@@ -1,0 +1,315 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using DataCore.Adapter.DataSource;
+using DataCore.Adapter.DataSource.Features;
+using DataCore.Adapter.DataSource.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace DataCore.Adapter.AspNetCore.Controllers {
+
+    /// <summary>
+    /// API controller for requesting tag data.
+    /// </summary>
+    [ApiController]
+    [ApiVersion("1.0")]
+    [Area("data-core")]
+    [Route("api/[area]/v{version:apiVersion}/tag-values")]
+    public class TagValuesController: ControllerBase {
+
+        /// <summary>
+        /// The Data Core context for the caller.
+        /// </summary>
+        private readonly IDataCoreContext _dataCoreContext;
+
+        /// <summary>
+        /// The service for accessing the running adapters.
+        /// </summary>
+        private readonly IAdapterAccessor _adapterAccessor;
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValuesController"/> object.
+        /// </summary>
+        /// <param name="dataCoreContext">
+        ///   The Data Core context for the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The service for accessing running adapters.
+        /// </param>
+        public TagValuesController(IDataCoreContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+            _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
+            _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+        }
+
+
+        /// <summary>
+        /// Requests snapshot (current) tag values.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The snapshot data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the snapshot values for the requested tags.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/snapshot")]
+        [ProducesResponseType(typeof(IEnumerable<SnapshotTagValue>), 200)]
+        public async Task<IActionResult> ReadSnapshotValues(ApiVersion apiVersion, string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadSnapshotTagValues>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
+            }
+
+            var result = await feature.ReadSnapshotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests raw (archived) tag values.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The raw data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the raw values for the requested tags.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/raw")]
+        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        public async Task<IActionResult> ReadRawValues(ApiVersion apiVersion, string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var featire = adapter.Features.Get<IReadRawTagValues>();
+            if (featire == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
+            }
+
+            var result = await featire.ReadRawTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests plot (vizualization-friendly) tag values.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The plot data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the plot values for the requested tags.
+        /// </returns>
+        /// <remarks>
+        ///   Plot data is intended to provide visualization-friendly data sets for display in e.g. 
+        ///   charts.
+        /// </remarks>
+        [HttpPost]
+        [Route("{adapterId}/plot")]
+        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        public async Task<IActionResult> ReadPlotValues(ApiVersion apiVersion, string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadPlotTagValues>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
+            }
+
+            var result = await feature.ReadPlotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests interpolated tag values.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="request">
+        ///   The interpolated data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the interpolated values for the requested tags.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/interpolated")]
+        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        public async Task<IActionResult> ReadInterpolatedValues(ApiVersion apiVersion, string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadInterpolatedTagValues>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadInterpolatedTagValues))); // 400
+            }
+
+            var result = await feature.ReadInterpolatedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests tag values at specific timestamps.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The values-at-times data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the values for the requested tags at the requested times.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/values-at-times")]
+        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        public async Task<IActionResult> ReadValuesAtTimes(ApiVersion apiVersion, string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadTagValuesAtTimes>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
+            }
+
+            var result = await feature.ReadTagValuesAtTimes(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests processed (aggregated) tag values.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The processed data request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the aggregated values for the requested tags and data 
+        ///   functions.
+        /// </returns>
+        /// <remarks>
+        ///   Processed data queries are used to request aggregated values for tags. The functions 
+        ///   supported vary by data source. The <see cref="DefaultDataFunctions"/> class defines
+        ///   constants for commonly-supported aggregate functions.
+        /// </remarks>
+        /// <seealso cref="DefaultDataFunctions"/>
+        [HttpPost]
+        [Route("{adapterId}/processed")]
+        [ProducesResponseType(typeof(IEnumerable<ProcessedHistoricalTagValues>), 200)]
+        public async Task<IActionResult> ReadProcessedValues(ApiVersion apiVersion, string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadProcessedTagValues>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
+            }
+
+            var result = await feature.ReadProcessedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Requests the aggregate functions that can be specified when requesting processed data.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the aggregated function names that can be specified.
+        /// </returns>
+        /// <remarks>
+        ///   Processed data queries are used to request aggregated values for tags. The functions 
+        ///   supported vary by data source. The <see cref="DefaultDataFunctions"/> class defines
+        ///   constants for commonly-supported aggregate functions.
+        /// </remarks>
+        /// <seealso cref="DefaultDataFunctions"/>
+        [HttpGet]
+        [Route("{adapterId}/supported-aggregations")]
+        [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+        public async Task<IActionResult> GetSupportedAggregateFunctions(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+
+            var feature = adapter.Features.Get<IReadProcessedTagValues>();
+            if (feature == null) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
+            }
+
+            var result = await feature.GetSupportedDataFunctions(_dataCoreContext, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+    }
+}
