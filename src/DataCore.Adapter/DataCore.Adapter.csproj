@@ -1,7 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>IntelligentPlant.AppStoreConnect.Adapters</PackageId>
+    <Authors>Intelligent Plant</Authors>
+    <Company>Intelligent Plant</Company>
+    <Description>Base types for App Store Connect adapters.</Description>
+    <Copyright>Copyright © 2019 Intelligent Plant Ltd.</Copyright>
+    <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <VersionPrefix>1.0.0.0</VersionPrefix>
+    <VersionSuffix>unofficial</VersionSuffix>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
   </PropertyGroup>
 
   <ItemGroup>
