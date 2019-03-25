@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace DataCore.Adapter.Common.Models {
@@ -10,7 +11,8 @@ namespace DataCore.Adapter.Common.Models {
     /// An extended descriptor for an adapter, that includes information about the features that the 
     /// adapter has implemented.
     /// </summary>
-    public class AdapterDescriptorExtended: AdapterDescriptor {
+    [Serializable]
+    public class AdapterDescriptorExtended: AdapterDescriptor, ISerializable {
 
         /// <summary>
         /// <see cref="IAdapterFeature"/> type.
@@ -62,5 +64,44 @@ namespace DataCore.Adapter.Common.Models {
             Features = adapter?.Features?.Keys?.Where(x => s_adapterFeatureType.IsAssignableFrom(x)).OrderBy(x => x.Name).Select(x => x.Name).ToArray() ?? throw new ArgumentNullException(nameof(adapter));
         }
 
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterDescriptorExtended"/> object from the provided serialization 
+        /// information.
+        /// </summary>
+        /// <param name="info">
+        ///   The serialization information.
+        /// </param>
+        /// <param name="context">
+        ///   The streaming context.
+        /// </param>
+        public AdapterDescriptorExtended(SerializationInfo info, StreamingContext context): base(info?.GetString(nameof(Id)), info?.GetString(nameof(Name)), info?.GetString(nameof(Description))) {
+            if (info == null) {
+                throw new ArgumentNullException(nameof(info));
+            }
+
+            Features = (string[]) info?.GetValue(nameof(Features), typeof(string[])) ?? new string[0];
+        }
+
+
+        /// <summary>
+        /// Adds serialization information to the provided serialization information object.
+        /// </summary>
+        /// <param name="info">
+        ///   The serialization information.
+        /// </param>
+        /// <param name="context">
+        ///   The streaming context.
+        /// </param>
+        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context) {
+            if (info == null) {
+                throw new ArgumentNullException(nameof(info));
+            }
+
+            info.AddValue(nameof(Id), Id);
+            info.AddValue(nameof(Name), Name);
+            info.AddValue(nameof(Description), Description);
+            info.AddValue(nameof(Features), Features.ToArray(), typeof(string[]));
+        }
     }
 }
