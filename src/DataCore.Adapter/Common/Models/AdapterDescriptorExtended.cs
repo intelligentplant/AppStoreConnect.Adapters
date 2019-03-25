@@ -24,6 +24,32 @@ namespace DataCore.Adapter.Common.Models {
 
 
         /// <summary>
+        /// Creates a new <see cref="AdapterDescriptorExtended"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="name">
+        ///   The adapter name.
+        /// </param>
+        /// <param name="description">
+        ///   The adapter description.
+        /// </param>
+        /// <param name="features">
+        ///   The adapter feature names.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features): base(id, name, description) {
+            Features = features?.ToArray() ?? new string[0];
+        }
+
+
+        /// <summary>
         /// Creates a new <see cref="AdapterDescriptorExtended"/> object for an <see cref="IAdapter"/>.
         /// </summary>
         /// <param name="adapter">
