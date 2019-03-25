@@ -77,7 +77,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
                 throw new ArgumentNullException(nameof(tag));
             }
 
-            var bucketSize = CalculateBucketSize(utcEndTime, utcStartTime, intervals);
+            var bucketSize = CalculateBucketSize(utcStartTime, utcEndTime, intervals);
 
             var rawSamples = rawData?.Where(x => x != null).ToArray() ?? new TagValue[0];
             if (rawSamples.Length == 0) {
