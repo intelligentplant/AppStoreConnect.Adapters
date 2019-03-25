@@ -75,12 +75,12 @@ namespace DataCore.Adapter.Common.Models {
         /// <param name="context">
         ///   The streaming context.
         /// </param>
-        public AdapterDescriptorExtended(SerializationInfo info, StreamingContext context): base(info?.GetString(nameof(Id)), info?.GetString(nameof(Name)), info?.GetString(nameof(Description))) {
+        public AdapterDescriptorExtended(SerializationInfo info, StreamingContext context): base(info?.GetString("id"), info?.GetString("name"), info?.GetString("description")) {
             if (info == null) {
                 throw new ArgumentNullException(nameof(info));
             }
 
-            Features = (string[]) info?.GetValue(nameof(Features), typeof(string[])) ?? new string[0];
+            Features = (string[]) info?.GetValue("features", typeof(string[])) ?? new string[0];
         }
 
 
@@ -98,10 +98,10 @@ namespace DataCore.Adapter.Common.Models {
                 throw new ArgumentNullException(nameof(info));
             }
 
-            info.AddValue(nameof(Id), Id);
-            info.AddValue(nameof(Name), Name);
-            info.AddValue(nameof(Description), Description);
-            info.AddValue(nameof(Features), Features.ToArray(), typeof(string[]));
+            info.AddValue("id", Id);
+            info.AddValue("name", Name);
+            info.AddValue("description", Description);
+            info.AddValue("features", Features.ToArray(), typeof(string[]));
         }
     }
 }
