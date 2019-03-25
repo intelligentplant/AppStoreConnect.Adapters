@@ -1,12 +1,12 @@
 ﻿# Intelligent Plant App Store Connect Adapters
 
-App Store Connect Adapters allow App Store Connect to integrate with 3rd party systems, and query them as if they were e.g. industrial plant historians. An ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-based API.
+Intelligent Plant's [Industrial App Store](https://appstore.intelligentplant.com) securely connects your industrial plant historian and alarm & event systems to apps using [App Store Connect](https://appstore.intelligentplant.com/Welcome/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5). App Store Connect comes with built-in drivers for many 3rd party systems (including OSIsoft PI and Asset Framework, OPC DA/HDA/AE, and more). App Store Connect can also integrate with 3rd party systems using App Store Connect Adapters, and query them as if they were e.g. industrial plant historians. An ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-based API.
 
 The repository contains the following projects:
 
-* `DataCore.Adapter` - a .NET Standard 2.0 library that contains interfaces and data transfer object definitions used by adapters.
-* `DataCore.Adapter.AspNetCore` - a .NET Core library containing API controllers, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
-* `DataCore.Adapter.AspNetCoreExample` - an ASP.NET Core 2.2 web application that hosts an in-memory data source that uses a looping data set to serve up sensor-like data.
+* `DataCore.Adapter` ([source](https://github.com/intelligentplant/app-store-connect-adapters/tree/master/src/DataCore.Adapter)) - a .NET Standard 2.0 library that contains interfaces and data transfer object definitions used by adapters.
+* `DataCore.Adapter.AspNetCore` ([source](https://github.com/intelligentplant/app-store-connect-adapters/tree/master/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
+* `DataCore.Adapter.AspNetCoreExample` ([source](https://github.com/intelligentplant/app-store-connect-adapters/tree/master/src/DataCore.AspNetCoreExample)) - an ASP.NET Core 2.2 web application that hosts an in-memory data source that uses a looping data set to serve up sensor-like data.
 
 
 # Implementing an Adapter
