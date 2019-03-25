@@ -13,22 +13,50 @@ using DataCore.Adapter.DataSource.Utilities;
 using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter.AspNetCoreExample {
-    public class ExampleDataSource: IHostedService, IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
 
+    /// <summary>
+    /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
+    /// adapter contains a set of sensor-like data for 3 tags that it will loop over.
+    /// </summary>
+    public class ExampleDataSource: BackgroundService, IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
+
+        /// <summary>
+        /// Background task that will be returned when <see cref="ExecuteAsync(CancellationToken)"/>.
+        /// </summary>
+        private Task _bgTask;
+
+        /// <summary>
+        /// The descriptor for the adapter.
+        /// </summary>
         private readonly AdapterDescriptor _descriptor = new AdapterDescriptor(
-            "8FE69877-9074-4B51-BF86-AFAE4F28CCBD",
-            "Example",
+            "example",
+            "Example Adapter",
             "An example data source adapter"
         );
 
-        private readonly IAdapterFeaturesCollection _features;
+        /// <summary>
+        /// Resolves adapter features.
+        /// </summary>
+        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
 
+        /// <summary>
+        /// ID for tag 1.
+        /// </summary>
         private const string Tag1Id = "3D3CB0C7-3578-46E8-B4C1-5BFBA563BF48";
 
+        /// <summary>
+        /// ID for tag 2.
+        /// </summary>
         private const string Tag2Id = "7C16DA6A-1802-42E4-8473-B2FB504968EE";
 
+        /// <summary>
+        /// ID for tag 3.
+        /// </summary>
         private const string Tag3Id = "67360992-B195-4DDD-8947-4D7C09737966";
 
+        /// <summary>
+        /// Tag definitions.
+        /// </summary>
         private readonly TagDefinition[] _tags = {
             new TagDefinition(Tag1Id, "Tag1", "This is an example tag", null, TagDataType.Numeric, null, null),
             new TagDefinition(Tag2Id, "Tag2", "This is an example tag with units specified", "deg C", TagDataType.Numeric, null, null),
@@ -37,8 +65,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
             }),
         };
 
+        /// <summary>
+        /// Raw data for each tag, indexed by tag ID.
+        /// </summary>
         private readonly ConcurrentDictionary<string, SortedList<DateTime, TagValue>> _rawValues = new ConcurrentDictionary<string, SortedList<DateTime, TagValue>>();
 
+        /// <summary>
+        /// The UTC sample times in the CSV data that we load in.
+        /// </summary>
         private readonly List<DateTime> _utcSampleTimes = new List<DateTime>();
 
         /// <summary>
@@ -56,40 +90,76 @@ namespace DataCore.Adapter.AspNetCoreExample {
         /// </summary>
         private TimeSpan _dataSetDuration;
 
+        /// <summary>
+        /// Handles non-raw historical queries for us.
+        /// </summary>
         private readonly ReadHistoricalTagValuesHelper _historicalQueryHelper;
 
+        /// <summary>
+        /// Maximum number of raw samples to return per tag per query.
+        /// </summary>
+        private const int MaxRawSamplesPerTag = 5000;
+
+
+        /// <inheritdoc/>
         AdapterDescriptor IAdapter.Descriptor {
             get { return _descriptor; }
         }
 
 
+        /// <inheritdoc/>
         IAdapterFeaturesCollection IAdapter.Features {
             get { return _features; }
         }
 
 
+        /// <summary>
+        /// Creates a new <see cref="ExampleDataSource"/> object.
+        /// </summary>
         public ExampleDataSource() {
-            _features = new AdapterFeatures(this);
+            // Register features!
+            _features.Add<IReadInterpolatedTagValues>(this);
+            _features.Add<IReadPlotTagValues>(this);
+            _features.Add<IReadProcessedTagValues>(this);
+            _features.Add<IReadRawTagValues>(this);
+            _features.Add<IReadSnapshotTagValues>(this);
+            _features.Add<IReadTagValueAnnotations>(this);
+            _features.Add<IReadTagValuesAtTimes>(this);
+            _features.Add<ITagSearch>(this);
+
             _historicalQueryHelper = new ReadHistoricalTagValuesHelper(this, this);
             LoadTagValuesFromCsv();
         }
 
 
-        Task IHostedService.StartAsync(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        /// <summary>
+        /// Starts the long-running <see cref="BackgroundService"/> task.
+        /// </summary>
+        /// <param name="stoppingToken">
+        ///   A cancellation token that will fire when the background service is stopping.
+        /// </param>
+        /// <returns>
+        ///   The long-running task for the adapter.
+        /// </returns>
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
+            lock (this) {
+                if (_bgTask == null) {
+                    _bgTask = Task.Delay(-1, stoppingToken);
+                }
+            }
+
+            return _bgTask;
         }
 
-        Task IHostedService.StopAsync(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
-        }
 
-
+        /// <inheritdoc/>
         Task<IEnumerable<TagDefinition>> ITagSearch.FindTags(IDataCoreContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             var result = _tags.ApplyFilter(request).ToArray();
             return Task.FromResult<IEnumerable<TagDefinition>>(result);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<TagDefinition>> ITagSearch.GetTags(IDataCoreContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             var result = request
                 .Tags
@@ -101,6 +171,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<SnapshotTagValue>> IReadSnapshotTagValues.ReadSnapshotTagValues(IDataCoreContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
             var values = GetSnapshotValues(tags.Select(t => t.Id).ToArray());
@@ -109,6 +180,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<HistoricalTagValues>> IReadRawTagValues.ReadRawTagValues(IDataCoreContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
             var values = GetRawValues(tags.Select(t => t.Id).ToArray(), request.UtcStartTime, request.UtcEndTime, request.BoundaryType, request.SampleCount);
@@ -117,36 +189,45 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<HistoricalTagValues>> IReadPlotTagValues.ReadPlotTagValues(IDataCoreContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadPlotTagValues(context, request, cancellationToken);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<HistoricalTagValues>> IReadInterpolatedTagValues.ReadInterpolatedTagValues(IDataCoreContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadInterpolatedTagValues(context, request, cancellationToken);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<HistoricalTagValues>> IReadTagValuesAtTimes.ReadTagValuesAtTimes(IDataCoreContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadTagValuesAtTimes(context, request, cancellationToken);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<string>> IReadProcessedTagValues.GetSupportedDataFunctions(IDataCoreContext context, CancellationToken cancellationToken) {
             return _historicalQueryHelper.GetSupportedDataFunctions(context, cancellationToken);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<ProcessedHistoricalTagValues>> IReadProcessedTagValues.ReadProcessedTagValues(IDataCoreContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadProcessedTagValues(context, request, cancellationToken);
         }
 
 
+        /// <inheritdoc/>
         Task<IEnumerable<TagValueAnnotations>> IReadTagValueAnnotations.ReadTagValueAnnotations(IDataCoreContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             return Task.FromResult<IEnumerable<TagValueAnnotations>>(new TagValueAnnotations[0]);
         }
 
 
+        /// <summary>
+        /// Loads the looping data set in from CSV.
+        /// </summary>
         private void LoadTagValuesFromCsv() {
             var tag1Values = new SortedList<DateTime, TagValue>();
             var tag2Values = new SortedList<DateTime, TagValue>();
@@ -172,12 +253,22 @@ namespace DataCore.Adapter.AspNetCoreExample {
             _rawValues[Tag2Id] = tag2Values;
             _rawValues[Tag3Id] = tag3Values;
 
+            // We store various properties about the CSV data to improve data query performance.
             _earliestSampleTimeUtc = _utcSampleTimes.First();
             _latestSampleTimeUtc = _utcSampleTimes.Last();
             _dataSetDuration = _latestSampleTimeUtc - _earliestSampleTimeUtc;
         }
 
 
+        /// <summary>
+        /// Gets the snapshot values for the specified tags.
+        /// </summary>
+        /// <param name="tags">
+        ///   The IDs of the tags to query.
+        /// </param>
+        /// <returns>
+        ///   The snapshot tag values, indexed by tag ID.
+        /// </returns>
         private IDictionary<string, TagValue> GetSnapshotValues(string[] tags) {
             // If we don't have any valid tags in the request, or if we don't have any CSV data to work with, 
             // return a null value for each valid tag.
@@ -247,11 +338,36 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
+        /// <summary>
+        /// Gets raw historical data for the specified tags.
+        /// </summary>
+        /// <param name="tags">
+        ///   The IDs of the tags to query.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The query start time.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The query end time.
+        /// </param>
+        /// <param name="boundaryType">
+        ///   The raw data boundary time.
+        /// </param>
+        /// <param name="maxValues">
+        ///   The maximum number of values to retrieve.
+        /// </param>
+        /// <returns>
+        ///   The raw historical values, indexed by tag ID.
+        /// </returns>
         private IDictionary<string, List<TagValue>> GetRawValues(string[] tags, DateTime utcStartTime, DateTime utcEndTime, RawDataBoundaryType boundaryType, int maxValues) {
             // If we don't have any valid tags in the request, or if we don't have any data to work with, 
             // return an empty set of values for each valid tag.
             if (tags.Length == 0) {
                 return tags.ToDictionary(x => x, x => new List<TagValue>());
+            }
+
+            if (maxValues < 1 || maxValues > MaxRawSamplesPerTag) {
+                maxValues = MaxRawSamplesPerTag;
             }
 
             // If the requested time range is inside the loaded data time range, it's easy - we just 
@@ -273,9 +389,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
                     var query = valuesForTag.Values.Where(x => x.UtcSampleTime >= utcStartTime && x.UtcSampleTime <= utcEndTime);
 
-                    res[tag] = maxValues > 0
-                        ? query.Take(maxValues).ToList()
-                        : query.ToList();
+                    res[tag] = query.Take(maxValues).ToList();
                 }
 
                 return res;
@@ -332,13 +446,11 @@ namespace DataCore.Adapter.AspNetCoreExample {
             do {
                 // Starting at startingIndex, we'll iterate over the sample times in the CSV data.
                 for (var i = startingIndex; i < _utcSampleTimes.Count; i++) {
-                    if (maxValues > 0) {
-                        ++iterations;
-                        if (iterations > maxValues) {
-                            continueOnce = false;
-                            @continue = false;
-                            break;
-                        }
+                    ++iterations;
+                    if (iterations > maxValues) {
+                        continueOnce = false;
+                        @continue = false;
+                        break;
                     }
 
                     // Get the unmodified CSV sample time.
@@ -416,45 +528,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
-        private class AdapterFeatures : IAdapterFeaturesCollection {
-
-            private readonly IDictionary<Type, object> _features;
-
-
-            public IEnumerable<Type> Keys {
-                get { return _features.Keys; }
-            }
-
-
-            private object this[Type key] {
-                get {
-                    return key == null || !_features.TryGetValue(key, out var value)
-                        ? null
-                        : value;
-                }
-            }
-
-            public AdapterFeatures(ExampleDataSource dataSource) {
-                _features = new Dictionary<Type, object>() {
-                    { typeof(IReadInterpolatedTagValues), dataSource },
-                    { typeof(IReadPlotTagValues), dataSource },
-                    { typeof(IReadProcessedTagValues), dataSource },
-                    { typeof(IReadRawTagValues), dataSource },
-                    { typeof(IReadSnapshotTagValues), dataSource },
-                    { typeof(IReadTagValueAnnotations), dataSource },
-                    { typeof(IReadTagValuesAtTimes), dataSource },
-                    { typeof(ITagSearch), dataSource },
-                };
-            }
-
-
-            public TFeature Get<TFeature>() where TFeature: IAdapterFeature {
-                var type = typeof(TFeature);
-                return (TFeature) this[type];
-            }
-        }
-
-
+        /// <summary>
+        /// CSV data that we parse at startup.
+        /// </summary>
         private const string CsvData = @"
 2019-03-21T12:49:10Z,55.65,54.81,45.01
 2019-03-21T12:49:40Z,53.46,55.40,46.89

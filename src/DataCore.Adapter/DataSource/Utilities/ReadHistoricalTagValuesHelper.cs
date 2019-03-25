@@ -157,33 +157,27 @@ namespace DataCore.Adapter.DataSource.Utilities {
                 Tags = request.Tags
             }, cancellationToken).ConfigureAwait(false);
 
-            var orderedSampleTimes = request.UtcSampleTimes.OrderBy(x => x).ToArray();
-            var earliest = orderedSampleTimes.First();
-            var latest = orderedSampleTimes.Last();
+            var valuesByTag = tagDefinitions.ToDictionary(x => x, x => new List<TagValue>());
 
-            if (earliest == latest) {
-                latest = earliest.AddSeconds(1);
+            foreach (var sampleTime in request.UtcSampleTimes.Distinct()) {
+                var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    Tags = tagDefinitions.Select(x => x.Id).ToArray(),
+                    UtcStartTime = sampleTime.AddSeconds(-1),
+                    UtcEndTime = sampleTime.AddSeconds(1),
+                    SampleCount = 0,
+                    BoundaryType = RawDataBoundaryType.Outside
+                }, cancellationToken).ConfigureAwait(false);
+
+                foreach (var item in rawValues) {
+                    var tag = tagDefinitions.FirstOrDefault(x => x.Id.Equals(item.TagId));
+                    if (tag == null || !valuesByTag.TryGetValue(tag, out var vals)) {
+                        continue;
+                    }
+                    vals.Add(InterpolationHelper.GetValueAtTime(tag, sampleTime, item.Values, tag.DataType == TagDataType.Numeric ? InterpolationCalculationType.Interpolate : InterpolationCalculationType.UsePreviousValue));
+                }
             }
 
-            var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                Tags = tagDefinitions.Select(x => x.Id).ToArray(),
-                UtcStartTime = earliest,
-                UtcEndTime = latest,
-                SampleCount = 0,
-                BoundaryType = RawDataBoundaryType.Outside
-            }, cancellationToken).ConfigureAwait(false);
-
-            return rawValues
-                .Select(x => new {
-                    Tag = tagDefinitions.FirstOrDefault(t => t.Id.Equals(x.TagId, StringComparison.OrdinalIgnoreCase)),
-                    Values = x
-                })
-                .Where(x => x.Tag != null)
-                .Select(x => new HistoricalTagValues(
-                    x.Tag.Id,
-                    x.Tag.Name,
-                    orderedSampleTimes.Select(ts => InterpolationHelper.GetValueAtTime(x.Tag, ts, x.Values.Values, InterpolationCalculationType.Interpolate)).ToArray()
-                )).ToArray();
+            return valuesByTag.Select(x => new HistoricalTagValues(x.Key.Id, x.Key.Name, x.Value));
         }
 
     }

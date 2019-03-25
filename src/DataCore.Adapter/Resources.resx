@@ -141,6 +141,10 @@
   <data name="Error_InvalidTimeStamp" xml:space="preserve">
     <value>Invalid time stamp.</value>
   </data>
+  <data name="Error_NotAnAdapterFeature" xml:space="preserve">
+    <value>Adapter features must be interfaces extending {0}.</value>
+    <comment>{0} - IAdapterFeature name</comment>
+  </data>
   <data name="Error_SampleIntervalMustBeGreaterThanZero" xml:space="preserve">
     <value>Sample interval must be greater than zero.</value>
   </data>

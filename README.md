@@ -1,6 +1,6 @@
-﻿# Intelligent Plant App Store Connect Adapter
+﻿# Intelligent Plant App Store Connect Adapters
 
-App Store Connect Adapter allows App Store Connect to integrate with 3rd party systems, and query them as if they were e.g. industrial plant historians. An ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-based API.
+App Store Connect Adapters allow App Store Connect to integrate with 3rd party systems, and query them as if they were e.g. industrial plant historians. An ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-based API.
 
 The repository contains the following projects:
 
@@ -11,11 +11,16 @@ The repository contains the following projects:
 
 # Implementing an Adapter
 
-All adapters implement the `IAdapter` interface. Each adapter implements a set of __features__, which are exposed via an `IAdapterFeaturesCollection`. Individual features are defined as interfaces, and must inherit from `IAdapterFeature`. 
+All adapters implement the `IAdapter` interface. Each adapter implements a set of __features__, which are exposed via an `IAdapterFeaturesCollection`. Individual features are defined as interfaces, and must inherit from `IAdapterFeature`. The `AdapterFeaturesCollection` class provides a default implementation of `IAdapterFeaturesCollection` that can register and unregister features dynamically at runtime.
 
 Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.DataSource.Features` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required. 
 
 In addition to implementing the `IAdapter` interface for individual adapters, the hosting application must also provide an implementation of the `IAdapterAccessor` service. This service is used to access adapters at runtime. The service can choose to control access to adapters based on the identity of the calling user.
+
+
+## Helper Classes
+
+The `DataCore.Adapter` project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of raw, unprocessed tag values, the `DataCore.Adapter.DataSource.Utilities.ReadHistoricalTagValuesHelper` class can be used to provide support for interpolated, plot, and aggregated data queries.
 
 
 # Implementing Authorization
@@ -45,4 +50,4 @@ In the `ConfigureServices` method in your `Startup.cs` file, add the following c
 
 The ASP.NET Core application is responsible for managing the lifecycle of its adapters. When registering the adapter services with the application, an `IAdapterAccessor` implementation must be provided. If your adapters are registered with ASP.NET Core as hosted services (that is, they implement `IHostedService` and are registered as hosted services at application startup), you can use the `HostedServiceAdapterAccessor` implementation. You can extend this class if you want to control access to adapters based on the identity of the calling user.
 
-The `IAdapterAccessor` implementation is registered as a scoped service (i.e. it calls `services.AddScoped<IAdapterAccessor, MyImplementation>` under the hood).
+The `IAdapterAccessor` implementation is registered as a transient service (i.e. it calls `services.AddTransient<IAdapterAccessor, MyImplementation>` under the hood). Note that this means that a new instance of the service will be created every time it is resolved!
