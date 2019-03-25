@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Common.Models {
                 return false;
             }
 
-            return descriptor.HasFeature(typeof(TFeature).FullName);
+            return descriptor.HasFeature(typeof(TFeature).Name);
         }
 
 
