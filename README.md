@@ -51,3 +51,8 @@ In the `ConfigureServices` method in your `Startup.cs` file, add the following c
 The ASP.NET Core application is responsible for managing the lifecycle of its adapters. When registering the adapter services with the application, an `IAdapterAccessor` implementation must be provided. If your adapters are registered with ASP.NET Core as hosted services (that is, they implement `IHostedService` and are registered as hosted services at application startup), you can use the `HostedServiceAdapterAccessor` implementation. You can extend this class if you want to control access to adapters based on the identity of the calling user.
 
 The `IAdapterAccessor` implementation is registered as a transient service (i.e. it calls `services.AddTransient<IAdapterAccessor, MyImplementation>` under the hood). Note that this means that a new instance of the service will be created every time it is resolved!
+
+
+# Testing API Calls
+
+The repository contains a [Postman collection](https://github.com/intelligentplant/app-store-connect-adapters/blob/master/postman_collection.json) that you can use to test API calls to your host.
