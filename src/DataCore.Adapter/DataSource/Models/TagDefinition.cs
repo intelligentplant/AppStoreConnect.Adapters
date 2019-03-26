@@ -39,12 +39,12 @@ namespace DataCore.Adapter.DataSource.Models {
         /// The discrete states for the tag. If <see cref="DataType"/> is not <see cref="TagDataType.State"/>, 
         /// this property will be <see langword="null"/>.
         /// </summary>
-        public IReadOnlyDictionary<string, int> States { get; }
+        public IDictionary<string, int> States { get; }
 
         /// <summary>
         /// Bespoke tag properties.
         /// </summary>
-        public IReadOnlyDictionary<string, string> Properties { get; }
+        public IDictionary<string, string> Properties { get; }
 
 
         /// <summary>
@@ -86,12 +86,8 @@ namespace DataCore.Adapter.DataSource.Models {
             DataType = dataType;
             States = dataType != TagDataType.State
                 ? null
-                : states == null
-                    ? new ReadOnlyDictionary<string, int>(new Dictionary<string, int>())
-                    : new ReadOnlyDictionary<string, int>(states);
-            Properties = properties == null
-                ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>())
-                : new ReadOnlyDictionary<string, string>(properties);
+                : new ReadOnlyDictionary<string, int>(states ?? new Dictionary<string, int>());
+            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 
     }

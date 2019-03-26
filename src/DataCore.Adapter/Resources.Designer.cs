@@ -185,5 +185,23 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("Error_TagSearchRequiresAtLeastOneFilter", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Host information has not been provided..
+        /// </summary>
+        internal static string HostInfo_Unspecified_Description {
+            get {
+                return ResourceManager.GetString("HostInfo_Unspecified_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unspecified.
+        /// </summary>
+        internal static string HostInfo_Unspecified_Name {
+            get {
+                return ResourceManager.GetString("HostInfo_Unspecified_Name", resourceCulture);
+            }
+        }
     }
 }

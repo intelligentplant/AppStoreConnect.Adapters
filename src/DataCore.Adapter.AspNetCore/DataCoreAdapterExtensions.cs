@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
+using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.DataSource;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,13 +27,17 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <param name="services">
         ///   The service collection.
         /// </param>
+        /// <param name="hostInfo">
+        ///   The application host information.
+        /// </param>
         /// <returns>
         ///   The service collection.
         /// </returns>
-        public static IServiceCollection AddDataCoreAdapterServices<TAdapterAccessor>(this IServiceCollection services) where TAdapterAccessor : class, IAdapterAccessor {
+        public static IServiceCollection AddDataCoreAdapterServices<TAdapterAccessor>(this IServiceCollection services, HostInfo hostInfo = null) where TAdapterAccessor : class, IAdapterAccessor {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IDataCoreContext, DataCoreContext>();
             services.AddTransient<IAdapterAccessor, TAdapterAccessor>();
+            services.AddSingleton<HostInfo>(sp => HostInfo.FromExisting(hostInfo ?? HostInfo.Unspecified));
 
             return services;
         }

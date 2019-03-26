@@ -24,11 +24,22 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Ask .NET Core to run our adapter in the background.
             services.AddHostedService<ExampleDataSource>();
 
-            // Add adapter services, including our IAdapterAccessor implementation.
-            services.AddDataCoreAdapterServices<HostedServiceAdapterAccessor>();
+            // Add adapter services, including our IAdapterAccessor implementation and hosting 
+            // information.
+            services.AddDataCoreAdapterServices<HostedServiceAdapterAccessor>(new Common.Models.HostInfo(
+                "Example Host",
+                "An example App Store Connect Adapters host",
+                GetType().Assembly.GetName().Version.ToString(),
+                new Common.Models.VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+                new Dictionary<string, string>() {
+                    { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
+                })
+            );
 
             // Adapter API controllers require the API versioning service.
-            services.AddApiVersioning();
+            services.AddApiVersioning(options => {
+                options.ReportApiVersions = true;
+            });
 
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()

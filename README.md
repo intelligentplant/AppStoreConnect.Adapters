@@ -36,11 +36,22 @@ Note also, that App Store Connect applies its own authorization before dispatchi
 
 In the `ConfigureServices` method in your `Startup.cs` file, add the following code to register the required services:
 
-    // Add adapter services, including our IAdapterAccessor implementation.
-    services.AddDataCoreAdapterServices<MyAdapterAccessor>();
+    // Add adapter services, including our IAdapterAccessor implementation and hosting 
+    // information.
+    services.AddDataCoreAdapterServices<MyAdapterAccessor>(new HostInfo(
+        "My Host",
+        "A brief description of the hosting application",
+        "0.9.0-alpha", // SemVer v2
+        new VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+        new Dictionary<string, string>() {
+            { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
+        })
+    );
 
     // Adapter API controllers require the API versioning service.
-    services.AddApiVersioning();
+    services.AddApiVersioning(options => {
+        options.ReportApiVersions = true;
+    });
 
     // Add the adapter API controllers to the MVC registration.
     services.AddMvc()

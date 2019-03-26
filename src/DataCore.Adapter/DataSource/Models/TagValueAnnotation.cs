@@ -50,7 +50,7 @@ namespace DataCore.Adapter.DataSource.Models {
         /// <summary>
         /// Additional annotation properties.
         /// </summary>
-        public IReadOnlyDictionary<string, string> Properties { get; private set; }
+        public IDictionary<string, string> Properties { get; private set; }
 
 
         /// <summary>

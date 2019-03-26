@@ -160,4 +160,10 @@
   <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
     <value>At least one tag search filter field must be specified.</value>
   </data>
+  <data name="HostInfo_Unspecified_Description" xml:space="preserve">
+    <value>Host information has not been provided.</value>
+  </data>
+  <data name="HostInfo_Unspecified_Name" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
 </root>

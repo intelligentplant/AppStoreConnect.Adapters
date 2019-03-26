@@ -10,6 +10,36 @@
 			"name": "v1.0",
 			"item": [
 				{
+					"name": "Host Info",
+					"item": [
+						{
+							"name": "Get Host Information",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{AdapterHost}}/v{{ApiVersion}}/host-info",
+									"host": [
+										"{{AdapterHost}}"
+									],
+									"path": [
+										"v{{ApiVersion}}",
+										"host-info"
+									]
+								},
+								"description": "Requests host and vendor information about the hosting application."
+							},
+							"response": []
+						}
+					],
+					"description": "Queries about the hosting application and vendor.",
+					"_postman_isSubFolder": true
+				},
+				{
 					"name": "Adapters",
 					"item": [
 						{
@@ -490,43 +520,43 @@
 	],
 	"variable": [
 		{
-			"id": "aadf2a54-72d4-478f-8e4c-45befacb5576",
+			"id": "0d639d92-e72c-4069-a1f6-9391e99eda33",
 			"key": "ApiVersion",
 			"value": "1.0",
 			"type": "string"
 		},
 		{
-			"id": "53f53c03-266c-4799-afaa-cde406faa9f9",
+			"id": "af6d6932-b819-4e94-aa65-6396acb1dbf4",
 			"key": "AdapterHost",
 			"value": "https://localhost:44309/api/data-core",
 			"type": "string"
 		},
 		{
-			"id": "d1c7770e-7109-4852-9373-ebbd8f5a207a",
+			"id": "f9dcde0d-f788-4567-a923-53ec91530b4f",
 			"key": "AdapterId",
 			"value": "example",
 			"type": "string"
 		},
 		{
-			"id": "e31b00b2-be23-4b3b-b1d7-e1b3b5ec6d66",
+			"id": "fa6bf03f-2f07-4194-89b2-053b54397583",
 			"key": "StartTime",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "5706c343-63d3-4d71-9ace-3cc43c6be986",
+			"id": "1ca09265-49c9-44ed-8ab0-be3f35720214",
 			"key": "EndTime",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "35a19a2b-4d85-4713-b0f3-cd19ceb1608b",
+			"id": "bc6039fe-1f35-4818-90cd-8d017dcec7c2",
 			"key": "SampleInterval",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "d4656cc2-8d03-4cbe-8942-2c7c6574a4d9",
+			"id": "a7a2ba8c-6110-4abb-a42d-a50674ea79d0",
 			"key": "SampleCount",
 			"value": "",
 			"type": "string"
