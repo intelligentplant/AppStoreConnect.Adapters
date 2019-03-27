@@ -55,6 +55,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
+        /// <summary>
+        /// Reads tag value annotations from an adapter.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="TagValueAnnotations"/> objects.
+        /// </returns>
         [HttpPost]
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagValueAnnotations>), 200)]

@@ -10,19 +10,43 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
 
+    /// <summary>
+    /// API controller for performing tag searches.
+    /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
     [Area("data-core")]
     [Route("api/[area]/v{version:apiVersion}/tags")]
     public class TagSearchController: ControllerBase {
 
+        /// <summary>
+        /// The adapter API authorization service to use.
+        /// </summary>
         private readonly AdapterApiAuthorizationService _authorizationService;
 
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the calling user.
+        /// </summary>
         private readonly IAdapterCallContext _dataCoreContext;
 
+        /// <summary>
+        /// For accessing the available adapters.
+        /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
 
+        /// <summary>
+        /// Creates a new <see cref="TagSearchController"/> object.
+        /// </summary>
+        /// <param name="authorizationService">
+        ///   The API authorization service to use.
+        /// </param>
+        /// <param name="dataCoreContext">
+        ///   The <see cref="IAdapterCallContext"/> for the calling user.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   Service for accessing the available adapters.
+        /// </param>
         public TagSearchController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
             _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
             _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
@@ -30,7 +54,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
-
+        /// <summary>
+        /// Performs a tag search on an adapter.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
+        /// </returns>
         [HttpPost]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
@@ -59,6 +100,36 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
+        /// <summary>
+        /// Performs a tag search on an adapter.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="name">
+        ///   The tag name filter.
+        /// </param>
+        /// <param name="description">
+        ///   The tag description filter.
+        /// </param>
+        /// <param name="units">
+        ///   The tag units filter.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size.
+        /// </param>
+        /// <param name="page">
+        ///   The results page to return.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
+        /// </returns>
         [HttpGet]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
@@ -73,6 +144,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
+        /// <summary>
+        /// Gets tags by ID.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of matching <see cref="TagDefinition"/> 
+        ///   objects.
+        /// </returns>
         [HttpPost]
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
@@ -101,6 +191,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
+        /// <summary>
+        /// Gets tags by ID.
+        /// </summary>
+        /// <param name="apiVersion">
+        ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="tag">
+        ///   The IDs of the tags to retrieve.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of matching <see cref="TagDefinition"/> 
+        ///   objects.
+        /// </returns>
         [HttpGet]
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]

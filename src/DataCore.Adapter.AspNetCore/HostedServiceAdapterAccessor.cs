@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter {

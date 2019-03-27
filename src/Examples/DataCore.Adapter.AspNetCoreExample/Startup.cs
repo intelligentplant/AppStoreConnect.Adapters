@@ -38,11 +38,11 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 );
 
                 options.UseAdapterAccessor<HostedServiceAdapterAccessor>();
-                
+
                 // To add authentication and authorization options for adapter API operations, extend 
-                // the AdapterOperationAuthorizationHandler class and call options.UseAdapterOperationAuthorizationHandler
+                // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
                 // to register your handler.
-                
+
                 //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
             });
 
