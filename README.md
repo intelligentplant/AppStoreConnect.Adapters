@@ -10,7 +10,8 @@ This repository contains the following projects:
 
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that contains interfaces and data transfer object definitions used by adapters.
 * `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
-* `DataCore.Adapter.AspNetCoreExample` ([source](/src/DataCore.AspNetCoreExample)) - an example ASP.NET Core 2.2 web application that hosts an in-memory data source that uses a looping data set to serve up sensor-like data.
+
+The [Examples](/src/Examples) folder contains example host applications.
 
 
 # ASP.NET Core Quick Start
