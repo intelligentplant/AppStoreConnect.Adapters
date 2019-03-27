@@ -67,4 +67,4 @@ At the moment, only anonymous and Windows authentication is supported at the App
 
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
-Authorization can also be applied at the [adapter level](./DataCore.Adapter) and at the [API level](./DataCore.Adapter.AspNetCore).
+Authorization can also be applied at the [adapter level](./src/DataCore.Adapter) and at the [API level](./src/DataCore.Adapter.AspNetCore).
