@@ -28,7 +28,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         /// <param name="rawData">
         ///   The raw data to be aggregated.
         /// </param>
-        /// <param name="aggregateName">
+        /// <param name="dataFunction">
         ///   The aggregate name (for information purposes only).
         /// </param>
         /// <param name="aggregateFunc">
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="aggregateFunc"/> is <see langword="null"/>.
         /// </exception>
-        private static IEnumerable<TagValue> GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData, string aggregateName, Func<TagDefinition, DateTime, IEnumerable<TagValue>, TagValue> aggregateFunc) {
+        private static IEnumerable<TagValue> GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData, string dataFunction, Func<TagDefinition, DateTime, IEnumerable<TagValue>, TagValue> aggregateFunc) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -62,8 +62,8 @@ namespace DataCore.Adapter.DataSource.Utilities {
             if (aggregateFunc == null) {
                 throw new ArgumentNullException(nameof(aggregateFunc));
             }
-            if (String.IsNullOrWhiteSpace(aggregateName)) {
-                aggregateName = "UNKNOWN";
+            if (String.IsNullOrWhiteSpace(dataFunction)) {
+                dataFunction = "UNKNOWN";
             }
 
             // Ensure that we are only working with non-null samples.
@@ -234,7 +234,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         ///   <paramref name="rawData"/> is <see langword="null"/>.
         /// </exception>
         public static IEnumerable<TagValue> GetAverageValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Average, CalculateAverage);
+            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Average.Name, CalculateAverage);
         }
 
 
@@ -309,7 +309,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         ///   <paramref name="rawData"/> is <see langword="null"/>.
         /// </exception>
         public static IEnumerable<TagValue> GetMinimumValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Minimum, CalculateMinimum);
+            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Minimum.Name, CalculateMinimum);
         }
 
         #endregion
@@ -383,7 +383,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         ///   <paramref name="rawData"/> is <see langword="null"/>.
         /// </exception>
         public static IEnumerable<TagValue> GetMaximumValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Maximum, CalculateMaximum);
+            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Maximum.Name, CalculateMaximum);
         }
 
         #endregion
@@ -454,15 +454,15 @@ namespace DataCore.Adapter.DataSource.Utilities {
             }
             
             // AVG
-            if (DefaultDataFunctions.Average.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
+            if (DefaultDataFunctions.Average.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
                 return GetAverageValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
             }
             // MAX
-            if (DefaultDataFunctions.Maximum.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
+            if (DefaultDataFunctions.Maximum.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
                 return GetMaximumValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
             }
             // MIN
-            if (DefaultDataFunctions.Minimum.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
+            if (DefaultDataFunctions.Minimum.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
                 return GetMinimumValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
             }
 
@@ -470,7 +470,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
         }
 
 
-        public static IEnumerable<string> GetSupportedDataFunctions() {
+        public static IEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions() {
             return new[] {
                 DefaultDataFunctions.Average,
                 DefaultDataFunctions.Maximum,

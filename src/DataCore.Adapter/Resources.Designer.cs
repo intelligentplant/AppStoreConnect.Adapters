@@ -61,6 +61,33 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average value calculated over a fixed sample interval..
+        /// </summary>
+        internal static string DataFunction_Avg_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Avg_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval..
+        /// </summary>
+        internal static string DataFunction_Max_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Max_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum value calculated over a fixed sample interval..
+        /// </summary>
+        internal static string DataFunction_Min_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify an adapter ID..
         /// </summary>
         internal static string Error_AdapterDescriptorIdIsRequired {

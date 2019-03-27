@@ -16,7 +16,7 @@ namespace DataCore.Adapter.DataSource.Features {
     /// </remarks>
     public interface IReadProcessedTagValues : IAdapterFeature {
 
-        Task<IEnumerable<string>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
+        Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// Reads processed (aggregated) data from the adapter.

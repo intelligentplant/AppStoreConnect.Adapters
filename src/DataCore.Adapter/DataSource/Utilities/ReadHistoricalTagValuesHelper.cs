@@ -115,7 +115,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
 
 
         /// <inheritdoc/>
-        public Task<IEnumerable<string>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             return Task.FromResult(AggregationHelper.GetSupportedDataFunctions());
         }
 

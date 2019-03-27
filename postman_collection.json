@@ -359,7 +359,7 @@
 										"exec": [
 											"const url = `${pm.variables.get('AdapterHost')}/v${pm.variables.get('ApiVersion')}/tag-values/${pm.variables.get('AdapterId')}/supported-aggregations`;",
 											"pm.sendRequest(url, function (err, response) {",
-											"    const funcs = '[' + response.json().map(x => `\"${x}\"`) + ']';",
+											"    const funcs = '[' + response.json().map(x => `\"${x.name}\"`) + ']';",
 											"    pm.environment.set('DataFunctions', funcs);",
 											"});"
 										],
@@ -520,43 +520,43 @@
 	],
 	"variable": [
 		{
-			"id": "0d639d92-e72c-4069-a1f6-9391e99eda33",
+			"id": "931f22d2-b2b9-436a-81f0-0265bb52a7e4",
 			"key": "ApiVersion",
 			"value": "1.0",
 			"type": "string"
 		},
 		{
-			"id": "af6d6932-b819-4e94-aa65-6396acb1dbf4",
+			"id": "49bd4462-0fe5-492f-a220-f191cfbcfa22",
 			"key": "AdapterHost",
 			"value": "https://localhost:44309/api/data-core",
 			"type": "string"
 		},
 		{
-			"id": "f9dcde0d-f788-4567-a923-53ec91530b4f",
+			"id": "d572d999-7fd2-4b79-ae28-ce32c40c3ead",
 			"key": "AdapterId",
 			"value": "example",
 			"type": "string"
 		},
 		{
-			"id": "fa6bf03f-2f07-4194-89b2-053b54397583",
+			"id": "50f68805-df00-45f2-b34b-a708b099ba10",
 			"key": "StartTime",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "1ca09265-49c9-44ed-8ab0-be3f35720214",
+			"id": "0e24f223-dc15-44a0-bc13-0e49ad802043",
 			"key": "EndTime",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "bc6039fe-1f35-4818-90cd-8d017dcec7c2",
+			"id": "8fb77a84-05e1-4af0-98f3-91be6e916255",
 			"key": "SampleInterval",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"id": "a7a2ba8c-6110-4abb-a42d-a50674ea79d0",
+			"id": "4f511325-bea3-494d-9258-1b3cf0396a28",
 			"key": "SampleCount",
 			"value": "",
 			"type": "string"

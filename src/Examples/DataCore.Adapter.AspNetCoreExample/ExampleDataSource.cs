@@ -208,7 +208,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<string>> IReadProcessedTagValues.GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+        Task<IEnumerable<DataFunctionDescriptor>> IReadProcessedTagValues.GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             return _historicalQueryHelper.GetSupportedDataFunctions(context, cancellationToken);
         }
 

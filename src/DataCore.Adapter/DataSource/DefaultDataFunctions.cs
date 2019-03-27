@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DataCore.Adapter.DataSource.Models;
 
 namespace DataCore.Adapter.DataSource {
 
@@ -12,22 +13,17 @@ namespace DataCore.Adapter.DataSource {
         /// <summary>
         /// Average value over a time period.
         /// </summary>
-        public const string Average = "AVG";
+        public static DataFunctionDescriptor Average => new DataFunctionDescriptor("AVG", Resources.DataFunction_Avg_Description);
 
         /// <summary>
         /// Minimum value over a time period.
         /// </summary>
-        public const string Minimum = "MIN";
+        public static DataFunctionDescriptor Minimum => new DataFunctionDescriptor("MIN", Resources.DataFunction_Min_Description);
 
         /// <summary>
         /// Maximum value over a time period.
         /// </summary>
-        public const string Maximum = "MAX";
-
-        /// <summary>
-        /// Standard deviation over a time period.
-        /// </summary>
-        public const string StandardDeviation = "STDDEV";
+        public static DataFunctionDescriptor Maximum => new DataFunctionDescriptor("MAX", Resources.DataFunction_Max_Description);
 
     }
 }
