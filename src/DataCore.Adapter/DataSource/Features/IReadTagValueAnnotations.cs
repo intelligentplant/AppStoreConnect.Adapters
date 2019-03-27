@@ -16,7 +16,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Reads annotations from the adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The annotation query.
@@ -27,7 +27,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The annotations for the requested tags.
         /// </returns>
-        Task<IEnumerable<TagValueAnnotations>> ReadTagValueAnnotations(IDataCoreContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<TagValueAnnotations>> ReadTagValueAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken);
 
     }
 }

@@ -57,7 +57,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IDataCoreContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
                 Tags = request.Tags
             }, cancellationToken).ConfigureAwait(false);
@@ -85,7 +85,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadPlotTagValues(IDataCoreContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<HistoricalTagValues>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
                 Tags = request.Tags
             }, cancellationToken).ConfigureAwait(false);
@@ -115,13 +115,13 @@ namespace DataCore.Adapter.DataSource.Utilities {
 
 
         /// <inheritdoc/>
-        public Task<IEnumerable<string>> GetSupportedDataFunctions(IDataCoreContext context, CancellationToken cancellationToken) {
+        public Task<IEnumerable<string>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             return Task.FromResult(AggregationHelper.GetSupportedDataFunctions());
         }
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IDataCoreContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
                 Tags = request.Tags
             }, cancellationToken).ConfigureAwait(false);
@@ -152,7 +152,7 @@ namespace DataCore.Adapter.DataSource.Utilities {
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IDataCoreContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
                 Tags = request.Tags
             }, cancellationToken).ConfigureAwait(false);

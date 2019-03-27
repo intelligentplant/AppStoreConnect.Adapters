@@ -26,15 +26,25 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             // Add adapter services, including our IAdapterAccessor implementation and hosting 
             // information.
-            services.AddDataCoreAdapterServices<HostedServiceAdapterAccessor>(new Common.Models.HostInfo(
-                "Example Host",
-                "An example App Store Connect Adapters host",
-                GetType().Assembly.GetName().Version.ToString(),
-                new Common.Models.VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
-                new Dictionary<string, string>() {
-                    { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
-                })
-            );
+            services.AddDataCoreAdapterServices(options => {
+                options.HostInfo = new Common.Models.HostInfo(
+                    "Example Host",
+                    "An example App Store Connect Adapters host",
+                    GetType().Assembly.GetName().Version.ToString(),
+                    new Common.Models.VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+                    new Dictionary<string, string>() {
+                        { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
+                    }
+                );
+
+                options.UseAdapterAccessor<HostedServiceAdapterAccessor>();
+                
+                // To add authentication and authorization options for adapter API operations, extend 
+                // the AdapterOperationAuthorizationHandler class and call options.UseAdapterOperationAuthorizationHandler
+                // to register your handler.
+                
+                //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
+            });
 
             // Adapter API controllers require the API versioning service.
             services.AddApiVersioning(options => {

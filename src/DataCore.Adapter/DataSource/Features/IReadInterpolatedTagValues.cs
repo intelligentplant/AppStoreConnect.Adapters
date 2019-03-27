@@ -20,7 +20,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Reads interpolated data from the adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The data query.
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The interpolated values for the requested tags.
         /// </returns>
-        Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IDataCoreContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

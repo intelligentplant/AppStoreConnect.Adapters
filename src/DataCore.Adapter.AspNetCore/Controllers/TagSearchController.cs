@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.DataSource;
 using DataCore.Adapter.DataSource.Features;
 using DataCore.Adapter.DataSource.Models;
@@ -15,12 +16,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Route("api/[area]/v{version:apiVersion}/tags")]
     public class TagSearchController: ControllerBase {
 
-        private readonly IDataCoreContext _dataCoreContext;
+        private readonly AdapterApiAuthorizationService _authorizationService;
+
+        private readonly IAdapterCallContext _dataCoreContext;
 
         private readonly IAdapterAccessor _adapterAccessor;
 
 
-        public TagSearchController(IDataCoreContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+        public TagSearchController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+            _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
             _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
@@ -36,12 +40,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
-            var tagSearch = adapter.Features.Get<ITagSearch>();
-            if (tagSearch == null) {
+            var feature = adapter.Features.Get<ITagSearch>();
+            if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
 
-            var tags = await tagSearch.FindTags(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var authResponse = await _authorizationService.AuthorizeAsync<ITagSearch>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
+            var tags = await feature.FindTags(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(tags); // 200
         }
 
@@ -68,12 +81,22 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-            var tagSearch = adapter.Features.Get<ITagSearch>();
-            if (tagSearch == null) {
+
+            var feature = adapter.Features.Get<ITagSearch>();
+            if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
 
-            var tags = await tagSearch.GetTags(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var authResponse = await _authorizationService.AuthorizeAsync<ITagSearch>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
+            var tags = await feature.GetTags(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(tags); // 200
         }
 

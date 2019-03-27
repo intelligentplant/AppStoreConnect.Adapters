@@ -15,7 +15,7 @@ namespace DataCore.Adapter {
         /// Gets the available adapters.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -23,13 +23,13 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapters available to the caller.
         /// </returns>
-        Task<IEnumerable<IAdapter>> GetAdapters(IDataCoreContext context, CancellationToken cancellationToken);
+        Task<IEnumerable<IAdapter>> GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets the specified adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter.
@@ -40,7 +40,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The requested adapter.
         /// </returns>
-        Task<IAdapter> GetAdapter(IDataCoreContext context, string adapterId, CancellationToken cancellationToken);
+        Task<IAdapter> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken);
 
     }
 }

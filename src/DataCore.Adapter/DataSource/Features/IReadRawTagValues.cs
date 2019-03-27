@@ -16,7 +16,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Reads raw data from the adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The data query.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.DataSource.Features {
         ///   range as possible. The adapter can apply its own maximum sample count to the queries it 
         ///   receives.
         /// </remarks>
-        Task<IEnumerable<HistoricalTagValues>> ReadRawTagValues(IDataCoreContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<HistoricalTagValues>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

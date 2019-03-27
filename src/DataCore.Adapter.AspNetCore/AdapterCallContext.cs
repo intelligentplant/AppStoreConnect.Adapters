@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.Http;
 namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
-    /// <see cref="IDataCoreContext"/> implementation for ASP.NET Core.
+    /// <see cref="IAdapterCallContext"/> implementation for ASP.NET Core.
     /// </summary>
-    public class DataCoreContext: IDataCoreContext {
+    public class AdapterCallContext: IAdapterCallContext {
 
         /// <summary>
-        /// The <see cref="HttpContext"/> associated with the <see cref="DataCoreContext"/>.
+        /// The <see cref="HttpContext"/> associated with the <see cref="AdapterCallContext"/>.
         /// </summary>
         private readonly HttpContext _httpContext;
 
@@ -25,12 +25,12 @@ namespace DataCore.Adapter.AspNetCore {
 
 
         /// <summary>
-        /// Creates a new <see cref="DataCoreContext"/> object.
+        /// Creates a new <see cref="AdapterCallContext"/> object.
         /// </summary>
         /// <param name="httpContextAccessor">
         ///   The <see cref="IHttpContextAccessor"/> service.
         /// </param>
-        public DataCoreContext(IHttpContextAccessor httpContextAccessor) {
+        public AdapterCallContext(IHttpContextAccessor httpContextAccessor) {
             _httpContext = httpContextAccessor?.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 

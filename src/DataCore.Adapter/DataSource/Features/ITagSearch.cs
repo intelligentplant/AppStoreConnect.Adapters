@@ -16,7 +16,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Performs a tag search.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The search filter.
@@ -27,13 +27,13 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        Task<IEnumerable<TagDefinition>> FindTags(IDataCoreContext context, FindTagsRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets tags by ID or name.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The search filter.
@@ -44,7 +44,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        Task<IEnumerable<TagDefinition>> GetTags(IDataCoreContext context, GetTagsRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken);
 
     }
 }

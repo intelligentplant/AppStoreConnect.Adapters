@@ -153,14 +153,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagDefinition>> ITagSearch.FindTags(IDataCoreContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<TagDefinition>> ITagSearch.FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             var result = _tags.ApplyFilter(request).ToArray();
             return Task.FromResult<IEnumerable<TagDefinition>>(result);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagDefinition>> ITagSearch.GetTags(IDataCoreContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<TagDefinition>> ITagSearch.GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             var result = request
                 .Tags
                 .Select(nameOrId => _tags.FirstOrDefault(t => t.Id.Equals(nameOrId, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(nameOrId, StringComparison.OrdinalIgnoreCase)))
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<SnapshotTagValue>> IReadSnapshotTagValues.ReadSnapshotTagValues(IDataCoreContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<SnapshotTagValue>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
             var values = GetSnapshotValues(tags.Select(t => t.Id).ToArray());
             var result = tags.Select(x => new SnapshotTagValue(x.Id, x.Name, values.TryGetValue(x.Id, out var val) ? val : null)).ToArray();
@@ -181,7 +181,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadRawTagValues.ReadRawTagValues(IDataCoreContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<HistoricalTagValues>> IReadRawTagValues.ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
             var values = GetRawValues(tags.Select(t => t.Id).ToArray(), request.UtcStartTime, request.UtcEndTime, request.BoundaryType, request.SampleCount);
             var result = tags.Select(x => new HistoricalTagValues(x.Id, x.Name, values.TryGetValue(x.Id, out var val) ? val : null)).ToArray();
@@ -190,37 +190,37 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadPlotTagValues.ReadPlotTagValues(IDataCoreContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<HistoricalTagValues>> IReadPlotTagValues.ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadPlotTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadInterpolatedTagValues.ReadInterpolatedTagValues(IDataCoreContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<HistoricalTagValues>> IReadInterpolatedTagValues.ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadInterpolatedTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadTagValuesAtTimes.ReadTagValuesAtTimes(IDataCoreContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<HistoricalTagValues>> IReadTagValuesAtTimes.ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadTagValuesAtTimes(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<string>> IReadProcessedTagValues.GetSupportedDataFunctions(IDataCoreContext context, CancellationToken cancellationToken) {
+        Task<IEnumerable<string>> IReadProcessedTagValues.GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             return _historicalQueryHelper.GetSupportedDataFunctions(context, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<ProcessedHistoricalTagValues>> IReadProcessedTagValues.ReadProcessedTagValues(IDataCoreContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<ProcessedHistoricalTagValues>> IReadProcessedTagValues.ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadProcessedTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagValueAnnotations>> IReadTagValueAnnotations.ReadTagValueAnnotations(IDataCoreContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        Task<IEnumerable<TagValueAnnotations>> IReadTagValueAnnotations.ReadTagValueAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             return Task.FromResult<IEnumerable<TagValueAnnotations>>(new TagValueAnnotations[0]);
         }
 

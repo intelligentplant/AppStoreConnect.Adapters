@@ -16,13 +16,13 @@ namespace DataCore.Adapter.DataSource.Features {
     /// </remarks>
     public interface IReadProcessedTagValues : IAdapterFeature {
 
-        Task<IEnumerable<string>> GetSupportedDataFunctions(IDataCoreContext context, CancellationToken cancellationToken);
+        Task<IEnumerable<string>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// Reads processed (aggregated) data from the adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The data query.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The values for the requested tags and aggregate functions.
         /// </returns>
-        Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IDataCoreContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

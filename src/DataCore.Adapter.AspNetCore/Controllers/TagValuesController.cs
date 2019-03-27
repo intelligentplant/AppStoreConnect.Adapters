@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.DataSource;
 using DataCore.Adapter.DataSource.Features;
 using DataCore.Adapter.DataSource.Models;
@@ -20,9 +21,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class TagValuesController: ControllerBase {
 
         /// <summary>
+        /// The adapter API authorization service to use.
+        /// </summary>
+        private readonly AdapterApiAuthorizationService _authorizationService;
+
+        /// <summary>
         /// The Data Core context for the caller.
         /// </summary>
-        private readonly IDataCoreContext _dataCoreContext;
+        private readonly IAdapterCallContext _dataCoreContext;
 
         /// <summary>
         /// The service for accessing the running adapters.
@@ -33,13 +39,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="TagValuesController"/> object.
         /// </summary>
+        /// <param name="authorizationService">
+        ///   The adapter API authorization service to use.
+        /// </param>
         /// <param name="dataCoreContext">
         ///   The Data Core context for the caller.
         /// </param>
         /// <param name="adapterAccessor">
         ///   The service for accessing running adapters.
         /// </param>
-        public TagValuesController(IDataCoreContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+        public TagValuesController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+            _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
             _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
@@ -77,6 +87,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
 
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadSnapshotTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
             var result = await feature.ReadSnapshotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
@@ -109,12 +128,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
-            var featire = adapter.Features.Get<IReadRawTagValues>();
-            if (featire == null) {
+            var feature = adapter.Features.Get<IReadRawTagValues>();
+            if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
             }
 
-            var result = await featire.ReadRawTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadRawTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
+            var result = await feature.ReadRawTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -155,6 +183,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
 
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadPlotTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
             var result = await feature.ReadPlotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
@@ -187,6 +224,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = adapter.Features.Get<IReadInterpolatedTagValues>();
             if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadInterpolatedTagValues))); // 400
+            }
+
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadInterpolatedTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
             }
 
             var result = await feature.ReadInterpolatedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
@@ -224,6 +270,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = adapter.Features.Get<IReadTagValuesAtTimes>();
             if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
+            }
+
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadTagValuesAtTimes>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
             }
 
             var result = await feature.ReadTagValuesAtTimes(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
@@ -270,6 +325,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
 
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadProcessedTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
+            }
+
             var result = await feature.ReadProcessedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
@@ -305,6 +369,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = adapter.Features.Get<IReadProcessedTagValues>();
             if (feature == null) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
+            }
+
+            var authResponse = await _authorizationService.AuthorizeAsync<IReadProcessedTagValues>(
+                User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                return Unauthorized(); // 401
             }
 
             var result = await feature.GetSupportedDataFunctions(_dataCoreContext, cancellationToken).ConfigureAwait(false);

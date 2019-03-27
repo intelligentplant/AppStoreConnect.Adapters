@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore;
+using DataCore.Adapter.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter {
@@ -12,7 +15,7 @@ namespace DataCore.Adapter {
     /// <see cref="IAdapterAccessor"/> implementation that resolves <see cref="IAdapter"/> objects that 
     /// are registered as ASP.NET Core hosted services.
     /// </summary>
-    public class HostedServiceAdapterAccessor : IAdapterAccessor {
+    public class HostedServiceAdapterAccessor : AdapterAccessor {
 
         /// <summary>
         /// The available adapters.
@@ -26,68 +29,22 @@ namespace DataCore.Adapter {
         /// <param name="hostedServices">
         ///   The ASP.NET Core hosted services.
         /// </param>
-        public HostedServiceAdapterAccessor(IEnumerable<IHostedService> hostedServices) {
+        public HostedServiceAdapterAccessor(AdapterApiAuthorizationService authorizationService, IEnumerable<IHostedService> hostedServices) : base(authorizationService) {
             _adapters = hostedServices?.Select(x => x as IAdapter).Where(x => x != null).ToArray() ?? new IAdapter[0];
         }
 
 
-        /// <inheritdoc/>
-        Task<IEnumerable<IAdapter>> IAdapterAccessor.GetAdapters(IDataCoreContext context, CancellationToken cancellationToken) {
-            return GetAdapters(context, cancellationToken);
-        }
-
-
         /// <summary>
-        /// Gets all available adapters.
+        /// Returns the available adapters.
         /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> describing the calling user.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The available <see cref="IAdapter"/> objects.
+        ///   The available adapters.
         /// </returns>
-        /// <remarks>
-        ///   Override this method to apply restrictions on which adapters are returned.
-        /// </remarks>
-        protected virtual Task<IEnumerable<IAdapter>> GetAdapters(IDataCoreContext context, CancellationToken cancellationToken) {
+        protected override Task<IEnumerable<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
             return Task.FromResult<IEnumerable<IAdapter>>(_adapters);
         }
-
-
-        /// <inheritdoc/>
-        Task<IAdapter> IAdapterAccessor.GetAdapter(IDataCoreContext context, string adapterId, CancellationToken cancellationToken) {
-            if (adapterId == null) {
-                throw new ArgumentNullException(nameof(adapterId));
-            }
-            return GetAdapter(context, adapterId, cancellationToken);
-        }
-
-
-        /// <summary>
-        /// Gets the specified adapter.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> describing the calling user.
-        /// </param>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The adapter.
-        /// </returns>
-        /// <remarks>
-        ///   Override this method to apply restrictions on which adapters are returned.
-        /// </remarks>
-        protected virtual Task<IAdapter> GetAdapter(IDataCoreContext context, string adapterId, CancellationToken cancellationToken) {
-            var adapter = _adapters.FirstOrDefault(x => x.Descriptor.Id.Equals(adapterId));
-            return Task.FromResult(adapter);
-        }
-
     }
 }

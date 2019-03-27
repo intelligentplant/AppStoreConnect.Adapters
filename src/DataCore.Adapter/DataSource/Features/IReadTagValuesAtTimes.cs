@@ -20,7 +20,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Reads values from the adapter with specific time stamps.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The data query.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.DataSource.Features {
         ///   value using the closest raw samples to a requested time stamp, or if it will repeat the 
         ///   previous raw value before the time stamp.
         /// </returns>
-        Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IDataCoreContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
 
 
     }

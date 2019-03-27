@@ -61,6 +61,15 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An {0} service is required. Did you forget to call {1}.{2}?.
+        /// </summary>
+        internal static string Error_AdapterAccessorIsRequired {
+            get {
+                return ResourceManager.GetString("Error_AdapterAccessorIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to resolve adapter ID: {0}.
         /// </summary>
         internal static string Error_CannotResolveAdapterId {

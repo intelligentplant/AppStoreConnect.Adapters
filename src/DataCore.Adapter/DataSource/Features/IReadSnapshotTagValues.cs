@@ -16,7 +16,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// Reads snapshot data from the adapter.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IDataCoreContext"/> for the caller.
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
         ///   The data query.
@@ -27,7 +27,7 @@ namespace DataCore.Adapter.DataSource.Features {
         /// <returns>
         ///   The snapshot values for the requested tags.
         /// </returns>
-        Task<IEnumerable<SnapshotTagValue>> ReadSnapshotTagValues(IDataCoreContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken);
+        Task<IEnumerable<SnapshotTagValue>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }
