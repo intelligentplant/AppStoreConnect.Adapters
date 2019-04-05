@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace DataCore.Adapter.Events.Models {
@@ -12,17 +13,35 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// Indicates if the write was successful.
         /// </summary>
-        public bool Success { get; }
+        public WriteStatus Status { get; }
+
+        /// <summary>
+        /// Notes associated with the write.
+        /// </summary>
+        public string Notes { get; }
+
+        /// <summary>
+        /// Additional properties related to the write.
+        /// </summary>
+        public IDictionary<string, string> Properties { get; }
 
 
         /// <summary>
         /// Creates a new <see cref="WriteEventMessagesResult"/> object.
         /// </summary>
-        /// <param name="success">
+        /// <param name="status">
         ///   A flag indicating if the write was successful.
         /// </param>
-        public WriteEventMessagesResult(bool success) {
-            Success = success;
+        /// <param name="notes">
+        ///   Notes associated with the write.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional properties related to the write.
+        /// </param>
+        public WriteEventMessagesResult(WriteStatus status, string notes, IDictionary<string, string> properties) {
+            Status = status;
+            Notes = notes?.Trim();
+            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 
     }

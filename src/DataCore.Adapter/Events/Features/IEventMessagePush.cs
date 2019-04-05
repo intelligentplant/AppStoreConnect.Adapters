@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Events.Features {
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        Task<IDisposable> Subscribe(IAdapterCallContext context, IObserver<PushedEventMessage> observer, CancellationToken cancellationToken);
+        Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, IObserver<PushedEventMessage> observer, CancellationToken cancellationToken);
 
     }
 
