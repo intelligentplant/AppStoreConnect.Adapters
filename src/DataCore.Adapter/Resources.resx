@@ -135,6 +135,9 @@
   <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null data function name.</value>
   </data>
+  <data name="Error_DuplicateTagWriteCollectionsAreNotAllowed" xml:space="preserve">
+    <value>You cannot specify multiple write collections for the same tag.</value>
+  </data>
   <data name="Error_InterpolationRequiresAtLeastOneSample" xml:space="preserve">
     <value>When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on.</value>
   </data>
@@ -173,6 +176,12 @@
     <value>Host information has not been provided.</value>
   </data>
   <data name="HostInfo_Unspecified_Name" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
+  <data name="SnapshotTagValue_Unspecified_ErrorText" xml:space="preserve">
+    <value>No snapshot value was provided.</value>
+  </data>
+  <data name="SnapshotTagValue_Unspecified_Value" xml:space="preserve">
     <value>Unspecified</value>
   </data>
 </root>

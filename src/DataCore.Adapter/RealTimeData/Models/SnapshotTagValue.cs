@@ -37,8 +37,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
             Value = value ?? TagValue.Create()
                 .WithUtcSampleTime(DateTime.MinValue)
                 .WithNumericValue(double.NaN)
-                .WithTextValue("Unknown")
-                .WithError("No snapshot value was provided.")
+                .WithTextValue(Resources.SnapshotTagValue_Unspecified_Value)
+                .WithError(Resources.SnapshotTagValue_Unspecified_ErrorText)
                 .WithStatus(TagValueStatus.Unknown)
                 .Build();
         }

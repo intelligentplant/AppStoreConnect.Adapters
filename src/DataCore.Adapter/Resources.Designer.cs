@@ -19,7 +19,7 @@ namespace DataCore.Adapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -111,6 +111,15 @@ namespace DataCore.Adapter {
         internal static string Error_DataFunctionCannotBeNull {
             get {
                 return ResourceManager.GetString("Error_DataFunctionCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You cannot specify multiple write collections for the same tag..
+        /// </summary>
+        internal static string Error_DuplicateTagWriteCollectionsAreNotAllowed {
+            get {
+                return ResourceManager.GetString("Error_DuplicateTagWriteCollectionsAreNotAllowed", resourceCulture);
             }
         }
         
@@ -228,6 +237,24 @@ namespace DataCore.Adapter {
         internal static string HostInfo_Unspecified_Name {
             get {
                 return ResourceManager.GetString("HostInfo_Unspecified_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No snapshot value was provided..
+        /// </summary>
+        internal static string SnapshotTagValue_Unspecified_ErrorText {
+            get {
+                return ResourceManager.GetString("SnapshotTagValue_Unspecified_ErrorText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unspecified.
+        /// </summary>
+        internal static string SnapshotTagValue_Unspecified_Value {
+            get {
+                return ResourceManager.GetString("SnapshotTagValue_Unspecified_Value", resourceCulture);
             }
         }
     }

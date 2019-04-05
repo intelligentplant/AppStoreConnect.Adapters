@@ -12,29 +12,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// methods to build new values using a fluent interface.
     /// </summary>
     /// <seealso cref="TagValueBuilder"/>
-    public sealed class TagValue {
-
-        /// <summary>
-        /// The UTC sample time for the value.
-        /// </summary>
-        public DateTime UtcSampleTime { get; }
-
-        /// <summary>
-        /// The numeric value for the tag. This can differ from the text value on state-based and 
-        /// non-numeric tags.
-        /// </summary>
-        public double NumericValue { get; }
-
-        /// <summary>
-        /// The text value for the tag. This can differ from the numeric value on state-based and 
-        /// non-numeric tags.
-        /// </summary>
-        public string TextValue { get; }
-
-        /// <summary>
-        /// The quality status for the value.
-        /// </summary>
-        public TagValueStatus Status { get; }
+    public sealed class TagValue : TagValueBase {
 
         /// <summary>
         /// The value units.
@@ -86,11 +64,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public TagValue(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) {
-            UtcSampleTime = utcSampleTime.ToUniversalTime();
-            NumericValue = numericValue;
-            TextValue = textValue;
-            Status = status;
+        public TagValue(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) : base(utcSampleTime, numericValue, textValue, status) {
             Units = units;
             Notes = notes;
             Error = error;
