@@ -7,9 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.Common.Models;
-using DataCore.Adapter.DataSource.Features;
-using DataCore.Adapter.DataSource.Models;
-using DataCore.Adapter.DataSource.Utilities;
+using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.RealTimeData.Utilities;
 using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter.AspNetCoreExample {
@@ -240,13 +240,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 _utcSampleTimes.Add(timestamp);
 
                 var tag1Value = double.Parse(cols[1], CultureInfo.InvariantCulture);
-                tag1Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag1Value).WithStatus(TagValueStatus.Good));
+                tag1Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag1Value).WithStatus(TagValueStatus.Good).Build());
 
                 var tag2Value = double.Parse(cols[2], CultureInfo.InvariantCulture);
-                tag2Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag2Value).WithStatus(TagValueStatus.Good));
+                tag2Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag2Value).WithStatus(TagValueStatus.Good).Build());
 
                 var tag3Value = double.Parse(cols[3], CultureInfo.InvariantCulture);
-                tag3Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag3Value).WithStatus(TagValueStatus.Good));
+                tag3Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag3Value).WithStatus(TagValueStatus.Good).Build());
             }
 
             _rawValues[Tag1Id] = tag1Values;
@@ -331,7 +331,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime.Add(offset) <= now);
                 result[tag] = snapshot == null
                     ? null
-                    : TagValue.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset));
+                    : TagValue.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build();
             }
 
             return result;
@@ -509,7 +509,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                         // sample, to prevent us from creating unnecessary instances of DataCoreTagValue.
                         var sample = offset.Equals(TimeSpan.Zero)
                             ? unmodifiedSample
-                            : TagValue.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration);
+                            : TagValue.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
                         resultValuesForTag.Add(sample);
                     }
                 }

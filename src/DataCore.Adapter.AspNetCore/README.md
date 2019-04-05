@@ -28,7 +28,7 @@ public class MyFeatureAuthorizationHandler : FeatureAuthorizationHandler {
             // calling user.
             isAuthorized = context.User.IsInRole("AdapterUsers");
         }
-        else if (requirement.Feature == typeof(DataCore.Adapter.DataSource.Features.IReadTagValueAnnotations)) {
+        else if (requirement.Feature == typeof(DataCore.Adapter.RealTimeData.Features.IReadTagValueAnnotations)) {
             isAuthorized = context.User.IsInRole("CanReadAnnotations");
         }
 

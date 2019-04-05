@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.DataSource;
-using DataCore.Adapter.DataSource.Features;
-using DataCore.Adapter.DataSource.Models;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
