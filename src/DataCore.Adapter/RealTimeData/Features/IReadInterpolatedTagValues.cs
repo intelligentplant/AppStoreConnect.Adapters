@@ -10,10 +10,6 @@ namespace DataCore.Adapter.RealTimeData.Features {
     /// <summary>
     /// Feature for reading interpolated tag values from an adapter.
     /// </summary>
-    /// <remarks>
-    ///   The <see cref="Utilities.InterpolationHelper"/> class can assist with the calculation 
-    ///   of values.
-    /// </remarks>
     public interface IReadInterpolatedTagValues : IAdapterFeature {
 
         /// <summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DataCore.Adapter.RealTimeData.Utilities;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -115,6 +116,19 @@ namespace DataCore.Adapter.RealTimeData.Models {
         }
 
 
+        /// <summary>
+        /// Gets the text value for a tag based on its numeric value.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="numericValue">
+        ///   The numeric value.
+        /// </param>
+        /// <returns>
+        ///   The equivalent text value. For state-based tags, this will be the name of the state that 
+        ///   matches the numeric value.
+        /// </returns>
         public static string GetTextValue(this TagDefinition tag, double numericValue) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
@@ -122,13 +136,26 @@ namespace DataCore.Adapter.RealTimeData.Models {
 
             switch (tag.DataType) {
                 case TagDataType.State:
-                    return tag.States.FirstOrDefault(x => x.Value == numericValue).Key ?? TagValue.GetTextValue(numericValue);
+                    return tag.States.FirstOrDefault(x => x.Value == numericValue).Key ?? TagValueBuilder.GetTextValue(numericValue);
                 default:
-                    return TagValue.GetTextValue(numericValue);
+                    return TagValueBuilder.GetTextValue(numericValue);
             }
         }
 
 
+        /// <summary>
+        /// Gets the numeric value for a tag based on its nutextmeric value.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="textValue">
+        ///   The text value.
+        /// </param>
+        /// <returns>
+        ///   The equivalent numeric value. For state-based tags, this will be the value of the state 
+        ///   that matches the text value.
+        /// </returns>
         public static double GetNumericValue(this TagDefinition tag, string textValue) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));

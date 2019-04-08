@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using DataCore.Adapter.RealTimeData.Utilities;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
-    /// Describes an annotation on a tag. Use the <see cref="Create"/> or <see cref="CreateFromExisting(TagValueAnnotation)"/> 
-    /// methods to build new annotations using a fluent interface.
+    /// Describes an annotation on a tag.
     /// </summary>
-    /// <seealso cref="TagValueAnnotationBuilder"/>
     public sealed class TagValueAnnotation {
 
         /// <summary>
@@ -61,9 +58,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
 
 
         /// <summary>
-        /// Creates a new <see cref="TagValueAnnotation"/> object. The static <see cref="Create"/> and 
-        /// <see cref="CreateFromExisting(TagValueAnnotation)"/> methods are also avalable, for easier 
-        /// construction using a fluent interface.
+        /// Creates a new <see cref="TagValueAnnotation"/> object.
         /// </summary>
         /// <param name="id">
         ///   The annotation ID.
@@ -97,36 +92,6 @@ namespace DataCore.Adapter.RealTimeData.Models {
             Value = value;
             Description = description;
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
-        /// </summary>
-        public static TagValueAnnotationBuilder Create() {
-            return new TagValueAnnotationBuilder();
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagValueAnnotationBuilder"/> that is configured using an existing 
-        /// tag value annotation.
-        /// </summary>
-        /// <param name="other">
-        ///   The tag value annotation to copy the initial values from.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="TagValueAnnotationBuilder"/> with pre-configured properties.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="other"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueAnnotationBuilder CreateFromExisting(TagValueAnnotation other) {
-            if (other == null) {
-                throw new ArgumentNullException(nameof(other));
-            }
-
-            return new TagValueAnnotationBuilder(other);
         }
 
     }

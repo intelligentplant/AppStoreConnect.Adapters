@@ -50,7 +50,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
         /// </summary>
-        internal TagValueAnnotationBuilder() {
+        private TagValueAnnotationBuilder() {
             _properties = new Dictionary<string, string>();
         }
 
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="existing">
         ///   The existing annotation.
         /// </param>
-        internal TagValueAnnotationBuilder(TagValueAnnotation existing) {
+        private TagValueAnnotationBuilder(TagValueAnnotation existing) {
             if (existing == null) {
                 _properties = new Dictionary<string, string>();
                 return;
@@ -75,6 +75,36 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             _value = existing.Value;
             _description = existing.Description;
             _properties = new Dictionary<string, string>(existing.Properties);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
+        /// </summary>
+        public static TagValueAnnotationBuilder Create() {
+            return new TagValueAnnotationBuilder();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotationBuilder"/> that is configured using an existing 
+        /// tag value annotation.
+        /// </summary>
+        /// <param name="other">
+        ///   The tag value annotation to copy the initial values from.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="TagValueAnnotationBuilder"/> with pre-configured properties.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="other"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueAnnotationBuilder CreateFromExisting(TagValueAnnotation other) {
+            if (other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            return new TagValueAnnotationBuilder(other);
         }
 
 

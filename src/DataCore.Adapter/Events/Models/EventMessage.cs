@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using DataCore.Adapter.Events.Utilities;
 
 namespace DataCore.Adapter.Events.Models {
 
@@ -70,40 +69,6 @@ namespace DataCore.Adapter.Events.Models {
             Category = category;
             Message = message;
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="EventMessageBuilder"/> object that can be used to create an 
-        /// <see cref="EventMessage"/> using a fluent configuration interface.
-        /// </summary>
-        /// <returns>
-        ///   A new <see cref="EventMessageBuilder"/> object.
-        /// </returns>
-        public static EventMessageBuilder Create() {
-            return new EventMessageBuilder();
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="EventMessageBuilder"/> that is configured using an existing 
-        /// event message.
-        /// </summary>
-        /// <param name="other">
-        ///   The event message to copy values from.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="EventMessageBuilder"/> with pre-configured event properties.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="other"/> is <see langword="null"/>.
-        /// </exception>
-        public static EventMessageBuilder CreateFromExisting(EventMessage other) {
-            if (other == null) {
-                throw new ArgumentNullException(nameof(other));
-            }
-
-            return new EventMessageBuilder(other);
         }
 
     }

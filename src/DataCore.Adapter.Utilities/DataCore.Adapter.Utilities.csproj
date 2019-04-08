@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnect.Adapters</PackageId>
+    <PackageId>IntelligentPlant.AppStoreConnect.Adapters.Utilities</PackageId>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant</Company>
-    <Description>Base types for App Store Connect adapters.</Description>
+    <Description>Utility classes for App Store Connect adapters.</Description>
     <Copyright>Copyright © 2019 Intelligent Plant Ltd.</Copyright>
     <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -14,26 +14,11 @@
     <VersionSuffix>unofficial</VersionSuffix>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
+    <RootNamespace>DataCore.Adapter</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.Versioning" Version="4.9.4" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
   </ItemGroup>
 
 </Project>

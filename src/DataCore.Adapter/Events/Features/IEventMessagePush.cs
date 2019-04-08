@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events.Models;
 
 namespace DataCore.Adapter.Events.Features {
@@ -27,7 +28,7 @@ namespace DataCore.Adapter.Events.Features {
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, IObserver<PushedEventMessage> observer, CancellationToken cancellationToken);
+        Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, IAdapterObserver<EventMessage> observer, CancellationToken cancellationToken);
 
     }
 

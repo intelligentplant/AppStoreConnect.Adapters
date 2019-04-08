@@ -56,6 +56,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddDataCoreAdapterMvc();
 
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,6 +71,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             app.UseHttpsRedirection();
             app.UseMvc();
+            app.UseSignalR(route => {
+                route.MapDataCoreAdapterHubs();
+            });
         }
     }
 }

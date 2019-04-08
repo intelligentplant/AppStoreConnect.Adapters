@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -54,7 +55,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a new <see cref="TagValueBuilder"/> object.
         /// </summary>
-        internal TagValueBuilder() {
+        private TagValueBuilder() {
             _properties = new Dictionary<string, string>();
         }
 
@@ -66,7 +67,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        internal TagValueBuilder(TagValue existing) {
+        private TagValueBuilder(TagValue existing) {
             if (existing == null) {
                 _properties = new Dictionary<string, string>();
                 return;
@@ -84,6 +85,39 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
+        /// Creates a new <see cref="TagValueBuilder"/> object.
+        /// </summary>
+        /// <returns>
+        ///   A new <see cref="TagValueBuilder"/> object.
+        /// </returns>
+        public static TagValueBuilder Create() {
+            return new TagValueBuilder();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueBuilder"/> that is configured using an existing 
+        /// tag value.
+        /// </summary>
+        /// <param name="other">
+        ///   The tag value to copy the initial values from.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="TagValueBuilder"/> with pre-configured properties.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="other"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueBuilder CreateFromExisting(TagValue other) {
+            if (other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            return new TagValueBuilder(other);
+        }
+
+
+        /// <summary>
         /// Creates a <see cref="TagValue"/> using the configured settings.
         /// </summary>
         /// <returns>
@@ -91,6 +125,21 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </returns>
         public TagValue Build() {
             return new TagValue(_utcSampleTime, _numericValue, _textValue, _status, _units, _notes, _error, _properties);
+        }
+
+
+        /// <summary>
+        /// Infrastructure only. <see cref="TagDefinitionExtensions.GetTextValue(TagDefinition, double)"/> 
+        /// should be used instead.
+        /// </summary>
+        /// <param name="numericValue">
+        ///   The numeric value.
+        /// </param>
+        /// <returns>
+        ///   The equivalent text value.
+        /// </returns>
+        internal static string GetTextValue(double numericValue) {
+            return numericValue.ToString(CultureInfo.InvariantCulture);
         }
 
 
@@ -121,7 +170,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         public TagValueBuilder WithNumericValue(double value) {
             _numericValue = value;
             if (string.IsNullOrWhiteSpace(_textValue)) {
-                _textValue = TagValue.GetTextValue(value);
+                _textValue = GetTextValue(value);
             }
             return this;
         }

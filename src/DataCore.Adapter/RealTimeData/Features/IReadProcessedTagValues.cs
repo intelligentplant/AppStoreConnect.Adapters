@@ -10,10 +10,6 @@ namespace DataCore.Adapter.RealTimeData.Features {
     /// <summary>
     /// Feature for reading processed (aggregated) tag values from an adapter.
     /// </summary>
-    /// <remarks>
-    ///   The <see cref="Utilities.AggregationHelper"/> class can assist with the calculation 
-    ///   of values.
-    /// </remarks>
     public interface IReadProcessedTagValues : IAdapterFeature {
 
         Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);

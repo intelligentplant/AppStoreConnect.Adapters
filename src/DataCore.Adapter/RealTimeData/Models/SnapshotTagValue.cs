@@ -33,14 +33,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagName"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="value"/> is <see langword="null"/>.
+        /// </exception>
         public SnapshotTagValue(string tagId, string tagName, TagValue value): base(tagId, tagName) {
-            Value = value ?? TagValue.Create()
-                .WithUtcSampleTime(DateTime.MinValue)
-                .WithNumericValue(double.NaN)
-                .WithTextValue(Resources.SnapshotTagValue_Unspecified_Value)
-                .WithError(Resources.SnapshotTagValue_Unspecified_ErrorText)
-                .WithStatus(TagValueStatus.Unknown)
-                .Build();
+            Value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
     }

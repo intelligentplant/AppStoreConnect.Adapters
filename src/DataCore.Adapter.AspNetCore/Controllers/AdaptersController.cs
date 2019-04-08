@@ -21,7 +21,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// The <see cref="IAdapterCallContext"/> for the calling user.
         /// </summary>
-        private readonly IAdapterCallContext _dataCoreContext;
+        private readonly IAdapterCallContext _callContext;
 
         /// <summary>
         /// For accessing the available adapters.
@@ -32,17 +32,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="AdaptersController"/> object.
         /// </summary>
-        /// <param name="authorizationService">
-        ///   The API authorization service to use.
-        /// </param>
-        /// <param name="dataCoreContext">
+        /// <param name="callContext">
         ///   The <see cref="IAdapterCallContext"/> for the calling user.
         /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public AdaptersController(IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
-            _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
+        public AdaptersController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
+            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -64,7 +61,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptorExtended>), 200)]
         public async Task<IActionResult> GetAllAdapters(ApiVersion apiVersion, CancellationToken cancellationToken) {
-            var adapters = await _adapterAccessor.GetAdapters(_dataCoreContext, cancellationToken).ConfigureAwait(false);
+            var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
             var result = adapters.Select(x => new AdapterDescriptorExtended(x)).OrderBy(x => x.Name).ToArray();
             return Ok(result); // 200
         }
@@ -90,7 +87,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }

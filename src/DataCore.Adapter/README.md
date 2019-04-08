@@ -1,6 +1,6 @@
 ﻿# DataCore.Adapter
 
-This project contains core types for implementing an App Store Connect Adapter. An adapter is a component that exposes real-time process data and/or alarm & event data to App Store Connect. This data can then be used by apps on the [Industrial App Store](https://appstore.intelligentplant.com) such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
+This project contains core types and abstractions for implementing an App Store Connect Adapter. An adapter is a component that exposes real-time process data and/or alarm & event data to App Store Connect. This data can then be used by apps on the [Industrial App Store](https://appstore.intelligentplant.com) such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
 
 
 # Implementing an Adapter
@@ -12,4 +12,4 @@ Adapter implementers can pick and choose which features they want to provide. Fo
 
 ## Helper Classes
 
-The project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of [raw, unprocessed tag values](./RealTimeData/Features/IReadRawTagValues.cs), the [ReadHistoricalTagValuesHelper](./DataSource/Utilities/ReadHistoricalTagValuesHelper.cs) class can be used to provide support for [interpolated](./RealTimeData/Features/IReadInterpolatedTagValues.cs), [values-at-times](./RealTimeData/Features/IReadTagValuesAtTimes.cs), [plot](./RealTimeData/Features/IReadPlotTagValues.cs), and [aggregated](./RealTimeData/Features/IReadProcessedTagValues.cs) data queries.
+The [DataCore.Adapter.Utilities](/src/DataCore.Adapter.Utilities) project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of [raw, unprocessed tag values](./RealTimeData/Features/IReadRawTagValues.cs), the [ReadHistoricalTagValuesHelper](/src/DataCore.Adapter.Utilities/DataSource/Utilities/ReadHistoricalTagValuesHelper.cs) class can be used to provide support for [interpolated](./RealTimeData/Features/IReadInterpolatedTagValues.cs), [values-at-times](./RealTimeData/Features/IReadTagValuesAtTimes.cs), [plot](./RealTimeData/Features/IReadPlotTagValues.cs), and [aggregated](./RealTimeData/Features/IReadProcessedTagValues.cs) data queries.

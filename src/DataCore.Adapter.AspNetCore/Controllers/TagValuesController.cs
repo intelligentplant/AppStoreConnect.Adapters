@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// The Data Core context for the caller.
         /// </summary>
-        private readonly IAdapterCallContext _dataCoreContext;
+        private readonly IAdapterCallContext _callContext;
 
         /// <summary>
         /// The service for accessing the running adapters.
@@ -42,15 +42,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="authorizationService">
         ///   The adapter API authorization service to use.
         /// </param>
-        /// <param name="dataCoreContext">
+        /// <param name="callContext">
         ///   The Data Core context for the caller.
         /// </param>
         /// <param name="adapterAccessor">
         ///   The service for accessing running adapters.
         /// </param>
-        public TagValuesController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+        public TagValuesController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
             _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
-            _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
+            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<SnapshotTagValue>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(ApiVersion apiVersion, string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -96,7 +96,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadSnapshotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadSnapshotTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -123,7 +123,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/raw")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
         public async Task<IActionResult> ReadRawValues(ApiVersion apiVersion, string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -142,7 +142,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadRawTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadRawTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -173,7 +173,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/plot")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
         public async Task<IActionResult> ReadPlotValues(ApiVersion apiVersion, string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -192,7 +192,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadPlotTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadPlotTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -216,7 +216,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/interpolated")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
         public async Task<IActionResult> ReadInterpolatedValues(ApiVersion apiVersion, string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -235,7 +235,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadInterpolatedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadInterpolatedTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -262,7 +262,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/values-at-times")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(ApiVersion apiVersion, string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -281,7 +281,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadTagValuesAtTimes(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadTagValuesAtTimes(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -315,7 +315,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/processed")]
         [ProducesResponseType(typeof(IEnumerable<ProcessedHistoricalTagValues>), 200)]
         public async Task<IActionResult> ReadProcessedValues(ApiVersion apiVersion, string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -334,7 +334,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadProcessedTagValues(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var result = await feature.ReadProcessedTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -361,7 +361,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<string>), 200)]
         public async Task<IActionResult> GetSupportedAggregateFunctions(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -380,7 +380,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.GetSupportedDataFunctions(_dataCoreContext, cancellationToken).ConfigureAwait(false);
+            var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 

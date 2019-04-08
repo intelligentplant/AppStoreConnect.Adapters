@@ -30,7 +30,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
             if (double.IsNaN(valueBefore.NumericValue) || double.IsNaN(valueAfter.NumericValue) || double.IsInfinity(valueBefore.NumericValue) || double.IsInfinity(valueAfter.NumericValue)) {
-                return TagValue.CreateFromExisting(valueBefore)
+                return TagValueBuilder.CreateFromExisting(valueBefore)
                     .WithUtcSampleTime(utcSampleTime)
                     .Build();
             }
@@ -42,10 +42,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var y1 = valueAfter.NumericValue;
 
             var nextNumericValue = y0 + (utcSampleTime.Ticks - x0) * ((y1 - y0) / (x1 - x0));
-            var nextTextValue = TagValue.GetTextValue(nextNumericValue);
+            var nextTextValue = TagValueBuilder.GetTextValue(nextNumericValue);
             var nextStatusValue = new[] { valueBefore, valueAfter }.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
-            return TagValue.Create()
+            return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithNumericValue(nextNumericValue)
                 .WithTextValue(nextTextValue)
@@ -104,13 +104,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (valueBefore == null) {
                 return utcSampleTime < valueAfter.UtcSampleTime
                     ? throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueAfter))
-                    : TagValue.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
+                    : TagValueBuilder.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
             }
 
             if (valueAfter == null) {
                 return utcSampleTime < valueBefore.UtcSampleTime
                     ? throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueBefore))
-                    : TagValue.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
+                    : TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
             }
 
             if (utcSampleTime < valueBefore.UtcSampleTime && utcSampleTime < valueAfter.UtcSampleTime) {
@@ -126,8 +126,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return interpolationType == InterpolationCalculationType.Interpolate
                 ? tag.DataType == TagDataType.Numeric
                     ? InterpolateSample(utcSampleTime, valueBefore, valueAfter)
-                    : TagValue.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build()
-                : TagValue.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
+                    : TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build()
+                : TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
         }
 
 

@@ -40,7 +40,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Removes tags from the subscription.
         /// </summary>
-        /// <param name="tagNamesOdIds">
+        /// <param name="tagNamesOrIds">
         ///   The tag names or IDs to unsubscribe from.
         /// </param>
         /// <param name="cancellationToken">
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The total number of subscriptions held after the update.
         /// </returns>
-        Task<int> RemoveTagsFromSubscription(IEnumerable<string> tagNamesOdIds, CancellationToken cancellationToken);
+        Task<int> RemoveTagsFromSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
 
     }
 }

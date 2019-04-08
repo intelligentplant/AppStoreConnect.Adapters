@@ -10,10 +10,6 @@ namespace DataCore.Adapter.RealTimeData.Features {
     /// <summary>
     /// Feature for reading tag values at specific time stamps from an adapter.
     /// </summary>
-    /// <remarks>
-    ///   The <see cref="Utilities.InterpolationHelper"/> class can assist with the calculation 
-    ///   of values.
-    /// </remarks>
     public interface IReadTagValuesAtTimes : IAdapterFeature {
 
         /// <summary>

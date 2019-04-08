@@ -16,6 +16,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Aggregates data.
         /// </summary>
+        /// <param name="tag">
+        ///   The definition for the tag being aggregated.
+        /// </param>
         /// <param name="utcStartTime">
         ///   The UTC end time for the aggregated data set.
         /// </param>
@@ -128,7 +131,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     else if (previousAggregatedValue != null) {
                         // There are no samples in the current bucket, but we have a value from the 
                         // previous bucket that we can re-use.
-                        var val = TagValue.Create()
+                        var val = TagValueBuilder.Create()
                                     .WithUtcSampleTime(bucket.UtcEnd)
                                     .WithNumericValue(previousAggregatedValue.NumericValue)
                                     .WithTextValue(previousAggregatedValue.TextValue)
@@ -189,7 +192,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var textValue = tag.GetTextValue(numericValue);
             var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
-            return TagValue.Create()
+            return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)
@@ -268,7 +271,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var textValue = tag.GetTextValue(numericValue);
             var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
-            return TagValue.Create()
+            return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)
@@ -346,7 +349,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var textValue = tag.GetTextValue(numericValue);
             var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
-            return TagValue.Create()
+            return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)

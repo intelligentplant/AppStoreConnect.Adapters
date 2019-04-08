@@ -240,13 +240,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 _utcSampleTimes.Add(timestamp);
 
                 var tag1Value = double.Parse(cols[1], CultureInfo.InvariantCulture);
-                tag1Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag1Value).WithStatus(TagValueStatus.Good).Build());
+                tag1Values.Add(timestamp, TagValueBuilder.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag1Value).WithStatus(TagValueStatus.Good).Build());
 
                 var tag2Value = double.Parse(cols[2], CultureInfo.InvariantCulture);
-                tag2Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag2Value).WithStatus(TagValueStatus.Good).Build());
+                tag2Values.Add(timestamp, TagValueBuilder.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag2Value).WithStatus(TagValueStatus.Good).Build());
 
                 var tag3Value = double.Parse(cols[3], CultureInfo.InvariantCulture);
-                tag3Values.Add(timestamp, TagValue.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag3Value).WithStatus(TagValueStatus.Good).Build());
+                tag3Values.Add(timestamp, TagValueBuilder.Create().WithUtcSampleTime(timestamp).WithNumericValue(tag3Value).WithStatus(TagValueStatus.Good).Build());
             }
 
             _rawValues[Tag1Id] = tag1Values;
@@ -331,7 +331,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime.Add(offset) <= now);
                 result[tag] = snapshot == null
                     ? null
-                    : TagValue.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build();
+                    : TagValueBuilder.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build();
             }
 
             return result;
@@ -509,7 +509,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                         // sample, to prevent us from creating unnecessary instances of DataCoreTagValue.
                         var sample = offset.Equals(TimeSpan.Zero)
                             ? unmodifiedSample
-                            : TagValue.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
+                            : TagValueBuilder.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
                         resultValuesForTag.Add(sample);
                     }
                 }

@@ -59,6 +59,9 @@ namespace DataCore.Adapter.Common.Models {
         /// <param name="vendor">
         ///   The vendor information.
         /// </param>
+        /// <param name="properties">
+        ///   Additional host properties.
+        /// </param>
         public HostInfo(string name, string description, string version, VendorInfo vendor, IDictionary<string, string> properties) {
             Name = name?.Trim();
             Description = description?.Trim();

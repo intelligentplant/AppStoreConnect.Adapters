@@ -2,8 +2,10 @@
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
+using DataCore.Adapter.AspNetCore.Hubs;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Microsoft.Extensions.DependencyInjection {
 
@@ -29,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             configure?.Invoke(options);
 
             if (options.AdapterAccessorType == null) {
-                throw new InvalidOperationException(string.Format(Resources.Error_AdapterAccessorIsRequired, nameof(IAdapterAccessor), nameof(AdapterServicesOptionsBuilder), nameof(AdapterServicesOptionsBuilder.UseAdapterAccessor)));
+                throw new InvalidOperationException(string.Format(DataCore.Adapter.AspNetCore.Resources.Error_AdapterAccessorIsRequired, nameof(IAdapterAccessor), nameof(AdapterServicesOptionsBuilder), nameof(AdapterServicesOptionsBuilder.UseAdapterAccessor)));
             }
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -60,6 +62,12 @@ namespace Microsoft.Extensions.DependencyInjection {
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
             builder.AddApplicationPart(typeof(ConfigurationExtensions).Assembly);
 
+            return builder;
+        }
+
+
+        public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
+            builder.MapHub<RealTimeDataHub>("/signalr/real-time-data");
             return builder;
         }
 

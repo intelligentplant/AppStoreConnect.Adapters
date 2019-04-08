@@ -10,10 +10,6 @@ namespace DataCore.Adapter.RealTimeData.Features {
     /// <summary>
     /// Feature for reading visualization-friendly tag values from an adapter.
     /// </summary>
-    /// <remarks>
-    ///   The <see cref="Utilities.PlotHelper"/> class can assist with the calculation 
-    ///   of values.
-    /// </remarks>
     public interface IReadPlotTagValues : IAdapterFeature {
 
         /// <summary>

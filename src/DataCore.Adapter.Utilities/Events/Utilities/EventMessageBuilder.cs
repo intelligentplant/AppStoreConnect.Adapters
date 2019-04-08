@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// Creates a new <see cref="EventMessageBuilder"/> object.
         /// </summary>
-        internal EventMessageBuilder() {
+        private EventMessageBuilder() {
             _properties = new Dictionary<string, string>();
         }
 
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        internal EventMessageBuilder(EventMessage existing) {
+        private EventMessageBuilder(EventMessage existing) {
             if (existing == null) {
                 _properties = new Dictionary<string, string>();
                 return;
@@ -68,6 +68,40 @@ namespace DataCore.Adapter.Events.Utilities {
             _category = existing.Category;
             _message = existing.Message;
             _properties = new Dictionary<string, string>(existing.Properties);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="EventMessageBuilder"/> object that can be used to create an 
+        /// <see cref="EventMessage"/> using a fluent configuration interface.
+        /// </summary>
+        /// <returns>
+        ///   A new <see cref="EventMessageBuilder"/> object.
+        /// </returns>
+        public static EventMessageBuilder Create() {
+            return new EventMessageBuilder();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="EventMessageBuilder"/> that is configured using an existing 
+        /// event message.
+        /// </summary>
+        /// <param name="other">
+        ///   The event message to copy values from.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="EventMessageBuilder"/> with pre-configured event properties.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="other"/> is <see langword="null"/>.
+        /// </exception>
+        public static EventMessageBuilder CreateFromExisting(EventMessage other) {
+            if (other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            return new EventMessageBuilder(other);
         }
 
 

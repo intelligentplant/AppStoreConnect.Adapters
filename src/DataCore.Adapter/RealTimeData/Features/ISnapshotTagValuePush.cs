@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Features {
@@ -28,7 +29,7 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, IObserver<PushedTagValue> observer, CancellationToken cancellationToken);
+        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, IAdapterObserver<SnapshotTagValue> observer, CancellationToken cancellationToken);
 
     }
 }

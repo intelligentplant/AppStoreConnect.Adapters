@@ -19,10 +19,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="3.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.Utilities\DataCore.Adapter.Utilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>

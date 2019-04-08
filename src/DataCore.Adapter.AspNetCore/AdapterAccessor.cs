@@ -11,8 +11,7 @@ namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
     /// Base <see cref="IAdapterAccessor"/> implementation that will authorize access to individual 
-    /// adapters based on the calling user's authorization on the <see cref="AdapterOperations.UseAdapter"/>
-    /// operation for the adapter.
+    /// adapters based on the <see cref="AdapterApiAuthorizationService"/>.
     /// </summary>
     public abstract class AdapterAccessor: IAdapterAccessor {
 

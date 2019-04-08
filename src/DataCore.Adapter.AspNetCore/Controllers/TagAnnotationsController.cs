@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// The <see cref="IAdapterCallContext"/> for the calling user.
         /// </summary>
-        private readonly IAdapterCallContext _dataCoreContext;
+        private readonly IAdapterCallContext _callContext;
 
         /// <summary>
         /// For accessing the available adapters.
@@ -42,15 +42,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="authorizationService">
         ///   The API authorization service to use.
         /// </param>
-        /// <param name="dataCoreContext">
+        /// <param name="callContext">
         ///   The <see cref="IAdapterCallContext"/> for the calling user.
         /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public TagAnnotationsController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext dataCoreContext, IAdapterAccessor adapterAccessor) {
+        public TagAnnotationsController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
             _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
-            _dataCoreContext = dataCoreContext ?? throw new ArgumentNullException(nameof(dataCoreContext));
+            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagValueAnnotations>), 200)]
         public async Task<IActionResult> ReadAnnotations(ApiVersion apiVersion, string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_dataCoreContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
@@ -96,7 +96,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var annotations = await feature.ReadTagValueAnnotations(_dataCoreContext, request, cancellationToken).ConfigureAwait(false);
+            var annotations = await feature.ReadTagValueAnnotations(_callContext, request, cancellationToken).ConfigureAwait(false);
             return Ok(annotations); // 200
         }
 
