@@ -25,6 +25,9 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="HostedServiceAdapterAccessor"/> object.
         /// </summary>
+        /// <param name="authorizationService">
+        ///   The authorization service that will be used to control access to adapters.
+        /// </param>
         /// <param name="hostedServices">
         ///   The ASP.NET Core hosted services.
         /// </param>

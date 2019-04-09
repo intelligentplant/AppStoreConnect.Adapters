@@ -34,10 +34,5 @@ namespace DataCore.Adapter.AspNetCore {
             _httpContext = httpContextAccessor?.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-
-        /// <inheritdoc/>
-        public object GetService(Type serviceType) {
-            return _httpContext.RequestServices?.GetService(serviceType);
-        }
     }
 }

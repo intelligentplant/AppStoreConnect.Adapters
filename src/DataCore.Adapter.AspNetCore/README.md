@@ -49,7 +49,7 @@ To register your authorization handler, call `options.UseFeatureAuthorizationHan
 
 # Registering Adapter Services
 
-Adapter services must be added to the application in the `Startup.cs` file. For example:
+Adapter services must be added to the application in the `Startup.cs` file's `ConfigureServices` method. For example:
 
 ```csharp
 // Configure adapter services
@@ -81,4 +81,15 @@ services.AddApiVersioning(options => {
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
     .AddDataCoreAdapterMvc();
+```
+
+
+# Registering Adapter SignalR Hubs
+
+Adapter SignalR hubs must be added to the application in the `Startup.cs` file's `Configure` method:
+
+```csharp
+app.UseSignalR(route => {
+    route.MapDataCoreAdapterHubs();
+});
 ```

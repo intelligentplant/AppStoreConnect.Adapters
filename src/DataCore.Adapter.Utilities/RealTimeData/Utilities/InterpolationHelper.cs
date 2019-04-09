@@ -72,9 +72,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
         /// </param>
         /// <param name="interpolationType">
-        ///   The calculation type to use when calculating the new value.
-        /// </param>
-        /// <param name="interpolationType">
         ///   The type of calculation type to perform when calculating the value. Specify 
         ///   <see cref="InterpolationCalculationType.UsePreviousValue"/> for non-numeric or state-based 
         ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
@@ -131,6 +128,29 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
+        /// <summary>
+        /// Calculates a value at the specified time stamp using the provided set of raw samples.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcSampleTime">
+        ///   The UTC sample time for the calculated sample.
+        /// </param>
+        /// <param name="rawValues">
+        ///   The raw samples for the tag.
+        /// </param>
+        /// <param name="interpolationType">
+        ///   The type of calculation type to perform when calculating the value. Specify 
+        ///   <see cref="InterpolationCalculationType.UsePreviousValue"/> for non-numeric or state-based 
+        ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
+        /// </param>
+        /// <returns>
+        ///   The calculated <see cref="TagValue"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
         public static TagValue GetValueAtTime(TagDefinition tag, DateTime utcSampleTime, IEnumerable<TagValue> rawValues, InterpolationCalculationType interpolationType) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));

@@ -34,6 +34,9 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new InvalidOperationException(string.Format(DataCore.Adapter.AspNetCore.Resources.Error_AdapterAccessorIsRequired, nameof(IAdapterAccessor), nameof(AdapterServicesOptionsBuilder), nameof(AdapterServicesOptionsBuilder.UseAdapterAccessor)));
             }
 
+            services.AddHostedService<BackgroundTaskQueueProcessorService>();
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAdapterCallContext, AdapterCallContext>();
 
@@ -66,8 +69,17 @@ namespace Microsoft.Extensions.DependencyInjection {
         }
 
 
+        /// <summary>
+        /// Adds adapter hubs to the SignalR registration.
+        /// </summary>
+        /// <param name="builder">
+        ///   The SignalR route builder.
+        /// </param>
+        /// <returns>
+        ///   The SignalR route builder.
+        /// </returns>
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
-            builder.MapHub<RealTimeDataHub>("/signalr/real-time-data");
+            builder.MapHub<RealTimeDataHub>("/signalr/v1.0/real-time-data");
             return builder;
         }
 

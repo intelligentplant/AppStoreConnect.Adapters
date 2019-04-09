@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptorExtended>), 200)]
         public async Task<IActionResult> GetAllAdapters(ApiVersion apiVersion, CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
-            var result = adapters.Select(x => new AdapterDescriptorExtended(x)).OrderBy(x => x.Name).ToArray();
+            var result = adapters.Select(x => x.CreateExtendedAdapterDescriptor()).OrderBy(x => x.Name).ToArray();
             return Ok(result); // 200
         }
 
@@ -92,7 +92,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
-            return Ok(new AdapterDescriptorExtended(adapter)); // 200
+            return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
         }
 
     }

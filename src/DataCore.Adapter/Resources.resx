@@ -138,6 +138,9 @@
   <data name="Error_DuplicateTagWriteCollectionsAreNotAllowed" xml:space="preserve">
     <value>You cannot specify multiple write collections for the same tag.</value>
   </data>
+  <data name="Error_EventMessageCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null event message.</value>
+  </data>
   <data name="Error_InterpolationRequiresAtLeastOneSample" xml:space="preserve">
     <value>When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on.</value>
   </data>
@@ -152,6 +155,10 @@
   </data>
   <data name="Error_InvalidTimeStamp" xml:space="preserve">
     <value>Invalid time stamp.</value>
+  </data>
+  <data name="Error_MissingAdapterFeature" xml:space="preserve">
+    <value>The {0} feature is not implemented by the adapter.</value>
+    <comment>{0} - IAdapterFeature name</comment>
   </data>
   <data name="Error_NotAnAdapterFeature" xml:space="preserve">
     <value>Adapter features must be interfaces extending {0}.</value>

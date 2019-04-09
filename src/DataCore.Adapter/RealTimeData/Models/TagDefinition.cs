@@ -8,7 +8,17 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Describes a tag definition.
     /// </summary>
-    public sealed class TagDefinition : TagIdentifier {
+    public sealed class TagDefinition : ITagIdentifier {
+
+        /// <summary>
+        /// The unique identifier for the tag.
+        /// </summary>
+        public string Id { get; }
+
+        /// <summary>
+        /// The tag name.
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// The tag description.
@@ -68,7 +78,9 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinition(string id, string name, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties) : base(id, name) {
+        public TagDefinition(string id, string name, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties) {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description;
             Units = units;
             DataType = dataType;

@@ -22,7 +22,7 @@ The [Examples](/src/Examples) folder contains example host applications.
 3. Implement an [IAdapter](/src/DataCore.Adapter/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
 4. Extend the [AdapterAccessor](/src/DataCore.Adapter.AspNetCore/AdapterAccessor.cs) class. If your adapter is registered as an `IHostedService`, you can use the built-in [HostedServiceAdapterAccessor](/src/DataCore.Adapter.AspNetCore/HostedServiceAdapterAccessor.cs) class instead.
 5. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
-6. In your `Startup.cs` file, configure adapter services:
+6. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
 ```csharp
 // Configure adapter services
@@ -56,6 +56,14 @@ services.AddApiVersioning(options => {
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
     .AddDataCoreAdapterMvc();
+```
+
+7. In your `Startup.cs` file, configure adapter SignalR hubs in the `Configure` method:
+
+```csharp
+app.UseSignalR(route => {
+    route.MapDataCoreAdapterHubs();
+});
 ```
 
 

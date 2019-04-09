@@ -124,6 +124,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You cannot specify a null event message..
+        /// </summary>
+        public static string Error_EventMessageCannotBeNull {
+            get {
+                return ResourceManager.GetString("Error_EventMessageCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on..
         /// </summary>
         public static string Error_InterpolationRequiresAtLeastOneSample {
@@ -165,6 +174,15 @@ namespace DataCore.Adapter {
         public static string Error_InvalidTimeStamp {
             get {
                 return ResourceManager.GetString("Error_InvalidTimeStamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
+        /// </summary>
+        public static string Error_MissingAdapterFeature {
+            get {
+                return ResourceManager.GetString("Error_MissingAdapterFeature", resourceCulture);
             }
         }
         

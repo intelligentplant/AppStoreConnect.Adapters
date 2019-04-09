@@ -11,6 +11,12 @@ namespace DataCore.Adapter.Common.Models {
     public static class AdapterDescriptorExtendedExtensions {
 
         /// <summary>
+        /// <see cref="IAdapterFeature"/> type.
+        /// </summary>
+        private static readonly Type s_adapterFeatureType = typeof(IAdapterFeature);
+
+
+        /// <summary>
         /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
         /// list.
         /// </summary>
@@ -53,6 +59,29 @@ namespace DataCore.Adapter.Common.Models {
             }
 
             return descriptor.Features.Any(f => String.Equals(f, featureName));
+        }
+
+
+        /// <summary>
+        /// Creates an <see cref="AdapterDescriptorExtended"/> for the <see cref="IAdapter"/>.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorExtended"/> for the adapter.
+        /// </returns>
+        public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) {
+            if (adapter == null) {
+                return null;
+            }
+
+            return new AdapterDescriptorExtended(
+                adapter.Descriptor.Id,
+                adapter.Descriptor.Name,
+                adapter.Descriptor.Description,
+                adapter.Features?.Keys?.Where(x => s_adapterFeatureType.IsAssignableFrom(x)).OrderBy(x => x.Name).Select(x => x.Name).ToArray()
+            );
         }
 
     }

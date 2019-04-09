@@ -116,7 +116,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
         /// <summary>
         /// Creates a new <see cref="ExampleDataSource"/> object.
         /// </summary>
-        public ExampleDataSource() {
+        /// <param name="backgroundTaskQueue">
+        ///   Service for queuing work items to be run in a background task.
+        /// </param>
+        public ExampleDataSource(IBackgroundTaskQueue backgroundTaskQueue) {
             // Register features!
             _features.Add<IReadInterpolatedTagValues>(this);
             _features.Add<IReadPlotTagValues>(this);
@@ -126,6 +129,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             _features.Add<IReadTagValueAnnotations>(this);
             _features.Add<IReadTagValuesAtTimes>(this);
             _features.Add<ITagSearch>(this);
+            _features.Add<ISnapshotTagValuePush>(new SnapshotSubscriptionManager(this, backgroundTaskQueue, TimeSpan.FromSeconds(30)));
 
             _historicalQueryHelper = new ReadHistoricalTagValuesHelper(this, this);
             LoadTagValuesFromCsv();
@@ -525,6 +529,36 @@ namespace DataCore.Adapter.AspNetCoreExample {
             while (@continue);
 
             return result.ToDictionary(x => x.Key, x => x.Value);
+        }
+
+
+        private class SnapshotSubscriptionManager : PollingSnapshotTagValueSubscriptionManager {
+
+            private readonly ExampleDataSource _dataSource;
+
+
+            public SnapshotSubscriptionManager(ExampleDataSource dataSource, IBackgroundTaskQueue backgroundTaskQueue, TimeSpan pollingInterval) : base(dataSource._descriptor, backgroundTaskQueue, pollingInterval) {
+                _dataSource = dataSource;
+            }
+
+
+            protected override async Task<IEnumerable<TagIdentifier>> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                var tags = await ((ITagSearch) _dataSource).GetTags(context, new GetTagsRequest() {
+                    Tags = tagNamesOrIds.ToArray()
+                }, cancellationToken).ConfigureAwait(false);
+
+                return tags.Select(x => new TagIdentifier(x.Id, x.Name)).ToArray();
+            }
+
+
+            protected override async Task<IEnumerable<SnapshotTagValue>> GetSnapshotTagValues(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+                var values = await ((IReadSnapshotTagValues) _dataSource).ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
+                    Tags = tagIds.ToArray()
+                }, cancellationToken).ConfigureAwait(false);
+
+                return values;
+            }
+
         }
 
 

@@ -12,6 +12,19 @@ namespace DataCore.Adapter.RealTimeData.Features {
     /// </summary>
     public interface IReadProcessedTagValues : IAdapterFeature {
 
+        /// <summary>
+        /// Gets information about the data functions that can be specified when calling 
+        /// <see cref="ReadProcessedTagValues"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A collection describing the available data functions.
+        /// </returns>
         Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>IntelligentPlant.AppStoreConnect.Adapters.Utilities</PackageId>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant</Company>
@@ -14,7 +15,6 @@
     <VersionSuffix>unofficial</VersionSuffix>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
-    <RootNamespace>DataCore.Adapter</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

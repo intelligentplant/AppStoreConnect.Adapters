@@ -203,6 +203,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="apiVersion">
         ///   The API version.
         /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
         /// <param name="request">
         ///   The interpolated data request.
         /// </param>
@@ -344,6 +347,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </summary>
         /// <param name="apiVersion">
         ///   The API version.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.

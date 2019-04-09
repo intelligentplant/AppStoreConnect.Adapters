@@ -54,25 +54,5 @@ namespace DataCore.Adapter.Common.Models {
             Description = description;
         }
 
-
-        /// <summary>
-        /// Creates a new <see cref="AdapterDescriptor"/> that is a copy of an existing descriptor.
-        /// </summary>
-        /// <param name="other">
-        ///   The descriptor to copy from.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="other"/> is <see langword="null"/>
-        /// </exception>
-        public AdapterDescriptor(AdapterDescriptor other) {
-            if (other == null) {
-                throw new ArgumentNullException(nameof(other));
-            }
-
-            Id = other.Id;
-            Name = other.Name;
-            Description = other.Description;
-        }
-
     }
 }
