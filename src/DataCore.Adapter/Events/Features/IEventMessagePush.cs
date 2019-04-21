@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using DataCore.Adapter.Common;
+using System.Threading.Channels;
 using DataCore.Adapter.Events.Models;
 
 namespace DataCore.Adapter.Events.Features {
@@ -19,16 +18,13 @@ namespace DataCore.Adapter.Events.Features {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="observer">
-        ///   The observer to push event messages to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the registration operation. 
+        /// <param name="channel">
+        ///   The channel to write event messages to.
         /// </param>
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, IAdapterObserver<EventMessage> observer, CancellationToken cancellationToken);
+        IEventMessageSubscription Subscribe(IAdapterCallContext context, ChannelWriter<EventMessage> channel);
 
     }
 

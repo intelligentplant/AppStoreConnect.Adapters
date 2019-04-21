@@ -26,16 +26,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private readonly TimeSpan _pollingInterval;
 
         /// <summary>
-        /// A timer that will kick off the snapshot polling queries.
-        /// </summary>
-        private readonly Timer _timer;
-
-        /// <summary>
-        /// Signals to the dedicated snapshot polling task that it is time for another query.
-        /// </summary>
-        private readonly SemaphoreSlim _readValues = new SemaphoreSlim(0);
-
-        /// <summary>
         /// Cancellation token source that fires when the object is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
@@ -44,46 +34,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a mew <see cref="PollingSnapshotTagValueSubscriptionManager"/> object.
         /// </summary>
-        /// <param name="adapterDescriptor">
-        ///   The descriptor for the adapter that the subscription manager belongs to.
-        /// </param>
-        /// <param name="backgroundTaskQueue">
-        ///   The background task scheduler to use.
-        /// </param>
         /// <param name="pollingInterval">
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
         ///   <see cref="DefaultPollingInterval"/> will be used.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterDescriptor"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="backgroundTaskQueue"/> is <see langword="null"/>.
-        /// </exception>
-        protected PollingSnapshotTagValueSubscriptionManager(AdapterDescriptor adapterDescriptor, IBackgroundTaskQueue backgroundTaskQueue, TimeSpan pollingInterval) : base(adapterDescriptor, backgroundTaskQueue) {
+        protected PollingSnapshotTagValueSubscriptionManager(TimeSpan pollingInterval) : base() {
             _pollingInterval = pollingInterval <= TimeSpan.Zero
                 ? DefaultPollingInterval
                 : pollingInterval;
 
-            _timer = new Timer(OnTimerFired, null, TimeSpan.Zero, _pollingInterval);
             // Run the dedicated polling task.
-            BackgroundTaskQueue.QueueBackgroundWorkItem(ct => RunSnapshotPollingLoop(ct));
-        }
-
-
-        /// <summary>
-        /// Callback handler for the polling <see cref="_timer"/>.
-        /// </summary>
-        /// <param name="state">
-        ///   The callback state. Not used.
-        /// </param>
-        private void OnTimerFired(object state) {
-            if (_disposedTokenSource.IsCancellationRequested) {
-                return;
-            }
-
-            // Let the polling loop know that it is time to read values again.
-            _readValues.Release();
+            _ = Task.Factory.StartNew(() => RunSnapshotPollingLoop(_disposedTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
 
@@ -97,17 +58,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   A task that will run the polling loop.
         /// </returns>
         private async Task RunSnapshotPollingLoop(CancellationToken cancellationToken) {
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
-                while (!ctSource.Token.IsCancellationRequested) {
-                    // Wait until the semaphore flags that it is time to poll.
-                    await _readValues.WaitAsync(ctSource.Token).ConfigureAwait(false);
+            try {
+                while (!cancellationToken.IsCancellationRequested) {
+                    await Task.Delay(_pollingInterval, cancellationToken).ConfigureAwait(false);
 
                     try {
-                        var tags = await GetSubscribedTags(ctSource.Token).ConfigureAwait(false);
+                        var tags = await GetSubscribedTags(cancellationToken).ConfigureAwait(false);
                         if (tags == null || !tags.Any()) {
                             return;
                         }
-                        var values = await GetSnapshotTagValues(tags, ctSource.Token).ConfigureAwait(false);
+                        var values = await GetSnapshotTagValues(tags, cancellationToken).ConfigureAwait(false);
                         if (values == null || !values.Any()) {
                             continue;
                         }
@@ -120,6 +80,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         // TODO: logging of errors!
                     }
                 }
+            }
+            catch (OperationCanceledException) {
+                // Cancellation token fired.
             }
         }
 
@@ -154,10 +117,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             if (disposing) {
-                _timer.Dispose();
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
-                _readValues.Dispose();
             }
         }
     }

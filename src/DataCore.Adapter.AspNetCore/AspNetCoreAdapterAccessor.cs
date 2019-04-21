@@ -12,9 +12,9 @@ namespace DataCore.Adapter {
 
     /// <summary>
     /// <see cref="IAdapterAccessor"/> implementation that resolves <see cref="IAdapter"/> objects that 
-    /// are registered as ASP.NET Core hosted services.
+    /// are passed in as constructor parameters via dependency injection.
     /// </summary>
-    public class HostedServiceAdapterAccessor : AdapterAccessor {
+    public class AspNetCoreAdapterAccessor : AdapterAccessor {
 
         /// <summary>
         /// The available adapters.
@@ -23,16 +23,16 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Creates a new <see cref="HostedServiceAdapterAccessor"/> object.
+        /// Creates a new <see cref="AspNetCoreAdapterAccessor"/> object.
         /// </summary>
         /// <param name="authorizationService">
         ///   The authorization service that will be used to control access to adapters.
         /// </param>
-        /// <param name="hostedServices">
+        /// <param name="adapters">
         ///   The ASP.NET Core hosted services.
         /// </param>
-        public HostedServiceAdapterAccessor(AdapterApiAuthorizationService authorizationService, IEnumerable<IHostedService> hostedServices) : base(authorizationService) {
-            _adapters = hostedServices?.Select(x => x as IAdapter).Where(x => x != null).ToArray() ?? new IAdapter[0];
+        public AspNetCoreAdapterAccessor(AdapterApiAuthorizationService authorizationService, IEnumerable<IAdapter> adapters) : base(authorizationService) {
+            _adapters = adapters?.ToArray() ?? new IAdapter[0];
         }
 
 

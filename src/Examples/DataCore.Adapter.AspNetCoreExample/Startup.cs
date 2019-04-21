@@ -21,11 +21,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
-            // Ask .NET Core to run our adapter in the background.
-            services.AddHostedService<ExampleDataSource>();
+            // Register our adapter as a singleton.
+            services.AddSingleton<IAdapter, ExampleDataSource>();
 
-            // Add adapter services, including our IAdapterAccessor implementation and hosting 
-            // information.
+            // Add adapter services
             services.AddDataCoreAdapterServices(options => {
                 options.HostInfo = new Common.Models.HostInfo(
                     "Example Host",
@@ -36,8 +35,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
                         { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
                     }
                 );
-
-                options.UseAdapterAccessor<HostedServiceAdapterAccessor>();
 
                 // To add authentication and authorization options for adapter API operations, extend 
                 // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler

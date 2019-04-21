@@ -3,11 +3,22 @@
 This project contains API controllers, authorization handlers, and other services for hosting adapters in an ASP.NET Core  application.
 
 
+# Registering Adapters
+
+In most cases, adapters should be registered as singleton services with the ASP.NET Core service collection:
+
+```csharp
+services.AddSingleton<IAdapter, MyAdapter>();
+```
+
+If your application can dynamically add or remove adapters at runtime, you must handle the adapter lifetimes yourself.
+
+
 # Writing an Adapter Accessor
 
-You must supply an [IAdapterAccessor](/src/DataCore.Adapter/IAdapterAccessor.cs) so that your adapter(s) can be resolved at runtime. If your adapters implement ASP.NET Core's `IHostedService` interface, and are registered as hosted services in your services collection, you can use the [HostedServiceAdapterAccessor](./HostedServiceAdapterAccessor.cs) class without any modification required.
+An [IAdapterAccessor](/src/DataCore.Adapter/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.
 
-Alternatively, you can supply your own implementation by inheriting from the [AdapterAccessor](./AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
+You can supply your own implementation by inheriting from the [AdapterAccessor](./AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
 
 To register your adapter accessor, call `options.UseAdapterAccessor<TAdapterAccessor>()` when [registering adapter services](#registering-adapter-services). Note that the adapter accessor is always registered as a *transient* service.
 
@@ -65,9 +76,6 @@ services.AddDataCoreAdapterServices(options => {
         }
     );
 
-    // Register our IAdapterAccessor class.
-    options.UseAdapterAccessor<HostedServiceAdapterAccessor>();
-            
     // Register our API authorization handler.
     options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
 });

@@ -72,4 +72,5 @@ namespace DataCore.Adapter.Events.Models {
         }
 
     }
+
 }

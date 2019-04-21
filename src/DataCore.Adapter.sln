@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{F0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCoreExample", "Examples\DataCore.Adapter.AspNetCoreExample\DataCore.Adapter.AspNetCoreExample.csproj", "{8600B790-8C9E-47B8-93A0-38D63A9B4937}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Utilities", "DataCore.Adapter.Utilities\DataCore.Adapter.Utilities.csproj", "{8586EB6F-3208-437B-9348-30581F5CD6B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Utilities", "DataCore.Adapter.Utilities\DataCore.Adapter.Utilities.csproj", "{8586EB6F-3208-437B-9348-30581F5CD6B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

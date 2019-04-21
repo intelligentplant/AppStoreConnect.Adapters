@@ -31,11 +31,8 @@ namespace Microsoft.Extensions.DependencyInjection {
             configure?.Invoke(options);
 
             if (options.AdapterAccessorType == null) {
-                throw new InvalidOperationException(string.Format(DataCore.Adapter.AspNetCore.Resources.Error_AdapterAccessorIsRequired, nameof(IAdapterAccessor), nameof(AdapterServicesOptionsBuilder), nameof(AdapterServicesOptionsBuilder.UseAdapterAccessor)));
+                options.UseAdapterAccessor<AspNetCoreAdapterAccessor>();
             }
-
-            services.AddHostedService<BackgroundTaskQueueProcessorService>();
-            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAdapterCallContext, AdapterCallContext>();

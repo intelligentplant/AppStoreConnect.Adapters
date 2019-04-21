@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Common.Models;
@@ -27,16 +28,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Fires when then object is being disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// For queueing up background tasks that push out new values.
-        /// </summary>
-        protected IBackgroundTaskQueue BackgroundTaskQueue { get; }
-
-        /// <summary>
-        /// The descriptor of the adapter for the subscription manager.
-        /// </summary>
-        private readonly AdapterDescriptor _adapterDescriptor;
 
         /// <summary>
         /// Dictionary where the item key is the ID of a tag, and the item value is the total number 
@@ -73,26 +64,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValueSubscriptionManager"/> object.
         /// </summary>
-        /// <param name="adapterDescriptor">
-        ///   The descriptor for the adapter that the subscription manager belongs to.
-        /// </param>
-        /// <param name="backgroundTaskQueue">
-        ///   The background task scheduler to use.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterDescriptor"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="backgroundTaskQueue"/> is <see langword="null"/>.
-        /// </exception>
-        protected SnapshotTagValueSubscriptionManager(AdapterDescriptor adapterDescriptor, IBackgroundTaskQueue backgroundTaskQueue) {
-            _adapterDescriptor = adapterDescriptor ?? throw new ArgumentNullException(nameof(adapterDescriptor));
-            BackgroundTaskQueue = backgroundTaskQueue ?? throw new ArgumentNullException(nameof(backgroundTaskQueue));
-            BackgroundTaskQueue.QueueBackgroundWorkItem(async ct => {
-                using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(ct, _disposedTokenSource.Token)) {
-                    await ProcessSendQueue(ctSource.Token).ConfigureAwait(false);
-                }
-            });
+        protected SnapshotTagValueSubscriptionManager() {
+            _ = Task.Factory.StartNew(() => ProcessSendQueue(_disposedTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
 
@@ -102,11 +75,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="adapterCallContext">
         ///   The call context for the subscription.
         /// </param>
-        /// <param name="observer">
-        ///   The observer.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="channel">
+        ///   The channel to write observed values to.
         /// </param>
         /// <returns>
         ///   A subscription object that can be disposed when the subscription is no longer required.
@@ -115,17 +85,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   <paramref name="adapterCallContext"/> is <see langword="null."/>
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="observer"/> is <see langword="null."/>
+        ///   <paramref name="channel"/> is <see langword="null."/>
         /// </exception>
-        public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, IAdapterObserver<SnapshotTagValue> observer, CancellationToken cancellationToken) {
+        public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext adapterCallContext, ChannelWriter<SnapshotTagValue> channel) {
             if (adapterCallContext == null) {
                 throw new ArgumentNullException(nameof(adapterCallContext));
             }
-            if (observer == null) {
-                throw new ArgumentNullException(nameof(observer));
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
             }
 
-            var subscription = new Subscription(this, adapterCallContext, observer);
+            var subscription = new Subscription(this, adapterCallContext, channel);
 
             _subscriptionsLock.Wait();
             try {
@@ -135,7 +105,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 _subscriptionsLock.Release();
             }
 
-            return Task.FromResult<ISnapshotTagValueSubscription>(subscription);
+            return subscription;
         }
 
 
@@ -217,11 +187,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 if (newTags.Count > 0) {
-                    return await OnSubscribe(newTags, cancellationToken).ConfigureAwait(false);
+                    var newVals = await OnSubscribe(newTags, cancellationToken).ConfigureAwait(false);
+                    initialValues.AddRange(newVals);
                 }
-                else {
-                    return new SnapshotTagValue[0];
-                }
+
+                return initialValues;
             }
             finally {
                 _subscriptionsLock.Release();
@@ -320,25 +290,30 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </param>
         /// <returns></returns>
         private async Task ProcessSendQueue(CancellationToken cancellationToken) {
-            while (!cancellationToken.IsCancellationRequested) {
-                await _pendingSendAvailable.WaitAsync(cancellationToken).ConfigureAwait(false);
-                if (_pendingSend.TryDequeue(out var values)) {
-                    Subscription[] subscribers;
+            try {
+                while (!cancellationToken.IsCancellationRequested) {
+                    await _pendingSendAvailable.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    if (_pendingSend.TryDequeue(out var values)) {
+                        Subscription[] subscribers;
 
-                    await _subscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                    try {
-                        subscribers = _subscribers.ToArray();
-                    }
-                    finally {
-                        _subscriptionsLock.Release();
-                    }
+                        await _subscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                        try {
+                            subscribers = _subscribers.ToArray();
+                        }
+                        finally {
+                            _subscriptionsLock.Release();
+                        }
 
-                    if (subscribers.Length == 0) {
-                        continue;
-                    }
+                        if (subscribers.Length == 0) {
+                            continue;
+                        }
 
-                    await Task.WhenAll(subscribers.Select(x => x.OnValuesChanged(values, cancellationToken))).ConfigureAwait(false);
+                        await Task.WhenAll(subscribers.Select(x => x.OnValuesChanged(values, cancellationToken))).ConfigureAwait(false);
+                    }
                 }
+            }
+            catch (OperationCanceledException) {
+                // Cancellation token fired
             }
         }
 
@@ -513,6 +488,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             private bool _isDisposed;
 
             /// <summary>
+            /// Fires when the subscription is disposed.
+            /// </summary>
+            private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+            /// <summary>
             /// The subscription manager that created the subscription.
             /// </summary>
             private readonly SnapshotTagValueSubscriptionManager _subscriptionManager;
@@ -523,9 +503,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             private readonly IAdapterCallContext _adapterCallContext;
 
             /// <summary>
-            /// The observer for the subscription.
+            /// The channel writer for the subscription.
             /// </summary>
-            private readonly IAdapterObserver<SnapshotTagValue> _observer;
+            private readonly ChannelWriter<SnapshotTagValue> _channel;
 
             /// <summary>
             /// The tags that have been added to the subscription.
@@ -547,13 +527,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <param name="adapterCallContext">
             ///   The call context to use when adding tags to the subscription.
             /// </param>
-            /// <param name="observer">
-            ///   The observer.
+            /// <param name="channel">
+            ///   The channel writer to send received values to.
             /// </param>
-            internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager, IAdapterCallContext adapterCallContext, IAdapterObserver<SnapshotTagValue> observer) {
+            internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager, IAdapterCallContext adapterCallContext, ChannelWriter<SnapshotTagValue> channel) {
                 _subscriptionManager = subscriptionManager;
                 _adapterCallContext = adapterCallContext;
-                _observer = observer;
+                _channel = channel;
             }
 
 
@@ -696,18 +676,38 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     return;
                 }
 
-                _subscriptionManager.BackgroundTaskQueue.QueueBackgroundWorkItem(async ct => {
-                    if (_isDisposed) {
-                        return;
-                    }
+                _ = WriteValuesToChannel(valuesToEmit, _disposedTokenSource.Token);
+            }
 
-                    foreach (var value in valuesToEmit) {
-                        if (_isDisposed || ct.IsCancellationRequested) {
-                            continue;
+
+            /// <summary>
+            /// Writes the specified values to the channel writer.
+            /// </summary>
+            /// <param name="values">
+            ///   The values to write.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A task that will write the values.
+            /// </returns>
+            private async Task WriteValuesToChannel(IEnumerable<SnapshotTagValue> values, CancellationToken cancellationToken) {
+                if (_isDisposed) {
+                    return;
+                }
+
+                try {
+                    foreach (var value in values) {
+                        if (_isDisposed || cancellationToken.IsCancellationRequested) {
+                            break;
                         }
-                        await _observer.OnNext(_subscriptionManager._adapterDescriptor, value).ConfigureAwait(false);
+                        await _channel.WriteAsync(value, cancellationToken).ConfigureAwait(false);
                     }
-                });
+                }
+                catch (Exception) {
+                    // Do nothing
+                }
             }
 
 
@@ -719,6 +719,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     return;
                 }
 
+                _disposedTokenSource.Cancel();
+                _disposedTokenSource.Dispose();
                 _subscriptionManager.OnSubscriptionDisposed(this);
                 _subscriptionLock.Dispose();
                 _isDisposed = true;

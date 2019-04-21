@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
@@ -20,11 +20,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
     /// is only supported on adapters that implement the <see cref="ISnapshotTagValuePush"/> feature.
     /// </summary>
     public class RealTimeDataHub : Hub {
-
-        /// <summary>
-        /// Hub context for sending messages back to connected clients.
-        /// </summary>
-        private readonly IHubContext<RealTimeDataHub> _hubContext;
 
         /// <summary>
         /// Authorization service for controlling access to adapters.
@@ -45,9 +40,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <summary>
         /// Creates a new <see cref="RealTimeDataHub"/> object.
         /// </summary>
-        /// <param name="hubContext">
-        ///   Hub context for sending messages back to connected clients.
-        /// </param>
         /// <param name="authorizationService">
         ///   Authorization service for controlling access to adapters.
         /// </param>
@@ -57,11 +49,45 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterAccessor">
         ///   For accessing runtime adapters.
         /// </param>
-        public RealTimeDataHub(IHubContext<RealTimeDataHub> hubContext, AdapterApiAuthorizationService authorizationService, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
-            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        public RealTimeDataHub(AdapterApiAuthorizationService authorizationService, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
             _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
             _adapterCallContext = adapterCallContext ?? throw new ArgumentNullException(nameof(adapterCallContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+        }
+
+
+        /// <summary>
+        /// Creates a new snapshot push subscription on an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   A cancellation token that will fire when the subscription is no longer required.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that the subscriber can observe to receive new tag values.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        public async Task<ChannelReader<SnapshotTagValue>> CreateChannel(string adapterId, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+            }
+
+            var authResponse = await _authorizationService.AuthorizeAsync<ISnapshotTagValuePush>(
+                Context.User,
+                adapter
+            ).ConfigureAwait(false);
+
+            if (!authResponse.Succeeded) {
+                throw new SecurityException();
+            }
+
+            var subscription = GetOrAddSubscription(_adapterCallContext, adapter, cancellationToken);
+            return subscription.Channel.Reader;
         }
 
 
@@ -93,8 +119,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var observer = GetObserver();
-            return await observer.AddTagsToSubscription(adapter, _adapterCallContext, tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            var subscription = GetSubscription(adapter.Descriptor.Id);
+            if (subscription == null) {
+                return -1;
+            }
+
+            return await subscription.Subscription.AddTagsToSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -126,8 +156,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var observer = GetObserver();
-            return await observer.RemoveTagsFromSubscription(adapter, _adapterCallContext, tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            var observer = GetSubscription(adapter.Descriptor.Id);
+            if (observer == null) {
+                return -1;
+            }
+
+            return await observer.Subscription.RemoveTagsFromSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -139,7 +173,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public override Task OnConnectedAsync() {
             // Store an observer for the connection in the connection context.
-            Context.Items[typeof(ValueObserver)] = new ValueObserver(Context.ConnectionId, _hubContext);
+            Context.Items[typeof(ValueSubscription)] = new ConcurrentDictionary<string, ValueSubscription>();
             return base.OnConnectedAsync();
         }
 
@@ -155,9 +189,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public override Task OnDisconnectedAsync(Exception exception) {
             // Remove the observer for the connection from the connection context.
-            if (Context.Items.TryGetValue(typeof(ValueObserver), out var observer)) {
-                Context.Items.Remove(typeof(ValueObserver));
-                (observer as IDisposable)?.Dispose();
+            if (Context.Items.TryGetValue(typeof(ValueSubscription), out var o)) {
+                Context.Items.Remove(typeof(ValueSubscription));
+                if (o is ConcurrentDictionary<string, ValueSubscription> observers) {
+                    foreach (var observer in observers.Values.ToArray()) {
+                        observer.Dispose(exception);
+                    }
+                    observers.Clear();
+                }
             }
 
             return base.OnDisconnectedAsync(exception);
@@ -165,164 +204,121 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Gets the value observer for the current connection.
+        /// Gets the current connection's value observer for the specified adapter.
         /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
         /// <returns>
-        ///   The <see cref="ValueObserver"/> for the connection.
+        ///   The <see cref="ValueSubscription"/> for the adapter.
         /// </returns>
-        private ValueObserver GetObserver() {
-            return Context.Items[typeof(ValueObserver)] as ValueObserver;
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        private ValueSubscription GetSubscription(string adapterId) {
+            if (adapterId == null) {
+                throw new ArgumentNullException(nameof(adapterId));
+            }
+
+            var observerDict =  Context.Items[typeof(ValueSubscription)] as ConcurrentDictionary<string, ValueSubscription>;
+            return observerDict.TryGetValue(adapterId, out var observer)
+                ? observer
+                : null;
+        }
+
+
+        
+        /// <summary>
+        /// Gets or creates a real-time data subscription to the specified adapter.
+        /// </summary>
+        /// <param name="callContext">
+        ///   The call context.
+        /// </param>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   A cancellation token that will fire when the subscription is no longer required.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueSubscription"/> containing both the channel for the subscription and 
+        ///   the real-time subscription registration.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///   <paramref name="adapter"/> does not support the <see cref="ISnapshotTagValuePush"/> feature.
+        /// </exception>
+        private ValueSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, CancellationToken cancellationToken) {
+            var feature = adapter.Features.Get<ISnapshotTagValuePush>();
+            if (feature == null) {
+                throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
+            }
+
+            var observerDict = Context.Items[typeof(ValueSubscription)] as ConcurrentDictionary<string, ValueSubscription>;
+            return observerDict.GetOrAdd(adapter.Descriptor.Id, key => {
+                var channel = Channel.CreateUnbounded<SnapshotTagValue>();
+                return new ValueSubscription(channel, feature.Subscribe(callContext, channel.Writer), cancellationToken);
+            });
         }
 
 
         /// <summary>
-        /// Class for observing snapshot value changes on adapters.
+        /// Describes a subscription channel for real-time tag values.
         /// </summary>
-        private class ValueObserver : IAdapterObserver<SnapshotTagValue>, IDisposable {
+        private class ValueSubscription : IDisposable {
 
             /// <summary>
-            /// Flags if the observer has been disposed.
+            /// The channel that observed values will be written to.
             /// </summary>
-            private bool _isDisposed;
+            public Channel<SnapshotTagValue> Channel { get; }
 
             /// <summary>
-            /// The SignalR connection ID for the observer.
+            /// The adapter subscription registration.
             /// </summary>
-            private readonly string _connectionId;
+            public ISnapshotTagValueSubscription Subscription { get; }
 
             /// <summary>
-            /// The hub context to use when pushing values back to the SignalR client.
+            /// Callback registration that will fire when the SignalR client cancels the subscription.
             /// </summary>
-            private readonly IHubContext<RealTimeDataHub> _hubContext;
-
-            /// <summary>
-            /// Adapter subscriptions for the observer, indexed by adapter ID.
-            /// </summary>
-            private readonly Dictionary<string, ISnapshotTagValueSubscription> _adapterSubscriptions = new Dictionary<string, ISnapshotTagValueSubscription>(StringComparer.OrdinalIgnoreCase);
-
-            /// <summary>
-            /// Lock for accessing <see cref="_adapterSubscriptions"/>.
-            /// </summary>
-            private readonly SemaphoreSlim _adapterSubscriptionsLock = new SemaphoreSlim(1, 1);
+            private readonly CancellationTokenRegistration _subscriptionCancelled;
 
 
             /// <summary>
-            /// Creates a new <see cref="ValueObserver"/> object.
+            /// Creates a new <see cref="ValueSubscription"/> object.
             /// </summary>
-            /// <param name="connectionId">
-            ///   The connection ID for the observer.
+            /// <param name="channel">
+            ///   The channel that observed values will be written to.
             /// </param>
-            /// <param name="hubContext">
-            ///   The hub context to use when pushing values back to the SignalR client.
+            /// <param name="subscription">
+            ///   The adapter subscription registration.
             /// </param>
-            internal ValueObserver(string connectionId, IHubContext<RealTimeDataHub> hubContext) {
-                _connectionId = connectionId;
-                _hubContext = hubContext;
-            }
-
-
-            /// <inheritdoc/>
-            public async Task<int> AddTagsToSubscription(IAdapter adapter, IAdapterCallContext context, string[] tagNamesOrIds, CancellationToken cancellationToken) {
-                var feature = adapter.Features.Get<ISnapshotTagValuePush>();
-                if (feature == null) {
-                    throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
-                }
-
-                ISnapshotTagValueSubscription subscription;
-                await _adapterSubscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try {
-                    if (!_adapterSubscriptions.TryGetValue(adapter.Descriptor.Id, out subscription)) {
-                        subscription = await feature.Subscribe(context, this, cancellationToken).ConfigureAwait(false);
-                        _adapterSubscriptions[adapter.Descriptor.Id] = subscription;
-                    }
-                }
-                finally {
-                    _adapterSubscriptionsLock.Release();
-                }
-
-                return await subscription.AddTagsToSubscription(tagNamesOrIds, cancellationToken).ConfigureAwait(false);
-            }
-
-
-            /// <inheritdoc/>
-            public async Task<int> RemoveTagsFromSubscription(IAdapter adapter, IAdapterCallContext context, string[] tagNamesOrIds, CancellationToken cancellationToken) {
-                var feature = adapter.Features.Get<ISnapshotTagValuePush>();
-                if (feature == null) {
-                    throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
-                }
-
-                ISnapshotTagValueSubscription subscription;
-                await _adapterSubscriptionsLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-                try {
-                    if (!_adapterSubscriptions.TryGetValue(adapter.Descriptor.Id, out subscription)) {
-                        return 0;
-                    }
-                }
-                finally {
-                    _adapterSubscriptionsLock.Release();
-                }
-
-                return await subscription.RemoveTagsFromSubscription(tagNamesOrIds, cancellationToken).ConfigureAwait(false);
-            }
-
-
-            /// <inheritdoc/>
-            public async Task OnNext(AdapterDescriptor adapter, SnapshotTagValue value) {
-                if (_isDisposed) {
-                    return;
-                }
-
-                await _hubContext
-                    .Clients
-                    .Client(_connectionId)
-                    .SendAsync("Next", adapter.Id, value.TagId, value.TagName, value.Value)
-                    .ConfigureAwait(false);                
-            }
-
-
-            /// <inheritdoc/>
-            public async Task OnError(AdapterDescriptor adapter, Exception error) {
-                if (_isDisposed) {
-                    return;
-                }
-
-                await _hubContext
-                    .Clients
-                    .Client(_connectionId)
-                    .SendAsync("Error", adapter.Id, error.Message)
-                    .ConfigureAwait(false);
-            }
-
-
-            /// <inheritdoc/>
-            public async Task OnCompleted(AdapterDescriptor adapter) {
-                if (_isDisposed) {
-                    return;
-                }
-
-                await _hubContext
-                    .Clients
-                    .Client(_connectionId)
-                    .SendAsync("Completed", adapter.Id)
-                    .ConfigureAwait(false);
+            /// <param name="cancellationToken">
+            ///   A cancellation token that will fire when the SignalR client cancels the subscription.
+            /// </param>
+            public ValueSubscription(Channel<SnapshotTagValue> channel, ISnapshotTagValueSubscription subscription, CancellationToken cancellationToken) {
+                Channel = channel;
+                Subscription = subscription;
+                _subscriptionCancelled = cancellationToken.Register(Dispose);
             }
 
 
             /// <summary>
-            /// Disposes of the observer.
+            /// Disposes of subscription resources.
             /// </summary>
             public void Dispose() {
-                if (_isDisposed) {
-                    return;
-                }
+                Dispose(null);
+            }
 
-                foreach (var item in _adapterSubscriptions.Values) {
-                    item.Dispose();
-                }
-                _adapterSubscriptions.Clear();
-                _adapterSubscriptionsLock.Dispose();
 
-                _isDisposed = true;
+            /// <summary>
+            /// Disposes of subscription resources.
+            /// </summary>
+            /// <param name="error">
+            ///   An error to send to the <see cref="Channel"/> writer.
+            /// </param>
+            public void Dispose(Exception error) {
+                _subscriptionCancelled.Dispose();
+                Subscription?.Dispose();
+                Channel?.Writer.TryComplete(error);
             }
         }
 

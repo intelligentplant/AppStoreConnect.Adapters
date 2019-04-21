@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData.Models;
@@ -20,16 +21,13 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="observer">
-        ///   The observer to push event messages to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the registration operation. 
+        /// <param name="channel">
+        ///   The channel to write snapshot values to.
         /// </param>
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, IAdapterObserver<SnapshotTagValue> observer, CancellationToken cancellationToken);
+        ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context, ChannelWriter<SnapshotTagValue> channel);
 
     }
 }

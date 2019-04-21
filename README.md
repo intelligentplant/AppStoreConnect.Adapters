@@ -20,11 +20,13 @@ The [Examples](/src/Examples) folder contains example host applications.
 1. Create a new ASP.NET Core 2.2 project.
 2. Add a reference to `DataCore.Adapter.AspNetCore` to your project.
 3. Implement an [IAdapter](/src/DataCore.Adapter/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
-4. Extend the [AdapterAccessor](/src/DataCore.Adapter.AspNetCore/AdapterAccessor.cs) class. If your adapter is registered as an `IHostedService`, you can use the built-in [HostedServiceAdapterAccessor](/src/DataCore.Adapter.AspNetCore/HostedServiceAdapterAccessor.cs) class instead.
-5. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
-6. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
+4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
+5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
 ```csharp
+// Register the adapter
+services.AddSingleton<IAdapter, MyAdapter>();
+
 // Configure adapter services
 services.AddDataCoreAdapterServices(options => {
     // Host information metadata.
@@ -38,9 +40,6 @@ services.AddDataCoreAdapterServices(options => {
         }
     );
 
-    // Register our IAdapterAccessor class.
-    options.UseAdapterAccessor<HostedServiceAdapterAccessor>();
-            
     // To authorization options for adapter API operations, extend 
     // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
     // to register your handler.

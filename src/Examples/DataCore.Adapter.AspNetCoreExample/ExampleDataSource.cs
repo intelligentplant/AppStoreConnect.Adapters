@@ -116,10 +116,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
         /// <summary>
         /// Creates a new <see cref="ExampleDataSource"/> object.
         /// </summary>
-        /// <param name="backgroundTaskQueue">
-        ///   Service for queuing work items to be run in a background task.
-        /// </param>
-        public ExampleDataSource(IBackgroundTaskQueue backgroundTaskQueue) {
+        public ExampleDataSource() {
             // Register features!
             _features.Add<IReadInterpolatedTagValues>(this);
             _features.Add<IReadPlotTagValues>(this);
@@ -129,7 +126,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             _features.Add<IReadTagValueAnnotations>(this);
             _features.Add<IReadTagValuesAtTimes>(this);
             _features.Add<ITagSearch>(this);
-            _features.Add<ISnapshotTagValuePush>(new SnapshotSubscriptionManager(this, backgroundTaskQueue, TimeSpan.FromSeconds(30)));
+            _features.Add<ISnapshotTagValuePush>(new SnapshotSubscriptionManager(this, TimeSpan.FromSeconds(30)));
 
             _historicalQueryHelper = new ReadHistoricalTagValuesHelper(this, this);
             LoadTagValuesFromCsv();
@@ -537,7 +534,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             private readonly ExampleDataSource _dataSource;
 
 
-            public SnapshotSubscriptionManager(ExampleDataSource dataSource, IBackgroundTaskQueue backgroundTaskQueue, TimeSpan pollingInterval) : base(dataSource._descriptor, backgroundTaskQueue, pollingInterval) {
+            public SnapshotSubscriptionManager(ExampleDataSource dataSource, TimeSpan pollingInterval) : base(pollingInterval) {
                 _dataSource = dataSource;
             }
 
