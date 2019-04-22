@@ -11,7 +11,6 @@ using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
-using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter.AspNetCoreExample {
 
@@ -19,12 +18,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
     /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
     /// adapter contains a set of sensor-like data for 3 tags that it will loop over.
     /// </summary>
-    public class ExampleAdapter: BackgroundService, IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
-
-        /// <summary>
-        /// Background task that will be returned when <see cref="ExecuteAsync(CancellationToken)"/>.
-        /// </summary>
-        private Task _bgTask;
+    public class ExampleAdapter: IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
 
         /// <summary>
         /// The descriptor for the adapter.
@@ -132,26 +126,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             _historicalQueryHelper = new ReadHistoricalTagValuesHelper(this, this);
             LoadTagValuesFromCsv();
-        }
-
-
-        /// <summary>
-        /// Starts the long-running <see cref="BackgroundService"/> task.
-        /// </summary>
-        /// <param name="stoppingToken">
-        ///   A cancellation token that will fire when the background service is stopping.
-        /// </param>
-        /// <returns>
-        ///   The long-running task for the adapter.
-        /// </returns>
-        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
-            lock (this) {
-                if (_bgTask == null) {
-                    _bgTask = Task.Delay(-1, stoppingToken);
-                }
-            }
-
-            return _bgTask;
         }
 
 
