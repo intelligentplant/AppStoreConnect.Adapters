@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             // Register our adapter as a singleton.
-            services.AddSingleton<IAdapter, ExampleDataSource>();
+            services.AddSingleton<IAdapter, ExampleAdapter>();
 
             // Add adapter services
             services.AddDataCoreAdapterServices(options => {

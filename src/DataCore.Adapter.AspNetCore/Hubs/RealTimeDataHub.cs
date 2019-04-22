@@ -68,9 +68,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/>.
-        /// </exception>
         public async Task<ChannelReader<SnapshotTagValue>> CreateChannel(string adapterId, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -87,7 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             var subscription = GetOrAddSubscription(_adapterCallContext, adapter, cancellationToken);
-            return subscription.Channel.Reader;
+            return subscription.Reader;
         }
 
 
@@ -124,7 +121,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 return -1;
             }
 
-            return await subscription.Subscription.AddTagsToSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            return await subscription.AddTagsToSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -156,12 +153,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var observer = GetSubscription(adapter.Descriptor.Id);
-            if (observer == null) {
+            var subscription = GetSubscription(adapter.Descriptor.Id);
+            if (subscription == null) {
                 return -1;
             }
 
-            return await observer.Subscription.RemoveTagsFromSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            return await subscription.RemoveTagsFromSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -172,8 +169,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A task that will process the connection.
         /// </returns>
         public override Task OnConnectedAsync() {
-            // Store an observer for the connection in the connection context.
-            Context.Items[typeof(ValueSubscription)] = new ConcurrentDictionary<string, ValueSubscription>();
+            // Store a dictionary of adapter subscriptions in the connection context.
+            Context.Items[typeof(ISnapshotTagValueSubscription)] = new ConcurrentDictionary<string, ISnapshotTagValueSubscription>();
             return base.OnConnectedAsync();
         }
 
@@ -188,12 +185,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A task that will process the disconnection.
         /// </returns>
         public override Task OnDisconnectedAsync(Exception exception) {
-            // Remove the observer for the connection from the connection context.
-            if (Context.Items.TryGetValue(typeof(ValueSubscription), out var o)) {
-                Context.Items.Remove(typeof(ValueSubscription));
-                if (o is ConcurrentDictionary<string, ValueSubscription> observers) {
+            // Remove the adapter subscriptions from the connection context.
+            if (Context.Items.TryGetValue(typeof(ISnapshotTagValueSubscription), out var o)) {
+                Context.Items.Remove(typeof(ISnapshotTagValueSubscription));
+                if (o is ConcurrentDictionary<string, ISnapshotTagValueSubscription> observers) {
                     foreach (var observer in observers.Values.ToArray()) {
-                        observer.Dispose(exception);
+                        observer.Dispose();
                     }
                     observers.Clear();
                 }
@@ -210,24 +207,24 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The adapter ID.
         /// </param>
         /// <returns>
-        ///   The <see cref="ValueSubscription"/> for the adapter.
+        ///   The <see cref="ISnapshotTagValueSubscription"/> for the adapter.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="adapterId"/> is <see langword="null"/>.
         /// </exception>
-        private ValueSubscription GetSubscription(string adapterId) {
+        private ISnapshotTagValueSubscription GetSubscription(string adapterId) {
             if (adapterId == null) {
                 throw new ArgumentNullException(nameof(adapterId));
             }
 
-            var observerDict =  Context.Items[typeof(ValueSubscription)] as ConcurrentDictionary<string, ValueSubscription>;
+            var observerDict =  Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
             return observerDict.TryGetValue(adapterId, out var observer)
                 ? observer
                 : null;
         }
 
 
-        
+
         /// <summary>
         /// Gets or creates a real-time data subscription to the specified adapter.
         /// </summary>
@@ -241,85 +238,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A cancellation token that will fire when the subscription is no longer required.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueSubscription"/> containing both the channel for the subscription and 
-        ///   the real-time subscription registration.
+        ///   A <see cref="ISnapshotTagValueSubscription"/> for the specified adapter.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         ///   <paramref name="adapter"/> does not support the <see cref="ISnapshotTagValuePush"/> feature.
         /// </exception>
-        private ValueSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, CancellationToken cancellationToken) {
+        private ISnapshotTagValueSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, CancellationToken cancellationToken) {
             var feature = adapter.Features.Get<ISnapshotTagValuePush>();
             if (feature == null) {
                 throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
             }
 
-            var observerDict = Context.Items[typeof(ValueSubscription)] as ConcurrentDictionary<string, ValueSubscription>;
-            return observerDict.GetOrAdd(adapter.Descriptor.Id, key => {
-                var channel = Channel.CreateUnbounded<SnapshotTagValue>();
-                return new ValueSubscription(channel, feature.Subscribe(callContext, channel.Writer), cancellationToken);
-            });
-        }
-
-
-        /// <summary>
-        /// Describes a subscription channel for real-time tag values.
-        /// </summary>
-        private class ValueSubscription : IDisposable {
-
-            /// <summary>
-            /// The channel that observed values will be written to.
-            /// </summary>
-            public Channel<SnapshotTagValue> Channel { get; }
-
-            /// <summary>
-            /// The adapter subscription registration.
-            /// </summary>
-            public ISnapshotTagValueSubscription Subscription { get; }
-
-            /// <summary>
-            /// Callback registration that will fire when the SignalR client cancels the subscription.
-            /// </summary>
-            private readonly CancellationTokenRegistration _subscriptionCancelled;
-
-
-            /// <summary>
-            /// Creates a new <see cref="ValueSubscription"/> object.
-            /// </summary>
-            /// <param name="channel">
-            ///   The channel that observed values will be written to.
-            /// </param>
-            /// <param name="subscription">
-            ///   The adapter subscription registration.
-            /// </param>
-            /// <param name="cancellationToken">
-            ///   A cancellation token that will fire when the SignalR client cancels the subscription.
-            /// </param>
-            public ValueSubscription(Channel<SnapshotTagValue> channel, ISnapshotTagValueSubscription subscription, CancellationToken cancellationToken) {
-                Channel = channel;
-                Subscription = subscription;
-                _subscriptionCancelled = cancellationToken.Register(Dispose);
-            }
-
-
-            /// <summary>
-            /// Disposes of subscription resources.
-            /// </summary>
-            public void Dispose() {
-                Dispose(null);
-            }
-
-
-            /// <summary>
-            /// Disposes of subscription resources.
-            /// </summary>
-            /// <param name="error">
-            ///   An error to send to the <see cref="Channel"/> writer.
-            /// </param>
-            public void Dispose(Exception error) {
-                _subscriptionCancelled.Dispose();
-                Subscription?.Dispose();
-                Channel?.Writer.TryComplete(error);
-            }
+            var observerDict = Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
+            return observerDict.GetOrAdd(adapter.Descriptor.Id, key => feature.Subscribe(callContext));
         }
 
     }

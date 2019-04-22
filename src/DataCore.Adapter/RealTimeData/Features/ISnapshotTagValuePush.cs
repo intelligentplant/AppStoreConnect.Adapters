@@ -21,13 +21,10 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="channel">
-        ///   The channel to write snapshot values to.
-        /// </param>
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context, ChannelWriter<SnapshotTagValue> channel);
+        ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context);
 
     }
 }

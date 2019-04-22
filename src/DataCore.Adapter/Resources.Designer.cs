@@ -22,7 +22,7 @@ namespace DataCore.Adapter {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace DataCore.Adapter {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace DataCore.Adapter {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Average value calculated over a fixed sample interval..
         /// </summary>
-        public static string DataFunction_Avg_Description {
+        internal static string DataFunction_Avg_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Avg_Description", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval..
         /// </summary>
-        public static string DataFunction_Max_Description {
+        internal static string DataFunction_Max_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Max_Description", resourceCulture);
             }
@@ -81,106 +81,16 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Minimum value calculated over a fixed sample interval..
         /// </summary>
-        public static string DataFunction_Min_Description {
+        internal static string DataFunction_Min_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You must specify an adapter ID..
-        /// </summary>
-        public static string Error_AdapterDescriptorIdIsRequired {
-            get {
-                return ResourceManager.GetString("Error_AdapterDescriptorIdIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You must specify an adapter name..
-        /// </summary>
-        public static string Error_AdapterDescriptorNameIsRequired {
-            get {
-                return ResourceManager.GetString("Error_AdapterDescriptorNameIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You cannot specify a null data function name..
-        /// </summary>
-        public static string Error_DataFunctionCannotBeNull {
-            get {
-                return ResourceManager.GetString("Error_DataFunctionCannotBeNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You cannot specify multiple write collections for the same tag..
-        /// </summary>
-        public static string Error_DuplicateTagWriteCollectionsAreNotAllowed {
-            get {
-                return ResourceManager.GetString("Error_DuplicateTagWriteCollectionsAreNotAllowed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You cannot specify a null event message..
-        /// </summary>
-        public static string Error_EventMessageCannotBeNull {
-            get {
-                return ResourceManager.GetString("Error_EventMessageCannotBeNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on..
-        /// </summary>
-        public static string Error_InterpolationRequiresAtLeastOneSample {
-            get {
-                return ResourceManager.GetString("Error_InterpolationRequiresAtLeastOneSample", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to When interpolating or inferring a tag value using raw samples, you must specify a sample that is earlier than the sample time you want to calculate at..
-        /// </summary>
-        public static string Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime {
-            get {
-                return ResourceManager.GetString("Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Interval count must be greater than zero..
-        /// </summary>
-        public static string Error_IntervalCountMustBeGreaterThanZero {
-            get {
-                return ResourceManager.GetString("Error_IntervalCountMustBeGreaterThanZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid time span..
-        /// </summary>
-        public static string Error_InvalidTimeSpan {
-            get {
-                return ResourceManager.GetString("Error_InvalidTimeSpan", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid time stamp..
-        /// </summary>
-        public static string Error_InvalidTimeStamp {
-            get {
-                return ResourceManager.GetString("Error_InvalidTimeStamp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
         /// </summary>
-        public static string Error_MissingAdapterFeature {
+        internal static string Error_MissingAdapterFeature {
             get {
                 return ResourceManager.GetString("Error_MissingAdapterFeature", resourceCulture);
             }
@@ -189,90 +99,9 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}..
         /// </summary>
-        public static string Error_NotAnAdapterFeature {
+        internal static string Error_NotAnAdapterFeature {
             get {
                 return ResourceManager.GetString("Error_NotAnAdapterFeature", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sample interval must be greater than zero..
-        /// </summary>
-        public static string Error_SampleIntervalMustBeGreaterThanZero {
-            get {
-                return ResourceManager.GetString("Error_SampleIntervalMustBeGreaterThanZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Start time cannot be greater than end time..
-        /// </summary>
-        public static string Error_StartTimeCannotBeGreaterThanEndTime {
-            get {
-                return ResourceManager.GetString("Error_StartTimeCannotBeGreaterThanEndTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Start time cannot be greater than or equal to end time..
-        /// </summary>
-        public static string Error_StartTimeCannotBeGreaterThanOrEqualToEndTime {
-            get {
-                return ResourceManager.GetString("Error_StartTimeCannotBeGreaterThanOrEqualToEndTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You cannot specify a null tag name or ID..
-        /// </summary>
-        public static string Error_TagNameOrIdCannotBeNull {
-            get {
-                return ResourceManager.GetString("Error_TagNameOrIdCannotBeNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to At least one tag search filter field must be specified..
-        /// </summary>
-        public static string Error_TagSearchRequiresAtLeastOneFilter {
-            get {
-                return ResourceManager.GetString("Error_TagSearchRequiresAtLeastOneFilter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Host information has not been provided..
-        /// </summary>
-        public static string HostInfo_Unspecified_Description {
-            get {
-                return ResourceManager.GetString("HostInfo_Unspecified_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unspecified.
-        /// </summary>
-        public static string HostInfo_Unspecified_Name {
-            get {
-                return ResourceManager.GetString("HostInfo_Unspecified_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No snapshot value was provided..
-        /// </summary>
-        public static string SnapshotTagValue_Unspecified_ErrorText {
-            get {
-                return ResourceManager.GetString("SnapshotTagValue_Unspecified_ErrorText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unspecified.
-        /// </summary>
-        public static string SnapshotTagValue_Unspecified_Value {
-            get {
-                return ResourceManager.GetString("SnapshotTagValue_Unspecified_Value", resourceCulture);
             }
         }
     }

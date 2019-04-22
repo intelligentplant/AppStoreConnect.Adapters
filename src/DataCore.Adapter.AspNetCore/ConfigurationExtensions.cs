@@ -77,6 +77,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </returns>
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
             builder.MapHub<RealTimeDataHub>("/signalr/v1.0/real-time-data");
+            builder.MapHub<EventsHub>("/signalr/v1.0/events");
             return builder;
         }
 

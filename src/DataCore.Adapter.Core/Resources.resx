@@ -117,21 +117,61 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DataFunction_Avg_Description" xml:space="preserve">
-    <value>Average value calculated over a fixed sample interval.</value>
+  <data name="Error_AdapterDescriptorIdIsRequired" xml:space="preserve">
+    <value>You must specify an adapter ID.</value>
   </data>
-  <data name="DataFunction_Max_Description" xml:space="preserve">
-    <value>Maximum value calculated over a fixed sample interval.</value>
+  <data name="Error_AdapterDescriptorNameIsRequired" xml:space="preserve">
+    <value>You must specify an adapter name.</value>
   </data>
-  <data name="DataFunction_Min_Description" xml:space="preserve">
-    <value>Minimum value calculated over a fixed sample interval.</value>
+  <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null data function name.</value>
   </data>
-  <data name="Error_MissingAdapterFeature" xml:space="preserve">
-    <value>The {0} feature is not implemented by the adapter.</value>
-    <comment>{0} - IAdapterFeature name</comment>
+  <data name="Error_DuplicateTagWriteCollectionsAreNotAllowed" xml:space="preserve">
+    <value>You cannot specify multiple write collections for the same tag.</value>
   </data>
-  <data name="Error_NotAnAdapterFeature" xml:space="preserve">
-    <value>Adapter features must be interfaces extending {0}.</value>
-    <comment>{0} - IAdapterFeature name</comment>
+  <data name="Error_EventMessageCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null event message.</value>
+  </data>
+  <data name="Error_InterpolationRequiresAtLeastOneSample" xml:space="preserve">
+    <value>When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on.</value>
+  </data>
+  <data name="Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime" xml:space="preserve">
+    <value>When interpolating or inferring a tag value using raw samples, you must specify a sample that is earlier than the sample time you want to calculate at.</value>
+  </data>
+  <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
+    <value>Interval count must be greater than zero.</value>
+  </data>
+  <data name="Error_InvalidTimeSpan" xml:space="preserve">
+    <value>Invalid time span.</value>
+  </data>
+  <data name="Error_InvalidTimeStamp" xml:space="preserve">
+    <value>Invalid time stamp.</value>
+  </data>
+  <data name="Error_SampleIntervalMustBeGreaterThanZero" xml:space="preserve">
+    <value>Sample interval must be greater than zero.</value>
+  </data>
+  <data name="Error_StartTimeCannotBeGreaterThanEndTime" xml:space="preserve">
+    <value>Start time cannot be greater than end time.</value>
+  </data>
+  <data name="Error_StartTimeCannotBeGreaterThanOrEqualToEndTime" xml:space="preserve">
+    <value>Start time cannot be greater than or equal to end time.</value>
+  </data>
+  <data name="Error_TagNameOrIdCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null tag name or ID.</value>
+  </data>
+  <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
+    <value>At least one tag search filter field must be specified.</value>
+  </data>
+  <data name="HostInfo_Unspecified_Description" xml:space="preserve">
+    <value>Host information has not been provided.</value>
+  </data>
+  <data name="HostInfo_Unspecified_Name" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
+  <data name="SnapshotTagValue_Unspecified_ErrorText" xml:space="preserve">
+    <value>No snapshot value was provided.</value>
+  </data>
+  <data name="SnapshotTagValue_Unspecified_Value" xml:space="preserve">
+    <value>Unspecified</value>
   </data>
 </root>

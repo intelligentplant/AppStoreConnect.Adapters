@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
@@ -18,7 +19,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
     /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
     /// adapter contains a set of sensor-like data for 3 tags that it will loop over.
     /// </summary>
-    public class ExampleDataSource: BackgroundService, IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
+    public class ExampleAdapter: BackgroundService, IAdapter, ITagSearch, IReadSnapshotTagValues, IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadRawTagValues, IReadTagValuesAtTimes, IReadTagValueAnnotations {
 
         /// <summary>
         /// Background task that will be returned when <see cref="ExecuteAsync(CancellationToken)"/>.
@@ -114,9 +115,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <summary>
-        /// Creates a new <see cref="ExampleDataSource"/> object.
+        /// Creates a new <see cref="ExampleAdapter"/> object.
         /// </summary>
-        public ExampleDataSource() {
+        public ExampleAdapter() {
             // Register features!
             _features.Add<IReadInterpolatedTagValues>(this);
             _features.Add<IReadPlotTagValues>(this);
@@ -127,6 +128,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             _features.Add<IReadTagValuesAtTimes>(this);
             _features.Add<ITagSearch>(this);
             _features.Add<ISnapshotTagValuePush>(new SnapshotSubscriptionManager(this, TimeSpan.FromSeconds(30)));
+            _features.Add<IEventMessagePush>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
 
             _historicalQueryHelper = new ReadHistoricalTagValuesHelper(this, this);
             LoadTagValuesFromCsv();
@@ -529,12 +531,12 @@ namespace DataCore.Adapter.AspNetCoreExample {
         }
 
 
-        private class SnapshotSubscriptionManager : PollingSnapshotTagValueSubscriptionManager {
+        private class SnapshotSubscriptionManager : RealTimeData.Utilities.PollingSnapshotTagValueSubscriptionManager {
 
-            private readonly ExampleDataSource _dataSource;
+            private readonly ExampleAdapter _dataSource;
 
 
-            public SnapshotSubscriptionManager(ExampleDataSource dataSource, TimeSpan pollingInterval) : base(pollingInterval) {
+            public SnapshotSubscriptionManager(ExampleAdapter dataSource, TimeSpan pollingInterval) : base(pollingInterval) {
                 _dataSource = dataSource;
             }
 
@@ -554,6 +556,49 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 }, cancellationToken).ConfigureAwait(false);
 
                 return values;
+            }
+
+        }
+
+
+        private class EventsSubscriptionManager : Events.Utilities.EventMessageSubscriptionManager {
+
+            private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+
+            internal EventsSubscriptionManager(TimeSpan interval) {
+                var startup = DateTime.UtcNow;
+                _ = Task.Run(async () => {
+                    try {
+                        while (!_disposedTokenSource.IsCancellationRequested) {
+                            await Task.Delay(interval, _disposedTokenSource.Token).ConfigureAwait(false);
+                            OnMessage(Events.Utilities.EventMessageBuilder
+                                .Create()
+                                .WithPriority(Events.Models.EventPriority.Low)
+                                .WithCategory("System Messages")
+                                .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
+                                .Build()
+                            );
+                        }
+                    }
+                    catch { }
+                });
+            }
+
+
+            protected override void OnSubscriptionAdded() {
+                // Do nothing
+            }
+
+            protected override void OnSubscriptionRemoved() {
+                // Do nothing
+            }
+
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    _disposedTokenSource.Cancel();
+                    _disposedTokenSource.Dispose();
+                }
             }
 
         }

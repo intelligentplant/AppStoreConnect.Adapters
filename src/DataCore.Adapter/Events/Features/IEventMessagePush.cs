@@ -18,13 +18,15 @@ namespace DataCore.Adapter.Events.Features {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="channel">
-        ///   The channel to write event messages to.
+        /// <param name="active">
+        ///   A flag that specifies if the adapter should treat this as an active or passive 
+        ///   subscription. Some adapters will only emit event messages when they have at least 
+        ///   one active subscriber.
         /// </param>
         /// <returns>
         ///   A subscription object that can be disposed once the subscription is no longer required.
         /// </returns>
-        IEventMessageSubscription Subscribe(IAdapterCallContext context, ChannelWriter<EventMessage> channel);
+        IEventMessageSubscription Subscribe(IAdapterCallContext context, bool active);
 
     }
 

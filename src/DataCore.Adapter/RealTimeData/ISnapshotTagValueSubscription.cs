@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -11,6 +12,11 @@ namespace DataCore.Adapter.RealTimeData {
     /// Describes a subscription for receiving snapshot tag values via push.
     /// </summary>
     public interface ISnapshotTagValueSubscription : IDisposable {
+
+        /// <summary>
+        /// A channel reader that emitted values can be read from.
+        /// </summary>
+        ChannelReader<SnapshotTagValue> Reader { get; }
 
         /// <summary>
         /// Gets the identifiers for the tags that the subscription is observing.

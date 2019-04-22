@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnect.Adapters</PackageId>
+    <RootNamespace>DataCore.Adapter</RootNamespace>
+    <PackageId>IntelligentPlant.AppStoreConnect.Adapters.Core</PackageId>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant</Company>
     <Description>Base types for App Store Connect adapters.</Description>
@@ -15,9 +16,11 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <ProjectReference Include="..\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj" />
+    <PackageReference Include="NuGet.Versioning" Version="4.9.4" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
+    <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +33,7 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
