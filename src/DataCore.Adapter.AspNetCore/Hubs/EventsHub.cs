@@ -181,8 +181,82 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(IEventMessagePush)));
             }
 
-            var observerDict = Context.Items[typeof(IEventMessageSubscription)] as ConcurrentDictionary<string, IEventMessageSubscription>;
-            return observerDict.GetOrAdd(adapter.Descriptor.Id, feature.Subscribe(callContext, active));
+            var subscriptionsForConnection = Context.Items[typeof(IEventMessageSubscription)] as ConcurrentDictionary<string, IEventMessageSubscription>;
+            return subscriptionsForConnection.GetOrAdd(adapter.Descriptor.Id, key => new EventMessageSubscription(key, feature.Subscribe(callContext, active), subscriptionsForConnection, cancellationToken));
+        }
+
+
+        /// <summary>
+        /// Subscription wrapper class.
+        /// </summary>
+        private class EventMessageSubscription : IEventMessageSubscription {
+
+            /// <summary>
+            /// Flags if the subscription has been disposed.
+            /// </summary>
+            private bool _isDisposed;
+
+            /// <summary>
+            /// The adapter ID for the subscription.
+            /// </summary>
+            private readonly string _adapterId;
+
+            /// <summary>
+            /// The inner subscription returned by the adapter.
+            /// </summary>
+            private readonly IEventMessageSubscription _inner;
+
+            /// <summary>
+            /// Automatically disposes the subscription if the caller cancels the streaming request.
+            /// </summary>
+            private readonly CancellationTokenRegistration _onStreamCancelled;
+
+            /// <summary>
+            /// The subscriptions dictionary for the connection.
+            /// </summary>
+            private readonly ConcurrentDictionary<string, IEventMessageSubscription> _subscriptionsForConnection;
+
+
+            /// <inheritdoc/>
+            ChannelReader<EventMessage> IEventMessageSubscription.Reader {
+                get { return _inner.Reader; }
+            }
+
+
+            /// <summary>
+            /// Creates a new <see cref="EventMessageSubscription"/> object.
+            /// </summary>
+            /// <param name="adapterId">
+            ///   The adapter ID.
+            /// </param>
+            /// <param name="inner">
+            ///   The inner subscription returned by the adapter.
+            /// </param>
+            /// <param name="subscriptionsForConnection">
+            ///   The subscriptions dictionary for the connection.
+            /// </param>
+            /// <param name="streamCancelled">
+            ///   A cancellation token that will fire if the streaming request is cancelled by the caller.
+            /// </param>
+            internal EventMessageSubscription(string adapterId, IEventMessageSubscription inner, ConcurrentDictionary<string, IEventMessageSubscription> subscriptionsForConnection, CancellationToken streamCancelled) {
+                _adapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
+                _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+                _subscriptionsForConnection = subscriptionsForConnection ?? throw new ArgumentNullException(nameof(subscriptionsForConnection));
+                _onStreamCancelled = streamCancelled.Register(Dispose);
+            }
+
+
+            /// <inheritdoc/>
+            public void Dispose() {
+                if (_isDisposed) {
+                    return;
+                }
+
+                _subscriptionsForConnection.TryRemove(_adapterId, out var _);
+                _onStreamCancelled.Dispose();
+                _inner.Dispose();
+                _isDisposed = true;
+            }
         }
 
     }

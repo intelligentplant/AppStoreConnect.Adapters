@@ -249,8 +249,100 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
             }
 
-            var observerDict = Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
-            return observerDict.GetOrAdd(adapter.Descriptor.Id, key => feature.Subscribe(callContext));
+            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
+            return subscriptionsForConnection.GetOrAdd(adapter.Descriptor.Id, key => new SnapshotTagValueSubscription(key, feature.Subscribe(callContext), subscriptionsForConnection, cancellationToken));
+        }
+
+
+        /// <summary>
+        /// Subscription wrapper class.
+        /// </summary>
+        private class SnapshotTagValueSubscription : ISnapshotTagValueSubscription {
+
+            /// <summary>
+            /// Flags if the subscription has been disposed.
+            /// </summary>
+            private bool _isDisposed;
+
+            /// <summary>
+            /// The adapter ID for the subscription.
+            /// </summary>
+            private readonly string _adapterId;
+
+            /// <summary>
+            /// The inner subscription returned by the adapter.
+            /// </summary>
+            private readonly ISnapshotTagValueSubscription _inner;
+
+            /// <summary>
+            /// Automatically disposes the subscription if the caller cancels the streaming request.
+            /// </summary>
+            private readonly CancellationTokenRegistration _onStreamCancelled;
+
+            /// <summary>
+            /// The subscriptions dictionary for the connection.
+            /// </summary>
+            private readonly ConcurrentDictionary<string, ISnapshotTagValueSubscription> _subscriptionsForConnection;
+
+
+            /// <inheritdoc/>
+            ChannelReader<SnapshotTagValue> ISnapshotTagValueSubscription.Reader {
+                get { return _inner.Reader; }
+            }
+
+
+            /// <summary>
+            /// Creates a new <see cref="SnapshotTagValueSubscription"/> object.
+            /// </summary>
+            /// <param name="adapterId">
+            ///   The adapter ID.
+            /// </param>
+            /// <param name="inner">
+            ///   The inner subscription returned by the adapter.
+            /// </param>
+            /// <param name="subscriptionsForConnection">
+            ///   The subscriptions dictionary for the connection.
+            /// </param>
+            /// <param name="streamCancelled">
+            ///   A cancellation token that will fire if the streaming request is cancelled by the caller.
+            /// </param>
+            internal SnapshotTagValueSubscription(string adapterId, ISnapshotTagValueSubscription inner, ConcurrentDictionary<string, ISnapshotTagValueSubscription> subscriptionsForConnection, CancellationToken streamCancelled) {
+                _adapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
+                _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+                _subscriptionsForConnection = subscriptionsForConnection ?? throw new ArgumentNullException(nameof(subscriptionsForConnection));
+                _onStreamCancelled = streamCancelled.Register(Dispose);
+            }
+
+
+            /// <inheritdoc/>
+            Task<IEnumerable<TagIdentifier>> ISnapshotTagValueSubscription.GetSubscribedTags(CancellationToken cancellationToken) {
+                return _inner.GetSubscribedTags(cancellationToken);
+            }
+
+
+            /// <inheritdoc/>
+            Task<int> ISnapshotTagValueSubscription.AddTagsToSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                return _inner.AddTagsToSubscription(tagNamesOrIds, cancellationToken);
+            }
+
+
+            /// <inheritdoc/>
+            Task<int> ISnapshotTagValueSubscription.RemoveTagsFromSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                return _inner.RemoveTagsFromSubscription(tagNamesOrIds, cancellationToken);
+            }
+
+
+            /// <inheritdoc/>
+            public void Dispose() {
+                if (_isDisposed) {
+                    return;
+                }
+
+                _subscriptionsForConnection.TryRemove(_adapterId, out var _);
+                _onStreamCancelled.Dispose();
+                _inner.Dispose();
+                _isDisposed = true;
+            }
         }
 
     }
