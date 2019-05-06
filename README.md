@@ -11,9 +11,9 @@ This repository contains the following projects:
 * `DataCore.Adapter.Core` ([source](/src/DataCore.Adapter.Core) - a .NET Standard 2.0 library containing request and response types used by adapters.
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter.Utilities` ([source](/src/DataCore.Adapter.Utilities)) - a .NET Standard 2.0 library that contains utility classes for simplifying the implementation of adapter features.
-* `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
+* `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, SignalR hubs, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
 
-The [Examples](/src/Examples) folder contains example host applications.
+The [examples](/examples) folder contains example host applications.
 
 
 # ASP.NET Core Quick Start
