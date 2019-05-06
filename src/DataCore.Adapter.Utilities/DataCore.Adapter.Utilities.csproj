@@ -4,17 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>IntelligentPlant.AppStoreConnect.Adapters.Utilities</PackageId>
-    <Authors>Intelligent Plant</Authors>
-    <Company>Intelligent Plant</Company>
     <Description>Utility classes for App Store Connect adapters.</Description>
-    <Copyright>Copyright © 2019 Intelligent Plant Ltd.</Copyright>
-    <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionPrefix>1.0.0.0</VersionPrefix>
-    <VersionSuffix>unofficial</VersionSuffix>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
   </PropertyGroup>
 
   <ItemGroup>

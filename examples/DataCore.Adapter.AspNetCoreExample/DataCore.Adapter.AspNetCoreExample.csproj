@@ -4,7 +4,6 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <LangVersion>7.1</LangVersion>
-    <StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
