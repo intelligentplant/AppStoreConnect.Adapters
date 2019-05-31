@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore\DataCore.Adapter.AspNetCore.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
 
-namespace DataCore.Adapter.AspNetCoreExample {
+namespace DataCore.Adapter {
 
     /// <summary>
     /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
@@ -130,56 +130,97 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagDefinition>> ITagSearch.FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
-            var result = _tags.ApplyFilter(request).ToArray();
-            return Task.FromResult<IEnumerable<TagDefinition>>(result);
+        ChannelReader<TagDefinition> ITagSearch.FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+            var result = Channel.CreateUnbounded<TagDefinition>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
+
+            result.Writer.RunBackgroundOperation((ch, ct) => {
+                foreach (var tag in _tags.ApplyFilter(request)) {
+                    ch.TryWrite(tag);
+                }
+            });
+
+            return result;
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagDefinition>> ITagSearch.GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
-            var result = request
-                .Tags
-                .Select(nameOrId => _tags.FirstOrDefault(t => t.Id.Equals(nameOrId, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(nameOrId, StringComparison.OrdinalIgnoreCase)))
-                .Where(tag => tag != null)
-                .ToArray();
+        ChannelReader<TagDefinition> ITagSearch.GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+            var result = Channel.CreateUnbounded<TagDefinition>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
 
-            return Task.FromResult<IEnumerable<TagDefinition>>(result);
+            result.Writer.RunBackgroundOperation((ch, ct) => {
+                var tags = request
+                    .Tags
+                    .Select(nameOrId => _tags.FirstOrDefault(t => t.Id.Equals(nameOrId, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(nameOrId, StringComparison.OrdinalIgnoreCase)))
+                    .Where(tag => tag != null);
+
+                foreach (var tag in tags) {
+                    ch.TryWrite(tag);
+                }
+            });
+
+            return result;
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<SnapshotTagValue>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
-            var values = GetSnapshotValues(tags.Select(t => t.Id).ToArray());
-            var result = tags.Select(x => new SnapshotTagValue(x.Id, x.Name, values.TryGetValue(x.Id, out var val) ? val : null)).ToArray();
-            return Task.FromResult<IEnumerable<SnapshotTagValue>>(result);
+        ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(5000) { FullMode = BoundedChannelFullMode.Wait });
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
+                var values = GetSnapshotValues(tags.Select(t => t.Id).ToArray());
+                foreach (var tag in tags) {
+                    if (!values.TryGetValue(tag.Id, out var val)) {
+                        continue;
+                    }
+
+                    var canWrite = await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
+                    if (!canWrite) {
+                        return;
+                    }
+
+                    result.Writer.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, val));
+                }
+            }, true, cancellationToken);
+
+            return result;
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadRawTagValues.ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
-            var values = GetRawValues(tags.Select(t => t.Id).ToArray(), request.UtcStartTime, request.UtcEndTime, request.BoundaryType, request.SampleCount);
-            var result = tags.Select(x => new HistoricalTagValues(x.Id, x.Name, values.TryGetValue(x.Id, out var val) ? val : null)).ToArray();
-            return Task.FromResult<IEnumerable<HistoricalTagValues>>(result);
+        ChannelReader<TagValueQueryResult> IReadRawTagValues.ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(5000) { FullMode = BoundedChannelFullMode.Wait });
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tags = request.Tags.Select(x => _tags.FirstOrDefault(t => t.Id.Equals(x, StringComparison.OrdinalIgnoreCase) || t.Name.Equals(x, StringComparison.OrdinalIgnoreCase))).Where(x => x != null).ToArray();
+                await GetRawValues(ch, tags, request.UtcStartTime, request.UtcEndTime, request.BoundaryType, request.SampleCount, ct).ConfigureAwait(false);
+            }, true, cancellationToken);
+
+            return result;
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadPlotTagValues.ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        ChannelReader<TagValueQueryResult> IReadPlotTagValues.ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadPlotTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadInterpolatedTagValues.ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+        ChannelReader<TagValueQueryResult> IReadInterpolatedTagValues.ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadInterpolatedTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<HistoricalTagValues>> IReadTagValuesAtTimes.ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        ChannelReader<TagValueQueryResult> IReadTagValuesAtTimes.ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadTagValuesAtTimes(context, request, cancellationToken);
         }
 
@@ -191,14 +232,17 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<ProcessedHistoricalTagValues>> IReadProcessedTagValues.ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        ChannelReader<ProcessedTagValueQueryResult> IReadProcessedTagValues.ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             return _historicalQueryHelper.ReadProcessedTagValues(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<TagValueAnnotations>> IReadTagValueAnnotations.ReadTagValueAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            return Task.FromResult<IEnumerable<TagValueAnnotations>>(new TagValueAnnotations[0]);
+        ChannelReader<TagValueAnnotationQueryResult> IReadTagValueAnnotations.ReadTagValueAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+            var result = Channel.CreateUnbounded<TagValueAnnotationQueryResult>();
+            result.Writer.TryComplete();
+
+            return result;
         }
 
 
@@ -333,14 +377,17 @@ namespace DataCore.Adapter.AspNetCoreExample {
         /// <param name="maxValues">
         ///   The maximum number of values to retrieve.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
-        ///   The raw historical values, indexed by tag ID.
+        ///   A task that will retrieve the raw values.
         /// </returns>
-        private IDictionary<string, List<TagValue>> GetRawValues(string[] tags, DateTime utcStartTime, DateTime utcEndTime, RawDataBoundaryType boundaryType, int maxValues) {
+        private async Task GetRawValues(ChannelWriter<TagValueQueryResult> writer, TagDefinition[] tags, DateTime utcStartTime, DateTime utcEndTime, RawDataBoundaryType boundaryType, int maxValues, CancellationToken cancellationToken) {
             // If we don't have any valid tags in the request, or if we don't have any data to work with, 
-            // return an empty set of values for each valid tag.
+            // just return.
             if (tags.Length == 0) {
-                return tags.ToDictionary(x => x, x => new List<TagValue>());
+                return;
             }
 
             if (maxValues < 1 || maxValues > MaxRawSamplesPerTag) {
@@ -350,26 +397,30 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // If the requested time range is inside the loaded data time range, it's easy - we just 
             // get the raw values inside the requested time range for each valid tag.
             if ((utcStartTime >= _earliestSampleTimeUtc && utcEndTime <= _latestSampleTimeUtc)) {
-                // If the request is outside of the CSV range, return an empty set of values for every valid tag in the request.
+                // If the request is outside of the CSV range, just return.
                 if ((utcStartTime < _earliestSampleTimeUtc && utcEndTime < _earliestSampleTimeUtc) || (utcStartTime > _latestSampleTimeUtc && utcEndTime > _latestSampleTimeUtc)) {
-                    return tags.ToDictionary(x => x, x => new List<TagValue>());
+                    return;
                 }
 
                 // For every valid tag in the request, return the raw values inside the requested time range.
-                var res = new Dictionary<string, List<TagValue>>();
+
                 foreach (var tag in tags) {
-                    SortedList<DateTime, TagValue> valuesForTag;
-                    if (!_rawValues.TryGetValue(tag, out valuesForTag)) {
-                        res[tag] = new List<TagValue>();
+                    if (tag == null || !_rawValues.TryGetValue(tag.Id, out var valuesForTag)) {
                         continue;
                     }
 
-                    var query = valuesForTag.Values.Where(x => x.UtcSampleTime >= utcStartTime && x.UtcSampleTime <= utcEndTime);
+                    var query = valuesForTag
+                        .Values
+                        .Where(x => x.UtcSampleTime >= utcStartTime && x.UtcSampleTime <= utcEndTime)
+                        .Take(maxValues);
 
-                    res[tag] = query.Take(maxValues).ToList();
+                    foreach (var value in query) {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                            writer.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, value));
+                        }
+                    }
                 }
-
-                return res;
             }
 
             // The time stamp offset that we have to apply to the original CSV samples in order to create 
@@ -413,8 +464,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     break;
                 }
             }
-
-            var result = new Dictionary<string, List<TagValue>>();
 
             // We'll set this to false when we don't need to iterate over the CSV data any more.
             var @continue = true;
@@ -463,11 +512,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     // current iteration is inside the original CSV date range) and add it to the raw 
                     // data for the tag.
                     foreach (var tag in tags) {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         SortedList<DateTime, TagValue> csvValuesForTag;
                         // If there are no raw values for the current tag, or if we have already exceeded 
                         // the maximum number of raw samples we are allowed to use in a query, move to the 
                         // next tag.
-                        if (!_rawValues.TryGetValue(tag, out csvValuesForTag)) {
+                        if (!_rawValues.TryGetValue(tag.Id, out csvValuesForTag)) {
                             continue;
                         }
 
@@ -476,18 +527,15 @@ namespace DataCore.Adapter.AspNetCoreExample {
                             continue;
                         }
 
-                        List<TagValue> resultValuesForTag;
-                        if (!result.TryGetValue(tag, out resultValuesForTag)) {
-                            resultValuesForTag = new List<TagValue>();
-                            result[tag] = resultValuesForTag;
-                        }
-
                         // If the time stamp offset is currently zero, we'll just use the original CSV 
                         // sample, to prevent us from creating unnecessary instances of DataCoreTagValue.
                         var sample = offset.Equals(TimeSpan.Zero)
                             ? unmodifiedSample
                             : TagValueBuilder.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
-                        resultValuesForTag.Add(sample);
+
+                        if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                            writer.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, sample));
+                        }
                     }
                 }
 
@@ -500,8 +548,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 }
             }
             while (@continue);
-
-            return result.ToDictionary(x => x.Key, x => x.Value);
         }
 
 
@@ -515,21 +561,42 @@ namespace DataCore.Adapter.AspNetCoreExample {
             }
 
 
-            protected override async Task<IEnumerable<TagIdentifier>> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                var tags = await ((ITagSearch) _dataSource).GetTags(context, new GetTagsRequest() {
-                    Tags = tagNamesOrIds.ToArray()
-                }, cancellationToken).ConfigureAwait(false);
+            protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                var channel = Channel.CreateUnbounded<TagIdentifier>(new UnboundedChannelOptions() {
+                    AllowSynchronousContinuations = true,
+                    SingleReader = true,
+                    SingleWriter = true
+                });
 
-                return tags.Select(x => new TagIdentifier(x.Id, x.Name)).ToArray();
+                channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    var tags = ((ITagSearch) _dataSource).GetTags(context, new GetTagsRequest() {
+                        Tags = tagNamesOrIds.ToArray()
+                    }, ct);
+
+                    while (await tags.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        if (!tags.TryRead(out var tag) || tag == null) {
+                            continue;
+                        }
+                        ch.TryWrite(new TagIdentifier(tag.Id, tag.Name));
+                    }
+                }, true, cancellationToken);
+
+                return channel;
             }
 
 
-            protected override async Task<IEnumerable<SnapshotTagValue>> GetSnapshotTagValues(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
-                var values = await ((IReadSnapshotTagValues) _dataSource).ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
+            protected override async Task GetSnapshotTagValues(IEnumerable<string> tagIds, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
+                var reader = ((IReadSnapshotTagValues) _dataSource).ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
                     Tags = tagIds.ToArray()
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
-                return values;
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value)) {
+                        continue;
+                    }
+
+                    channel.TryWrite(value);
+                }
             }
 
         }

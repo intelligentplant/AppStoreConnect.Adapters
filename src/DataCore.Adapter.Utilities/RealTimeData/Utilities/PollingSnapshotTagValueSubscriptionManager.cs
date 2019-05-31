@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Models;
@@ -67,11 +68,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         if (tags == null || !tags.Any()) {
                             return;
                         }
-                        var values = await GetSnapshotTagValues(tags, cancellationToken).ConfigureAwait(false);
-                        if (values == null || !values.Any()) {
-                            continue;
+
+                        var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
+                        channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags, ch, ct), true, cancellationToken);
+                        
+                        while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.Reader.TryRead(out var val)) {
+                            OnValueChanged(val);
                         }
-                        OnValuesChanged(values);
                     }
                     catch (OperationCanceledException) {
                         // Cancellation token fired.
@@ -93,18 +96,30 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tagIds">
         ///   The tag IDs to query.
         /// </param>
+        /// <param name="channel">
+        ///   The channel to write the snapshot values to.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The snapshot values for the tags.
         /// </returns>
-        protected abstract Task<IEnumerable<SnapshotTagValue>> GetSnapshotTagValues(IEnumerable<string> tagIds, CancellationToken cancellationToken);
+        protected abstract Task GetSnapshotTagValues(IEnumerable<string> tagIds, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken);
 
 
         /// <inheritdoc/>
-        protected override async Task<IEnumerable<SnapshotTagValue>> OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
-            return await GetSnapshotTagValues(tagIds, cancellationToken).ConfigureAwait(false);
+        protected override async Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+            var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
+            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, cancellationToken);
+            
+            while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!channel.Reader.TryRead(out var val) || val == null) {
+                    continue;
+                }
+
+                OnValueChanged(val);
+            }
         }
 
 

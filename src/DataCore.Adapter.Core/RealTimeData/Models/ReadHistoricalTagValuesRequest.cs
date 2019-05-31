@@ -38,7 +38,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
             }
 
             if (UtcStartTime >= UtcEndTime) {
-                yield return new ValidationResult(Resources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, new[] { nameof(UtcStartTime) });
+                yield return new ValidationResult(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, new[] { nameof(UtcStartTime) });
             }
         }
 

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataCore.Adaper.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />
+  </ItemGroup>
+  
+</Project>

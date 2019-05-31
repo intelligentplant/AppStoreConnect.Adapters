@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -39,10 +40,10 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
-        /// <returns>
-        ///   The values for the requested tags and aggregate functions.
+        /// returns>
+        ///   A channel containing the values for the requested tags.
         /// </returns>
-        Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

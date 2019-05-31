@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+service AdaptersService {
+    rpc GetAdapters(GetAdapterRequest) returns (GetAdaptersResponse);
+    rpc GetAdapter(GetAdapterRequest) returns (GetAdapterResponse);
+}
+
+
+// Gets information about the registered adapters
+message GetAdaptersRequest { }
+message GetAdaptersResponse {
+    repeated ExtendedAdapterDescriptor adapters = 1;
+}
+
+
+// Gets information about a specific adapter
+message GetAdapterRequest { 
+    string adapter_id = 1;
+}
+message GetAdapterResponse {
+    ExtendedAdapterDescriptor adapter = 1;
+}
+
+
+// Adapter models
+
+message AdapterDescriptor {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+message ExtendedAdapterDescriptor {
+    AdapterDescriptor adapterDescriptor = 1;
+    repeated string features = 2;
+}

@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service TagSearchService {
+    rpc FindTags(FindTagsRequest) returns (stream TagDefinition);
+    rpc GetTags(GetTagsRequest) returns (stream TagDefinition);
+}
+
+
+// Find tags
+message FindTagsRequest {
+    string adapter_id = 1;
+    fixed32 page_size = 2;
+    fixed32 page = 3;
+    string name = 4;
+    string description = 5;
+    string units = 6;
+    map<string, string> other = 7;
+}
+
+
+// Get tags by ID or name
+message GetTagsRequest {
+    string adapter_id = 1;
+    repeated string tags = 2;
+}
+
+
+// Tag definition models
+
+message TagDefinition {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string units = 4;
+    TagDataType data_type = 5;
+    map<string, int32> states = 6;
+    map<string, string> properties = 7;
+}
+
+
+enum TagDataType {
+    NUMERIC = 0;
+    TEXT = 1;
+    STATE = 2;
+}

@@ -71,11 +71,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   Successful responses contain a collection of <see cref="TagValueAnnotations"/> objects.
+        ///   Successful responses contain a collection of <see cref="TagValueAnnotationQueryResult"/> objects.
         /// </returns>
         [HttpPost]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueAnnotations>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueAnnotationQueryResult>), 200)]
         public async Task<IActionResult> ReadAnnotations(ApiVersion apiVersion, string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -96,8 +96,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var annotations = await feature.ReadTagValueAnnotations(_callContext, request, cancellationToken).ConfigureAwait(false);
-            return Ok(annotations); // 200
+            var reader = feature.ReadTagValueAnnotations(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueAnnotationQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
+            return Ok(result); // 200
         }
 
     }

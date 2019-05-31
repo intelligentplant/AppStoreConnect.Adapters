@@ -5,8 +5,7 @@ using System.Text;
 namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
-    /// Describes a data function that is supported when making an <see cref="Features.IReadProcessedTagValues.ReadProcessedTagValues(IAdapterCallContext, ReadProcessedTagValuesRequest, System.Threading.CancellationToken)"/> 
-    /// call.
+    /// Describes a data function that is supported when making a call for historical process data.
     /// </summary>
     public sealed class DataFunctionDescriptor {
 

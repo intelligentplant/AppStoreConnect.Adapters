@@ -32,7 +32,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
             }
 
             if (SampleInterval <= TimeSpan.Zero) {
-                yield return new ValidationResult(Resources.Error_SampleIntervalMustBeGreaterThanZero, new[] { nameof(SampleInterval) });
+                yield return new ValidationResult(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, new[] { nameof(SampleInterval) });
             }
         }
 

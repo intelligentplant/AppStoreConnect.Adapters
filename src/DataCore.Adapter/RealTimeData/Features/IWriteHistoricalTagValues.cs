@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -13,22 +14,23 @@ namespace DataCore.Adapter.RealTimeData.Features {
     public interface IWriteHistoricalTagValues : IAdapterFeature {
 
         /// <summary>
-        /// Writes values directly to the historian archive for the specified tags. Implementations 
-        /// can choose if existing archive values with the same sample times should be kept or replaced.
+        /// Writes a stream of historical tag values to an adapter.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="request">
-        ///   The values to be written.
+        /// <param name="channel">
+        ///   A <see cref="ChannelReader{T}"/> that will provide the tag values to write to the 
+        ///   adapter.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A collection of objects describing the write result for each tag in the request.
+        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   the input <paramref name="channel"/>.
         /// </returns>
-        Task<IEnumerable<TagValueWriteResult>> WriteSnapshotTagValues(IAdapterCallContext context, WriteTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken);
 
     }
 }

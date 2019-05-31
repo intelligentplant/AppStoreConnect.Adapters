@@ -416,13 +416,13 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static DateTime ToUtcDateTime(this string s, IFormatProvider formatProvider) {
             if (string.IsNullOrWhiteSpace(s)) {
-                throw new FormatException(Resources.Error_InvalidTimeStamp);
+                throw new FormatException(SharedResources.Error_InvalidTimeStamp);
             }
 
             var dateTimeStyle = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
 
             if (!IsDateTime(s, formatProvider, dateTimeStyle, out var m)) {
-                throw new FormatException(Resources.Error_InvalidTimeStamp);
+                throw new FormatException(SharedResources.Error_InvalidTimeStamp);
             }
 
             if (s.TryParseNumericDateTime(formatProvider, out var dt)) {
@@ -774,11 +774,11 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static TimeSpan ToTimeSpan(this string s, IFormatProvider formatProvider) {
             if (string.IsNullOrWhiteSpace(s)) {
-                throw new FormatException(Resources.Error_InvalidTimeSpan);
+                throw new FormatException(SharedResources.Error_InvalidTimeSpan);
             }
 
             if (!IsTimeSpan(s, formatProvider, out var m)) {
-                throw new FormatException(Resources.Error_InvalidTimeSpan);
+                throw new FormatException(SharedResources.Error_InvalidTimeSpan);
             }
 
             return m == null 

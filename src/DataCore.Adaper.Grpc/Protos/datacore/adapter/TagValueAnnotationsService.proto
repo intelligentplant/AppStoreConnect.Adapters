@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service TagValueAnnotationsService {
+    rpc ReadAnnotations(ReadAnnotationsRequest) returns (stream TagValueAnnotationQueryResult);
+}
+
+// Read annotations
+message ReadAnnotationsRequest {
+    string adapter_id = 1;
+    repeated string tags = 2;
+    google.protobuf.Timestamp utc_start_time = 3;
+    google.protobuf.Timestamp utc_end_time = 4;
+}
+
+
+// Annotation models
+
+message TagValueAnnotation {
+    string id = 1;
+    AnnotationType annotation_type = 2;
+    google.protobuf.Timestamp utc_start_time = 3;
+    google.protobuf.Timestamp utc_end_time = 4;
+    bool has_utc_end_time = 5;
+    string value = 6;
+    string description = 7;
+    map<string, string> properties = 8;
+}
+
+
+enum AnnotationType {
+    ANNOTATION_TYPE_INSTANTANEOUS = 0;
+    ANNOTATION_TYPE_TIME_RANGE = 1;
+}
+
+
+message TagValueAnnotationQueryResult {
+    string tag_id = 1;
+    string tag_name = 2;
+    TagValueAnnotation annotation = 3;
+}

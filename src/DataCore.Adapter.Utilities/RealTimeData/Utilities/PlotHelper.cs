@@ -14,10 +14,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         internal static TimeSpan CalculateBucketSize(DateTime utcStartTime, DateTime utcEndTime, int intervals) {
             if (utcStartTime >= utcEndTime) {
-                throw new ArgumentException(Resources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
             }
             if (intervals < 1) {
-                throw new ArgumentException(Resources.Error_IntervalCountMustBeGreaterThanZero, nameof(intervals));
+                throw new ArgumentException(SharedResources.Error_IntervalCountMustBeGreaterThanZero, nameof(intervals));
             }
 
             return TimeSpan.FromMilliseconds((utcEndTime - utcStartTime).TotalMilliseconds / intervals); ;

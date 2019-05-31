@@ -15,5 +15,10 @@ namespace DataCore.Adapter {
         /// </summary>
         ClaimsPrincipal User { get; }
 
+        /// <summary>
+        /// The connection ID for the caller.
+        /// </summary>
+        string ConnectionId { get; }
+
     }
 }

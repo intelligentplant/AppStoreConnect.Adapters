@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,7 +26,7 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The raw tag values for the requested tags.
+        ///   A channel containing the tag values for the requested tags.
         /// </returns>
         /// <remarks>
         ///   If the <see cref="ReadRawTagValuesRequest.SampleCount"/> is less than one, this should be 
@@ -33,7 +34,7 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   range as possible. The adapter can apply its own maximum sample count to the queries it 
         ///   receives.
         /// </remarks>
-        Task<IEnumerable<HistoricalTagValues>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

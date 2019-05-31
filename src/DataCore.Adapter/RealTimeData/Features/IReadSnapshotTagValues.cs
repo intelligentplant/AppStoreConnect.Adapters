@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The snapshot values for the requested tags.
+        ///   A channel that will complete once the request has completed.
         /// </returns>
-        Task<IEnumerable<SnapshotTagValue>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

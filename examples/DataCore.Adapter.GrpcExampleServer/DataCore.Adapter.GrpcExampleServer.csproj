@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="0.1.20-pre1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataCore.Adaper.Grpc\DataCore.Adapter.Grpc.Server\DataCore.Adapter.Grpc.Server.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore\DataCore.Adapter.AspNetCore.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj" />
+  </ItemGroup>
+
+</Project>

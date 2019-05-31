@@ -6,17 +6,17 @@ using System.Text;
 namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
-    /// Describes the results of an annotations query on a tag.
+    /// Describes a result for an annotations query on a tag.
     /// </summary>
-    public class TagValueAnnotations: TagDataContainer {
+    public class TagValueAnnotationQueryResult : TagDataContainer {
 
         /// <summary>
-        /// The annotations.
+        /// The annotation.
         /// </summary>
-        public IEnumerable<TagValueAnnotation> Annotations { get; }
+        public TagValueAnnotation Annotation { get; }
 
         /// <summary>
-        /// Creates a new <see cref="TagValueAnnotations"/> object.
+        /// Creates a new <see cref="TagValueAnnotationQueryResult"/> object.
         /// </summary>
         /// <param name="tagId">
         ///   The tag ID.
@@ -24,8 +24,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="tagName">
         ///   The tag name.
         /// </param>
-        /// <param name="annotations">
-        ///   The annotations.
+        /// <param name="annotation">
+        ///   The annotation.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
@@ -33,8 +33,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagName"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueAnnotations(string tagId, string tagName, IEnumerable<TagValueAnnotation> annotations): base(tagId, tagName) {
-            Annotations = annotations?.ToArray() ?? new TagValueAnnotation[0]; 
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="annotation"/> is <see langword="null"/>.
+        /// </exception>
+        public TagValueAnnotationQueryResult(string tagId, string tagName, TagValueAnnotation annotation): base(tagId, tagName) {
+            Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation)); 
         }
 
     }

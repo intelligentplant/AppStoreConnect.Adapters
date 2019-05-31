@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,11 +26,11 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The values for the requested tags. The adapter can decide if it will interpolate a tag 
-        ///   value using the closest raw samples to a requested time stamp, or if it will repeat the 
-        ///   previous raw value before the time stamp.
+        ///   A channel containing the values for the requested tags. The adapter can decide if it 
+        ///   will interpolate a tag value using the closest raw samples to a requested time stamp, 
+        ///   or if it will repeat the previous raw value before the time stamp.
         /// </returns>
-        Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
 
 
     }

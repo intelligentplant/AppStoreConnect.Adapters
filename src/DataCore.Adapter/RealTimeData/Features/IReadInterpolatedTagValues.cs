@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The interpolated values for the requested tags.
+        ///   A channel containing the values for the requested tags.
         /// </returns>
-        Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

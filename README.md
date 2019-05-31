@@ -12,8 +12,10 @@ This repository contains the following projects:
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter.Utilities` ([source](/src/DataCore.Adapter.Utilities)) - a .NET Standard 2.0 library that contains utility classes for simplifying the implementation of adapter features.
 * `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, SignalR hubs, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
+* `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - a .NET Standard 2.0 library containing C# implementations of services that can be used to expose adapters via [gRPC](https://grpc.io/).
+* `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a .NET Standard 2.0 library containing C# implementations of clients for querying adapters via [gRPC](https://grpc.io/).
 
-The [examples](/examples) folder contains example host applications.
+The [examples](/examples) folder contains example host and client applications.
 
 
 # ASP.NET Core Quick Start
@@ -82,3 +84,8 @@ At the moment, only anonymous and Windows authentication is supported at the App
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
 Authorization can also be applied at the [adapter level](./src/DataCore.Adapter) and at the [API level](./src/DataCore.Adapter.AspNetCore).
+
+
+# Development and Hosting Without .NET
+
+If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/DataCore.Adapter.Grpc/Protos).

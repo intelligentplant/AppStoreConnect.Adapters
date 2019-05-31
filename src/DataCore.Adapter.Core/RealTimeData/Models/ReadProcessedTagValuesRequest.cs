@@ -40,11 +40,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
             }
 
             if (DataFunctions.Any(x => x == null)) {
-                yield return new ValidationResult(Resources.Error_DataFunctionCannotBeNull, new[] { nameof(DataFunctions) });
+                yield return new ValidationResult(SharedResources.Error_DataFunctionCannotBeNull, new[] { nameof(DataFunctions) });
             }
 
             if (SampleInterval <= TimeSpan.Zero) {
-                yield return new ValidationResult(Resources.Error_SampleIntervalMustBeGreaterThanZero, new[] { nameof(SampleInterval) });
+                yield return new ValidationResult(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, new[] { nameof(SampleInterval) });
             }
         }
 

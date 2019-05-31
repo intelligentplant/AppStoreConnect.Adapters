@@ -62,13 +62,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="tags">
+        ///   The tags to subscribe to.
+        /// </param>
         /// <param name="cancellationToken">
         ///   A cancellation token that will fire when the subscription is no longer required.
         /// </param>
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
-        public async Task<ChannelReader<SnapshotTagValue>> CreateChannel(string adapterId, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<TagValueQueryResult>> CreateChannel(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
@@ -83,26 +86,23 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var subscription = GetOrAddSubscription(_adapterCallContext, adapter, cancellationToken);
+            var subscription = await GetOrCreateSubscription(_adapterCallContext, adapter, cancellationToken).ConfigureAwait(false);
+
+            tags = tags
+                ?.Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray() ?? new string[0];
+
+            if (tags.Any()) {
+                await subscription.AddTagsToSubscription(_adapterCallContext, tags, cancellationToken).ConfigureAwait(false);
+            }
+
             return subscription.Reader;
         }
 
 
-        /// <summary>
-        /// Subscribes the caller to the specified tags.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to subscribe to. The adapter must support the 
-        ///   <see cref="ISnapshotTagValuePush"/> feature.
-        /// </param>
-        /// <param name="tagIdsOrNames">
-        ///   The IDs or names of the tags to subscribe to.
-        /// </param>
-        /// <returns>
-        ///   The total number of tag subscriptions held by the caller after the subscription change.
-        /// </returns>
-        public async Task<int> AddTagSubscriptions(string adapterId, string[] tagIdsOrNames) {
-            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+        public async Task<int> AddTagsToSubscription(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
             }
@@ -116,30 +116,26 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var subscription = GetSubscription(adapter.Descriptor.Id);
-            if (subscription == null) {
-                return -1;
+            tags = tags
+                ?.Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray() ?? new string[0];
+
+            if (!tags.Any()) {
+                throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
             }
 
-            return await subscription.AddTagsToSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            var subscription = GetSubscription(adapter);
+            if (subscription == null) {
+                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
+            }
+
+            return await subscription.AddTagsToSubscription(_adapterCallContext, tags, cancellationToken).ConfigureAwait(false);
         }
 
 
-        /// <summary>
-        /// Unsubscribes the caller from the specified tags.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to unsubscribe from. The adapter must support the 
-        ///   <see cref="ISnapshotTagValuePush"/> feature.
-        /// </param>
-        /// <param name="tagIdsOrNames">
-        ///   The IDs or names of the tags to unsubscribe from.
-        /// </param>
-        /// <returns>
-        ///   The total number of tag subscriptions held by the caller after the subscription change.
-        /// </returns>
-        public async Task<int> RemoveTagSubscriptions(string adapterId, string[] tagIdsOrNames) {
-            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+        public async Task<int> RemoveTagsFromSubscription(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
+            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
             }
@@ -153,12 +149,21 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new SecurityException();
             }
 
-            var subscription = GetSubscription(adapter.Descriptor.Id);
-            if (subscription == null) {
-                return -1;
+            tags = tags
+                ?.Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray() ?? new string[0];
+
+            if (!tags.Any()) {
+                throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
             }
 
-            return await subscription.RemoveTagsFromSubscription(tagIdsOrNames, Context.ConnectionAborted).ConfigureAwait(false);
+            var subscription = GetSubscription(adapter);
+            if (subscription == null) {
+                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
+            }
+
+            return await subscription.RemoveTagsFromSubscription(_adapterCallContext, tags, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -170,7 +175,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public override Task OnConnectedAsync() {
             // Store a dictionary of adapter subscriptions in the connection context.
-            Context.Items[typeof(ISnapshotTagValueSubscription)] = new ConcurrentDictionary<string, ISnapshotTagValueSubscription>();
+            Context.Items[typeof(ISnapshotTagValueSubscription)] = new List<SubscriptionWrapper>();
             return base.OnConnectedAsync();
         }
 
@@ -188,11 +193,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Remove the adapter subscriptions from the connection context.
             if (Context.Items.TryGetValue(typeof(ISnapshotTagValueSubscription), out var o)) {
                 Context.Items.Remove(typeof(ISnapshotTagValueSubscription));
-                if (o is ConcurrentDictionary<string, ISnapshotTagValueSubscription> observers) {
-                    foreach (var observer in observers.Values.ToArray()) {
-                        observer.Dispose();
+                if (o is List<SubscriptionWrapper> observers) {
+                    lock (observers) {
+                        foreach (var observer in observers.ToArray()) {
+                            observer.Dispose();
+                        }
+                        observers.Clear();
                     }
-                    observers.Clear();
                 }
             }
 
@@ -200,33 +207,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
-        /// <summary>
-        /// Gets the current connection's value observer for the specified adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="ISnapshotTagValueSubscription"/> for the adapter.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/>.
-        /// </exception>
-        private ISnapshotTagValueSubscription GetSubscription(string adapterId) {
-            if (adapterId == null) {
-                throw new ArgumentNullException(nameof(adapterId));
-            }
-
-            var observerDict =  Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
-            return observerDict.TryGetValue(adapterId, out var observer)
-                ? observer
-                : null;
-        }
-
-
 
         /// <summary>
-        /// Gets or creates a real-time data subscription to the specified adapter.
+        /// Gets or creates a real-time data subscription on the specified adapter.
         /// </summary>
         /// <param name="callContext">
         ///   The call context.
@@ -238,111 +221,106 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A cancellation token that will fire when the subscription is no longer required.
         /// </param>
         /// <returns>
-        ///   A <see cref="ISnapshotTagValueSubscription"/> for the specified adapter.
+        ///   An <see cref="ISnapshotTagValueSubscription"/> for the specified adapter.
         /// </returns>
         /// <exception cref="InvalidOperationException">
         ///   <paramref name="adapter"/> does not support the <see cref="ISnapshotTagValuePush"/> feature.
         /// </exception>
-        private ISnapshotTagValueSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, CancellationToken cancellationToken) {
+        private async Task<ISnapshotTagValueSubscription> GetOrCreateSubscription(IAdapterCallContext callContext, IAdapter adapter, CancellationToken cancellationToken) {
+            var subscription = GetSubscription(adapter);
+            if (subscription != null) {
+                return subscription;
+            }
+
             var feature = adapter.Features.Get<ISnapshotTagValuePush>();
             if (feature == null) {
                 throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(ISnapshotTagValuePush)));
             }
 
-            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as ConcurrentDictionary<string, ISnapshotTagValueSubscription>;
-            return subscriptionsForConnection.GetOrAdd(adapter.Descriptor.Id, key => new SnapshotTagValueSubscription(key, feature.Subscribe(callContext), subscriptionsForConnection, cancellationToken));
+            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as List<SubscriptionWrapper>;
+            subscription = await feature.Subscribe(callContext, cancellationToken).ConfigureAwait(false);
+
+            SubscriptionWrapper result;
+            lock (subscriptionsForConnection) {
+                result = new SubscriptionWrapper(adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
+                subscriptionsForConnection.Add(result);
+            }
+
+            return result;
         }
 
 
         /// <summary>
-        /// Subscription wrapper class.
+        /// Gets an existing real-time data subscription on the specified adapter.
         /// </summary>
-        private class SnapshotTagValueSubscription : ISnapshotTagValueSubscription {
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="ISnapshotTagValueSubscription"/> for the specified adapter, or 
+        ///   <see langword="null"/> if a subscription does not exist.
+        /// </returns>
+        private ISnapshotTagValueSubscription GetSubscription(IAdapter adapter) {
+            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as List<SubscriptionWrapper>;
+            return subscriptionsForConnection?.FirstOrDefault(x => string.Equals(x.AdapterId, adapter.Descriptor.Id));
+        }
 
-            /// <summary>
-            /// Flags if the subscription has been disposed.
-            /// </summary>
-            private bool _isDisposed;
 
-            /// <summary>
-            /// The adapter ID for the subscription.
-            /// </summary>
-            private readonly string _adapterId;
+        private class SubscriptionWrapper : ISnapshotTagValueSubscription {
 
-            /// <summary>
-            /// The inner subscription returned by the adapter.
-            /// </summary>
+            public string AdapterId { get; }
+
             private readonly ISnapshotTagValueSubscription _inner;
 
-            /// <summary>
-            /// Automatically disposes the subscription if the caller cancels the streaming request.
-            /// </summary>
+            private Action _onDisposed;
+
             private readonly CancellationTokenRegistration _onStreamCancelled;
 
-            /// <summary>
-            /// The subscriptions dictionary for the connection.
-            /// </summary>
-            private readonly ConcurrentDictionary<string, ISnapshotTagValueSubscription> _subscriptionsForConnection;
-
 
             /// <inheritdoc/>
-            ChannelReader<SnapshotTagValue> ISnapshotTagValueSubscription.Reader {
-                get { return _inner.Reader; }
-            }
+            public ChannelReader<TagValueQueryResult> Reader { get { return _inner.Reader; } }
+
+            /// <inheritdoc/>
+            public int Count { get { return _inner.Count; } }
 
 
-            /// <summary>
-            /// Creates a new <see cref="SnapshotTagValueSubscription"/> object.
-            /// </summary>
-            /// <param name="adapterId">
-            ///   The adapter ID.
-            /// </param>
-            /// <param name="inner">
-            ///   The inner subscription returned by the adapter.
-            /// </param>
-            /// <param name="subscriptionsForConnection">
-            ///   The subscriptions dictionary for the connection.
-            /// </param>
-            /// <param name="streamCancelled">
-            ///   A cancellation token that will fire if the streaming request is cancelled by the caller.
-            /// </param>
-            internal SnapshotTagValueSubscription(string adapterId, ISnapshotTagValueSubscription inner, ConcurrentDictionary<string, ISnapshotTagValueSubscription> subscriptionsForConnection, CancellationToken streamCancelled) {
-                _adapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
+            public SubscriptionWrapper(string adapterId, ISnapshotTagValueSubscription inner, ICollection<SubscriptionWrapper> subscriptionsForConnection, CancellationToken streamCancelled) {
+                AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
                 _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-                _subscriptionsForConnection = subscriptionsForConnection ?? throw new ArgumentNullException(nameof(subscriptionsForConnection));
-                _onStreamCancelled = streamCancelled.Register(Dispose);
+                _onDisposed = () => {
+                    lock (subscriptionsForConnection) {
+                        subscriptionsForConnection.Remove(this);
+                    }
+                };
+                streamCancelled.Register(Dispose);
             }
 
 
             /// <inheritdoc/>
-            Task<IEnumerable<TagIdentifier>> ISnapshotTagValueSubscription.GetSubscribedTags(CancellationToken cancellationToken) {
-                return _inner.GetSubscribedTags(cancellationToken);
+            public Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken) {
+                return _inner.GetTags(cancellationToken);
             }
 
 
             /// <inheritdoc/>
-            Task<int> ISnapshotTagValueSubscription.AddTagsToSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                return _inner.AddTagsToSubscription(tagNamesOrIds, cancellationToken);
+            public Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                return _inner.AddTagsToSubscription(context, tagNamesOrIds, cancellationToken);
             }
 
 
             /// <inheritdoc/>
-            Task<int> ISnapshotTagValueSubscription.RemoveTagsFromSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                return _inner.RemoveTagsFromSubscription(tagNamesOrIds, cancellationToken);
+            public Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                return _inner.RemoveTagsFromSubscription(context, tagNamesOrIds, cancellationToken);
             }
 
 
-            /// <inheritdoc/>
             public void Dispose() {
-                if (_isDisposed) {
-                    return;
-                }
-
-                _subscriptionsForConnection.TryRemove(_adapterId, out var _);
+                _onDisposed.Invoke();
+                _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 _inner.Dispose();
-                _isDisposed = true;
             }
+
         }
 
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Models;
 
@@ -13,21 +14,23 @@ namespace DataCore.Adapter.Events.Features {
     public interface IWriteEventMessages : IAdapterFeature {
 
         /// <summary>
-        /// Writes event messages to an adapter.
+        /// Writes a stream of event messages to an adapter.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="request">
-        ///   A request object describing the event messages to be written.
+        /// <param name="channel">
+        ///   A <see cref="ChannelReader{T}"/> that will provide the event messages to write to the 
+        ///   adapter.
         /// </param>
         /// <param name="cancellationToken">
-        ///   The cancellation token for the registration operation. 
+        ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A response object describing if the write operation was successful or not.
+        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   the input <paramref name="channel"/>.
         /// </returns>
-        Task<WriteEventMessagesResult> WriteEventMessages(IAdapterCallContext context, WriteEventMessagesRequest request, CancellationToken cancellationToken);
+        ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<EventMessage> channel, CancellationToken cancellationToken);
 
     }
 }

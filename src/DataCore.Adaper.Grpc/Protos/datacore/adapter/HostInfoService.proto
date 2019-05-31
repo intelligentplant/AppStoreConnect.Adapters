@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service HostInfoService {
+    rpc GetHostInfo(GetHostInfoRequest) returns (GetHostInfoResponse);
+}
+
+
+// Gets information about the host app
+message GetHostInfoRequest { }
+message GetHostInfoResponse {
+    HostInfo host_info = 1;
+}
+
+
+message HostInfo {
+    string name = 1;
+    string description = 2;
+    string version = 3;
+    VendorInfo vendor_info = 4;
+    map<string, string> properties = 5;
+}
+
+
+message VendorInfo {
+    string name = 1;
+    string url = 2;
+}

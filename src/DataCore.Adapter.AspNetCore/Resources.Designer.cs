@@ -19,7 +19,7 @@ namespace DataCore.Adapter.AspNetCore {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -66,6 +66,24 @@ namespace DataCore.Adapter.AspNetCore {
         internal static string Error_AdapterAccessorIsRequired {
             get {
                 return ResourceManager.GetString("Error_AdapterAccessorIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An existing subscription for this adapter could not be found..
+        /// </summary>
+        internal static string Error_AdapterSubscriptionDoesNotExist {
+            get {
+                return ResourceManager.GetString("Error_AdapterSubscriptionDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must specify at least one tag to subscribe to..
+        /// </summary>
+        internal static string Error_AtLeastOneTagIsRequired {
+            get {
+                return ResourceManager.GetString("Error_AtLeastOneTagIsRequired", resourceCulture);
             }
         }
         

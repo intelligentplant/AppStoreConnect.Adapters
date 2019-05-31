@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Common.Models {
         /// The <see cref="HostInfo"/> to use when an instance is not provided by the hosting 
         /// application.
         /// </summary>
-        public static HostInfo Unspecified { get; } = new HostInfo(Resources.HostInfo_Unspecified_Name, Resources.HostInfo_Unspecified_Description, "0.0.0", null, null);
+        public static HostInfo Unspecified { get; } = new HostInfo(SharedResources.HostInfo_Unspecified_Name, SharedResources.HostInfo_Unspecified_Description, "0.0.0", null, null);
 
 
         /// <summary>

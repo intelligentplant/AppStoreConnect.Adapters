@@ -75,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<SnapshotTagValue>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(ApiVersion apiVersion, string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -96,7 +96,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadSnapshotTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadSnapshotTagValues(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueQueryResult>(request.Tags.Length);
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 
@@ -121,7 +131,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/raw")]
-        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadRawValues(ApiVersion apiVersion, string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -142,7 +152,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadRawTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadRawTagValues(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 
@@ -171,7 +191,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpPost]
         [Route("{adapterId}/plot")]
-        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(ApiVersion apiVersion, string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -192,7 +212,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadPlotTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadPlotTagValues(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 
@@ -217,7 +247,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/interpolated")]
-        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadInterpolatedValues(ApiVersion apiVersion, string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -238,7 +268,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadInterpolatedTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadInterpolatedTagValues(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 
@@ -263,7 +303,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/values-at-times")]
-        [ProducesResponseType(typeof(IEnumerable<HistoricalTagValues>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(ApiVersion apiVersion, string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -284,7 +324,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadTagValuesAtTimes(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadTagValuesAtTimes(_callContext, request, cancellationToken);
+
+            var result = new List<TagValueQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 
@@ -316,7 +366,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
         [Route("{adapterId}/processed")]
-        [ProducesResponseType(typeof(IEnumerable<ProcessedHistoricalTagValues>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(ApiVersion apiVersion, string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
@@ -337,7 +387,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var result = await feature.ReadProcessedTagValues(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.ReadProcessedTagValues(_callContext, request, cancellationToken);
+
+            var result = new List<ProcessedTagValueQueryResult>();
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
+
+                result.Add(value);
+            }
+
             return Ok(result); // 200
         }
 

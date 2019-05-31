@@ -6,9 +6,9 @@ using System.Text;
 namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
-    /// Describes values to be written to a tag.
+    /// Describes a value being written to a tag.
     /// </summary>
-    public class TagValueWriteCollection {
+    public sealed class WriteTagValueItem {
 
         /// <summary>
         /// The tag ID.
@@ -17,11 +17,10 @@ namespace DataCore.Adapter.RealTimeData.Models {
         public string TagId { get; set; }
 
         /// <summary>
-        /// The values to write.
+        /// The tag value.
         /// </summary>
         [Required]
-        [MinLength(1)]
-        public TagValueBase[] Values { get; set; }
+        public TagValueBase Value { get; set; }
 
     }
 }

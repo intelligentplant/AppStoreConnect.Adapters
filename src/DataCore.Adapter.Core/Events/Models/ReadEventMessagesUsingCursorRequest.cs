@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// The cursor position to start the query at.
         /// </summary>
-        public string Cursor { get; set; }
+        public string CursorPosition { get; set; }
 
     }
 }

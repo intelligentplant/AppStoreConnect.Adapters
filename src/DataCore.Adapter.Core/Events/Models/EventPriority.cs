@@ -12,27 +12,27 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// The priority is unknown.
         /// </summary>
-        Unknown,
+        Unknown = 0,
 
         /// <summary>
         /// Low priority.
         /// </summary>
-        Low,
+        Low = 1,
 
         /// <summary>
         /// Medium priority.
         /// </summary>
-        Medium,
+        Medium = 2,
 
         /// <summary>
         /// High priority.
         /// </summary>
-        High,
+        High = 3,
 
         /// <summary>
         /// Critical priority.
         /// </summary>
-        Critical
+        Critical = 4
 
     }
 }

@@ -57,10 +57,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentNullException(nameof(tag));
             }
             if (utcStartTime >= utcEndTime) {
-                throw new ArgumentException(Resources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
             }
             if (sampleInterval <= TimeSpan.Zero) {
-                throw new ArgumentException(Resources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
+                throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
             }
             if (aggregateFunc == null) {
                 throw new ArgumentNullException(nameof(aggregateFunc));

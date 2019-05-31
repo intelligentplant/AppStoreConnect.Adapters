@@ -16,46 +16,57 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// A channel reader that emitted values can be read from.
         /// </summary>
-        ChannelReader<SnapshotTagValue> Reader { get; }
+        ChannelReader<TagValueQueryResult> Reader { get; }
 
         /// <summary>
-        /// Gets the identifiers for the tags that the subscription is observing.
+        /// Gets the total number of tags that the subscription is observing.
+        /// </summary>
+        int Count { get; }
+
+        /// <summary>
+        /// Gets the tags that the subscription is observing.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A collection of subscribed tag identifiers.
+        ///   The tag identifiers for the subscription's tags.
         /// </returns>
-        Task<IEnumerable<TagIdentifier>> GetSubscribedTags(CancellationToken cancellationToken);
+        Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Adds tags to the subscription.
+        /// Adds additional tags to the subscription.
         /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
         /// <param name="tagNamesOrIds">
-        ///   The tag names or IDs to subscribe to.
+        ///   The names or IDs of the tags to subscribe to.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The total number of subscriptions held after the update.
+        ///   The total number of tags held by the subscription following the update.
         /// </returns>
-        Task<int> AddTagsToSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
+        Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes tags from the subscription.
         /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
         /// <param name="tagNamesOrIds">
-        ///   The tag names or IDs to unsubscribe from.
+        ///   The names or IDs of the tags to unsubscribe from.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The total number of subscriptions held after the update.
+        ///   The total number of tags held by the subscription following the update.
         /// </returns>
-        Task<int> RemoveTagsFromSubscription(IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
+        Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
 
     }
 }

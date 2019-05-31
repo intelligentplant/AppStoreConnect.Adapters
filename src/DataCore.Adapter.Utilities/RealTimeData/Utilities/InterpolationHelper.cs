@@ -95,23 +95,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentNullException(nameof(tag));
             }
             if (valueBefore == null && valueAfter == null) {
-                throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSample);
+                throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSample);
             }
 
             if (valueBefore == null) {
                 return utcSampleTime < valueAfter.UtcSampleTime
-                    ? throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueAfter))
+                    ? throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueAfter))
                     : TagValueBuilder.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
             }
 
             if (valueAfter == null) {
                 return utcSampleTime < valueBefore.UtcSampleTime
-                    ? throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueBefore))
+                    ? throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime, nameof(valueBefore))
                     : TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
             }
 
             if (utcSampleTime < valueBefore.UtcSampleTime && utcSampleTime < valueAfter.UtcSampleTime) {
-                throw new ArgumentException(Resources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime);
+                throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime);
             }
 
             if (valueBefore.UtcSampleTime > valueAfter.UtcSampleTime) {
@@ -204,10 +204,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentNullException(nameof(tag));
             }
             if (utcStartTime >= utcEndTime) {
-                throw new ArgumentException(Resources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
             }
             if (sampleInterval <= TimeSpan.Zero) {
-                throw new ArgumentException(Resources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
+                throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
             }
 
             var rawSamples = rawData?.Where(x => x != null).ToArray() ?? new TagValue[0];

@@ -1,7 +1,7 @@
 ﻿<Project>
   <PropertyGroup>
     <Authors>Intelligent Plant</Authors>
-    <Company>Intelligent Plant</Company>
+    <Company>Intelligent Plant Ltd.</Company>
     <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
@@ -11,12 +11,12 @@
   <Choose>
     <When Condition=" $([System.DateTime]::UtcNow.Year) > 2019 ">
       <PropertyGroup>
-        <Copyright>Copyright © 2019-$([System.DateTime]::UtcNow.Year) Intelligent Plant Ltd.</Copyright>
+        <Copyright>Copyright © 2019-$([System.DateTime]::UtcNow.Year) $(Company)</Copyright>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
-        <Copyright>Copyright © 2019 Intelligent Plant Ltd.</Copyright>
+        <Copyright>Copyright © 2019 $(Company)</Copyright>
       </PropertyGroup>
     </Otherwise>
   </Choose>

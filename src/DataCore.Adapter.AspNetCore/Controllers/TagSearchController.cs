@@ -95,7 +95,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var tags = await feature.FindTags(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.FindTags(_callContext, request, cancellationToken);
+            var tags = new List<TagDefinition>();
+
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var tag) || tag == null) {
+                    continue;
+                }
+                tags.Add(tag);
+            }
+
             return Ok(tags); // 200
         }
 
@@ -186,7 +195,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Unauthorized(); // 401
             }
 
-            var tags = await feature.GetTags(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = feature.GetTags(_callContext, request, cancellationToken);
+            var tags = new List<TagDefinition>();
+
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var tag) || tag == null) {
+                    continue;
+                }
+                tags.Add(tag);
+            }
+
             return Ok(tags); // 200
         }
 

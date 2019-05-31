@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The plot values for the requested tags.
+        ///   A channel containing the values for the requested tags.
         /// </returns>
-        Task<IEnumerable<HistoricalTagValues>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken);
 
     }
 }

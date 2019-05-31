@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
@@ -56,61 +57,125 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
-                Tags = request.Tags
-            }, cancellationToken).ConfigureAwait(false);
-
-            var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                Tags = tagDefinitions.Select(x => x.Id).ToArray(),
-                UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
-                UtcEndTime = request.UtcEndTime,
-                SampleCount = 0,
-                BoundaryType = RawDataBoundaryType.Outside
-            }, cancellationToken).ConfigureAwait(false);
-
-            return rawValues
-                .Select(x => new {
-                    Tag = tagDefinitions.FirstOrDefault(t => t.Id.Equals(x.TagId, StringComparison.OrdinalIgnoreCase)),
-                    Values = x
+        /// <summary>
+        /// Creates a channel that can be used to write tag values to.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. Specify less than 1 for an unbounded channel.
+        /// </param>
+        /// <param name="fullMode">
+        ///   The action to take if the channel reaches capacity. Ignored if <paramref name="capacity"/> is less than 1.
+        /// </param>
+        /// <returns>
+        ///   A new channel.
+        /// </returns>
+        protected Channel<T> CreateChannel<T>(int capacity, BoundedChannelFullMode fullMode) where T : TagValueQueryResult {
+            return capacity > 0
+                ? Channel.CreateBounded<T>(new BoundedChannelOptions(capacity) {
+                    FullMode = fullMode,
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = true
                 })
-                .Where(x => x.Tag != null)
-                .Select(x => new HistoricalTagValues(
-                    x.Tag.Id,
-                    x.Tag.Name,
-                    InterpolationHelper.GetInterpolatedValues(x.Tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, InterpolationCalculationType.Interpolate, x.Values.Values)
-                )).ToArray();
+                : Channel.CreateUnbounded<T>(new UnboundedChannelOptions() {
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = true
+                });
         }
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
-                Tags = request.Tags
-            }, cancellationToken).ConfigureAwait(false);
+        public ChannelReader<TagValueQueryResult> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = CreateChannel<TagValueQueryResult>(5000, BoundedChannelFullMode.Wait);
 
-            var bucketSize = PlotHelper.CalculateBucketSize(request.UtcStartTime, request.UtcEndTime, request.Intervals);
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                    Tags = request.Tags
+                }, ct);
 
-            var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                Tags = tagDefinitions.Select(x => x.Id).ToArray(),
-                UtcStartTime = request.UtcStartTime.Subtract(bucketSize),
-                UtcEndTime = request.UtcEndTime,
-                SampleCount = 0,
-                BoundaryType = RawDataBoundaryType.Outside
-            }, cancellationToken).ConfigureAwait(false);
+                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                        continue;
+                    }
 
-            return rawValues
-                .Select(x => new {
-                    Tag = tagDefinitions.FirstOrDefault(t => t.Id.Equals(x.TagId, StringComparison.OrdinalIgnoreCase)),
-                    Values = x
-                })
-                .Where(x => x.Tag != null)
-                .Select(x => new HistoricalTagValues(
-                    x.Tag.Id,
-                    x.Tag.Name,
-                    PlotHelper.GetPlotValues(x.Tag, request.UtcStartTime, request.UtcEndTime, request.Intervals, x.Values.Values)
-                )).ToArray();
+                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                        Tags = new [] { tag.Id },
+                        UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
+                        UtcEndTime = request.UtcEndTime,
+                        SampleCount = 0,
+                        BoundaryType = RawDataBoundaryType.Outside
+                    }, ct);
+
+                    var values = new List<TagValue>();
+                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!valueReader.TryRead(out var val) || val == null) {
+                            continue;
+                        }
+                        values.Add(val.Value);
+                    }
+
+                    foreach (var val in InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, InterpolationCalculationType.Interpolate, values)) {
+                        if (ct.IsCancellationRequested) {
+                            break;
+                        }
+
+                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, val));
+                        }
+                    }
+                }
+            }, true, cancellationToken);
+
+            return result;
+        }
+
+
+        /// <inheritdoc/>
+        public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = CreateChannel<TagValueQueryResult>(5000, BoundedChannelFullMode.Wait);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                    Tags = request.Tags
+                }, ct);
+
+                var bucketSize = PlotHelper.CalculateBucketSize(request.UtcStartTime, request.UtcEndTime, request.Intervals);
+
+                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                        continue;
+                    }
+
+                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                        Tags = new[] { tag.Id },
+                        UtcStartTime = request.UtcStartTime.Subtract(bucketSize),
+                        UtcEndTime = request.UtcEndTime,
+                        SampleCount = 0,
+                        BoundaryType = RawDataBoundaryType.Outside
+                    }, ct);
+
+                    var values = new List<TagValue>();
+                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!valueReader.TryRead(out var val) || val == null) {
+                            continue;
+                        }
+                        values.Add(val.Value);
+                    }
+
+                    foreach (var val in PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, request.Intervals, values)) {
+                        if (ct.IsCancellationRequested) {
+                            break;
+                        }
+
+                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, val));
+                        }
+                    }
+                }
+            }, true, cancellationToken);
+
+            return result;
         }
 
 
@@ -121,63 +186,93 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<ProcessedHistoricalTagValues>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
-                Tags = request.Tags
-            }, cancellationToken).ConfigureAwait(false);
+        public ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = CreateChannel<ProcessedTagValueQueryResult>(5000, BoundedChannelFullMode.Wait);
 
-            var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                Tags = tagDefinitions.Select(x => x.Id).ToArray(),
-                UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
-                UtcEndTime = request.UtcEndTime,
-                SampleCount = 0,
-                BoundaryType = RawDataBoundaryType.Outside
-            }, cancellationToken).ConfigureAwait(false);
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                    Tags = request.Tags
+                }, ct);
 
-            return rawValues
-                .Select(x => new {
-                    Tag = tagDefinitions.FirstOrDefault(t => t.Id.Equals(x.TagId, StringComparison.OrdinalIgnoreCase)),
-                    Values = x
-                })
-                .Where(x => x.Tag != null)
-                .Select(x => new ProcessedHistoricalTagValues(
-                    x.Tag.Id,
-                    x.Tag.Name,
-                    request.DataFunctions.ToDictionary(
-                        f => f,
-                        f => AggregationHelper.GetAggregatedValues(x.Tag, f, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, x.Values.Values)
-                    )
-                )).ToArray();
+                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                        continue;
+                    }
+
+                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                        Tags = new[] { tag.Id },
+                        UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
+                        UtcEndTime = request.UtcEndTime,
+                        SampleCount = 0,
+                        BoundaryType = RawDataBoundaryType.Outside
+                    }, ct);
+
+                    var values = new List<TagValue>();
+                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!valueReader.TryRead(out var val) || val == null) {
+                            continue;
+                        }
+                        values.Add(val.Value);
+                    }
+
+                    foreach (var dataFunction in request.DataFunctions) {
+                        foreach (var val in AggregationHelper.GetAggregatedValues(tag, dataFunction, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, values)) {
+                            if (ct.IsCancellationRequested) {
+                                break;
+                            }
+
+                            if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                                ch.TryWrite(new ProcessedTagValueQueryResult(tag.Id, tag.Name, val, dataFunction));
+                            }
+                        }
+                    }
+                }
+            }, true, cancellationToken);
+
+            return result;
         }
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<HistoricalTagValues>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var tagDefinitions = await _tagSearchProvider.GetTags(context, new GetTagsRequest() {
-                Tags = request.Tags
-            }, cancellationToken).ConfigureAwait(false);
+        public ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            var result = CreateChannel<TagValueQueryResult>(5000, BoundedChannelFullMode.Wait);
 
-            var valuesByTag = tagDefinitions.ToDictionary(x => x, x => new List<TagValue>());
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                    Tags = request.Tags
+                }, ct);
 
-            foreach (var sampleTime in request.UtcSampleTimes.Distinct()) {
-                var rawValues = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                    Tags = tagDefinitions.Select(x => x.Id).ToArray(),
-                    UtcStartTime = sampleTime.AddSeconds(-1),
-                    UtcEndTime = sampleTime.AddSeconds(1),
-                    SampleCount = 0,
-                    BoundaryType = RawDataBoundaryType.Outside
-                }, cancellationToken).ConfigureAwait(false);
-
-                foreach (var item in rawValues) {
-                    var tag = tagDefinitions.FirstOrDefault(x => x.Id.Equals(item.TagId));
-                    if (tag == null || !valuesByTag.TryGetValue(tag, out var vals)) {
+                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
                         continue;
                     }
-                    vals.Add(InterpolationHelper.GetValueAtTime(tag, sampleTime, item.Values, tag.DataType == TagDataType.Numeric ? InterpolationCalculationType.Interpolate : InterpolationCalculationType.UsePreviousValue));
-                }
-            }
 
-            return valuesByTag.Select(x => new HistoricalTagValues(x.Key.Id, x.Key.Name, x.Value));
+                    foreach (var sampleTime in request.UtcSampleTimes) {
+                        var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                            Tags = new[] { tag.Id },
+                            UtcStartTime = sampleTime.AddSeconds(-1),
+                            UtcEndTime = sampleTime.AddSeconds(1),
+                            SampleCount = 0,
+                            BoundaryType = RawDataBoundaryType.Outside
+                        }, ct);
+
+                        var values = new List<TagValue>();
+                        while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            if (!valueReader.TryRead(out var val) || val == null) {
+                                continue;
+                            }
+                            values.Add(val.Value);
+                        }
+
+                        var valueAtTime = InterpolationHelper.GetValueAtTime(tag, sampleTime, values, tag.DataType == TagDataType.Numeric ? InterpolationCalculationType.Interpolate : InterpolationCalculationType.UsePreviousValue);
+                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, valueAtTime));
+                        }
+                    }
+                }
+            }, true, cancellationToken);
+
+            return result;
         }
 
     }

@@ -2,33 +2,35 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Features {
 
     /// <summary>
-    /// Feature for writing new snapshot values to tags.
+    /// Feature for writing new snapshot values to adapter tags.
     /// </summary>
     public interface IWriteSnapshotTagValues : IAdapterFeature {
 
         /// <summary>
-        /// Writes values to the snapshot for the specified tags. Implementations should ignore any 
-        /// values that are older than the current snapshot value for the tag.
+        /// Writes a stream of snapshot tag values to an adapter.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="request">
-        ///   The values to be written.
+        /// <param name="channel">
+        ///   A <see cref="ChannelReader{T}"/> that will provide the tag values to write to the 
+        ///   adapter.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A collection of objects describing the write result for each tag in the request.
+        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   the input <paramref name="channel"/>.
         /// </returns>
-        Task<IEnumerable<TagValueWriteResult>> WriteSnapshotTagValues(IAdapterCallContext context, WriteTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<WriteTagValueResult> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken);
 
     }
 }

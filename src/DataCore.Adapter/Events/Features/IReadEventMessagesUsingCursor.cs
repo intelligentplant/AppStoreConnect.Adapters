@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Models;
 
@@ -28,7 +29,7 @@ namespace DataCore.Adapter.Events.Features {
         /// <returns>
         ///   The event messages that occurred during the time range.
         /// </returns>
-        Task<TimeBasedEventMessageCollection> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken);
+        ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken);
 
     }
 }

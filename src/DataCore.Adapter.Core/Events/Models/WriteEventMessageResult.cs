@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using DataCore.Adapter.Events.Models;
 
-namespace DataCore.Adapter.RealTimeData.Models {
+namespace DataCore.Adapter.Events.Models {
 
     /// <summary>
-    /// Describes the result of a tag value write operation.
+    /// Describes the result of an event message write operation.
     /// </summary>
-    public sealed class TagValueWriteResult {
-
-        /// <summary>
-        /// The ID of the tag.
-        /// </summary>
-        public string TagId { get; }
+    public sealed class WriteEventMessageResult {
 
         /// <summary>
         /// Indicates if the write was successful.
@@ -33,11 +27,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
 
 
         /// <summary>
-        /// Creates a new <see cref="TagValueWriteResult"/> object.
+        /// Creates a new <see cref="WriteEventMessageResult"/> object.
         /// </summary>
-        /// <param name="tagId">
-        ///   The ID of the tag that was written to.
-        /// </param>
         /// <param name="status">
         ///   A flag indicating if the write was successful.
         /// </param>
@@ -47,11 +38,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagId"/> is <see langword="null"/>.
-        /// </exception>
-        public TagValueWriteResult(string tagId, WriteStatus status, string notes, IDictionary<string, string> properties) {
-            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
+        public WriteEventMessageResult(WriteStatus status, string notes, IDictionary<string, string> properties) {
             Status = status;
             Notes = notes?.Trim();
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());

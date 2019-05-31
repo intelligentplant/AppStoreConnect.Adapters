@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DataCore.Adapter {
@@ -28,6 +29,32 @@ namespace DataCore.Adapter {
                 return key == null || !_features.TryGetValue(key, out var value)
                     ? null
                     : value;
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterFeaturesCollection"/> object.
+        /// </summary>
+        public AdapterFeaturesCollection() { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterFeaturesCollection"/> object that is pre-populated using 
+        /// the specified object.
+        /// </summary>
+        /// <param name="featureProvider">
+        ///   The object that will provide the adapter feature implementations.
+        /// </param>
+        public AdapterFeaturesCollection(object featureProvider) : this() {
+            if (featureProvider == null) {
+                return;
+            }
+
+            var rootFeatureType = typeof(IAdapterFeature);
+            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(t => rootFeatureType.IsAssignableFrom(t));
+            foreach (var feature in implementedFeatures) {
+                _features[feature] = featureProvider;
             }
         }
 

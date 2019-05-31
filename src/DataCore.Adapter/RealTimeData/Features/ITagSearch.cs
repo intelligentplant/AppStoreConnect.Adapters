@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -25,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData.Features {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The matching tag definitions.
+        ///   A channel that the search results can be read from.
         /// </returns>
-        Task<IEnumerable<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets tags by ID or name.
@@ -44,7 +45,7 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        Task<IEnumerable<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken);
 
     }
 }
