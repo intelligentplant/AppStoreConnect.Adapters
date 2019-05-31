@@ -26,9 +26,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests", "t
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1BF8C809-6F14-4C52-B172-D43A96295884}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Server", "src\DataCore.Adaper.Grpc\DataCore.Adapter.Grpc.Server\DataCore.Adapter.Grpc.Server.csproj", "{FF24D9EB-8283-4278-9171-6E6AB99EF322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Server", "src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Server\DataCore.Adapter.Grpc.Server.csproj", "{FF24D9EB-8283-4278-9171-6E6AB99EF322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Grpc.Client", "src\DataCore.Adaper.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj", "{F971C9D2-5948-4680-BA30-C5E31B1FF8D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Grpc.Client", "src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj", "{F971C9D2-5948-4680-BA30-C5E31B1FF8D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.GrpcExampleServer", "examples\DataCore.Adapter.GrpcExampleServer\DataCore.Adapter.GrpcExampleServer.csproj", "{186474A6-F93B-4544-AFFA-84B8FD8FCF91}"
 EndProject
