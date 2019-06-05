@@ -16,9 +16,9 @@ If your application can dynamically add or remove adapters at runtime, you must 
 
 # Writing an Adapter Accessor
 
-An [IAdapterAccessor](/src/DataCore.Adapter/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.
+An [IAdapterAccessor](/src/DataCore.Adapter.Abstractions/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.
 
-You can supply your own implementation by inheriting from the [AdapterAccessor](./AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
+You can supply your own implementation by inheriting from the [AdapterAccessor](./DataCore.Adapter/AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
 
 To register your adapter accessor, call `options.UseAdapterAccessor<TAdapterAccessor>()` when [registering adapter services](#registering-adapter-services). Note that the adapter accessor is always registered as a *transient* service.
 
@@ -27,7 +27,7 @@ To register your adapter accessor, call `options.UseAdapterAccessor<TAdapterAcce
 
 By default, all calls to the adapter API will be authorized, as long as they meet the authentication requirements of the hosting application. However, you may want to apply custom authorization policies to control access to individual adapters, or to features on an adapter (for example, you may want to prevent unauthorized callers from writing values to tags). 
 
-Custom authorization is performed by inheriting from the [FeatureAuthorizationHandler](./Authorization/FeatureAuthorizationHandler.cs) and implementing the `HandleRequirementAsync` method. In your implementation, you will be passed the adapter, and a [FeatureAuthorizationRequirement](./Authorization/FeatureAuthorizationRequirement.cs) that describes the feature that the caller is requesting access to. For example:
+Custom authorization is performed by the ASP.NET Core authorization model, by inheriting from the [FeatureAuthorizationHandler](./Authorization/FeatureAuthorizationHandler.cs) and implementing the `HandleRequirementAsync` method. In your implementation, you will be passed the adapter, and a [FeatureAuthorizationRequirement](./Authorization/FeatureAuthorizationRequirement.cs) that describes the feature that the caller is requesting access to. For example:
 
 ```csharp
 public class MyFeatureAuthorizationHandler : FeatureAuthorizationHandler {

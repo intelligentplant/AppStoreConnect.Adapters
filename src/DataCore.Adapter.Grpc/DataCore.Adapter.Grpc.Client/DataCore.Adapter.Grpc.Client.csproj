@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnectAdapters.Grpc.Client</PackageId>
+    <PackageId>IntelligentPlant.DataCore.Adapter.Grpc.Client</PackageId>
     <Description>gRPC client for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -12,10 +12,6 @@
     <PackageReference Include="Google.Protobuf" Version="3.7.0" />
     <PackageReference Include="Grpc.Core" Version="1.20.1" />
     <PackageReference Include="Grpc.Tools" Version="1.20.1" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

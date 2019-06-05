@@ -2,29 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnectAdapters</PackageId>
-    <Description>Base types for App Store Connect adapters.</Description>
+    <RootNamespace>DataCore.Adapter</RootNamespace>
+    <PackageId>IntelligentPlant.DataCore.Adapter</PackageId>
+    <Description>Base implementations and utility classes for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

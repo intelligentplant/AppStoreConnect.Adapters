@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.Utilities\DataCore.Adapter.Utilities.csproj" />
   </ItemGroup>
 
 </Project>

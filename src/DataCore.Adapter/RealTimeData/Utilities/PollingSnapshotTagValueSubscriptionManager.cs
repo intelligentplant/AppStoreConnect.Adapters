@@ -33,7 +33,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a mew <see cref="PollingSnapshotTagValueSubscriptionManager"/> object.
+        /// Creates a new <see cref="PollingSnapshotTagValueSubscriptionManager"/> object.
         /// </summary>
         /// <param name="pollingInterval">
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
@@ -80,7 +80,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         // Cancellation token fired.
                     }
                     catch (Exception e) {
-                        // TODO: logging of errors!
+                        OnPollingError(e);
                     }
                 }
             }
@@ -88,6 +88,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // Cancellation token fired.
             }
         }
+
+
+        /// <summary>
+        /// Called if an error occurs while the subscription manager is polling for new tag values.
+        /// </summary>
+        /// <param name="error">
+        ///   The error.
+        /// </param>
+        protected abstract void OnPollingError(Exception error);
 
 
         /// <summary>

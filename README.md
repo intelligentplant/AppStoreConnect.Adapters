@@ -9,8 +9,8 @@ An ASP.NET Core application is used to host and run one or more adapters, which 
 This repository contains the following projects:
 
 * `DataCore.Adapter.Core` ([source](/src/DataCore.Adapter.Core) - a .NET Standard 2.0 library containing request and response types used by adapters.
-* `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
-* `DataCore.Adapter.Utilities` ([source](/src/DataCore.Adapter.Utilities)) - a .NET Standard 2.0 library that contains utility classes for simplifying the implementation of adapter features.
+* `DataCore.Adapter.Abstractions` ([source](/src/DataCore.Adapter.Abstractions)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
+* `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that contains base classes and utility classes for simplifying the implementation of adapter features.
 * `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, SignalR hubs, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
 * `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - a .NET Standard 2.0 library containing C# implementations of services that can be used to expose adapters via [gRPC](https://grpc.io/).
 * `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a .NET Standard 2.0 library containing C# implementations of clients for querying adapters via [gRPC](https://grpc.io/).
@@ -22,7 +22,7 @@ The [examples](/examples) folder contains example host and client applications.
 
 1. Create a new ASP.NET Core 2.2 project.
 2. Add a reference to `DataCore.Adapter.AspNetCore` to your project.
-3. Implement an [IAdapter](/src/DataCore.Adapter/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
+3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
 4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
@@ -83,7 +83,9 @@ At the moment, only anonymous and Windows authentication is supported at the App
 
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
-Authorization can also be applied at the [adapter level](./src/DataCore.Adapter) and at the [API level](./src/DataCore.Adapter.AspNetCore).
+The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAuthorizationService.cs) service can be used to authorize access the individual adapters and adapter features; this authorization is automatically applied by the [ASP.NET Core](/src/DataCore.Adapter.AspNetCore) host on incoming calls to API or SignalR endpoints.
+
+Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. the apply per-tag authorization on tag data queries.
 
 
 # Development and Hosting Without .NET

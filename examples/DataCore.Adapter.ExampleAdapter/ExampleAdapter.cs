@@ -599,6 +599,11 @@ namespace DataCore.Adapter {
                 }
             }
 
+
+            protected override void OnPollingError(Exception error) {
+                // Do nothing.
+            }
+
         }
 
 

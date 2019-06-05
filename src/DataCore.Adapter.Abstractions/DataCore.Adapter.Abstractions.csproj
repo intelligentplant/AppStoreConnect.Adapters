@@ -2,25 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.DataCore.Adapter.Grpc.Server</PackageId>
-    <Description>gRPC server for App Store Connect adapters.</Description>
+    <PackageId>IntelligentPlant.DataCore.Adapter.Abstractions</PackageId>
+    <Description>Base types for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.7.0" />
-    <PackageReference Include="Grpc.Core" Version="1.20.1" />
-    <PackageReference Include="Grpc.Tools" Version="1.20.1" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\DataCore.Adapter\DataCore.Adapter.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Protos\**\*.proto" GrpcServices="Server" />
-    <Content Include="@(Protobuf)" LinkBase="Protos" />
+    <ProjectReference Include="..\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

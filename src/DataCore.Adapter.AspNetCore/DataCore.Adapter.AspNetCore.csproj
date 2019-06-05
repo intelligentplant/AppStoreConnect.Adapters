@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnectAdapters.AspNetCore</PackageId>
+    <PackageId>IntelligentPlant.DataCore.Adapter.AspNetCore</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
-    <ProjectReference Include="..\DataCore.Adapter.Utilities\DataCore.Adapter.Utilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>
