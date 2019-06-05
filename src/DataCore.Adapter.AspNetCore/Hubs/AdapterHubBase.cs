@@ -155,7 +155,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(TFeature)));
             }
 
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 throw new SecurityException(Resources.Error_NotAuthorizedToAccessFeature);
             }
 

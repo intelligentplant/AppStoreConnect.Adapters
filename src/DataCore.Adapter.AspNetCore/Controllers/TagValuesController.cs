@@ -75,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -124,7 +124,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -177,7 +177,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -226,7 +226,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadInterpolatedTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -275,7 +275,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -331,7 +331,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
@@ -383,7 +383,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;

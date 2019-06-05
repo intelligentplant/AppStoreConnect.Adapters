@@ -47,7 +47,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             if (!resolvedFeature.IsFeatureResolved) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 throw new RpcException(new Status(StatusCode.PermissionDenied, Resources.Error_NotAuthorized));
             }
 

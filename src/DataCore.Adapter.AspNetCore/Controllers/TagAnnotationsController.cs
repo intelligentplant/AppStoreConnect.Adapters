@@ -75,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
-            if (!resolvedFeature.IsAuthorized) {
+            if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;

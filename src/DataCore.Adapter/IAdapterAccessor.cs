@@ -87,7 +87,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// A flag indicating if access to the feature is authorized.
         /// </summary>
-        private bool _isAuthorized;
+        private bool _isFeatureAuthorized;
 
         /// <summary>
         /// The adapter. The value will be <see langword="null"/> if the adapter could not be resolved.
@@ -114,7 +114,7 @@ namespace DataCore.Adapter {
         /// <see langword="true"/> if access to the feature was authorized, or <see langword="false"/> 
         /// otherwise.
         /// </summary>
-        public bool IsAuthorized { get { return _isAuthorized; } }
+        public bool IsFeatureAuthorized { get { return _isFeatureAuthorized; } }
 
 
         /// <summary>
@@ -126,13 +126,13 @@ namespace DataCore.Adapter {
         /// <param name="feature">
         ///   The feature.
         /// </param>
-        /// <param name="isAuthorized">
+        /// <param name="isFeatureAuthorized">
         ///   A flag indicating if access to the feature was authorized.
         /// </param>
-        public ResolvedAdapterFeature(IAdapter adapter, TFeature feature, bool isAuthorized) {
+        public ResolvedAdapterFeature(IAdapter adapter, TFeature feature, bool isFeatureAuthorized) {
             _adapter = adapter;
             _feature = feature;
-            _isAuthorized = isAuthorized;
+            _isFeatureAuthorized = isFeatureAuthorized;
         }
 
     }
