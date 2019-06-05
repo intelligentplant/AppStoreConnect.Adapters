@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
@@ -13,7 +14,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
     /// using <see cref="AdapterServicesOptionsBuilder.UseFeatureAuthorizationHandler{THandler}"/>
     /// during application startup.
     /// </summary>
-    public class AdapterApiAuthorizationService {
+    internal class AdapterAuthorizationService : IAdapterAuthorizationService {
 
         /// <summary>
         /// The ASP.NET Core authorization service.
@@ -29,7 +30,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterApiAuthorizationService"/> object.
+        /// Creates a new <see cref="AdapterAuthorizationService"/> object.
         /// </summary>
         /// <param name="useAuthorization">
         ///   Indicates if authorizatio will be applied to adapter API calls.
@@ -40,7 +41,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="authorizationService"/> is <see langword="null"/>.
         /// </exception>
-        internal AdapterApiAuthorizationService(bool useAuthorization, IAuthorizationService authorizationService) {
+        internal AdapterAuthorizationService(bool useAuthorization, IAuthorizationService authorizationService) {
             UseAuthorization = useAuthorization;
             if (useAuthorization) {
                 _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
@@ -48,49 +49,25 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         }
 
 
-        /// <summary>
-        /// Authorizes access to an adapter.
-        /// </summary>
-        /// <param name="user">
-        ///   The calling user.
-        /// </param>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <returns>
-        ///   The authorization result.
-        /// </returns>
-        internal async Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, IAdapter adapter) {
+        /// <inheritdoc/>
+        public async Task<bool> AuthorizeAdapter(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
             if (!UseAuthorization) {
-                return AuthorizationResult.Success();
+                return true;
             }
 
-            return await _authorizationService.AuthorizeAsync(user, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
+            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
+            return result.Succeeded;
         }
 
 
-        /// <summary>
-        /// Authorizes access to an adapter feature.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The adapter feature type.
-        /// </typeparam>
-        /// <param name="user">
-        ///   The calling user.
-        /// </param>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <returns>
-        ///   The authorization result.
-        /// </returns>
-        internal async Task<AuthorizationResult> AuthorizeAsync<TFeature>(ClaimsPrincipal user, IAdapter adapter) where TFeature : IAdapterFeature {
+        /// <inheritdoc/>
+        public async Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             if (!UseAuthorization) {
-                return AuthorizationResult.Success();
+                return true;
             }
 
-            return await _authorizationService.AuthorizeAsync(user, adapter, new FeatureAuthorizationRequirement<TFeature>()).ConfigureAwait(false);
+            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement<TFeature>()).ConfigureAwait(false);
+            return result.Succeeded;
         }
-
     }
 }

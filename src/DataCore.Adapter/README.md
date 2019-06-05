@@ -40,3 +40,9 @@ private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<stri
     ...
 }
 ```
+
+# Implementing Authorization
+
+All calls to adapter features include information about the caller (via the [IAdapterCallContext](./IAdapterCallContext.cs) interface).
+
+Alternatively, you can implement the [IAdapterAuthorizationService](./IAdapterAuthorizationService.cs) and use it in your host application to pre-authorize access to individual adapters and features.

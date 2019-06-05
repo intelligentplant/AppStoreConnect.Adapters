@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             services.Add(new ServiceDescriptor(typeof(IAdapterAccessor), options.AdapterAccessorType, ServiceLifetime.Transient));
 
-            services.AddSingleton(sp => new AdapterApiAuthorizationService(options.UseAuthorization, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+            services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new AdapterAuthorizationService(options.UseAuthorization, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             if (options.UseAuthorization) {
                 services.Add(new ServiceDescriptor(typeof(AspNetCore.Authorization.IAuthorizationHandler), options.FeatureAuthorizationHandlerType, ServiceLifetime.Singleton));
             }
@@ -76,8 +76,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The SignalR route builder.
         /// </returns>
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
-            builder.MapHub<RealTimeDataHub>("/signalr/v1.0/real-time-data");
             builder.MapHub<EventsHub>("/signalr/v1.0/events");
+            builder.MapHub<TagAnnotationsHub>("/signalr/v1.0/tag-annotations");
+            builder.MapHub<TagSearchHub>("/signalr/v1.0/tag-search");
+            builder.MapHub<TagValuesHub>("/signalr/v1.0/tag-values");
             return builder;
         }
 

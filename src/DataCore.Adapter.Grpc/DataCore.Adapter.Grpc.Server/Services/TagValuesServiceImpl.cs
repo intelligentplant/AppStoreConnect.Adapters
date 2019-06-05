@@ -26,14 +26,14 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task CreateSnapshotPushChannel(CreateSnapshotPushChannelRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<ISnapshotTagValuePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
             if (s_subscriptions.TryGetValue(key, out var _)) {
                 throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateSnapshotSubscriptionAlreadyExists, adapterId)));
             }
 
-            using (var subscription = await feature.Subscribe(_adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
                     if (request.Tags.Count > 0) {
@@ -92,9 +92,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadSnapshotTagValues(ReadSnapshotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadSnapshotTagValues(_adapterCallContext, new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
+            var reader = adapter.Feature.ReadSnapshotTagValues(_adapterCallContext, new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
                 Tags = request.Tags.ToArray()
             }, cancellationToken);
 
@@ -111,9 +111,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadRawTagValues(ReadRawTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadRawTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadRawTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadRawTagValues(_adapterCallContext, new RealTimeData.Models.ReadRawTagValuesRequest() {
+            var reader = adapter.Feature.ReadRawTagValues(_adapterCallContext, new RealTimeData.Models.ReadRawTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -134,9 +134,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadPlotTagValues(ReadPlotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadPlotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadPlotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadPlotTagValues(_adapterCallContext, new RealTimeData.Models.ReadPlotTagValuesRequest() {
+            var reader = adapter.Feature.ReadPlotTagValues(_adapterCallContext, new RealTimeData.Models.ReadPlotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -156,9 +156,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadInterpolatedTagValues(ReadInterpolatedTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadInterpolatedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadInterpolatedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadInterpolatedTagValues(_adapterCallContext, new RealTimeData.Models.ReadInterpolatedTagValuesRequest() {
+            var reader = adapter.Feature.ReadInterpolatedTagValues(_adapterCallContext, new RealTimeData.Models.ReadInterpolatedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -178,9 +178,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadTagValuesAtTimes(ReadTagValuesAtTimesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadTagValuesAtTimes>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadTagValuesAtTimes>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadTagValuesAtTimes(_adapterCallContext, new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
+            var reader = adapter.Feature.ReadTagValuesAtTimes(_adapterCallContext, new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcSampleTimes = request.UtcSampleTimes.Select(x => x.ToDateTime()).ToArray()
             }, cancellationToken);
@@ -198,9 +198,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task<GetSupportedDataFunctionsResponse> GetSupportedDataFunctions(GetSupportedDataFunctionsRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var values = await feature.GetSupportedDataFunctions(_adapterCallContext, cancellationToken).ConfigureAwait(false);
+            var values = await adapter.Feature.GetSupportedDataFunctions(_adapterCallContext, cancellationToken).ConfigureAwait(false);
 
             var result = new GetSupportedDataFunctionsResponse();
             result.DataFunctions.AddRange(values.Select(x => x.ToGrpcDataFunctionDescriptor()));
@@ -212,9 +212,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadProcessedTagValues(ReadProcessedTagValuesRequest request, IServerStreamWriter<ProcessedTagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadProcessedTagValues(_adapterCallContext, new RealTimeData.Models.ReadProcessedTagValuesRequest() {
+            var reader = adapter.Feature.ReadProcessedTagValues(_adapterCallContext, new RealTimeData.Models.ReadProcessedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),

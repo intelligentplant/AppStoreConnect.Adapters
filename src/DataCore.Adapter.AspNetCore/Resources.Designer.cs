@@ -97,6 +97,15 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are not authorized to access this feature..
+        /// </summary>
+        internal static string Error_NotAuthorizedToAccessFeature {
+            get {
+                return ResourceManager.GetString("Error_NotAuthorizedToAccessFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unsupported interface: {0}.
         /// </summary>
         internal static string Error_UnsupportedInterface {

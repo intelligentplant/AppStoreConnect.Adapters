@@ -21,11 +21,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class TagValuesController: ControllerBase {
 
         /// <summary>
-        /// The adapter API authorization service to use.
-        /// </summary>
-        private readonly AdapterApiAuthorizationService _authorizationService;
-
-        /// <summary>
         /// The Data Core context for the caller.
         /// </summary>
         private readonly IAdapterCallContext _callContext;
@@ -39,17 +34,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="TagValuesController"/> object.
         /// </summary>
-        /// <param name="authorizationService">
-        ///   The adapter API authorization service to use.
-        /// </param>
         /// <param name="callContext">
         ///   The Data Core context for the caller.
         /// </param>
         /// <param name="adapterAccessor">
         ///   The service for accessing running adapters.
         /// </param>
-        public TagValuesController(AdapterApiAuthorizationService authorizationService, IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
-            _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
+        public TagValuesController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
             _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
@@ -77,24 +68,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(ApiVersion apiVersion, string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadSnapshotTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadSnapshotTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadSnapshotTagValues(_callContext, request, cancellationToken);
 
@@ -133,24 +117,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/raw")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadRawValues(ApiVersion apiVersion, string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadRawTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadRawTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadRawTagValues(_callContext, request, cancellationToken);
 
@@ -193,24 +170,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/plot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(ApiVersion apiVersion, string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadPlotTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadPlotTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadPlotTagValues(_callContext, request, cancellationToken);
 
@@ -249,24 +219,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/interpolated")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadInterpolatedValues(ApiVersion apiVersion, string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadInterpolatedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadInterpolatedTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadInterpolatedTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadInterpolatedTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadInterpolatedTagValues(_callContext, request, cancellationToken);
 
@@ -305,24 +268,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/values-at-times")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(ApiVersion apiVersion, string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadTagValuesAtTimes>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadTagValuesAtTimes>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadTagValuesAtTimes(_callContext, request, cancellationToken);
 
@@ -368,24 +324,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/processed")]
         [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(ApiVersion apiVersion, string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadProcessedTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadProcessedTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadProcessedTagValues(_callContext, request, cancellationToken);
 
@@ -427,24 +376,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<string>), 200)]
         public async Task<IActionResult> GetSupportedAggregateFunctions(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
-
-            var feature = adapter.Features.Get<IReadProcessedTagValues>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IReadProcessedTagValues>(
-                User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
+            if (!resolvedFeature.IsAuthorized) {
                 return Unauthorized(); // 401
             }
+            var feature = resolvedFeature.Feature;
 
             var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200

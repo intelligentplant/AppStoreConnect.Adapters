@@ -1,33 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization;
 
-namespace DataCore.Adapter.AspNetCore {
+namespace DataCore.Adapter {
 
     /// <summary>
     /// Base <see cref="IAdapterAccessor"/> implementation that will authorize access to individual 
-    /// adapters based on the <see cref="AdapterApiAuthorizationService"/>.
+    /// adapters based on the provided <see cref="IAdapterAuthorizationService"/>.
     /// </summary>
-    public abstract class AdapterAccessor: IAdapterAccessor {
+    public abstract class AdapterAccessor : IAdapterAccessor {
 
         /// <summary>
         /// The adapter API authorization service to use.
         /// </summary>
-        private readonly AdapterApiAuthorizationService _authorizationService;
+        private readonly IAdapterAuthorizationService _authorizationService;
 
 
         /// <summary>
         /// Creates a new <see cref="AdapterAccessor"/> object.
         /// </summary>
         /// <param name="authorizationService">
-        ///   The adapter API authorization service to use.
+        ///   The adapter authorization service to use.
         /// </param>
-        protected AdapterAccessor(AdapterApiAuthorizationService authorizationService) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="authorizationService"/> is <see langword="null"/>.
+        /// </exception>
+        protected AdapterAccessor(IAdapterAuthorizationService authorizationService) {
             _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
         }
 
@@ -46,6 +46,10 @@ namespace DataCore.Adapter.AspNetCore {
 
         /// <inheritdoc/>
         async Task<IEnumerable<IAdapter>> IAdapterAccessor.GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -56,9 +60,9 @@ namespace DataCore.Adapter.AspNetCore {
             var result = new List<IAdapter>(adapters.Count());
 
             foreach (var adapter in adapters) {
-                var authResult = await _authorizationService.AuthorizeAsync(context.User, adapter).ConfigureAwait(false);
+                var authResult = await _authorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (authResult.Succeeded) {
+                if (authResult) {
                     result.Add(adapter);
                 }
             }
@@ -68,6 +72,13 @@ namespace DataCore.Adapter.AspNetCore {
 
         /// <inheritdoc/>
         async Task<IAdapter> IAdapterAccessor.GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(adapterId));
+            }
+
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -76,10 +87,26 @@ namespace DataCore.Adapter.AspNetCore {
                 return null;
             }
 
-            var authResult = await _authorizationService.AuthorizeAsync(context.User, adapter).ConfigureAwait(false);
-            return authResult.Succeeded
+            var authResult = await _authorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
+            return authResult
                 ? adapter
                 : null;
+        }
+
+        /// <inheritdoc/>
+        async Task<ResolvedAdapterFeature<TFeature>> IAdapterAccessor.GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+            var adapter = await ((IAdapterAccessor) this).GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return new ResolvedAdapterFeature<TFeature>(null, default, false);
+            }
+
+            var feature = adapter.Features.Get<TFeature>();
+            if (feature == null) {
+                return new ResolvedAdapterFeature<TFeature>(adapter, default, false);
+            }
+
+            var isAuthorized = await _authorizationService.AuthorizeAdapterFeature<TFeature>(adapter, context, cancellationToken).ConfigureAwait(false);
+            return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
         }
     }
 }

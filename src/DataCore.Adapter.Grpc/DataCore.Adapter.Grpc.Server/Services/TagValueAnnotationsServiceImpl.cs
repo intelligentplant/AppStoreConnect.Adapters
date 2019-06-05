@@ -23,9 +23,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task ReadAnnotations(ReadAnnotationsRequest request, IServerStreamWriter<TagValueAnnotationQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = feature.ReadTagValueAnnotations(_adapterCallContext, new RealTimeData.Models.ReadAnnotationsRequest() {
+            var reader = adapter.Feature.ReadTagValueAnnotations(_adapterCallContext, new RealTimeData.Models.ReadAnnotationsRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 Tags = request.Tags?.ToArray() ?? new string[0]

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.AppStoreConnect.Adapters.GrpcServer</PackageId>
+    <PackageId>IntelligentPlant.AppStoreConnectAdapters.Grpc.Server</PackageId>
     <Description>gRPC server for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

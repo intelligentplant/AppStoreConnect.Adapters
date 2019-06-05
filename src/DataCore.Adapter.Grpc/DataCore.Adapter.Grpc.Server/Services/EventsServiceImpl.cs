@@ -25,14 +25,14 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task CreateEventPushChannel(CreateEventPushChannelRequest request, IServerStreamWriter<EventMessagePush> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var feature = await Util.GetAdapterFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(EventsServiceImpl)}:{adapterId}:{request.Active}".ToUpperInvariant();
+            var key = $"{_adapterCallContext.ConnectionId}:{nameof(EventsServiceImpl)}:{adapter.Adapter.Descriptor.Id}:{request.Active}".ToUpperInvariant();
             if (s_subscriptions.TryGetValue(key, out var _)) {
                 throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateEventSubscriptionAlreadyExists, adapterId)));
             }
 
-            using (var subscription = feature.Subscribe(_adapterCallContext, request.Active)) {
+            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext, request.Active)) {
                 try {
                     s_subscriptions[key] = subscription;
                     while (!context.CancellationToken.IsCancellationRequested) {

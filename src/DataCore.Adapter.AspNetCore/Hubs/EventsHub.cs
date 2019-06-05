@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Authorization;
+using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.Events.Models;
@@ -19,29 +20,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
     /// SignalR hub that is used to push event messages to subscribers. Event message push is only 
     /// supported on adapters that implement the <see cref="IEventMessagePush"/> feature.
     /// </summary>
-    public class EventsHub : Hub {
-
-        /// <summary>
-        /// Authorization service for controlling access to adapters.
-        /// </summary>
-        private AdapterApiAuthorizationService _authorizationService;
-
-        /// <summary>
-        /// The adapter call context describing the calling user.
-        /// </summary>
-        private readonly IAdapterCallContext _adapterCallContext;
-
-        /// <summary>
-        /// For accessing runtime adapters.
-        /// </summary>
-        private readonly IAdapterAccessor _adapterAccessor;
-
+    public class EventsHub : AdapterHubBase {
 
         /// <summary>
         /// Creates a new <see cref="EventsHub"/> object.
         /// </summary>
-        /// <param name="authorizationService">
-        ///   Authorization service for controlling access to adapters.
+        /// <param name="hostInfo">
+        ///   The host information.
         /// </param>
         /// <param name="adapterCallContext">
         ///   The adapter call context describing the calling user.
@@ -49,11 +34,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterAccessor">
         ///   For accessing runtime adapters.
         /// </param>
-        public EventsHub(AdapterApiAuthorizationService authorizationService, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
-            _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
-            _adapterCallContext = adapterCallContext ?? throw new ArgumentNullException(nameof(adapterCallContext));
-            _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
-        }
+        public EventsHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor)
+            : base(hostInfo, adapterCallContext, adapterAccessor) { }
 
 
         /// <summary>
@@ -72,21 +54,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
         public async Task<ChannelReader<EventMessage>> CreateChannel(string adapterId, bool active, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
-                throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
-            }
-
-            var authResponse = await _authorizationService.AuthorizeAsync<IEventMessagePush>(
-                Context.User,
-                adapter
-            ).ConfigureAwait(false);
-
-            if (!authResponse.Succeeded) {
-                throw new SecurityException();
-            }
-
-            var subscription = GetOrAddSubscription(_adapterCallContext, adapter, active, cancellationToken);
+            var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
+            var subscription = GetOrAddSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken);
             return subscription.Reader;
         }
 
@@ -130,31 +99,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Gets the current connection's subscription for the specified adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="IEventMessageSubscription"/> for the adapter.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/>.
-        /// </exception>
-        private IEventMessageSubscription GetSubscription(string adapterId) {
-            if (adapterId == null) {
-                throw new ArgumentNullException(nameof(adapterId));
-            }
-
-            var observerDict = Context.Items[typeof(IEventMessageSubscription)] as ConcurrentDictionary<string, IEventMessageSubscription>;
-            return observerDict.TryGetValue(adapterId, out var observer)
-                ? observer
-                : null;
-        }
-
-
-
-        /// <summary>
         /// Gets or creates an event subscription to the specified adapter.
         /// </summary>
         /// <param name="callContext">
@@ -162,6 +106,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </param>
         /// <param name="adapter">
         ///   The adapter.
+        /// </param>
+        /// <param name="feature">
+        ///   The event message push feature for the adapter.
         /// </param>
         /// <param name="active">
         ///   A flag indicating if an active or passive subscription should be created.
@@ -175,12 +122,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="InvalidOperationException">
         ///   <paramref name="adapter"/> does not support the <see cref="IEventMessagePush"/> feature.
         /// </exception>
-        private IEventMessageSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, bool active, CancellationToken cancellationToken) {
-            var feature = adapter.Features.Get<IEventMessagePush>();
-            if (feature == null) {
-                throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(IEventMessagePush)));
-            }
-
+        private IEventMessageSubscription GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, IEventMessagePush feature, bool active, CancellationToken cancellationToken) {
             var subscriptionsForConnection = Context.Items[typeof(IEventMessageSubscription)] as ConcurrentDictionary<string, IEventMessageSubscription>;
             return subscriptionsForConnection.GetOrAdd(adapter.Descriptor.Id, key => new EventMessageSubscription(key, feature.Subscribe(callContext, active), subscriptionsForConnection, cancellationToken));
         }

@@ -76,7 +76,7 @@ services.AddDataCoreAdapterServices(options => {
         }
     );
 
-    // Register our API authorization handler.
+    // Register our feature authorization handler.
     options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
 });
 	

@@ -28,6 +28,11 @@ namespace DataCore.Adapter.AspNetCore {
             get { return _httpContext.Connection.Id; }
         }
 
+        /// <inheritdoc/>
+        public IDictionary<object, object> Items {
+            get { return _httpContext.Items; }
+        }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterCallContext"/> object.

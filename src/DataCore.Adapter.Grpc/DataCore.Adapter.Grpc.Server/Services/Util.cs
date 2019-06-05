@@ -39,18 +39,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <exception cref="RpcException">
         ///   The adapter does not provide the requested feature.
         /// </exception>
-        internal static async Task<TFeature> GetAdapterFeature<TFeature>(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
-            var adapter = await adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+        internal static async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+            var resolvedFeature = await adapterAccessor.GetAdapterAndFeature<TFeature>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
                 throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_CannotResolveAdapterId, adapterId)));
             }
-
-            var feature = adapter.Features.Get<TFeature>();
-            if (feature == null) {
+            if (!resolvedFeature.IsFeatureResolved) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
+            if (!resolvedFeature.IsAuthorized) {
+                throw new RpcException(new Status(StatusCode.PermissionDenied, Resources.Error_NotAuthorized));
+            }
 
-            return feature;
+            return resolvedFeature;
         }
 
     }

@@ -88,6 +88,15 @@ namespace DataCore.Adapter.Grpc.Server {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Not authorized..
+        /// </summary>
+        internal static string Error_NotAuthorized {
+            get {
+                return ResourceManager.GetString("Error_NotAuthorized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A snapshot tag value subscription for adapter {0} does not exist..
         /// </summary>
         internal static string Error_SnapshotSubscriptionDoesNotExist {

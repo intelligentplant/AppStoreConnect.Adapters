@@ -40,7 +40,7 @@ namespace DataCore.Adapter.RealTimeData.Features {
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
-        /// returns>
+        /// <returns>
         ///   A channel containing the values for the requested tags.
         /// </returns>
         ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DataCore.Adaper.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />
   </ItemGroup>
   
 </Project>

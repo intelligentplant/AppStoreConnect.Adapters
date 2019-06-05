@@ -20,6 +20,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0DEC6A31-20B5-46C7-A1FD-D4193755119E}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests", "test\DataCore.Adapter.Tests\DataCore.Adapter.Tests.csproj", "{67504392-4D6A-4BA3-B59F-3D8D72D93EAC}"
@@ -28,13 +29,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1BF8C809-6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Server", "src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Server\DataCore.Adapter.Grpc.Server.csproj", "{FF24D9EB-8283-4278-9171-6E6AB99EF322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Grpc.Client", "src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj", "{F971C9D2-5948-4680-BA30-C5E31B1FF8D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Client", "src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj", "{F971C9D2-5948-4680-BA30-C5E31B1FF8D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.GrpcExampleServer", "examples\DataCore.Adapter.GrpcExampleServer\DataCore.Adapter.GrpcExampleServer.csproj", "{186474A6-F93B-4544-AFFA-84B8FD8FCF91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.GrpcExampleServer", "examples\DataCore.Adapter.GrpcExampleServer\DataCore.Adapter.GrpcExampleServer.csproj", "{186474A6-F93B-4544-AFFA-84B8FD8FCF91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.ExampleAdapter", "examples\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj", "{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.ExampleAdapter", "examples\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj", "{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.GrpcExampleClient", "examples\DataCore.Adapter.GrpcExampleClient\DataCore.Adapter.GrpcExampleClient.csproj", "{F8F84631-2D62-4104-BDFD-F43C6A76C068}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.GrpcExampleClient", "examples\DataCore.Adapter.GrpcExampleClient\DataCore.Adapter.GrpcExampleClient.csproj", "{F8F84631-2D62-4104-BDFD-F43C6A76C068}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

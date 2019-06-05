@@ -16,9 +16,14 @@ namespace DataCore.Adapter {
         ClaimsPrincipal User { get; }
 
         /// <summary>
-        /// The connection ID for the caller.
+        /// The host-specified connection ID for the caller.
         /// </summary>
         string ConnectionId { get; }
+
+        /// <summary>
+        /// Additional items related to the call context.
+        /// </summary>
+        IDictionary<object, object> Items { get; }
 
     }
 }

@@ -133,6 +133,9 @@
     <value>Unable to resolve adapter ID: {0}</value>
     <comment>{0} - adapter ID</comment>
   </data>
+  <data name="Error_NotAuthorizedToAccessFeature" xml:space="preserve">
+    <value>You are not authorized to access this feature.</value>
+  </data>
   <data name="Error_UnsupportedInterface" xml:space="preserve">
     <value>Unsupported interface: {0}</value>
     <comment>{0} - interface name</comment>
