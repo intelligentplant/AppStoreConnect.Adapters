@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DataCore.Adapter;
 using DataCore.Adapter.RealTimeData.Features;
 using Grpc.Core;
 
@@ -228,6 +229,112 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }
 
                 await responseStream.WriteAsync(val.Value.ToGrpcProcessedTagValue(val.TagId, val.TagName, val.DataFunction, TagValueQueryType.Processed)).ConfigureAwait(false);
+            }
+        }
+
+
+        public override async Task WriteSnapshotTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
+            var cancellationToken = context.CancellationToken;
+
+            // For writing values to the target adapters.
+            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.Models.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+
+            try {
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    var request = requestStream.Current;
+                    if (request == null) {
+                        continue;
+                    }
+
+                    if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
+                        // We've not created a write channel to this adapter, so we'll create one now.
+                        var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+                        var adapterId = adapter.Adapter.Descriptor.Id;
+
+                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<RealTimeData.Models.WriteTagValueItem>(new System.Threading.Channels.UnboundedChannelOptions() {
+                            AllowSynchronousContinuations = true,
+                            SingleReader = true,
+                            SingleWriter = true
+                        });
+                        writeChannels[adapterId] = writeChannel;
+
+                        var resultsChannel = adapter.Feature.WriteSnapshotTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
+                        resultsChannel.RunBackgroundOperation(async (ch, ct) => {
+                            while (!ct.IsCancellationRequested) {
+                                var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                                if (val == null) {
+                                    continue;
+                                }
+                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
+                            }
+                        }, cancellationToken);
+                    }
+
+                    writeChannel.Writer.TryWrite(request.ToAdapterWriteTagValueItem());
+                }
+            }
+            catch (Exception e) {
+                foreach (var item in writeChannels) {
+                    item.Value.Writer.TryComplete(e);
+                }
+            }
+            finally {
+                foreach (var item in writeChannels) {
+                    item.Value.Writer.TryComplete();
+                }
+            }
+        }
+
+
+        public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
+            var cancellationToken = context.CancellationToken;
+
+            // For writing values to the target adapters.
+            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.Models.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+
+            try {
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    var request = requestStream.Current;
+                    if (request == null) {
+                        continue;
+                    }
+
+                    if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
+                        // We've not created a write channel to this adapter, so we'll create one now.
+                        var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+                        var adapterId = adapter.Adapter.Descriptor.Id;
+
+                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<RealTimeData.Models.WriteTagValueItem>(new System.Threading.Channels.UnboundedChannelOptions() {
+                            AllowSynchronousContinuations = true,
+                            SingleReader = true,
+                            SingleWriter = true
+                        });
+                        writeChannels[adapterId] = writeChannel;
+
+                        var resultsChannel = adapter.Feature.WriteHistoricalTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
+                        resultsChannel.RunBackgroundOperation(async (ch, ct) => {
+                            while (!ct.IsCancellationRequested) {
+                                var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                                if (val == null) {
+                                    continue;
+                                }
+                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
+                            }
+                        }, cancellationToken);
+                    }
+
+                    writeChannel.Writer.TryWrite(request.ToAdapterWriteTagValueItem());
+                }
+            }
+            catch (Exception e) {
+                foreach (var item in writeChannels) {
+                    item.Value.Writer.TryComplete(e);
+                }
+            }
+            finally {
+                foreach (var item in writeChannels) {
+                    item.Value.Writer.TryComplete();
+                }
             }
         }
 

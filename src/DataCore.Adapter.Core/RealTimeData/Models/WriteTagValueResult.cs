@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using DataCore.Adapter.Events.Models;
+using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -10,6 +10,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// Describes the result of a tag value write operation.
     /// </summary>
     public sealed class WriteTagValueResult {
+
+        /// <summary>
+        /// The optional correlation ID for the operation.
+        /// </summary>
+        public string CorrelationId { get; }
 
         /// <summary>
         /// The ID of the tag.
@@ -35,6 +40,9 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// Creates a new <see cref="WriteTagValueResult"/> object.
         /// </summary>
+        /// <param name="correlationId">
+        ///   The optional correlation ID for the operation. Can be <see langword="null"/>.
+        /// </param>
         /// <param name="tagId">
         ///   The ID of the tag that was written to.
         /// </param>
@@ -50,7 +58,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public WriteTagValueResult(string tagId, WriteStatus status, string notes, IDictionary<string, string> properties) {
+        public WriteTagValueResult(string correlationId, string tagId, WriteStatus status, string notes, IDictionary<string, string> properties) {
+            CorrelationId = correlationId;
             TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
             Status = status;
             Notes = notes?.Trim();

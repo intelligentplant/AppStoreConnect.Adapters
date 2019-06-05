@@ -83,7 +83,7 @@ namespace DataCore.Adapter {
             var rootFeatureType = typeof(IAdapterFeature);
             var featureType = typeof(TFeature);
             if (!featureType.IsInterface || !rootFeatureType.IsAssignableFrom(featureType)) {
-                throw new ArgumentException(string.Format(Resources.Error_NotAnAdapterFeature, nameof(IAdapterFeature)), nameof(feature));
+                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature)), nameof(feature));
             }
 
             _features[typeof(TFeature)] = feature;

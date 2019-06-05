@@ -11,6 +11,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
     public sealed class WriteTagValueItem {
 
         /// <summary>
+        /// An optional correlation ID to assign to the write operation.
+        /// </summary>
+        public string CorrelationId { get; set; }
+
+        /// <summary>
         /// The tag ID.
         /// </summary>
         [Required]

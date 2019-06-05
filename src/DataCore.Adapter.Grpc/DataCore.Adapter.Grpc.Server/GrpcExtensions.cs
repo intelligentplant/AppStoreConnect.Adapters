@@ -162,6 +162,28 @@ namespace DataCore.Adapter.Grpc.Server {
 
 
         /// <summary>
+        /// Converts from a gRPC tag value status to its adapter equivalent.
+        /// </summary>
+        /// <param name="status">
+        ///   The gRPC tag value status.
+        /// </param>
+        /// <returns>
+        ///   The adapter tag value status.
+        /// </returns>
+        internal static RealTimeData.Models.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
+            switch (status) {
+                case TagValueStatus.Bad:
+                    return RealTimeData.Models.TagValueStatus.Bad;
+                case TagValueStatus.Good:
+                    return RealTimeData.Models.TagValueStatus.Good;
+                case TagValueStatus.Unknown:
+                default:
+                    return RealTimeData.Models.TagValueStatus.Unknown;
+            }
+        }
+
+
+        /// <summary>
         /// Converts from a gRPC raw data boundary type to its adapter equivalent.
         /// </summary>
         /// <param name="boundaryType">
@@ -198,6 +220,90 @@ namespace DataCore.Adapter.Grpc.Server {
         }
 
 
+        /// <summary>
+        /// Converts from a gRPC write tag value item to its adapter equivalent.
+        /// </summary>
+        /// <param name="writeRequest">
+        ///   The gRPC tag value write item.
+        /// </param>
+        /// <returns>
+        ///   The adapter tag value write item.
+        /// </returns>
+        internal static WriteTagValueItem ToAdapterWriteTagValueItem(this WriteTagValueRequest writeRequest) {
+            return new WriteTagValueItem() {
+                CorrelationId = writeRequest.CorrelationId,
+                TagId = writeRequest.TagId,
+                Value = new TagValueBase(
+                    writeRequest.UtcSampleTime.ToDateTime(),
+                    writeRequest.NumericValue,
+                    writeRequest.TextValue,
+                    writeRequest.Status.ToAdapterTagValueStatus()
+                )
+            };
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter write tag value result to its gRPC equivalent.
+        /// </summary>
+        /// <param name="adapterResult">
+        ///   The adapter write tag value result.
+        /// </param>
+        /// <returns>
+        ///   The gRPC write tag value result.
+        /// </returns>
+        internal static WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.Models.WriteTagValueResult adapterResult, string adapterId) {
+            var result = new WriteTagValueResult() {
+                AdapterId = adapterId ?? string.Empty,
+                CorrelationId = adapterResult.CorrelationId ?? string.Empty,
+                Notes = adapterResult.Notes ?? string.Empty,
+                TagId = adapterResult.TagId ?? string.Empty,
+                WriteStatus = adapterResult.Status.ToGrpcTagValueWriteStatus()
+            };
+
+            if (adapterResult.Properties != null) {
+                foreach (var item in adapterResult.Properties) {
+                    result.Properties.Add(item.Key, item.Value);
+                }
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter write tag value status to its gRPC equivalent.
+        /// </summary>
+        /// <param name="status">
+        ///   The adapter write status.
+        /// </param>
+        /// <returns>
+        ///   The gRPC write tag value status.
+        /// </returns>
+        internal static TagValueWriteStatus ToGrpcTagValueWriteStatus(this Common.Models.WriteStatus status) {
+            switch (status) {
+                case Common.Models.WriteStatus.Fail:
+                    return TagValueWriteStatus.Fail;
+                case Common.Models.WriteStatus.Pending:
+                    return TagValueWriteStatus.Pending;
+                case Common.Models.WriteStatus.Success:
+                    return TagValueWriteStatus.Success;
+                case Common.Models.WriteStatus.Unknown:
+                default:
+                    return TagValueWriteStatus.Unknown;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter tag value annotation to its gRPC equivalent.
+        /// </summary>
+        /// <param name="annotation">
+        ///   The adapter tag value annotation.
+        /// </param>
+        /// <returns>
+        ///   The gRPC tag value annotation.
+        /// </returns>
         internal static TagValueAnnotationQueryResult ToGrpcTagValueAnnotation(this RealTimeData.Models.TagValueAnnotationQueryResult annotation) {
             var result = new TagValueAnnotationQueryResult() {
                 TagId = annotation.TagId ?? string.Empty,

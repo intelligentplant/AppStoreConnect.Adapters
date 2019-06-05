@@ -151,6 +151,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}..
+        /// </summary>
+        public static string Error_NotAnAdapterFeature {
+            get {
+                return ResourceManager.GetString("Error_NotAnAdapterFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample interval must be greater than zero..
         /// </summary>
         public static string Error_SampleIntervalMustBeGreaterThanZero {

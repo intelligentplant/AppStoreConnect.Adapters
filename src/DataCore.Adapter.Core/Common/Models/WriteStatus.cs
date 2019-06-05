@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DataCore.Adapter.Events.Models {
+namespace DataCore.Adapter.Common.Models {
 
     /// <summary>
     /// Describes the status of a write operation.

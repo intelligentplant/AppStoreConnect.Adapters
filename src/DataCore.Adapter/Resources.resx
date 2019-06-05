@@ -130,8 +130,4 @@
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>
   </data>
-  <data name="Error_NotAnAdapterFeature" xml:space="preserve">
-    <value>Adapter features must be interfaces extending {0}.</value>
-    <comment>{0} - IAdapterFeature name</comment>
-  </data>
 </root>
