@@ -8,7 +8,7 @@ An ASP.NET Core application is used to host and run one or more adapters, which 
 
 This repository contains the following projects:
 
-* `DataCore.Adapter.Core` ([source](/src/DataCore.Adapter.Core) - a .NET Standard 2.0 library containing request and response types used by adapters.
+* `DataCore.Adapter.Core` ([source](/src/DataCore.Adapter.Core)) - a .NET Standard 2.0 library containing request and response types used by adapters.
 * `DataCore.Adapter.Abstractions` ([source](/src/DataCore.Adapter.Abstractions)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that contains base classes and utility classes for simplifying the implementation of adapter features.
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a .NET Standard 2.0 library containing an adapter that uses CSV files to serve real-time and historical tag values.
