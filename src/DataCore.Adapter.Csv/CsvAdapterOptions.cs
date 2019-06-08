@@ -6,6 +6,11 @@ using System.IO;
 using System.Text;
 
 namespace DataCore.Adapter.Csv {
+
+    /// <summary>
+    /// Options for <see cref="CsvAdapter"/> instances.
+    /// </summary>
+    /// <seealso cref="CsvAdapter"/>
     public class CsvAdapterOptions {
 
         /// <summary>
