@@ -44,7 +44,7 @@ services.AddDataCoreAdapterServices(options => {
         }
     );
 
-    // To authorization options for adapter API operations, extend 
+    // To add authorization options for adapter API operations, extend 
     // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
     // to register your handler.
     //options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
