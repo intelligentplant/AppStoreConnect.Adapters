@@ -69,10 +69,54 @@ namespace DataCore.Adapter.Grpc.Server {
 
 
         /// <summary>
+        /// Converts from an adapter asset mode node to its gRPC equivalent.
+        /// </summary>
+        /// <param name="node">
+        ///   The adapter asset model node.
+        /// </param>
+        /// <returns>
+        ///   The gRPC asset model node.
+        /// </returns>
+        internal static AssetModelNode ToGrpcAssetModelNode(this AssetModel.Models.AssetModelNode node) {
+            var result = new AssetModelNode() {
+                Id = node.Id ?? string.Empty,
+                Name = node.Name ?? string.Empty,
+                Description = node.Description ?? string.Empty,
+                Parent = node.Parent ?? string.Empty
+            };
+
+            if (node.Children.Any()) {
+                result.Children.AddRange(node.Children);
+            }
+            if (node.Measurements?.Count > 0) {
+                foreach (var item in node.Measurements) {
+                    result.Measurements.Add(item.Key, item.Value.ToGrpcTagDefinition());
+                }
+            }
+            if (node.Properties?.Count > 0) {
+                foreach (var item in node.Properties) {
+                    result.Properties.Add(item.Key, item.Value);
+                }
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
         /// Converts from an adapter tag value to its gRPC equivalent.
         /// </summary>
         /// <param name="value">
         ///   The adapter tag value.
+        /// </param>
+        /// <param name="tagId">
+        ///   The ID of the tag.
+        /// </param>
+        /// <param name="tagName">
+        ///   The name of the tag.
+        /// </param>
+        /// <param name="queryType">
+        ///   The type of query that was used to retrieve the value.
         /// </param>
         /// <returns>
         ///   The gRPC tag value.

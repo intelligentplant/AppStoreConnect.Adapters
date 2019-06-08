@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
@@ -173,74 +176,30 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="utcSampleTime">
-        ///   The time stamp for the calcuated value.
-        /// </param>
-        /// <param name="rawValues">
+        /// <param name="bucket">
         ///   The values to calculate the average from.
         /// </param>
         /// <returns>
         ///   The new tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="rawValues"/> used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static TagValue CalculateAverage(TagDefinition tag, DateTime utcSampleTime, IEnumerable<TagValue> rawValues) {
-            var tagInfoSample = rawValues.First();
-            var numericValue = rawValues.Average(x => x.NumericValue);
+        private static TagValue CalculateAverage(TagDefinition tag, TagValueBucket bucket) {
+            var tagInfoSample = bucket.Samples.First();
+            var numericValue = bucket.Samples.Min(x => x.NumericValue);
             var textValue = tag.GetTextValue(numericValue);
-            var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
-                .WithUtcSampleTime(utcSampleTime)
+                .WithUtcSampleTime(bucket.UtcEnd)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)
                 .WithStatus(status)
                 .WithUnits(tagInfoSample.Units)
                 .Build();
         }
-
-
-        /// <summary>
-        /// Calculates average (mean) data using the specified raw data samples.
-        /// </summary>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcStartTime">
-        ///   The UTC start time for the aggregated data set.
-        /// </param>
-        /// <param name="utcEndTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="sampleInterval">
-        ///   The sample interval to use for the aggregation.
-        /// </param>
-        /// <param name="rawData">
-        ///   The raw samples to use in the aggregation. Note that, for accurate calculation, 
-        ///   <paramref name="rawData"/> should contain samples starting at 
-        ///   <paramref name="utcStartTime"/> - <paramref name="sampleInterval"/>.
-        /// </param>
-        /// <returns>
-        ///   The average tag values.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="sampleInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="rawData"/> is <see langword="null"/>.
-        /// </exception>
-        public static IEnumerable<TagValue> GetAverageValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Average.Name, CalculateAverage);
-        }
-
 
         #endregion
 
@@ -252,72 +211,29 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="utcSampleTime">
-        ///   The time stamp for the calcuated value.
-        /// </param>
-        /// <param name="rawValues">
-        ///   The values to calculate the average from.
+        /// <param name="bucket">
+        ///   The values to calculate the minimum value from.
         /// </param>
         /// <returns>
         ///   The new tag value.
         /// </returns>
         /// <remarks>
-        ///   The statuc used is the worst-case of all of the <paramref name="rawValues"/> used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static TagValue CalculateMinimum(TagDefinition tag, DateTime utcSampleTime, IEnumerable<TagValue> rawValues) {
-            var tagInfoSample = rawValues.First();
-            var numericValue = rawValues.Min(x => x.NumericValue);
+        private static TagValue CalculateMinimum(TagDefinition tag, TagValueBucket bucket) {
+            var tagInfoSample = bucket.Samples.First();
+            var numericValue = bucket.Samples.Min(x => x.NumericValue);
             var textValue = tag.GetTextValue(numericValue);
-            var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
-                .WithUtcSampleTime(utcSampleTime)
+                .WithUtcSampleTime(bucket.UtcEnd)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)
                 .WithStatus(status)
                 .WithUnits(tagInfoSample.Units)
                 .Build();
-        }
-
-
-        /// <summary>
-        /// Calculates minimum-aggregated data using the specified raw data samples.
-        /// </summary>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcStartTime">
-        ///   The UTC start time for the aggregated data set.
-        /// </param>
-        /// <param name="utcEndTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="sampleInterval">
-        ///   The sample interval to use for the aggregation.
-        /// </param>
-        /// <param name="rawData">
-        ///   The raw samples to use in the aggregation. Note that, for accurate calculation, 
-        ///   <paramref name="rawData"/> should contain samples starting at 
-        ///   <paramref name="utcStartTime"/> - <paramref name="sampleInterval"/>.
-        /// </param>
-        /// <returns>
-        ///   The average tag values.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="sampleInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="rawData"/> is <see langword="null"/>.
-        /// </exception>
-        public static IEnumerable<TagValue> GetMinimumValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Minimum.Name, CalculateMinimum);
         }
 
         #endregion
@@ -330,27 +246,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="utcSampleTime">
-        ///   The time stamp for the calcuated value.
-        /// </param>
-        /// <param name="rawValues">
-        ///   The values to calculate the average from.
+        /// <param name="bucket">
+        ///   The values to calculate the maximum value from.
         /// </param>
         /// <returns>
         ///   The new tag value.
         /// </returns>
         /// <remarks>
-        ///   The qualilty used is the worst-case of all of the <paramref name="rawValues"/> used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static TagValue CalculateMaximum(TagDefinition tag, DateTime utcSampleTime, IEnumerable<TagValue> rawValues) {
-            var tagInfoSample = rawValues.First();
-            var numericValue = rawValues.Max(x => x.NumericValue);
+        private static TagValue CalculateMaximum(TagDefinition tag, TagValueBucket bucket) {
+            var tagInfoSample = bucket.Samples.First();
+            var numericValue = bucket.Samples.Max(x => x.NumericValue);
             var textValue = tag.GetTextValue(numericValue);
-            var status = rawValues.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
-                .WithUtcSampleTime(utcSampleTime)
+                .WithUtcSampleTime(bucket.UtcEnd)
                 .WithNumericValue(numericValue)
                 .WithTextValue(textValue)
                 .WithStatus(status)
@@ -358,130 +271,106 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .Build();
         }
 
-
-        /// <summary>
-        /// Calculates maximum-aggregated data using the specified raw data samples.
-        /// </summary>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcStartTime">
-        ///   The UTC start time for the aggregated data set.
-        /// </param>
-        /// <param name="utcEndTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="sampleInterval">
-        ///   The sample interval to use for the aggregation.
-        /// </param>
-        /// <param name="rawData">
-        ///   The raw samples to use in the aggregation. Note that, for accurate calculation, 
-        ///   <paramref name="rawData"/> should contain samples starting at 
-        ///   <paramref name="utcStartTime"/> - <paramref name="sampleInterval"/>.
-        /// </param>
-        /// <returns>
-        ///   The average tag values.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="sampleInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="rawData"/> is <see langword="null"/>.
-        /// </exception>
-        public static IEnumerable<TagValue> GetMaximumValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            return GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, DefaultDataFunctions.Maximum.Name, CalculateMaximum);
-        }
-
         #endregion
 
         #region [ Aggregation using Data Function Names ]
 
-        /// <summary>
-        /// Aggregates raw data.
-        /// </summary>
-        /// <param name="dataFunctionName">
-        ///   The name of the aggregation function to use. See the remarks for information about supported 
-        ///   functions.
-        /// </param>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcStartTime">
-        ///   The UTC start time for the aggregated data set.
-        /// </param>
-        /// <param name="utcEndTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="sampleInterval">
-        ///   The sample interval to use for the aggregation.
-        /// </param>
-        /// <param name="rawData">
-        ///   The raw samples to use in the aggregation. Note that, for accurate calculation, 
-        ///   <paramref name="rawData"/> should contain samples starting at 
-        ///   <paramref name="utcStartTime"/> - <paramref name="sampleInterval"/>.
-        /// </param>
-        /// <returns>
-        ///   The aggregated tag values. If the <paramref name="dataFunctionName"/> is not supported, 
-        ///   an empty array will be returned.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="sampleInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="rawData"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        ///   The following data functions are supported:
-        ///   
-        ///   <list type="bullet">
-        ///     <item>
-        ///       <description>
-        ///         <see cref="DefaultDataFunctions.Average"/>
-        ///       </description>
-        ///     </item>
-        ///     <item>
-        ///       <description>
-        ///         <see cref="DefaultDataFunctions.Maximum"/>
-        ///       </description>
-        ///     </item>
-        ///     <item>
-        ///       <description>
-        ///         <see cref="DefaultDataFunctions.Minimum"/>
-        ///       </description>
-        ///     </item>
-        ///   </list>
-        /// </remarks>
-        public static IEnumerable<TagValue> GetAggregatedValues(TagDefinition tag, string dataFunctionName, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData) {
-            if (rawData == null || !rawData.Any()) {
-                return new TagValue[0];
+        public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
             }
-            
-            // AVG
-            if (DefaultDataFunctions.Average.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
-                return GetAverageValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
+            if (utcStartTime >= utcEndTime) {
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
             }
-            // MAX
-            if (DefaultDataFunctions.Maximum.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
-                return GetMaximumValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
-            }
-            // MIN
-            if (DefaultDataFunctions.Minimum.Name.Equals(dataFunctionName, StringComparison.OrdinalIgnoreCase)) {
-                return GetMinimumValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData);
+            if (sampleInterval <= TimeSpan.Zero) {
+                throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
             }
 
-            return new TagValue[0];
+            var result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
+                FullMode = BoundedChannelFullMode.Wait,
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
+
+            var funcs = new Dictionary<string, Func<TagDefinition, TagValueBucket, TagValue>>();
+
+            if (dataFunctions != null) {
+                foreach (var item in dataFunctions) {
+                    if (string.IsNullOrWhiteSpace(item)) {
+                        continue;
+                    }
+
+                    if (string.Equals(item, DefaultDataFunctions.Average.Name, StringComparison.OrdinalIgnoreCase)) {
+                        funcs[DefaultDataFunctions.Average.Name] = CalculateAverage;
+                    }
+                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Name, StringComparison.OrdinalIgnoreCase)) {
+                        funcs[DefaultDataFunctions.Maximum.Name] = CalculateMaximum;
+                    }
+                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Name, StringComparison.OrdinalIgnoreCase)) {
+                        funcs[DefaultDataFunctions.Minimum.Name] = CalculateMinimum;
+                    }
+                }
+            }
+
+            if (funcs.Count == 0) {
+                result.Writer.TryComplete();
+            }
+            else {
+                result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, cancellationToken);
+            }
+
+            return result;
+        }
+
+
+        private static async Task GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, Func<TagDefinition, TagValueBucket, TagValue>> funcs, CancellationToken cancellationToken) {
+            var bucket = new TagValueBucket() {
+                UtcStart = utcStartTime.Subtract(sampleInterval),
+                UtcEnd = utcStartTime
+            };
+
+            while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!rawData.TryRead(out var val)) {
+                    break;
+                }
+                if (val == null) {
+                    continue;
+                }
+
+                if (val.Value.UtcSampleTime < bucket.UtcStart) {
+                    continue;
+                }
+
+                if (val.Value.UtcSampleTime > bucket.UtcEnd) {
+                    if (bucket.Samples.Count > 0) {
+                        await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    bucket = new TagValueBucket() {
+                        UtcStart = bucket.UtcEnd,
+                        UtcEnd = bucket.UtcEnd.Add(sampleInterval)
+                    };
+                }
+
+                if (val.Value.UtcSampleTime < utcEndTime) {
+                    bucket.Samples.Add(val.Value);
+                }
+            }
+
+            if (bucket.Samples.Count > 0) {
+                await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, Func<TagDefinition, TagValueBucket, TagValue>> funcs, CancellationToken cancellationToken) {
+            foreach (var agg in funcs) {
+                var val = agg.Value.Invoke(tag, bucket);
+                if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                    resultChannel.TryWrite(new ProcessedTagValueQueryResult(tag.Id, tag.Name, val, agg.Key));
+                }
+            }
         }
 
 

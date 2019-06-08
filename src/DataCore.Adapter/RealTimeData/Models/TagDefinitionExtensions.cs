@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using DataCore.Adapter.RealTimeData.Utilities;
@@ -125,26 +126,29 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="numericValue">
         ///   The numeric value.
         /// </param>
+        /// <param name="provider">
+        ///   The format provider to use.
+        /// </param>
         /// <returns>
         ///   The equivalent text value. For state-based tags, this will be the name of the state that 
         ///   matches the numeric value.
         /// </returns>
-        public static string GetTextValue(this TagDefinition tag, double numericValue) {
+        public static string GetTextValue(this TagDefinition tag, double numericValue, IFormatProvider provider = null) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
 
             switch (tag.DataType) {
                 case TagDataType.State:
-                    return tag.States.FirstOrDefault(x => x.Value == numericValue).Key ?? TagValueBuilder.GetTextValue(numericValue);
+                    return tag.States.FirstOrDefault(x => x.Value == numericValue).Key ?? TagValueBuilder.GetTextValue(numericValue, provider);
                 default:
-                    return TagValueBuilder.GetTextValue(numericValue);
+                    return TagValueBuilder.GetTextValue(numericValue, provider);
             }
         }
 
 
         /// <summary>
-        /// Gets the numeric value for a tag based on its nutextmeric value.
+        /// Gets the numeric value for a tag based on its text value.
         /// </summary>
         /// <param name="tag">
         ///   The tag.
@@ -152,11 +156,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="textValue">
         ///   The text value.
         /// </param>
+        /// <param name="provider">
+        ///   The format provider to use when parsing the text value.
+        /// </param>
         /// <returns>
         ///   The equivalent numeric value. For state-based tags, this will be the value of the state 
         ///   that matches the text value.
         /// </returns>
-        public static double GetNumericValue(this TagDefinition tag, string textValue) {
+        public static double GetNumericValue(this TagDefinition tag, string textValue, IFormatProvider provider = null) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -168,11 +175,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
                     var state = tag.States.FirstOrDefault(x => x.Key.Equals(textValue, StringComparison.OrdinalIgnoreCase));
                     return state.Key != null
                         ? state.Value
-                        : double.TryParse(textValue, out num)
+                        : double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
                             ? num
                             : double.NaN;
                 default:
-                    return double.TryParse(textValue, out num)
+                    return double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
                             ? num
                             : double.NaN;
             }

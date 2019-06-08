@@ -8,14 +8,34 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DataCore.Adapter.Grpc.Server.Services;
+using System.IO;
 
 namespace DataCore.Adapter.GrpcExampleServer {
     public class Startup {
         
 
         public void ConfigureServices(IServiceCollection services) {
-            // Register our adapter as a singleton.
-            services.AddSingleton<IAdapter, ExampleAdapter>();
+            // Register our adapters.
+
+            services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
+                return new Csv.CsvAdapter(
+                    new Common.Models.AdapterDescriptor("sensor-csv", "Sensor CSV", "CSV adapter with dummy sensor data"),
+                    new Csv.CsvAdapterOptions() {
+                        IsDataLoopingAllowed = true,
+                        GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummySensorData.csv"), FileMode.Open)
+                    }
+                );
+            });
+
+            services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
+                return new Csv.CsvAdapter(
+                    new Common.Models.AdapterDescriptor("acoustic-probe-csv", "Acoustic Probe CSV", "CSV adapter with dummy acoustic probe data"),
+                    new Csv.CsvAdapterOptions() {
+                        IsDataLoopingAllowed = true,
+                        GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummyAcousticProbeData.csv"), FileMode.Open)
+                    }
+                );
+            });
 
             // Add adapter services
             services.AddDataCoreAdapterServices(options => {

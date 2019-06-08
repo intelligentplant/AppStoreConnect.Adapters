@@ -129,17 +129,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Infrastructure only. <see cref="TagDefinitionExtensions.GetTextValue(TagDefinition, double)"/> 
+        /// Infrastructure only. <see cref="TagDefinitionExtensions.GetTextValue(TagDefinition, double, IFormatProvider)"/> 
         /// should be used instead.
         /// </summary>
         /// <param name="numericValue">
         ///   The numeric value.
         /// </param>
+        /// <param name="provider">
+        ///   The format provider to use.
+        /// </param>
         /// <returns>
         ///   The equivalent text value.
         /// </returns>
-        internal static string GetTextValue(double numericValue) {
-            return numericValue.ToString(CultureInfo.InvariantCulture);
+        internal static string GetTextValue(double numericValue, IFormatProvider provider = null) {
+            return numericValue.ToString(provider ?? CultureInfo.CurrentCulture);
         }
 
 
@@ -159,35 +162,70 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Updates the numeric value.
+        /// Updates both the numeric and text values. If <paramref name="textValue"/> is 
+        /// <see langword="null"/> or white space, it will be updated by converting 
+        /// <paramref name="numericValue"/> to a string.
         /// </summary>
-        /// <param name="value">
+        /// <param name="numericValue">
         ///   The numeric value.
+        /// </param>
+        /// <param name="textValue">
+        ///   The text value.
+        /// </param>
+        /// <param name="provider">
+        ///   The format provider to use if a conversion of the numeric value to a string is required.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithNumericValue(double value) {
+        public TagValueBuilder WithValue(double numericValue, string textValue, IFormatProvider provider = null) {
+            _numericValue = numericValue;
+            _textValue = string.IsNullOrWhiteSpace(textValue)
+                ? GetTextValue(numericValue, provider)
+                : textValue;
+            return this;
+        }
+
+
+        /// <summary>
+        /// Updates the numeric value. If the text value is currently <see langword="null"/> or white 
+        /// space, it will be updated as a string-formatted version of the numeric value.
+        /// </summary>
+        /// <param name="value">
+        ///   The numeric value.
+        /// </param>
+        /// <param name="provider">
+        ///   The format provider to use.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        public TagValueBuilder WithNumericValue(double value, IFormatProvider provider = null) {
             _numericValue = value;
             if (string.IsNullOrWhiteSpace(_textValue)) {
-                _textValue = GetTextValue(value);
+                _textValue = GetTextValue(value, provider);
             }
             return this;
         }
 
 
         /// <summary>
-        /// Updates the text value.
+        /// Updates the text value. If the numeric value is currently <see cref="double.NaN"/> and 
+        /// the text value can be parsed to a <see cref="double"/>, the numeric value will also be 
+        /// updated.
         /// </summary>
         /// <param name="value">
         ///   The text value.
         /// </param>
+        /// <param name="provider">
+        ///   The format provider to use.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithTextValue(string value) {
+        public TagValueBuilder WithTextValue(string value, IFormatProvider provider = null) {
             _textValue = value;
-            if (!string.IsNullOrWhiteSpace(_textValue) && double.IsNaN(_numericValue) && double.TryParse(value, out var numericValue)) {
+            if (!string.IsNullOrWhiteSpace(_textValue) && double.IsNaN(_numericValue) && double.TryParse(value, NumberStyles.Any, provider ?? CultureInfo.InvariantCulture, out var numericValue)) {
                 _numericValue = numericValue;
             }
             return this;

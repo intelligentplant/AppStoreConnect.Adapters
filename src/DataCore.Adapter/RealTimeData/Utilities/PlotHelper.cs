@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
@@ -25,7 +28,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a plot-friendly data set suitable for trending.
+        /// Creates a visualization-friendly data set suitable for trending.
         /// </summary>
         /// <param name="tag">
         ///   The tag definition.
@@ -36,14 +39,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="utcEndTime">
         ///   The UTC end time for the plot data set.
         /// </param>
-        /// <param name="intervals">
-        ///   The number of buckets to use when calculating the plot data set.
+        /// <param name="bucketSize">
+        ///   The bucket size to use when calculating the plot data set.
         /// </param>
         /// <param name="rawData">
-        ///   The raw data to use in the calculations.
+        ///   A channel that will provide the raw data to use in the calculations.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A set of trend-friendly samples.
+        ///   A channel that will emit a set of trend-friendly samples.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
@@ -52,13 +58,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="intervals"/> is less than one.
+        ///   <paramref name="bucketSize"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
         /// </exception>
         /// <remarks>
         /// 
         /// <para>
         ///   The plot function works by collecting raw values into buckets. Each bucket covers the 
-        ///   same period of time. The method iterates over <paramref name="rawData"/> and adds samples 
+        ///   same period of time. The method reads from <paramref name="rawData"/> and adds samples 
         ///   to the bucket, until it encounters a sample that has a time stamp that is after the 
         ///   bucket's end time. The function then takes the earliest, latest, minimum and maximum 
         ///   values in the bucket, as well as the first non-good value in the bucket, and adds them 
@@ -66,27 +72,64 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// <para>
-        ///   It is important then to note that <see cref="GetPlotValues"/> is not guaranteed to give 
-        ///   evenly-spaced time stamps in the resulting data set, but instead returns a data set that 
+        ///   It is important then to note that method is not guaranteed to give evenly-spaced time 
+        ///   stamps in the resulting data set, but instead returns a data set that 
         ///   gives a reasonable approximation of the tag when visualized.
         /// </para>
         /// 
         /// </remarks>
-        public static IEnumerable<TagValue> GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, int intervals, IEnumerable<TagValue> rawData) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
-
-            var bucketSize = CalculateBucketSize(utcStartTime, utcEndTime, intervals);
-
-            var rawSamples = rawData?.Where(x => x != null).ToArray() ?? new TagValue[0];
-            if (rawSamples.Length == 0) {
-                return new TagValue[0];
+            if (utcStartTime >= utcEndTime) {
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+            }
+            if (bucketSize <= TimeSpan.Zero) {
+                throw new ArgumentException(Resources.Error_BucketSizeMustBeGreaterThanZero, nameof(bucketSize));
             }
 
-            // Set the initial list capacity based on the time range and sample interval.
-            var result = new List<TagValue>((int) ((utcEndTime - utcStartTime).TotalMilliseconds / bucketSize.TotalMilliseconds));
+            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
+                FullMode = BoundedChannelFullMode.Wait,
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
 
+            result.Writer.RunBackgroundOperation((ch, ct) => GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, rawData, ch, ct), true, cancellationToken);
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Creates a visualization-friendly data set suitable for trending.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The UTC start time for the plot data set.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time for the plot data set.
+        /// </param>
+        /// <param name="bucketSize">
+        ///   The bucket size to use when calculating the plot data set.
+        /// </param>
+        /// <param name="rawData">
+        ///   A channel that will provide the raw data to use in the calculations.
+        /// </param>
+        /// <param name="resultChannel">
+        ///   A channel that the computed values will be written to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will compute the values.
+        /// </returns>
+        private static async Task GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             // We will determine the values to return for the plot request by creating aggregation 
             // buckets that cover a time range that is equal to the bucketSize. For each bucket, we 
             // will we add up to 5 raw samples into the resulting data set:
@@ -105,177 +148,103 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 UtcEnd = utcStartTime.Add(bucketSize)
             };
 
-            // If the initial bucket covers a period of time that starts before the raw data set that 
-            // we have been given, move the start time of the bucket forward to match the first raw 
-            // sample.
-
-            var firstSample = rawSamples[0];
-
-            if (bucket.UtcStart < firstSample.UtcSampleTime) {
-                bucket.UtcStart = firstSample.UtcSampleTime;
-                // Make sure that the end time of the bucket is at least equal to the start time of the bucket.
-                if (bucket.UtcEnd < bucket.UtcStart) {
-                    bucket.UtcEnd = bucket.UtcStart;
-                }
-            }
-
-            var sampleEnumerator = rawSamples.AsEnumerable().GetEnumerator();
-            // The raw sample that was processed before the current sample.  Used when we need to interpolate 
-            // a value at utcStartTime or utcEndTime.
-            TagValue previousSample = null;
-            // The raw sample that was processed before previousSample.  Used when we need to interpolate a 
-            // value at utcEndTime.
-            TagValue previousPreviousSample = null;
-            // An interpolated value calculated at utcStartTime.  Included in the final result when a raw 
-            // sample does not exactly fall at utcStartTime.
-            TagValue interpolatedStartValue = null;
-            // The last value in the previous bucket.
             TagValue lastValuePreviousBucket = null;
 
-
-            while (sampleEnumerator.MoveNext()) {
-                var currentSample = sampleEnumerator.Current;
-
-                // If we've moved past the requested end time, break from the loop.
-                if (currentSample.UtcSampleTime > utcEndTime) {
+            while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!rawData.TryRead(out var val)) {
                     break;
                 }
-
-                // If the current sample lies before the bucket start time, make a note of the sample 
-                // for use in interpolation calculations and move on to the next sample.  This can 
-                // occur when utcStartTime is greater than the start time of the raw data set.
-                if (currentSample.UtcSampleTime < bucket.UtcStart) {
-                    previousPreviousSample = previousSample;
-                    previousSample = currentSample;
+                if (val == null) {
                     continue;
                 }
 
-                // If utcStartTime lies between the previous sample and the current sample, we'll interpolate a value at utcStartTime.
-                if (interpolatedStartValue == null &&
-                    previousSample != null &&
-                    currentSample.UtcSampleTime > utcStartTime &&
-                    previousSample.UtcSampleTime < utcStartTime) {
-                    interpolatedStartValue = InterpolationHelper.GetValueAtTime(tag, utcStartTime, previousSample, currentSample, InterpolationCalculationType.Interpolate);
+                if (val.Value.UtcSampleTime < utcStartTime) {
+                    continue;
                 }
 
-                previousPreviousSample = previousSample;
-                previousSample = currentSample;
+                if (val.Value.UtcSampleTime > utcEndTime) {
+                    continue;
+                }
 
-                // If we've moved past the end of the bucket, identify the values to use for the bucket, 
-                // move to the next bucket, and repeat this process until the end time for the bucket 
-                // is greater than the time stamp for currentSample.
-                //
-                // This allows us to handle situations where there is a gap in raw data that is bigger 
-                // than our bucket size (e.g. if our bucket size is 20 minutes, but there is a gap of 
-                // 30 minutes between raw samples).
-                while (currentSample.UtcSampleTime > bucket.UtcEnd) {
+                if (val.Value.UtcSampleTime >= bucket.UtcEnd) {
                     if (bucket.Samples.Count > 0) {
-                        var significantValues = new HashSet<TagValue>();
-
-                        if (bucket.Samples.Any(x => !Double.IsNaN(x.NumericValue))) {
-                            // If any of the samples are numeric, assume that we can aggregate.
-                            significantValues.Add(bucket.Samples.First());
-                            significantValues.Add(bucket.Samples.Last());
-                            significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue <= b.NumericValue ? a : b)); // min
-                            significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue >= b.NumericValue ? a : b)); // max
-
-                            var exceptionValue = bucket.Samples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
-                            if (exceptionValue != null) {
-                                significantValues.Add(exceptionValue);
-                            }
-
-                        }
-                        else {
-                            // We don't have any numeric values, so we have to add each value change 
-                            // in the bucket.
-                            var currentState = lastValuePreviousBucket;
-                            foreach (var item in bucket.Samples) {
-                                if (currentState != null && String.Equals(currentState.TextValue, item.TextValue) && currentState.Status == item.Status) {
-                                    continue;
-                                }
-                                currentState = item;
-                                significantValues.Add(item);
-                            }
-                        }
-
-                        foreach (var item in significantValues.OrderBy(x => x.UtcSampleTime)) {
-                            result.Add(item);
-                        }
-
+                        await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
                         lastValuePreviousBucket = bucket.Samples.Last();
-                        bucket.Samples.Clear();
                     }
 
-                    bucket.UtcStart = bucket.UtcEnd;
-                    bucket.UtcEnd = bucket.UtcStart.Add(bucketSize);
+                    bucket = new TagValueBucket() {
+                        UtcStart = bucket.UtcEnd,
+                        UtcEnd = bucket.UtcStart.Add(bucketSize)
+                    };
                 }
 
-                bucket.Samples.Add(currentSample);
+                bucket.Samples.Add(val.Value);
             }
 
-            // We've moved past utcEndTime in the raw data.  If we still have any values in the bucket, 
-            // identify the significant values and add them to the result.
             if (bucket.Samples.Count > 0) {
-                var significantValues = new HashSet<TagValue>();
-
-                if (bucket.Samples.Any(x => !Double.IsNaN(x.NumericValue))) {
-                    // If any of the samples are numeric, assume that we can aggregate.
-
-                    significantValues.Add(bucket.Samples.First());
-                    significantValues.Add(bucket.Samples.Last());
-                    significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue <= b.NumericValue ? a : b)); // min
-                    significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue >= b.NumericValue ? a : b)); // max
-
-                    var exceptionValue = bucket.Samples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
-                    if (exceptionValue != null) {
-                        significantValues.Add(exceptionValue);
-                    }
-                }
-                else {
-                    // We don't have any numeric values, so we have to add each text value change 
-                    // or quality status change in the bucket.
-                    var currentState = lastValuePreviousBucket;
-                    foreach (var item in bucket.Samples) {
-                        if (currentState != null && String.Equals(currentState.TextValue, item.TextValue) && currentState.Status == item.Status) {
-                            continue;
-                        }
-                        currentState = item;
-                        significantValues.Add(item);
-                    }
-                }
-
-                foreach (var item in significantValues.OrderBy(x => x.UtcSampleTime)) {
-                    result.Add(item);
-                }
+                await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
             }
+        }
 
-            if (result.Count == 0) {
-                // Add interpolated values at utcStartTime and utcEndTime, if possible.
-                if (interpolatedStartValue != null) {
-                    result.Add(interpolatedStartValue);
-                    // Only attempt to add a value at utcEndTime if we also have one at utcStartTime.  Otherwise, 
-                    // we will be interpolating based on two values that lie before utcStartTime.
-                    if (previousSample != null && previousPreviousSample != null) {
-                        result.Add(InterpolationHelper.GetValueAtTime(tag, utcEndTime, previousPreviousSample, previousSample, InterpolationCalculationType.Interpolate));
-                    }
-                }
+
+        /// <summary>
+        /// Emits samples calculated from the specified bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition for the samples.
+        /// </param>
+        /// <param name="bucket">
+        ///   The bucket.
+        /// </param>
+        /// <param name="lastValuePreviousBucket">
+        ///   The last value that was added to the previous bucket for the same tag.
+        /// </param>
+        /// <param name="resultsChannel">
+        ///   The channel to write the calculated values to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will calculate and emit the samples.
+        /// </returns>
+        /// <remarks>
+        ///   Assumes that the <paramref name="bucket"/> contains at least one sample.
+        /// </remarks>
+        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, TagValue lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
+            var significantValues = new HashSet<TagValue>();
+
+            if (tag.DataType == TagDataType.Numeric) {
+                significantValues.Add(bucket.Samples.First());
+                significantValues.Add(bucket.Samples.Last());
+                significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue <= b.NumericValue ? a : b)); // min
+                significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue >= b.NumericValue ? a : b)); // max
             }
             else {
-                // Add the interpolated value at utcStartTime if the first value in the result set 
-                // has a time stamp greater than utcStartTime.
-                if (interpolatedStartValue != null && result.First().UtcSampleTime > utcStartTime) {
-                    result.Insert(0, interpolatedStartValue);
-                }
-
-                // If the last value in the result set has a time stamp less than utcEndTime, re-add 
-                // the last value at utcEndTime.
-                if (previousSample != null && previousPreviousSample != null && result.Last().UtcSampleTime < utcEndTime) {
-                    result.Add(InterpolationHelper.GetValueAtTime(tag, utcEndTime, previousSample, null, InterpolationCalculationType.UsePreviousValue));
+                // The tag is not numeric, so we have to add each text value change or quality status 
+                // change in the bucket.
+                var currentState = lastValuePreviousBucket;
+                foreach (var item in bucket.Samples) {
+                    if (currentState != null && string.Equals(currentState.TextValue, item.TextValue) && currentState.Status == item.Status) {
+                        continue;
+                    }
+                    currentState = item;
+                    significantValues.Add(item);
                 }
             }
 
-            return result;
+            var exceptionValue = bucket.Samples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
+            if (exceptionValue != null) {
+                significantValues.Add(exceptionValue);
+            }
 
+            foreach (var value in significantValues.OrderBy(x => x.UtcSampleTime)) {
+                if (!await resultsChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                    break;
+                }
+                resultsChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, value));
+            }
         }
+
     }
 }

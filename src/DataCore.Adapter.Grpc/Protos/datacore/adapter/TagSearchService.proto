@@ -14,8 +14,8 @@ service TagSearchService {
 // Find tags
 message FindTagsRequest {
     string adapter_id = 1;
-    fixed32 page_size = 2;
-    fixed32 page = 3;
+    int32 page_size = 2;
+    int32 page = 3;
     string name = 4;
     string description = 5;
     string units = 6;

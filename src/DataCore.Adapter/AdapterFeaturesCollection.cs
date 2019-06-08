@@ -46,16 +46,12 @@ namespace DataCore.Adapter {
         /// <param name="featureProvider">
         ///   The object that will provide the adapter feature implementations.
         /// </param>
+        /// <remarks>
+        ///   All interfaces implemented by the <paramref name="featureProvider"/> that extend 
+        ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="AdapterFeaturesCollection"/>.
+        /// </remarks>
         public AdapterFeaturesCollection(object featureProvider) : this() {
-            if (featureProvider == null) {
-                return;
-            }
-
-            var rootFeatureType = typeof(IAdapterFeature);
-            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(t => rootFeatureType.IsAssignableFrom(t));
-            foreach (var feature in implementedFeatures) {
-                _features[feature] = featureProvider;
-            }
+            AddFromProvider(featureProvider);
         }
 
 
@@ -63,6 +59,29 @@ namespace DataCore.Adapter {
         public TFeature Get<TFeature>() where TFeature : IAdapterFeature {
             var type = typeof(TFeature);
             return (TFeature) this[type];
+        }
+
+
+        /// <summary>
+        /// Adds all adapter features implemented by the specified feature provider.
+        /// </summary>
+        /// <param name="featureProvider">
+        ///   The object that will provide the adapter feature implementations.
+        /// </param>
+        /// <remarks>
+        ///   All interfaces implemented by the <paramref name="featureProvider"/> that extend 
+        ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="AdapterFeaturesCollection"/>.
+        /// </remarks>
+        public void AddFromProvider(object featureProvider) {
+            if (featureProvider == null) {
+                return;
+            }
+
+            var rootFeatureType = typeof(IAdapterFeature);
+            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(t => rootFeatureType.IsAssignableFrom(t) && t != rootFeatureType);
+            foreach (var feature in implementedFeatures) {
+                _features[feature] = featureProvider;
+            }
         }
 
 

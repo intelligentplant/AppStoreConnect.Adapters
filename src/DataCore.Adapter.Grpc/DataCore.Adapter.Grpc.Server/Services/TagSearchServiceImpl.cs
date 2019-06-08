@@ -30,8 +30,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Description = request.Description,
                 Units = request.Units,
                 Other = request.Other,
-                PageSize = (int) request.PageSize,
-                Page = (int) request.Page
+                PageSize = request.PageSize,
+                Page = request.Page
             }, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

@@ -151,6 +151,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You cannot specify a null node ID..
+        /// </summary>
+        public static string Error_NodeIdCannotBeNull {
+            get {
+                return ResourceManager.GetString("Error_NodeIdCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}..
         /// </summary>
         public static string Error_NotAnAdapterFeature {

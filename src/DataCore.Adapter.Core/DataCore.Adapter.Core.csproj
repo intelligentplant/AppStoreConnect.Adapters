@@ -27,6 +27,7 @@
     <EmbeddedResource Update="SharedResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>SharedResources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
 

@@ -99,7 +99,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new [] { tag.Id },
                         UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
                         UtcEndTime = request.UtcEndTime,
@@ -107,21 +107,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var values = new List<TagValue>();
-                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!valueReader.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-                        values.Add(val.Value);
-                    }
 
-                    foreach (var val in InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, InterpolationCalculationType.Interpolate, values)) {
-                        if (ct.IsCancellationRequested) {
-                            break;
+                    var resultValuesReader = InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, ct);
+                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!resultValuesReader.TryRead(out var val) || val == null) {
+                            continue;
                         }
 
                         if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, val));
+                            ch.TryWrite(val);
                         }
                     }
                 }
@@ -147,7 +141,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
                         UtcStartTime = request.UtcStartTime.Subtract(bucketSize),
                         UtcEndTime = request.UtcEndTime,
@@ -155,22 +149,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var values = new List<TagValue>();
-                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!valueReader.TryRead(out var val) || val == null) {
+                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, ct);
+                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
-                        }
-                        values.Add(val.Value);
-                    }
-
-                    foreach (var val in PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, request.Intervals, values)) {
-                        if (ct.IsCancellationRequested) {
-                            break;
                         }
 
                         if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, val));
+                            ch.TryWrite(val);
                         }
+
                     }
                 }
             }, true, cancellationToken);
@@ -199,7 +187,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
                         UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
                         UtcEndTime = request.UtcEndTime,
@@ -207,23 +195,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var values = new List<TagValue>();
-                    while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!valueReader.TryRead(out var val) || val == null) {
+                    var resultValuesReader = AggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, ct);
+                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
                         }
-                        values.Add(val.Value);
-                    }
 
-                    foreach (var dataFunction in request.DataFunctions) {
-                        foreach (var val in AggregationHelper.GetAggregatedValues(tag, dataFunction, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, values)) {
-                            if (ct.IsCancellationRequested) {
-                                break;
-                            }
-
-                            if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                                ch.TryWrite(new ProcessedTagValueQueryResult(tag.Id, tag.Name, val, dataFunction));
-                            }
+                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            ch.TryWrite(val);
                         }
                     }
                 }
@@ -247,26 +226,42 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    foreach (var sampleTime in request.UtcSampleTimes) {
-                        var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                            Tags = new[] { tag.Id },
-                            UtcStartTime = sampleTime.AddSeconds(-1),
-                            UtcEndTime = sampleTime.AddSeconds(1),
-                            SampleCount = 0,
-                            BoundaryType = RawDataBoundaryType.Outside
-                        }, ct);
+                    // Values-at-times queries are managed differently to regular interpolated 
+                    // queries. For values-at-times, we make a raw data query with an outside 
+                    // boundary type for every requested sample time (in case the sample times 
+                    // span a huge number of raw samples). We then write the values received 
+                    // from the resulting channel into a master raw data channel, which is used 
+                    // by the InterpolationHelper to calcukate the required values.
 
-                        var values = new List<TagValue>();
-                        while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            if (!valueReader.TryRead(out var val) || val == null) {
-                                continue;
+                    var rawValuesChannel = CreateChannel<TagValueQueryResult>(-1, BoundedChannelFullMode.Wait);
+
+                    rawValuesChannel.Writer.RunBackgroundOperation(async (ch2, ct2) => {
+                        foreach (var sampleTime in request.UtcSampleTimes) {
+                            var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                                Tags = new[] { tag.Id },
+                                UtcStartTime = sampleTime.AddSeconds(-1),
+                                UtcEndTime = sampleTime.AddSeconds(1),
+                                SampleCount = 0,
+                                BoundaryType = RawDataBoundaryType.Outside
+                            }, ct2);
+
+                            while (await valueReader.WaitToReadAsync(ct2).ConfigureAwait(false)) {
+                                if (!valueReader.TryRead(out var val) || val == null) {
+                                    continue;
+                                }
+                                rawValuesChannel.Writer.TryWrite(val);
                             }
-                            values.Add(val.Value);
+                        }
+                    }, true, ct);
+
+                    var resultValuesReader = InterpolationHelper.GetValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, ct);
+                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!resultValuesReader.TryRead(out var val) || val == null) {
+                            continue;
                         }
 
-                        var valueAtTime = InterpolationHelper.GetValueAtTime(tag, sampleTime, values, tag.DataType == TagDataType.Numeric ? InterpolationCalculationType.Interpolate : InterpolationCalculationType.UsePreviousValue);
                         if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, valueAtTime));
+                            ch.TryWrite(val);
                         }
                     }
                 }
