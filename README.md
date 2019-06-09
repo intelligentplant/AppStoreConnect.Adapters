@@ -12,16 +12,18 @@ This repository contains the following projects:
 * `DataCore.Adapter.Abstractions` ([source](/src/DataCore.Adapter.Abstractions)) - a .NET Standard 2.0 library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a .NET Standard 2.0 library that contains base classes and utility classes for simplifying the implementation of adapter features.
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a .NET Standard 2.0 library containing an adapter that uses CSV files to serve real-time and historical tag values.
-* `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers, SignalR hubs, and concrete implementations of various types to provide integration with ASP.NET Core 2.2 applications.
 * `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - a .NET Standard 2.0 library containing C# implementations of services that can be used to expose adapters via [gRPC](https://grpc.io/).
 * `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a .NET Standard 2.0 library containing C# implementations of clients for querying adapters via [gRPC](https://grpc.io/).
+* `DataCore.Adapter.AspNetCore.Common` ([source](/src/DataCore.Adapter.AspNetCore.Common)) - a .NET Core library containing concrete implementations of various types to provide integration with ASP.NET Core 3.0 applications.
+* `DataCore.Adapter.AspNetCore` ([source](/src/DataCore.Adapter.AspNetCore)) - a .NET Core library containing API controllers and SignalR hubs for use with with ASP.NET Core 3.0 applications.
+* `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a .NET Core library to assist with hosting adapter [gRPC](https://grpc.io/) services.
 
 The [examples](/examples) folder contains example host and client applications.
 
 
 # ASP.NET Core Quick Start
 
-1. Create a new ASP.NET Core 2.2 project.
+1. Create a new ASP.NET Core 3.0 project.
 2. Add a reference to `DataCore.Adapter.AspNetCore` to your project.
 3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
 4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
@@ -57,15 +59,18 @@ services.AddApiVersioning(options => {
 
 // Add the adapter API controllers to the MVC registration.
 services.AddMvc()
-    .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+    .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
     .AddDataCoreAdapterMvc();
 ```
 
-7. In your `Startup.cs` file, configure adapter SignalR hubs in the `Configure` method:
+7. In your `Startup.cs` file, add adapter Web API controller and SignalR hub endpoints in the `Configure` method:
 
 ```csharp
-app.UseSignalR(route => {
-    route.MapDataCoreAdapterHubs();
+app.UseRouting();
+
+app.UseEndpoints(endpoints => {
+    endpoints.MapControllers();
+    endpoints.MapDataCoreAdapterHubs();
 });
 ```
 

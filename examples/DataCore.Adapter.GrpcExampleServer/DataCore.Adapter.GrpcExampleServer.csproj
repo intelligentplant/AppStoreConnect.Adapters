@@ -23,8 +23,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc\DataCore.Adapter.Grpc.Server\DataCore.Adapter.Grpc.Server.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore\DataCore.Adapter.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj" />
   </ItemGroup>
 

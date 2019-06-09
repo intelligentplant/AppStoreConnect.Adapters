@@ -2,17 +2,16 @@
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.AspNetCore.Hubs;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
+
 
 namespace Microsoft.Extensions.DependencyInjection {
 
     /// <summary>
     /// Service registration extensions.
     /// </summary>
-    public static class ConfigurationExtensions {
+    public static class CommonConfigurationExtensions {
 
         /// <summary>
         /// Adds services required to run App Store Connect adapters.
@@ -47,42 +46,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             services.AddSingleton<HostInfo>(sp => HostInfo.FromExisting(options.HostInfo ?? HostInfo.Unspecified));
 
             return services;
-        }
-
-
-        /// <summary>
-        /// Adds the adapter API controllers to the MVC registration.
-        /// </summary>
-        /// <param name="builder">
-        ///   The MVC builder.
-        /// </param>
-        /// <returns>
-        ///   The MVC builder.
-        /// </returns>
-        public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
-            builder.AddApplicationPart(typeof(ConfigurationExtensions).Assembly);
-
-            return builder;
-        }
-
-
-        /// <summary>
-        /// Adds adapter hubs to the SignalR registration.
-        /// </summary>
-        /// <param name="builder">
-        ///   The SignalR route builder.
-        /// </param>
-        /// <returns>
-        ///   The SignalR route builder.
-        /// </returns>
-        public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
-            const string routePrefix = "/signalr/data-core/v1.0";
-            builder.MapHub<AssetModelBrowserHub>($"{routePrefix}/asset-model-browser");
-            builder.MapHub<EventsHub>($"{routePrefix}/events");
-            builder.MapHub<TagAnnotationsHub>($"{routePrefix}/tag-annotations");
-            builder.MapHub<TagSearchHub>($"{routePrefix}/tag-search");
-            builder.MapHub<TagValuesHub>($"{routePrefix}/tag-values");
-            return builder;
         }
 
     }

@@ -37,7 +37,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.ExampleAda
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.GrpcExampleClient", "examples\DataCore.Adapter.GrpcExampleClient\DataCore.Adapter.GrpcExampleClient.csproj", "{F8F84631-2D62-4104-BDFD-F43C6A76C068}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Csv", "src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj", "{A00430B8-EF92-4C82-97C1-48B8977B88A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Csv", "src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj", "{A00430B8-EF92-4C82-97C1-48B8977B88A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.Common", "src\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj", "{1EEB0C0A-6790-401A-A501-411FF8235861}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.Grpc", "src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj", "{0895A919-F5F8-4358-98B0-1BC7087D1906}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +97,14 @@ Global
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EEB0C0A-6790-401A-A501-411FF8235861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EEB0C0A-6790-401A-A501-411FF8235861}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EEB0C0A-6790-401A-A501-411FF8235861}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EEB0C0A-6790-401A-A501-411FF8235861}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -110,6 +122,8 @@ Global
 		{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
 		{F8F84631-2D62-4104-BDFD-F43C6A76C068} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
+		{1EEB0C0A-6790-401A-A501-411FF8235861} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
+		{0895A919-F5F8-4358-98B0-1BC7087D1906} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

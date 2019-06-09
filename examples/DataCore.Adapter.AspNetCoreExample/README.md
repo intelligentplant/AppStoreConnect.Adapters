@@ -1,1 +1,1 @@
-﻿An example ASP.NET Core 2.2 web application that hosts an App Store Connect adapter for an in-memory data source. A looping data set is used to serve up sensor-like data.
+﻿An example ASP.NET Core 3.0 web application that hosts an App Store Connect adapter for an in-memory data source. A looping data set is used to serve up sensor-like data.

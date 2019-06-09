@@ -1,6 +1,6 @@
-﻿# DataCore.Adapter.AspNetCore
+﻿# DataCore.Adapter.AspNetCore.Grpc
 
-This project contains API controllers and SignalR hubs for querying adapters in an ASP.NET Core application.
+This project provides helper methods to add gRPC adapter services to an ASP.NET Core application.
 
 
 # Registering Adapters
@@ -38,32 +38,14 @@ services.AddDataCoreAdapterServices(options => {
 ```
 
 
-# Registering Adapter API Controllers
+# Registering gRPC Services
 
-API controllers are registered with ASP.NET Core MVC in the `Startup.cs` file's `ConfigureServices` method:
-
-```csharp
-// Adapter API controllers require the API versioning service.
-services.AddApiVersioning(options => {
-    options.ReportApiVersions = true;
-});
-
-// Add the adapter API controllers to the MVC registration.
-services.AddMvc()
-    .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-    .AddDataCoreAdapterMvc();
-```
-
-
-# Registering Adapter API Controller and SignalR Hub Endpoints
-
-API controllers and SignalR hubs must be added to the application's endpoints in the `Startup.cs` file's `Configure` method:
+gRPC services must be added to the application's endpoints in the `Startup.cs` file's `Configure` method:
 
 ```csharp
 app.UseRouting();
 
 app.UseEndpoints(endpoints => {
-    endpoints.MapControllers();
-    endpoints.MapDataCoreAdapterHubs();
+    endpoints.MapDataCoreGrpcServices();
 });
 ```

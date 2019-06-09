@@ -63,11 +63,7 @@ namespace DataCore.Adapter.GrpcExampleServer {
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
-                endpoints.MapGrpcService<HostInfoServiceImpl>();
-                endpoints.MapGrpcService<AdaptersServiceImpl>();
-                endpoints.MapGrpcService<TagSearchServiceImpl>();
-                endpoints.MapGrpcService<TagValuesServiceImpl>();
-                endpoints.MapGrpcService<EventsServiceImpl>();
+                endpoints.MapDataCoreGrpcServices();
             });
         }
     }
