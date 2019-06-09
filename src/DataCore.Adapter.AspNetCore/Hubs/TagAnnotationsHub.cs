@@ -49,6 +49,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadTagValueAnnotations(AdapterCallContext, request, cancellationToken);
         }
 

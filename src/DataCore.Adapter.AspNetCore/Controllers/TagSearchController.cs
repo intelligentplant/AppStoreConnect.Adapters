@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -77,8 +75,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
-            var feature = resolvedFeature.Feature;
 
+            var feature = resolvedFeature.Feature;
             var reader = feature.FindTags(_callContext, request, cancellationToken);
             var tags = new List<TagDefinition>();
 

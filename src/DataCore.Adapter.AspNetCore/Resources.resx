@@ -140,4 +140,8 @@
     <value>Unsupported interface: {0}</value>
     <comment>{0} - interface name</comment>
   </data>
+  <data name="Warning_MaxResponseItemsReached" xml:space="preserve">
+    <value>Max items = {0}</value>
+    <comment>{0} - maximum number of response items allowed</comment>
+  </data>
 </root>

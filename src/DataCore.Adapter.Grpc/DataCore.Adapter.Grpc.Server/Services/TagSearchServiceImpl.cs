@@ -25,14 +25,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.FindTags(_adapterCallContext, new Adapter.RealTimeData.Models.FindTagsRequest() {
+            var adapterRequest = new Adapter.RealTimeData.Models.FindTagsRequest() {
                 Name = request.Name,
                 Description = request.Description,
                 Units = request.Units,
                 Other = request.Other,
                 PageSize = request.PageSize,
                 Page = request.Page
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.FindTags(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {
@@ -49,9 +52,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.GetTags(_adapterCallContext, new Adapter.RealTimeData.Models.GetTagsRequest() {
+            var adapterRequest = new Adapter.RealTimeData.Models.GetTagsRequest() {
                 Tags = request.Tags.ToArray()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.GetTags(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {

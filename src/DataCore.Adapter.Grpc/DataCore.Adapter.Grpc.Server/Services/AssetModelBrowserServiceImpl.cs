@@ -25,10 +25,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowser>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.BrowseAssetModelNodes(_adapterCallContext, new Adapter.AssetModel.Models.BrowseAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.Models.BrowseAssetModelNodesRequest() {
                 ParentId = request.ParentId,
                 Depth = request.Depth
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.BrowseAssetModelNodes(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {
@@ -45,9 +48,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowser>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.GetAssetModelNodes(_adapterCallContext, new Adapter.AssetModel.Models.GetAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.Models.GetAssetModelNodesRequest() {
                 Nodes = request.Nodes.ToArray()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.GetAssetModelNodes(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {
@@ -64,12 +70,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowser>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.FindAssetModelNodes(_adapterCallContext, new Adapter.AssetModel.Models.FindAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.Models.FindAssetModelNodesRequest() {
                 Name = request.Name,
                 Description = request.Description,
                 PageSize = request.PageSize,
                 Page = request.Page
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.FindAssetModelNodes(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {

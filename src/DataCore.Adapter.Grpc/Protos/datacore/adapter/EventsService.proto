@@ -3,12 +3,21 @@ syntax = "proto3";
 package datacore.adapter;
 
 import "google/protobuf/timestamp.proto";
+import "WriteOperationStatus.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 
 service EventsService {
-    rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessagePush);
+    // Push 
+    rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessage);
+    
+    // Polling
+    rpc GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest) returns (stream EventMessage);
+    rpc GetEventMessagesUsingCursorPosition(GetEventMessagesUsingCursorPositionRequest) returns (stream EventMessageWithCursorPosition);
+
+    // Event message write
+    rpc WriteEventMessages(stream WriteEventMessageRequest) returns (stream WriteEventMessageResult);
 }
 
 
@@ -18,8 +27,20 @@ message CreateEventPushChannelRequest {
 }
 
 
-message EventMessagePush {
-    EventMessage event_message = 1;
+message GetEventMessagesForTimeRangeRequest {
+    string adapter_id = 1;
+    EventReadDirection direction = 2;
+    int32 message_count = 3;
+    google.protobuf.Timestamp utc_start_time = 4;
+    google.protobuf.Timestamp utc_end_time = 5;
+}
+
+
+message GetEventMessagesUsingCursorPositionRequest {
+    string adapter_id = 1;
+    EventReadDirection direction = 2;
+    int32 message_count = 3;
+    string cursor_position = 4;
 }
 
 
@@ -33,10 +54,38 @@ message EventMessage {
 }
 
 
+message EventMessageWithCursorPosition {
+    string cursor_position = 1;
+    EventMessage event_message = 2;
+}
+
+
 enum EventPriority {
     EVENT_PRIORITY_UNKNOWN = 0;
     EVENT_PRIORITY_LOW = 1;
     EVENT_PRIORITY_MEDIUM = 2;
     EVENT_PRIORITY_HIGH = 3;
     EVENT_PRIORITY_CRITICAL = 4;
+}
+
+
+enum EventReadDirection {
+    EVENT_READ_DIRECTION_FORWARDS = 0;
+    EVENT_READ_DIRECTION_BACKWARDS = 1;
+}
+
+
+message WriteEventMessageRequest {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    EventMessage message = 3;
+}
+
+
+message WriteEventMessageResult {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    WriteOperationStatus write_status = 3;
+    string notes = 4;
+    map<string, string> properties = 5;
 }

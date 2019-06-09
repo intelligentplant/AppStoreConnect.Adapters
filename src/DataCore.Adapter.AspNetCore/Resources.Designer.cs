@@ -113,5 +113,14 @@ namespace DataCore.Adapter.AspNetCore {
                 return ResourceManager.GetString("Error_UnsupportedInterface", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max items = {0}.
+        /// </summary>
+        internal static string Warning_MaxResponseItemsReached {
+            get {
+                return ResourceManager.GetString("Warning_MaxResponseItemsReached", resourceCulture);
+            }
+        }
     }
 }

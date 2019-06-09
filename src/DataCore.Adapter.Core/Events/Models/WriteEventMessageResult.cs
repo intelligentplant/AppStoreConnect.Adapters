@@ -12,6 +12,11 @@ namespace DataCore.Adapter.Events.Models {
     public sealed class WriteEventMessageResult {
 
         /// <summary>
+        /// The optional correlation ID for the operation.
+        /// </summary>
+        public string CorrelationId { get; }
+
+        /// <summary>
         /// Indicates if the write was successful.
         /// </summary>
         public WriteStatus Status { get; }
@@ -30,6 +35,9 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// Creates a new <see cref="WriteEventMessageResult"/> object.
         /// </summary>
+        /// <param name="correlationId">
+        ///   The optional correlation ID for the operation.
+        /// </param>
         /// <param name="status">
         ///   A flag indicating if the write was successful.
         /// </param>
@@ -39,7 +47,7 @@ namespace DataCore.Adapter.Events.Models {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public WriteEventMessageResult(WriteStatus status, string notes, IDictionary<string, string> properties) {
+        public WriteEventMessageResult(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties) {
             Status = status;
             Notes = notes?.Trim();
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security;
 using System.Text;
@@ -160,6 +161,28 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             return resolvedFeature;
+        }
+
+
+        /// <summary>
+        /// Validates the specified object. This method should be called on any adapter request objects 
+        /// prior to passing them to an adapter.
+        /// </summary>
+        /// <param name="instance">
+        ///   The object to validate.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="instance"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="instance"/> is not valid.
+        /// </exception>
+        protected void ValidateObject(object instance) {
+            if (instance == null) {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
+            Validator.ValidateObject(instance, new ValidationContext(instance), true);
         }
 
     }

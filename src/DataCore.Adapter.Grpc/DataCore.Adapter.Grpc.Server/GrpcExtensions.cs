@@ -153,6 +153,18 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <param name="value">
         ///   The adapter tag value.
         /// </param>
+        /// <param name="tagId">
+        ///   The ID of the tag.
+        /// </param>
+        /// <param name="tagName">
+        ///   The name of the tag.
+        /// </param>
+        /// <param name="dataFunction">
+        ///   The data function that was used to calculate the value.
+        /// </param>
+        /// <param name="queryType">
+        ///   The type of query that was used to retrieve the value.
+        /// </param>
         /// <returns>
         ///   The gRPC tag value.
         /// </returns>
@@ -293,6 +305,9 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <param name="adapterResult">
         ///   The adapter write tag value result.
         /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID that the event message was written to.
+        /// </param>
         /// <returns>
         ///   The gRPC write tag value result.
         /// </returns>
@@ -302,7 +317,7 @@ namespace DataCore.Adapter.Grpc.Server {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcTagValueWriteStatus()
+                WriteStatus = adapterResult.Status.ToGrpcWriteOperationStatus()
             };
 
             if (adapterResult.Properties != null) {
@@ -316,25 +331,25 @@ namespace DataCore.Adapter.Grpc.Server {
 
 
         /// <summary>
-        /// Converts from an adapter write tag value status to its gRPC equivalent.
+        /// Converts from an adapter write status to its gRPC equivalent.
         /// </summary>
         /// <param name="status">
         ///   The adapter write status.
         /// </param>
         /// <returns>
-        ///   The gRPC write tag value status.
+        ///   The gRPC write status.
         /// </returns>
-        internal static TagValueWriteStatus ToGrpcTagValueWriteStatus(this Common.Models.WriteStatus status) {
+        internal static WriteOperationStatus ToGrpcWriteOperationStatus(this Common.Models.WriteStatus status) {
             switch (status) {
                 case Common.Models.WriteStatus.Fail:
-                    return TagValueWriteStatus.Fail;
+                    return WriteOperationStatus.Fail;
                 case Common.Models.WriteStatus.Pending:
-                    return TagValueWriteStatus.Pending;
+                    return WriteOperationStatus.Pending;
                 case Common.Models.WriteStatus.Success:
-                    return TagValueWriteStatus.Success;
+                    return WriteOperationStatus.Success;
                 case Common.Models.WriteStatus.Unknown:
                 default:
-                    return TagValueWriteStatus.Unknown;
+                    return WriteOperationStatus.Unknown;
             }
         }
 
@@ -384,7 +399,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC event message.
         /// </returns>
-        internal static EventMessage ToGrpcEventMessage(this Events.Models.EventMessage message) {
+        internal static EventMessage ToGrpcEventMessage(this Events.Models.EventMessageBase message) {
             var result = new EventMessage() {
                 Category = message.Category ?? string.Empty,
                 Id = message.Id ?? string.Empty,
@@ -426,6 +441,86 @@ namespace DataCore.Adapter.Grpc.Server {
                 default:
                     return EventPriority.Unknown;
             }
+        }
+
+
+        /// <summary>
+        /// Converts from a gRPC event message priority to its adapter equivalent.
+        /// </summary>
+        /// <param name="priority">
+        ///   The gRPC event message priority.
+        /// </param>
+        /// <returns>
+        ///   The adapter event message priority.
+        /// </returns>
+        internal static Events.Models.EventPriority ToAdapterEventPriority(this EventPriority priority) {
+            switch (priority) {
+                case EventPriority.Low:
+                    return Events.Models.EventPriority.Low;
+                case EventPriority.Medium:
+                    return Events.Models.EventPriority.Medium;
+                case EventPriority.High:
+                    return Events.Models.EventPriority.High;
+                case EventPriority.Critical:
+                    return Events.Models.EventPriority.Critical;
+                case EventPriority.Unknown:
+                default:
+                    return Events.Models.EventPriority.Unknown;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts from a gRPC write tag value item to its adapter equivalent.
+        /// </summary>
+        /// <param name="writeRequest">
+        ///   The gRPC tag value write item.
+        /// </param>
+        /// <returns>
+        ///   The adapter tag value write item.
+        /// </returns>
+        internal static Events.Models.WriteEventMessageItem ToAdapterWriteEventMessageItem(this WriteEventMessageRequest writeRequest) {
+            return new Events.Models.WriteEventMessageItem() {
+                CorrelationId = writeRequest.CorrelationId,
+                EventMessage = new Events.Models.EventMessage(
+                    writeRequest.Message?.Id,
+                    writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
+                    writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.Models.EventPriority.Unknown,
+                    writeRequest.Message?.Category,
+                    writeRequest.Message?.Message,
+                    writeRequest.Message?.Properties
+                )
+            };
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter write event message result to its gRPC equivalent.
+        /// </summary>
+        /// <param name="adapterResult">
+        ///   The adapter write event message result.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID that the event message was written to.
+        /// </param>
+        /// <returns>
+        ///   The gRPC write event message result.
+        /// </returns>
+        internal static WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.Models.WriteEventMessageResult adapterResult, string adapterId) {
+            var result = new WriteEventMessageResult() {
+                AdapterId = adapterId ?? string.Empty,
+                CorrelationId = adapterResult.CorrelationId ?? string.Empty,
+                Notes = adapterResult.Notes ?? string.Empty,
+                WriteStatus = adapterResult.Status.ToGrpcWriteOperationStatus()
+            };
+
+            if (adapterResult.Properties != null) {
+                foreach (var item in adapterResult.Properties) {
+                    result.Properties.Add(item.Key, item.Value);
+                }
+            }
+
+            return result;
         }
 
     }

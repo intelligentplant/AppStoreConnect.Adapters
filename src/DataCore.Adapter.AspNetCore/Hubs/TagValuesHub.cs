@@ -265,6 +265,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadSnapshotTagValues(AdapterCallContext, request, cancellationToken);
         }
 
@@ -286,6 +287,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadRawTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadRawTagValues(AdapterCallContext, request, cancellationToken);
         }
 
@@ -307,6 +309,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadPlotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadPlotTagValues(AdapterCallContext, request, cancellationToken);
         }
 
@@ -328,6 +331,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadInterpolatedTagValues(string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadInterpolatedTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadInterpolatedTagValues(AdapterCallContext, request, cancellationToken);
         }
 
@@ -349,6 +353,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadTagValuesAtTimes(AdapterCallContext, request, cancellationToken);
         }
 
@@ -389,6 +394,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.ReadProcessedTagValues(AdapterCallContext, request, cancellationToken);
         }
 

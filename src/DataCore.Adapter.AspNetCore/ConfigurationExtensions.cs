@@ -76,10 +76,12 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The SignalR route builder.
         /// </returns>
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder builder) {
-            builder.MapHub<EventsHub>("/signalr/v1.0/events");
-            builder.MapHub<TagAnnotationsHub>("/signalr/v1.0/tag-annotations");
-            builder.MapHub<TagSearchHub>("/signalr/v1.0/tag-search");
-            builder.MapHub<TagValuesHub>("/signalr/v1.0/tag-values");
+            const string routePrefix = "/signalr/data-core/v1.0";
+            builder.MapHub<AssetModelBrowserHub>($"{routePrefix}/asset-model-browser");
+            builder.MapHub<EventsHub>($"{routePrefix}/events");
+            builder.MapHub<TagAnnotationsHub>($"{routePrefix}/tag-annotations");
+            builder.MapHub<TagSearchHub>($"{routePrefix}/tag-search");
+            builder.MapHub<TagValuesHub>($"{routePrefix}/tag-values");
             return builder;
         }
 

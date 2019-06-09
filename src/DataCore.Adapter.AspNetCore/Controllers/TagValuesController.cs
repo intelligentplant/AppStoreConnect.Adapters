@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
@@ -29,6 +28,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// The service for accessing the running adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
+
+        /// <summary>
+        /// The maximum number of samples that can be requested overall per request.
+        /// </summary>
+        public const int MaxSamplesPerRequest = 20000;
 
 
         /// <summary>
@@ -88,6 +92,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
+                }
+
                 result.Add(value);
             }
 
@@ -127,14 +136,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
-            var feature = resolvedFeature.Feature;
 
+            var feature = resolvedFeature.Feature;
             var reader = feature.ReadRawTagValues(_callContext, request, cancellationToken);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
+                }
+
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
                 }
 
                 result.Add(value);
@@ -180,6 +194,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
+
             var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadPlotTagValues(_callContext, request, cancellationToken);
@@ -188,6 +203,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
+                }
+
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
                 }
 
                 result.Add(value);
@@ -239,6 +259,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
+                }
+
                 result.Add(value);
             }
 
@@ -288,6 +313,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
+                }
+
                 result.Add(value);
             }
 
@@ -334,6 +364,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
+
             var feature = resolvedFeature.Feature;
 
             var reader = feature.ReadProcessedTagValues(_callContext, request, cancellationToken);
@@ -342,6 +373,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
+                }
+
+                if (result.Count > MaxSamplesPerRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                    break;
                 }
 
                 result.Add(value);

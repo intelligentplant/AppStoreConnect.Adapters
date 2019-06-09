@@ -383,10 +383,7 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
-            var result = Channel.CreateUnbounded<TagDefinition>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = true,
-                SingleWriter = true
-            });
+            var result = ChannelExtensions.CreateBoundedTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
@@ -401,11 +398,7 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
-            var result = Channel.CreateBounded<TagDefinition>(new BoundedChannelOptions(5000) {
-                AllowSynchronousContinuations = true,
-                SingleReader = true,
-                SingleWriter = true
-            });
+            var result = ChannelExtensions.CreateBoundedTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
@@ -444,12 +437,7 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(5000) {
-                AllowSynchronousContinuations = true,
-                SingleReader = true,
-                SingleWriter = true,
-                FullMode = BoundedChannelFullMode.Wait
-            });
+            var result = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
@@ -580,12 +568,7 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(5000) {
-                AllowSynchronousContinuations = true,
-                SingleReader = true,
-                SingleWriter = true,
-                FullMode = BoundedChannelFullMode.Wait
-            });
+            var result = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);

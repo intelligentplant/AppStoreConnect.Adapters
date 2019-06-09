@@ -95,9 +95,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadSnapshotTagValues(_adapterCallContext, new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
+            var adapterRequest = new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
                 Tags = request.Tags.ToArray()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadSnapshotTagValues(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -114,13 +117,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadRawTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadRawTagValues(_adapterCallContext, new RealTimeData.Models.ReadRawTagValuesRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadRawTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleCount = request.SampleCount,
                 BoundaryType = request.BoundaryType.FromGrpcRawDataBoundaryType()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadRawTagValues(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -137,12 +143,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadPlotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadPlotTagValues(_adapterCallContext, new RealTimeData.Models.ReadPlotTagValuesRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadPlotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 Intervals = request.Intervals
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadPlotTagValues(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -159,12 +168,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadInterpolatedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadInterpolatedTagValues(_adapterCallContext, new RealTimeData.Models.ReadInterpolatedTagValuesRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadInterpolatedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleInterval = request.SampleInterval.ToTimeSpan()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadInterpolatedTagValues(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -181,10 +193,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValuesAtTimes>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadTagValuesAtTimes(_adapterCallContext, new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcSampleTimes = request.UtcSampleTimes.Select(x => x.ToDateTime()).ToArray()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadTagValuesAtTimes(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -215,13 +230,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadProcessedTagValues(_adapterCallContext, new RealTimeData.Models.ReadProcessedTagValuesRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadProcessedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleInterval = request.SampleInterval.ToTimeSpan(),
                 DataFunctions = request.DataFunctions.ToArray()
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadProcessedTagValues(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -270,7 +288,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         }, cancellationToken);
                     }
 
-                    writeChannel.Writer.TryWrite(request.ToAdapterWriteTagValueItem());
+                    var adapterRequest = request.ToAdapterWriteTagValueItem();
+                    Util.ValidateObject(adapterRequest);
+                    writeChannel.Writer.TryWrite(adapterRequest);
                 }
             }
             catch (Exception e) {
@@ -323,7 +343,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         }, cancellationToken);
                     }
 
-                    writeChannel.Writer.TryWrite(request.ToAdapterWriteTagValueItem());
+                    var adapterRequest = request.ToAdapterWriteTagValueItem();
+                    Util.ValidateObject(adapterRequest);
+                    writeChannel.Writer.TryWrite(adapterRequest);
                 }
             }
             catch (Exception e) {

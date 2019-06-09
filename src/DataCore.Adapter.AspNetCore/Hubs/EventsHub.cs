@@ -17,10 +17,13 @@ using Microsoft.AspNetCore.SignalR;
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
     /// <summary>
-    /// SignalR hub that is used to push event messages to subscribers. Event message push is only 
-    /// supported on adapters that implement the <see cref="IEventMessagePush"/> feature.
+    /// SignalR hub that is used to query for event messages, including pushing event messages to 
+    /// subscribers. Event message push is only supported on adapters that implement the 
+    /// <see cref="IEventMessagePush"/> feature.
     /// </summary>
     public class EventsHub : AdapterHubBase {
+
+        #region [ Constructor ]
 
         /// <summary>
         /// Creates a new <see cref="EventsHub"/> object.
@@ -37,28 +40,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public EventsHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor)
             : base(hostInfo, adapterCallContext, adapterAccessor) { }
 
+        #endregion
 
-        /// <summary>
-        /// Creates a channel that will receive event messages from the specified adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="active">
-        ///   A flag indicating if an active or passive subscription should be created.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A channel reader that the subscriber can observe to receive new tag values.
-        /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateChannel(string adapterId, bool active, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = GetOrAddSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken);
-            return subscription.Reader;
-        }
-
+        #region [ OnConnected/OnDisconnected ]
 
         /// <summary>
         /// Invoked when a new connection is created.
@@ -97,6 +81,31 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return base.OnDisconnectedAsync(exception);
         }
 
+        #endregion
+
+        #region [ Subscription Management ]
+
+        /// <summary>
+        /// Creates a channel that will receive event messages from the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="active">
+        ///   A flag indicating if an active or passive subscription should be created.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that the subscriber can observe to receive new tag values.
+        /// </returns>
+        public async Task<ChannelReader<EventMessage>> CreateChannel(string adapterId, bool active, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
+            var subscription = GetOrAddSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken);
+            return subscription.Reader;
+        }
+
 
         /// <summary>
         /// Gets or creates an event subscription to the specified adapter.
@@ -127,6 +136,56 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return subscriptionsForConnection.GetOrAdd(adapter.Descriptor.Id, key => new EventMessageSubscription(key, feature.Subscribe(callContext, active), subscriptionsForConnection, cancellationToken));
         }
 
+        #endregion
+
+        #region [ Polling Queries ]
+
+        /// <summary>
+        /// Reads event messages occurring inside the specified time range.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The matching event messages.
+        /// </returns>
+        public async Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+            return adapter.Feature.ReadEventMessages(AdapterCallContext, request, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Reads event messages starting at the specified cursor position.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The matching event messages.
+        /// </returns>
+        public async Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+            return adapter.Feature.ReadEventMessages(AdapterCallContext, request, cancellationToken);
+        }
+
+        #endregion
+
+        #region [ Inner Types ]
 
         /// <summary>
         /// Subscription wrapper class.
@@ -200,6 +259,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 _isDisposed = true;
             }
         }
+
+        #endregion
 
     }
 }

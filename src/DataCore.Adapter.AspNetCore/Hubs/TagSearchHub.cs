@@ -49,6 +49,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagDefinition>> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.FindTags(AdapterCallContext, request, cancellationToken);
         }
 
@@ -70,6 +71,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagDefinition>> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
             return adapter.Feature.GetTags(AdapterCallContext, request, cancellationToken);
         }
 

@@ -25,11 +25,14 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.ReadTagValueAnnotations(_adapterCallContext, new RealTimeData.Models.ReadAnnotationsRequest() {
+            var adapterRequest = new RealTimeData.Models.ReadAnnotationsRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 Tags = request.Tags?.ToArray() ?? new string[0]
-            }, cancellationToken);
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.ReadTagValueAnnotations(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {

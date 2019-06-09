@@ -16,7 +16,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [ApiVersion("1.0")]
     [Area("data-core")]
     [Route("api/[area]/v{version:apiVersion}/adapters")]
-    public class AdaptersController: ControllerBase {
+    public class AdaptersController : ControllerBase {
 
         /// <summary>
         /// The <see cref="IAdapterCallContext"/> for the calling user.

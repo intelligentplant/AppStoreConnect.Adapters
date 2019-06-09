@@ -230,7 +230,7 @@ namespace DataCore.Adapter.Events.Utilities {
                             _subscriptionsLock.ExitReadLock();
                         }
 
-                        await Task.WhenAll(subscribers.Select(x => x.OnMessageReceived(message))).ConfigureAwait(false);
+                        await Task.WhenAll(subscribers.Select(x => x.OnMessageReceived(message))).WithCancellation(cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -290,11 +290,11 @@ namespace DataCore.Adapter.Events.Utilities {
             /// </param>
             internal Subscription(EventMessageSubscriptionManager subscriptionManager, bool active) {
                 _subscriptionManager = subscriptionManager;
-                _channel = Channel.CreateUnbounded<EventMessage>(new UnboundedChannelOptions() {
-                    AllowSynchronousContinuations = true,
-                    SingleReader = true,
-                    SingleWriter = true
-                });
+                // If this is a passive subscription, we do not need to guarantee delivery of the message.
+                _channel = ChannelExtensions.CreateBoundedEventMessageChannel<EventMessage>(active 
+                    ? BoundedChannelFullMode.Wait 
+                    : BoundedChannelFullMode.DropWrite
+                );
                 IsActive = active;
             }
 

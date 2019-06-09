@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+enum WriteOperationStatus {
+    WRITE_OPERATION_STATUS_UNKNOWN = 0;
+    WRITE_OPERATION_STATUS_SUCCESS = 1;
+    WRITE_OPERATION_STATUS_FAIL = 2;
+    WRITE_OPERATION_STATUS_PENDING = 3;
+}

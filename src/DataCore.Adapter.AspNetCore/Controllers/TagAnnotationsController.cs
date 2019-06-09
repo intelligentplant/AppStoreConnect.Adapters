@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +27,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// For accessing the available adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
+
+        /// <summary>
+        /// The maximum number of annotations that can be returned per query.
+        /// </summary>
+        public const int MaxAnnotationsPerQuery = 1000;
 
 
         /// <summary>
@@ -86,6 +89,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
+                }
+
+                if (result.Count > MaxAnnotationsPerQuery) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
+                    break;
                 }
 
                 result.Add(value);

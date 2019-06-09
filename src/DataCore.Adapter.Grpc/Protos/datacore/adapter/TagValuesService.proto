@@ -4,6 +4,7 @@ package datacore.adapter;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "WriteOperationStatus.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -186,15 +187,7 @@ message WriteTagValueResult {
     string correlation_id = 1;
     string adapter_id = 2;
     string tag_id = 3;
-    TagValueWriteStatus write_status = 4;
+    WriteOperationStatus write_status = 4;
     string notes = 5;
     map<string, string> properties = 6;
-}
-
-
-enum TagValueWriteStatus {
-    TAG_VALUE_WRITE_STATUS_UNKNOWN = 0;
-    TAG_VALUE_WRITE_STATUS_SUCCESS = 1;
-    TAG_VALUE_WRITE_STATUS_FAIL = 2;
-    TAG_VALUE_WRITE_STATUS_PENDING = 3;
 }
