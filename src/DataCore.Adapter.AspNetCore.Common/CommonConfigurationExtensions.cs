@@ -5,7 +5,6 @@ using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.Http;
 
-
 namespace Microsoft.Extensions.DependencyInjection {
 
     /// <summary>

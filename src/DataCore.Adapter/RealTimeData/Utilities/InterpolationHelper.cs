@@ -131,6 +131,30 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
+        /// <summary>
+        /// Performs interpolation on raw tag values.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The start time for the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The end time for the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval for the data query.
+        /// </param>
+        /// <param name="rawData">
+        ///   The channel that will provide the raw data for the interpolation calculations.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated tag values.
+        /// </returns>
         public static ChannelReader<TagValueQueryResult> GetInterpolatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
@@ -155,6 +179,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
+        /// <summary>
+        /// Gets tag values at the specified sample times.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="utcSampleTimes">
+        ///   The sample times.
+        /// </param>
+        /// <param name="rawData">
+        ///   A channel that will provide the raw data for the calculations.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated tag values.
+        /// </returns>
         public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagDefinition tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));

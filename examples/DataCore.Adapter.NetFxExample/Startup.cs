@@ -5,23 +5,14 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Example;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
-namespace DataCore.Adapter.AspNetCoreExample {
+namespace DataCore.Adapter.NetFxExample {
     public class Startup {
-        public Startup(IConfiguration configuration) {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
+        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services) {
             // Register our adapter as a singleton.
             services.AddSingleton<IAdapter, ExampleAdapter>();
@@ -29,8 +20,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add adapter services
             services.AddDataCoreAdapterServices(options => {
                 options.HostInfo = new Common.Models.HostInfo(
-                    "Example .NET Core Host",
-                    "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
+                    "Example .NET Framework Host",
+                    "An example App Store Connect Adapters host running on ASP.NET Core 2.2 on .NET Framework",
                     GetType().Assembly.GetName().Version.ToString(),
                     new Common.Models.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     new Dictionary<string, string>() {
@@ -52,29 +43,21 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddDataCoreAdapterMvc();
 
             services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
-            else {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
 
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints => {
-                endpoints.MapControllers();
-                endpoints.MapDataCoreAdapterHubs();
+            app.UseMvc();
+            app.UseSignalR(route => {
+                route.MapDataCoreAdapterHubs();
             });
         }
     }

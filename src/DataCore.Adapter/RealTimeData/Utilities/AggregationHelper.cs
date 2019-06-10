@@ -275,6 +275,33 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         #region [ Aggregation using Data Function Names ]
 
+        /// <summary>
+        /// Performs aggregation on raw tag values.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="dataFunctions">
+        ///   The data functions to apply to the raw data.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The start time for the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The end time for the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval for the data query.
+        /// </param>
+        /// <param name="rawData">
+        ///   The channel that will provide the raw data for the aggregation calculations.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated values.
+        /// </returns>
         public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
