@@ -36,4 +36,5 @@ message AdapterDescriptor {
 message ExtendedAdapterDescriptor {
     AdapterDescriptor adapterDescriptor = 1;
     repeated string features = 2;
+    repeated string extensions = 3;
 }

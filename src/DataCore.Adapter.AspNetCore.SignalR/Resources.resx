@@ -117,69 +117,27 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Error_AdapterDescriptorIdIsRequired" xml:space="preserve">
-    <value>You must specify an adapter ID.</value>
+  <data name="Error_AdapterAccessorIsRequired" xml:space="preserve">
+    <value>An {0} service is required. Did you forget to call {1}.{2}?</value>
+    <comment>{0} - service name
+{1} - builder type name
+{2} - method name</comment>
   </data>
-  <data name="Error_AdapterDescriptorNameIsRequired" xml:space="preserve">
-    <value>You must specify an adapter name.</value>
+  <data name="Error_AdapterSubscriptionDoesNotExist" xml:space="preserve">
+    <value>An existing subscription for this adapter could not be found.</value>
   </data>
-  <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
-    <value>You cannot specify a null data function name.</value>
+  <data name="Error_AtLeastOneTagIsRequired" xml:space="preserve">
+    <value>You must specify at least one tag to subscribe to.</value>
   </data>
-  <data name="Error_DuplicateTagWriteCollectionsAreNotAllowed" xml:space="preserve">
-    <value>You cannot specify multiple write collections for the same tag.</value>
+  <data name="Error_CannotResolveAdapterId" xml:space="preserve">
+    <value>Unable to resolve adapter ID: {0}</value>
+    <comment>{0} - adapter ID</comment>
   </data>
-  <data name="Error_EventMessageCannotBeNull" xml:space="preserve">
-    <value>You cannot specify a null event message.</value>
+  <data name="Error_NotAuthorizedToAccessFeature" xml:space="preserve">
+    <value>You are not authorized to access this feature.</value>
   </data>
-  <data name="Error_InterpolationRequiresAtLeastOneSample" xml:space="preserve">
-    <value>When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on.</value>
-  </data>
-  <data name="Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime" xml:space="preserve">
-    <value>When interpolating or inferring a tag value using raw samples, you must specify a sample that is earlier than the sample time you want to calculate at.</value>
-  </data>
-  <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
-    <value>Interval count must be greater than zero.</value>
-  </data>
-  <data name="Error_InvalidTimeSpan" xml:space="preserve">
-    <value>Invalid time span.</value>
-  </data>
-  <data name="Error_InvalidTimeStamp" xml:space="preserve">
-    <value>Invalid time stamp.</value>
-  </data>
-  <data name="Error_NodeIdCannotBeNull" xml:space="preserve">
-    <value>You cannot specify a null node ID.</value>
-  </data>
-  <data name="Error_NotAnAdapterFeature" xml:space="preserve">
-    <value>Adapter features must be interfaces extending {0}. Non-standard features must extend {1}.</value>
-    <comment>{0} - IAdapterFeature name
-{1} - IAdapterExtensionFeature name</comment>
-  </data>
-  <data name="Error_SampleIntervalMustBeGreaterThanZero" xml:space="preserve">
-    <value>Sample interval must be greater than zero.</value>
-  </data>
-  <data name="Error_StartTimeCannotBeGreaterThanEndTime" xml:space="preserve">
-    <value>Start time cannot be greater than end time.</value>
-  </data>
-  <data name="Error_StartTimeCannotBeGreaterThanOrEqualToEndTime" xml:space="preserve">
-    <value>Start time cannot be greater than or equal to end time.</value>
-  </data>
-  <data name="Error_TagNameOrIdCannotBeNull" xml:space="preserve">
-    <value>You cannot specify a null tag name or ID.</value>
-  </data>
-  <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
-    <value>At least one tag search filter field must be specified.</value>
-  </data>
-  <data name="HostInfo_Unspecified_Description" xml:space="preserve">
-    <value>Host information has not been provided.</value>
-  </data>
-  <data name="HostInfo_Unspecified_Name" xml:space="preserve">
-    <value>Unspecified</value>
-  </data>
-  <data name="SnapshotTagValue_Unspecified_ErrorText" xml:space="preserve">
-    <value>No snapshot value was provided.</value>
-  </data>
-  <data name="SnapshotTagValue_Unspecified_Value" xml:space="preserve">
-    <value>Unspecified</value>
+  <data name="Error_UnsupportedInterface" xml:space="preserve">
+    <value>Unsupported interface: {0}</value>
+    <comment>{0} - interface name</comment>
   </data>
 </root>

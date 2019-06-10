@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{92
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Abstractions", "src\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj", "{CE3C7621-5106-465A-864C-B0312BFC76B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore", "src\DataCore.Adapter.AspNetCore\DataCore.Adapter.AspNetCore.csproj", "{A6F99E04-31F9-4304-A829-C283352F4AB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.Mvc", "src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj", "{A6F99E04-31F9-4304-A829-C283352F4AB4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Core", "src\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj", "{2D8FB46F-A5EB-43CE-A510-D15072A0D500}"
 EndProject
@@ -39,9 +39,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.GrpcExampl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Csv", "src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj", "{A00430B8-EF92-4C82-97C1-48B8977B88A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.Common", "src\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj", "{1EEB0C0A-6790-401A-A501-411FF8235861}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.Common", "src\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj", "{1EEB0C0A-6790-401A-A501-411FF8235861}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.Grpc", "src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj", "{0895A919-F5F8-4358-98B0-1BC7087D1906}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.Grpc", "src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj", "{0895A919-F5F8-4358-98B0-1BC7087D1906}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.SignalR", "src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj", "{72E6C560-2248-4209-9F10-315B93C4FDEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +107,10 @@ Global
 		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0895A919-F5F8-4358-98B0-1BC7087D1906}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -124,6 +130,7 @@ Global
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{1EEB0C0A-6790-401A-A501-411FF8235861} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{0895A919-F5F8-4358-98B0-1BC7087D1906} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
+		{72E6C560-2248-4209-9F10-315B93C4FDEA} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

@@ -11,12 +11,6 @@ namespace DataCore.Adapter.Common.Models {
     public static class AdapterDescriptorExtendedExtensions {
 
         /// <summary>
-        /// <see cref="IAdapterFeature"/> type.
-        /// </summary>
-        private static readonly Type s_adapterFeatureType = typeof(IAdapterFeature);
-
-
-        /// <summary>
         /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
         /// list.
         /// </summary>
@@ -35,7 +29,9 @@ namespace DataCore.Adapter.Common.Models {
                 return false;
             }
 
-            return descriptor.HasFeature(typeof(TFeature).Name);
+            return typeof(TFeature).IsExtensionAdapterFeature()
+                ? descriptor.HasFeature(typeof(TFeature).FullName)
+                : descriptor.HasFeature(typeof(TFeature).Name);
         }
 
 
@@ -58,7 +54,7 @@ namespace DataCore.Adapter.Common.Models {
                 return false;
             }
 
-            return descriptor.Features.Any(f => String.Equals(f, featureName));
+            return descriptor.Features.Any(f => string.Equals(f, featureName)) || descriptor.Extensions.Any(f => string.Equals(f, featureName));
         }
 
 
@@ -76,11 +72,24 @@ namespace DataCore.Adapter.Common.Models {
                 return null;
             }
 
+            var standardFeatures = adapter
+                .Features
+                ?.Keys
+                ?.Where(x => x.IsStandardAdapterFeature())
+                .ToArray() ?? new Type[0];
+
+            var extensionFeatures = adapter
+                .Features
+                ?.Keys
+                ?.Except(standardFeatures)
+                .ToArray();
+
             return new AdapterDescriptorExtended(
                 adapter.Descriptor.Id,
                 adapter.Descriptor.Name,
                 adapter.Descriptor.Description,
-                adapter.Features?.Keys?.Where(x => s_adapterFeatureType.IsAssignableFrom(x)).OrderBy(x => x.Name).Select(x => x.Name).ToArray()
+                standardFeatures.OrderBy(x => x.Name).Select(x => x.Name).ToArray(),
+                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray()
             );
         }
 

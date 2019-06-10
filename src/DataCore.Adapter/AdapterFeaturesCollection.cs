@@ -77,8 +77,7 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            var rootFeatureType = typeof(IAdapterFeature);
-            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(t => rootFeatureType.IsAssignableFrom(t) && t != rootFeatureType);
+            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(x => x.IsAdapterFeature());
             foreach (var feature in implementedFeatures) {
                 _features[feature] = featureProvider;
             }
@@ -99,10 +98,8 @@ namespace DataCore.Adapter {
         ///   <see cref="IAdapterFeature"/>.
         /// </exception>
         public void Add<TFeature>(TFeature feature) where TFeature : class, IAdapterFeature {
-            var rootFeatureType = typeof(IAdapterFeature);
-            var featureType = typeof(TFeature);
-            if (!featureType.IsInterface || !rootFeatureType.IsAssignableFrom(featureType)) {
-                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature)), nameof(feature));
+            if (!typeof(TFeature).IsAdapterFeature()) {
+                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
             }
 
             _features[typeof(TFeature)] = feature;

@@ -43,7 +43,7 @@ namespace DataCore.Adapter.GrpcExampleServer {
                     "Example gRPC Host",
                     "An example App Store Connect Adapters gRPC host",
                     GetType().Assembly.GetName().Version.ToString(),
-                    new Common.Models.VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+                    new Common.Models.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     new Dictionary<string, string>() {
                         { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
                     }

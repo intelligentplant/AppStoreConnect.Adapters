@@ -5,7 +5,8 @@ using System.Text;
 namespace DataCore.Adapter {
 
     /// <summary>
-    /// Interface that all adapter features must inherit from.
+    /// Interface that all standard adapter features must implement.
     /// </summary>
     public interface IAdapterFeature { }
+
 }

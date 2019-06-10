@@ -33,6 +33,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
 
             result.Features.AddRange(source.Features);
+            result.Extensions.AddRange(source.Extensions);
             return result;
         }
 

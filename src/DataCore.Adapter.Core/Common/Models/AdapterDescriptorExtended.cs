@@ -15,9 +15,14 @@ namespace DataCore.Adapter.Common.Models {
     public class AdapterDescriptorExtended: AdapterDescriptor, ISerializable {
 
         /// <summary>
-        /// The names of the implemented adapter features.
+        /// The names of the implemented standard adapter features.
         /// </summary>
         public IEnumerable<string> Features { get; }
+
+        /// <summary>
+        /// The names of the implemented extension adapter features.
+        /// </summary>
+        public IEnumerable<string> Extensions { get; }
 
 
         /// <summary>
@@ -33,7 +38,12 @@ namespace DataCore.Adapter.Common.Models {
         ///   The adapter description.
         /// </param>
         /// <param name="features">
-        ///   The adapter feature names.
+        ///   The standard features implemented by the adapter, typically the simple name of the 
+        ///   feature type.
+        /// </param>
+        /// <param name="extensions">
+        ///   The extension features implemented by the adapter, typically the namespace-qualified name 
+        ///   of the feature type.
         /// </param>
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
@@ -41,8 +51,9 @@ namespace DataCore.Adapter.Common.Models {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features): base(id, name, description) {
+        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions): base(id, name, description) {
             Features = features?.ToArray() ?? new string[0];
+            Extensions = extensions?.ToArray() ?? new string[0];
         }
 
 
@@ -62,6 +73,7 @@ namespace DataCore.Adapter.Common.Models {
             }
 
             Features = (string[]) info?.GetValue("features", typeof(string[])) ?? new string[0];
+            Extensions = (string[]) info?.GetValue("extensions", typeof(string[])) ?? new string[0];
         }
 
 
@@ -83,6 +95,7 @@ namespace DataCore.Adapter.Common.Models {
             info.AddValue("name", Name);
             info.AddValue("description", Description);
             info.AddValue("features", Features.ToArray(), typeof(string[]));
+            info.AddValue("extensions", Extensions.ToArray(), typeof(string[]));
         }
     }
 }

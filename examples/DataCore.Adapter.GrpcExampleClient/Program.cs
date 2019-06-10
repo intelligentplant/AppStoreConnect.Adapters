@@ -33,6 +33,10 @@ namespace DataCore.Adapter.GrpcExampleClient {
                 foreach (var feature in adapter.Features) {
                     Console.WriteLine($"          {feature}");
                 }
+                Console.WriteLine("    Extensions:");
+                foreach (var feature in adapter.Extensions) {
+                    Console.WriteLine($"          {feature}");
+                }
             }
 
             foreach (var adapter in adaptersResponse.Adapters) {

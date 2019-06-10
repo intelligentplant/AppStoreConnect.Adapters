@@ -8,17 +8,14 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.RealTimeData.Features;
-using DataCore.Adapter.RealTimeData.Models;
-using DataCore.Adapter.RealTimeData.Utilities;
 
-namespace DataCore.Adapter {
+namespace DataCore.Adapter.Example {
 
     /// <summary>
     /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
     /// adapter contains a set of sensor-like data for 3 tags that it will loop over.
     /// </summary>
-    public class ExampleAdapter : Csv.CsvAdapter  {
+    public class ExampleAdapter : Csv.CsvAdapter, IExampleExtensionFeature  {
 
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
@@ -36,6 +33,12 @@ namespace DataCore.Adapter {
             // Register additional features!
             AddFeature<IEventMessagePush>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
         }
+
+
+        DateTime IExampleExtensionFeature.GetCurrentTime() {
+            return DateTime.UtcNow;
+        }
+
 
         private class EventsSubscriptionManager : Events.Utilities.EventMessageSubscriptionManager {
 

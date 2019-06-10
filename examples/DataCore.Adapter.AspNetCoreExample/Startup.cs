@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DataCore.Adapter.Example;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,7 +32,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     "Example Host",
                     "An example App Store Connect Adapters host",
                     GetType().Assembly.GetName().Version.ToString(),
-                    new Common.Models.VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+                    new Common.Models.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     new Dictionary<string, string>() {
                         { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
                     }

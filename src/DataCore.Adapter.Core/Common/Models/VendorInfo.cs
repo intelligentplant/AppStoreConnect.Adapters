@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Common.Models {
         /// <summary>
         /// The vendor URL.
         /// </summary>
-        public Uri Url { get; }
+        public string Url { get; }
 
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Common.Models {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
-        public VendorInfo(string name, Uri url) {
+        public VendorInfo(string name, string url) {
             Name = name?.Trim();
             Url = url;
         }

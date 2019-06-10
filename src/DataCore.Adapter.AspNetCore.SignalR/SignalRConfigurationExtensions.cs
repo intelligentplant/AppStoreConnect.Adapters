@@ -1,4 +1,7 @@
-﻿using DataCore.Adapter.AspNetCore.Hubs;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using DataCore.Adapter.AspNetCore.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -7,23 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection {
     /// <summary>
     /// Service registration extensions.
     /// </summary>
-    public static class AspNetCoreConfigurationExtensions {
-
-        /// <summary>
-        /// Adds the adapter API controllers to the MVC registration.
-        /// </summary>
-        /// <param name="builder">
-        ///   The MVC builder.
-        /// </param>
-        /// <returns>
-        ///   The MVC builder.
-        /// </returns>
-        public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
-            builder.AddApplicationPart(typeof(AspNetCoreConfigurationExtensions).Assembly);
-
-            return builder;
-        }
-
+    public static class SignalRConfigurationExtensions {
 
         /// <summary>
         /// Adds adapter hubs to the SignalR registration.
@@ -45,5 +32,4 @@ namespace Microsoft.Extensions.DependencyInjection {
         }
 
     }
-
 }

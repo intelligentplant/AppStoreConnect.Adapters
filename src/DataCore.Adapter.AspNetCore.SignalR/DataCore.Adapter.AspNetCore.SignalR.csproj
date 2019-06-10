@@ -2,22 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <PackageId>IntelligentPlant.DataCore.Adapter.AspNetCore</PackageId>
-    <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
+    <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
+    <PackageId>IntelligentPlant.DataCore.Adapter.AspNetCore.SignalR</PackageId>
+    <Description>ASP.NET Core SignalR hubs for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="3.1.2" />
-  </ItemGroup>
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj" />  
+    <ProjectReference Include="..\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

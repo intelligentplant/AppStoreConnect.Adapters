@@ -54,15 +54,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   Successful responses contain a collection of <see cref="AdapterDescriptorExtended"/> 
+        ///   Successful responses contain a collection of <see cref="AdapterDescriptor"/> 
         ///   objects.
         /// </returns>
         [HttpGet]
         [Route("")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptorExtended>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> GetAllAdapters(ApiVersion apiVersion, CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
-            var result = adapters.Select(x => x.CreateExtendedAdapterDescriptor()).OrderBy(x => x.Name).ToArray();
+            var result = adapters.Select(x => x.Descriptor).OrderBy(x => x.Name).ToArray();
             return Ok(result); // 200
         }
 
