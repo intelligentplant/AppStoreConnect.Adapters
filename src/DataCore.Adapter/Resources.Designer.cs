@@ -68,5 +68,14 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("Error_BucketSizeMustBeGreaterThanZero", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Object does not implement feature {0}..
+        /// </summary>
+        internal static string Error_NotAFeatureImplementation {
+            get {
+                return ResourceManager.GetString("Error_NotAFeatureImplementation", resourceCulture);
+            }
+        }
     }
 }

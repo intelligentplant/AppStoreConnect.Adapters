@@ -32,12 +32,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateEventSubscriptionAlreadyExists, adapterId)));
             }
 
-            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext, request.Active)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.Active, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
-                    while (!context.CancellationToken.IsCancellationRequested) {
+                    while (!cancellationToken.IsCancellationRequested) {
                         try {
-                            var msg = await subscription.Reader.ReadAsync(context.CancellationToken).ConfigureAwait(false);
+                            var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                             await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException) {

@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Example {
                 GetCsvStream = () => new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(CsvData))
             }) {
             // Register additional features!
-            AddFeature<IEventMessagePush>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
+            AddFeature<IEventMessagePush, EventsSubscriptionManager>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
         }
 
 

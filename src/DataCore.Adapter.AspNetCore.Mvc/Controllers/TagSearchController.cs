@@ -12,9 +12,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for performing tag searches.
     /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Area("data-core")]
-    [Route("api/[area]/v{version:apiVersion}/tags")]
+    [Route("api/[area]/v1.0/tags")]
     public class TagSearchController: ControllerBase {
 
         /// <summary>
@@ -46,9 +45,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Performs a tag search on an adapter.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -64,7 +60,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> FindTags(ApiVersion apiVersion, string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -94,9 +90,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Performs a tag search on an adapter.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -124,8 +117,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> FindTags(ApiVersion apiVersion, CancellationToken cancellationToken, string adapterId, string name = null, string description = null, string units = null, int pageSize = 10, int page = 1) {
-            return await FindTags(apiVersion, adapterId, new FindTagsRequest() {
+        public async Task<IActionResult> FindTags(CancellationToken cancellationToken, string adapterId, string name = null, string description = null, string units = null, int pageSize = 10, int page = 1) {
+            return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
                 Description = description,
                 Units = units,
@@ -138,9 +131,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Gets tags by ID.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -157,7 +147,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> GetTags(ApiVersion apiVersion, string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -187,9 +177,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Gets tags by ID.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -206,8 +193,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> GetTags(ApiVersion apiVersion, string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
-            return await GetTags(apiVersion, adapterId, new GetTagsRequest() {
+        public async Task<IActionResult> GetTags(string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
+            return await GetTags(adapterId, new GetTagsRequest() {
                 Tags = tag
             }, cancellationToken).ConfigureAwait(false);
         }

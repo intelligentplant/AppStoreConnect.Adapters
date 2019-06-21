@@ -39,6 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 #endif
             endpoints.MapHub<AssetModelBrowserHub>($"{HubRoutePrefix}/asset-model-browser");
             endpoints.MapHub<EventsHub>($"{HubRoutePrefix}/events");
+            endpoints.MapHub<InfoHub>($"{HubRoutePrefix}/info");
             endpoints.MapHub<TagAnnotationsHub>($"{HubRoutePrefix}/tag-annotations");
             endpoints.MapHub<TagSearchHub>($"{HubRoutePrefix}/tag-search");
             endpoints.MapHub<TagValuesHub>($"{HubRoutePrefix}/tag-values");

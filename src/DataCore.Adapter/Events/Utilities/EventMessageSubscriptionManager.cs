@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Events.Utilities {
 
 
         /// <inheritdoc/>
-        public IEventMessageSubscription Subscribe(IAdapterCallContext context, bool active) {
+        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
             var subscription = new Subscription(this, active);
 
             bool added;
@@ -89,7 +89,7 @@ namespace DataCore.Adapter.Events.Utilities {
                 OnSubscriptionAdded();
             }
 
-            return subscription;
+            return Task.FromResult<IEventMessageSubscription>(subscription);
         }
 
 

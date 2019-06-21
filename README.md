@@ -16,7 +16,7 @@ This repository contains the following projects:
 * `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a .NET Standard 2.0 library containing C# implementations of clients for querying adapters via [gRPC](https://grpc.io/).
 * `DataCore.Adapter.AspNetCore.Common` ([source](/src/DataCore.Adapter.AspNetCore.Common)) - a .NET Core library containing concrete implementations of various types to provide integration with ASP.NET Core 3.0 applications.
 * `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a .NET Core library containing API controllers for use with with ASP.NET Core 3.0 applications.
-* `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a .NET Core library containing SignalR hubs for use with with ASP.NET Core 3.0 applications.
+* `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a .NET Standard 2.0 library containing SignalR hubs for use with with ASP.NET Core 3.0 applications.
 * `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a .NET Core library to assist with hosting adapter [gRPC](https://grpc.io/) services.
 
 The [examples](/examples) folder contains example host and client applications.
@@ -53,11 +53,6 @@ services.AddDataCoreAdapterServices(options => {
     //options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
 });
 	
-// Adapter API controllers require the API versioning service.
-services.AddApiVersioning(options => {
-    options.ReportApiVersions = true;
-});
-
 // Add the adapter API controllers to the MVC registration.
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)

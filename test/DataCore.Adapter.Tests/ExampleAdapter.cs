@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Tests {
             Descriptor = new AdapterDescriptor("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
             var features = new AdapterFeaturesCollection(this);
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager();
-            features.Add<ISnapshotTagValuePush>(_snapshotSubscriptionManager);
+            features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
             Features = features;
         }
 

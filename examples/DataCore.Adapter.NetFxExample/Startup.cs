@@ -36,11 +36,6 @@ namespace DataCore.Adapter.NetFxExample {
                 //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
             });
 
-            // Adapter API controllers require the API versioning service.
-            services.AddApiVersioning(options => {
-                options.ReportApiVersions = true;
-            });
-
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)

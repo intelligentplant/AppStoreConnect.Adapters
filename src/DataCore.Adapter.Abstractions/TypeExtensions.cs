@@ -33,6 +33,18 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Gets the <see cref="Type"/> objects that correspond to the standard adapter feature 
+        /// types.
+        /// </summary>
+        /// <returns>
+        ///   The adapter feature types.
+        /// </returns>
+        public static Type[] GetStandardAdapterFeatureTypes() {
+            return s_standardAdapterFeatureTypes;
+        }
+
+
+        /// <summary>
         /// Tests if the type is an adapter feature.
         /// </summary>
         /// <param name="type">

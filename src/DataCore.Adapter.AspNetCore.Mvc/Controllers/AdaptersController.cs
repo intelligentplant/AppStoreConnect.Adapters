@@ -13,9 +13,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting information about the hosted adapters.
     /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Area("data-core")]
-    [Route("api/[area]/v{version:apiVersion}/adapters")]
+    [Route("api/[area]/v1.0/adapters")]
     public class AdaptersController : ControllerBase {
 
         /// <summary>
@@ -47,9 +46,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Gets information about all registered adapters that are visible to the caller.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -60,7 +56,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public async Task<IActionResult> GetAllAdapters(ApiVersion apiVersion, CancellationToken cancellationToken) {
+        public async Task<IActionResult> GetAllAdapters(CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
             var result = adapters.Select(x => x.Descriptor).OrderBy(x => x.Name).ToArray();
             return Ok(result); // 200
@@ -70,9 +66,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Gets information about the specified adapter.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -86,7 +79,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
-        public async Task<IActionResult> GetAdapterById(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
+        public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

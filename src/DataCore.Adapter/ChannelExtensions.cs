@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.AssetModel.Models;
 
 namespace DataCore.Adapter {
 
@@ -21,7 +22,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Capacity of channels created using <see cref="CreateBoundedTagValueChannel{T}"/>.
         /// </summary>
-        public const int TagValueChannelCapacity = 1000;
+        public const int TagValueChannelCapacity = 5000;
 
         /// <summary>
         /// Capacity of channels created using <see cref="CreateBoundedTagValueAnnotationChannel"/>.
@@ -32,6 +33,11 @@ namespace DataCore.Adapter {
         /// Capacity of channels created using <see cref="CreateBoundedEventMessageChannel{T}()"/>.
         /// </summary>
         public const int EventChannelCapacity = 100;
+
+        /// <summary>
+        /// Capacity of channels created using <see cref="CreateBoundedAssetModelNodeChannel"/>.
+        /// </summary>
+        public const int AssetModelNodeChannelCapacity = 100;
 
 
         /// <summary>
@@ -79,6 +85,20 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static Channel<RealTimeData.Models.TagDefinition> CreateBoundedTagDefinitionChannel() {
             return CreateChannel<RealTimeData.Models.TagDefinition>(TagDefinitionChannelCapacity);
+        }
+
+
+        /// <summary>
+        /// Creates a bounded channel that can be used to return results to tag identifier queries.
+        /// </summary>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.Models.TagIdentifier> CreateBoundedTagIdentifierChannel() {
+            return CreateChannel<RealTimeData.Models.TagIdentifier>(TagDefinitionChannelCapacity);
         }
 
 
@@ -147,6 +167,62 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static Channel<T> CreateBoundedEventMessageChannel<T>() where T : Events.Models.EventMessageBase {
             return CreateBoundedEventMessageChannel<T>(BoundedChannelFullMode.Wait);
+        }
+
+
+        /// <summary>
+        /// Creates a bounded channel that can be used to return results to asset model node queries.
+        /// </summary>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The capacity of the created channel is set to <see cref="AssetModelNodeChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<AssetModelNode> CreateBoundedAssetModelNodeChannel() {
+            return CreateChannel<AssetModelNode>(AssetModelNodeChannelCapacity);
+        }
+
+
+        /// <summary>
+        /// Republishes items read from the channel reader to a destination channel.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="source">
+        ///   The source channel.
+        /// </param>
+        /// <param name="destination">
+        ///   The destination channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will read and republish items from the source channel until it completes 
+        ///   or the <paramref name="cancellationToken"/> fires.
+        /// </returns>
+        public static async Task Forward<T>(this ChannelReader<T> source, ChannelWriter<T> destination, CancellationToken cancellationToken = default) {
+            if (source == null) {
+                throw new ArgumentNullException(nameof(source));
+            }
+            if (destination == null) {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            // Republish from source to destination. We'll swallow OperationCanceledException and 
+            // ChannelClosedException errors, as these indicate one way or another that one of the 
+            // channels completed.
+
+            try {
+                while (!cancellationToken.IsCancellationRequested) {
+                    var item = await source.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    await destination.WriteAsync(item, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (ChannelClosedException) { }
         }
 
 

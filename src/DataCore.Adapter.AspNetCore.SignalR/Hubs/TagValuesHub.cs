@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A task that will process the connection.
         /// </returns>
         public override Task OnConnectedAsync() {
-            // Store a dictionary of adapter subscriptions in the connection context.
+            // Store a list of adapter subscriptions in the connection context.
             Context.Items[typeof(ISnapshotTagValueSubscription)] = new List<SubscriptionWrapper>();
             return base.OnConnectedAsync();
         }
@@ -120,6 +120,43 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
+        /// Gets the tags that an existing snapshot subscription is subscribed to. You must create a 
+        /// channel first by calling <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/>.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID for the subscription.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that the caller can subscribe to to receive the tags that the 
+        ///   subscription holds references to.
+        /// </returns>
+        public async Task<ChannelReader<TagIdentifier>> GetSnapshotTagValueChannelSubscriptions(string adapterId, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
+            var subscription = GetSubscription(adapter.Adapter);
+            if (subscription == null) {
+                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
+            }
+
+            var result = ChannelExtensions.CreateBoundedTagIdentifierChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                foreach (var item in await subscription.GetTags(ct).ConfigureAwait(false)) {
+                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        break;
+                    }
+
+                    ch.TryWrite(item);
+                }
+            }, true, cancellationToken);
+
+            return result;
+        }
+
+
+        /// <summary>
         /// Adds tags to an existing snapshot data channel subscription. You must create a channel 
         /// first by calling <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/>.
         /// </summary>
@@ -129,14 +166,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="tags">
         ///   The tags to add to the subscription.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   The total number of tags in the subscription.
         /// </returns>
-        public async Task<int> AddTagsToSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
+        public async Task<int> AddTagsToSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags) {
+            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -151,7 +185,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
 
-            return await subscription.AddTagsToSubscription(AdapterCallContext, tags, cancellationToken).ConfigureAwait(false);
+            return await subscription.AddTagsToSubscription(AdapterCallContext, tags, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -165,14 +199,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="tags">
         ///   The tags to remove from the subscription.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   The total number of tags in the subscription.
         /// </returns>
-        public async Task<int> RemoveTagsFromSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
+        public async Task<int> RemoveTagsFromSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags) {
+            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -187,7 +218,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
 
-            return await subscription.RemoveTagsFromSubscription(AdapterCallContext, tags, cancellationToken).ConfigureAwait(false);
+            return await subscription.RemoveTagsFromSubscription(AdapterCallContext, tags, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 

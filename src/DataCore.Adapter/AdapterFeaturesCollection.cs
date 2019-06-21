@@ -79,7 +79,7 @@ namespace DataCore.Adapter {
 
             var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(x => x.IsAdapterFeature());
             foreach (var feature in implementedFeatures) {
-                _features[feature] = featureProvider;
+                AddInternal(feature, featureProvider);
             }
         }
 
@@ -87,8 +87,70 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Adds an adapter feature.
         /// </summary>
+        /// <param name="featureType">
+        ///   The feature interface type.
+        /// </param>
+        /// <param name="feature">
+        ///   The feature implementation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
+        /// </exception>
+        private void AddInternal(Type featureType, object feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (!featureType.IsInstanceOfType(feature)) {
+                throw new ArgumentException(string.Format(Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
+            }
+            _features[featureType] = feature;
+        }
+
+
+        /// <summary>
+        /// Adds an adapter feature.
+        /// </summary>
+        /// <param name="featureType">
+        ///   The feature interface type.
+        /// </param>
+        /// <param name="feature">
+        ///   The feature implementation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="featureType"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="featureType"/> is not an adapter feature type.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
+        /// </exception>
+        public void Add(Type featureType, object feature) {
+            if (featureType == null) {
+                throw new ArgumentNullException(nameof(featureType));
+            }
+            if (!featureType.IsAdapterFeature()) {
+                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(featureType));
+            }
+
+            AddInternal(featureType, feature);
+        }
+
+
+        /// <summary>
+        /// Adds an adapter feature.
+        /// </summary>
         /// <typeparam name="TFeature">
-        ///   The feature type.
+        ///   The feature interface type.
+        /// </typeparam>
+        /// <typeparam name="TFeatureImpl">
+        ///   The feature implementation type.
         /// </typeparam>
         /// <param name="feature">
         ///   The feature implementation.
@@ -97,12 +159,14 @@ namespace DataCore.Adapter {
         ///   <typeparamref name="TFeature"/> is not an interface, or it does not interit from 
         ///   <see cref="IAdapterFeature"/>.
         /// </exception>
-        public void Add<TFeature>(TFeature feature) where TFeature : class, IAdapterFeature {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (!typeof(TFeature).IsAdapterFeature()) {
                 throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
             }
-
-            _features[typeof(TFeature)] = feature;
+            AddInternal(typeof(TFeature), feature);
         }
 
 

@@ -13,9 +13,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for querying event messages on adapters.
     /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Area("data-core")]
-    [Route("api/[area]/v{version:apiVersion}/events")]
+    [Route("api/[area]/v1.0/events")]
     public class EventsController : ControllerBase {
 
         /// <summary>
@@ -52,9 +51,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Reads historical event messages for the specified time range.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -70,7 +66,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/by-time-range")]
         [ProducesResponseType(typeof(IEnumerable<EventMessage>), 200)]
-        public async Task<IActionResult> ReadEventMessagesForTimeRange(ApiVersion apiVersion, string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesForTimeRange>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -106,9 +102,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Reads historical event messages starting at the specified cursor position.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -125,7 +118,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/by-cursor")]
         [ProducesResponseType(typeof(IEnumerable<EventMessageWithCursorPosition>), 200)]
-        public async Task<IActionResult> ReadEventMessagesByCursor(ApiVersion apiVersion, string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadEventMessagesByCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesUsingCursor>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

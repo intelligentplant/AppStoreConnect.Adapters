@@ -43,11 +43,6 @@ services.AddDataCoreAdapterServices(options => {
 API controllers are registered with ASP.NET Core MVC in the `Startup.cs` file's `ConfigureServices` method:
 
 ```csharp
-// Adapter API controllers require the API versioning service.
-services.AddApiVersioning(options => {
-    options.ReportApiVersions = true;
-});
-
 // Add the adapter API controllers to the MVC registration.
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)

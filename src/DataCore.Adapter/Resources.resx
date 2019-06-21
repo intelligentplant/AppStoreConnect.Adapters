@@ -120,4 +120,8 @@
   <data name="Error_BucketSizeMustBeGreaterThanZero" xml:space="preserve">
     <value>The bucket size for plot calculations must be greater than zero.</value>
   </data>
+  <data name="Error_NotAFeatureImplementation" xml:space="preserve">
+    <value>Object does not implement feature {0}.</value>
+    <comment>{0} - feature name</comment>
+  </data>
 </root>

@@ -66,14 +66,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <summary>
         /// Gets information about the available adapters.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   The adapters visible to the caller.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> GetAdapters(CancellationToken cancellationToken) {
-            var adapters = await AdapterAccessor.GetAdapters(AdapterCallContext, cancellationToken).ConfigureAwait(false);
+        public async Task<IEnumerable<AdapterDescriptor>> GetAdapters() {
+            var adapters = await AdapterAccessor.GetAdapters(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
             return adapters.Select(x => x.Descriptor).ToArray();
         }
 
@@ -84,14 +81,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   Information about the requested adapter.
         /// </returns>
-        public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+        public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
+            var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             return adapter.CreateExtendedAdapterDescriptor();
         }
 

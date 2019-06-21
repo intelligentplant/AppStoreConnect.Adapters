@@ -14,9 +14,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting tag data.
     /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Area("data-core")]
-    [Route("api/[area]/v{version:apiVersion}/tag-values")]
+    [Route("api/[area]/v1.0/tag-values")]
     public class TagValuesController: ControllerBase {
 
         /// <summary>
@@ -53,9 +52,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests snapshot (current) tag values.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -71,7 +67,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadSnapshotValues(ApiVersion apiVersion, string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadSnapshotValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -107,9 +103,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests raw (archived) tag values.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -125,7 +118,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/raw")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadRawValues(ApiVersion apiVersion, string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadRawValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -161,9 +154,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests plot (vizualization-friendly) tag values.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -183,7 +173,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/plot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadPlotValues(ApiVersion apiVersion, string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadPlotValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -220,9 +210,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests interpolated tag values.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -238,7 +225,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/interpolated")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadInterpolatedValues(ApiVersion apiVersion, string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadInterpolatedValues(string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadInterpolatedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -274,9 +261,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests tag values at specific timestamps.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -292,7 +276,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/values-at-times")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadValuesAtTimes(ApiVersion apiVersion, string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -328,9 +312,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests processed (aggregated) tag values.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -353,7 +334,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/processed")]
         [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadProcessedValues(ApiVersion apiVersion, string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadProcessedValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -390,9 +371,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Requests the aggregate functions that can be specified when requesting processed data.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -411,7 +389,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<string>), 200)]
-        public async Task<IActionResult> GetSupportedAggregateFunctions(ApiVersion apiVersion, string adapterId, CancellationToken cancellationToken) {
+        public async Task<IActionResult> GetSupportedAggregateFunctions(string adapterId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

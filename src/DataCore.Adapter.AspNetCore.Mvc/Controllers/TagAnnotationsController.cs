@@ -13,9 +13,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting annotations on tag values.
     /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Area("data-core")]
-    [Route("api/[area]/v{version:apiVersion}/tag-annotations")]
+    [Route("api/[area]/v1.0/tag-annotations")]
     public class TagAnnotationsController: ControllerBase {
 
         /// <summary>
@@ -52,9 +51,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Reads tag value annotations from an adapter.
         /// </summary>
-        /// <param name="apiVersion">
-        ///   The API version.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -70,7 +66,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagValueAnnotationQueryResult>), 200)]
-        public async Task<IActionResult> ReadAnnotations(ApiVersion apiVersion, string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

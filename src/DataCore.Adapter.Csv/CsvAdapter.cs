@@ -92,17 +92,20 @@ namespace DataCore.Adapter.Csv {
         /// Adds or replaces an adapter feature.
         /// </summary>
         /// <typeparam name="TFeature">
-        ///   The feature type.
+        ///   The feature interface type.
+        /// </typeparam>
+        /// <typeparam name="TFeatureImpl">
+        ///   The feature implementation type.
         /// </typeparam>
         /// <param name="feature">
         ///   The feature implementation.
         /// </param>
-        protected void AddFeature<TFeature>(TFeature feature) where TFeature : class, IAdapterFeature {
+        protected void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
 
-            _features.Add(feature);
+            _features.Add<TFeature, TFeatureImpl>(feature);
         }
  
 

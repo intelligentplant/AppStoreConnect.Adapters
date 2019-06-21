@@ -2,13 +2,50 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DataCore.Adapter.Common.Models;
 
-namespace DataCore.Adapter.Common.Models {
+namespace DataCore.Adapter {
 
     /// <summary>
-    /// Extensions for <see cref="AdapterDescriptorExtended"/>.
+    /// Extensions for <see cref="IAdapter"/> and <see cref="AdapterDescriptorExtended"/>.
     /// </summary>
-    public static class AdapterDescriptorExtendedExtensions {
+    public static class AdapterExtensions {
+
+        /// <summary>
+        /// Creates an <see cref="AdapterDescriptorExtended"/> for the <see cref="IAdapter"/>.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorExtended"/> for the adapter.
+        /// </returns>
+        public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) {
+            if (adapter == null) {
+                return null;
+            }
+
+            var standardFeatures = adapter
+                .Features
+                ?.Keys
+                ?.Where(x => x.IsStandardAdapterFeature())
+                .ToArray() ?? new Type[0];
+
+            var extensionFeatures = adapter
+                .Features
+                ?.Keys
+                ?.Except(standardFeatures)
+                .ToArray();
+
+            return new AdapterDescriptorExtended(
+                adapter.Descriptor.Id,
+                adapter.Descriptor.Name,
+                adapter.Descriptor.Description,
+                standardFeatures.OrderBy(x => x.Name).Select(x => x.Name).ToArray(),
+                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray()
+            );
+        }
+
 
         /// <summary>
         /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
@@ -55,42 +92,6 @@ namespace DataCore.Adapter.Common.Models {
             }
 
             return descriptor.Features.Any(f => string.Equals(f, featureName)) || descriptor.Extensions.Any(f => string.Equals(f, featureName));
-        }
-
-
-        /// <summary>
-        /// Creates an <see cref="AdapterDescriptorExtended"/> for the <see cref="IAdapter"/>.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorExtended"/> for the adapter.
-        /// </returns>
-        public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) {
-            if (adapter == null) {
-                return null;
-            }
-
-            var standardFeatures = adapter
-                .Features
-                ?.Keys
-                ?.Where(x => x.IsStandardAdapterFeature())
-                .ToArray() ?? new Type[0];
-
-            var extensionFeatures = adapter
-                .Features
-                ?.Keys
-                ?.Except(standardFeatures)
-                .ToArray();
-
-            return new AdapterDescriptorExtended(
-                adapter.Descriptor.Id,
-                adapter.Descriptor.Name,
-                adapter.Descriptor.Description,
-                standardFeatures.OrderBy(x => x.Name).Select(x => x.Name).ToArray(),
-                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray()
-            );
         }
 
     }
