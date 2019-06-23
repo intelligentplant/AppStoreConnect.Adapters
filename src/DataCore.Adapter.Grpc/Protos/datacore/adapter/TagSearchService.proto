@@ -32,6 +32,11 @@ message GetTagsRequest {
 
 // Tag definition models
 
+message TagIdentifier {
+    string id = 1;
+    string name = 2;
+}
+
 message TagDefinition {
     string id = 1;
     string name = 2;

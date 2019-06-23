@@ -214,6 +214,30 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #endregion
 
+        #region [ Write Event Messages ]
+
+        /// <summary>
+        /// Writes event messages to the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="channel">
+        ///   A channel that will provide the event messages to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that will return the write results.
+        /// </returns>
+        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteEventMessages(AdapterCallContext, channel, cancellationToken);
+        }
+
+        #endregion
+
         #region [ Inner Types ]
 
         /// <summary>

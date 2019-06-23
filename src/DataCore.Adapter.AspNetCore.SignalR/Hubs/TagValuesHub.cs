@@ -140,19 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
 
-            var result = ChannelExtensions.CreateBoundedTagIdentifierChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                foreach (var item in await subscription.GetTags(ct).ConfigureAwait(false)) {
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
-
-                    ch.TryWrite(item);
-                }
-            }, true, cancellationToken);
-
-            return result;
+            return subscription.GetTags(cancellationToken);
         }
 
 
@@ -431,6 +419,51 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #endregion
 
+        #region [ Tag Value Write ]
+
+        /// <summary>
+        /// Writes values to the specified adapter's snapshot.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="channel">
+        ///   A channel that will provide the values to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that will return the write results.
+        /// </returns>
+        public async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteSnapshotTagValues(AdapterCallContext, channel, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Writes values to the specified adapter's historical archive.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="channel">
+        ///   A channel that will provide the values to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that will return the write results.
+        /// </returns>
+        public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteHistoricalTagValues(AdapterCallContext, channel, cancellationToken);
+        }
+
+        #endregion
+
         #region [ Inner Types ]
 
         /// <summary>
@@ -468,7 +501,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
             /// <inheritdoc/>
-            public Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken) {
+            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
                 return _inner.GetTags(cancellationToken);
             }
 

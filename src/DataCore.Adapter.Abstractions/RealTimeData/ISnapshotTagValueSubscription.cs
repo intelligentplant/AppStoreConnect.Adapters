@@ -30,9 +30,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The tag identifiers for the subscription's tags.
+        ///   A channel that returns the tag identifiers for the subscription's tags.
         /// </returns>
-        Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken);
+        ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds additional tags to the subscription.

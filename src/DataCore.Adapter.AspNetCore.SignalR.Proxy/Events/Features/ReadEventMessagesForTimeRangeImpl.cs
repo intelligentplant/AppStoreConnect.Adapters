@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public ReadEventMessagesForTimeRangeImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         public ChannelReader<EventMessage> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedEventMessageChannel<EventMessage>();
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await this.GetTagValuesHubConnection(ct).ConfigureAwait(false);

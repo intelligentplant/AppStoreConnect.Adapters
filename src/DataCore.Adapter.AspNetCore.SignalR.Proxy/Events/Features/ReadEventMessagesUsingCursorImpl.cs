@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public ReadEventMessagesUsingCursorImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         public ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedEventMessageChannel<EventMessageWithCursorPosition>();
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await this.GetTagValuesHubConnection(ct).ConfigureAwait(false);

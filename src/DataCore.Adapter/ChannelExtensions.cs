@@ -15,17 +15,17 @@ namespace DataCore.Adapter {
     public static class ChannelExtensions {
 
         /// <summary>
-        /// Capacity of channels created using <see cref="CreateBoundedTagDefinitionChannel"/>.
+        /// Capacity of channels created using <see cref="CreateTagDefinitionChannel"/>.
         /// </summary>
         public const int TagDefinitionChannelCapacity = 100;
 
         /// <summary>
-        /// Capacity of channels created using <see cref="CreateBoundedTagValueChannel{T}"/>.
+        /// Capacity of channels created using <see cref="CreateTagValueChannel{T}"/>.
         /// </summary>
         public const int TagValueChannelCapacity = 5000;
 
         /// <summary>
-        /// Capacity of channels created using <see cref="CreateBoundedTagValueAnnotationChannel"/>.
+        /// Capacity of channels created using <see cref="CreateTagValueAnnotationChannel"/>.
         /// </summary>
         public const int TagAnnotationChannelCapacity = 100;
 
@@ -35,7 +35,7 @@ namespace DataCore.Adapter {
         public const int EventChannelCapacity = 100;
 
         /// <summary>
-        /// Capacity of channels created using <see cref="CreateBoundedAssetModelNodeChannel"/>.
+        /// Capacity of channels created using <see cref="CreateAssetModelNodeChannel"/>.
         /// </summary>
         public const int AssetModelNodeChannelCapacity = 100;
 
@@ -75,66 +75,114 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to tag search queries.
+        /// Creates a channel that can be used to return results to tag search queries.
         /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagDefinition> CreateBoundedTagDefinitionChannel() {
-            return CreateChannel<RealTimeData.Models.TagDefinition>(TagDefinitionChannelCapacity);
+        public static Channel<RealTimeData.Models.TagDefinition> CreateTagDefinitionChannel(int capacity = TagDefinitionChannelCapacity) {
+            return CreateChannel<RealTimeData.Models.TagDefinition>(capacity);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to tag identifier queries.
+        /// Creates a channel that can be used to return results to tag identifier queries.
         /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagIdentifier> CreateBoundedTagIdentifierChannel() {
-            return CreateChannel<RealTimeData.Models.TagIdentifier>(TagDefinitionChannelCapacity);
+        public static Channel<RealTimeData.Models.TagIdentifier> CreateTagIdentifierChannel(int capacity = TagDefinitionChannelCapacity) {
+            return CreateChannel<RealTimeData.Models.TagIdentifier>(capacity);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to tag value queries.
+        /// Creates a channel that can be used to return results to tag value queries.
         /// </summary>
         /// <typeparam name="T">
         ///   The result type.
         /// </typeparam>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateBoundedTagValueChannel<T>() where T : RealTimeData.Models.TagValueQueryResult {
-            return CreateChannel<T>(TagValueChannelCapacity);
+        public static Channel<T> CreateTagValueChannel<T>(int capacity = TagValueChannelCapacity) where T : RealTimeData.Models.TagValueQueryResult {
+            return CreateChannel<T>(capacity);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to tag annotation queries.
+        /// Creates a channel that can be used to write tag values to an adapter.
         /// </summary>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="TagAnnotationChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagValueAnnotationQueryResult> CreateBoundedTagValueAnnotationChannel() {
-            return CreateChannel<RealTimeData.Models.TagValueAnnotationQueryResult>(TagAnnotationChannelCapacity);
+        public static Channel<RealTimeData.Models.WriteTagValueItem> CreateTagValueWriteChannel(int capacity = TagValueChannelCapacity) {
+            return CreateChannel<RealTimeData.Models.WriteTagValueItem>(capacity);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to event message queries.
+        /// Creates a channel that can be used to return the results of tag value writes.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.Models.WriteTagValueResult> CreateTagValueWriteResultChannel(int capacity = TagValueChannelCapacity) {
+            return CreateChannel<RealTimeData.Models.WriteTagValueResult>(capacity);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to tag annotation queries.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagAnnotationChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.Models.TagValueAnnotationQueryResult> CreateTagValueAnnotationChannel(int capacity = TagAnnotationChannelCapacity) {
+            return CreateChannel<RealTimeData.Models.TagValueAnnotationQueryResult>(capacity);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to event message queries.
         /// </summary>
         /// <typeparam name="T">
         ///   The result type.
@@ -142,45 +190,89 @@ namespace DataCore.Adapter {
         /// <param name="fullMode">
         ///   The action to take when a write is attempted on a full channel.
         /// </param>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        internal static Channel<T> CreateBoundedEventMessageChannel<T>(BoundedChannelFullMode fullMode) where T : Events.Models.EventMessageBase {
-            return CreateChannel<T>(EventChannelCapacity, fullMode);
+        internal static Channel<T> CreateEventMessageChannel<T>(BoundedChannelFullMode fullMode, int capacity = EventChannelCapacity) where T : Events.Models.EventMessageBase {
+            return CreateChannel<T>(capacity, fullMode);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to event message queries.
+        /// Creates a channel that can be used to return results to event message queries.
         /// </summary>
         /// <typeparam name="T">
         ///   The result type.
         /// </typeparam>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateBoundedEventMessageChannel<T>() where T : Events.Models.EventMessageBase {
-            return CreateBoundedEventMessageChannel<T>(BoundedChannelFullMode.Wait);
+        public static Channel<T> CreateEventMessageChannel<T>(int capacity = EventChannelCapacity) where T : Events.Models.EventMessageBase {
+            return CreateEventMessageChannel<T>(BoundedChannelFullMode.Wait, capacity);
         }
 
 
         /// <summary>
-        /// Creates a bounded channel that can be used to return results to asset model node queries.
+        /// Creates a channel that can be used to write event messages to an adapter.
         /// </summary>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
-        ///   The capacity of the created channel is set to <see cref="AssetModelNodeChannelCapacity"/>.
+        ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<AssetModelNode> CreateBoundedAssetModelNodeChannel() {
-            return CreateChannel<AssetModelNode>(AssetModelNodeChannelCapacity);
+        public static Channel<Events.Models.WriteEventMessageItem> CreateEventMessageWriteChannel(int capacity = EventChannelCapacity) {
+            return CreateChannel<Events.Models.WriteEventMessageItem>(capacity);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return the results of event message writes.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<Events.Models.WriteEventMessageResult> CreateEventMessageWriteResultChannel(int capacity = EventChannelCapacity) {
+            return CreateChannel<Events.Models.WriteEventMessageResult>(capacity);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to asset model node queries.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="AssetModelNodeChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<AssetModelNode> CreateAssetModelNodeChannel(int capacity = AssetModelNodeChannelCapacity) {
+            return CreateChannel<AssetModelNode>(capacity);
         }
 
 

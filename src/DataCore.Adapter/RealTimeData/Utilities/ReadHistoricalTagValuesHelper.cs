@@ -59,7 +59,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
@@ -99,7 +99,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
@@ -147,7 +147,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         /// <inheritdoc/>
         public ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagValueChannel<ProcessedTagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
@@ -186,7 +186,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
@@ -205,7 +205,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     // from the resulting channel into a master raw data channel, which is used 
                     // by the InterpolationHelper to calcukate the required values.
 
-                    var rawValuesChannel = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
+                    var rawValuesChannel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
                     rawValuesChannel.Writer.RunBackgroundOperation(async (ch2, ct2) => {
                         foreach (var sampleTime in request.UtcSampleTimes) {

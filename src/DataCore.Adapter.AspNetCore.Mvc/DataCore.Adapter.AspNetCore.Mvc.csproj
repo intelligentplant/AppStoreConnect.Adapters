@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netcoreapp2.2;netcoreapp3.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
-    <PackageId>IntelligentPlant.DataCore.Adapter.AspNetCore.Mvc</PackageId>
+    <PackageId>$(PackagePrefix).Adapter.AspNetCore.Mvc</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

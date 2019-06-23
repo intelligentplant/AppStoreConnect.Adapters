@@ -597,8 +597,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <inheritdoc/>
-            public Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken) {
-                return Task.FromResult<IEnumerable<TagIdentifier>>(_subscribedTags.ToArray());
+            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
+                var result = ChannelExtensions.CreateTagIdentifierChannel();
+
+                result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    foreach (var item in _subscribedTags.ToArray()) {
+                        await ch.WriteAsync(item, ct).ConfigureAwait(false);
+                    }
+                });
+
+                return result;
             }
 
 

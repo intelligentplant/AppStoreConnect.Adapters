@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>DataCore.Adapter</RootNamespace>
-    <PackageId>IntelligentPlant.DataCore.Adapter</PackageId>
+    <PackageId>$(PackagePrefix).Adapter</PackageId>
     <Description>Base implementations and utility classes for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

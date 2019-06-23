@@ -14,7 +14,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagDefinitionChannel();
+            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await this.GetTagSearchHubConnection(ct).ConfigureAwait(false);
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         }
 
         public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedTagDefinitionChannel();
+            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await this.GetTagSearchHubConnection(ct).ConfigureAwait(false);

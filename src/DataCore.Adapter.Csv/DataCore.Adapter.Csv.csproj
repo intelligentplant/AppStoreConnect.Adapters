@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>IntelligentPlant.DataCore.Adapter.Csv</PackageId>
+    <PackageId>$(PackagePrefix).Adapter.Csv</PackageId>
     <Description>App Store Connect adapter that serves data from CSV files.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

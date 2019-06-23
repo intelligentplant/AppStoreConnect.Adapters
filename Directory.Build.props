@@ -2,6 +2,7 @@
   <PropertyGroup>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant Ltd.</Company>
+    <PackagePrefix>IntelligentPlant.AppStoreConnect</PackagePrefix>
     <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>

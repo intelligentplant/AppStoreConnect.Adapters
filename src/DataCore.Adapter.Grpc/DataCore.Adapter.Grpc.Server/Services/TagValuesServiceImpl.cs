@@ -58,6 +58,31 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        public override async Task GetSnapshotPushChannelTags(GetSnapshotPushChannelTagsRequest request, IServerStreamWriter<TagIdentifier> responseStream, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
+
+            RealTimeData.ISnapshotTagValueSubscription subscription;
+            if (!s_subscriptions.TryGetValue(key, out var o) || (subscription = o as RealTimeData.ISnapshotTagValueSubscription) == null) {
+                throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_SnapshotSubscriptionDoesNotExist, adapterId)));
+            }
+
+            var cancellationToken = context.CancellationToken;
+            var channel = subscription.GetTags(cancellationToken);
+
+            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!channel.TryRead(out var item) || item == null) {
+                    continue;
+                }
+
+                await responseStream.WriteAsync(new TagIdentifier() {
+                    Id = item.Id,
+                    Name = item.Name
+                }).ConfigureAwait(false);
+            }
+        }
+
+
         public override async Task<AddTagsToSnapshotPushChannelResponse> AddTagsToSnapshotPushChannel(AddTagsToSnapshotPushChannelRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
@@ -269,11 +294,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
-                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<RealTimeData.Models.WriteTagValueItem>(new System.Threading.Channels.UnboundedChannelOptions() {
-                            AllowSynchronousContinuations = true,
-                            SingleReader = true,
-                            SingleWriter = true
-                        });
+                        writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
                         var resultsChannel = adapter.Feature.WriteSnapshotTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
@@ -290,7 +311,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     var adapterRequest = request.ToAdapterWriteTagValueItem();
                     Util.ValidateObject(adapterRequest);
-                    writeChannel.Writer.TryWrite(adapterRequest);
+                    await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e) {
@@ -324,11 +345,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
-                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<RealTimeData.Models.WriteTagValueItem>(new System.Threading.Channels.UnboundedChannelOptions() {
-                            AllowSynchronousContinuations = true,
-                            SingleReader = true,
-                            SingleWriter = true
-                        });
+                        writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
                         var resultsChannel = adapter.Feature.WriteHistoricalTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
@@ -345,7 +362,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     var adapterRequest = request.ToAdapterWriteTagValueItem();
                     Util.ValidateObject(adapterRequest);
-                    writeChannel.Writer.TryWrite(adapterRequest);
+                    await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e) {

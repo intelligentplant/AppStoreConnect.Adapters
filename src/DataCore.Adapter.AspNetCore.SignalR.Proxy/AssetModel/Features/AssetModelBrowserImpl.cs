@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
         public AssetModelBrowserImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         public ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
@@ -30,10 +30,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
         }
 
         public ChannelReader<AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetTagValuesHubConnection(ct).ConfigureAwait(false);
+                var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
                     "GetAssetModelNodes",
                     AdapterId,
@@ -47,10 +47,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
         }
 
         public ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateBoundedAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetTagValuesHubConnection(ct).ConfigureAwait(false);
+                var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
                     "FindAssetModelNodes",
                     AdapterId,

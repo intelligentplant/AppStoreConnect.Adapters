@@ -17,7 +17,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
         public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
             var result = new EventMessageSubscription(
-                this,
+                AdapterId,
                 await this.GetTagValuesHubConnection(cancellationToken).ConfigureAwait(false),
                 active
             );
@@ -30,19 +30,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
             private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
 
-            private readonly EventMessagePushImpl _feature;
+            private readonly string _adapterId;
 
             private readonly HubConnection _hubConnection;
 
-            private readonly Channel<EventMessage> _channel = ChannelExtensions.CreateBoundedEventMessageChannel<EventMessage>();
+            private readonly Channel<EventMessage> _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
 
             private readonly bool _activeSubscription;
 
             public ChannelReader<EventMessage> Reader { get { return _channel; } }
 
 
-            public EventMessageSubscription(EventMessagePushImpl feature, HubConnection hubConnection, bool activeSubscription) {
-                _feature = feature;
+            public EventMessageSubscription(string adapterId, HubConnection hubConnection, bool activeSubscription) {
+                _adapterId = adapterId;
                 _hubConnection = hubConnection;
                 _activeSubscription = activeSubscription;
             }
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _hubConnection.StreamAsChannelAsync<EventMessage>(
                         "CreateChannel",
-                        _feature.AdapterId,
+                        _adapterId,
                         _activeSubscription,
                         ct
                     ).ConfigureAwait(false);

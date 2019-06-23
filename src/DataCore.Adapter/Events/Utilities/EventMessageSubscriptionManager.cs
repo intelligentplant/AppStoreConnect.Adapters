@@ -291,7 +291,7 @@ namespace DataCore.Adapter.Events.Utilities {
             internal Subscription(EventMessageSubscriptionManager subscriptionManager, bool active) {
                 _subscriptionManager = subscriptionManager;
                 // If this is a passive subscription, we do not need to guarantee delivery of the message.
-                _channel = ChannelExtensions.CreateBoundedEventMessageChannel<EventMessage>(active 
+                _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(active 
                     ? BoundedChannelFullMode.Wait 
                     : BoundedChannelFullMode.DropWrite
                 );

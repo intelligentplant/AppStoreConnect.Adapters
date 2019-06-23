@@ -18,7 +18,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = new SnapshotTagValueSubscription(
-                this,
+                AdapterId,
                 await this.GetTagValuesHubConnection(cancellationToken).ConfigureAwait(false)
             );
             result.Start();
@@ -30,11 +30,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
 
-            private readonly SnapshotTagValuePushImpl _feature;
+            private readonly string _adapterId;
 
             private readonly HubConnection _hubConnection;
 
-            private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateBoundedTagValueChannel<TagValueQueryResult>();
+            private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             private readonly HashSet<string> _tags = new HashSet<string>();
 
@@ -45,8 +45,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
-            public SnapshotTagValueSubscription(SnapshotTagValuePushImpl feature, HubConnection hubConnection) {
-                _feature = feature;
+            public SnapshotTagValueSubscription(string adapterId, HubConnection hubConnection) {
+                _adapterId = adapterId;
                 _hubConnection = hubConnection;
             }
 
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                     var hubChannel = await _hubConnection.StreamAsChannelAsync<TagValueQueryResult>(
                         "CreateSnapshotTagValueChannel",
-                        _feature.AdapterId,
+                        _adapterId,
                         tags,
                         ct
                     ).ConfigureAwait(false);
@@ -70,20 +70,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
-            public async Task<IEnumerable<TagIdentifier>> GetTags(CancellationToken cancellationToken) {
-                var channel = await _hubConnection.StreamAsChannelAsync<TagIdentifier>(
-                    "GetSnapshotTagValueChannelSubscriptions",
-                    _feature.AdapterId,
-                    cancellationToken
-                ).ConfigureAwait(false);
+            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
+                var result = ChannelExtensions.CreateTagIdentifierChannel();
 
-                var result = new List<TagIdentifier>();
+                result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    var hubChannel = await _hubConnection.StreamAsChannelAsync<TagIdentifier>(
+                        "GetSnapshotTagValueChannelSubscriptions",
+                        _adapterId,
+                        ct
+                    ).ConfigureAwait(false);
 
-                while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (channel.TryRead(out var tagIdentifier) && tagIdentifier != null) {
-                        result.Add(tagIdentifier);
-                    }
-                }
+                    await hubChannel.Forward(ch, ct).ConfigureAwait(false);
+                }, true, cancellationToken);
 
                 return result;
             }
@@ -109,7 +107,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                 return await _hubConnection.InvokeAsync<int>(
                     "AddTagsToSnapshotTagValueChannel",
-                    _feature.AdapterId,
+                    _adapterId,
                     tagsToAdd,
                     cancellationToken
                 ).ConfigureAwait(false);
@@ -136,7 +134,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                 return await _hubConnection.InvokeAsync<int>(
                     "RemoveTagsFromSnapshotTagValueChannel",
-                    _feature.AdapterId,
+                    _adapterId,
                     tagsToRemove,
                     cancellationToken
                 ).ConfigureAwait(false);
