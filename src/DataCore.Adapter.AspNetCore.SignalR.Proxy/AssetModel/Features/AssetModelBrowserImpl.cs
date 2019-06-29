@@ -16,7 +16,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
+                var connection = await GetHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
                     "BrowseAssetModelNodes",
                     AdapterId,
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
+                var connection = await GetHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
                     "GetAssetModelNodes",
                     AdapterId,
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetAssetModelBrowserHubConnection(ct).ConfigureAwait(false);
+                var connection = await GetHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
                     "FindAssetModelNodes",
                     AdapterId,

@@ -13,9 +13,9 @@ using Microsoft.AspNetCore.SignalR;
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
     /// <summary>
-    /// Base class that all adapter hubs should inherit from.
+    /// SignalR hub for adapter API calls.
     /// </summary>
-    public abstract class AdapterHubBase : Hub {
+    public partial class AdapterHub : Hub {
 
         /// <summary>
         /// The host information.
@@ -34,7 +34,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterHubBase"/> object.
+        /// Creates a new <see cref="AdapterHub"/> object.
         /// </summary>
         /// <param name="hostInfo">
         ///   The host information.
@@ -45,7 +45,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterAccessor">
         ///   For accessing runtime adapters.
         /// </param>
-        protected AdapterHubBase(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
+        public AdapterHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterCallContext = adapterCallContext ?? throw new ArgumentNullException(nameof(adapterCallContext));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
@@ -105,7 +105,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> could not be resolved.
         /// </exception>
-        protected async Task<IAdapter> ResolveAdapter(string adapterId, CancellationToken cancellationToken) {
+        private async Task<IAdapter> ResolveAdapter(string adapterId, CancellationToken cancellationToken) {
             var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
         /// </exception>
-        protected async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+        private async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<TFeature>(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
@@ -171,12 +171,41 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="ValidationException">
         ///   <paramref name="instance"/> is not valid.
         /// </exception>
-        protected void ValidateObject(object instance) {
+        private void ValidateObject(object instance) {
             if (instance == null) {
                 throw new ArgumentNullException(nameof(instance));
             }
 
             Validator.ValidateObject(instance, new ValidationContext(instance), true);
+        }
+
+
+        /// <summary>
+        /// Called when a connection is established.
+        /// </summary>
+        /// <returns>
+        ///   A task that will process the connection.
+        /// </returns>
+        public override Task OnConnectedAsync() {
+            OnTagValuesHubConnected();
+            OnEventsHubConnected();
+            return base.OnConnectedAsync();
+        }
+
+
+        /// <summary>
+        /// Called when a connection is ended.
+        /// </summary>
+        /// <param name="exception">
+        ///   An exception associated with the disconnection.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the disconnection.
+        /// </returns>
+        public override Task OnDisconnectedAsync(Exception exception) {
+            OnTagValuesHubDisconnected();
+            OnEventsHubDisconnected();
+            return base.OnDisconnectedAsync(exception);
         }
 
     }

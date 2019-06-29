@@ -88,9 +88,16 @@ namespace DataCore.Adapter.Grpc.Server {
             if (node.Children.Any()) {
                 result.Children.AddRange(node.Children);
             }
-            if (node.Measurements?.Count > 0) {
+            if (node.Measurements.Any()) {
                 foreach (var item in node.Measurements) {
-                    result.Measurements.Add(item.Key, item.Value.ToGrpcTagDefinition());
+                    result.Measurements.Add(new AssetModelNodeMeasurement() {
+                        Name = item.Name ?? string.Empty,
+                        AdapterId = item.AdapterId ?? string.Empty,
+                        Tag = new TagIdentifier() {
+                            Id = item.Tag?.Id ?? string.Empty,
+                            Name = item.Tag?.Name ?? string.Empty
+                        }
+                    });
                 }
             }
             if (node.Properties?.Count > 0) {

@@ -10,26 +10,9 @@ using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
-    /// <summary>
-    /// SignalR hub that is used for browsing an adapter's asset model hierarchy.
-    /// </summary>
-    public class AssetModelBrowserHub : AdapterHubBase {
+    // Adds hub methods for asset model browsing.
 
-        /// <summary>
-        /// Creates a new <see cref="AssetModelBrowserHub"/> object.
-        /// </summary>
-        /// <param name="hostInfo">
-        ///   The host information.
-        /// </param>
-        /// <param name="adapterCallContext">
-        ///   The adapter call context describing the calling user.
-        /// </param>
-        /// <param name="adapterAccessor">
-        ///   For accessing runtime adapters.
-        /// </param>
-        public AssetModelBrowserHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor)
-            : base(hostInfo, adapterCallContext, adapterAccessor) { }
-
+    public partial class AdapterHub {
 
         /// <summary>
         /// Browses nodes in an adapter's asset model hierarchy.

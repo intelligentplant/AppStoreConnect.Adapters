@@ -14,9 +14,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     public class SignalRAdapterProxy : IAdapterProxy {
 
         /// <summary>
-        /// Prefix for standard hub routes.
+        /// Fires when the proxy is disposed.
         /// </summary>
-        public const string HubRoutePrefix = "/signalr/data-core/v1.0";
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// The relative SignalR hub route.
+        /// </summary>
+        public const string HubRoute = "/signalr/data-core/v1.0";
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -24,15 +29,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         private readonly string _adapterId;
 
         /// <summary>
-        /// A factory method that can create a hub connection for the specified hub route.
+        /// A factory method that can create a hub connection.
         /// </summary>
-        private readonly Func<string, HubConnection> _connectionFactory;
+        private readonly Func<HubConnection> _connectionFactory;
 
         /// <summary>
-        /// Active connections, indexed by hub route.
+        /// The hub connection.
         /// </summary>
-        private readonly ConcurrentDictionary<string, Task<HubConnection>> _connections = new ConcurrentDictionary<string, Task<HubConnection>>(StringComparer.OrdinalIgnoreCase);
-
+        private readonly Lazy<Task<HubConnection>> _connection;
+        
         /// <inheritdoc />
         public AdapterDescriptor Descriptor { get; private set; }
 
@@ -54,6 +59,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         private SignalRAdapterProxy(SignalRAdapterProxyOptions options) {
             _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
             _connectionFactory = options?.ConnectionFactory ?? throw new ArgumentException("Connection factory is required.", nameof(options));
+            _connection = new Lazy<Task<HubConnection>>(() => Task.Run(async () => {
+                var conn = _connectionFactory.Invoke();
+                await conn.StartAsync(_disposedTokenSource.Token).ConfigureAwait(false);
+                return conn;
+            }));
         }
 
 
@@ -78,39 +88,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <summary>
-        /// Creates and starts a hub connection for the specified hub route.
+        /// Gets or creates an active hub connection.
         /// </summary>
-        /// <param name="url">
-        ///   The hub route.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The hub connection.
         /// </returns>
-        private async Task<HubConnection> CreateHubConnection(string url, CancellationToken cancellationToken = default) {
-            var connection = _connectionFactory.Invoke(url);
-            await connection.StartAsync(cancellationToken).ConfigureAwait(false);
-            return connection;
-        }
-
-
-        /// <summary>
-        /// Gets or creates an active hub connection for the specified hub route.
-        /// </summary>
-        /// <param name="url">
-        ///   The hub route.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The hub connection.
-        /// </returns>
-        internal async Task<HubConnection> GetOrCreateHubConnection(string url, CancellationToken cancellationToken = default) {
-            var connectionTask = _connections.GetOrAdd(url, k => CreateHubConnection(url, cancellationToken));
-            return await connectionTask.ConfigureAwait(false);
+        internal async Task<HubConnection> GetOrCreateHubConnection(CancellationToken cancellationToken = default) {
+            var connectionTask = _connection.Value;
+            return await connectionTask.WithCancellation(cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -124,7 +112,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   A task that will perform the initialisation.
         /// </returns>
         private async Task Init(CancellationToken cancellationToken = default) {
-            var connection = await GetOrCreateHubConnection($"{HubRoutePrefix}/info", cancellationToken).ConfigureAwait(false);
+            var connection = await GetOrCreateHubConnection(cancellationToken).ConfigureAwait(false);
             var descriptor = await connection.InvokeAsync<AdapterDescriptorExtended>("GetAdapter", _adapterId, cancellationToken).ConfigureAwait(false);
 
             Descriptor = new AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
@@ -146,14 +134,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   A task that will dispose of the hub connections.
         /// </returns>
         private async Task DisposeAsync() {
-            try {
-                foreach (var item in _connections.Values.ToArray()) {
-                    var connection = await item.ConfigureAwait(false);
-                    await connection.DisposeAsync().ConfigureAwait(false);
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+
+            try {    
+                if (_connection.IsValueCreated) {
+                    await _connection.Value.ConfigureAwait(false);
+                    await _connection.Value.Result.DisposeAsync().ConfigureAwait(false);
                 }
             }
-            finally {
-                _connections.Clear();
+            catch (OperationCanceledException) {
+                // Do nothing - the connection task was cancelled.
             }
         }
 

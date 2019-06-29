@@ -38,9 +38,9 @@ namespace DataCore.Adapter.AssetModel.Models {
         public IEnumerable<string> Children { get; }
 
         /// <summary>
-        /// The measurements associated with the node, indexed by measurement name.
+        /// The measurements associated with the node.
         /// </summary>
-        public IDictionary<string, TagDefinition> Measurements { get; }
+        public IEnumerable<AssetModelNodeMeasurement> Measurements { get; }
 
         /// <summary>
         /// Additional properties associated with the node.
@@ -78,13 +78,13 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNode(string id, string name, string description, string parentId, IEnumerable<string> childIds, IDictionary<string, TagDefinition> measurements, IDictionary<string, string> properties) {
+        public AssetModelNode(string id, string name, string description, string parentId, IEnumerable<string> childIds, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description;
             Parent = parentId;
             Children = childIds?.ToArray() ?? new string[0];
-            Measurements = new ReadOnlyDictionary<string, TagDefinition>(measurements ?? new Dictionary<string, TagDefinition>());
+            Measurements = measurements?.ToArray() ?? new AssetModelNodeMeasurement[0];
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 

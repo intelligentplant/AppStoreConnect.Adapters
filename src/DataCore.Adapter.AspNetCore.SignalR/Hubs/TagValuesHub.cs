@@ -16,57 +16,27 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
-    /// <summary>
-    /// SignalR hub that is used to request tag values, including pushing real-time snapshot value 
-    /// changes to subscribers. Snapshot push is only supported on adapters that implement the 
-    /// <see cref="ISnapshotTagValuePush"/> feature.
-    /// </summary>
-    public class TagValuesHub : AdapterHubBase {
-
-        #region [ Constructor ]
-
-        /// <summary>
-        /// Creates a new <see cref="TagValuesHub"/> object.
-        /// </summary>
-        /// <param name="hostInfo">
-        ///   The host information.
-        /// </param>
-        /// <param name="adapterCallContext">
-        ///   The adapter call context describing the calling user.
-        /// </param>
-        /// <param name="adapterAccessor">
-        ///   For accessing runtime adapters.
-        /// </param>
-        public TagValuesHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) 
-            : base(hostInfo, adapterCallContext, adapterAccessor) { }
-
-        #endregion
+    // Adds hub methods for requesting tag values, including pushing real-time snapshot value 
+    // changes to subscribers. Snapshot push is only supported on adapters that implement the 
+    // ISnapshotTagValuePush feature.
+    
+    public partial class AdapterHub {
 
         #region [ OnConnected/OnDisconnected ]
 
         /// <summary>
         /// Invoked when a new connection is created.
         /// </summary>
-        /// <returns>
-        ///   A task that will process the connection.
-        /// </returns>
-        public override Task OnConnectedAsync() {
+        private void OnTagValuesHubConnected() {
             // Store a list of adapter subscriptions in the connection context.
             Context.Items[typeof(ISnapshotTagValueSubscription)] = new List<SubscriptionWrapper>();
-            return base.OnConnectedAsync();
         }
 
 
         /// <summary>
         /// Invoked when a connection is closed.
         /// </summary>
-        /// <param name="exception">
-        ///   Non-null if disconnection was due to an error.
-        /// </param>
-        /// <returns>
-        ///   A task that will process the disconnection.
-        /// </returns>
-        public override Task OnDisconnectedAsync(Exception exception) {
+        private void OnTagValuesHubDisconnected() {
             // Remove the adapter subscriptions from the connection context.
             if (Context.Items.TryGetValue(typeof(ISnapshotTagValueSubscription), out var o)) {
                 Context.Items.Remove(typeof(ISnapshotTagValueSubscription));
@@ -79,8 +49,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     }
                 }
             }
-
-            return base.OnDisconnectedAsync(exception);
         }
 
         #endregion
@@ -104,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = await GetOrCreateSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, cancellationToken).ConfigureAwait(false);
+            var subscription = await GetOrCreateSnapshotSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, cancellationToken).ConfigureAwait(false);
 
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
@@ -135,7 +103,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagIdentifier>> GetSnapshotTagValueChannelSubscriptions(string adapterId, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = GetSubscription(adapter.Adapter);
+            var subscription = GetSnapshotSubscription(adapter.Adapter);
             if (subscription == null) {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
@@ -168,7 +136,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
             }
 
-            var subscription = GetSubscription(adapter.Adapter);
+            var subscription = GetSnapshotSubscription(adapter.Adapter);
             if (subscription == null) {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
@@ -201,7 +169,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
             }
 
-            var subscription = GetSubscription(adapter.Adapter);
+            var subscription = GetSnapshotSubscription(adapter.Adapter);
             if (subscription == null) {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
@@ -228,8 +196,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   An <see cref="ISnapshotTagValueSubscription"/> for the specified adapter.
         /// </returns>
-        private async Task<ISnapshotTagValueSubscription> GetOrCreateSubscription(IAdapterCallContext callContext, IAdapter adapter, ISnapshotTagValuePush feature, CancellationToken cancellationToken) {
-            var subscription = GetSubscription(adapter);
+        private async Task<ISnapshotTagValueSubscription> GetOrCreateSnapshotSubscription(IAdapterCallContext callContext, IAdapter adapter, ISnapshotTagValuePush feature, CancellationToken cancellationToken) {
+            var subscription = GetSnapshotSubscription(adapter);
             if (subscription != null) {
                 return subscription;
             }
@@ -257,7 +225,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The <see cref="ISnapshotTagValueSubscription"/> for the specified adapter, or 
         ///   <see langword="null"/> if a subscription does not exist.
         /// </returns>
-        private ISnapshotTagValueSubscription GetSubscription(IAdapter adapter) {
+        private ISnapshotTagValueSubscription GetSnapshotSubscription(IAdapter adapter) {
             var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as List<SubscriptionWrapper>;
             return subscriptionsForConnection?.FirstOrDefault(x => string.Equals(x.AdapterId, adapter.Descriptor.Id));
         }

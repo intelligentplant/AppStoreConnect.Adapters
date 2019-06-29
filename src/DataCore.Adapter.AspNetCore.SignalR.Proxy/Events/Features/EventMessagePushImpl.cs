@@ -18,7 +18,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
             var result = new EventMessageSubscription(
                 AdapterId,
-                await this.GetTagValuesHubConnection(cancellationToken).ConfigureAwait(false),
+                await GetHubConnection(cancellationToken).ConfigureAwait(false),
                 active
             );
             result.Start();

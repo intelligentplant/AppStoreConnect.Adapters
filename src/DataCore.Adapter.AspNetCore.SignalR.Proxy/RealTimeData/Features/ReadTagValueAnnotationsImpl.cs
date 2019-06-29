@@ -17,7 +17,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetTagAnnotationsHubConnection(ct).ConfigureAwait(false);
+                var connection = await GetHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<TagValueAnnotationQueryResult>(
                     "ReadTagValueAnnotations",
                     AdapterId,

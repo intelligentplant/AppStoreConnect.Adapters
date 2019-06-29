@@ -16,57 +16,27 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
-    /// <summary>
-    /// SignalR hub that is used to query for event messages, including pushing event messages to 
-    /// subscribers. Event message push is only supported on adapters that implement the 
-    /// <see cref="IEventMessagePush"/> feature.
-    /// </summary>
-    public class EventsHub : AdapterHubBase {
-
-        #region [ Constructor ]
-
-        /// <summary>
-        /// Creates a new <see cref="EventsHub"/> object.
-        /// </summary>
-        /// <param name="hostInfo">
-        ///   The host information.
-        /// </param>
-        /// <param name="adapterCallContext">
-        ///   The adapter call context describing the calling user.
-        /// </param>
-        /// <param name="adapterAccessor">
-        ///   For accessing runtime adapters.
-        /// </param>
-        public EventsHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor)
-            : base(hostInfo, adapterCallContext, adapterAccessor) { }
-
-        #endregion
+    // Adds hub methods for querying event messages, including pushing event messages to 
+    // subscribers. Event message push is only supported on adapters that implement the 
+    // IEventMessagePush feature.
+    
+    public partial class AdapterHub {
 
         #region [ OnConnected/OnDisconnected ]
 
         /// <summary>
         /// Invoked when a new connection is created.
         /// </summary>
-        /// <returns>
-        ///   A task that will process the connection.
-        /// </returns>
-        public override Task OnConnectedAsync() {
+        private void OnEventsHubConnected() {
             // Store a list of adapter subscriptions in the connection context.
             Context.Items[typeof(IEventMessageSubscription)] = new List<EventMessageSubscription>();
-            return base.OnConnectedAsync();
         }
 
 
         /// <summary>
         /// Invoked when a connection is closed.
         /// </summary>
-        /// <param name="exception">
-        ///   Non-null if disconnection was due to an error.
-        /// </param>
-        /// <returns>
-        ///   A task that will process the disconnection.
-        /// </returns>
-        public override Task OnDisconnectedAsync(Exception exception) {
+        private void OnEventsHubDisconnected() {
             // Remove the adapter subscriptions from the connection context.
             if (Context.Items.TryGetValue(typeof(IEventMessageSubscription), out var o)) {
                 Context.Items.Remove(typeof(IEventMessageSubscription));
@@ -77,8 +47,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     observers.Clear();
                 }
             }
-
-            return base.OnDisconnectedAsync(exception);
         }
 
         #endregion
@@ -100,9 +68,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateChannel(string adapterId, bool active, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, bool active, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = await GetOrAddSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken).ConfigureAwait(false);
+            var subscription = await GetOrAddEventMessageSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken).ConfigureAwait(false);
             return subscription.Reader;
         }
 
@@ -131,8 +99,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="InvalidOperationException">
         ///   <paramref name="adapter"/> does not support the <see cref="IEventMessagePush"/> feature.
         /// </exception>
-        private async Task<IEventMessageSubscription> GetOrAddSubscription(IAdapterCallContext callContext, IAdapter adapter, IEventMessagePush feature, bool active, CancellationToken cancellationToken) {
-            var subscription = GetSubscription(adapter);
+        private async Task<IEventMessageSubscription> GetOrAddEventMessageSubscription(IAdapterCallContext callContext, IAdapter adapter, IEventMessagePush feature, bool active, CancellationToken cancellationToken) {
+            var subscription = GetEventMessageSubscription(adapter);
             if (subscription != null) {
                 return subscription;
             }
@@ -160,7 +128,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The <see cref="IEventMessageSubscription"/> for the specified adapter, or 
         ///   <see langword="null"/> if a subscription does not exist.
         /// </returns>
-        private IEventMessageSubscription GetSubscription(IAdapter adapter) {
+        private IEventMessageSubscription GetEventMessageSubscription(IAdapter adapter) {
             var subscriptionsForConnection = Context.Items[typeof(IEventMessageSubscription)] as List<EventMessageSubscription>;
             return subscriptionsForConnection?.FirstOrDefault(x => string.Equals(x.AdapterId, adapter.Descriptor.Id));
         }

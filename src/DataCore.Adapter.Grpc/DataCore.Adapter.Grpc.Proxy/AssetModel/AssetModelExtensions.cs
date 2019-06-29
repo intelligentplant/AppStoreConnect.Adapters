@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel {
                 node.Description,
                 node.Parent,
                 node.Children,
-                node.Measurements.ToDictionary(x => x.Key, x => x.Value.ToAdapterTagDefinition()),
+                node.Measurements.Select(x => new Adapter.AssetModel.Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagIdentifier(x.Tag.Id, x.Tag.Name))).ToArray(),
                 node.Properties
             );
         }

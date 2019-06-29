@@ -8,7 +8,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Describes a tag definition.
     /// </summary>
-    public sealed class TagDefinition : ITagIdentifier {
+    public class TagDefinition : ITagIdentifier {
 
         /// <summary>
         /// The unique identifier for the tag.

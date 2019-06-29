@@ -18,9 +18,9 @@ namespace Microsoft.Extensions.DependencyInjection {
     public static class SignalRConfigurationExtensions {
 
         /// <summary>
-        /// Prefix for all SignalR hub routes.
+        /// SignalR Hub route.
         /// </summary>
-        private const string HubRoutePrefix = "/signalr/data-core/v1.0";
+        public const string HubRoute = "/signalr/data-core/v1.0";
 
 
         /// <summary>
@@ -37,12 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 #else
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder endpoints) {
 #endif
-            endpoints.MapHub<AssetModelBrowserHub>($"{HubRoutePrefix}/asset-model-browser");
-            endpoints.MapHub<EventsHub>($"{HubRoutePrefix}/events");
-            endpoints.MapHub<InfoHub>($"{HubRoutePrefix}/info");
-            endpoints.MapHub<TagAnnotationsHub>($"{HubRoutePrefix}/tag-annotations");
-            endpoints.MapHub<TagSearchHub>($"{HubRoutePrefix}/tag-search");
-            endpoints.MapHub<TagValuesHub>($"{HubRoutePrefix}/tag-values");
+            endpoints.MapHub<AdapterHub>(HubRoute);
             return endpoints;
         }
 

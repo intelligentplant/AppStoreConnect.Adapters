@@ -42,6 +42,13 @@ message AssetModelNode {
     string description = 3;
     string parent = 4;
     repeated string children = 5;
-    map<string, datacore.adapter.TagDefinition> measurements = 6;
+    repeated AssetModelNodeMeasurement measurements = 6;
     map<string, string> properties = 7;
+}
+
+
+message AssetModelNodeMeasurement {
+    string name = 1;
+    string adapter_id = 2;
+    datacore.adapter.TagIdentifier tag = 3;
 }

@@ -15,7 +15,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var connection = await this.GetTagValuesHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<DataFunctionDescriptor>>(
                 "GetSupportedDataFunctions",
                 AdapterId,
@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await this.GetTagValuesHubConnection(ct).ConfigureAwait(false);
+                var connection = await GetHubConnection(ct).ConfigureAwait(false);
                 var hubChannel = await connection.StreamAsChannelAsync<ProcessedTagValueQueryResult>(
                     "ReadProcessedTagValues",
                     AdapterId,

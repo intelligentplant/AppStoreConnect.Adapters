@@ -19,7 +19,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = new SnapshotTagValueSubscription(
                 AdapterId,
-                await this.GetTagValuesHubConnection(cancellationToken).ConfigureAwait(false)
+                await GetHubConnection(cancellationToken).ConfigureAwait(false)
             );
             result.Start();
             return result;

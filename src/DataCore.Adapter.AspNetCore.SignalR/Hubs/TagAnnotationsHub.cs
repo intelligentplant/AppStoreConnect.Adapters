@@ -11,26 +11,9 @@ using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
-    /// <summary>
-    /// SignalR hub for querying adapter tag annotations.
-    /// </summary>
-    public class TagAnnotationsHub : AdapterHubBase {
-
-        /// <summary>
-        /// Creates a new <see cref="TagSearchHub"/> object.
-        /// </summary>
-        /// <param name="hostInfo">
-        ///   The host information.
-        /// </param>
-        /// <param name="adapterCallContext">
-        ///   The adapter call context describing the calling user.
-        /// </param>
-        /// <param name="adapterAccessor">
-        ///   For accessing runtime adapters.
-        /// </param>
-        public TagAnnotationsHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor)
-            : base(hostInfo, adapterCallContext, adapterAccessor) { }
-
+    // Adds hub methods for querying adapter tag annotations.
+    
+    public partial class AdapterHub {
 
         /// <summary>
         /// Reads tag value annotations.

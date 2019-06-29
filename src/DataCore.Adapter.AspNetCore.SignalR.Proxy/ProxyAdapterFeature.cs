@@ -102,20 +102,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <summary>
-        /// Gets a SignalR hub connection for the specified hub route.
+        /// Gets a SignalR hub connection for the hub route.
         /// </summary>
-        /// <param name="url">
-        ///   The hub route.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A hub connection object. If an existing connection for the same hub already exists, the 
-        ///   existing connection will be returned.
+        ///   An active hub connection object. If an existing connection for the hub already exists, 
+        ///   the existing connection will be returned.
         /// </returns>
-        protected internal async Task<HubConnection> GetHubConnection(string url, CancellationToken cancellationToken = default) {
-            return await _proxy.GetOrCreateHubConnection(url, cancellationToken).ConfigureAwait(false);
+        protected internal async Task<HubConnection> GetHubConnection(CancellationToken cancellationToken = default) {
+            return await _proxy.GetOrCreateHubConnection(cancellationToken).ConfigureAwait(false);
         }
 
     }
