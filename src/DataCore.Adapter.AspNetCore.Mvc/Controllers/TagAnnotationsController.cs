@@ -98,6 +98,48 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             return Ok(result); // 200
         }
 
+
+        /// <summary>
+        /// Gets an annotation by ID.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="tagId">
+        ///   The tag ID for the annotation.
+        /// </param>
+        /// <param name="annotationId">
+        ///   The ID for the annotation.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the matching <see cref="TagValueAnnotation"/> object.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [ProducesResponseType(typeof(TagValueAnnotation), 200)]
+        public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var result = await feature.ReadAnnotation(_callContext, new ReadAnnotationRequest() {
+                TagId = tagId,
+                AnnotationId = annotationId
+            }, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
     }
 
 }
