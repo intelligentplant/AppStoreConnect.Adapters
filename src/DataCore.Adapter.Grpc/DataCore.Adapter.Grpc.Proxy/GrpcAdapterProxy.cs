@@ -15,7 +15,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
-    public class GrpcAdapterProxy : IAdapterProxy {
+    public class GrpcAdapterProxy : IAdapterProxy, IDisposable
+#if NETCOREAPP3_0
+        , 
+        IAsyncDisposable
+#endif
+        {
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -186,6 +191,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 response.Adapter.AdapterDescriptor.Description
             );
             ProxyAdapterFeature.AddFeaturesToProxy(this, _features, response.Adapter.Features);
+        }
+
+
+        public async ValueTask DisposeAsync() {
+            await _channel.ShutdownAsync().ConfigureAwait(false);
         }
 
 

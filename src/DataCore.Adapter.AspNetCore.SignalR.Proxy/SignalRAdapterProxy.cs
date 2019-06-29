@@ -11,7 +11,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via SignalR.
     /// </summary>
-    public class SignalRAdapterProxy : IAdapterProxy {
+    public class SignalRAdapterProxy : IAdapterProxy, IDisposable
+#if NETCOREAPP3_0
+        , 
+        IAsyncDisposable
+#endif
+        {
 
         /// <summary>
         /// Fires when the proxy is disposed.
@@ -133,7 +138,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A task that will dispose of the hub connections.
         /// </returns>
-        private async Task DisposeAsync() {
+        public async ValueTask DisposeAsync() {
+            if (_isDisposed) {
+                return;
+            }
+
             _disposedTokenSource.Cancel();
             _disposedTokenSource.Dispose();
 
@@ -146,23 +155,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             catch (OperationCanceledException) {
                 // Do nothing - the connection task was cancelled.
             }
-        }
 
-
-        /// <summary>
-        /// Disposes of the proxy.
-        /// </summary>
-        /// <param name="disposing">
-        ///   A flag indicating if the proxy is being disposed or finalized.
-        /// </param>
-        protected virtual void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                if (disposing) {
-                    DisposeAsync().Wait();
-                }
-
-                _isDisposed = true;
-            }
+            _isDisposed = true;
         }
 
 
@@ -170,7 +164,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// Disposes of the proxy.
         /// </summary>
         public void Dispose() {
-            Dispose(true);
+            if (!_isDisposed) {
+                DisposeAsync().GetAwaiter().GetResult();
+            }
         }
 
         #endregion

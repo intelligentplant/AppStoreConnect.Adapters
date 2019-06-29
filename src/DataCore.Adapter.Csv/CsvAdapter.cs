@@ -779,8 +779,6 @@ namespace DataCore.Adapter.Csv {
         public void Dispose() {
             _disposedSource.Cancel();
             _disposedSource.Dispose();
-            // Wait for parse task to finish.
-            _csvParseTask.GetAwaiter().GetResult();
         }
 
 
