@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             public void Start() {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _hubConnection.StreamAsChannelAsync<EventMessage>(
-                        "CreateChannel",
+                        "CreateEventMessageChannel",
                         _adapterId,
                         _activeSubscription,
                         ct

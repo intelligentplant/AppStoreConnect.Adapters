@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 
@@ -12,7 +13,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         public ReadTagValueAnnotationsImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
-        public ChannelReader<Adapter.RealTimeData.Models.TagValueAnnotationQueryResult> ReadTagValueAnnotations(IAdapterCallContext context, Adapter.RealTimeData.Models.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public ChannelReader<Adapter.RealTimeData.Models.TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.Models.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -39,6 +40,20 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }, true, cancellationToken);
 
             return result;
+        }
+
+        public async Task<Adapter.RealTimeData.Models.TagValueAnnotation> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.Models.ReadAnnotationRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
+            var grpcRequest = new ReadAnnotationRequest() {
+                AdapterId = AdapterId,
+                TagId = request.TagId,
+                AnnotationId = request.AnnotationId
+            };
+
+            var grpcResponse = client.ReadAnnotationAsync(grpcRequest, cancellationToken: cancellationToken);
+            var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
+
+            return result.ToAdapterTagValueAnnotation();
         }
     }
 }

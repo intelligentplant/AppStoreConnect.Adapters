@@ -32,16 +32,31 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadTagValueAnnotations(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadAnnotations(_adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.ToGrpcTagValueAnnotation()).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcTagValueAnnotationQueryResult()).ConfigureAwait(false);
             }
+        }
 
+
+        public override async Task<TagValueAnnotation> ReadAnnotation(ReadAnnotationRequest request, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.Models.ReadAnnotationRequest() {
+                TagId = request.TagId,
+                AnnotationId = request.AnnotationId
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.ReadAnnotation(_adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcTagValueAnnotation();
         }
 
     }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
+﻿using System.Collections.Generic;
 using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.Events.Models {
@@ -9,28 +6,12 @@ namespace DataCore.Adapter.Events.Models {
     /// <summary>
     /// Describes the result of an event message write operation.
     /// </summary>
-    public sealed class WriteEventMessageResult {
+    public sealed class WriteEventMessageResult : WriteOperationResult {
 
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
         public string CorrelationId { get; }
-
-        /// <summary>
-        /// Indicates if the write was successful.
-        /// </summary>
-        public WriteStatus Status { get; }
-
-        /// <summary>
-        /// Notes associated with the write.
-        /// </summary>
-        public string Notes { get; }
-
-        /// <summary>
-        /// Additional properties related to the write.
-        /// </summary>
-        public IDictionary<string, string> Properties { get; }
-
 
         /// <summary>
         /// Creates a new <see cref="WriteEventMessageResult"/> object.
@@ -47,10 +28,9 @@ namespace DataCore.Adapter.Events.Models {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public WriteEventMessageResult(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties) {
-            Status = status;
-            Notes = notes?.Trim();
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+        public WriteEventMessageResult(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties) 
+            : base(status, notes, properties) {
+            CorrelationId = correlationId;
         }
 
     }

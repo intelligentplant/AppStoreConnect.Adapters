@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -13,7 +14,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public ReadTagValueAnnotationsImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
 
-        public ChannelReader<TagValueAnnotationQueryResult> ReadTagValueAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -30,5 +31,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             return result;
         }
 
+        public async Task<TagValueAnnotation> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
+            var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
+            return await connection.InvokeAsync<TagValueAnnotation>(
+                "ReadTagValueAnnotation",
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
     }
 }

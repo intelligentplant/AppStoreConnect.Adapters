@@ -362,6 +362,26 @@ namespace DataCore.Adapter.Grpc.Server {
 
 
         /// <summary>
+        /// Converts from an adapter tag value annotation query result to its gRPC equivalent.
+        /// </summary>
+        /// <param name="annotation">
+        ///   The adapter tag value annotation query result.
+        /// </param>
+        /// <returns>
+        ///   The gRPC tag value annotation query result.
+        /// </returns>
+        internal static TagValueAnnotationQueryResult ToGrpcTagValueAnnotationQueryResult(this RealTimeData.Models.TagValueAnnotationQueryResult annotation) {
+            var result = new TagValueAnnotationQueryResult() {
+                TagId = annotation.TagId ?? string.Empty,
+                TagName = annotation.TagName ?? string.Empty,
+                Annotation = annotation.Annotation.ToGrpcTagValueAnnotation()
+            };
+
+            return result;
+        }
+
+
+        /// <summary>
         /// Converts from an adapter tag value annotation to its gRPC equivalent.
         /// </summary>
         /// <param name="annotation">
@@ -370,26 +390,26 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value annotation.
         /// </returns>
-        internal static TagValueAnnotationQueryResult ToGrpcTagValueAnnotation(this RealTimeData.Models.TagValueAnnotationQueryResult annotation) {
-            var result = new TagValueAnnotationQueryResult() {
-                TagId = annotation.TagId ?? string.Empty,
-                TagName = annotation.TagName ?? string.Empty,
-                Annotation = new TagValueAnnotation() {
-                    Description = annotation.Annotation.Description ?? string.Empty,
-                    HasUtcEndTime = annotation.Annotation.UtcEndTime.HasValue,
-                    Id = annotation.Annotation.Id,
-                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.Annotation.UtcStartTime),
-                    Value = annotation.Annotation.Value
-                }
-            };
-
-            if (result.Annotation.HasUtcEndTime) {
-                result.Annotation.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.Annotation.UtcEndTime.Value);
+        internal static TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.Models.TagValueAnnotation annotation) {
+            if (annotation == null) {
+                return null;
             }
 
-            if (annotation.Annotation.Properties != null) {
-                foreach (var item in annotation.Annotation.Properties) {
-                    result.Annotation.Properties.Add(item.Key, item.Value);
+            var result = new TagValueAnnotation() {
+                Description = annotation.Description ?? string.Empty,
+                HasUtcEndTime = annotation.UtcEndTime.HasValue,
+                Id = annotation.Id,
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
+                Value = annotation.Value
+            };
+
+            if (result.HasUtcEndTime) {
+                result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
+            }
+
+            if (annotation.Properties != null) {
+                foreach (var item in annotation.Properties) {
+                    result.Properties.Add(item.Key, item.Value);
                 }
             }
 

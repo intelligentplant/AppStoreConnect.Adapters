@@ -9,6 +9,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service TagValueAnnotationsService {
     rpc ReadAnnotations(ReadAnnotationsRequest) returns (stream TagValueAnnotationQueryResult);
+    rpc ReadAnnotation(ReadAnnotationRequest) returns (TagValueAnnotation);
 }
 
 // Read annotations
@@ -17,6 +18,11 @@ message ReadAnnotationsRequest {
     repeated string tags = 2;
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
+}
+message ReadAnnotationRequest {
+    string adapter_id = 1;
+    string tag_id = 2;
+    string annotation_id = 3;
 }
 
 
