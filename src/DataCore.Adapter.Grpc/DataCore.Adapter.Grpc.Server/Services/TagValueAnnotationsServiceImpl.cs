@@ -59,5 +59,54 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             return result.ToGrpcTagValueAnnotation();
         }
 
+
+        public override async Task<WriteTagValueAnnotationResult> CreateAnnotation(CreateAnnotationRequest request, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.Models.CreateAnnotationRequest() {
+                TagId = request.TagId,
+                Annotation = request.Annotation.ToAdapterTagValueAnnotation()
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.CreateAnnotation(_adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+        }
+
+
+        public override async Task<WriteTagValueAnnotationResult> UpdateAnnotation(UpdateAnnotationRequest request, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.Models.UpdateAnnotationRequest() {
+                TagId = request.TagId,
+                AnnotationId = request.AnnotationId,
+                Annotation = request.Annotation.ToAdapterTagValueAnnotation()
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.UpdateAnnotation(_adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+        }
+
+
+        public override async Task<WriteTagValueAnnotationResult> DeleteAnnotation(DeleteAnnotationRequest request, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.Models.DeleteAnnotationRequest() {
+                TagId = request.TagId,
+                AnnotationId = request.AnnotationId
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.DeleteAnnotation(_adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+        }
+
     }
 }

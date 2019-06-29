@@ -396,19 +396,103 @@ namespace DataCore.Adapter.Grpc.Server {
             }
 
             var result = new TagValueAnnotation() {
-                Description = annotation.Description ?? string.Empty,
-                HasUtcEndTime = annotation.UtcEndTime.HasValue,
                 Id = annotation.Id,
-                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
-                Value = annotation.Value
+                Annotation = new TagValueAnnotationBase() {
+                    Description = annotation.Description ?? string.Empty,
+                    HasUtcEndTime = annotation.UtcEndTime.HasValue,
+                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
+                    Value = annotation.Value
+                }
             };
 
-            if (result.HasUtcEndTime) {
-                result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
+            if (result.Annotation.HasUtcEndTime) {
+                result.Annotation.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
             }
 
             if (annotation.Properties != null) {
                 foreach (var item in annotation.Properties) {
+                    result.Annotation.Properties.Add(item.Key, item.Value);
+                }
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Converts from a gRPC tag value annotation to its adapter equivalent.
+        /// </summary>
+        /// <param name="annotation">
+        ///   The gRPC tag value annotation.
+        /// </param>
+        /// <returns>
+        ///   The adapter tag value annotation.
+        /// </returns>
+        internal static RealTimeData.Models.TagValueAnnotationBase ToAdapterTagValueAnnotation(this TagValueAnnotationBase annotation) {
+            if (annotation == null) {
+                return null;
+            }
+
+            return new RealTimeData.Models.TagValueAnnotationBase(
+                annotation.AnnotationType.ToAdapterAnnotationType(),
+                annotation.UtcStartTime.ToDateTime(),
+                annotation.HasUtcEndTime
+                    ? annotation.UtcEndTime.ToDateTime()
+                    : (DateTime?) null,
+                annotation.Value,
+                annotation.Description,
+                annotation.Properties
+            );
+        }
+
+
+        /// <summary>
+        /// Converts from a gRPC tag value annotation type to its gRPC equivalent.
+        /// </summary>
+        /// <param name="annotationType">
+        ///   The gRPC tag value annotation type.
+        /// </param>
+        /// <returns>
+        ///   The adapter tag value annotation type.
+        /// </returns>
+        internal static RealTimeData.Models.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
+            switch (annotationType) {
+                case AnnotationType.TimeRange:
+                    return RealTimeData.Models.AnnotationType.TimeRange;
+                case AnnotationType.Instantaneous:
+                default:
+                    return RealTimeData.Models.AnnotationType.Instantaneous;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter tag value annotation write result to its gRPC equivalent.
+        /// </summary>
+        /// <param name="adapterResult">
+        ///   The adapter tag value annotation write result.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   The gRPC tag value annotation write result.
+        /// </returns>
+        internal static WriteTagValueAnnotationResult ToGrpcWriteTagValueAnnotationResult(this RealTimeData.Models.WriteTagValueAnnotationResult adapterResult, string adapterId) {
+            if (adapterResult == null) {
+                return null;
+            }
+
+            var result = new WriteTagValueAnnotationResult() {
+                AdapterId = adapterId ?? string.Empty,
+                TagId = adapterResult.TagId ?? string.Empty,
+                AnnotationId = adapterResult.AnnotationId ?? string.Empty,
+                WriteStatus = adapterResult.Status.ToGrpcWriteOperationStatus(),
+                Notes = adapterResult.Notes ?? string.Empty
+            };
+
+            if (adapterResult.Properties.Count > 0) {
+                foreach (var item in adapterResult.Properties) {
                     result.Properties.Add(item.Key, item.Value);
                 }
             }

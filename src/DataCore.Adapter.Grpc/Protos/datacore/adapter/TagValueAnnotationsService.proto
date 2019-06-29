@@ -3,6 +3,7 @@ syntax = "proto3";
 package datacore.adapter;
 
 import "google/protobuf/timestamp.proto";
+import "WriteOperationStatus.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -10,6 +11,9 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagValueAnnotationsService {
     rpc ReadAnnotations(ReadAnnotationsRequest) returns (stream TagValueAnnotationQueryResult);
     rpc ReadAnnotation(ReadAnnotationRequest) returns (TagValueAnnotation);
+    rpc CreateAnnotation(CreateAnnotationRequest) returns (WriteTagValueAnnotationResult);
+    rpc UpdateAnnotation(UpdateAnnotationRequest) returns (WriteTagValueAnnotationResult);
+    rpc DeleteAnnotation(DeleteAnnotationRequest) returns (WriteTagValueAnnotationResult);
 }
 
 // Read annotations
@@ -24,30 +28,56 @@ message ReadAnnotationRequest {
     string tag_id = 2;
     string annotation_id = 3;
 }
+message CreateAnnotationRequest {
+    string adapter_id = 1;
+    string tag_id = 2;
+    TagValueAnnotationBase annotation = 3;
+}
+message UpdateAnnotationRequest {
+    string adapter_id = 1;
+    string tag_id = 2;
+    string annotation_id = 3;
+    TagValueAnnotationBase annotation = 4;
+}
+message DeleteAnnotationRequest {
+    string adapter_id = 1;
+    string tag_id = 2;
+    string annotation_id = 3;
+}
 
 
 // Annotation models
+message TagValueAnnotationBase {
+    AnnotationType annotation_type = 1;
+    google.protobuf.Timestamp utc_start_time = 2;
+    google.protobuf.Timestamp utc_end_time = 3;
+    bool has_utc_end_time = 4;
+    string value = 5;
+    string description = 6;
+    map<string, string> properties = 7;
+}
 
 message TagValueAnnotation {
     string id = 1;
-    AnnotationType annotation_type = 2;
-    google.protobuf.Timestamp utc_start_time = 3;
-    google.protobuf.Timestamp utc_end_time = 4;
-    bool has_utc_end_time = 5;
-    string value = 6;
-    string description = 7;
-    map<string, string> properties = 8;
+    TagValueAnnotationBase annotation = 2;
 }
-
 
 enum AnnotationType {
     ANNOTATION_TYPE_INSTANTANEOUS = 0;
     ANNOTATION_TYPE_TIME_RANGE = 1;
 }
 
-
 message TagValueAnnotationQueryResult {
     string tag_id = 1;
     string tag_name = 2;
     TagValueAnnotation annotation = 3;
+}
+
+message WriteTagValueAnnotationResult {
+    string adapter_id = 1;
+    string tag_id = 2;
+    string annotation_id = 3;
+    WriteOperationStatus write_status = 4;
+    string notes = 5;
+    map<string, string> properties = 6;
 }

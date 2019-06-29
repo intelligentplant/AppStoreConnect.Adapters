@@ -165,12 +165,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
 
             return new Adapter.RealTimeData.Models.TagValueAnnotation(
                 annotation.Id,
-                annotation.AnnotationType.ToAdapterAnnotationType(),
-                annotation.UtcStartTime.ToDateTime(),
-                annotation.UtcEndTime?.ToDateTime(),
-                annotation.Value,
-                annotation.Description,
-                annotation.Properties
+                annotation.Annotation.AnnotationType.ToAdapterAnnotationType(),
+                annotation.Annotation.UtcStartTime.ToDateTime(),
+                annotation.Annotation.UtcEndTime?.ToDateTime(),
+                annotation.Annotation.Value,
+                annotation.Annotation.Description,
+                annotation.Annotation.Properties
             );
         }
 
@@ -195,6 +195,55 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
                 result.TagId,
                 result.TagName,
                 result.Annotation.ToAdapterTagValueAnnotation()
+            );
+        }
+
+
+        internal static AnnotationType ToGrpcAnnotationType(this Adapter.RealTimeData.Models.AnnotationType annotationType) {
+            switch (annotationType) {
+                case Adapter.RealTimeData.Models.AnnotationType.TimeRange:
+                    return AnnotationType.TimeRange;
+                case Adapter.RealTimeData.Models.AnnotationType.Instantaneous:
+                default:
+                    return AnnotationType.Instantaneous;
+            }
+        }
+
+
+        internal static TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this Adapter.RealTimeData.Models.TagValueAnnotationBase annotation) {
+            if (annotation == null) {
+                return null;
+            }
+
+            var result = new TagValueAnnotationBase() {
+                AnnotationType = annotation.AnnotationType.ToGrpcAnnotationType(),
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
+                HasUtcEndTime = annotation.UtcEndTime.HasValue,
+                Value = annotation.Value,
+                Description = annotation.Description
+            };
+
+            if (result.HasUtcEndTime) {
+                result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
+            }
+
+            if (annotation.Properties.Count > 0) {
+                foreach (var item in annotation.Properties) {
+                    result.Properties.Add(item.Key, item.Value);
+                }
+            }
+
+            return result;
+        }
+
+
+        internal static Adapter.RealTimeData.Models.WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this WriteTagValueAnnotationResult result) {
+            return new Adapter.RealTimeData.Models.WriteTagValueAnnotationResult(
+                result.TagId,
+                result.AnnotationId,
+                result.WriteStatus.ToAdapterWriteStatus(),
+                result.Notes,
+                result.Properties
             );
         }
 

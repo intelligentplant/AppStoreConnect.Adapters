@@ -40,7 +40,7 @@ services.AddDataCoreAdapterServices(options => {
 
 # Registering Endpoints
 
-The adapter hub endpoints are registered in the `Startup.cs` file's `Configure` method as follows:
+The adapter hub endpoint is registered in the `Startup.cs` file's `Configure` method as follows:
 
 ```csharp
 app.UseRouting();
@@ -49,3 +49,5 @@ app.UseEndpoints(endpoints => {
     endpoints.MapDataCoreAdapterHubs();
 });
 ```
+
+The adapter hub will be mapped to `/signalr/data-core/v1.0`.

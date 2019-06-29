@@ -16,7 +16,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
     public partial class AdapterHub {
 
         /// <summary>
-        /// Reads tag value annotations.
+        /// Reads a single tag value annotation.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter to query.
@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The matching operations.
+        ///   The matching annotation.
         /// </returns>
         public async Task<TagValueAnnotation> ReadAnnotation(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The matching operations.
+        ///   A channel that will return the matching annotations.
         /// </returns>
         public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
@@ -58,6 +58,65 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return adapter.Feature.ReadAnnotations(AdapterCallContext, request, cancellationToken);
         }
 
+
+        /// <summary>
+        /// Creates a tag value annotation.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The create request.
+        /// </param>
+        /// <returns>
+        ///   The result of the operation.
+        /// </returns>
+        public async Task<WriteTagValueAnnotationResult> CreateAnnotation(string adapterId, CreateAnnotationRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+            return await adapter.Feature.CreateAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Updates a tag value annotation.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The update request.
+        /// </param>
+        /// <returns>
+        ///   The result of the operation.
+        /// </returns>
+        public async Task<WriteTagValueAnnotationResult> UpdateAnnotation(string adapterId, UpdateAnnotationRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+            return await adapter.Feature.UpdateAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Deletes a tag value annotation.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The delete request.
+        /// </param>
+        /// <returns>
+        ///   The result of the operation.
+        /// </returns>
+        public async Task<WriteTagValueAnnotationResult> DeleteAnnotation(string adapterId, DeleteAnnotationRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+            return await adapter.Feature.DeleteAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+        }
 
     }
 }
