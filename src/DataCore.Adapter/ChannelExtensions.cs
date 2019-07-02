@@ -30,7 +30,7 @@ namespace DataCore.Adapter {
         public const int TagAnnotationChannelCapacity = 100;
 
         /// <summary>
-        /// Capacity of channels created using <see cref="CreateBoundedEventMessageChannel{T}()"/>.
+        /// Capacity of channels created using <see cref="CreateEventMessageChannel{T}(int)"/>.
         /// </summary>
         public const int EventChannelCapacity = 100;
 

@@ -8,10 +8,21 @@ using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="IWriteHistoricalTagValues"/>.
+    /// </summary>
     internal class WriteHistoricalTagValuesImpl : ProxyAdapterFeature, IWriteHistoricalTagValues {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteHistoricalTagValuesImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public WriteHistoricalTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+        /// <inheritdoc />
         public ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueWriteResultChannel();
 

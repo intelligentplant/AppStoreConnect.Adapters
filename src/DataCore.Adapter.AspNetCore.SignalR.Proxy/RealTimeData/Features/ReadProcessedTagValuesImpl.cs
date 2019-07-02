@@ -9,11 +9,21 @@ using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="IReadProcessedTagValues"/>.
+    /// </summary>
     internal class ReadProcessedTagValuesImpl : ProxyAdapterFeature, IReadProcessedTagValues {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadProcessedTagValuesImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public ReadProcessedTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
-
+        /// <inheritdoc />
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<DataFunctionDescriptor>>(
@@ -23,7 +33,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             ).ConfigureAwait(false);
         }
 
-
+        /// <inheritdoc />
         public ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 

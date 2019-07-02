@@ -8,10 +8,21 @@ using DataCore.Adapter.Events.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
+
+    /// <summary>
+    /// Implements <see cref="IReadEventMessagesForTimeRange"/>.
+    /// </summary>
     internal class ReadEventMessagesForTimeRangeImpl : ProxyAdapterFeature, IReadEventMessagesForTimeRange {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadEventMessagesForTimeRangeImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public ReadEventMessagesForTimeRangeImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+        /// <inheritdoc />
         public ChannelReader<EventMessage> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
 

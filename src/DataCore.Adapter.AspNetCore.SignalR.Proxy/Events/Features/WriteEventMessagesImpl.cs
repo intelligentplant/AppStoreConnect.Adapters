@@ -8,10 +8,21 @@ using DataCore.Adapter.Events.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="WriteEventMessagesImpl"/>.
+    /// </summary>
     internal class WriteEventMessagesImpl : ProxyAdapterFeature, IWriteEventMessages {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteEventMessagesImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public WriteEventMessagesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+        /// <inheritdoc />
         public ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
 

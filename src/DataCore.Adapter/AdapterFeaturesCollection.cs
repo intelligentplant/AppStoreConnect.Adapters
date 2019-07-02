@@ -6,8 +6,7 @@ using System.Text;
 namespace DataCore.Adapter {
 
     /// <summary>
-    /// Default <see cref="IAdapterFeaturesCollection"/> implementation. Use <see cref="Add{TFeature}(TFeature)"/> 
-    /// and <see cref="Remove{TFeature}"/> to add and remove features.
+    /// Default <see cref="IAdapterFeaturesCollection"/> implementation.
     /// </summary>
     public class AdapterFeaturesCollection: IAdapterFeaturesCollection {
 

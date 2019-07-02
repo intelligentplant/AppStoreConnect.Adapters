@@ -11,11 +11,21 @@ using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="ISnapshotTagValuePush"/>.
+    /// </summary>
     internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
 
+        /// <summary>
+        /// Creates a new <see cref="SnapshotTagValuePushImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public SnapshotTagValuePushImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
-
+        /// <inheritdoc />
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = new SnapshotTagValueSubscription(
                 AdapterId,
@@ -25,32 +35,64 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             return result;
         }
 
-
+        /// <summary>
+        /// <see cref="ISnapshotTagValueSubscription"/> implementation for the 
+        /// <see cref="ISnapshotTagValuePush"/> feature.
+        /// </summary>
         private class SnapshotTagValueSubscription : ISnapshotTagValueSubscription {
 
+            /// <summary>
+            /// Fires when the subscription is disposed.
+            /// </summary>
             private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
 
+            /// <summary>
+            /// The adapter ID for the subscription.
+            /// </summary>
             private readonly string _adapterId;
 
+            /// <summary>
+            /// The underlying hub connection.
+            /// </summary>
             private readonly HubConnection _hubConnection;
 
+            /// <summary>
+            /// The subscription channel.
+            /// </summary>
             private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
+            /// <summary>
+            /// The tags that have been added to the subscription.
+            /// </summary>
             private readonly HashSet<string> _tags = new HashSet<string>();
 
+            /// <inheritdoc />
             public ChannelReader<TagValueQueryResult> Reader { get { return _channel; } }
 
+            /// <inheritdoc />
             public int Count {
                 get { return _tags.Count; }
             }
 
 
+            /// <summary>
+            /// Creates a new <see cref="SnapshotTagValueSubscription"/> object.
+            /// </summary>
+            /// <param name="adapterId">
+            ///   The adapter ID.
+            /// </param>
+            /// <param name="hubConnection">
+            ///   The underlying hub connection.
+            /// </param>
             public SnapshotTagValueSubscription(string adapterId, HubConnection hubConnection) {
                 _adapterId = adapterId;
                 _hubConnection = hubConnection;
             }
 
 
+            /// <summary>
+            /// Starts the subscription.
+            /// </summary>
             public void Start() {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
@@ -70,6 +112,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
+            /// <inheritdoc />
             public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
@@ -87,6 +130,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
+            /// <inheritdoc />
             public async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToAdd = new List<string>();
                 int count;
@@ -114,6 +158,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
+            /// <inheritdoc />
             public async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToRemove = new List<string>();
                 int count;

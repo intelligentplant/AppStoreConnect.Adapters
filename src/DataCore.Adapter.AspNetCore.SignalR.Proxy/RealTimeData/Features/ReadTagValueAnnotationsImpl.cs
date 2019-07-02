@@ -9,11 +9,19 @@ using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="IReadTagValueAnnotations"/>.
+    /// </summary>
     internal class ReadTagValueAnnotationsImpl : ProxyAdapterFeature, IReadTagValueAnnotations {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadTagValueAnnotationsImpl"/> object.
+        /// </summary>
+        /// <param name="proxy"></param>
         public ReadTagValueAnnotationsImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
-
+        /// <inheritdoc />
         public ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel();
 

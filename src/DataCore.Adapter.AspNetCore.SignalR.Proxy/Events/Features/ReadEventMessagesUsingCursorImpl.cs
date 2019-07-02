@@ -8,10 +8,21 @@ using DataCore.Adapter.Events.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
+
+    /// <summary>
+    /// Implements <see cref="IReadEventMessagesUsingCursor"/>.
+    /// </summary>
     internal class ReadEventMessagesUsingCursorImpl : ProxyAdapterFeature, IReadEventMessagesUsingCursor {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadEventMessagesUsingCursorImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public ReadEventMessagesUsingCursorImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+        /// <inheritdoc />
         public ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>();
 

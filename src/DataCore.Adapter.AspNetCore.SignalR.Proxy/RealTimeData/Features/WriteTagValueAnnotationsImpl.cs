@@ -9,10 +9,20 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
+    /// <summary>
+    /// Implements <see cref="IWriteTagValueAnnotations"/>.
+    /// </summary>
     internal class WriteTagValueAnnotationsImpl : ProxyAdapterFeature, IWriteTagValueAnnotations {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteTagValueAnnotationsImpl"/>.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public WriteTagValueAnnotationsImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+        /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, CreateAnnotationRequest request, CancellationToken cancellationToken) {
             var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
@@ -23,6 +33,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             ).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, UpdateAnnotationRequest request, CancellationToken cancellationToken) {
             var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
@@ -33,6 +44,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             ).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, DeleteAnnotationRequest request, CancellationToken cancellationToken) {
             var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(

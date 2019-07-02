@@ -49,7 +49,7 @@ services.AddDataCoreAdapterServices(options => {
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
-        new VendorInfo("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+        new VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
         new Dictionary<string, string>() {
             { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
         }

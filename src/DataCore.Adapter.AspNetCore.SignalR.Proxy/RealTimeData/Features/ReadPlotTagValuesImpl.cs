@@ -8,11 +8,21 @@ using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// Implements <see cref="IReadPlotTagValues"/>.
+    /// </summary>
     internal class ReadPlotTagValuesImpl : ProxyAdapterFeature, IReadPlotTagValues {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadPlotTagValuesImpl"/> object.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The owning proxy.
+        /// </param>
         public ReadPlotTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
-
+        /// <inheritdoc />
         public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
