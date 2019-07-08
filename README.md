@@ -95,7 +95,7 @@ App Store Connect applies its own authorization before dispatching queries to an
 
 The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAuthorizationService.cs) service can be used to authorize access the individual adapters and adapter features; this authorization is automatically applied by the [ASP.NET Core](/src/DataCore.Adapter.AspNetCore) host on incoming calls to API or SignalR endpoints.
 
-Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. the apply per-tag authorization on tag data queries.
+Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on tag data queries.
 
 
 # Development and Hosting Without .NET
