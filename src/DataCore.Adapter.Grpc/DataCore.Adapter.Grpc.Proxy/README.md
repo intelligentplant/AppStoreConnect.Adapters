@@ -32,17 +32,17 @@ var readRaw = proxy.Features.Get<IReadRawTagValues>();
 var now = DateTime.UtcNow;
 
 var rawChannel = readRaw.ReadRawTagValues(null, new ReadRawTagValuesRequest() {
-	Tags = new[] { "Sensor_001", "Sensor_002" },
-	UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
-	UtcEndTime = now,
-	SampleCount = 0, // i.e. all raw values inside the time range
-	BoundaryType = RawDataBoundaryType.Inside
+    Tags = new[] { "Sensor_001", "Sensor_002" },
+    UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
+    UtcEndTime = now,
+    SampleCount = 0, // i.e. all raw values inside the time range
+    BoundaryType = RawDataBoundaryType.Inside
 }, cancellationToken);
 
 while (await rawChannel.WaitToReadAsync()) {
-	if (rawChannel.TryRead(out var val)) {
-		DoSomethingWithValue(val);
-	}
+    if (rawChannel.TryRead(out var val)) {
+        DoSomethingWithValue(val);
+    }
 }
 ```
 
@@ -53,7 +53,7 @@ gRPC supports both per-channel and per-call authentication. If the remote host s
 
 ```csharp
 var options = new GrpcAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}",
+    AdapterId = "{SOME_ADAPTER_ID}",
     GetCallCredentials = async (IAdapterCallContext context) => {
         var accessToken = await GetAccessToken(context);
         return GrpcAdapterProxyCallCredentials.FromAccessToken(accessToken);
@@ -70,7 +70,7 @@ You can add support for adapter extension features by providing an `ExtensionFea
 
 ```csharp
 var options = new GrpcAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}",
+    AdapterId = "{SOME_ADAPTER_ID}",
     ExtensionFeatureFactory = (featureName, proxy) => {
         return GetFeatureImplementation(featureName, proxy);
     }

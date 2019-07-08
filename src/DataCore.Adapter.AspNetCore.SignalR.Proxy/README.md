@@ -7,8 +7,8 @@ Proxy adapter that connects to a remote adapter via ASP.NET Core SignalR.
 
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}",
-	ConnectionFactory = key => {
+    AdapterId = "{SOME_ADAPTER_ID}",
+    ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
             : GetExtensionHubRoute(key);
@@ -33,17 +33,17 @@ var readRaw = proxy.Features.Get<IReadRawTagValues>();
 var now = DateTime.UtcNow;
 
 var rawChannel = readRaw.ReadRawTagValues(null, new ReadRawTagValuesRequest() {
-	Tags = new[] { "Sensor_001", "Sensor_002" },
-	UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
-	UtcEndTime = now,
-	SampleCount = 0, // i.e. all raw values inside the time range
-	BoundaryType = RawDataBoundaryType.Inside
+    Tags = new[] { "Sensor_001", "Sensor_002" },
+    UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
+    UtcEndTime = now,
+    SampleCount = 0, // i.e. all raw values inside the time range
+    BoundaryType = RawDataBoundaryType.Inside
 }, cancellationToken);
 
 while (await rawChannel.WaitToReadAsync()) {
-	if (rawChannel.TryRead(out var val)) {
-		DoSomethingWithValue(val);
-	}
+    if (rawChannel.TryRead(out var val)) {
+        DoSomethingWithValue(val);
+    }
 }
 ```
 
@@ -56,12 +56,12 @@ You can add support for adapter extension features by providing an `ExtensionFea
 
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}",
-	ConnectionFactory = key => {
+    AdapterId = "{SOME_ADAPTER_ID}",
+    ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
             : GetExtensionHubRoute(key);
-        
+            
         return new HubConnectionBuilder()
             .WithUrl($"http://localhost:5000" + hubRoute)
             .Build();
@@ -79,8 +79,8 @@ var options = new SignalRAdapterProxyOptions() {
 
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}",
-	ConnectionFactory = key => {
+    AdapterId = "{SOME_ADAPTER_ID}",
+    ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
             : GetExtensionHubRoute(key);
