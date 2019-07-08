@@ -26,13 +26,16 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Gets the tags that the subscription is observing.
         /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel that returns the tag identifiers for the subscription's tags.
         /// </returns>
-        ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken);
+        ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds additional tags to the subscription.

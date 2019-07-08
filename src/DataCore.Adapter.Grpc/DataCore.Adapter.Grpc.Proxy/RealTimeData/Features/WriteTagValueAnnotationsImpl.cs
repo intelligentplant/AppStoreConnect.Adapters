@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 TagId = request.TagId,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
-            var grpcResponse = client.CreateAnnotationAsync(grpcRequest, cancellationToken: cancellationToken);
+            var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
             return result.ToAdapterWriteTagValueAnnotationResult();
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AnnotationId = request.AnnotationId,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
-            var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, cancellationToken: cancellationToken);
+            var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
             return result.ToAdapterWriteTagValueAnnotationResult();
@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 TagId = request.TagId,
                 AnnotationId = request.AnnotationId
             };
-            var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, cancellationToken: cancellationToken);
+            var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
             return result.ToAdapterWriteTagValueAnnotationResult();

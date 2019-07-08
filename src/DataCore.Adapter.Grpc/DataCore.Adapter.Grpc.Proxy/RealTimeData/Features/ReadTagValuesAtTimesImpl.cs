@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 grpcRequest.Tags.AddRange(request.Tags);
                 grpcRequest.UtcSampleTimes.AddRange(request.UtcSampleTimes.Select(x => Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(x)));
 
-                var grpcResponse = client.ReadTagValuesAtTimes(grpcRequest, cancellationToken: ct);
+                var grpcResponse = client.ReadTagValuesAtTimes(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {

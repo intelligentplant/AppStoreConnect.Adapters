@@ -113,7 +113,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc />
-            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
+            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {

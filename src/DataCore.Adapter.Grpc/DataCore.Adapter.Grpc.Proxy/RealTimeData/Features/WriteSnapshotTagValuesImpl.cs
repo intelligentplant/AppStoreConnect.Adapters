@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-                var grpcStream = client.WriteSnapshotTagValues(cancellationToken: ct);
+                var grpcStream = client.WriteSnapshotTagValues(GetCallOptions(context, ct));
 
                 channel.RunBackgroundOperation(async (ch2, ct2) => {
                     try {

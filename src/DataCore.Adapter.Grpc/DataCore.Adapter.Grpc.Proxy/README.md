@@ -46,4 +46,35 @@ while (await rawChannel.WaitToReadAsync()) {
 }
 ```
 
-Note however, that the proxy's feature implementations ignore `IAdapterCallContext` objects that are passed into the feature's methods; it is safe to pass `null` for these parameters. The connection factory method should be used to directly set any required authentication properties on the hub connections.
+
+# Implementing Per-Call Authentication
+
+gRPC supports both per-channel and per-call authentication. If the remote host supports (or requires) per-call authentication, you can configure this by setting the `GetCallCredentials` property in the `GrpcAdapterProxyOptions` object you pass to the proxy constructor. The property is a delegate that takes an `IAdapterCallContext` representing the calling user, and returns a `GrpcAdapterProxyCallCredentials` object that will be added to the headers of the outgoing gRPC request:
+
+```csharp
+var options = new GrpcAdapterProxyOptions() {
+	AdapterId = "{SOME_ADAPTER_ID}",
+    GetCallCredentials = async (IAdapterCallContext context) => {
+        var accessToken = await GetAccessToken(context);
+        return GrpcAdapterProxyCallCredentials.FromAccessToken(accessToken);
+    }
+};
+```
+
+Note that per-call implementation requires that SSL/TLS authentication is already in place at the channel level.
+
+
+# Adding Extension Feature Support
+
+You can add support for adapter extension features by providing an `ExtensionFeatureFactory` delegate in the proxy options. This delegate will be invoked for every extension feature that the remote proxy reports that it supports:
+
+```csharp
+var options = new GrpcAdapterProxyOptions() {
+	AdapterId = "{SOME_ADAPTER_ID}",
+    ExtensionFeatureFactory = (featureName, proxy) => {
+        return GetFeatureImplementation(featureName, proxy);
+    }
+};
+```
+
+The `CreateClient<TClient>` method on the proxy can be used to create a gRPC client that uses the channel or HTTP client configured when the proxy was created.

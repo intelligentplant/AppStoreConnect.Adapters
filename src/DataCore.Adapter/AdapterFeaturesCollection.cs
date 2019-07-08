@@ -1,19 +1,26 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter {
 
     /// <summary>
     /// Default <see cref="IAdapterFeaturesCollection"/> implementation.
     /// </summary>
-    public class AdapterFeaturesCollection: IAdapterFeaturesCollection {
+    public class AdapterFeaturesCollection: IAdapterFeaturesCollection, IDisposable
+#if NETCOREAPP3_0
+        ,
+        IAsyncDisposable
+#endif
+        {
 
         /// <summary>
         /// The implemented features.
         /// </summary>
-        private readonly IDictionary<Type, object> _features = new Dictionary<Type, object>();
+        private readonly ConcurrentDictionary<Type, object> _features = new ConcurrentDictionary<Type, object>();
 
 
         /// <inheritdoc/>
@@ -54,31 +61,38 @@ namespace DataCore.Adapter {
         }
 
 
-        /// <inheritdoc/>
-        public TFeature Get<TFeature>() where TFeature : IAdapterFeature {
-            var type = typeof(TFeature);
-            return (TFeature) this[type];
-        }
-
-
         /// <summary>
         /// Adds all adapter features implemented by the specified feature provider.
         /// </summary>
         /// <param name="featureProvider">
         ///   The object that will provide the adapter feature implementations.
         /// </param>
+        /// <param name="addStandardFeatures">
+        ///   Specifies if standard adapter feature implementations should be added to the 
+        ///   collection.
+        /// </param>
+        /// <param name="addExtensionFeatures">
+        ///   Specifies if extension adapter feature implementations should be added to the 
+        ///   collection.
+        /// </param>
         /// <remarks>
         ///   All interfaces implemented by the <paramref name="featureProvider"/> that extend 
         ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="AdapterFeaturesCollection"/>.
         /// </remarks>
-        public void AddFromProvider(object featureProvider) {
+        public void AddFromProvider(object featureProvider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
             if (featureProvider == null) {
                 return;
             }
 
             var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(x => x.IsAdapterFeature());
             foreach (var feature in implementedFeatures) {
-                AddInternal(feature, featureProvider);
+                if (!addStandardFeatures && feature.IsStandardAdapterFeature()) {
+                    continue;
+                }
+                if (!addExtensionFeatures && feature.IsExtensionAdapterFeature()) {
+                    continue;
+                }
+                AddInternal(feature, featureProvider, false);
             }
         }
 
@@ -92,20 +106,31 @@ namespace DataCore.Adapter {
         /// <param name="feature">
         ///   The feature implementation.
         /// </param>
+        /// <param name="throwOnAlreadyAdded">
+        ///   Flags if an exception should be thrown if the feature type has already been registered.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
         /// </exception>
-        private void AddInternal(Type featureType, object feature) {
+        /// <exception cref="ArgumentException">
+        ///   An implementation of <paramref name="featureType"/> has already been registered and 
+        ///   <paramref name="throwOnAlreadyAdded"/> is <see langword="true"/>.
+        /// </exception>
+        private void AddInternal(Type featureType, object feature, bool throwOnAlreadyAdded) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
             if (!featureType.IsInstanceOfType(feature)) {
                 throw new ArgumentException(string.Format(Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
             }
-            _features[featureType] = feature;
+            if (!_features.TryAdd(featureType, feature)) {
+                if (throwOnAlreadyAdded) {
+                    throw new ArgumentException(Resources.Error_FeatureIsAlreadyRegistered, nameof(featureType));
+                }
+            }
         }
 
 
@@ -130,6 +155,9 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
         /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   An implementation of <paramref name="featureType"/> has already been registered.
+        /// </exception>
         public void Add(Type featureType, object feature) {
             if (featureType == null) {
                 throw new ArgumentNullException(nameof(featureType));
@@ -138,7 +166,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(featureType));
             }
 
-            AddInternal(featureType, feature);
+            AddInternal(featureType, feature, true);
         }
 
 
@@ -161,11 +189,14 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   An implementation of <typeparamref name="TFeature"/> has already been registered.
+        /// </exception>
         public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (!typeof(TFeature).IsAdapterFeature()) {
                 throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
             }
-            AddInternal(typeof(TFeature), feature);
+            AddInternal(typeof(TFeature), feature, true);
         }
 
 
@@ -179,8 +210,54 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature was removed, or <see langword="false"/> otherwise.
         /// </returns>
         public bool Remove<TFeature>() where TFeature : class, IAdapterFeature {
-            return _features.Remove(typeof(TFeature));
+            return _features.TryRemove(typeof(TFeature), out var _);
         }
 
+
+        /// <summary>
+        /// Asynchronously disposes of any features in the collection that implement 
+        /// <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>.
+        /// </summary>
+        /// <returns>
+        ///   A task that will dispose of the collection.
+        /// </returns>
+        public async ValueTask DisposeAsync() {
+            var features = _features.Values.ToArray();
+            _features.Clear();
+
+            foreach (var item in features) {
+#if NETCOREAPP3_0
+                if (item is IAsyncDisposable ad) {
+                    await ad.DisposeAsync().ConfigureAwait(false);
+                    continue;
+                }
+#endif
+                if (item is IDisposable d) {
+                    d.Dispose();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Disposes of any features in the collection that implement 
+        /// <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>.
+        /// </summary>
+        public void Dispose() {
+            var features = _features.Values.ToArray();
+            _features.Clear();
+
+            foreach (var item in features) {
+#if NETCOREAPP3_0
+                if (item is IAsyncDisposable ad) {
+                    ad.DisposeAsync().GetAwaiter().GetResult();
+                    continue;
+                }
+#endif
+                if (item is IDisposable d) {
+                    d.Dispose();
+                }
+            }
+        }
     }
 }

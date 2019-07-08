@@ -14,7 +14,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
-            throw new NotImplementedException();
+            var result = new SnapshotTagValueSubscription(this, CreateClient<TagValuesService.TagValuesServiceClient>());
+            result.Start(context);
+            return Task.FromResult<ISnapshotTagValueSubscription>(result);
         }
 
 
@@ -22,7 +24,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
 
-            private readonly string _adapterId;
+            private readonly SnapshotTagValuePushImpl _feature;
 
             private readonly TagValuesService.TagValuesServiceClient _client;
 
@@ -37,13 +39,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public SnapshotTagValueSubscription(string adapterId, TagValuesService.TagValuesServiceClient client) {
-                _adapterId = adapterId;
+            public SnapshotTagValueSubscription(SnapshotTagValuePushImpl feature, TagValuesService.TagValuesServiceClient client) {
+                _feature = feature;
                 _client = client;
             }
 
 
-            public void Start() {
+            public void Start(IAdapterCallContext context) {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
                     lock (_tags) {
@@ -51,11 +53,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     }
 
                     var grpcRequest = new CreateSnapshotPushChannelRequest() {
-                        AdapterId = _adapterId
+                        AdapterId = _feature.AdapterId
                     };
                     grpcRequest.Tags.AddRange(tags);
 
-                    var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, cancellationToken: ct);
+                    var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, _feature.GetCallOptions(context, ct));
                     try {
                         while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                             if (grpcResponse.ResponseStream.Current == null) {
@@ -71,15 +73,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public System.Threading.Channels.ChannelReader<Adapter.RealTimeData.Models.TagIdentifier> GetTags(CancellationToken cancellationToken) {
+            public System.Threading.Channels.ChannelReader<Adapter.RealTimeData.Models.TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcRequest = new GetSnapshotPushChannelTagsRequest() {
-                        AdapterId = _adapterId
+                        AdapterId = _feature.AdapterId
                     };
                     
-                    var grpcResponse = _client.GetSnapshotPushChannelTags(grpcRequest, cancellationToken: ct);
+                    var grpcResponse = _client.GetSnapshotPushChannelTags(grpcRequest, _feature.GetCallOptions(context, ct));
                     try {
                         while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                             if (grpcResponse.ResponseStream.Current == null) {
@@ -119,11 +121,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
 
                 var grpcRequest = new AddTagsToSnapshotPushChannelRequest() {
-                    AdapterId = _adapterId
+                    AdapterId = _feature.AdapterId
                 };
                 grpcRequest.Tags.AddRange(tagsToAdd);
 
-                var grpcResponse = _client.AddTagsToSnapshotPushChannelAsync(grpcRequest, cancellationToken: cancellationToken);
+                var grpcResponse = _client.AddTagsToSnapshotPushChannelAsync(grpcRequest, _feature.GetCallOptions(context, cancellationToken));
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.Count;
@@ -149,11 +151,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
 
                 var grpcRequest = new RemoveTagsFromSnapshotPushChannelRequest() {
-                    AdapterId = _adapterId
+                    AdapterId = _feature.AdapterId
                 };
                 grpcRequest.Tags.AddRange(tagsToRemove);
 
-                var grpcResponse = _client.RemoveTagsFromSnapshotPushChannelAsync(grpcRequest, cancellationToken: cancellationToken);
+                var grpcResponse = _client.RemoveTagsFromSnapshotPushChannelAsync(grpcRequest, _feature.GetCallOptions(context, cancellationToken));
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.Count;

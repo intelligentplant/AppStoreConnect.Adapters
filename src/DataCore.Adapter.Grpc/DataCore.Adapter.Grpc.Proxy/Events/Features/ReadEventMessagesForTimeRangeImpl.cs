@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     Direction = request.Direction.ToGrpcReadDirection(),
                     MessageCount = request.MessageCount
                 };
-                var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest);
+                var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, ct));
 
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {

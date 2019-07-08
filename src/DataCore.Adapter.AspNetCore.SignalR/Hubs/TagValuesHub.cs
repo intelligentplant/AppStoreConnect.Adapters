@@ -108,7 +108,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
             }
 
-            return subscription.GetTags(cancellationToken);
+            return subscription.GetTags(AdapterCallContext, cancellationToken);
         }
 
 
@@ -469,8 +469,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
             /// <inheritdoc/>
-            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
-                return _inner.GetTags(cancellationToken);
+            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
+                return _inner.GetTags(context, cancellationToken);
             }
 
 

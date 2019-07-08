@@ -8,9 +8,15 @@ Proxy adapter that connects to a remote adapter via ASP.NET Core SignalR.
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
 	AdapterId = "{SOME_ADAPTER_ID}",
-	ConnectionFactory = url => new HubConnectionBuilder()
-        .WithUrl($"http://localhost:5000" + url)
-        .Build();
+	ConnectionFactory = key => {
+        var hubRoute = key == null
+            ? SignalRAdapterProxy.HubRoute
+            : GetExtensionHubRoute(key);
+        
+        return new HubConnectionBuilder()
+            .WithUrl($"http://localhost:5000" + hubRoute)
+            .Build();
+    }
 };
 
 var proxy = await SignalRAdapterProxy.Create(options, cancellationToken);
@@ -44,6 +50,29 @@ while (await rawChannel.WaitToReadAsync()) {
 Note however, that the proxy's feature implementations ignore `IAdapterCallContext` objects that are passed into the feature's methods; it is safe to pass `null` for these parameters. The connection factory method should be used to directly set any required authentication properties on the hub connections.
 
 
+# Adding Extension Feature Support
+
+You can add support for adapter extension features by providing an `ExtensionFeatureFactory` delegate in the proxy options. This delegate will be invoked for every extension feature that the remote proxy reports that it supports:
+
+```csharp
+var options = new SignalRAdapterProxyOptions() {
+	AdapterId = "{SOME_ADAPTER_ID}",
+	ConnectionFactory = key => {
+        var hubRoute = key == null
+            ? SignalRAdapterProxy.HubRoute
+            : GetExtensionHubRoute(key);
+        
+        return new HubConnectionBuilder()
+            .WithUrl($"http://localhost:5000" + hubRoute)
+            .Build();
+    },
+    ExtensionFeatureFactory = (featureName, proxy) => {
+        return GetFeatureImplementation(featureName, proxy);
+    }
+};
+```
+
+
 # Enabling MessagePack
 
 [MessagePack](https://docs.microsoft.com/en-us/aspnet/core/signalr/messagepackhubprotocol) increases performance when e.g. querying for large data sets. After adding the [Microsoft.AspNetCore.SignalR.Protocols.MessagePack](https://www.nuget.org/packages/Microsoft.AspNetCore.SignalR.Protocols.MessagePack) NuGet package to your project, it can be added to hub connections inside the proxy's connection factory method:
@@ -51,9 +80,15 @@ Note however, that the proxy's feature implementations ignore `IAdapterCallConte
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
 	AdapterId = "{SOME_ADAPTER_ID}",
-	ConnectionFactory = url => new HubConnectionBuilder()
-        .WithUrl($"http://localhost:5000" + url)
-        .AddMessagePackProtocol()
-        .Build();
+	ConnectionFactory = key => {
+        var hubRoute = key == null
+            ? SignalRAdapterProxy.HubRoute
+            : GetExtensionHubRoute(key);
+        
+        return new HubConnectionBuilder()
+            .WithUrl($"http://localhost:5000" + hubRoute)
+            .AddMessagePackProtocol()
+            .Build();
+    }
 };
 ```

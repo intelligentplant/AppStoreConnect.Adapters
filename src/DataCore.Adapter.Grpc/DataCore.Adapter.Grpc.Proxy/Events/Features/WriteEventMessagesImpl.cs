@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<EventsService.EventsServiceClient>();
-                var grpcStream = client.WriteEventMessages(cancellationToken: ct);
+                var grpcStream = client.WriteEventMessages(GetCallOptions(context, ct));
 
                 channel.RunBackgroundOperation(async (ch2, ct2) => {
                     try {

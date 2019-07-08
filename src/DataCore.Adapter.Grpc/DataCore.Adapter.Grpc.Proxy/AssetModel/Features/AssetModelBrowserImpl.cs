@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                     ParentId = request.ParentId,
                     Depth = request.Depth
                 };
-                var grpcResponse = client.BrowseAssetModelNodes(grpcRequest);
+                var grpcResponse = client.BrowseAssetModelNodes(grpcRequest, GetCallOptions(context, ct));
 
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                     AdapterId = AdapterId
                 };
                 grpcRequest.Nodes.AddRange(request.Nodes);
-                var grpcResponse = client.GetAssetModelNodes(grpcRequest);
+                var grpcResponse = client.GetAssetModelNodes(grpcRequest, GetCallOptions(context, ct));
 
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                     PageSize = request.PageSize,
                     Page = request.Page
                 };
-                var grpcResponse = client.FindAssetModelNodes(grpcRequest);
+                var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, ct));
 
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {

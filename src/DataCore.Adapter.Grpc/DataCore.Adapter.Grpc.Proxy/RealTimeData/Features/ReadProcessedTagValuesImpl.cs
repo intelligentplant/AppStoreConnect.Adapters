@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 grpcRequest.Tags.AddRange(request.Tags);
                 grpcRequest.DataFunctions.AddRange(request.DataFunctions);
 
-                var grpcResponse = client.ReadProcessedTagValues(grpcRequest, cancellationToken: ct);
+                var grpcResponse = client.ReadProcessedTagValues(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {

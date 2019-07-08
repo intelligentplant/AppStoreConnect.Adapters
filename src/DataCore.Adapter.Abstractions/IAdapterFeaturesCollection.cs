@@ -26,17 +26,5 @@ namespace DataCore.Adapter {
         /// </returns>
         object this[Type key] { get; }
 
-        /// <summary>
-        /// Gets the specified adapter feature.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature type.
-        /// </typeparam>
-        /// <returns>
-        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
-        ///   feature.
-        /// </returns>
-        TFeature Get<TFeature>() where TFeature : IAdapterFeature;
-
     }
 }

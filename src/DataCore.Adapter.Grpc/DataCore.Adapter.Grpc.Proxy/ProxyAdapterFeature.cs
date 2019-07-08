@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading;
 using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy {
@@ -108,6 +108,24 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </returns>
         protected internal TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
             return _proxy.CreateClient<TClient>();
+        }
+
+
+        /// <summary>
+        /// Gets the gRPC call options for the specified adapter call context and cancellation token.
+        /// </summary>
+        /// <param name="context">
+        ///   The adapter call context. If per-call credential options are configured on the proxy, 
+        ///   call credentials will be added to the call options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token to register with the call options.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="GrpcCore.CallOptions"/> object.
+        /// </returns>
+        protected internal GrpcCore.CallOptions GetCallOptions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            return new GrpcCore.CallOptions(cancellationToken: cancellationToken, credentials: _proxy.GetCallCredentials(context));
         }
 
     }

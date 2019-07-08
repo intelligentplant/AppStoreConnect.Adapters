@@ -13,8 +13,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
-            var result = new EventMessageSubscription(AdapterId, CreateClient<EventsService.EventsServiceClient>(), active);
-            result.Start();
+            var result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), active);
+            result.Start(context);
             return Task.FromResult<IEventMessageSubscription>(result);
         }
 
@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
             private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
 
-            private readonly string _adapterId;
+            private readonly EventMessagePushImpl _feature;
 
             private readonly EventsService.EventsServiceClient _client;
 
@@ -34,19 +34,19 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             public System.Threading.Channels.ChannelReader<Adapter.Events.Models.EventMessage> Reader { get { return _channel; } }
 
 
-            public EventMessageSubscription(string adapterId, EventsService.EventsServiceClient client, bool activeSubscription) {
-                _adapterId = adapterId;
+            public EventMessageSubscription(EventMessagePushImpl feature, EventsService.EventsServiceClient client, bool activeSubscription) {
+                _feature = feature;
                 _client = client;
                 _activeSubscription = activeSubscription;
             }
 
 
-            public void Start() {
+            public void Start(IAdapterCallContext context) {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
-                        AdapterId = _adapterId,
+                        AdapterId = _feature.AdapterId,
                         Active = _activeSubscription
-                    }, cancellationToken: ct);
+                    }, _feature.GetCallOptions(context, ct));
 
                     try {
                         while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {

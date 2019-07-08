@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DataCore.Adapter {
+namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DataCore.Adapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,29 +61,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The bucket size for plot calculations must be greater than zero..
+        ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
-        internal static string Error_BucketSizeMustBeGreaterThanZero {
+        internal static string Log_ExtensionFeatureRegistrationError {
             get {
-                return ResourceManager.GetString("Error_BucketSizeMustBeGreaterThanZero", resourceCulture);
+                return ResourceManager.GetString("Log_ExtensionFeatureRegistrationError", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This feature has already been registered..
+        ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
         /// </summary>
-        internal static string Error_FeatureIsAlreadyRegistered {
+        internal static string Log_NoExtensionImplementationAvailable {
             get {
-                return ResourceManager.GetString("Error_FeatureIsAlreadyRegistered", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Object does not implement feature {0}..
-        /// </summary>
-        internal static string Error_NotAFeatureImplementation {
-            get {
-                return ResourceManager.GetString("Error_NotAFeatureImplementation", resourceCulture);
+                return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
             }
         }
     }

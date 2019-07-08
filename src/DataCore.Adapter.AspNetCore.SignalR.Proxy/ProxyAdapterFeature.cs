@@ -112,7 +112,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   the existing connection will be returned.
         /// </returns>
         protected internal async Task<HubConnection> GetHubConnection(CancellationToken cancellationToken = default) {
-            return await _proxy.GetOrCreateHubConnection(cancellationToken).ConfigureAwait(false);
+            return await _proxy.GetOrCreateHubConnection().WithCancellation(cancellationToken).ConfigureAwait(false);
         }
 
     }

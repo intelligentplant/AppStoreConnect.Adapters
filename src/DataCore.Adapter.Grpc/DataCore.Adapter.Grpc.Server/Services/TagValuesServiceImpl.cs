@@ -66,9 +66,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             if (!s_subscriptions.TryGetValue(key, out var o) || (subscription = o as RealTimeData.ISnapshotTagValueSubscription) == null) {
                 throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_SnapshotSubscriptionDoesNotExist, adapterId)));
             }
-
+            
             var cancellationToken = context.CancellationToken;
-            var channel = subscription.GetTags(cancellationToken);
+            var channel = subscription.GetTags(_adapterCallContext, cancellationToken);
 
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!channel.TryRead(out var item) || item == null) {

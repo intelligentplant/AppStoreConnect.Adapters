@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AnnotationId = request.AnnotationId
             };
 
-            var grpcResponse = client.ReadAnnotationAsync(grpcRequest, cancellationToken: cancellationToken);
+            var grpcResponse = client.ReadAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
             return result.ToAdapterTagValueAnnotation();

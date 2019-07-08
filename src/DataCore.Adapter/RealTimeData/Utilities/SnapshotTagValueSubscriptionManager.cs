@@ -597,7 +597,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <inheritdoc/>
-            public ChannelReader<TagIdentifier> GetTags(CancellationToken cancellationToken) {
+            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {

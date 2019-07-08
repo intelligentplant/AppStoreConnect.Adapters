@@ -6,6 +6,8 @@ using System.Threading.Channels;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 
+using GrpcCore = Grpc.Core;
+
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     internal class TagSearchImpl : ProxyAdapterFeature, ITagSearch {
 
@@ -31,7 +33,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     }
                 }
 
-                var grpcResponse = client.FindTags(grpcRequest, cancellationToken: ct);
+                var grpcResponse = client.FindTags(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -59,7 +61,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 };
                 grpcRequest.Tags.AddRange(request.Tags);
 
-                var grpcResponse = client.GetTags(grpcRequest, cancellationToken: ct);
+                var grpcResponse = client.GetTags(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
