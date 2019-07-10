@@ -22,7 +22,7 @@ namespace DataCore.Adapter.GrpcExampleClient {
             Console.WriteLine($"{hostInfoResponse.HostInfo.VendorInfo.Name} ({hostInfoResponse.HostInfo.VendorInfo.Url})");
 
             var adaptersClient = new AdaptersService.AdaptersServiceClient(channel);
-            var adaptersResponse = await adaptersClient.GetAdaptersAsync(new GetAdapterRequest());
+            var adaptersResponse = await adaptersClient.GetAdaptersAsync(new GetAdaptersRequest());
             Console.WriteLine();
             Console.WriteLine("== Adapters ==");
             foreach (var adapter in adaptersResponse.Adapters) {

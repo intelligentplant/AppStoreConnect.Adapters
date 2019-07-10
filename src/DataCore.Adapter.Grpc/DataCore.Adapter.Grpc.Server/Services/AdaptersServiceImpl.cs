@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        public override async Task<GetAdaptersResponse> GetAdapters(GetAdapterRequest request, ServerCallContext context) {
+        public override async Task<GetAdaptersResponse> GetAdapters(GetAdaptersRequest request, ServerCallContext context) {
             var adapters = await _adapterAccessor.GetAdapters(_adapterCallContext, context.CancellationToken).ConfigureAwait(false);
 
             var result = new GetAdaptersResponse();

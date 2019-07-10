@@ -2,10 +2,10 @@
 using System.Threading.Tasks;
 using System.Threading;
 
-//#if NETCOREAPP3_0
-//using System.Net.Http;
-//using GrpcNet = Grpc.Net;
-//#endif
+#if NETCOREAPP3_0
+using System.Net.Http;
+using GrpcNet = Grpc.Net;
+#endif
 
 using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
@@ -42,12 +42,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </summary>
         private readonly GrpcCore.Channel _channel;
 
-//#if NETCOREAPP3_0
-//        /// <summary>
-//        /// HTTP client (when using native HTTP/2 support in .NET Core 3.0+).
-//        /// </summary>
-//        private readonly HttpClient _httpClient;
-//#endif
+#if NETCOREAPP3_0
+        /// <summary>
+        /// HTTP client (when using native HTTP/2 support in .NET Core 3.0+).
+        /// </summary>
+        private readonly HttpClient _httpClient;
+#endif
 
         /// <inheritdoc />
         public Adapter.Common.Models.AdapterDescriptor Descriptor { get; private set; }
@@ -126,68 +126,68 @@ namespace DataCore.Adapter.Grpc.Proxy {
             return result;
         }
 
-        //#if NETCOREAPP3_0
+#if NETCOREAPP3_0
 
-        //        /// <summary>
-        //        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
-        //        /// </summary>
-        //        /// <param name="httpClient">
-        //        ///   The HTTP client.
-        //        /// </param>
-        //        /// <param name="options">
-        //        ///   The proxy options.
-        //        /// </param>
-        //        /// <param name="logger">
-        //        ///   The logger for the proxy.
-        //        /// </param>
-        //        /// <exception cref="ArgumentNullException">
-        //        ///   <paramref name="httpClient"/> is <see langword="null"/>.
-        //        /// </exception>
-        //        /// <exception cref="ArgumentNullException">
-        //        ///   <paramref name="logger"/> is <see langword="null"/>.
-        //        /// </exception>
-        //        /// <exception cref="ArgumentException">
-        //        ///   <paramref name="options"/> does not define an adapter ID.
-        //        /// </exception>
-        //        private GrpcAdapterProxy(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) {
-        //            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        //            _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
-        //            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        //            _getCallCredentials = options?.GetCallCredentials;
-        //        }
+        /// <summary>
+        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
+        /// </summary>
+        /// <param name="httpClient">
+        ///   The HTTP client.
+        /// </param>
+        /// <param name="options">
+        ///   The proxy options.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger for the proxy.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="httpClient"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="options"/> does not define an adapter ID.
+        /// </exception>
+        private GrpcAdapterProxy(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _getCallCredentials = options?.GetCallCredentials;
+        }
 
 
-        //        /// <summary>
-        //        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
-        //        /// </summary>
-        //        /// <param name="httpClient">
-        //        ///   The HTTP client.
-        //        /// </param>
-        //        /// <param name="options">
-        //        ///   The proxy options.
-        //        /// </param>
-        //        /// <param name="logger">
-        //        ///   The logger for the proxy.
-        //        /// </param>
-        //        /// <param name="cancellationToken">
-        //        ///   The cancellation token for the operation.
-        //        /// </param>
-        //        /// <exception cref="ArgumentNullException">
-        //        ///   <paramref name="httpClient"/> is <see langword="null"/>.
-        //        /// </exception>
-        //        /// <exception cref="ArgumentNullException">
-        //        ///   <paramref name="logger"/> is <see langword="null"/>.
-        //        /// </exception>
-        //        /// <exception cref="ArgumentException">
-        //        ///   <paramref name="options"/> does not define an adapter ID.
-        //        /// </exception>
-        //        public static async Task<GrpcAdapterProxy> Create(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger, CancellationToken cancellationToken = default) {
-        //            var result = new GrpcAdapterProxy(httpClient, options, logger);
-        //            await result.Init(cancellationToken).ConfigureAwait(false);
-        //            return result;
-        //        }
+        /// <summary>
+        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
+        /// </summary>
+        /// <param name="httpClient">
+        ///   The HTTP client.
+        /// </param>
+        /// <param name="options">
+        ///   The proxy options.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger for the proxy.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="httpClient"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="options"/> does not define an adapter ID.
+        /// </exception>
+        public static async Task<GrpcAdapterProxy> Create(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger, CancellationToken cancellationToken = default) {
+            var result = new GrpcAdapterProxy(httpClient, options, logger);
+            await result.Init(cancellationToken).ConfigureAwait(false);
+            return result;
+        }
 
-        //#endif
+#endif
 
 
         /// <summary>
@@ -201,11 +201,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </returns>
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
 
-//#if NETCOREAPP3_0
-//            if (_httpClient != null) {
-//                return GrpcNet.Client.GrpcClient.Create<TClient>(_httpClient);
-//            }
-//#endif
+#if NETCOREAPP3_0
+            if (_httpClient != null) {
+                return GrpcNet.Client.GrpcClient.Create<TClient>(_httpClient);
+            }
+#endif
 
             return (TClient) Activator.CreateInstance(typeof(TClient), _channel);
         }
