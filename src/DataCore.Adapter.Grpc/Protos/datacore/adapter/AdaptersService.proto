@@ -5,7 +5,7 @@ package datacore.adapter;
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service AdaptersService {
-    rpc GetAdapters(GetAdapterRequest) returns (GetAdaptersResponse);
+    rpc GetAdapters(GetAdaptersRequest) returns (GetAdaptersResponse);
     rpc GetAdapter(GetAdapterRequest) returns (GetAdapterResponse);
 }
 
