@@ -16,6 +16,8 @@ namespace DataCore.Adapter.Tests {
 
         public IAdapterFeaturesCollection Features { get; }
 
+        public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
+
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 
 

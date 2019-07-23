@@ -27,7 +27,8 @@ namespace DataCore.Adapter.Common.Models {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterDescriptor"/> object.
+        /// Creates a new <see cref="AdapterDescriptor"/> object using the specified ID, name and 
+        /// description.
         /// </summary>
         /// <param name="id">
         ///   The adapter ID.
@@ -53,6 +54,37 @@ namespace DataCore.Adapter.Common.Models {
                 : name;
             Description = description;
         }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterDescriptor"/> object using the specified ID and name.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="name">
+        ///   The adapter name.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public AdapterDescriptor(string id, string name) : this(id, name, null) { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterDescriptor"/> object using the specified ID. The ID 
+        /// will also be used as the adapter name.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public AdapterDescriptor(string id) : this(id, id, null) { }
 
     }
 }

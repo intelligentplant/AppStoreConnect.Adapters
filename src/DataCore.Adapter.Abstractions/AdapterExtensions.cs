@@ -27,14 +27,14 @@ namespace DataCore.Adapter {
 
             var standardFeatures = adapter
                 .Features
-                ?.Keys
-                ?.Where(x => x.IsStandardAdapterFeature())
+                    ?.Keys
+                    ?.Where(x => x.IsStandardAdapterFeature())
                 .ToArray() ?? new Type[0];
 
             var extensionFeatures = adapter
                 .Features
-                ?.Keys
-                ?.Except(standardFeatures)
+                    ?.Keys
+                    ?.Except(standardFeatures)
                 .ToArray();
 
             return new AdapterDescriptorExtended(
@@ -42,7 +42,8 @@ namespace DataCore.Adapter {
                 adapter.Descriptor.Name,
                 adapter.Descriptor.Description,
                 standardFeatures.OrderBy(x => x.Name).Select(x => x.Name).ToArray(),
-                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray()
+                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray(),
+                adapter.Properties
             );
         }
 

@@ -37,4 +37,5 @@ message ExtendedAdapterDescriptor {
     AdapterDescriptor adapterDescriptor = 1;
     repeated string features = 2;
     repeated string extensions = 3;
+    map<string, string> properties = 4;
 }

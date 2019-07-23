@@ -13,7 +13,7 @@ namespace DataCore.Adapter {
     public interface IAdapter {
 
         /// <summary>
-        /// Gets the adaptor descriptor.
+        /// Gets the adapter descriptor.
         /// </summary>
         AdapterDescriptor Descriptor { get; }
 
@@ -21,6 +21,11 @@ namespace DataCore.Adapter {
         /// Gets the feature collection for the adapter.
         /// </summary>
         IAdapterFeaturesCollection Features { get; }
+
+        /// <summary>
+        /// Gets additional properties associated with the adapter.
+        /// </summary>
+        IDictionary<string, string> Properties { get; }
 
         /// <summary>
         /// Starts the adapter.

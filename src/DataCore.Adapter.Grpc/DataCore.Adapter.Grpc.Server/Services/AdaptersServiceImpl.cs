@@ -34,6 +34,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             result.Features.AddRange(source.Features);
             result.Extensions.AddRange(source.Extensions);
+            result.Properties.Add(source.Properties);
             return result;
         }
 

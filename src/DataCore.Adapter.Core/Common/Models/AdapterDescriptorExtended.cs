@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -24,6 +25,11 @@ namespace DataCore.Adapter.Common.Models {
         /// </summary>
         public IEnumerable<string> Extensions { get; }
 
+        /// <summary>
+        /// Additional adapter properties.
+        /// </summary>
+        public IDictionary<string, string> Properties { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterDescriptorExtended"/> object.
@@ -45,15 +51,19 @@ namespace DataCore.Adapter.Common.Models {
         ///   The extension features implemented by the adapter, typically the namespace-qualified name 
         ///   of the feature type.
         /// </param>
+        /// <param name="properties">
+        ///   Additional adapter properties.
+        /// </param>
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions): base(id, name, description) {
+        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IDictionary<string, string> properties): base(id, name, description) {
             Features = features?.ToArray() ?? new string[0];
             Extensions = extensions?.ToArray() ?? new string[0];
+            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 
 
@@ -74,6 +84,7 @@ namespace DataCore.Adapter.Common.Models {
 
             Features = (string[]) info?.GetValue("features", typeof(string[])) ?? new string[0];
             Extensions = (string[]) info?.GetValue("extensions", typeof(string[])) ?? new string[0];
+            Properties = new ReadOnlyDictionary<string, string>((Dictionary<string, string>) info?.GetValue("properties", typeof(Dictionary<string, string>)) ?? new Dictionary<string, string>());
         }
 
 
@@ -96,6 +107,7 @@ namespace DataCore.Adapter.Common.Models {
             info.AddValue("description", Description);
             info.AddValue("features", Features.ToArray(), typeof(string[]));
             info.AddValue("extensions", Extensions.ToArray(), typeof(string[]));
+            info.AddValue("properties", new Dictionary<string, string>(Properties), typeof(Dictionary<string, string>));
         }
     }
 }

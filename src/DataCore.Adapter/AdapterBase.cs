@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -80,6 +82,19 @@ namespace DataCore.Adapter {
             get {
                 CheckDisposed();
                 return _features;
+            }
+        }
+
+        /// <summary>
+        /// Adapter properties.
+        /// </summary>
+        private ConcurrentDictionary<string, string> _properties = new ConcurrentDictionary<string, string>();
+
+        /// <inheritdoc/>
+        IDictionary<string, string> IAdapter.Properties {
+            get {
+                CheckDisposed();
+                return new ReadOnlyDictionary<string, string>(_properties);
             }
         }
 
@@ -182,6 +197,7 @@ namespace DataCore.Adapter {
             }
             finally {
                 await _features.DisposeAsync().ConfigureAwait(false);
+                _properties.Clear();
                 _isDisposed = true;
                 _isDisposing = false;
                 IsStarted = false;
@@ -281,9 +297,39 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   An implementation of <typeparamref name="TFeature"/> has already been registered.
         /// </exception>
-        protected void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
+        public void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             CheckDisposed();
             _features.Add<TFeature, TFeatureImpl>(feature ?? throw new ArgumentNullException(nameof(feature)));
+        }
+
+
+        /// <summary>
+        /// Adds an adapter feature.
+        /// </summary>
+        /// <param name="featureType">
+        ///   The feature type. This must be an interface derived from <see cref="IAdapterFeature"/>.
+        /// </param>
+        /// <param name="feature">
+        ///   The feature implementation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="featureType"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="featureType"/> is not an adapter feature type.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   An implementation of <paramref name="featureType"/> has already been registered.
+        /// </exception>
+        public void AddFeature(Type featureType, object feature) {
+            CheckDisposed();
+            _features.Add(featureType, feature);
         }
 
 
@@ -308,7 +354,7 @@ namespace DataCore.Adapter {
         ///   (assuming that they meet the <paramref name="addStandardFeatures"/> and 
         ///   <paramref name="addExtensionFeatures"/> constraints).
         /// </remarks>
-        protected void AddFeatures(object provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
+        public void AddFeatures(object provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
             CheckDisposed();
             _features.AddFromProvider(provider ?? throw new ArgumentNullException(nameof(provider)), addStandardFeatures, addExtensionFeatures);
         }
@@ -324,7 +370,7 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature was removed, or <see langword="false"/>
         ///   otherwise.
         /// </returns>
-        protected bool RemoveFeature<TFeature>() where TFeature : IAdapterFeature {
+        public bool RemoveFeature<TFeature>() where TFeature : IAdapterFeature {
             CheckDisposed();
             return _features.Remove<TFeature>();
         }
@@ -333,9 +379,60 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Removes all features.
         /// </summary>
-        protected void RemoveAllFeatures() {
+        public void RemoveAllFeatures() {
             CheckDisposed();
             _features.Clear();
+        }
+
+
+        /// <summary>
+        /// Adds a bespoke adapter property.
+        /// </summary>
+        /// <param name="key">
+        ///   The property key.
+        /// </param>
+        /// <param name="value">
+        ///   The property value.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="key"/> i <see langword="null"/>.
+        /// </exception>
+        protected void AddProperty(string key, string value) {
+            CheckDisposed();
+            if (key == null) {
+                throw new ArgumentNullException(nameof(key));
+            }
+            _properties[key] = value;
+        }
+
+
+        /// <summary>
+        /// Removes a bespoke adapter property.
+        /// </summary>
+        /// <param name="key">
+        ///   The property key.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the property was removed, or <see langword="false"/>
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="key"/> i <see langword="null"/>.
+        /// </exception>
+        protected bool RemoveProperty(string key) {
+            CheckDisposed();
+            if (key == null) {
+                throw new ArgumentNullException(nameof(key));
+            }
+            return _properties.TryRemove(key, out var _);
+        }
+
+
+        /// <summary>
+        /// Removes all bespoke adapter properties.
+        /// </summary>
+        protected void RemoveAllProperties() {
+            _properties.Clear();
         }
 
     }
