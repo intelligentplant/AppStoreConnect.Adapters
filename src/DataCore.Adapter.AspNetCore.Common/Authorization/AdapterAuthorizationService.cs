@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapter(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (!UseAuthorization) {
+            if (!UseAuthorization || context == null) {
                 return true;
             }
 
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
-            if (!UseAuthorization) {
+            if (!UseAuthorization || context == null) {
                 return true;
             }
 

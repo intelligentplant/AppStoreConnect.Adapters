@@ -5,7 +5,6 @@
     <PackageId>$(PackagePrefix).Adapter.Grpc.Server</PackageId>
     <Description>gRPC server for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

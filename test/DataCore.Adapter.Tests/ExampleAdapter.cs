@@ -28,6 +28,16 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        public Task StartAsync(CancellationToken cancellationToken = default) {
+            return Task.CompletedTask;
+        }
+
+
+        public Task StopAsync(CancellationToken cancellationToken = default) {
+            return Task.CompletedTask;
+        }
+
+
         public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             throw new NotImplementedException();
         }

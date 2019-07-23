@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Events.Utilities {
 
 
         /// <inheritdoc/>
-        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
             var subscription = new Subscription(this, active);
 
             bool added;
@@ -86,23 +86,35 @@ namespace DataCore.Adapter.Events.Utilities {
             }
 
             if (added) {
-                OnSubscriptionAdded();
+                await OnSubscriptionAdded(_disposedTokenSource.Token).WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
-            return Task.FromResult<IEventMessageSubscription>(subscription);
+            return subscription;
         }
 
 
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected abstract void OnSubscriptionAdded();
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will perform subscription-related activities.
+        /// </returns>
+        protected abstract Task OnSubscriptionAdded(CancellationToken cancellationToken);
 
 
         /// <summary>
         /// Invoked when a subscription is removed.
         /// </summary>
-        protected abstract void OnSubscriptionRemoved();
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will perform subscription-related activities.
+        /// </returns>
+        protected abstract Task OnSubscriptionRemoved(CancellationToken cancellationToken);
 
 
         /// <summary>
@@ -134,7 +146,7 @@ namespace DataCore.Adapter.Events.Utilities {
             }
 
             if (removed) {
-                OnSubscriptionRemoved();
+                _ = Task.Run(() => OnSubscriptionRemoved(_disposedTokenSource.Token), _disposedTokenSource.Token);
             }
         }
 

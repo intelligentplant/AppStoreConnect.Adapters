@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (tag.Properties != null) {
                 foreach (var item in tag.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -102,7 +102,7 @@ namespace DataCore.Adapter.Grpc.Server {
             }
             if (node.Properties?.Count > 0) {
                 foreach (var item in node.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -146,7 +146,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (value.Properties != null) {
                 foreach (var item in value.Properties) {
-                    result.Value.Properties.Add(item.Key, item.Value);
+                    result.Value.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -194,7 +194,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (value.Properties != null) {
                 foreach (var item in value.Properties) {
-                    result.Value.Properties.Add(item.Key, item.Value);
+                    result.Value.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -329,7 +329,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -411,7 +411,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (annotation.Properties != null) {
                 foreach (var item in annotation.Properties) {
-                    result.Annotation.Properties.Add(item.Key, item.Value);
+                    result.Annotation.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -493,7 +493,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties.Count > 0) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -521,7 +521,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (message.Properties != null) {
                 foreach (var item in message.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 
@@ -627,7 +627,7 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
 

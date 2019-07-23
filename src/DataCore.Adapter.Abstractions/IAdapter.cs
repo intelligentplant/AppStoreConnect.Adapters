@@ -22,5 +22,27 @@ namespace DataCore.Adapter {
         /// </summary>
         IAdapterFeaturesCollection Features { get; }
 
+        /// <summary>
+        /// Starts the adapter.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that represents the start operation.
+        /// </returns>
+        Task StartAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Shuts down the adapter.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that represents the stop operation.
+        /// </returns>
+        Task StopAsync(CancellationToken cancellationToken);
+
     }
 }

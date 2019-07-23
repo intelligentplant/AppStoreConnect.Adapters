@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     /// Adapter proxy that communicates with a remote adapter via SignalR.
     /// </summary>
     public class SignalRAdapterProxy : IAdapterProxy, IDisposable
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
         , 
         IAsyncDisposable
 #endif
@@ -196,6 +196,21 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
 
+        /// <inheritdoc/>
+        public async Task StartAsync(CancellationToken cancellationToken = default) {
+            await Init(cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        public async Task StopAsync(CancellationToken cancellationToken = default) {
+            if (_connection.IsValueCreated) {
+                await _connection.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+                await _connection.Value.Result.StopAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
         #region [ IDisposable Support ]
 
         /// <summary>
@@ -217,11 +232,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             _disposedTokenSource.Cancel();
             _disposedTokenSource.Dispose();
 
-            try {    
-                if (_connection.IsValueCreated) {
-                    await _connection.Value.ConfigureAwait(false);
-                    await _connection.Value.Result.DisposeAsync().ConfigureAwait(false);
-                }
+            try {
+                await StopAsync().ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
                 // Do nothing - the connection task was cancelled.

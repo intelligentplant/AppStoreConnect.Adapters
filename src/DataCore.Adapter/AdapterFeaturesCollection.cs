@@ -11,11 +11,17 @@ namespace DataCore.Adapter {
     /// Default <see cref="IAdapterFeaturesCollection"/> implementation.
     /// </summary>
     public class AdapterFeaturesCollection: IAdapterFeaturesCollection, IDisposable
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
         ,
         IAsyncDisposable
 #endif
         {
+
+        /// <summary>
+        /// When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
+        /// or <see cref="IAsyncDisposable"/> will be disposed when the collection is disposed.
+        /// </summary>
+        private bool _disposeFeatures;
 
         /// <summary>
         /// The implemented features.
@@ -42,7 +48,13 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="AdapterFeaturesCollection"/> object.
         /// </summary>
-        public AdapterFeaturesCollection() { }
+        /// <param name="disposeFeatures">
+        ///   When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
+        ///   or <see cref="IAsyncDisposable"/> will be disposed when the collection is disposed.
+        /// </param>
+        public AdapterFeaturesCollection(bool disposeFeatures = false) {
+            _disposeFeatures = disposeFeatures;
+        }
 
 
         /// <summary>
@@ -52,11 +64,15 @@ namespace DataCore.Adapter {
         /// <param name="featureProvider">
         ///   The object that will provide the adapter feature implementations.
         /// </param>
+        /// <param name="disposeFeatures">
+        ///   When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
+        ///   or <see cref="IAsyncDisposable"/> will be disposed when the collection is disposed.
+        /// </param>
         /// <remarks>
         ///   All interfaces implemented by the <paramref name="featureProvider"/> that extend 
         ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="AdapterFeaturesCollection"/>.
         /// </remarks>
-        public AdapterFeaturesCollection(object featureProvider) : this() {
+        public AdapterFeaturesCollection(object featureProvider, bool disposeFeatures = false) : this(disposeFeatures) {
             AddFromProvider(featureProvider);
         }
 
@@ -69,15 +85,19 @@ namespace DataCore.Adapter {
         /// </param>
         /// <param name="addStandardFeatures">
         ///   Specifies if standard adapter feature implementations should be added to the 
-        ///   collection.
+        ///   collection. Standard feature types can be obtained by calling 
+        ///   <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>.
         /// </param>
         /// <param name="addExtensionFeatures">
         ///   Specifies if extension adapter feature implementations should be added to the 
-        ///   collection.
+        ///   collection. Extension features must derive from <see cref="IAdapterExtensionFeature"/>.
         /// </param>
         /// <remarks>
         ///   All interfaces implemented by the <paramref name="featureProvider"/> that extend 
-        ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="AdapterFeaturesCollection"/>.
+        ///   <see cref="IAdapterFeature"/> will be registered with the 
+        ///   <see cref="AdapterFeaturesCollection"/> (assuming that they meet the 
+        ///   <paramref name="addStandardFeatures"/> and <paramref name="addExtensionFeatures"/> 
+        ///   constraints).
         /// </remarks>
         public void AddFromProvider(object featureProvider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
             if (featureProvider == null) {
@@ -174,10 +194,11 @@ namespace DataCore.Adapter {
         /// Adds an adapter feature.
         /// </summary>
         /// <typeparam name="TFeature">
-        ///   The feature interface type.
+        ///   The feature. This must be an interface derived from <see cref="IAdapterFeature"/>.
         /// </typeparam>
         /// <typeparam name="TFeatureImpl">
-        ///   The feature implementation type.
+        ///   The feature implementation type. This must be a concrete class that implements 
+        ///   <typeparamref name="TFeature"/>.
         /// </typeparam>
         /// <param name="feature">
         ///   The feature implementation.
@@ -209,8 +230,16 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   <see langword="true"/> if the feature was removed, or <see langword="false"/> otherwise.
         /// </returns>
-        public bool Remove<TFeature>() where TFeature : class, IAdapterFeature {
+        public bool Remove<TFeature>() where TFeature : IAdapterFeature {
             return _features.TryRemove(typeof(TFeature), out var _);
+        }
+
+
+        /// <summary>
+        /// Removes all adapter features.
+        /// </summary>
+        public void Clear() {
+            _features.Clear();
         }
 
 
@@ -222,11 +251,16 @@ namespace DataCore.Adapter {
         ///   A task that will dispose of the collection.
         /// </returns>
         public async ValueTask DisposeAsync() {
+            if (!_disposeFeatures) {
+                _features.Clear();
+                return;
+            }
+
             var features = _features.Values.ToArray();
             _features.Clear();
 
             foreach (var item in features) {
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
                 if (item is IAsyncDisposable ad) {
                     await ad.DisposeAsync().ConfigureAwait(false);
                     continue;
@@ -244,11 +278,16 @@ namespace DataCore.Adapter {
         /// <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>.
         /// </summary>
         public void Dispose() {
+            if (!_disposeFeatures) {
+                _features.Clear();
+                return;
+            }
+
             var features = _features.Values.ToArray();
             _features.Clear();
 
             foreach (var item in features) {
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
                 if (item is IAsyncDisposable ad) {
                     ad.DisposeAsync().GetAwaiter().GetResult();
                     continue;

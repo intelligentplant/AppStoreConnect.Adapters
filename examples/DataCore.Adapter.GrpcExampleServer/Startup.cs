@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DataCore.Adapter.Grpc.Server.Services;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.GrpcExampleServer {
     public class Startup {
@@ -23,7 +24,8 @@ namespace DataCore.Adapter.GrpcExampleServer {
                     new Csv.CsvAdapterOptions() {
                         IsDataLoopingAllowed = true,
                         GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummySensorData.csv"), FileMode.Open)
-                    }
+                    },
+                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
                 );
             });
 
@@ -33,7 +35,8 @@ namespace DataCore.Adapter.GrpcExampleServer {
                     new Csv.CsvAdapterOptions() {
                         IsDataLoopingAllowed = true,
                         GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummyAcousticProbeData.csv"), FileMode.Open)
-                    }
+                    },
+                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
                 );
             });
 

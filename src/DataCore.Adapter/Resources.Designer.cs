@@ -61,6 +61,33 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An adapter cannot be started when it is already running..
+        /// </summary>
+        internal static string Error_AdapterIsAlreadyStarted {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsAlreadyStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter has not been started..
+        /// </summary>
+        internal static string Error_AdapterIsNotStarted {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsNotStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter is currently stopping and cannot be started until this operation completes..
+        /// </summary>
+        internal static string Error_AdapterIsStopping {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The bucket size for plot calculations must be greater than zero..
         /// </summary>
         internal static string Error_BucketSizeMustBeGreaterThanZero {
@@ -84,6 +111,69 @@ namespace DataCore.Adapter {
         internal static string Error_NotAFeatureImplementation {
             get {
                 return ResourceManager.GetString("Error_NotAFeatureImplementation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while starting adapter {AdapterId}..
+        /// </summary>
+        internal static string Log_AdapterStartupError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStartupError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while stopping adapter {AdapterId}..
+        /// </summary>
+        internal static string Log_AdapterStopError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStopError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping adapter {AdapterId} (disposing: true)..
+        /// </summary>
+        internal static string Log_DisposingAdapter {
+            get {
+                return ResourceManager.GetString("Log_DisposingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Started adapter {AdapterId}..
+        /// </summary>
+        internal static string Log_StartedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting adapter {AdapterId}..
+        /// </summary>
+        internal static string Log_StartingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopped adapter {AdapterId}..
+        /// </summary>
+        internal static string Log_StoppedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping adapter {AdapterId} (disposing: false)..
+        /// </summary>
+        internal static string Log_StoppingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
             }
         }
     }

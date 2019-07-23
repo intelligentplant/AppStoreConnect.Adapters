@@ -13,6 +13,7 @@ using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Csv {
 
@@ -20,7 +21,7 @@ namespace DataCore.Adapter.Csv {
     /// App Store Connect adapter that uses a looping CSV file as its source data.
     /// </summary>
     /// <seealso cref="CsvAdapterOptions"/>
-    public class CsvAdapter : IAdapter, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues, IDisposable {
+    public class CsvAdapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
 
         /// <summary>
         /// The regular expression used to parse tag properties from a tag field.
@@ -28,25 +29,14 @@ namespace DataCore.Adapter.Csv {
         private static readonly Regex s_tagFieldPropertyRegex = new Regex(@"(?<pname>.+)=(?<pval>.+)\|?", RegexOptions.Compiled);
 
         /// <summary>
-        /// Fires when the adapter is disposed.
+        /// Adapter options.
         /// </summary>
-        private readonly CancellationTokenSource _disposedSource = new CancellationTokenSource();
+        private readonly CsvAdapterOptions _options;
 
         /// <summary>
         /// CSV parsing task.
         /// </summary>
-        private readonly Task<CsvDataSet> _csvParseTask;
-
-        /// <inheritdoc/>
-        public AdapterDescriptor Descriptor { get; }
-
-        /// <summary>
-        /// The adapter features.
-        /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
-
-        /// <inheritdoc/>
-        public IAdapterFeaturesCollection Features => _features;
+        private Lazy<Task<CsvDataSet>> _csvParseTask;
 
 
         /// <summary>
@@ -58,6 +48,9 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
+        /// <param name="logger">
+        ///   The logger for the adapter.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="descriptor"/> is <see langword="null"/>.
         /// </exception>
@@ -67,8 +60,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(AdapterDescriptor descriptor, CsvAdapterOptions options) {
-            Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+        public CsvAdapter(AdapterDescriptor descriptor, CsvAdapterOptions options, ILogger<CsvAdapter> logger)
+            : base(descriptor, logger) {
             // Validate options.
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
@@ -76,38 +69,30 @@ namespace DataCore.Adapter.Csv {
             System.ComponentModel.DataAnnotations.Validator.ValidateObject(options, new System.ComponentModel.DataAnnotations.ValidationContext(options));
 
             // Construct adapter features.
-            _features.AddFromProvider(this);
-            _features.AddFromProvider(new ReadHistoricalTagValuesHelper(this, this));
+            AddFeatures(this);
+            AddFeatures(new ReadHistoricalTagValuesHelper(this, this));
 
             var snapshotPushUpdateInterval = options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                _features.AddFromProvider(new CsvAdapterSnapshotSubscriptionManager(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
+                AddFeatures(new CsvAdapterSnapshotSubscriptionManager(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
             }
 
-            _csvParseTask = ReadCsvDataInternal(options, _disposedSource.Token);
+            _options = options;
         }
 
 
-        /// <summary>
-        /// Adds or replaces an adapter feature.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature interface type.
-        /// </typeparam>
-        /// <typeparam name="TFeatureImpl">
-        ///   The feature implementation type.
-        /// </typeparam>
-        /// <param name="feature">
-        ///   The feature implementation.
-        /// </param>
-        protected void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
-            if (feature == null) {
-                throw new ArgumentNullException(nameof(feature));
-            }
-
-            _features.Add<TFeature, TFeatureImpl>(feature);
+        /// <inheritdoc/>
+        protected override async Task StartAsync(CancellationToken cancellationToken) {
+            _csvParseTask = new Lazy<Task<CsvDataSet>>(() => ReadCsvDataInternal(_options, StopToken), LazyThreadSafetyMode.ExecutionAndPublication);
+            await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
         }
- 
+
+
+        /// <inheritdoc/>
+        protected override Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+
 
         /// <summary>
         /// Parses CSV data using the specified options.
@@ -386,10 +371,12 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted();
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
+                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 foreach (var item in dataSet.Tags.Values.Where(x => x.MatchesFilter(request)).SelectPage(request)) {
                     ch.TryWrite(item);
                 }
@@ -401,10 +388,12 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted();
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
+                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 foreach (var item in request.Tags) {
                     var tag = GetTagByIdOrName(item, dataSet);
                     if (tag != null) {
@@ -440,10 +429,12 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted();
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
+                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 await ReadSnapshotTagValues(dataSet, request, ch, ct).ConfigureAwait(false);
             }, true, cancellationToken);
 
@@ -571,10 +562,13 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public ChannelReader<TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted();
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.WithCancellation(ct).ConfigureAwait(false);
+                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 await ReadRawTagValues(dataSet, request, ch, ct).ConfigureAwait(false);
             }, true, cancellationToken);
 
@@ -774,15 +768,6 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <summary>
-        /// Releases managed resources.
-        /// </summary>
-        public void Dispose() {
-            _disposedSource.Cancel();
-            _disposedSource.Dispose();
-        }
-
-
-        /// <summary>
         /// Helper class for providing <see cref="ISnapshotTagValuePush"/> functionality to a 
         /// <see cref="CsvAdapter"/>.
         /// </summary>
@@ -810,6 +795,9 @@ namespace DataCore.Adapter.Csv {
 
             /// <inheritdoc/>
             protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+                _adapter.CheckDisposed();
+                _adapter.CheckStarted();
+
                 var channel = Channel.CreateUnbounded<TagIdentifier>(new UnboundedChannelOptions() {
                     AllowSynchronousContinuations = true,
                     SingleReader = true,
@@ -817,7 +805,7 @@ namespace DataCore.Adapter.Csv {
                 });
 
                 channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var dataSet = await _adapter._csvParseTask.WithCancellation(ct).ConfigureAwait(false);
+                    var dataSet = await _adapter._csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                     foreach (var item in tagNamesOrIds) {
                         var tag = _adapter.GetTagByIdOrName(item, dataSet);
                         if (tag != null) {
@@ -832,6 +820,9 @@ namespace DataCore.Adapter.Csv {
 
             /// <inheritdoc/>
             protected override async Task GetSnapshotTagValues(IEnumerable<string> tagIds, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
+                _adapter.CheckDisposed();
+                _adapter.CheckStarted();
+
                 var reader = _adapter.ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
                     Tags = tagIds.ToArray()
                 }, cancellationToken);
@@ -848,7 +839,7 @@ namespace DataCore.Adapter.Csv {
 
             /// <inheritdoc/>
             protected override void OnPollingError(Exception error) {
-                // Do nothing.
+                _adapter.Logger.LogError(error, "A snapshot polling error occurred.");
             }
 
         }

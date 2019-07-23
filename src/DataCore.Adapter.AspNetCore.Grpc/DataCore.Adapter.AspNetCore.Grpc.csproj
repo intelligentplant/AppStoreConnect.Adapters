@@ -5,7 +5,6 @@
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Grpc</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapter gRPC services.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

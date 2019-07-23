@@ -6,7 +6,6 @@
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Common</PackageId>
     <Description>Common ASP.NET Core types for hosting App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">

@@ -6,7 +6,6 @@
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.SignalR</PackageId>
     <Description>ASP.NET Core SignalR hubs for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">

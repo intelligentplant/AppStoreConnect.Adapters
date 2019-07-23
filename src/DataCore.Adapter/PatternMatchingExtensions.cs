@@ -31,6 +31,32 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Converts the specified string into a regular expression pattern that will match the 
+        /// string.
+        /// </summary>
+        /// <param name="s">
+        ///   The string.
+        /// </param>
+        /// <returns>
+        /// A regex pattern that will match the string.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="s"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   When generating the regular expression, characters in <paramref name="s"/> that have 
+        ///   special meaning in regular expressions (e.g. '$') will be replaced with escaped versions 
+        ///   of themselves (e.g. '\$').
+        /// </remarks>
+        public static string ToRegexPattern(this string s) {
+            if (s == null) {
+                throw new ArgumentNullException(nameof(s));
+            }
+            return s_regexSpecialCharacterEscapes.Aggregate(s, (current, specialCharacter) => Regex.Replace(current, specialCharacter, specialCharacter));
+        }
+
+
+        /// <summary>
         /// Converts the specified string into a regular expression that will match the string.
         /// </summary>
         /// <param name="s">
@@ -55,7 +81,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(s));
             }
 
-            var pattern = s_regexSpecialCharacterEscapes.Aggregate(s, (current, specialCharacter) => Regex.Replace(current, specialCharacter, specialCharacter, options));
+            var pattern = s.ToRegexPattern();
             return new Regex(pattern, options);
         }
 

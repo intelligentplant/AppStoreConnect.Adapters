@@ -321,10 +321,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithProperties(IDictionary<string, string> properties) {
+        public TagValueBuilder WithProperties(IEnumerable<KeyValuePair<string, string>> properties) {
             if (properties != null) {
                 foreach (var prop in properties) {
-                    _properties[prop.Key] = prop.Value;
+                    if (prop.Key != null) {
+                        _properties[prop.Key] = prop.Value;
+                    }
                 }
             }
             return this;

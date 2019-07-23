@@ -8,6 +8,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events.Features;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Example {
 
@@ -20,7 +21,10 @@ namespace DataCore.Adapter.Example {
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
         /// </summary>
-        public ExampleAdapter() : base(
+        /// <param name="logger">
+        ///   The adapter logger.
+        /// </param>
+        public ExampleAdapter(ILogger<ExampleAdapter> logger) : base(
             new AdapterDescriptor(
                 "example", 
                 "Example Adapter", 
@@ -29,7 +33,8 @@ namespace DataCore.Adapter.Example {
                 IsDataLoopingAllowed = true,
                 SnapshotPushUpdateInterval = 5000,
                 GetCsvStream = () => new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(CsvData))
-            }) {
+            },
+            logger) {
             // Register additional features!
             AddFeature<IEventMessagePush, EventsSubscriptionManager>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
         }
@@ -65,12 +70,12 @@ namespace DataCore.Adapter.Example {
             }
 
 
-            protected override void OnSubscriptionAdded() {
-                // Do nothing
+            protected override Task OnSubscriptionAdded(CancellationToken cancellationToken) {
+                return Task.CompletedTask;
             }
 
-            protected override void OnSubscriptionRemoved() {
-                // Do nothing
+            protected override Task OnSubscriptionRemoved(CancellationToken cancellationToken) {
+                return Task.CompletedTask;
             }
 
             protected override void Dispose(bool disposing) {

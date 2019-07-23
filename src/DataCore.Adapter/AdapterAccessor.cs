@@ -46,10 +46,6 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task<IEnumerable<IAdapter>> IAdapterAccessor.GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -72,9 +68,6 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task<IAdapter> IAdapterAccessor.GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(adapterId));
             }

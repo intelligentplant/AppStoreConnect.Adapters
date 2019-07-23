@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Threading;
 
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
 using System.Net.Http;
 using GrpcNet = Grpc.Net;
 #endif
@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
     public class GrpcAdapterProxy : IAdapterProxy, IDisposable
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
         , 
         IAsyncDisposable
 #endif
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </summary>
         private readonly GrpcCore.Channel _channel;
 
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
         /// <summary>
         /// HTTP client (when using native HTTP/2 support in .NET Core 3.0+).
         /// </summary>
@@ -122,11 +122,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </exception>
         public static async Task<GrpcAdapterProxy> Create(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger, CancellationToken cancellationToken = default) {
             var result = new GrpcAdapterProxy(channel, options, logger);
-            await result.Init(cancellationToken).ConfigureAwait(false);
+            await result.StartAsync(cancellationToken).ConfigureAwait(false);
             return result;
         }
 
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
 
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
@@ -201,7 +201,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </returns>
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
 
-#if NETCOREAPP3_0
+#if NETSTANDARD2_1
             if (_httpClient != null) {
                 return GrpcNet.Client.GrpcClient.Create<TClient>(_httpClient);
             }
@@ -259,6 +259,20 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
+        /// <inheritdoc/>
+        public async Task StartAsync(CancellationToken cancellationToken = default) {
+            await Init(cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        public async Task StopAsync(CancellationToken cancellationToken = default) {
+            if (_channel != null) {
+                await _channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
         /// <summary>
         /// Gets per-call gRPC credentials for the specified adapter call context.
         /// </summary>
@@ -293,10 +307,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A task that will shut down the proxy's channel.
         /// </returns>
         public async ValueTask DisposeAsync() {
+            await StopAsync().ConfigureAwait(false);
             await _features.DisposeAsync().ConfigureAwait(false);
-            if (_channel != null) {
-                await _channel.ShutdownAsync().ConfigureAwait(false);
-            }
         }
 
 
@@ -304,10 +316,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// Disposes of the proxy.
         /// </summary>
         public void Dispose() {
+            StopAsync().GetAwaiter().GetResult();
             _features.Dispose();
-            if (_channel != null) {
-                _channel.ShutdownAsync().GetAwaiter().GetResult();
-            }
         }
     }
 }

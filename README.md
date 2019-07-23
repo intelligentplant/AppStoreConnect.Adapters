@@ -34,7 +34,7 @@ The [examples](/examples) folder contains example host and client applications.
 
 1. Create a new ASP.NET Core 3.0 project.
 2. Add references to `DataCore.Adapter.AspNetCore.Mvc` and `DataCore.Adapter.AspNetCore.SignalR` to your project.
-3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to.
+3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that you can inherit from.
 4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 

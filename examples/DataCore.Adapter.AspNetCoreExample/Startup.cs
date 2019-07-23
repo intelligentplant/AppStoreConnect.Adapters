@@ -34,7 +34,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     new Csv.CsvAdapterOptions() {
                         IsDataLoopingAllowed = true,
                         GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummySensorData.csv"), FileMode.Open)
-                    }
+                    },
+                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
                 );
             });
 
