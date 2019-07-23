@@ -59,7 +59,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// <summary>
             /// The channel for the subscription.
             /// </summary>
-            private readonly Channel<EventMessage> _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+            private readonly Channel<EventMessage> _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(-1);
 
             /// <summary>
             /// Flags if the subscription is active or passive.

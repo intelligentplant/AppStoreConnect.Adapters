@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await GetHubConnection(ct).ConfigureAwait(false);
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public ChannelReader<AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await GetHubConnection(ct).ConfigureAwait(false);
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await GetHubConnection(ct).ConfigureAwait(false);

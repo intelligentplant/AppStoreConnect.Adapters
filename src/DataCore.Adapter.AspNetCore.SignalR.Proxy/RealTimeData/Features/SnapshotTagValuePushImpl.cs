@@ -59,7 +59,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <summary>
             /// The subscription channel.
             /// </summary>
-            private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
 
             /// <summary>
             /// The tags that have been added to the subscription.
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             /// <inheritdoc />
             public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var result = ChannelExtensions.CreateTagIdentifierChannel();
+                var result = ChannelExtensions.CreateTagIdentifierChannel(-1);
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _hubConnection.StreamAsChannelAsync<TagIdentifier>(

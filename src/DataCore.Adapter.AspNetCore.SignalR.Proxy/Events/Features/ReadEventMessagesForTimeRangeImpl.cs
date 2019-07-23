@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
         /// <inheritdoc />
         public ChannelReader<EventMessage> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await GetHubConnection(ct).ConfigureAwait(false);

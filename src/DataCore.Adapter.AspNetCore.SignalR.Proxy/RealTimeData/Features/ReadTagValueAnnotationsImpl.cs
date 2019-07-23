@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueAnnotationChannel();
+            var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var connection = await GetHubConnection(ct).ConfigureAwait(false);
