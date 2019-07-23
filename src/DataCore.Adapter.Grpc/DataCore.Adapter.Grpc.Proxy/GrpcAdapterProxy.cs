@@ -15,22 +15,31 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
-    public class GrpcAdapterProxy : IAdapterProxy, IDisposable
-#if NETSTANDARD2_1
-        , 
-        IAsyncDisposable
-#endif
-        {
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        private readonly ILogger _logger;
+    public class GrpcAdapterProxy : AdapterBase, IAdapterProxy {
 
         /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
-        private readonly string _adapterId;
+        private readonly string _remoteAdapterId;
+
+        /// <summary>
+        /// The descriptor for the remote adapter.
+        /// </summary>
+        private Adapter.Common.Models.AdapterDescriptor _remoteDescriptor;
+
+        /// <inheritdoc/>
+        public Adapter.Common.Models.AdapterDescriptor RemoteDescriptor {
+            get {
+                lock (_remoteDescriptor) {
+                    return _remoteDescriptor;
+                }
+            }
+            private set {
+                lock (_remoteDescriptor) {
+                    _remoteDescriptor = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets per-call credentials.
@@ -49,17 +58,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly HttpClient _httpClient;
 #endif
 
-        /// <inheritdoc />
-        public Adapter.Common.Models.AdapterDescriptor Descriptor { get; private set; }
-
-        /// <summary>
-        /// Adapter features.
-        /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
-
-        /// <inheritdoc />
-        public IAdapterFeaturesCollection Features { get { return _features; } }
-
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
@@ -69,6 +67,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified gRPC channel.
         /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor for the local proxy.
         /// <param name="channel">
         ///   The channel.
         /// </param>
@@ -87,43 +87,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        private GrpcAdapterProxy(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        public GrpcAdapterProxy(Adapter.Common.Models.AdapterDescriptor descriptor, GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger)
+            : base(descriptor, logger) {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
             _getCallCredentials = options?.GetCallCredentials;
             _extensionFeatureFactory = options?.ExtensionFeatureFactory;
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified gRPC channel.
-        /// </summary>
-        /// <param name="channel">
-        ///   The channel.
-        /// </param>
-        /// <param name="options">
-        ///   The proxy options.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="logger"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="options"/> does not define an adapter ID.
-        /// </exception>
-        public static async Task<GrpcAdapterProxy> Create(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger, CancellationToken cancellationToken = default) {
-            var result = new GrpcAdapterProxy(channel, options, logger);
-            await result.StartAsync(cancellationToken).ConfigureAwait(false);
-            return result;
         }
 
 #if NETSTANDARD2_1
@@ -131,6 +100,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
         /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor for the local proxy.
+        /// </param>
         /// <param name="httpClient">
         ///   The HTTP client.
         /// </param>
@@ -149,42 +121,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        private GrpcAdapterProxy(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+        public GrpcAdapterProxy(Adapter.Common.Models.AdapterDescriptor descriptor, HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) 
+            : base(descriptor, logger) {
+            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _getCallCredentials = options?.GetCallCredentials;
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
-        /// </summary>
-        /// <param name="httpClient">
-        ///   The HTTP client.
-        /// </param>
-        /// <param name="options">
-        ///   The proxy options.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="httpClient"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="logger"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="options"/> does not define an adapter ID.
-        /// </exception>
-        public static async Task<GrpcAdapterProxy> Create(HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger, CancellationToken cancellationToken = default) {
-            var result = new GrpcAdapterProxy(httpClient, options, logger);
-            await result.Init(cancellationToken).ConfigureAwait(false);
-            return result;
         }
 
 #endif
@@ -220,21 +161,22 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        private async Task Init(CancellationToken cancellationToken = default) {
+        private async Task Init(CancellationToken cancellationToken) {
             var client = CreateClient<AdaptersService.AdaptersServiceClient>();
             var response = await client.GetAdapterAsync(
                 new GetAdapterRequest() {
-                    AdapterId = _adapterId
+                    AdapterId = _remoteAdapterId
                 }, 
                 cancellationToken: cancellationToken
             ).ResponseAsync.ConfigureAwait(false);
 
-            Descriptor = new Adapter.Common.Models.AdapterDescriptor(
-                response.Adapter.AdapterDescriptor.Id, 
-                response.Adapter.AdapterDescriptor.Name, 
+            RemoteDescriptor = new Adapter.Common.Models.AdapterDescriptor(
+                response.Adapter.AdapterDescriptor.Id,
+                response.Adapter.AdapterDescriptor.Name,
                 response.Adapter.AdapterDescriptor.Description
             );
-            ProxyAdapterFeature.AddFeaturesToProxy(this, _features, response.Adapter.Features);
+
+            ProxyAdapterFeature.AddFeaturesToProxy(this, response.Adapter.Features);
 
             if (_extensionFeatureFactory != null) {
                 foreach (var extensionFeature in response.Adapter.Extensions) {
@@ -245,14 +187,14 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     try {
                         var impl = _extensionFeatureFactory.Invoke(extensionFeature, this);
                         if (impl == null) {
-                            _logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
+                            Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }
 
-                        _features.AddFromProvider(impl, addStandardFeatures: false);
+                        AddFeatures(impl, addStandardFeatures: false);
                     }
                     catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
+                        Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
             }
@@ -260,13 +202,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         /// <inheritdoc/>
-        public async Task StartAsync(CancellationToken cancellationToken = default) {
+        protected override async Task StartAsync(CancellationToken cancellationToken) {
             await Init(cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
-        public async Task StopAsync(CancellationToken cancellationToken = default) {
+        protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
             if (_channel != null) {
                 await _channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
@@ -299,25 +241,5 @@ namespace DataCore.Adapter.Grpc.Proxy {
             }));
         }
 
-
-        /// <summary>
-        /// Disposes of the proxy.
-        /// </summary>
-        /// <returns>
-        ///   A task that will shut down the proxy's channel.
-        /// </returns>
-        public async ValueTask DisposeAsync() {
-            await StopAsync().ConfigureAwait(false);
-            await _features.DisposeAsync().ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Disposes of the proxy.
-        /// </summary>
-        public void Dispose() {
-            StopAsync().GetAwaiter().GetResult();
-            _features.Dispose();
-        }
     }
 }

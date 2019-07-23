@@ -12,22 +12,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via SignalR.
     /// </summary>
-    public class SignalRAdapterProxy : IAdapterProxy, IDisposable
-#if NETSTANDARD2_1
-        , 
-        IAsyncDisposable
-#endif
-        {
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        private readonly ILogger _logger;
-
-        /// <summary>
-        /// Fires when the proxy is disposed.
-        /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+    public class SignalRAdapterProxy : AdapterBase, IAdapterProxy {
 
         /// <summary>
         /// The relative SignalR hub route.
@@ -37,7 +22,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
-        private readonly string _adapterId;
+        private readonly string _remoteAdapterId;
+
+        /// <summary>
+        /// The descriptor for the remote adapter.
+        /// </summary>
+        private AdapterDescriptor _remoteDescriptor;
+
+        /// <inheritdoc/>
+        public AdapterDescriptor RemoteDescriptor {
+            get {
+                lock (_remoteDescriptor) {
+                    return _remoteDescriptor;
+                }
+            }
+            private set {
+                lock (_remoteDescriptor) {
+                    _remoteDescriptor = value;
+                }
+            }
+        }
 
         /// <summary>
         /// A factory delegate that can create hub connections.
@@ -52,67 +56,32 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// The main hub connection.
         /// </summary>
-        private readonly Lazy<Task<HubConnection>> _connection;
+        private HubConnection _connection;
 
         /// <summary>
         /// Additional hub connections created for extension features.
         /// </summary>
         private readonly ConcurrentDictionary<string, Lazy<Task<HubConnection>>> _extensionConnections = new ConcurrentDictionary<string, Lazy<Task<HubConnection>>>();
         
-        /// <inheritdoc />
-        public AdapterDescriptor Descriptor { get; private set; }
-
-        /// <summary>
-        /// Adapter features.
-        /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
-
-        /// <inheritdoc />
-        public IAdapterFeaturesCollection Features { get { return _features; } }
-
 
         /// <summary>
         /// Creates a new <see cref="SignalRAdapterProxy"/> object.
         /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor for the local proxy. This is not the descriptor for the remote 
+        ///   adapter that the proxy will connect to.
+        /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
         /// <param name="logger">
         ///   The logger for the proxy.
         /// </param>
-        private SignalRAdapterProxy(SignalRAdapterProxyOptions options, ILogger<SignalRAdapterProxy> logger) {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _adapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+        public SignalRAdapterProxy(AdapterDescriptor descriptor, SignalRAdapterProxyOptions options, ILogger<SignalRAdapterProxy> logger) 
+            : base(descriptor, logger) {
+            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
             _connectionFactory = options?.ConnectionFactory ?? throw new ArgumentException("Connection factory is required.", nameof(options));
-            _connection = new Lazy<Task<HubConnection>>(() => Task.Run(async () => {
-                var conn = _connectionFactory.Invoke(null);
-                await conn.StartAsync(_disposedTokenSource.Token).ConfigureAwait(false);
-                return conn;
-            }), LazyThreadSafetyMode.ExecutionAndPublication);
             _extensionFeatureFactory = options?.ExtensionFeatureFactory;
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="SignalRAdapterProxy"/> object.
-        /// </summary>
-        /// <param name="options">
-        ///   The proxy options.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The adapter proxy.
-        /// </returns>
-        public static async Task<SignalRAdapterProxy> Create(SignalRAdapterProxyOptions options, ILogger<SignalRAdapterProxy> logger, CancellationToken cancellationToken = default) {
-            var result = new SignalRAdapterProxy(options, logger);
-            await result.Init(cancellationToken).ConfigureAwait(false);
-
-            return result;
         }
 
 
@@ -125,9 +94,22 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <remarks>
         ///   The connection lifetime is managed by the proxy.
         /// </remarks>
-        public Task<HubConnection> GetOrCreateHubConnection() {
-            var connectionTask = _connection.Value;
-            return connectionTask;
+        public async Task<HubConnection> GetOrCreateHubConnection() {
+            HubConnection connection;
+
+            lock (_connection) {
+                if (_connection == null) {
+                    _connection = _connectionFactory.Invoke(null);
+                }
+
+                connection = _connection;
+            }
+            
+            if (connection.State == HubConnectionState.Disconnected) {
+                await connection.StartAsync(StopToken).ConfigureAwait(false);
+            }
+
+            return connection;
         }
 
 
@@ -151,7 +133,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             return _extensionConnections.GetOrAdd(key, k => new Lazy<Task<HubConnection>>(() => Task.Run(async () => {
                 var conn = _connectionFactory.Invoke(k);
-                await conn.StartAsync(_disposedTokenSource.Token).ConfigureAwait(false);
+                await conn.StartAsync(StopToken).ConfigureAwait(false);
                 return conn;
             }), LazyThreadSafetyMode.ExecutionAndPublication)).Value;
         }
@@ -168,10 +150,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </returns>
         private async Task Init(CancellationToken cancellationToken = default) {
             var connection = await GetOrCreateHubConnection().WithCancellation(cancellationToken).ConfigureAwait(false);
-            var descriptor = await connection.InvokeAsync<AdapterDescriptorExtended>("GetAdapter", _adapterId, cancellationToken).ConfigureAwait(false);
+            var descriptor = await connection.InvokeAsync<AdapterDescriptorExtended>("GetAdapter", _remoteAdapterId, cancellationToken).ConfigureAwait(false);
 
-            Descriptor = new AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
-            ProxyAdapterFeature.AddFeaturesToProxy(this, _features, descriptor.Features);
+            RemoteDescriptor = new AdapterDescriptor(
+                descriptor.Id,
+                descriptor.Name,
+                descriptor.Description
+            );
+
+            ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
             if (_extensionFeatureFactory != null) {
                 foreach (var extensionFeature in descriptor.Extensions) {
@@ -182,14 +169,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     try {
                         var impl = _extensionFeatureFactory.Invoke(extensionFeature, this);
                         if (impl == null) {
-                            _logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
+                            Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }
-
-                        _features.AddFromProvider(impl, addStandardFeatures: false);
+                        AddFeatures(impl, addStandardFeatures: false);
                     }
                     catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
+                        Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
             }
@@ -197,78 +183,23 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <inheritdoc/>
-        public async Task StartAsync(CancellationToken cancellationToken = default) {
+        protected override async Task StartAsync(CancellationToken cancellationToken) {
             await Init(cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
-        public async Task StopAsync(CancellationToken cancellationToken = default) {
-            if (_connection.IsValueCreated) {
-                await _connection.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
-                await _connection.Value.Result.StopAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-
-        #region [ IDisposable Support ]
-
-        /// <summary>
-        /// Flags if the proxy has been disposed.
-        /// </summary>
-        private bool _isDisposed = false;
-
-        /// <summary>
-        /// Disposes of the active hub connections.
-        /// </summary>
-        /// <returns>
-        ///   A task that will dispose of the hub connections.
-        /// </returns>
-        public async ValueTask DisposeAsync() {
-            if (_isDisposed) {
-                return;
-            }
-
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-
-            try {
-                await StopAsync().ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) {
-                // Do nothing - the connection task was cancelled.
-            }
-
-            await _features.DisposeAsync().ConfigureAwait(false);
-
-            _isDisposed = true;
-        }
-
-
-        /// <summary>
-        /// Disposes of the proxy.
-        /// </summary>
-        public void Dispose() {
-            if (_isDisposed) {
-                return;
-            }
-
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-
-            try {
-                if (_connection.IsValueCreated) {
-                    _connection.Value.Result.DisposeAsync().GetAwaiter().GetResult();
+        protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+            if (_connection != null) {
+                try {
+                    await _connection.StopAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally {
+                    if (disposing) {
+                        await _connection.DisposeAsync().ConfigureAwait(false);
+                    }
                 }
             }
-            catch (AggregateException) {
-                // Do nothing - the connection task was cancelled.
-            }
-
-            _features.Dispose();
-            _isDisposed = true;
         }
-
-        #endregion
     }
 }

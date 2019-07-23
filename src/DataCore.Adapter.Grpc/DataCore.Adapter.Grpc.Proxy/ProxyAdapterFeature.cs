@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// The adapter ID for the remote adapter.
         /// </summary>
         protected string AdapterId {
-            get { return _proxy.Descriptor.Id; }
+            get { return _proxy.RemoteDescriptor?.Id; }
         }
 
 
@@ -64,13 +64,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <param name="proxy">
         ///   The proxy.
         /// </param>
-        /// <param name="features">
-        ///   The proxy's features collection.
-        /// </param>
         /// <param name="remoteAdapterFeatures">
         ///   The features supported by the remote adapter.
         /// </param>
-        internal static void AddFeaturesToProxy(GrpcAdapterProxy proxy, AdapterFeaturesCollection features, IEnumerable<string> remoteAdapterFeatures) {
+        internal static void AddFeaturesToProxy(GrpcAdapterProxy proxy, IEnumerable<string> remoteAdapterFeatures) {
             foreach (var item in remoteAdapterFeatures) {
                 var implementation = _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
 
@@ -81,7 +78,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     continue;
                 }
 
-                features.Add(implementation.Key, Activator.CreateInstance(implementation.Value, proxy));
+                proxy.AddFeature(implementation.Key, Activator.CreateInstance(implementation.Value, proxy));
             }
         }
 
