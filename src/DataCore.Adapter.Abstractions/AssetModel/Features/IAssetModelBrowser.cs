@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AssetModel.Features {
     public interface IAssetModelBrowser : IAdapterFeature {
 
         /// <summary>
-        /// Borwses nodes in the adapter's asset model.
+        /// Browses nodes in the adapter's asset model.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
@@ -30,7 +30,7 @@ namespace DataCore.Adapter.AssetModel.Features {
         ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Gets nodes from the adapter's asset model.
+        /// Gets specific nodes from the adapter's asset model.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.

@@ -31,7 +31,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// The maximum number of samples that can be requested overall per request.
         /// </summary>
-        public const int MaxSamplesPerRequest = 20000;
+        public const int MaxSamplesPerReadRequest = 20000;
+
+        /// <summary>
+        /// The maximum number of samples that can be written per request.
+        /// </summary>
+        public const int MaxSamplesPerWriteRequest = 5000;
 
 
         /// <summary>
@@ -88,8 +93,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -139,8 +144,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -195,8 +200,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -246,8 +251,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -297,8 +302,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -356,8 +361,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxSamplesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerRequest));
+                if (result.Count > MaxSamplesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -403,6 +408,160 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ConfigureAwait(false);
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Writes values to an adapter's snapshot. Up to <see cref="MaxSamplesPerWriteRequest"/> 
+        /// values can be written in a single request.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to write to.
+        /// </param>
+        /// <param name="values">
+        ///   The values to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
+        ///   objects (one per sample written).
+        /// </returns>
+        /// <remarks>
+        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
+        ///   in a single request. Subsequent values will be ignored. No corresponding 
+        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
+        /// </remarks>
+        [HttpPost]
+        [Route("{adapterId}/write/snapshot")]
+        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        public async Task<IActionResult> WriteSnapshotValues(string adapterId, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteSnapshotTagValues))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+
+            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var itemsWritten = 0;
+
+                foreach (var value in values) {
+                    ++itemsWritten;
+
+                    if (value == null) {
+                        continue;
+                    }
+
+                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        break;
+                    }
+
+                    ch.TryWrite(value);
+
+                    if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                        break;
+                    }
+                }
+            }, true, cancellationToken);
+
+            var resultChannel = feature.WriteSnapshotTagValues(_callContext, writeChannel, cancellationToken);
+
+            var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
+
+            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (resultChannel.TryRead(out var res) && res != null) {
+                    result.Add(res);
+                }
+            }
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Writes values to an adapter's historical archive. Up to <see cref="MaxSamplesPerWriteRequest"/>
+        /// values can be written in a single request.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to write to.
+        /// </param>
+        /// <param name="values">
+        ///   The values to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
+        ///   objects (one per sample written).
+        /// </returns>
+        /// <remarks>
+        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
+        ///   in a single request. Subsequent values will be ignored. No corresponding 
+        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
+        /// </remarks>
+        [HttpPost]
+        [Route("{adapterId}/write/history")]
+        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        public async Task<IActionResult> WriteHistoricalValues(string adapterId, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteHistoricalTagValues))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+
+            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var itemsWritten = 0;
+
+                foreach (var value in values) {
+                    ++itemsWritten;
+
+                    if (value == null) {
+                        continue;
+                    }
+
+                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        break;
+                    }
+
+                    ch.TryWrite(value);
+
+                    if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                        break;
+                    }
+                }
+            }, true, cancellationToken);
+
+            var resultChannel = feature.WriteHistoricalTagValues(_callContext, writeChannel, cancellationToken);
+
+            var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
+
+            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (resultChannel.TryRead(out var res) && res != null) {
+                    result.Add(res);
+                }
+            }
+
             return Ok(result); // 200
         }
 

@@ -117,7 +117,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <returns>
         ///   Successful responses contain the matching <see cref="TagValueAnnotation"/> object.
         /// </returns>
-        [HttpPost]
+        [HttpGet]
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(TagValueAnnotation), 200)]
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
@@ -137,6 +137,143 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 TagId = tagId,
                 AnnotationId = annotationId
             }, cancellationToken).ConfigureAwait(false);
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Creates an annotation on a tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="annotation">
+        ///   The annotation.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a <see cref="WriteTagValueAnnotationResult"/> 
+        ///   describing the operation.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/{tagId}/create")]
+        [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotationBase annotation, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var result = await feature.CreateAnnotation(_callContext, new CreateAnnotationRequest() {
+                TagId = tagId,
+                Annotation = annotation
+            }, cancellationToken).ConfigureAwait(false);
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Deletes an annotation on a tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="annotationId">
+        ///   The annotation ID.
+        /// </param>
+        /// <param name="annotation">
+        ///   The annotation.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a <see cref="WriteTagValueAnnotationResult"/> 
+        ///   describing the operation.
+        /// </returns>
+        [HttpPut]
+        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotationBase annotation, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var result = await feature.UpdateAnnotation(_callContext, new UpdateAnnotationRequest() {
+                TagId = tagId,
+                AnnotationId = annotationId,
+                Annotation = annotation
+            }, cancellationToken).ConfigureAwait(false);
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Deletes an annotation on a tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="annotationId">
+        ///   The annotation ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a <see cref="WriteTagValueAnnotationResult"/> 
+        ///   describing the operation.
+        /// </returns>
+        [HttpDelete]
+        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        public async Task<IActionResult> DeleteAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var result = await feature.DeleteAnnotation(_callContext, new DeleteAnnotationRequest() {
+                TagId = tagId,
+                AnnotationId = annotationId
+            }, cancellationToken).ConfigureAwait(false);
+
             return Ok(result); // 200
         }
 

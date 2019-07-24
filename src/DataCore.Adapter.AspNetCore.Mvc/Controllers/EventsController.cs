@@ -30,7 +30,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// The maximum number of event messages that can be returned via an HTTP request.
         /// </summary>
-        public const int MaxEventMessagesPerRequest = 1000;
+        public const int MaxEventMessagesPerReadRequest = 1000;
+
+        /// <summary>
+        /// The maximum number of event messages that can be written in a single HTTP request.
+        /// </summary>
+        public const int MaxEventMessagesPerWriteRequest = 1000;
 
 
         /// <summary>
@@ -87,8 +92,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxEventMessagesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerRequest));
+                if (result.Count > MaxEventMessagesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                     break;
                 }
 
@@ -139,12 +144,89 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     continue;
                 }
 
-                if (result.Count > MaxEventMessagesPerRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerRequest));
+                if (result.Count > MaxEventMessagesPerReadRequest) {
+                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                     break;
                 }
 
                 result.Add(msg);
+            }
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
+        /// Writes event messages to an adapter. Up to <see cref="MaxEventMessagesPerWriteRequest"/> 
+        /// messages can be written in a single request.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID to write to.
+        /// </param>
+        /// <param name="events">
+        ///   The event messages to write.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="WriteEventMessageResult"/> 
+        ///   objects (one per sample written).
+        /// </returns>
+        /// <remarks>
+        ///   Up to <see cref="MaxEventMessagesPerWriteRequest"/> values can be written to the 
+        ///   adapter in a single request. Subsequent values will be ignored. No corresponding 
+        ///   <see cref="WriteEventMessageResult"/> object will be returned for these items.
+        /// </remarks>
+        [HttpPost]
+        [Route("{adapterId}/write")]
+        [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
+        public async Task<IActionResult> WriteEventMessages(string adapterId, IEnumerable<WriteEventMessageItem> events, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteEventMessages))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+
+            var feature = resolvedFeature.Feature;
+
+            var writeChannel = ChannelExtensions.CreateEventMessageWriteChannel(MaxEventMessagesPerWriteRequest);
+
+            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var itemsWritten = 0;
+
+                foreach (var evt in events) {
+                    ++itemsWritten;
+
+                    if (evt == null) {
+                        continue;
+                    }
+
+                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        break;
+                    }
+
+                    ch.TryWrite(evt);
+
+                    if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
+                        break;
+                    }
+                }
+            }, true, cancellationToken);
+
+            var resultChannel = feature.WriteEventMessages(_callContext, writeChannel, cancellationToken);
+            var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
+
+            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (resultChannel.TryRead(out var res) && res != null) {
+                    result.Add(res);
+                }
             }
 
             return Ok(result); // 200
