@@ -29,15 +29,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </summary>
         private AdapterDescriptor _remoteDescriptor;
 
+        /// <summary>
+        /// Lock for accessing <see cref="_remoteDescriptor"/>.
+        /// </summary>
+        private readonly object _remoteDescriptorLock = new object();
+
         /// <inheritdoc/>
         public AdapterDescriptor RemoteDescriptor {
             get {
-                lock (_remoteDescriptor) {
+                lock (_remoteDescriptorLock) {
                     return _remoteDescriptor;
                 }
             }
             private set {
-                lock (_remoteDescriptor) {
+                lock (_remoteDescriptorLock) {
                     _remoteDescriptor = value;
                 }
             }
