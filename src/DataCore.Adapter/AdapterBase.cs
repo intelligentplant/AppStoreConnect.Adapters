@@ -106,17 +106,15 @@ namespace DataCore.Adapter {
         ///   The adapter descriptor.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the adapter.
+        ///   The logger for the adapter. If a <see langword="null"/> value is provided, 
+        ///   <see cref="Logger"/> will be set to an instance of <see cref="Microsoft.Extensions.Logging.Abstractions.NullLogger"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="descriptor"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="logger"/> is <see langword="null"/>.
-        /// </exception>
         protected AdapterBase(AdapterDescriptor descriptor, ILogger logger) {
             _descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
 
