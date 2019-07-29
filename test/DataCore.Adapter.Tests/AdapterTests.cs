@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Tests {
                         new RealTimeData.Models.TagValueQueryResult(
                             "Test Tag 1", 
                             "Test Tag 1", 
-                            RealTimeData.Utilities.TagValueBuilder
+                            RealTimeData.Models.TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-5))
                                 .WithNumericValue(100)
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Tests {
                         new RealTimeData.Models.TagValueQueryResult(
                             "Test Tag 1",
                             "Test Tag 1",
-                            RealTimeData.Utilities.TagValueBuilder
+                            RealTimeData.Models.TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-1))
                                 .WithNumericValue(99)

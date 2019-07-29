@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Example {
                     try {
                         while (!_disposedTokenSource.IsCancellationRequested) {
                             await Task.Delay(interval, _disposedTokenSource.Token).ConfigureAwait(false);
-                            OnMessage(Events.Utilities.EventMessageBuilder
+                            OnMessage(Events.Models.EventMessageBuilder
                                 .Create()
                                 .WithPriority(Events.Models.EventPriority.Low)
                                 .WithCategory("System Messages")

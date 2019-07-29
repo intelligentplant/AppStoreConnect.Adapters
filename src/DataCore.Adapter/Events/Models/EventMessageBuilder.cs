@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using DataCore.Adapter.Events.Models;
 
-namespace DataCore.Adapter.Events.Utilities {
+namespace DataCore.Adapter.Events.Models {
 
     /// <summary>
     /// Helper class for constructing <see cref="EventMessage"/> objects using a fluent interface.
