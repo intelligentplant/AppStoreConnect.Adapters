@@ -142,6 +142,51 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred in the event subscription manager publish loop..
+        /// </summary>
+        internal static string Log_ErrorInEventSubscriptionManagerPublishLoop {
+            get {
+                return ResourceManager.GetString("Log_ErrorInEventSubscriptionManagerPublishLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while the snapshot subscription manager was polling for new values..
+        /// </summary>
+        internal static string Log_ErrorInSnapshotPollingUpdateLoop {
+            get {
+                return ResourceManager.GetString("Log_ErrorInSnapshotPollingUpdateLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred in the snapshot subscription manager publish loop..
+        /// </summary>
+        internal static string Log_ErrorInSnapshotSubscriptionManagerPublishLoop {
+            get {
+                return ResourceManager.GetString("Log_ErrorInSnapshotSubscriptionManagerPublishLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while disposing of an event message subscription..
+        /// </summary>
+        internal static string Log_ErrorWhileDisposingOfEventMessageSubscription {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileDisposingOfEventMessageSubscription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while disposing of a snapshot subscription..
+        /// </summary>
+        internal static string Log_ErrorWhileDisposingOfSnapshotSubscription {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileDisposingOfSnapshotSubscription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Started adapter {AdapterId}..
         /// </summary>
         internal static string Log_StartedAdapter {

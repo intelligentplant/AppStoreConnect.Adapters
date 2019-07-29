@@ -145,6 +145,21 @@
   <data name="Log_DisposingAdapter" xml:space="preserve">
     <value>Stopping adapter {AdapterId} (disposing: true).</value>
   </data>
+  <data name="Log_ErrorInEventSubscriptionManagerPublishLoop" xml:space="preserve">
+    <value>An error occurred in the event subscription manager publish loop.</value>
+  </data>
+  <data name="Log_ErrorInSnapshotPollingUpdateLoop" xml:space="preserve">
+    <value>An error occurred while the snapshot subscription manager was polling for new values.</value>
+  </data>
+  <data name="Log_ErrorInSnapshotSubscriptionManagerPublishLoop" xml:space="preserve">
+    <value>An error occurred in the snapshot subscription manager publish loop.</value>
+  </data>
+  <data name="Log_ErrorWhileDisposingOfEventMessageSubscription" xml:space="preserve">
+    <value>An error occurred while disposing of an event message subscription.</value>
+  </data>
+  <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
+    <value>An error occurred while disposing of a snapshot subscription.</value>
+  </data>
   <data name="Log_StartedAdapter" xml:space="preserve">
     <value>Started adapter {AdapterId}.</value>
   </data>

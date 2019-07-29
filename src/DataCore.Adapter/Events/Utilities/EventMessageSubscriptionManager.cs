@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.Events.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events.Utilities {
 
@@ -14,6 +15,11 @@ namespace DataCore.Adapter.Events.Utilities {
     /// Base class for simplifying implementation of the <see cref="IEventMessagePush"/> feature.
     /// </summary>
     public abstract class EventMessageSubscriptionManager : IEventMessagePush, IDisposable {
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        protected ILogger Logger { get; }
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -62,12 +68,19 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// Creates a new <see cref="EventMessageSubscriptionManager"/> object.
         /// </summary>
-        protected EventMessageSubscriptionManager() {
+        /// <param name="logger">
+        ///   The logger for the subscription manager.
+        /// </param>
+        protected EventMessageSubscriptionManager(ILogger logger) {
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = Task.Factory.StartNew(async () => {
                 try {
                     await PublishToSubscribers(_disposedTokenSource.Token).ConfigureAwait(false);
                 }
-                catch { }
+                catch (OperationCanceledException) { }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorInEventSubscriptionManagerPublishLoop);
+                }
             }, TaskCreationOptions.LongRunning);
         }
 
@@ -145,8 +158,16 @@ namespace DataCore.Adapter.Events.Utilities {
                 }
             }
 
-            if (removed) {
-                _ = Task.Run(() => OnSubscriptionRemoved(_disposedTokenSource.Token), _disposedTokenSource.Token);
+            if (removed && !_isDisposed && !_disposedTokenSource.IsCancellationRequested) {
+                _ = Task.Run(async () => {
+                    try {
+                        await OnSubscriptionRemoved(_disposedTokenSource.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (Exception e) {
+                        Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfEventMessageSubscription);
+                    }
+                });
             }
         }
 

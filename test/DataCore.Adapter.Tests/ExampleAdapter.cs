@@ -57,6 +57,10 @@ namespace DataCore.Adapter.Tests {
 
         private class SnapshotSubscriptionManager : RealTimeData.Utilities.SnapshotTagValueSubscriptionManager {
 
+
+            public SnapshotSubscriptionManager() : base(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance) { }
+
+
             protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var channel = Channel.CreateUnbounded<TagIdentifier>();
                 channel.Writer.RunBackgroundOperation((ch, ct) => {

@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -39,7 +40,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
         ///   <see cref="DefaultPollingInterval"/> will be used.
         /// </param>
-        protected PollingSnapshotTagValueSubscriptionManager(TimeSpan pollingInterval) : base() {
+        /// <param name="logger">
+        ///   The logger for the subscription manager.
+        /// </param>
+        protected PollingSnapshotTagValueSubscriptionManager(TimeSpan pollingInterval, ILogger logger) : base(logger) {
             _pollingInterval = pollingInterval <= TimeSpan.Zero
                 ? DefaultPollingInterval
                 : pollingInterval;
@@ -76,10 +80,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                             OnValueChanged(val);
                         }
                     }
+                    catch (ChannelClosedException) {
+                        // Channel was closed.
+                    }
                     catch (OperationCanceledException) {
                         // Cancellation token fired.
                     }
                     catch (Exception e) {
+                        Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
                         OnPollingError(e);
                     }
                 }

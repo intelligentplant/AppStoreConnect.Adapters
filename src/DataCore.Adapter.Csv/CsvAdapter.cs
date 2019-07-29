@@ -788,7 +788,7 @@ namespace DataCore.Adapter.Csv {
             /// <param name="pollingInterval">
             ///   The interval to poll for new values at.
             /// </param>
-            public CsvAdapterSnapshotSubscriptionManager(CsvAdapter adapter, TimeSpan pollingInterval) : base(pollingInterval) {
+            public CsvAdapterSnapshotSubscriptionManager(CsvAdapter adapter, TimeSpan pollingInterval) : base(pollingInterval, adapter?.Logger) {
                 _adapter = adapter;
             }
 

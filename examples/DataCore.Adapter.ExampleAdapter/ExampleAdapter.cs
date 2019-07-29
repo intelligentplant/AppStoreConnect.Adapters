@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Example {
             private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
 
-            internal EventsSubscriptionManager(TimeSpan interval) {
+            internal EventsSubscriptionManager(TimeSpan interval) : base(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance) {
                 var startup = DateTime.UtcNow;
                 _ = Task.Run(async () => {
                     try {

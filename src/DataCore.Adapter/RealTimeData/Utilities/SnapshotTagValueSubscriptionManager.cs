@@ -8,6 +8,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -16,6 +17,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     /// feature.
     /// </summary>
     public abstract class SnapshotTagValueSubscriptionManager : ISnapshotTagValuePush, IDisposable {
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        protected ILogger Logger { get; }
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -61,12 +67,19 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValueSubscriptionManager"/> object.
         /// </summary>
-        protected SnapshotTagValueSubscriptionManager() {
+        /// <param name="logger">
+        ///   The logger for the subscription manager.
+        /// </param>
+        protected SnapshotTagValueSubscriptionManager(ILogger logger) {
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = Task.Factory.StartNew(async () => {
                 try {
                     await PublishToSubscribers(_disposedTokenSource.Token).ConfigureAwait(false);
                 }
-                catch { }
+                catch (OperationCanceledException) { }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
+                }
             }, TaskCreationOptions.LongRunning);
         }
 
@@ -101,10 +114,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         /// <inheritdoc/>
         public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, CancellationToken cancellationToken) {
-            if (adapterCallContext == null) {
-                throw new ArgumentNullException(nameof(adapterCallContext));
-            }
-
             var subscription = new Subscription(this);
             OnSubscriptionCreated(subscription);
 
@@ -143,15 +152,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return;
             }
 
+            bool removed;
             _subscriptionsLock.EnterWriteLock();
             try {
-                _subscriptions.Remove(subscription);
+                removed = _subscriptions.Remove(subscription);
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
             }
 
-            if (!subscribedTags.Any()) {
+            if (removed && subscribedTags.Any() && !_isDisposed && !_disposedTokenSource.IsCancellationRequested) {
                 return;
             }
 
@@ -159,7 +169,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 try {
                     await OnTagsRemovedFromSubscription(subscription, subscribedTags, _disposedTokenSource.Token).ConfigureAwait(false);
                 }
-                catch { }
+                catch (OperationCanceledException) { }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfSnapshotSubscription);
+                }
             });
         }
 
