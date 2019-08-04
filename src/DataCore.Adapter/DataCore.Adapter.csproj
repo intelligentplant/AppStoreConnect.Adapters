@@ -10,8 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0-preview7.19362.9" Condition=" $(TargetFramework) == 'netstandard2.0' " />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
   </ItemGroup>

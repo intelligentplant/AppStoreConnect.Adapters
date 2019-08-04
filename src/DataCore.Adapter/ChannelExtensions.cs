@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -497,66 +498,70 @@ namespace DataCore.Adapter {
             }, cancellationToken);
         }
 
-#if NETSTANDARD2_1
 
-        /// <summary>
-        /// Creates an <see cref="IAsyncEnumerable{T}"/> using a <see cref="ChannelReader{T}"/>. 
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The channel type.
-        /// </typeparam>
-        /// <param name="channel">
-        ///   The channel reader.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="IAsyncEnumerable{T}"/> that returns values published to the channel.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this ChannelReader<T> channel, CancellationToken cancellationToken = default) {
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+//        /// <summary>
+//        /// Creates an <see cref="IAsyncEnumerable{T}"/> using a <see cref="ChannelReader{T}"/>. 
+//        /// </summary>
+//        /// <typeparam name="T">
+//        ///   The channel type.
+//        /// </typeparam>
+//        /// <param name="channel">
+//        ///   The channel reader.
+//        /// </param>
+//        /// <param name="cancellationToken">
+//        ///   The cancellation token for the operation.
+//        /// </param>
+//        /// <returns>
+//        ///   An <see cref="IAsyncEnumerable{T}"/> that returns values published to the channel.
+//        /// </returns>
+//        /// <exception cref="ArgumentNullException">
+//        ///   <paramref name="channel"/> is <see langword="null"/>.
+//        /// </exception>
+//        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(
+//            this ChannelReader<T> channel,
+//#if NETSTANDARD2_1
+//            [EnumeratorCancellation]
+//#endif
+//            CancellationToken cancellationToken = default) {
 
-            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (channel.TryRead(out var item)) {
-                    yield return item;
-                }
-            }
-        }
+//            if (channel == null) {
+//                throw new ArgumentNullException(nameof(channel));
+//            }
+
+//            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+//                if (channel.TryRead(out var item)) {
+//                    yield return item;
+//                }
+//            }
+//        }
 
 
-        /// <summary>
-        /// Creates an <see cref="IAsyncEnumerable{T}"/> using the reader for a <see cref="Channel{T}"/>. 
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The channel type.
-        /// </typeparam>
-        /// <param name="channel">
-        ///   The channel.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="IAsyncEnumerable{T}"/> that returns values published to the channel.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        public static IAsyncEnumerable<T> ToAsyncEnumerable<T>(this Channel<T> channel, CancellationToken cancellationToken = default) {
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+//        /// <summary>
+//        /// Creates an <see cref="IAsyncEnumerable{T}"/> using the reader for a <see cref="Channel{T}"/>. 
+//        /// </summary>
+//        /// <typeparam name="T">
+//        ///   The channel type.
+//        /// </typeparam>
+//        /// <param name="channel">
+//        ///   The channel.
+//        /// </param>
+//        /// <param name="cancellationToken">
+//        ///   The cancellation token for the operation.
+//        /// </param>
+//        /// <returns>
+//        ///   An <see cref="IAsyncEnumerable{T}"/> that returns values published to the channel.
+//        /// </returns>
+//        /// <exception cref="ArgumentNullException">
+//        ///   <paramref name="channel"/> is <see langword="null"/>.
+//        /// </exception>
+//        public static IAsyncEnumerable<T> ToAsyncEnumerable<T>(
+//            this Channel<T> channel, CancellationToken cancellationToken = default) {
+//            if (channel == null) {
+//                throw new ArgumentNullException(nameof(channel));
+//            }
 
-            return ToAsyncEnumerable(channel.Reader, cancellationToken);
-        }
-
-#endif
+//            return ToAsyncEnumerable(channel.Reader, cancellationToken);
+//        }
 
     }
 }

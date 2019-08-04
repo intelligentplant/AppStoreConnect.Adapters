@@ -10,12 +10,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Default <see cref="IAdapterFeaturesCollection"/> implementation.
     /// </summary>
-    public class AdapterFeaturesCollection: IAdapterFeaturesCollection, IDisposable
-#if NETSTANDARD2_1
-        ,
-        IAsyncDisposable
-#endif
-        {
+    public class AdapterFeaturesCollection: IAdapterFeaturesCollection, IAsyncDisposable {
 
         /// <summary>
         /// When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
@@ -260,43 +255,14 @@ namespace DataCore.Adapter {
             _features.Clear();
 
             foreach (var item in features) {
-#if NETSTANDARD2_1
                 if (item is IAsyncDisposable ad) {
                     await ad.DisposeAsync().ConfigureAwait(false);
-                    continue;
                 }
-#endif
-                if (item is IDisposable d) {
+                else if (item is IDisposable d) {
                     d.Dispose();
                 }
             }
         }
 
-
-        /// <summary>
-        /// Disposes of any features in the collection that implement 
-        /// <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>.
-        /// </summary>
-        public void Dispose() {
-            if (!_disposeFeatures) {
-                _features.Clear();
-                return;
-            }
-
-            var features = _features.Values.ToArray();
-            _features.Clear();
-
-            foreach (var item in features) {
-#if NETSTANDARD2_1
-                if (item is IAsyncDisposable ad) {
-                    ad.DisposeAsync().GetAwaiter().GetResult();
-                    continue;
-                }
-#endif
-                if (item is IDisposable d) {
-                    d.Dispose();
-                }
-            }
-        }
     }
 }

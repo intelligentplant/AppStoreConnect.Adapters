@@ -14,13 +14,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Base class that adapter implementations can inherit from.
     /// </summary>
-    public abstract class AdapterBase : IAdapter, IDisposable
-#if NETSTANDARD2_1
-        ,
-        IAsyncDisposable
-#endif
-
-        {
+    public abstract class AdapterBase : IAdapter, IAsyncDisposable {
 
         /// <summary>
         /// Indicates if the adapter has been disposed.
@@ -171,19 +165,13 @@ namespace DataCore.Adapter {
         }
 
 
-        /// <inheritdoc/>
-        void IDisposable.Dispose() {
-            DisposeAsync().GetAwaiter().GetResult();
-        }
-
-
         /// <summary>
         /// Disposes of the adapter.
         /// </summary>
         /// <returns>
         ///   A <see cref="ValueTask"/> that represents the dispose operation.
         /// </returns>
-        public async ValueTask DisposeAsync() {
+        async ValueTask IAsyncDisposable.DisposeAsync() {
             if (_isDisposed || _isDisposing) {
                 return;
             }
