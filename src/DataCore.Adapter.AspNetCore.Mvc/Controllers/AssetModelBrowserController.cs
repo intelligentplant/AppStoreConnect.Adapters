@@ -112,6 +112,59 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
+        /// Browses the asset model hierarchy. Up to <see cref="MaxNodesPerQuery"/> will be 
+        /// returned.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID to query.
+        /// </param>
+        /// <param name="request">
+        ///   The browse request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/browse")]
+        [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
+        public async Task<IActionResult> BrowseNodesPost(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowser))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            var resultChannel = feature.BrowseAssetModelNodes(_callContext, request, cancellationToken);
+
+            var result = new List<AssetModelNode>(MaxNodesPerQuery);
+
+            var itemsRead = 0;
+            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (resultChannel.TryRead(out var item) && item != null) {
+                    ++itemsRead;
+                    result.Add(item);
+
+                    if (itemsRead >= MaxNodesPerQuery) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                        break;
+                    }
+                }
+            }
+
+            return Ok(result); // 200
+        }
+
+
+        /// <summary>
         /// Gets a collection of nodes by ID. Up to <see cref="MaxNodesPerQuery"/> will be returned.
         /// </summary>
         /// <param name="adapterId">

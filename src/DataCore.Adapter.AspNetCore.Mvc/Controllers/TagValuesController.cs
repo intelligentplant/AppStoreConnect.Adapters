@@ -383,7 +383,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   Successful responses contain the aggregated function names that can be specified.
+        ///   Successful responses contain descriptors for the aggregated function names that can 
+        ///   be specified.
         /// </returns>
         /// <remarks>
         ///   Processed data queries are used to request aggregated values for tags. The functions 
@@ -393,7 +394,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
-        [ProducesResponseType(typeof(IEnumerable<string>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetSupportedAggregateFunctions(string adapterId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
