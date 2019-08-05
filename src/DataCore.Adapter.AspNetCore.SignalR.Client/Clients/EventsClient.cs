@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<EventMessage>(
                 "CreateEventMessageChannel",
                 adapterId,
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<EventMessage>(
                 "ReadEventMessagesForTimeRange",
                 adapterId,
@@ -55,7 +55,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<EventMessageWithCursorPosition>(
                 "ReadEventMessagesUsingCursor",
                 adapterId,
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<WriteEventMessageResult>(
                 "WriteEventMessages",
                 adapterId,

@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<TagValueAnnotation>(
                 "ReadAnnotation",
                 adapterId,
@@ -40,7 +40,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueAnnotationQueryResult>(
                 "ReadAnnotations",
                 adapterId,
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
                 "CreateAnnotation",
                 adapterId,
@@ -72,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
                 "UpdateAnnotation",
                 adapterId,
@@ -88,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
                 "DeleteAnnotation",
                 adapterId,

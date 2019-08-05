@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
                 adapterId,
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagIdentifier>(
                 "GetSnapshotTagValueChannelSubscriptions",
                 adapterId,
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(tags));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<int>(
                 "AddTagsToSnapshotTagValueChannel",
                 adapterId,
@@ -74,7 +74,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(tags));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<int>(
                 "RemoveTagsFromSnapshotTagValueChannel",
                 adapterId,
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "ReadSnapshotTagValues",
                 adapterId,
@@ -106,7 +106,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "ReadRawTagValues",
                 adapterId,
@@ -122,7 +122,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "ReadPlotTagValues",
                 adapterId,
@@ -138,7 +138,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "ReadInterpolatedTagValues",
                 adapterId,
@@ -154,7 +154,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "ReadTagValuesAtTimes",
                 adapterId,
@@ -169,7 +169,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<DataFunctionDescriptor>>(
                 "GetSupportedDataFunctions",
                 adapterId,
@@ -184,7 +184,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<ProcessedTagValueQueryResult>(
                 "ReadProcessedTagValues",
                 adapterId,
@@ -202,7 +202,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<WriteTagValueResult>(
                 "WriteSnapshotTagValues",
                 adapterId,
@@ -220,7 +220,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var connection = await _client.GetHubConnection(cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<WriteTagValueResult>(
                 "WriteHistoricalTagValues",
                 adapterId,
