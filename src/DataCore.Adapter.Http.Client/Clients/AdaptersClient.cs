@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 
-namespace DataCore.Adapter.Http.Clients {
+namespace DataCore.Adapter.Http.Client.Clients {
     public class AdaptersClient {
 
         private const string UrlPrefix = "api/data-core/v1.0/adapters";

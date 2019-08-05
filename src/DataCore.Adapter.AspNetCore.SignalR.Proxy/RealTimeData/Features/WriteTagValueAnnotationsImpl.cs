@@ -24,35 +24,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, CreateAnnotationRequest request, CancellationToken cancellationToken) {
-            var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
-                "CreateAnnotation",
-                AdapterId,
-                request,
-                cancellationToken
-            ).ConfigureAwait(false);
+            var client = GetClient();
+            return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, UpdateAnnotationRequest request, CancellationToken cancellationToken) {
-            var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
-                "UpdateAnnotation",
-                AdapterId,
-                request,
-                cancellationToken
-            ).ConfigureAwait(false);
+            var client = GetClient();
+            return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, DeleteAnnotationRequest request, CancellationToken cancellationToken) {
-            var connection = await GetHubConnection(cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<WriteTagValueAnnotationResult>(
-                "DeleteAnnotation",
-                AdapterId,
-                request,
-                cancellationToken
-            ).ConfigureAwait(false);
+            var client = GetClient();
+            return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
     }
 }

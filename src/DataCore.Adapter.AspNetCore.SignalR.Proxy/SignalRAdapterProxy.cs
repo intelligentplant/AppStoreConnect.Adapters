@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -59,9 +60,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         private readonly ExtensionFeatureFactory _extensionFeatureFactory;
 
         /// <summary>
-        /// The main hub connection.
+        /// The client used in standard adapter queries.
         /// </summary>
-        private HubConnection _connection;
+        private readonly Lazy<AdapterSignalRClient> _client;
 
         /// <summary>
         /// Additional hub connections created for extension features.
@@ -84,37 +85,24 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </param>
         public SignalRAdapterProxy(AdapterDescriptor descriptor, SignalRAdapterProxyOptions options, ILogger<SignalRAdapterProxy> logger) 
             : base(descriptor, logger) {
-            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
-            _connectionFactory = options?.ConnectionFactory ?? throw new ArgumentException("Connection factory is required.", nameof(options));
+            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _connectionFactory = options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = options?.ExtensionFeatureFactory;
+            _client = new Lazy<AdapterSignalRClient>(() => {
+                return new AdapterSignalRClient(_connectionFactory.Invoke(null), true);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
         /// <summary>
-        /// Gets or creates an active hub connection for use with standard adapter features.
+        /// Gets the strongly-typed SignalR client for the proxy. This client can be used to query 
+        /// standard adapter features (if supported by the remote adapter).
         /// </summary>
         /// <returns>
-        ///   The hub connection.
+        ///   An <see cref="AdapterSignalRClient"/> object.
         /// </returns>
-        /// <remarks>
-        ///   The connection lifetime is managed by the proxy.
-        /// </remarks>
-        public async Task<HubConnection> GetOrCreateHubConnection() {
-            HubConnection connection;
-
-            lock (_connection) {
-                if (_connection == null) {
-                    _connection = _connectionFactory.Invoke(null);
-                }
-
-                connection = _connection;
-            }
-            
-            if (connection.State == HubConnectionState.Disconnected) {
-                await connection.StartAsync(StopToken).ConfigureAwait(false);
-            }
-
-            return connection;
+        public AdapterSignalRClient GetClient() {
+            return _client.Value;
         }
 
 
@@ -125,13 +113,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   The key for the extension hub. This cannot be <see langword="null"/> and will be 
         ///   vendor-specific.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   The hub connection.
         /// </returns>
         /// <remarks>
         ///   The connection lifetime is managed by the proxy.
         /// </remarks>
-        public Task<HubConnection> GetOrCreateExtensionHubConnection(string key) {
+        public Task<HubConnection> GetOrCreateExtensionHubConnection(string key, CancellationToken cancellationToken = default) {
             if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
@@ -140,7 +131,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 var conn = _connectionFactory.Invoke(k);
                 await conn.StartAsync(StopToken).ConfigureAwait(false);
                 return conn;
-            }), LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+            }), LazyThreadSafetyMode.ExecutionAndPublication)).Value.WithCancellation(cancellationToken);
         }
 
 
@@ -154,8 +145,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   A task that will perform the initialisation.
         /// </returns>
         private async Task Init(CancellationToken cancellationToken = default) {
-            var connection = await GetOrCreateHubConnection().WithCancellation(cancellationToken).ConfigureAwait(false);
-            var descriptor = await connection.InvokeAsync<AdapterDescriptorExtended>("GetAdapter", _remoteAdapterId, cancellationToken).ConfigureAwait(false);
+            var client = GetClient();
+            var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false);
 
             RemoteDescriptor = new AdapterDescriptor(
                 descriptor.Id,
@@ -195,14 +186,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
         /// <inheritdoc/>
         protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
-            if (_connection != null) {
-                try {
-                    await _connection.StopAsync(cancellationToken).ConfigureAwait(false);
+            if (_client.IsValueCreated) {
+                if (disposing) {
+                    await _client.Value.DisposeAsync().ConfigureAwait(false);
                 }
-                finally {
-                    if (disposing) {
-                        await _connection.DisposeAsync().ConfigureAwait(false);
-                    }
+                else {
+                    var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
+                    await connection.StopAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
         }

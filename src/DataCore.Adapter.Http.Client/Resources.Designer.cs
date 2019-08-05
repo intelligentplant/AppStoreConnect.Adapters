@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
+namespace DataCore.Adapter.Http.Client {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Http.Client.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,38 +61,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter ID is required..
+        ///   Looks up a localized string similar to A value is required for this parameter..
         /// </summary>
-        internal static string Error_AdapterIdIsRequired {
+        internal static string Error_ParameterIsRequired {
             get {
-                return ResourceManager.GetString("Error_AdapterIdIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connection factory is required..
-        /// </summary>
-        internal static string Error_ConnectionFactoryIsRequired {
-            get {
-                return ResourceManager.GetString("Error_ConnectionFactoryIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
-        /// </summary>
-        internal static string Log_ExtensionFeatureRegistrationError {
-            get {
-                return ResourceManager.GetString("Log_ExtensionFeatureRegistrationError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
-        /// </summary>
-        internal static string Log_NoExtensionImplementationAvailable {
-            get {
-                return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
+                return ResourceManager.GetString("Error_ParameterIsRequired", resourceCulture);
             }
         }
     }

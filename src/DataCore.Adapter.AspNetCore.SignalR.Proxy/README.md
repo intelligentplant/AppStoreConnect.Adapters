@@ -6,6 +6,8 @@ Proxy adapter that connects to a remote adapter via ASP.NET Core SignalR.
 # Creating a Proxy Instance
 
 ```csharp
+var descriptor = new AdapterDescriptor("some-id", "some-name");
+
 var options = new SignalRAdapterProxyOptions() {
     AdapterId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
@@ -19,7 +21,8 @@ var options = new SignalRAdapterProxyOptions() {
     }
 };
 
-var proxy = await SignalRAdapterProxy.Create(options, cancellationToken);
+var proxy = new SignalRAdapterProxy(descriptor, options);
+await proxy.StartAsync(cancellationToken);
 ```
 
 

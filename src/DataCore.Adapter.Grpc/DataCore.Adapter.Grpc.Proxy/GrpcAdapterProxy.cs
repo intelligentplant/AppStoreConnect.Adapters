@@ -74,6 +74,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </summary>
         /// <param name="descriptor">
         ///   The descriptor for the local proxy.
+        /// </param>
         /// <param name="channel">
         ///   The channel.
         /// </param>

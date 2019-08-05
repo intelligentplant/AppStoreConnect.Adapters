@@ -6,19 +6,23 @@ Proxy adapter that connects to a remote adapter via gRPC.
 # Creating a Proxy Instance
 
 ```csharp
+var descriptor = new AdapterDescriptor("some-id", "some-name");
+
 var options = new GrpcAdapterProxyOptions() {
 	AdapterId = "{SOME_ADAPTER_ID}"
 };
 
 // OPTION 1: Use Grpc.Core channel
 var channel = new Grpc.Core.Channel("localhost:5000", Grpc.Core.ChannelCredentials.Insecure);
-var proxy = await GrpcAdapterProxy.Create(channel, options, cancellationToken);
+var proxy = new GrpcAdapterProxy(descriptor, channel, options);
+await proxy.StartAsync(cancellationToken);
 
-// OPTION 2: Use HttpClient (.NET Core 3.0+)
+// OPTION 2: Use HttpClient (requires .NET Core 3.0 due to lack of HTTP/2 support in earlier versions)
 var httpClient = new System.Net.HttpClient() {
     BaseAddress = new Uri("http://localhost:5000")
 };
-var proxy = await GrpcAdapterProxy.Create(httpClient, options, cancellationToken);
+var proxy = new GrpcAdapterProxy(descriptor, httpClient, options);
+await proxy.StartAsync(cancellationToken);
 ```
 
 

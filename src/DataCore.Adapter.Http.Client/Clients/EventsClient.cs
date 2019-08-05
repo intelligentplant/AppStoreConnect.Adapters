@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Models;
 
-namespace DataCore.Adapter.Http.Clients {
+namespace DataCore.Adapter.Http.Client.Clients {
     public class EventsClient {
 
         private const string UrlPrefix = "api/data-core/v1.0/events";
@@ -24,9 +24,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-time-range";
 
@@ -41,9 +39,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-cursor";
 

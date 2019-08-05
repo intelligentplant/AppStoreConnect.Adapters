@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
@@ -99,17 +100,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <summary>
-        /// Gets a SignalR hub connection for the hub route.
+        /// Gets the <see cref="AdapterSignalRClient"/> used to query standard adapter features.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
-        ///   An active hub connection object. If an existing connection for the hub already exists, 
-        ///   the existing connection will be returned.
+        ///   A <see cref="AdapterSignalRClient"/> object.
         /// </returns>
-        protected internal async Task<HubConnection> GetHubConnection(CancellationToken cancellationToken = default) {
-            return await _proxy.GetOrCreateHubConnection().WithCancellation(cancellationToken).ConfigureAwait(false);
+        protected internal AdapterSignalRClient GetClient() {
+            return _proxy.GetClient();
         }
 
     }

@@ -1,4 +1,4 @@
-﻿# DataCore.Adapter.HttpClient
+﻿# DataCore.Adapter.Http.Client
 
 Client for querying remote adapters via HTTP.
 

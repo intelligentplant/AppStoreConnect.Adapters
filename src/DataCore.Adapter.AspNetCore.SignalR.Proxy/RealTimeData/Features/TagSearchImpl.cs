@@ -27,13 +27,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await GetHubConnection(ct).ConfigureAwait(false);
-                var hubChannel = await connection.StreamAsChannelAsync<TagDefinition>(
-                    "FindTags",
-                    AdapterId,
-                    request,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                var client = GetClient();
+                var hubChannel = await client.TagSearch.FindTagsAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
             }, true, cancellationToken);
 
@@ -45,13 +40,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await GetHubConnection(ct).ConfigureAwait(false);
-                var hubChannel = await connection.StreamAsChannelAsync<TagDefinition>(
-                    "GetTags",
-                    AdapterId,
-                    request,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                var client = GetClient();
+                var hubChannel = await client.TagSearch.GetTagsAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
             }, true, cancellationToken);
 

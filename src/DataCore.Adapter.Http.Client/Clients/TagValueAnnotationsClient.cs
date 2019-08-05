@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
-namespace DataCore.Adapter.Http.Clients {
+namespace DataCore.Adapter.Http.Client.Clients {
     public class TagValueAnnotationsClient {
 
         private const string UrlPrefix = "api/data-core/v1.0/tag-annotations";
@@ -23,9 +23,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
@@ -63,9 +61,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(tagId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(tagId));
             }
-            if (annotation == null) {
-                throw new ArgumentNullException(nameof(annotation));
-            }
+            _client.ValidateObject(annotation);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(tagId)}/create";
 
@@ -86,9 +82,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(annotationId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(annotationId));
             }
-            if (annotation == null) {
-                throw new ArgumentNullException(nameof(annotation));
-            }
+            _client.ValidateObject(annotation);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(tagId)}/{Uri.EscapeDataString(annotationId)}";
 

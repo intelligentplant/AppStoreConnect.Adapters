@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
 
-namespace DataCore.Adapter.Http.Clients {
+namespace DataCore.Adapter.Http.Client.Clients {
     public class TagSearchClient {
 
         private const string UrlPrefix = "api/data-core/v1.0/tags";
@@ -23,9 +23,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (request != null) {
-                throw new ArgumentNullException(nameof(request));
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/find";
             var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
@@ -39,9 +37,7 @@ namespace DataCore.Adapter.Http.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (request != null) {
-                throw new ArgumentNullException(nameof(request));
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/get-by-id";
             var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);

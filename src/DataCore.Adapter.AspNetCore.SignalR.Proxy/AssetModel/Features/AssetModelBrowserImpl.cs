@@ -27,13 +27,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await GetHubConnection(ct).ConfigureAwait(false);
-                var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
-                    "BrowseAssetModelNodes",
-                    AdapterId,
-                    request,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                var client = GetClient();
+                var hubChannel = await client.AssetModel.BrowseAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
             }, true, cancellationToken);
 
@@ -45,13 +40,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await GetHubConnection(ct).ConfigureAwait(false);
-                var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
-                    "GetAssetModelNodes",
-                    AdapterId,
-                    request,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                var client = GetClient();
+                var hubChannel = await client.AssetModel.GetAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
             }, true, cancellationToken);
 
@@ -63,13 +53,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var connection = await GetHubConnection(ct).ConfigureAwait(false);
-                var hubChannel = await connection.StreamAsChannelAsync<AssetModelNode>(
-                    "FindAssetModelNodes",
-                    AdapterId,
-                    request,
-                    cancellationToken
-                ).ConfigureAwait(false);
+                var client = GetClient();
+                var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
             }, true, cancellationToken);
 
