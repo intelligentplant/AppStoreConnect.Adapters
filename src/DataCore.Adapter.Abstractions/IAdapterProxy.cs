@@ -13,7 +13,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets the descriptor for the remote adapter.
         /// </summary>
-        AdapterDescriptor RemoteDescriptor { get; }
+        AdapterDescriptorExtended RemoteDescriptor { get; }
 
     }
 

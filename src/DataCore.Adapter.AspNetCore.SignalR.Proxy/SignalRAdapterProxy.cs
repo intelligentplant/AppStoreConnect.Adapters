@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private AdapterDescriptor _remoteDescriptor;
+        private AdapterDescriptorExtended _remoteDescriptor;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteDescriptor"/>.
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         private readonly object _remoteDescriptorLock = new object();
 
         /// <inheritdoc/>
-        public AdapterDescriptor RemoteDescriptor {
+        public AdapterDescriptorExtended RemoteDescriptor {
             get {
                 lock (_remoteDescriptorLock) {
                     return _remoteDescriptor;
@@ -148,11 +148,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             var client = GetClient();
             var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false);
 
-            RemoteDescriptor = new AdapterDescriptor(
-                descriptor.Id,
-                descriptor.Name,
-                descriptor.Description
-            );
+            RemoteDescriptor = descriptor;
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 

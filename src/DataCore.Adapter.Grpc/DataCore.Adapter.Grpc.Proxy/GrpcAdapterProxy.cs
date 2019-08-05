@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private Adapter.Common.Models.AdapterDescriptor _remoteDescriptor;
+        private Adapter.Common.Models.AdapterDescriptorExtended _remoteDescriptor;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteDescriptor"/>.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly object _remoteDescriptorLock = new object();
 
         /// <inheritdoc/>
-        public Adapter.Common.Models.AdapterDescriptor RemoteDescriptor {
+        public Adapter.Common.Models.AdapterDescriptorExtended RemoteDescriptor {
             get {
                 lock (_remoteDescriptorLock) {
                     return _remoteDescriptor;
@@ -176,10 +176,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 cancellationToken: cancellationToken
             ).ResponseAsync.ConfigureAwait(false);
 
-            RemoteDescriptor = new Adapter.Common.Models.AdapterDescriptor(
+            RemoteDescriptor = new Adapter.Common.Models.AdapterDescriptorExtended(
                 response.Adapter.AdapterDescriptor.Id,
                 response.Adapter.AdapterDescriptor.Name,
-                response.Adapter.AdapterDescriptor.Description
+                response.Adapter.AdapterDescriptor.Description,
+                response.Adapter.Features,
+                response.Adapter.Extensions,
+                response.Adapter.Properties
             );
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, response.Adapter.Features);
