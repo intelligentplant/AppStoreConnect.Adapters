@@ -115,9 +115,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <inheritdoc/>
         public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, CancellationToken cancellationToken) {
             var subscription = new Subscription(this);
+            if (subscription == null) {
+                throw new InvalidOperationException();
+            }
             OnSubscriptionCreated(subscription);
 
             return Task.FromResult<ISnapshotTagValueSubscription>(subscription);
+        }
+
+
+        /// <summary>
+        /// Creates a new subscription.
+        /// </summary>
+        /// <param name="subscriptionManager">
+        ///   The subscription manager that is creating the subscription.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="Subscription"/> object.
+        /// </returns>
+        /// <remarks>
+        ///   Override this method if you need to customise some features of the snapshot tag 
+        ///   value subscription in a subclass (e.g. your adapter supports wildcards in tag names 
+        ///   when subscribing, and you need to add custom logic to the 
+        ///   <see cref="Subscription.IsSubscribed(TagValueQueryResult)"/> method to handle this).
+        /// </remarks>
+        protected virtual Subscription CreateSubscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
+            return new Subscription(subscriptionManager);
         }
 
 
@@ -147,7 +170,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="subscribedTags">
         ///   The tags that the subscription was subscribed to.
         /// </param>
-        private void OnSubscriptionDisposed(Subscription subscription, IEnumerable<string> subscribedTags) {
+        private void OnSubscriptionDisposed(Subscription subscription, IEnumerable<TagIdentifier> subscribedTags) {
             if (_isDisposed) {
                 return;
             }
@@ -250,7 +273,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="subscription">
         ///   The subscription that was modified.
         /// </param>
-        /// <param name="tagIds">
+        /// <param name="tags">
         ///   The tags that were removed from the subscription.
         /// </param>
         /// <param name="cancellationToken">
@@ -259,25 +282,25 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A task that will unregister the tag subscriptions.
         /// </returns>
-        private async Task OnTagsRemovedFromSubscription(Subscription subscription, IEnumerable<string> tagIds, CancellationToken cancellationToken) {
-            var length = tagIds.Count();
+        private async Task OnTagsRemovedFromSubscription(Subscription subscription, IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
+            var length = tags.Count();
             var tagsToRemove = new List<string>(length);
 
-            foreach (var tagId in tagIds) {
-                if (string.IsNullOrWhiteSpace(tagId)) {
+            foreach (var tag in tags) {
+                if (string.IsNullOrWhiteSpace(tag.Id)) {
                     continue;
                 }
 
                 _subscriptionsLock.EnterWriteLock();
                 try {
-                    if (!_subscriptionsByTagId.TryGetValue(tagId, out var subscribersForTag)) {
+                    if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribersForTag)) {
                         continue;
                     }
 
                     subscribersForTag.Remove(subscription);
                     if (subscribersForTag.Count == 0) {
-                        _subscriptionsByTagId.Remove(tagId);
-                        tagsToRemove.Add(tagId);
+                        _subscriptionsByTagId.Remove(tag.Id);
+                        tagsToRemove.Add(tag.Id);
                     }
                 }
                 finally {
@@ -358,14 +381,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                         _subscriptionsLock.EnterReadLock();
                         try {
-                            if (!_subscriptionsByTagId.TryGetValue(value.TagId, out var subs) || subs.Count == 0) {
-                                continue;
-                            }
-
-                            subscribers = subs.ToArray();
+                            subscribers = _subscriptions.Where(x => x.IsSubscribed(value)).ToArray();
                         }
                         finally {
                             _subscriptionsLock.ExitReadLock();
+                        }
+
+                        if (subscribers.Length == 0) {
+                            continue;
                         }
 
                         await Task.WhenAll(subscribers.Select(x => x.OnValueChanged(value))).ConfigureAwait(false);
@@ -497,15 +520,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Equality comparer for <see cref="TagIdentifier"/> that tests for equality based solely 
-        /// on the <see cref="TagIdentifier.Id"/> property.
+        /// Equality comparer for <see cref="TagIdentifier"/> objects.
         /// </summary>
-        private class TagIdentifierComparer : IEqualityComparer<TagIdentifier> {
+        public class TagIdentifierComparer : IEqualityComparer<TagIdentifier> {
 
             /// <summary>
-            /// Default comparer instance.
+            /// <see cref="TagIdentifierComparer"/> that tests for equality based solely on the 
+            /// <see cref="TagIdentifier.Id"/> property.
             /// </summary>
-            public static TagIdentifierComparer Default { get; } = new TagIdentifierComparer();
+            public static TagIdentifierComparer CompareById { get; } = new TagIdentifierComparer();
 
 
             /// <summary>
@@ -555,7 +578,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// <see cref="ISnapshotTagValueSubscription"/> implementation.
         /// </summary>
-        private class Subscription : ISnapshotTagValueSubscription {
+        public class Subscription : ISnapshotTagValueSubscription {
 
             /// <summary>
             /// Flags if the object has been disposed.
@@ -585,8 +608,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <inheritdoc/>
             public int Count {
                 get {
-                    lock (_subscribedTags) {
+                    _subscribedTagsLock.EnterReadLock();
+                    try {
                         return _subscribedTags.Count;
+                    }
+                    finally {
+                        _subscribedTagsLock.ExitReadLock();
                     }
                 }
             }
@@ -594,7 +621,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <summary>
             /// The tags that have been added to the subscription.
             /// </summary>
-            private HashSet<TagIdentifier> _subscribedTags { get; } = new HashSet<TagIdentifier>(TagIdentifierComparer.Default);
+            private HashSet<TagIdentifier> _subscribedTags = new HashSet<TagIdentifier>(TagIdentifierComparer.CompareById);
+
+            /// <summary>
+            /// Subscribed tags indexed by ID.
+            /// </summary>
+            private ILookup<string, TagIdentifier> _subscribedTagsById;
+
+            /// <summary>
+            /// Subscribed tags indexed by name.
+            /// </summary>
+            private ILookup<string, TagIdentifier> _subscribedTagsByName;
+
+            /// <summary>
+            /// Lock for accessing field related to tag subscriptions.
+            /// </summary>
+            private readonly ReaderWriterLockSlim _subscribedTagsLock = new ReaderWriterLockSlim();
 
 
             /// <summary>
@@ -603,9 +645,29 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <param name="subscriptionManager">
             ///   The subscription manager.
             /// </param>
-            internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
-                _subscriptionManager = subscriptionManager;
+            /// <exception cref="ArgumentNullException">
+            ///   <paramref name="subscriptionManager"/> is <see langword="null"/>.
+            /// </exception>
+            protected internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
+                _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
                 _channel = _subscriptionManager.CreateChannel(5000, BoundedChannelFullMode.DropOldest);
+            }
+
+
+            /// <summary>
+            /// Gets all tags that the subscription is currently subscribed to.
+            /// </summary>
+            /// <returns>
+            ///   The subscribed tag identifiers.
+            /// </returns>
+            protected internal IEnumerable<TagIdentifier> GetTags() {
+                _subscribedTagsLock.EnterReadLock();
+                try {
+                    return _subscribedTags.ToArray();
+                }
+                finally {
+                    _subscribedTagsLock.ExitReadLock();
+                }
             }
 
 
@@ -614,7 +676,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    foreach (var item in _subscribedTags.ToArray()) {
+                    foreach (var item in GetTags()) {
                         await ch.WriteAsync(item, ct).ConfigureAwait(false);
                     }
                 });
@@ -650,15 +712,39 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 TagIdentifier[] newTags;
-                lock (_subscribedTags) {
+
+                _subscribedTagsLock.EnterWriteLock();
+                try {
                     newTags = tagIdentifiers.Where(x => _subscribedTags.Add(x)).ToArray();
+                    if (newTags.Length > 0) {
+                        RebuildLookups();
+                    }
+                }
+                finally {
+                    _subscribedTagsLock.ExitWriteLock();
                 }
 
                 if (newTags.Length > 0) {
+                    OnTagsAddedToSubscription(newTags);
                     await _subscriptionManager.OnTagsAddedToSubscription(this, newTags, cancellationToken).ConfigureAwait(false);
                 }
 
                 return Count;
+            }
+
+
+            /// <summary>
+            /// Called when tags are added to the subscription.
+            /// </summary>
+            /// <param name="tags">
+            ///   The tags that were added.
+            /// </param>
+            /// <remarks>
+            ///   Override this method to perform custom logic in a subclass when tags are added 
+            ///   to a subscription.
+            /// </remarks>
+            protected virtual void OnTagsAddedToSubscription(IEnumerable<TagIdentifier> tags) {
+                // Do nothing.
             }
 
 
@@ -673,29 +759,56 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     return Count;
                 }
 
-                var removed = new List<string>(tagNamesOrIds.Count());
+                var removed = new List<TagIdentifier>(tagNamesOrIds.Count());
 
-                lock (_subscribedTags) {
+                _subscribedTagsLock.EnterWriteLock();
+                try {
                     foreach (var tag in tagNamesOrIds) {
                         // Try and remove by tag ID.
-                        if (_subscribedTags.Remove(new TagIdentifier(tag, tag))) {
-                            removed.Add(tag);
+                        var existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Id, tag));
+                        if (existing != null) {
+                            _subscribedTags.Remove(existing);
+                            removed.Add(existing);
                             continue;
                         }
 
-                        var existingTagByName = _subscribedTags.FirstOrDefault(x => string.Equals(x.Name, tag, StringComparison.OrdinalIgnoreCase));
-                        if (existingTagByName != null) {
-                            _subscribedTags.Remove(existingTagByName);
-                            removed.Add(existingTagByName.Id);
+                        // Now try and remove by tag name.
+                        existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Name, tag, StringComparison.OrdinalIgnoreCase));
+                        if (existing != null) {
+                            _subscribedTags.Remove(existing);
+                            removed.Add(existing);
                         }
                     }
+
+                    if (removed.Count > 0) {
+                        RebuildLookups();
+                    }
+                }
+                finally {
+                    _subscribedTagsLock.ExitWriteLock();
                 }
 
                 if (removed.Count > 0) {
+                    OnTagsRemovedFromSubscription(removed);
                     await _subscriptionManager.OnTagsRemovedFromSubscription(this, removed, cancellationToken).ConfigureAwait(false);
                 }
 
                 return Count;
+            }
+
+
+            /// <summary>
+            /// Called when tags are removed from the subscription.
+            /// </summary>
+            /// <param name="tags">
+            ///   The tags that were removed.
+            /// </param>
+            /// <remarks>
+            ///   Override this method to perform custom logic in a subclass when tags are added 
+            ///   to a subscription.
+            /// </remarks>
+            protected virtual void OnTagsRemovedFromSubscription(IEnumerable<TagIdentifier> tags) {
+                // Do nothing.
             }
 
 
@@ -706,7 +819,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             ///   The updated value.
             /// </param>
             internal async Task OnValueChanged(TagValueQueryResult value) {
-                if (_isDisposed || _disposedTokenSource.IsCancellationRequested || _channel.Reader.Completion.IsCompleted) {
+                if (_isDisposed ||
+                    _disposedTokenSource.IsCancellationRequested ||
+                    _channel.Reader.Completion.IsCompleted) {
                     return;
                 }
 
@@ -715,9 +830,43 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <summary>
+            /// Rebuilds the subscribed tags lookups. Assumes that a write lock has already been 
+            /// obtained from <see cref="_subscribedTagsLock"/>.
+            /// </summary>
+            private void RebuildLookups() {
+                _subscribedTagsById = _subscribedTags.ToLookup(x => x.Id);
+                _subscribedTagsByName = _subscribedTags.ToLookup(x => x.Name);
+            }
+
+
+            /// <summary>
+            /// Tests if the subscription object holds a subscription for the specified tag value.
+            /// </summary>
+            /// <param name="value">
+            ///   The tag value.
+            /// </param>
+            /// <returns>
+            ///   <see langword="true"/> if a subscription is held for the tag value.
+            /// </returns>
+            protected internal virtual bool IsSubscribed(TagValueQueryResult value) {
+                _subscribedTagsLock.EnterReadLock();
+                try {
+                    return (_subscribedTagsById?.Contains(value.TagId) ?? false) ||
+                           (_subscribedTagsByName?.Contains(value.TagName) ?? false);
+                }
+                finally {
+                    _subscribedTagsLock.ExitReadLock();
+                }
+            }
+
+
+            /// <summary>
             /// Disposes of the subscription.
             /// </summary>
-            public void Dispose() {
+            /// <param name="disposing">
+            ///   Indicates if the subscription is being disposed or finalized.
+            /// </param>
+            protected virtual void Dispose(bool disposing) {
                 if (_isDisposed) {
                     return;
                 }
@@ -725,11 +874,31 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 _channel.Writer.TryComplete();
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
-                _subscriptionManager.OnSubscriptionDisposed(this, _subscribedTags.Select(x => x.Id).ToArray());
+                _subscriptionManager.OnSubscriptionDisposed(this, _subscribedTags.ToArray());
+                _subscribedTagsLock.Dispose();
                 _subscribedTags.Clear();
+
                 _isDisposed = true;
+            }
+
+
+            /// <summary>
+            /// Disposes of the subscription.
+            /// </summary>
+            public void Dispose() {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+
+            /// <summary>
+            /// Finalizer.
+            /// </summary>
+            ~Subscription() {
+                Dispose(false);
             }
         }
 
     }
+
 }
