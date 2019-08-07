@@ -1,10 +1,10 @@
 <Project>
   
-  <!-- Recursively import the Directory.Build.props file from the parent folder if it exists. -->
-  <!--<PropertyGroup>
-    <ParentProject>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))</ParentProject>
+  <!-- Recursively import the Directory.Build.targets file from the parent folder if it exists. -->
+  <PropertyGroup>
+    <ParentProject>$([MSBuild]::GetPathOfFileAbove('$(MSBuildThisFile)', '$(MSBuildThisFileDirectory)../'))</ParentProject>
   </PropertyGroup>
-  <Import Project="$(ParentProject)" Condition=" '$(ParentProject)' != '' " />--> 
+  <Import Project="$(ParentProject)" Condition=" '$(ParentProject)' != '' " /> 
 
   <!-- Source link settings -->
   <PropertyGroup>
