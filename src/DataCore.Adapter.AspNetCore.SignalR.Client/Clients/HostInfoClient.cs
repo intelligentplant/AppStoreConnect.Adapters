@@ -34,7 +34,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
 
         /// <summary>
-        /// Request information about the remote adapter host.
+        /// Requests information about the remote adapter host.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
