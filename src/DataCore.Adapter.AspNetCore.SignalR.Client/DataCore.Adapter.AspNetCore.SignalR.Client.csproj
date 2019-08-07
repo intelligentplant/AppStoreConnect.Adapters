@@ -13,7 +13,7 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <!-- IAsyncDisposable support for .NET Standard 2.0 -->
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0-preview7.19362.9" Condition=" $(TargetFramework) == 'netstandard2.0' " />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0-preview7.19362.9" />
   </ItemGroup>
 
   <ItemGroup>
