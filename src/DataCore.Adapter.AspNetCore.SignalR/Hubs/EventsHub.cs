@@ -59,8 +59,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="active">
-        ///   A flag indicating if an active or passive subscription should be created.
+        /// <param name="subscriptionType">
+        ///   Specifies if an active or passive subscription should be created.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -68,9 +68,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, bool active, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = await GetOrAddEventMessageSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, active, cancellationToken).ConfigureAwait(false);
+            var subscription = await GetOrAddEventMessageSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, subscriptionType, cancellationToken).ConfigureAwait(false);
             return subscription.Reader;
         }
 
@@ -87,8 +87,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="feature">
         ///   The event message push feature for the adapter.
         /// </param>
-        /// <param name="active">
-        ///   A flag indicating if an active or passive subscription should be created.
+        /// <param name="subscriptionType">
+        ///   Specifies if an active or passive subscription should be created.
         /// </param>
         /// <param name="cancellationToken">
         ///   A cancellation token that will fire when the subscription is no longer required.
@@ -99,14 +99,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="InvalidOperationException">
         ///   <paramref name="adapter"/> does not support the <see cref="IEventMessagePush"/> feature.
         /// </exception>
-        private async Task<IEventMessageSubscription> GetOrAddEventMessageSubscription(IAdapterCallContext callContext, IAdapter adapter, IEventMessagePush feature, bool active, CancellationToken cancellationToken) {
+        private async Task<IEventMessageSubscription> GetOrAddEventMessageSubscription(IAdapterCallContext callContext, IAdapter adapter, IEventMessagePush feature, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             var subscription = GetEventMessageSubscription(adapter);
             if (subscription != null) {
                 return subscription;
             }
 
             var subscriptionsForConnection = Context.Items[typeof(IEventMessageSubscription)] as List<EventMessageSubscription>;
-            subscription = await feature.Subscribe(callContext, active, cancellationToken).ConfigureAwait(false);
+            subscription = await feature.Subscribe(callContext, subscriptionType, cancellationToken).ConfigureAwait(false);
 
             EventMessageSubscription result;
             lock (subscriptionsForConnection) {

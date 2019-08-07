@@ -23,7 +23,7 @@ service EventsService {
 
 message CreateEventPushChannelRequest {
     string adapter_id = 1;
-    bool active = 2;
+    EventSubscriptionType subscription_type = 2;
 }
 
 
@@ -57,6 +57,12 @@ message EventMessage {
 message EventMessageWithCursorPosition {
     string cursor_position = 1;
     EventMessage event_message = 2;
+}
+
+
+enum EventSubscriptionType {
+    EVENT_SUBSCRIPTION_TYPE_ACTIVE = 0;
+    EVENT_SUBSCRIPTION_TYPE_PASSIVE = 2;
 }
 
 

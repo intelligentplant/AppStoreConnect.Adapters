@@ -26,11 +26,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public EventMessagePushImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
+        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             var result = new EventMessageSubscription(
                 AdapterId,
                 GetClient(),
-                active
+                subscriptionType
             );
             result.Start();
             return Task.FromResult<IEventMessageSubscription>(result);
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// <summary>
             /// Flags if the subscription is active or passive.
             /// </summary>
-            private readonly bool _activeSubscription;
+            private readonly EventMessageSubscriptionType _subscriptionType;
 
             /// <inheritdoc />
             public ChannelReader<EventMessage> Reader { get { return _channel; } }
@@ -80,13 +80,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// <param name="client">
             ///   The adapter SignalR client.
             /// </param>
-            /// <param name="activeSubscription">
+            /// <param name="subscriptionType">
             ///   Flags if the subscription is active or passive.
             /// </param>
-            public EventMessageSubscription(string adapterId, AdapterSignalRClient client , bool activeSubscription) {
+            public EventMessageSubscription(string adapterId, AdapterSignalRClient client, EventMessageSubscriptionType subscriptionType) {
                 _adapterId = adapterId;
                 _client = client;
-                _activeSubscription = activeSubscription;
+                _subscriptionType = subscriptionType;
             }
 
             /// <summary>
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// </summary>
             public void Start() {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_adapterId, _activeSubscription, ct).ConfigureAwait(false);
+                    var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_adapterId, _subscriptionType, ct).ConfigureAwait(false);
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
                 }, true, _shutdownTokenSource.Token);
             }

@@ -27,12 +27,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(EventsServiceImpl)}:{adapter.Adapter.Descriptor.Id}:{request.Active}".ToUpperInvariant();
+            var key = $"{_adapterCallContext.ConnectionId}:{nameof(EventsServiceImpl)}:{adapter.Adapter.Descriptor.Id}:{request.SubscriptionType}".ToUpperInvariant();
             if (s_subscriptions.TryGetValue(key, out var _)) {
                 throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateEventSubscriptionAlreadyExists, adapterId)));
             }
 
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.Active, cancellationToken).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? Events.Models.EventMessageSubscriptionType.Active : Events.Models.EventMessageSubscriptionType.Passive, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
                     while (!cancellationToken.IsCancellationRequested) {

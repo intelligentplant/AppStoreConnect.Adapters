@@ -12,8 +12,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
         public EventMessagePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
-        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
-            var result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), active);
+        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, Adapter.Events.Models.EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
+            var result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), subscriptionType);
             result.Start(context);
             return Task.FromResult<IEventMessageSubscription>(result);
         }
@@ -34,10 +34,10 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             public System.Threading.Channels.ChannelReader<Adapter.Events.Models.EventMessage> Reader { get { return _channel; } }
 
 
-            public EventMessageSubscription(EventMessagePushImpl feature, EventsService.EventsServiceClient client, bool activeSubscription) {
+            public EventMessageSubscription(EventMessagePushImpl feature, EventsService.EventsServiceClient client, Adapter.Events.Models.EventMessageSubscriptionType subscriptionType) {
                 _feature = feature;
                 _client = client;
-                _activeSubscription = activeSubscription;
+                _activeSubscription = subscriptionType == Adapter.Events.Models.EventMessageSubscriptionType.Active;
             }
 
 
@@ -45,7 +45,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
                         AdapterId = _feature.AdapterId,
-                        Active = _activeSubscription
+                        SubscriptionType = _activeSubscription 
+                            ? EventSubscriptionType.Active 
+                            : EventSubscriptionType.Passive
                     }, _feature.GetCallOptions(context, ct));
 
                     try {

@@ -86,8 +86,8 @@ namespace DataCore.Adapter.Events.Utilities {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, bool active, CancellationToken cancellationToken) {
-            var subscription = new Subscription(this, active);
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
+            var subscription = new Subscription(this, subscriptionType);
 
             bool added;
             lock (_subscriptions) {
@@ -318,17 +318,17 @@ namespace DataCore.Adapter.Events.Utilities {
             /// <param name="subscriptionManager">
             ///   The subscription manager that the subscription is attached to.
             /// </param>
-            /// <param name="active">
+            /// <param name="subscriptionType">
             ///   Indicates if the subscription is an active or passive event listener.
             /// </param>
-            internal Subscription(EventMessageSubscriptionManager subscriptionManager, bool active) {
+            internal Subscription(EventMessageSubscriptionManager subscriptionManager, EventMessageSubscriptionType subscriptionType) {
                 _subscriptionManager = subscriptionManager;
                 // If this is a passive subscription, we do not need to guarantee delivery of the message.
-                _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(active 
+                _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(subscriptionType == EventMessageSubscriptionType.Active 
                     ? BoundedChannelFullMode.Wait 
                     : BoundedChannelFullMode.DropWrite
                 );
-                IsActive = active;
+                IsActive = subscriptionType == EventMessageSubscriptionType.Active;
             }
 
 
