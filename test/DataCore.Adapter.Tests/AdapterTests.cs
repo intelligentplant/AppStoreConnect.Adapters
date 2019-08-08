@@ -31,7 +31,14 @@ namespace DataCore.Adapter.Tests {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
                 using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), CancellationToken.None).ConfigureAwait(false)) {
-                    var subscribedTagCount = await subscription.AddTagsToSubscription(ExampleCallContext.ForPrincipal(null), new[] { "Test Tag 1", "Test Tag 2" }, CancellationToken.None).ConfigureAwait(false);
+                    var subscribedTagCount = await subscription.AddTagsToSubscription(
+                        ExampleCallContext.ForPrincipal(null), 
+                        new[] {
+                            "Test Tag 1",
+                            "Test Tag 2"
+                        }, 
+                        CancellationToken.None
+                    ).ConfigureAwait(false);
                     Assert.AreEqual(2, subscribedTagCount, "Incorrect subscribed tag count");
 
                     // Write a couple of values that we should then be able to read out again via 
