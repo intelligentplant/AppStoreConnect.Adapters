@@ -142,7 +142,7 @@ namespace DataCore.Adapter.Csv {
             if (!item.StartsWith("[") || !item.EndsWith("]")) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return new TagDefinition(item, item, null, null, TagDataType.Numeric, null, null);
+                return new TagDefinition(item, item, null, null, null, TagDataType.Numeric, null, null);
             }
 
             item = item.TrimStart('[').TrimEnd(']');
@@ -162,6 +162,7 @@ namespace DataCore.Adapter.Csv {
 
             string name;
             string id;
+            string category;
             string description;
             string units;
             string dataType;
@@ -185,6 +186,9 @@ namespace DataCore.Adapter.Csv {
             return new TagDefinition(
                 id ?? name,
                 name ?? id,
+                props.TryGetValue(nameof(category), out category)
+                    ? category
+                    : string.Empty,
                 props.TryGetValue(nameof(description), out description) 
                     ? description 
                     : string.Empty,

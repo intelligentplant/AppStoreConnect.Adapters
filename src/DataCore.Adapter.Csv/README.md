@@ -21,6 +21,7 @@ In the second case, the tag's configuration is defined using a set of `property=
 
 - `name`
 - `id`
+- `category`
 - `description`
 - `units`
 - `dataType` (value can be one of `numeric` or `text`, and is ignored if discrete state properties are defined; see below for details)

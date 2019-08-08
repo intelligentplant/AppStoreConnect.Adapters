@@ -11,6 +11,13 @@ namespace DataCore.Adapter.Common.Models {
     public abstract class AdapterRequest : IValidatableObject {
 
         /// <summary>
+        /// Additional request properties. These can be used to provide bespoke query parameters 
+        /// supported by the adapter.
+        /// </summary>
+        public IDictionary<string, string> Properties { get; set; }
+
+
+        /// <summary>
         /// Validates the request.
         /// </summary>
         /// <param name="validationContext">

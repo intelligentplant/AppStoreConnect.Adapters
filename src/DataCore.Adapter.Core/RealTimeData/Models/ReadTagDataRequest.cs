@@ -8,7 +8,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Base class for requests that query tags for data.
     /// </summary>
-    public abstract class ReadTagDataRequest: AdapterRequest {
+    public abstract class ReadTagDataRequest : AdapterRequest {
 
         /// <summary>
         /// The tag names or IDs to query.

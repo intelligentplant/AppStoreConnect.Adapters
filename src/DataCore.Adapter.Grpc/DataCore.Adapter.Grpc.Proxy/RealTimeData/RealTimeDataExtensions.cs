@@ -18,6 +18,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
             return new Adapter.RealTimeData.Models.TagDefinition(
                 tagDefinition.Id,
                 tagDefinition.Name,
+                tagDefinition.Category,
                 tagDefinition.Description,
                 tagDefinition.Units,
                 tagDefinition.DataType.ToAdapterTagDataType(),
@@ -142,7 +143,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(item.Value.UtcSampleTime),
                 NumericValue = item.Value.NumericValue,
                 TextValue = item.Value.TextValue,
-                Status = item.Value.Status.ToGrpcTagValueStatus()
+                Status = item.Value.Status.ToGrpcTagValueStatus(),
+                Units = item.Value.Units ?? string.Empty
             };
         }
 

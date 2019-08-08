@@ -31,6 +31,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// </summary>
         public TagValueStatus Status { get; }
 
+        /// <summary>
+        /// The value units.
+        /// </summary>
+        public string Units { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="TagValueBase"/> object.
@@ -47,11 +52,15 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="status">
         ///   The quality status for the value.
         /// </param>
-        public TagValueBase(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status) {
+        /// <param name="units">
+        ///   The value's units.
+        /// </param>
+        public TagValueBase(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units) {
             UtcSampleTime = utcSampleTime;
             NumericValue = numericValue;
             TextValue = textValue;
             Status = status;
+            Units = units ?? string.Empty;
         }
 
     }

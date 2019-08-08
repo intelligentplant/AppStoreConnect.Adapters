@@ -12,11 +12,6 @@ namespace DataCore.Adapter.RealTimeData.Models {
     public sealed class TagValue : TagValueBase {
 
         /// <summary>
-        /// The value units.
-        /// </summary>
-        public string Units { get; }
-
-        /// <summary>
         /// Notes associated with the value.
         /// </summary>
         public string Notes { get; }
@@ -59,8 +54,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public TagValue(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) : base(utcSampleTime, numericValue, textValue, status) {
-            Units = units;
+        public TagValue(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) : base(utcSampleTime, numericValue, textValue, status, units) {
             Notes = notes;
             Error = error;
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());

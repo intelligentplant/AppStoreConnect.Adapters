@@ -121,7 +121,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
-                Tags = request.Tags.ToArray()
+                Tags = request.Tags.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -147,7 +148,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleCount = request.SampleCount,
-                BoundaryType = request.BoundaryType.FromGrpcRawDataBoundaryType()
+                BoundaryType = request.BoundaryType.FromGrpcRawDataBoundaryType(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -172,7 +174,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
-                Intervals = request.Intervals
+                Intervals = request.Intervals,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -197,7 +200,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
-                SampleInterval = request.SampleInterval.ToTimeSpan()
+                SampleInterval = request.SampleInterval.ToTimeSpan(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -220,7 +224,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
                 Tags = request.Tags.ToArray(),
-                UtcSampleTimes = request.UtcSampleTimes.Select(x => x.ToDateTime()).ToArray()
+                UtcSampleTimes = request.UtcSampleTimes.Select(x => x.ToDateTime()).ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -260,7 +265,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleInterval = request.SampleInterval.ToTimeSpan(),
-                DataFunctions = request.DataFunctions.ToArray()
+                DataFunctions = request.DataFunctions.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 

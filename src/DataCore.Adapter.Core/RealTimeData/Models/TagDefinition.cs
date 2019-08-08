@@ -21,6 +21,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         public string Name { get; }
 
         /// <summary>
+        /// The tag measurement category (e.g. temperature, pressure, mass).
+        /// </summary>
+        public string Category { get; }
+
+        /// <summary>
         /// The tag description.
         /// </summary>
         public string Description { get; }
@@ -53,6 +58,9 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="id">
         ///   The tag ID.
         /// </param>
+        /// <param name="category">
+        ///   The tag measurement category (temperature, pressure, mass, etc).
+        /// </param>
         /// <param name="name">
         ///   The tag name.
         /// </param>
@@ -78,9 +86,12 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinition(string id, string name, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties) {
+        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            Category = string.IsNullOrWhiteSpace(category)
+                ? string.Empty
+                : category;
             Description = description;
             Units = units;
             DataType = dataType;

@@ -22,6 +22,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// </returns>
         internal static TagDefinition ToGrpcTagDefinition(this RealTimeData.Models.TagDefinition tag) {
             var result = new TagDefinition() {
+                Category = tag.Category,
                 DataType = tag.DataType.ToGrpcTagDataType(),
                 Description = tag.Description ?? string.Empty,
                 Id = tag.Id ?? string.Empty,
@@ -300,7 +301,8 @@ namespace DataCore.Adapter.Grpc.Server {
                     writeRequest.UtcSampleTime.ToDateTime(),
                     writeRequest.NumericValue,
                     writeRequest.TextValue,
-                    writeRequest.Status.ToAdapterTagValueStatus()
+                    writeRequest.Status.ToAdapterTagValueStatus(),
+                    writeRequest.Units
                 )
             };
         }

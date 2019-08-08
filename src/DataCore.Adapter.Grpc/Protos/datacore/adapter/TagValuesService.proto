@@ -36,6 +36,7 @@ service TagValuesService {
 message ReadSnapshotTagValuesRequest {
     string adapter_id = 1;
     repeated string tags = 2;
+    map<string,string> properties = 3;
 }
 
 
@@ -74,6 +75,7 @@ message ReadRawTagValuesRequest {
     google.protobuf.Timestamp utc_end_time = 4;
     int32 sample_count = 5;
     RawDataBoundaryType boundary_type = 6;
+    map<string,string> properties = 7;
 }
 
 
@@ -84,6 +86,7 @@ message ReadPlotTagValuesRequest {
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
     int32 intervals = 5;
+    map<string,string> properties = 6;
 }
 
 
@@ -94,6 +97,7 @@ message ReadInterpolatedTagValuesRequest {
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
     google.protobuf.Duration sample_interval = 5;
+    map<string,string> properties = 6;
 }
 
 
@@ -102,6 +106,7 @@ message ReadTagValuesAtTimesRequest {
     string adapter_id = 1;
     repeated string tags = 2;
     repeated google.protobuf.Timestamp utc_sample_times = 3;
+    map<string,string> properties = 4;
 }
 
 
@@ -118,7 +123,8 @@ message ReadProcessedTagValuesRequest {
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
     google.protobuf.Duration sample_interval = 5;
-    repeated string data_functions = 6; 
+    repeated string data_functions = 6;
+    map<string,string> properties = 7;
 }
 
 
@@ -185,6 +191,7 @@ message WriteTagValueRequest {
     double numeric_value = 5;
     string text_value = 6;
     TagValueStatus status = 7;
+    string units = 8;
 }
 
 
