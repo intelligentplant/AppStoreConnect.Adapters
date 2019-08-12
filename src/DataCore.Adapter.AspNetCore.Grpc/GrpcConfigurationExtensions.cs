@@ -20,13 +20,34 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The endpoint route builder.
         /// </returns>
         public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints) {
-            endpoints.MapGrpcService<AdaptersServiceImpl>();
-            endpoints.MapGrpcService<AssetModelBrowserServiceImpl>();
-            endpoints.MapGrpcService<EventsServiceImpl>();
-            endpoints.MapGrpcService<HostInfoServiceImpl>();
-            endpoints.MapGrpcService<TagSearchServiceImpl>();
-            endpoints.MapGrpcService<TagValueAnnotationsServiceImpl>();
-            endpoints.MapGrpcService<TagValuesServiceImpl>();
+            return endpoints.MapDataCoreGrpcServices(null);
+        }
+
+
+        /// <summary>
+        /// Registers adapter gRPC services.
+        /// </summary>
+        /// <param name="endpoints">
+        ///   The endpoint route builder.
+        /// </param>
+        /// <param name="builder">
+        ///   A callback function that will be invoked for each gRPC service that is registered 
+        ///   with the host. The parameters are the type of the gRPC service and the 
+        ///   <see cref="IEndpointConventionBuilder"/> for the service endpoint registration. This 
+        ///   can be used to e.g. require specific authentication schemes for calling gRPC services 
+        ///   such as client certificate authentication.
+        /// </param>
+        /// <returns>
+        ///   The endpoint route builder.
+        /// </returns>
+        public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) { 
+            builder?.Invoke(typeof(AdaptersServiceImpl), endpoints.MapGrpcService<AdaptersServiceImpl>());
+            builder?.Invoke(typeof(AssetModelBrowserServiceImpl), endpoints.MapGrpcService<AssetModelBrowserServiceImpl>());
+            builder?.Invoke(typeof(EventsServiceImpl), endpoints.MapGrpcService<EventsServiceImpl>());
+            builder?.Invoke(typeof(HostInfoServiceImpl), endpoints.MapGrpcService<HostInfoServiceImpl>());
+            builder?.Invoke(typeof(TagSearchServiceImpl), endpoints.MapGrpcService<TagSearchServiceImpl>());
+            builder?.Invoke(typeof(TagValueAnnotationsServiceImpl), endpoints.MapGrpcService<TagValueAnnotationsServiceImpl>());
+            builder?.Invoke(typeof(TagValuesServiceImpl), endpoints.MapGrpcService<TagValuesServiceImpl>());
 
             return endpoints;
         }
