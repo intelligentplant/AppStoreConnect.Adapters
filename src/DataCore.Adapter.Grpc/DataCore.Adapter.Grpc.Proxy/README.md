@@ -53,14 +53,16 @@ while (await rawChannel.WaitToReadAsync()) {
 
 # Implementing Per-Call Authentication
 
-gRPC supports both per-channel and per-call authentication. If the remote host supports (or requires) per-call authentication, you can configure this by setting the `GetCallCredentials` property in the `GrpcAdapterProxyOptions` object you pass to the proxy constructor. The property is a delegate that takes an `IAdapterCallContext` representing the calling user, and returns a `GrpcAdapterProxyCallCredentials` object that will be added to the headers of the outgoing gRPC request:
+gRPC supports both per-channel and per-call authentication. If the remote host supports (or requires) per-call authentication, you can configure this by setting the `GetCallCredentials` property in the `GrpcAdapterProxyOptions` object you pass to the proxy constructor. The property is a delegate that takes an `IAdapterCallContext` representing the calling user, and returns a collection of [IClientCallCredentials](../DataCore.Adapter.Grpc.Client/Authentication/IClientCallCredentials.cs) objects that will be added to the headers of the outgoing gRPC request:
 
 ```csharp
 var options = new GrpcAdapterProxyOptions() {
     AdapterId = "{SOME_ADAPTER_ID}",
     GetCallCredentials = async (IAdapterCallContext context) => {
         var accessToken = await GetAccessToken(context);
-        return GrpcAdapterProxyCallCredentials.FromAccessToken(accessToken);
+        return new IClientCallCredentials[] {
+            new BearerTokenCallCredentials(accessToken)
+        };
     }
 };
 ```

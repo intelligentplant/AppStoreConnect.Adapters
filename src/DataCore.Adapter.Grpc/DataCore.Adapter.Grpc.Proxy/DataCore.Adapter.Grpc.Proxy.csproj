@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Grpc.Net.Client" Version="0.1.22-pre1" />
+    <PackageReference Include="Grpc.Net.Client" Version="0.1.22-pre2" />
   </ItemGroup>
 
   <ItemGroup>

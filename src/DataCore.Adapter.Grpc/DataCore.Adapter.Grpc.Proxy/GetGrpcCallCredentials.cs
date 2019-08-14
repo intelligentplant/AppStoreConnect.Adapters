@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using DataCore.Adapter.Grpc.Client.Authentication;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -12,9 +13,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
     ///   The adapter call context.
     /// </param>
     /// <returns>
-    ///   The gRPC call credentials. Return <see langword="null"/> to use only the channel-level 
-    ///   credentials.
+    ///   The gRPC call credentials. Return <see langword="null"/> or an empty collection to use 
+    ///   only the channel-level credentials.
     /// </returns>
-    public delegate Task<GrpcAdapterProxyCallCredentials> GetGrpcCallCredentials(IAdapterCallContext context);
+    public delegate Task<IEnumerable<IClientCallCredentials>> GetGrpcCallCredentials(IAdapterCallContext context);
 
 }

@@ -9,6 +9,7 @@ using GrpcNet = Grpc.Net;
 
 using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
+using DataCore.Adapter.Grpc.Client.Authentication;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -169,11 +170,16 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </returns>
         private async Task Init(CancellationToken cancellationToken) {
             var client = CreateClient<AdaptersService.AdaptersServiceClient>();
+            var callOptions = new GrpcCore.CallOptions(
+                cancellationToken: cancellationToken,
+                credentials: GetCallCredentials(null)
+            );
+
             var response = await client.GetAdapterAsync(
                 new GetAdapterRequest() {
                     AdapterId = _remoteAdapterId
                 }, 
-                cancellationToken: cancellationToken
+                callOptions
             ).ResponseAsync.ConfigureAwait(false);
 
             RemoteDescriptor = new Adapter.Common.Models.AdapterDescriptorExtended(
@@ -242,11 +248,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             return GrpcCore.CallCredentials.FromInterceptor(new GrpcCore.AsyncAuthInterceptor(async (authContext, metadata) => {
                 var credentials = await _getCallCredentials(context).ConfigureAwait(false);
-                if (credentials == null) {
-                    return;
-                }
-
-                metadata.Add(credentials.ToMetadataEntry());
+                credentials.AddMetadataEntries(metadata);
             }));
         }
 
