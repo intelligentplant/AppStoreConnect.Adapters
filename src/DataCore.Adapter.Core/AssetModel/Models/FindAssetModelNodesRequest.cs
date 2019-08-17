@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace DataCore.Adapter.AssetModel.Models {
@@ -20,30 +22,18 @@ namespace DataCore.Adapter.AssetModel.Models {
         public string Description { get; set; }
 
         /// <summary>
-        /// The page size for the search results.
+        /// The page size for the query.
         /// </summary>
-        private int _pageSize = 10;
+        [Range(1, int.MaxValue)]
+        [DefaultValue(10)]
+        public int PageSize { get; set; } = 10;
 
         /// <summary>
-        /// The page size for the search results.
+        /// The page number for the query.
         /// </summary>
-        public int PageSize {
-            get { return _pageSize; }
-            set { _pageSize = value < 1 ? 1 : value; }
-        }
-
-        /// <summary>
-        /// The result page to retrieve.
-        /// </summary>
-        private int _page = 1;
-
-        /// <summary>
-        /// The result page to retrieve.
-        /// </summary>
-        public int Page {
-            get { return _page; }
-            set { _page = value < 1 ? 1 : value; }
-        }
+        [Range(1, int.MaxValue)]
+        [DefaultValue(10)]
+        public int Page { get; set; } = 1;
 
     }
 }

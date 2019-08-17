@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
 using DataCore.Adapter.AssetModel.Features;
 
@@ -19,7 +16,9 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 var grpcRequest = new BrowseAssetModelNodesRequest() {
                     AdapterId = AdapterId,
                     ParentId = request.ParentId,
-                    Depth = request.Depth
+                    Depth = request.Depth,
+                    PageSize = request.PageSize,
+                    Page = request.Page
                 };
                 var grpcResponse = client.BrowseAssetModelNodes(grpcRequest, GetCallOptions(context, ct));
 

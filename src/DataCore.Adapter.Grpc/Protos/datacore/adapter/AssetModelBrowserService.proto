@@ -16,8 +16,10 @@ service AssetModelBrowserService {
 
 message BrowseAssetModelNodesRequest {
     string adapter_id = 1;
-    string parent_id = 2;
-    int32 depth = 3;
+    int32 page_size = 2;
+    int32 page = 3;
+    string parent_id = 4;
+    int32 depth = 5;
 }
 
 

@@ -27,7 +27,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new Adapter.AssetModel.Models.BrowseAssetModelNodesRequest() {
                 ParentId = request.ParentId,
-                Depth = request.Depth
+                Depth = request.Depth,
+                PageSize = request.PageSize,
+                Page = request.Page
             };
             Util.ValidateObject(adapterRequest);
 

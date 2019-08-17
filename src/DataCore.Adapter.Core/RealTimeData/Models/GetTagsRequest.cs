@@ -9,7 +9,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Describes a request to get tag definitions by tag ID or name.
     /// </summary>
-    public sealed class GetTagsRequest: IValidatableObject {
+    public sealed class GetTagsRequest : IValidatableObject {
 
         /// <summary>
         /// The IDs or names of the tags to retrieve.

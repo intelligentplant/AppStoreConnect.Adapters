@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace DataCore.Adapter.AssetModel.Models {
@@ -20,6 +22,20 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// levels below the <see cref="ParentId"/>.
         /// </summary>
         public int Depth { get; set; } = 1;
+
+        /// <summary>
+        /// The page size for the query.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        [DefaultValue(10)]
+        public int PageSize { get; set; } = 10;
+
+        /// <summary>
+        /// The page number for the query.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        [DefaultValue(10)]
+        public int Page { get; set; } = 1;
 
     }
 }
