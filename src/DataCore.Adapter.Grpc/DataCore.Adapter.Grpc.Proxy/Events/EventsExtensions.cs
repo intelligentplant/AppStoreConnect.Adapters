@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DataCore.Adapter.Grpc.Proxy.Common;
+﻿using DataCore.Adapter.Grpc.Proxy.Common;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events {
     internal static class EventsExtensions {

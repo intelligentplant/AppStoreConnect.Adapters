@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DataCore.Adapter.Grpc.Proxy {
+﻿namespace DataCore.Adapter.Grpc.Proxy {
 
     /// <summary>
     /// Configuration options for gRPC adapter proxies.

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using DataCore.Adapter.RealTimeData.Features;
-using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     internal class ReadTagValuesAtTimesImpl : ProxyAdapterFeature, IReadTagValuesAtTimes {

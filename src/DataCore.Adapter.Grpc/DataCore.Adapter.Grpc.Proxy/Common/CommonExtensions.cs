@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.Grpc.Proxy.Common {
+﻿namespace DataCore.Adapter.Grpc.Proxy.Common {
     internal static class CommonExtensions {
 
         internal static Adapter.Common.Models.WriteStatus ToAdapterWriteStatus(this WriteOperationStatus status) {
