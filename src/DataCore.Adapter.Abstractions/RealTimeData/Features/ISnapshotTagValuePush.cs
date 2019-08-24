@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Channels;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Features {
 

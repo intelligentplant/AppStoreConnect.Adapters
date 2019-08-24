@@ -117,63 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Error_AdapterIsAlreadyStarted" xml:space="preserve">
-    <value>An adapter cannot be started when it is already running.</value>
-  </data>
-  <data name="Error_AdapterIsNotStarted" xml:space="preserve">
-    <value>The adapter has not been started.</value>
-  </data>
-  <data name="Error_AdapterIsStopping" xml:space="preserve">
-    <value>The adapter is currently stopping and cannot be started until this operation completes.</value>
-  </data>
-  <data name="Error_BucketSizeMustBeGreaterThanZero" xml:space="preserve">
-    <value>The bucket size for plot calculations must be greater than zero.</value>
-  </data>
-  <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
-    <value>This feature has already been registered.</value>
-  </data>
-  <data name="Error_NamedAdapterOptionsNotFound" xml:space="preserve">
-    <value>Unable to find named adapter options "{0}".</value>
-    <comment>{0} - options name</comment>
-  </data>
-  <data name="Error_NotAFeatureImplementation" xml:space="preserve">
-    <value>Object does not implement feature {0}.</value>
-    <comment>{0} - feature name</comment>
-  </data>
-  <data name="Log_AdapterStartupError" xml:space="preserve">
-    <value>An error occurred while starting adapter {AdapterId}.</value>
-  </data>
-  <data name="Log_AdapterStopError" xml:space="preserve">
-    <value>An error occurred while stopping adapter {AdapterId}.</value>
-  </data>
-  <data name="Log_DisposingAdapter" xml:space="preserve">
-    <value>Stopping adapter {AdapterId} (disposing: true).</value>
-  </data>
-  <data name="Log_ErrorInEventSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the event subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotPollingUpdateLoop" xml:space="preserve">
-    <value>An error occurred while the snapshot subscription manager was polling for new values.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the snapshot subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfEventMessageSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of an event message subscription.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of a snapshot subscription.</value>
-  </data>
-  <data name="Log_StartedAdapter" xml:space="preserve">
-    <value>Started adapter {AdapterId}.</value>
-  </data>
-  <data name="Log_StartingAdapter" xml:space="preserve">
-    <value>Starting adapter {AdapterId}.</value>
-  </data>
-  <data name="Log_StoppedAdapter" xml:space="preserve">
-    <value>Stopped adapter {AdapterId}.</value>
-  </data>
-  <data name="Log_StoppingAdapter" xml:space="preserve">
-    <value>Stopping adapter {AdapterId} (disposing: false).</value>
+  <data name="Error_NoCsvFileDefined" xml:space="preserve">
+    <value>No CSV file was specified. Check that the {0} or {1} property is defined correctly in the adapter options.</value>
+    <comment>{0} - CsvFile property name
+{1} - GetCsvStream property name</comment>
   </data>
 </root>

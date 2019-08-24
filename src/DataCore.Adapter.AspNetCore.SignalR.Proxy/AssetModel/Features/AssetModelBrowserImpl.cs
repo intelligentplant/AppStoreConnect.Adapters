@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
 using DataCore.Adapter.AssetModel.Features;
 using DataCore.Adapter.AssetModel.Models;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 

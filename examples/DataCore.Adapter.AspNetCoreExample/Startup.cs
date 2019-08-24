@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using DataCore.Adapter.Example;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
@@ -30,12 +24,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Common.Models.AdapterDescriptor("sensor-csv", "Sensor CSV", "CSV adapter with dummy sensor data"),
                     new Csv.CsvAdapterOptions() {
+                        Id = "sensor-csv",
+                        Name = "Sensor CSV",
+                        Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
-                        GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummySensorData.csv"), FileMode.Open)
+                        CsvFile = "DummySensorData.csv"
                     },
-                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
+                    sp.GetRequiredService<ILoggerFactory>()
                 );
             });
 

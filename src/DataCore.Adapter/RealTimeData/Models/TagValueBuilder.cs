@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
-using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -178,7 +176,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithValue(double numericValue, string textValue, IFormatProvider provider = null) {
+        public TagValueBuilder WithValues(double numericValue, string textValue, IFormatProvider provider = null) {
             _numericValue = numericValue;
             _textValue = string.IsNullOrWhiteSpace(textValue)
                 ? GetTextValue(numericValue, provider)

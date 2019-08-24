@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
     // Adds hub methods for tag search queries.
-    
+
     public partial class AdapterHub {
 
         /// <summary>

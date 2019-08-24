@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Security.Principal;
-using System.Text;
 
 namespace DataCore.Adapter.Tests {
     public class ExampleCallContext : IAdapterCallContext {

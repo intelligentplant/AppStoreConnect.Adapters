@@ -1,9 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.RealTimeData.Models {
+﻿namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
     /// Describes the quality status of a tag value.

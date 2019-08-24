@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using CsvHelper;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
@@ -21,7 +20,7 @@ namespace DataCore.Adapter.Csv {
     /// App Store Connect adapter that uses a looping CSV file as its source data.
     /// </summary>
     /// <seealso cref="CsvAdapterOptions"/>
-    public class CsvAdapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
+    public class CsvAdapter : AdapterBase<CsvAdapterOptions>, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
 
         /// <summary>
         /// The regular expression used to parse tag properties from a tag field.
@@ -42,31 +41,26 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// Creates a new <see cref="CsvAdapter"/> object.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The adapter descriptor.
-        /// </param>
         /// <param name="options">
         ///   The adapter options.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the adapter.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="descriptor"/> is <see langword="null"/>.
-        /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(AdapterDescriptor descriptor, CsvAdapterOptions options, ILogger<CsvAdapter> logger)
-            : base(descriptor, logger) {
+        public CsvAdapter(CsvAdapterOptions options, ILoggerFactory loggerFactory)
+            : base(options, loggerFactory) {
+
             // Validate options.
-            if (options == null) {
-                throw new ArgumentNullException(nameof(options));
-            }
-            System.ComponentModel.DataAnnotations.Validator.ValidateObject(options, new System.ComponentModel.DataAnnotations.ValidationContext(options));
+            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
+                options, 
+                new System.ComponentModel.DataAnnotations.ValidationContext(options)
+            );
 
             // Construct adapter features.
             AddFeatures(this);
@@ -247,7 +241,22 @@ namespace DataCore.Adapter.Csv {
             var timeStampColumnIndex = options.TimeStampFieldIndex;
             var columnIndexToTagMap = new Dictionary<int, TagDefinition>();
 
-            using (var stream = options.GetCsvStream())
+            if (string.IsNullOrWhiteSpace(options.CsvFile) && options.GetCsvStream == null) {
+                throw new ArgumentException(string.Format(Resources.Error_NoCsvFileDefined, nameof(CsvAdapterOptions.CsvFile), nameof(CsvAdapterOptions.GetCsvStream)), nameof(options));
+            }
+
+            Func<Stream> getCsvStream;
+            if (string.IsNullOrWhiteSpace(options.CsvFile)) {
+                getCsvStream = options.GetCsvStream;
+            }
+            else {
+                var csvFile = Path.IsPathRooted(options.CsvFile)
+                    ? options.CsvFile
+                    : Path.Combine(AppContext.BaseDirectory, options.CsvFile);
+                getCsvStream = () => new FileStream(csvFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            }
+
+            using (var stream = getCsvStream())
             using (var reader = new StreamReader(stream))
             using (var csvParser = new CsvParser(reader, csvConfig)) {
                 // Read fields.
@@ -353,7 +362,7 @@ namespace DataCore.Adapter.Csv {
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(sampleTime)
-                                .WithValue(numericValue, textValue)
+                                .WithValues(numericValue, textValue)
                                 .WithStatus(TagValueStatus.Good)
                                 .WithUnits(tag.Units)
                                 .Build()

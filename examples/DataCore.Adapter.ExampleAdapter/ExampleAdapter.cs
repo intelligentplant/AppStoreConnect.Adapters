@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events.Features;
 using Microsoft.Extensions.Logging;
 
@@ -21,20 +15,20 @@ namespace DataCore.Adapter.Example {
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
         /// </summary>
-        /// <param name="logger">
-        ///   The adapter logger.
+        /// <param name="loggerFactory">
+        ///   The adapter logger factory.
         /// </param>
-        public ExampleAdapter(ILogger<ExampleAdapter> logger) : base(
-            new AdapterDescriptor(
-                "example", 
-                "Example Adapter", 
-                "An example data source adapter"
-            ), new Csv.CsvAdapterOptions() {
+        public ExampleAdapter(ILoggerFactory loggerFactory) : base(
+            new Csv.CsvAdapterOptions() {
+                Id = "example",
+                Name = "Example Adapter",
+                Description = "An example data source adapter",
                 IsDataLoopingAllowed = true,
                 SnapshotPushUpdateInterval = 5000,
                 GetCsvStream = () => new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(CsvData))
             },
-            logger) {
+            loggerFactory
+        ) {
             // Register additional features!
             AddFeature<IEventMessagePush, EventsSubscriptionManager>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
         }

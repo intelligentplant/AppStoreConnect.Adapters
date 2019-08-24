@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.AssetModel.Models {
 

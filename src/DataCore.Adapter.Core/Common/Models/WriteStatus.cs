@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.Common.Models {
+﻿namespace DataCore.Adapter.Common.Models {
 
     /// <summary>
     /// Describes the status of a write operation.

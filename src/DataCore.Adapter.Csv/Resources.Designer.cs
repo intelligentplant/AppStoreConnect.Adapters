@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DataCore.Adapter.Grpc.Proxy {
+namespace DataCore.Adapter.Csv {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Grpc.Proxy.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Csv.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,29 +61,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter ID is required..
+        ///   Looks up a localized string similar to No CSV file was specified. Check that the {0} or {1} property is defined correctly in the adapter options..
         /// </summary>
-        internal static string Error_AdapterIdIsRequired {
+        internal static string Error_NoCsvFileDefined {
             get {
-                return ResourceManager.GetString("Error_AdapterIdIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
-        /// </summary>
-        internal static string Log_ExtensionFeatureRegistrationError {
-            get {
-                return ResourceManager.GetString("Log_ExtensionFeatureRegistrationError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
-        /// </summary>
-        internal static string Log_NoExtensionImplementationAvailable {
-            get {
-                return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
+                return ResourceManager.GetString("Error_NoCsvFileDefined", resourceCulture);
             }
         }
     }

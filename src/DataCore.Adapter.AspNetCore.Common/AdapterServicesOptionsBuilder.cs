@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace DataCore.Adapter.AspNetCore {
 

@@ -1,17 +1,14 @@
-﻿using System;
-using Microsoft.AspNetCore.SignalR.Client;
-
-namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
+﻿namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
     /// <summary>
     /// Options for creating a <see cref="SignalRAdapterProxy"/>.
     /// </summary>
-    public class SignalRAdapterProxyOptions {
+    public class SignalRAdapterProxyOptions : AdapterOptions {
 
         /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
-        public string AdapterId { get; set; }
+        public string RemoteId { get; set; }
 
         /// <summary>
         /// A factory method that creates hub connections on behalf of the proxy.

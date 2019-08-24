@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.RealTimeData.Models {
+﻿namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
     /// Describes a boundary type used when making a raw data query.

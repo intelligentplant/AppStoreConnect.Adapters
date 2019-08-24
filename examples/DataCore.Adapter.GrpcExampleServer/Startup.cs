@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,23 +14,27 @@ namespace DataCore.Adapter.GrpcExampleServer {
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Common.Models.AdapterDescriptor("sensor-csv", "Sensor CSV", "CSV adapter with dummy sensor data"),
                     new Csv.CsvAdapterOptions() {
+                        Id = "sensor-csv",
+                        Name = "Sensor CSV",
+                        Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
-                        GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummySensorData.csv"), FileMode.Open)
+                        CsvFile = "DummySensorData.csv"
                     },
-                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
+                    sp.GetRequiredService<ILoggerFactory>()
                 );
             });
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Common.Models.AdapterDescriptor("acoustic-probe-csv", "Acoustic Probe CSV", "CSV adapter with dummy acoustic probe data"),
                     new Csv.CsvAdapterOptions() {
+                        Id = "acoustic-probe-csv",
+                        Name = "Acoustic Probe CSV",
+                        Description = "CSV adapter with dummy acoustic probe data",
                         IsDataLoopingAllowed = true,
-                        GetCsvStream = () => new FileStream(Path.Combine(AppContext.BaseDirectory, "DummyAcousticProbeData.csv"), FileMode.Open)
+                        CsvFile = "DummyAcousticProbeData.csv"
                     },
-                    sp.GetRequiredService<ILogger<Csv.CsvAdapter>>()
+                    sp.GetRequiredService<ILoggerFactory>()
                 );
             });
 

@@ -1,25 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.Events.Models;
-using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
     // Adds hub methods for querying event messages, including pushing event messages to 
     // subscribers. Event message push is only supported on adapters that implement the 
     // IEventMessagePush feature.
-    
+
     public partial class AdapterHub {
 
         #region [ OnConnected/OnDisconnected ]

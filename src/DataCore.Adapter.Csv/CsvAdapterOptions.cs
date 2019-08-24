@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
-using System.Text;
 
 namespace DataCore.Adapter.Csv {
 
@@ -11,7 +9,7 @@ namespace DataCore.Adapter.Csv {
     /// Options for <see cref="CsvAdapter"/> instances.
     /// </summary>
     /// <seealso cref="CsvAdapter"/>
-    public class CsvAdapterOptions {
+    public class CsvAdapterOptions : AdapterOptions {
 
         /// <summary>
         /// Configuration options for a <see cref="CsvAdapter"/>.
@@ -19,10 +17,15 @@ namespace DataCore.Adapter.Csv {
         public const int DefaultSnapshotPushUpdateInterval = 30000;
 
         /// <summary>
+        /// The path to the CSV file to load. Can be <see langword="null"/> if the 
+        /// <see cref="GetCsvStream"/> callback is provided instead.
+        /// </summary>
+        public string CsvFile { get; set; }
+
+        /// <summary>
         /// A callback that will return a stream to read CSV data from. The stream will be disposed 
         /// once the CSV data has been read.
         /// </summary>
-        [Required]
         public Func<Stream> GetCsvStream { get; set; }
 
         /// <summary>

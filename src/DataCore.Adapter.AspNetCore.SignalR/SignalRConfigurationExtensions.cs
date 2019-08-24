@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using DataCore.Adapter.AspNetCore.Hubs;
 
 #if NETCOREAPP3_0

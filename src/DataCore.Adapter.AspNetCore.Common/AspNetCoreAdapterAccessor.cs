@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore;
-using DataCore.Adapter.AspNetCore.Authorization;
-using Microsoft.Extensions.Hosting;
 
 namespace DataCore.Adapter {
 

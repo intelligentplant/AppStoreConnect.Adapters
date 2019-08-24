@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.Events.Models {
+﻿namespace DataCore.Adapter.Events.Models {
 
     /// <summary>
     /// Describes the type of an event message push subscription.

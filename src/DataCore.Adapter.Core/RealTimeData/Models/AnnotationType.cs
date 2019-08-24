@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.RealTimeData.Models {
+﻿namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
     /// Specifies the type of an annotation.

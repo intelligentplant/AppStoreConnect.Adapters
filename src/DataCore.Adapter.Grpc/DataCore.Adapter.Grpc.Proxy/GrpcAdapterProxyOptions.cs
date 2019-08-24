@@ -3,12 +3,12 @@
     /// <summary>
     /// Configuration options for gRPC adapter proxies.
     /// </summary>
-    public class GrpcAdapterProxyOptions {
+    public class GrpcAdapterProxyOptions : AdapterOptions {
 
         /// <summary>
         /// The ID of the remote adapter to connect to.
         /// </summary>
-        public string AdapterId { get; set; }
+        public string RemoteId { get; set; }
 
         /// <summary>
         /// A factory that can be used to set per-call credentials for gRPC calls.

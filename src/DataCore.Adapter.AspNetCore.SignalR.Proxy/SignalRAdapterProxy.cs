@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
@@ -13,7 +12,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via SignalR.
     /// </summary>
-    public class SignalRAdapterProxy : AdapterBase, IAdapterProxy {
+    public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
         /// The relative SignalR hub route.
@@ -73,19 +72,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Creates a new <see cref="SignalRAdapterProxy"/> object.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor for the local proxy. This is not the descriptor for the remote 
-        ///   adapter that the proxy will connect to.
-        /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
-        public SignalRAdapterProxy(AdapterDescriptor descriptor, SignalRAdapterProxyOptions options, ILogger<SignalRAdapterProxy> logger) 
-            : base(descriptor, logger) {
-            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+        public SignalRAdapterProxy(SignalRAdapterProxyOptions options, ILoggerFactory loggerFactory) 
+            : base(options, loggerFactory) {
+            _remoteAdapterId = options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = options?.ExtensionFeatureFactory;
             _client = new Lazy<AdapterSignalRClient>(() => {

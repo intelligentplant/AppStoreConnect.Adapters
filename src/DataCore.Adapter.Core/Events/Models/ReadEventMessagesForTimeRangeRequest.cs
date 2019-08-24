@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.Events.Models {
 

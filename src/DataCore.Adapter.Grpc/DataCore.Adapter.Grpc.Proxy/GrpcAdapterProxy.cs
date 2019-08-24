@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
-    public class GrpcAdapterProxy : AdapterBase, IAdapterProxy {
+    public class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -73,31 +73,28 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified gRPC channel.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor for the local proxy.
-        /// </param>
         /// <param name="channel">
         ///   The channel.
         /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="logger"/> is <see langword="null"/>.
+        ///   <paramref name="loggerFactory"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(Adapter.Common.Models.AdapterDescriptor descriptor, GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger)
-            : base(descriptor, logger) {
+        public GrpcAdapterProxy(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILoggerFactory loggerFactory)
+            : base(options, loggerFactory) {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+            _remoteAdapterId = options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = options?.GetCallCredentials;
             _extensionFeatureFactory = options?.ExtensionFeatureFactory;
         }
@@ -107,30 +104,27 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor for the local proxy.
-        /// </param>
         /// <param name="httpClient">
         ///   The HTTP client.
         /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="httpClient"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="logger"/> is <see langword="null"/>.
+        ///   <paramref name="loggerFactory"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(Adapter.Common.Models.AdapterDescriptor descriptor, HttpClient httpClient, GrpcAdapterProxyOptions options, ILogger<GrpcAdapterProxy> logger) 
-            : base(descriptor, logger) {
-            _remoteAdapterId = options?.AdapterId ?? throw new ArgumentException("Adapter ID is required.", nameof(options));
+        public GrpcAdapterProxy(HttpClient httpClient, GrpcAdapterProxyOptions options, ILoggerFactory loggerFactory) 
+            : base(options, loggerFactory) {
+            _remoteAdapterId = options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _getCallCredentials = options?.GetCallCredentials;
         }

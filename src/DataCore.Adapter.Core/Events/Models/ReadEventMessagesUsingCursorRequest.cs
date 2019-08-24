@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DataCore.Adapter.Common.Models;
-
-namespace DataCore.Adapter.Events.Models {
+﻿namespace DataCore.Adapter.Events.Models {
 
     /// <summary>
     /// Describes a request to retrieve historical event messages using a cursor to specified the query start position.

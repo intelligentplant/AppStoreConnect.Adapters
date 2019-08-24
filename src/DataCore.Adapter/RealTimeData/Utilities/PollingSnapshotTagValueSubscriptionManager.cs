@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.Extensions.Logging;
 

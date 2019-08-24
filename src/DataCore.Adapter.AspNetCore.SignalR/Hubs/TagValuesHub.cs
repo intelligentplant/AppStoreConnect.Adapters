@@ -1,25 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
-using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
     // Adds hub methods for requesting tag values, including pushing real-time snapshot value 
     // changes to subscribers. Snapshot push is only supported on adapters that implement the 
     // ISnapshotTagValuePush feature.
-    
+
     public partial class AdapterHub {
 
         #region [ OnConnected/OnDisconnected ]

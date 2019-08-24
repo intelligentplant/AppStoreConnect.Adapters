@@ -2,19 +2,21 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter {
 
     /// <summary>
     /// Base class that adapter implementations can inherit from.
     /// </summary>
-    public abstract class AdapterBase : IAdapter, IAsyncDisposable {
+    /// <typeparam name="TAdapterOptions">
+    ///   The options type for the adapter.
+    /// </typeparam>
+    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable where TAdapterOptions : AdapterOptions {
 
         /// <summary>
         /// Indicates if the adapter has been disposed.
@@ -25,6 +27,12 @@ namespace DataCore.Adapter {
         /// Indicates if the adapter is being disposed.
         /// </summary>
         private bool _isDisposing;
+
+        /// <summary>
+        /// The <typeparamref name="TAdapterOptions"/> monitor subscription, if the constructor overload 
+        /// providing an <see cref="IOptionsMonitor{TOptions}"/> is called.
+        /// </summary>
+        private readonly IDisposable _optionsMonitorSubscription;
 
         /// <summary>
         /// Logging.
@@ -96,19 +104,95 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="Adapter"/> object.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The adapter descriptor.
+        /// <param name="options">
+        ///   The adapter options.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the adapter. If a <see langword="null"/> value is provided, 
-        ///   <see cref="Logger"/> will be set to an instance of <see cref="Microsoft.Extensions.Logging.Abstractions.NullLogger"/>.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
+        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        protected AdapterBase(AdapterDescriptor descriptor, ILogger logger) {
-            _descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        /// <exception cref="ArgumentException">
+        ///   The <see cref="AdapterOptions.Id"/> property on the <paramref name="options"/> is 
+        ///   <see langword="null"/> or white space.
+        /// </exception>
+        protected AdapterBase(TAdapterOptions options, ILoggerFactory loggerFactory) {
+            if (options == null) {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            _descriptor = new AdapterDescriptor(
+                options.Id, 
+                string.IsNullOrWhiteSpace(options.Name) 
+                    ? options.Id 
+                    : options.Name, 
+                options.Description
+            );
+
+            Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Adapter"/> object that can monitor for changes in 
+        /// configuration. Note that changes in the adapter's ID will be ignored once the adapter 
+        /// has been created.
+        /// </summary>
+        /// <param name="optionsMonitor">
+        ///   The monitor for the adapter's options type.
+        /// </param>
+        /// <param name="optionsName">
+        ///   The named options to monitor in the <paramref name="optionsMonitor"/>. If the name is
+        ///   <see langword="null"/>, <see cref="Options.DefaultName"/> will be used.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
+        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="optionsMonitor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   The named options specified by <paramref name="optionsName"/> cannot be resolved.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   The <see cref="AdapterOptions.Id"/> property on the options retrieved from <paramref name="optionsMonitor"/> 
+        ///   is <see langword="null"/> or white space.
+        /// </exception>
+        protected AdapterBase(IOptionsMonitor<TAdapterOptions> optionsMonitor, string optionsName, ILoggerFactory loggerFactory) {
+            if (optionsMonitor == null) {
+                throw new ArgumentNullException(nameof(optionsMonitor));
+            }
+
+            if (optionsName == null) {
+                optionsName = Options.DefaultName;
+            }
+            var options = optionsMonitor.Get(optionsName);
+
+            if (options == null) {
+                throw new ArgumentException(string.Format(Resources.Error_NamedAdapterOptionsNotFound, optionsName), nameof(optionsName));
+            }
+
+            _descriptor = new AdapterDescriptor(
+                options.Id,
+                string.IsNullOrWhiteSpace(options.Name)
+                    ? options.Id
+                    : options.Name,
+                options.Description
+            );
+
+            Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+            _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
+                if (!string.Equals(name, optionsName)) {
+                    // These options are for a different adapter of the same type!
+                    return;
+                }
+
+                OnOptionsChangeInternal(opts);
+            });
         }
 
 
@@ -178,6 +262,7 @@ namespace DataCore.Adapter {
             try {
                 _isDisposing = true;
                 Logger.LogInformation(Resources.Log_DisposingAdapter, _descriptor.Id);
+                _optionsMonitorSubscription?.Dispose();
                 _stopTokenSource.Dispose();
                 await StopAsync(true, default).ConfigureAwait(false);
             }
@@ -240,23 +325,54 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Updates the adapter descriptor.
+        /// Invoked when the adapter detects that its supplied <typeparamref name="TAdapterOptions"/> 
+        /// have changed. This method will only be called if an <see cref="IOptionsMonitor{TOptions}"/> 
+        /// was provided when the adapter was created.
         /// </summary>
-        /// <param name="descriptor">
-        ///   The updated descriptor.
+        /// <param name="options">
+        ///   The updated options.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="descriptor"/> is <see langword="null"/>.
-        /// </exception>
-        protected void UpdateDescriptor(AdapterDescriptor descriptor) {
-            CheckDisposed();
-            if (descriptor == null) {
-                throw new ArgumentNullException(nameof(descriptor));
+        private void OnOptionsChangeInternal(TAdapterOptions options) {
+            if (options == null) {
+                return;
             }
 
+            // Check if we need to update the descriptor.
+
+            AdapterDescriptor descriptor;
             lock (_descriptor) {
-                _descriptor = descriptor;
+                descriptor = _descriptor;
             }
+
+            if (!string.Equals(options.Name, descriptor.Name) || 
+                !string.Equals(options.Description, descriptor.Description)) {
+                lock (_descriptor) {
+                    _descriptor = new AdapterDescriptor(
+                        descriptor.Id, // ID cannot change once initially configured!
+                        string.IsNullOrWhiteSpace(options.Name)
+                            ? options.Id
+                            : options.Name,
+                        options.Description
+                    );
+                }
+            }
+
+            // Call the handler on the implementing class.
+
+            OnOptionsChange(options);
+        }
+
+
+        /// <summary>
+        /// Override this method in a subclass to receive notifications when the adapter's options 
+        /// have changed. The method will only be called if an <see cref="IOptionsMonitor{TOptions}"/> 
+        /// was provided when the adapter was created.
+        /// </summary>
+        /// <param name="options">
+        ///   The updated options.
+        /// </param>
+        protected virtual void OnOptionsChange(TAdapterOptions options) {
+            // Do nothing.
         }
 
 

@@ -2,9 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using DataCore.Adapter;
 using DataCore.Adapter.RealTimeData.Features;
 using Grpc.Core;
 

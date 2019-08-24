@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.SignalR;
 
