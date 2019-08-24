@@ -10,7 +10,7 @@ An adapter is a component can expose real-time process data and/or alarm & event
 
 Different systems expose different features. For example, an MQTT broker can be used to transmit sensor readings from IoT devices to interested subscribers, but it is not capable of long-term storage of these readings, or of performing ad hoc aggregation of the data (e.g. find the average value of instrument X at 1 hour intervals over the previous calendar day). Some alarm & event systems may allow historical querying of event messages, where as others (such as OPC AE) can only emit ephemeral event messages. Some systems may be read-only, others may be write-only, and some may allow data to flow in both directions. An adapter allows you to integrate with a system (or multiple systems), and expose the system's capabilities as simple, discrete features. 
 
-Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-, SignalR, or [gRPC](https://grpc.io/)-based API. Hosting is also possible in other frameworks via gRPC (see notes at the end of this README).
+Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-, SignalR-, or [gRPC](https://grpc.io/)-based API. Hosting is also possible in other frameworks via gRPC (see notes at the end of this README).
 
 # Summary of Projects
 
