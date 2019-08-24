@@ -40,16 +40,34 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <returns>
         ///   The endpoint route builder.
         /// </returns>
-        public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) { 
-            builder?.Invoke(typeof(AdaptersServiceImpl), endpoints.MapGrpcService<AdaptersServiceImpl>());
-            builder?.Invoke(typeof(AssetModelBrowserServiceImpl), endpoints.MapGrpcService<AssetModelBrowserServiceImpl>());
-            builder?.Invoke(typeof(EventsServiceImpl), endpoints.MapGrpcService<EventsServiceImpl>());
-            builder?.Invoke(typeof(HostInfoServiceImpl), endpoints.MapGrpcService<HostInfoServiceImpl>());
-            builder?.Invoke(typeof(TagSearchServiceImpl), endpoints.MapGrpcService<TagSearchServiceImpl>());
-            builder?.Invoke(typeof(TagValueAnnotationsServiceImpl), endpoints.MapGrpcService<TagValueAnnotationsServiceImpl>());
-            builder?.Invoke(typeof(TagValuesServiceImpl), endpoints.MapGrpcService<TagValuesServiceImpl>());
+        public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) {
+            MapService<AdaptersServiceImpl>(endpoints, builder);
+            MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
+            MapService<EventsServiceImpl>(endpoints, builder);
+            MapService<HostInfoServiceImpl>(endpoints, builder);
+            MapService<TagSearchServiceImpl>(endpoints, builder);
+            MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
+            MapService<TagValuesServiceImpl>(endpoints, builder);
 
             return endpoints;
+        }
+
+
+        /// <summary>
+        /// Registers a gRPC service.
+        /// </summary>
+        /// <typeparam name="TService">
+        ///   The service type.
+        /// </typeparam>
+        /// <param name="endpoints">
+        ///   The endpoint route builder to register the service with.
+        /// </param>
+        /// <param name="builder">
+        ///   The optional builder for the registered endpoint.
+        /// </param>
+        private static void MapService<TService>(IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) where TService : class {
+            var endpoint = endpoints.MapGrpcService<TService>();
+            builder?.Invoke(typeof(TService), endpoint);
         }
 
     }

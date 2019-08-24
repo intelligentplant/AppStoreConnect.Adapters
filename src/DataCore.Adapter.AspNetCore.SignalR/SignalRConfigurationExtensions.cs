@@ -51,7 +51,8 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The endpoint route builder.
         /// </returns>
         public static IEndpointRouteBuilder MapDataCoreAdapterHubs(this IEndpointRouteBuilder endpoints, Action<Type, HubEndpointConventionBuilder> builder) {
-            builder?.Invoke(typeof(AdapterHub), endpoints.MapHub<AdapterHub>(HubRoute));
+            var hubEndpointBuilder = endpoints.MapHub<AdapterHub>(HubRoute);
+            builder?.Invoke(typeof(AdapterHub), hubEndpointBuilder);
             return endpoints;
         }
 
