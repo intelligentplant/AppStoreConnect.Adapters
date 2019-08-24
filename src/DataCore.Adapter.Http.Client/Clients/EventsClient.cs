@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Models;
@@ -47,6 +49,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -62,7 +67,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<EventMessage>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<EventMessage>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesForTimeRangeRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -70,10 +75,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-time-range";
 
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<ReadEventMessagesForTimeRangeRequest>(request, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<IEnumerable<EventMessage>>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<EventMessage>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -87,6 +101,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -102,7 +119,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<EventMessageWithCursorPosition>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<EventMessageWithCursorPosition>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesUsingCursorRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -110,10 +127,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-cursor";
 
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<ReadEventMessagesUsingCursorRequest>(request, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<IEnumerable<EventMessageWithCursorPosition>>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<EventMessageWithCursorPosition>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -121,11 +147,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// Writes event messages to an adapter.
         /// </summary>
+        /// 
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
         /// <param name="events">
         ///   The events to write.
+        /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -139,7 +169,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="events"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(string adapterId, IEnumerable<WriteEventMessageItem> events, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(string adapterId, IEnumerable<WriteEventMessageItem> events, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -154,10 +184,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write";
 
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, events, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<IEnumerable<WriteEventMessageItem>>(events, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<IEnumerable<WriteEventMessageResult>>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<WriteEventMessageResult>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 

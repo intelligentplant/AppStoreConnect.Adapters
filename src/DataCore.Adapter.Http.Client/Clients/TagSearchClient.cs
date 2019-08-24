@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
@@ -46,6 +48,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -61,17 +66,27 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagDefinition>> FindTagsAsync(string adapterId, FindTagsRequest request, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagDefinition>> FindTagsAsync(string adapterId, FindTagsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/find";
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
 
-                return await response.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<FindTagsRequest>(request, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
+
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -85,6 +100,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -100,17 +118,28 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagDefinition>> GetTagsAsync(string adapterId, GetTagsRequest request, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagDefinition>> GetTagsAsync(string adapterId, GetTagsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/get-by-id";
-            var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<GetTagsRequest>(request, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
+
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
+            }
         }
 
     }

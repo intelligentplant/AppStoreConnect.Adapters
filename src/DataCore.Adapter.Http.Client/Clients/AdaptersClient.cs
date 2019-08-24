@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
@@ -40,17 +41,27 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// Gets information about the available adapters in the remote host.
         /// </summary>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> GetAdaptersAsync(CancellationToken cancellationToken = default) {
-            using (var response = await _client.HttpClient.GetAsync(UrlPrefix, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+        public async Task<IEnumerable<AdapterDescriptor>> GetAdaptersAsync(ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<IEnumerable<AdapterDescriptor>>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterDescriptor>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -61,6 +72,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -70,15 +84,23 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<AdapterDescriptorExtended> GetAdapterAsync(string adapterId, CancellationToken cancellationToken = default) {
+        public async Task<AdapterDescriptorExtended> GetAdapterAsync(string adapterId, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
-            using (var response = await _client.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
 
-                return await response.Content.ReadAsAsync<AdapterDescriptorExtended>(cancellationToken).ConfigureAwait(false);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddStateProperty(principal);
+
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<AdapterDescriptorExtended>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 

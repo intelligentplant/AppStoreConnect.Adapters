@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
@@ -39,17 +40,27 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// Requests information about the remote adapter host.
         /// </summary>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will return information about the remote host.
         /// </returns>
-        public async Task<HostInfo> GetHostInfoAsync(CancellationToken cancellationToken = default) {
-            using (var response = await _client.HttpClient.GetAsync(UrlPrefix, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+        public async Task<HostInfo> GetHostInfoAsync(ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<HostInfo>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<HostInfo>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 

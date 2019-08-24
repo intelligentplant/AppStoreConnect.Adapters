@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Models;
@@ -46,6 +48,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -61,7 +66,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<TagValueAnnotation> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken = default) {
+        public async Task<TagValueAnnotation> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -69,10 +74,17 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var response = await _client.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<TagValueAnnotation>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<TagValueAnnotation>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -85,6 +97,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </param>
         /// <param name="request">
         ///   The request.
+        /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -101,7 +116,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(string adapterId, ReadAnnotationsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -109,10 +124,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, request, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<ReadAnnotationsRequest>(request, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<IEnumerable<TagValueAnnotationQueryResult>>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagValueAnnotationQueryResult>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -126,6 +150,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -141,7 +168,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> CreateAnnotationAsync(string adapterId, CreateAnnotationRequest request, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> CreateAnnotationAsync(string adapterId, CreateAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -149,10 +176,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/create";
 
-            using (var response = await _client.HttpClient.PostAsJsonAsync(url, request.Annotation, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<TagValueAnnotationBase>(request.Annotation, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -166,6 +202,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -181,7 +220,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> UpdateAnnotationAsync(string adapterId, UpdateAnnotationRequest request, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> UpdateAnnotationAsync(string adapterId, UpdateAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -189,10 +228,19 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var response = await _client.HttpClient.PutAsJsonAsync(url, request.Annotation, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Put, url) {
+                Content = new ObjectContent<TagValueAnnotationBase>(request.Annotation, new JsonMediaTypeFormatter())
+            }.AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
@@ -206,6 +254,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -221,7 +272,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> DeleteAnnotationAsync(string adapterId, DeleteAnnotationRequest request, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> DeleteAnnotationAsync(string adapterId, DeleteAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -229,10 +280,17 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var response = await _client.HttpClient.DeleteAsync(url, cancellationToken).ConfigureAwait(false)) {
-                response.EnsureSuccessStatusCode();
+            var httpRequest = new HttpRequestMessage(HttpMethod.Delete, url).AddStateProperty(principal);
 
-                return await response.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
             }
         }
 
