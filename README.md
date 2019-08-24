@@ -1,10 +1,18 @@
 # Intelligent Plant App Store Connect Adapters
 
-Intelligent Plant's [Industrial App Store](https://appstore.intelligentplant.com) securely connects your industrial plant historian and alarm & event systems to apps using [App Store Connect](https://appstore.intelligentplant.com/Welcome/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5). App Store Connect comes with built-in drivers for many 3rd party systems (including OSIsoft PI and Asset Framework, OPC DA/HDA/AE, and more). App Store Connect can also integrate with 3rd party systems using an adapter.
+Industrial processes generate a variety of different types of data, such as real-time instrument readings, messages from alarm & event systems, and so on. Real-time data typically needs to be archived to a time-based data store for long-term storage, from where it can be visualized, aggregated, and monitored to ensure that the process remains healthy.
 
-An adapter is a component that exposes real-time process data and/or alarm & event data to App Store Connect. This data can then be used by apps such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
+Intelligent Plant's [Industrial App Store](https://appstore.intelligentplant.com) securely connects your industrial plant historian and alarm & event systems to apps using [App Store Connect](https://appstore.intelligentplant.com/Welcome/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5). App Store Connect comes with built-in drivers for many 3rd party systems (including OSIsoft PI and Asset Framework, OPC DA/HDA/AE, MQTT, and more). App Store Connect can also integrate with 3rd party systems using an adapter.
 
-An ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP- or SignalR-based API.
+## What is an Adapter?
+
+An adapter is a component can expose real-time process data and/or alarm & event data to App Store Connect. This data can then be used by apps such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
+
+Different systems expose different features. For example, an MQTT broker can be used to transmit sensor readings from IoT devices to interested subscribers, but it is not capable of long-term storage of these readings, or of performing ad hoc aggregation of the data (e.g. find the average value of instrument X at 1 hour intervals over the previous calendar day). Some alarm & event systems may allow historical querying of event messages, where as others (such as OPC AE) can only emit ephemeral event messages. Some systems may be read-only, others may be write-only, and some may allow data to flow in both directions. An adapter allows you to integrate with a system (or multiple systems), and expose the system's capabilities as small, discrete features. 
+
+Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-, SignalR, or [gRPC](https://grpc.io/)-based API. Hosting is also possible in other frameworks via gRPC (see notes at the end of this README).
+
+# Summary of Projects
 
 Some of the core projects in the repository are:
 
@@ -12,25 +20,31 @@ Some of the core projects in the repository are:
 * `DataCore.Adapter.Abstractions` ([source](/src/DataCore.Adapter.Abstractions)) - a library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a library that contains base classes and utility classes for simplifying the implementation of adapters and adapter features.
 
+## Hosting
+
 The following projects provide support for hosting adapters in ASP.NET Core applications:
 
 * `DataCore.Adapter.AspNetCore.Common` ([source](/src/DataCore.Adapter.AspNetCore.Common)) - a library containing concrete implementations of various types to provide integration with ASP.NET Core 2.2 and 3.0 applications.
 * `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a library containing API controllers for use with with ASP.NET Core 2.2 and 3.0 applications.
 * `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2 and 3.0 applications.
-* `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter [gRPC](https://grpc.io/) services in ASP.NET Core 3.0 applications.
-* `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - C# implementations of the [gRPC](https://grpc.io/) adapter services.
+* `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.0 applications.
+* `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - C# implementations of the gRPC adapter services.
 
-There are also projects that allow the creation of proxy adapters:
+## Client Libraries and Proxies
+
+There are also projects that allow the creation of proxy adapters, and their corresponding client libraries:
 
 * `DataCore.Adapter.AspNetCore.SignalR.Client` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Client)) - a strongly-typed client for querying remote adapters via ASP.NET Core SignalR.
 * `DataCore.Adapter.AspNetCore.SignalR.Proxy` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the strongly-typed SignalR client.
 * `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a strongly-typed client for querying remote adapters via gRPC.
 * `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
-* `DataCore.Adapter.Http.Client` ([source](/src/DataCore.Adapter.Http.Client)) - a strongly-typed client for querying remote adapters via API controllers.
+* `DataCore.Adapter.Http.Client` ([source](/src/DataCore.Adapter.Http.Client)) - a strongly-typed client for querying remote adapters via the HTTP API.
 
-Additional projects of interest include:
+## Adapter Implementations
 
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a library containing an adapter that uses CSV files to serve real-time and historical tag values.
+
+## Example Projects
 
 The [examples](/examples) folder contains example host and client applications.
 
@@ -86,21 +100,21 @@ app.UseEndpoints(endpoints => {
 
 # Testing API Calls
 
-The repository contains a [Postman collection](/postman_collection.json) that you can use to test API calls to your host.
+The repository contains a [Postman collection](/postman_collection.json) that you can use to test HTTP API calls to your host.
 
 
 # Authentication
 
-At the moment, only anonymous and Windows authentication is supported at the App Store Connect end. Other authentication types (e.g. OAuth2 authentication flows, client certificates) will be supported in future.
+App Store Connect can authenticate with adapter hosts via bearer token, client certificate, or Windows authentication. Adapter hosts can of course apply any authentication schemes that are valid in the host framework!
 
 
 # Authorization
 
-App Store Connect applies its own authorization before dispatching queries to an adapter, so a given user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
+App Store Connect applies its own authorization before dispatching queries to an adapter, so a given Industrial App Store user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
 The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAuthorizationService.cs) service can be used to authorize access the individual adapters and adapter features; this authorization is automatically applied by the [ASP.NET Core](/src/DataCore.Adapter.AspNetCore) host on incoming calls to API or SignalR endpoints.
 
-Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on tag data queries.
+Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.
 
 
 # Development and Hosting Without .NET
