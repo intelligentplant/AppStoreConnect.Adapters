@@ -117,6 +117,13 @@ The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAu
 Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.
 
 
+# Building
+
+Run [build.ps1](./build.ps1) to build the solution.
+
+Signing of assemblies requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
+
+
 # Development and Hosting Without .NET
 
 If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/DataCore.Adapter.Grpc/Protos).

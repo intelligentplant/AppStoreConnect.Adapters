@@ -9,6 +9,8 @@ This script runs MSBuild on this repository.
 Specify MSBuild configuration: Debug, Release
 .PARAMETER Pack
 Produce NuGet packages.
+.PARAMETER Sign
+Sign assemblies and NuGet packages (requires additional configuration not provided by this script).
 .PARAMETER Verbosity
 MSBuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]
 .PARAMETER MSBuildArguments
@@ -22,6 +24,8 @@ param(
     [ValidateSet('Debug', 'Release')]$Configuration,
 
     [switch]$Pack,
+
+    [switch]$Sign,
     
     [string]$Verbosity = 'minimal',
 
@@ -62,6 +66,11 @@ if (-not $Configuration) {
     $Configuration = 'Debug'
 }
 $MSBuildArguments += "/p:Configuration=$Configuration"
+
+# If the Sign flag is set, add a SignOutput build argument.
+if ($Sign) {
+    $MSBuildArguments += "/p:SignOutput=true"
+}
 
 $local:exit_code = $null
 try {

@@ -12,6 +12,7 @@
     <PackagePrefix>IntelligentPlant.AppStoreConnect</PackagePrefix>
     <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages\$(Configuration)</PackageOutputPath>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
     <Version>0.1.0-alpha</Version>
