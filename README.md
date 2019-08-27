@@ -121,7 +121,7 @@ Additionally, all methods on adapter feature interfaces are passed an [IAdapterC
 
 Run [build.ps1](./build.ps1) to build the solution.
 
-Signing of assemblies requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
+Signing of assemblies (by specifying the `-Sign` flag when running the build script) requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
 
 
 # Development and Hosting Without .NET
