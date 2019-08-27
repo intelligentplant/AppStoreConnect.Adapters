@@ -234,16 +234,21 @@ namespace DataCore.Adapter {
                     throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
                 }
 
+                string descriptorId;
+                lock (_descriptor) {
+                    descriptorId = _descriptor.Id;
+                }
+
                 try {
-                    Logger.LogInformation(Resources.Log_StartingAdapter, _descriptor.Id);
+                    Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
                     using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                         await StartAsync(ctSource.Token).ConfigureAwait(false);
                     }
                     IsStarted = true;
-                    Logger.LogInformation(Resources.Log_StartedAdapter, _descriptor.Id);
+                    Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_AdapterStartupError, _descriptor.Id);
+                    Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
                     throw;
                 }
             }
@@ -258,14 +263,19 @@ namespace DataCore.Adapter {
             CheckDisposed();
             CheckStarted();
 
+            string descriptorId;
+            lock (_descriptor) {
+                descriptorId = _descriptor.Id;
+            }
+
             try {
-                Logger.LogInformation(Resources.Log_StoppingAdapter, _descriptor.Id);
+                Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
                 _stopTokenSource.Cancel();
                 await StopAsync(false, cancellationToken).ConfigureAwait(false);
-                Logger.LogInformation(Resources.Log_StoppedAdapter, _descriptor.Id);
+                Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
             }
             catch (Exception e) {
-                Logger.LogError(e, Resources.Log_AdapterStopError, _descriptor.Id);
+                Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
                 throw;
             }
             finally {
