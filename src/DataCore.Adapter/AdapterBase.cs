@@ -16,7 +16,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The options type for the adapter.
     /// </typeparam>
-    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable where TAdapterOptions : AdapterOptions {
+    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the adapter has been disposed.
@@ -112,23 +112,30 @@ namespace DataCore.Adapter {
         ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="options"/> is <see langword="null"/>.
+        ///   <paramref name="options"/> or <see cref="IOptions{TOptions}.Value"/> is 
+        ///   <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   The <see cref="AdapterOptions.Id"/> property on the <paramref name="options"/> is 
-        ///   <see langword="null"/> or white space.
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   The <paramref name="options"/> are not valid.
         /// </exception>
-        protected AdapterBase(TAdapterOptions options, ILoggerFactory loggerFactory) {
-            if (options == null) {
-                throw new ArgumentNullException(nameof(options));
+        protected AdapterBase(IOptions<TAdapterOptions> options, ILoggerFactory loggerFactory) {
+            if (options?.Value == null) {
+                throw new ArgumentException(nameof(options));
             }
 
+            // Validate options.
+            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
+                options.Value,
+                new System.ComponentModel.DataAnnotations.ValidationContext(options.Value),
+                true
+            );
+
             _descriptor = new AdapterDescriptor(
-                options.Id, 
-                string.IsNullOrWhiteSpace(options.Name) 
-                    ? options.Id 
-                    : options.Name, 
-                options.Description
+                options.Value.Id, 
+                string.IsNullOrWhiteSpace(options.Value.Name) 
+                    ? options.Value.Id 
+                    : options.Value.Name, 
+                options.Value.Description
             );
 
             Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
@@ -157,9 +164,8 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   The named options specified by <paramref name="optionsName"/> cannot be resolved.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   The <see cref="AdapterOptions.Id"/> property on the options retrieved from <paramref name="optionsMonitor"/> 
-        ///   is <see langword="null"/> or white space.
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
         protected AdapterBase(IOptionsMonitor<TAdapterOptions> optionsMonitor, string optionsName, ILoggerFactory loggerFactory) {
             if (optionsMonitor == null) {
@@ -175,6 +181,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(Resources.Error_NamedAdapterOptionsNotFound, optionsName), nameof(optionsName));
             }
 
+            // Validate options.
+            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
+                options,
+                new System.ComponentModel.DataAnnotations.ValidationContext(options),
+                true
+            );
+
             _descriptor = new AdapterDescriptor(
                 options.Id,
                 string.IsNullOrWhiteSpace(options.Name)
@@ -188,6 +201,19 @@ namespace DataCore.Adapter {
             _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
                 if (!string.Equals(name, optionsName)) {
                     // These options are for a different adapter of the same type!
+                    return;
+                }
+
+                // Validate updated options.
+                try {
+                    System.ComponentModel.DataAnnotations.Validator.ValidateObject(
+                        opts,
+                        new System.ComponentModel.DataAnnotations.ValidationContext(opts),
+                        true
+                    );
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_InvalidAdapterOptionsUpdate);
                     return;
                 }
 

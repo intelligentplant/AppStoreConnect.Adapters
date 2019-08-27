@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
@@ -24,13 +25,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Csv.CsvAdapterOptions() {
+                    Options.Create(new Csv.CsvAdapterOptions() {
                         Id = "sensor-csv",
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
                         CsvFile = "DummySensorData.csv"
-                    },
+                    }),
                     sp.GetRequiredService<ILoggerFactory>()
                 );
             });

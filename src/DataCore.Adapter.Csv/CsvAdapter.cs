@@ -13,6 +13,7 @@ using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Csv {
 
@@ -53,25 +54,19 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(CsvAdapterOptions options, ILoggerFactory loggerFactory)
+        public CsvAdapter(IOptions<CsvAdapterOptions> options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
-
-            // Validate options.
-            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
-                options, 
-                new System.ComponentModel.DataAnnotations.ValidationContext(options)
-            );
 
             // Construct adapter features.
             AddFeatures(this);
             AddFeatures(new ReadHistoricalTagValuesHelper(this, this));
 
-            var snapshotPushUpdateInterval = options.SnapshotPushUpdateInterval;
+            var snapshotPushUpdateInterval = options.Value.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
                 AddFeatures(new CsvAdapterSnapshotSubscriptionManager(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
             }
 
-            _options = options;
+            _options = options.Value;
         }
 
 

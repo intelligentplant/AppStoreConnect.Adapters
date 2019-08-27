@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.GrpcExampleServer {
     public class Startup {
@@ -14,26 +15,26 @@ namespace DataCore.Adapter.GrpcExampleServer {
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Csv.CsvAdapterOptions() {
+                    Options.Create(new Csv.CsvAdapterOptions() {
                         Id = "sensor-csv",
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
                         CsvFile = "DummySensorData.csv"
-                    },
+                    }),
                     sp.GetRequiredService<ILoggerFactory>()
                 );
             });
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
-                    new Csv.CsvAdapterOptions() {
+                    Options.Create(new Csv.CsvAdapterOptions() {
                         Id = "acoustic-probe-csv",
                         Name = "Acoustic Probe CSV",
                         Description = "CSV adapter with dummy acoustic probe data",
                         IsDataLoopingAllowed = true,
                         CsvFile = "DummyAcousticProbeData.csv"
-                    },
+                    }),
                     sp.GetRequiredService<ILoggerFactory>()
                 );
             });

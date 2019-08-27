@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
     /// <summary>
     /// Options for creating a <see cref="SignalRAdapterProxy"/>.
@@ -8,11 +10,13 @@
         /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
+        [Required]
         public string RemoteId { get; set; }
 
         /// <summary>
         /// A factory method that creates hub connections on behalf of the proxy.
         /// </summary>
+        [Required]
         public ConnectionFactory ConnectionFactory { get; set; }
 
         /// <summary>

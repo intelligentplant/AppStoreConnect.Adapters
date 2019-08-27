@@ -164,6 +164,9 @@
   <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
+  <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
+    <value>Updated adapter options are not valid.</value>
+  </data>
   <data name="Log_StartedAdapter" xml:space="preserve">
     <value>Started adapter {AdapterId}.</value>
   </data>

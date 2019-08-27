@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.Grpc.Proxy {
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DataCore.Adapter.Grpc.Proxy {
 
     /// <summary>
     /// Configuration options for gRPC adapter proxies.
@@ -8,6 +10,7 @@
         /// <summary>
         /// The ID of the remote adapter to connect to.
         /// </summary>
+        [Required]
         public string RemoteId { get; set; }
 
         /// <summary>

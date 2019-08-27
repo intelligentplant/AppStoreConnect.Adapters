@@ -196,6 +196,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updated adapter options are not valid..
+        /// </summary>
+        internal static string Log_InvalidAdapterOptionsUpdate {
+            get {
+                return ResourceManager.GetString("Log_InvalidAdapterOptionsUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Started adapter {AdapterId}..
         /// </summary>
         internal static string Log_StartedAdapter {

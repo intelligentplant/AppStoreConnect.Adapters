@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events.Features;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Example {
 
@@ -19,14 +20,14 @@ namespace DataCore.Adapter.Example {
         ///   The adapter logger factory.
         /// </param>
         public ExampleAdapter(ILoggerFactory loggerFactory) : base(
-            new Csv.CsvAdapterOptions() {
+            Options.Create(new Csv.CsvAdapterOptions() {
                 Id = "example",
                 Name = "Example Adapter",
                 Description = "An example data source adapter",
                 IsDataLoopingAllowed = true,
                 SnapshotPushUpdateInterval = 5000,
                 GetCsvStream = () => new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(CsvData))
-            },
+            }),
             loggerFactory
         ) {
             // Register additional features!

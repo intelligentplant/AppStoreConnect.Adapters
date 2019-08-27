@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter {
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DataCore.Adapter {
 
     /// <summary>
     /// Base class for runtime options for adapters deriving from <see cref="AdapterBase{TAdapterOptions}"/>.
@@ -8,6 +10,7 @@
         /// <summary>
         /// The adapter ID.
         /// </summary>
+        [Required]
         public string Id { get; set; }
 
         /// <summary>
