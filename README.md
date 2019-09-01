@@ -123,4 +123,4 @@ Signing of assemblies (by specifying the `-Sign` flag when running the build scr
 
 # Development and Hosting Without .NET
 
-If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/DataCore.Adapter.Grpc/Protos).
+If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/DataCore.Adapter.Grpc/Protos). Additionally, the [swagger.json](/swagger.json) specification can be used to build a compatible HTTP API using the framework of your choice.
