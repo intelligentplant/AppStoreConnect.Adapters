@@ -1,0 +1,2767 @@
+{
+  "x-generator": "NSwag v13.0.6.0 (NJsonSchema v10.0.23.0 (Newtonsoft.Json v12.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "App Store Connect Adapters",
+    "description": "HTTP API for querying an App Store Connect adapters host.",
+    "version": "1.0.0"
+  },
+  "servers": [],
+  "paths": {
+    "/api/data-core/v1.0/adapters": {
+      "get": {
+        "tags": [
+          "Adapters"
+        ],
+        "summary": "Gets information about all registered adapters that are visible to the caller.",
+        "operationId": "Adapters_GetAllAdapters",
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of AdapterDescriptor \nobjects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdapterDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/adapters/{adapterId}": {
+      "get": {
+        "tags": [
+          "Adapters"
+        ],
+        "summary": "Gets information about the specified adapter.",
+        "operationId": "Adapters_GetAdapterById",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the AdapterDescriptorExtended for the \nrequested adapter.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdapterDescriptorExtended"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/asset-model/{adapterId}/browse": {
+      "get": {
+        "tags": [
+          "AssetModelBrowser"
+        ],
+        "summary": "Browses the asset model hierarchy. Up to MaxNodesPerQuery will be \nreturned.",
+        "operationId": "AssetModelBrowser_BrowseNodes",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "The optional starting node ID. If no value is specified, browsing will start at the \ntop-level nodes in the hierarchy.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "description": "The maximum depth of node to retrieve.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": -1
+            },
+            "x-position": 3
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The results page to retrieve.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size for the query.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the matching AssetModelNode objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetModelNode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AssetModelBrowser"
+        ],
+        "summary": "Browses the asset model hierarchy. Up to MaxNodesPerQuery will be \nreturned.",
+        "operationId": "AssetModelBrowser_BrowseNodesPost",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The browse request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseAssetModelNodesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the matching AssetModelNode objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetModelNode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/asset-model/{adapterId}/get-by-id": {
+      "post": {
+        "tags": [
+          "AssetModelBrowser"
+        ],
+        "summary": "Gets a collection of nodes by ID. Up to MaxNodesPerQuery will be returned.",
+        "operationId": "AssetModelBrowser_GetNodes",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request object describing the nodes to retrieve.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetAssetModelNodesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the matching AssetModelNode objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetModelNode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/asset-model/{adapterId}/find": {
+      "post": {
+        "tags": [
+          "AssetModelBrowser"
+        ],
+        "summary": "Finds nodes matching the specified search filter. Up to MaxNodesPerQuery \nwill be returned.",
+        "operationId": "AssetModelBrowser_FindNodes",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request object describing the nodes to retrieve.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindAssetModelNodesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the matching AssetModelNode objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetModelNode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/events/{adapterId}/by-time-range": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Reads historical event messages for the specified time range.",
+        "operationId": "Events_ReadEventMessagesForTimeRange",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadEventMessagesForTimeRangeRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of EventMessage objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventMessage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/events/{adapterId}/by-cursor": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Reads historical event messages starting at the specified cursor position.",
+        "operationId": "Events_ReadEventMessagesByCursor",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadEventMessagesUsingCursorRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of EventMessageWithCursorPosition \nobjects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventMessageWithCursorPosition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/events/{adapterId}/write": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Writes event messages to an adapter. Up to MaxEventMessagesPerWriteRequest \nmessages can be written in a single request.",
+        "description": "Up to MaxEventMessagesPerWriteRequest values can be written to the \nadapter in a single request. Subsequent values will be ignored. No corresponding \nWriteEventMessageResult object will be returned for these items.\n            ",
+        "operationId": "Events_WriteEventMessages",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to write to.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The event messages to write.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WriteEventMessagesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of WriteEventMessageResult \nobjects (one per sample written).\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WriteEventMessageResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/host-info": {
+      "get": {
+        "tags": [
+          "HostInfo"
+        ],
+        "summary": "Gets information about the hosting application.",
+        "operationId": "HostInfo_GetHostInfo",
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a HostInfo object describing the hosting \napplication.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-annotations/{adapterId}": {
+      "post": {
+        "tags": [
+          "TagAnnotations"
+        ],
+        "summary": "Reads tag value annotations from an adapter.",
+        "operationId": "TagAnnotations_ReadAnnotations",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The query.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadAnnotationsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of TagValueAnnotationQueryResult objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueAnnotationQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-annotations/{adapterId}/{tagId}/{annotationId}": {
+      "get": {
+        "tags": [
+          "TagAnnotations"
+        ],
+        "summary": "Gets an annotation by ID.",
+        "operationId": "TagAnnotations_ReadAnnotation",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tagId",
+            "in": "path",
+            "required": true,
+            "description": "The tag ID for the annotation.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "annotationId",
+            "in": "path",
+            "required": true,
+            "description": "The ID for the annotation.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the matching TagValueAnnotation object.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagValueAnnotation"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TagAnnotations"
+        ],
+        "summary": "Deletes an annotation on a tag.",
+        "operationId": "TagAnnotations_UpdateAnnotation",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tagId",
+            "in": "path",
+            "required": true,
+            "description": "The tag ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "annotationId",
+            "in": "path",
+            "required": true,
+            "description": "The annotation ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "requestBody": {
+          "x-name": "annotation",
+          "description": "The annotation.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagValueAnnotationBase"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 4
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a WriteTagValueAnnotationResult \ndescribing the operation.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteTagValueAnnotationResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TagAnnotations"
+        ],
+        "summary": "Deletes an annotation on a tag.",
+        "operationId": "TagAnnotations_DeleteAnnotation",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tagId",
+            "in": "path",
+            "required": true,
+            "description": "The tag ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "annotationId",
+            "in": "path",
+            "required": true,
+            "description": "The annotation ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a WriteTagValueAnnotationResult \ndescribing the operation.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteTagValueAnnotationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-annotations/{adapterId}/{tagId}/create": {
+      "post": {
+        "tags": [
+          "TagAnnotations"
+        ],
+        "summary": "Creates an annotation on a tag.",
+        "operationId": "TagAnnotations_CreateAnnotation",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tagId",
+            "in": "path",
+            "required": true,
+            "description": "The tag ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "annotation",
+          "description": "The annotation.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagValueAnnotationBase"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a WriteTagValueAnnotationResult \ndescribing the operation.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteTagValueAnnotationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tags/{adapterId}/find": {
+      "post": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Performs a tag search on an adapter.",
+        "operationId": "TagSearch_FindTagsAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindTagsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of TagDefinition objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Performs a tag search on an adapter.",
+        "operationId": "TagSearch_FindTags",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The tag name filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "The tag description filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "units",
+            "in": "query",
+            "description": "The tag units filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 5
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The results page to return.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of TagDefinition objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tags/{adapterId}/get-by-id": {
+      "post": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Gets tags by ID.",
+        "operationId": "TagSearch_GetTagsAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTagsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of matching TagDefinition \nobjects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Gets tags by ID.",
+        "operationId": "TagSearch_GetTags",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "The IDs of the tags to retrieve.\n            ",
+            "collectionFormat": "multi",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of matching TagDefinition \nobjects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/snapshot": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests snapshot (current) tag values.",
+        "operationId": "TagValues_ReadSnapshotValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The snapshot data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadSnapshotTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the snapshot values for the requested tags.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/raw": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests raw (archived) tag values.",
+        "operationId": "TagValues_ReadRawValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The raw data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadRawTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the raw values for the requested tags.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/plot": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests plot (vizualization-friendly) tag values.",
+        "description": "Plot data is intended to provide visualization-friendly data sets for display in e.g. \ncharts.\n            ",
+        "operationId": "TagValues_ReadPlotValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The plot data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadPlotTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the plot values for the requested tags.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/interpolated": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests interpolated tag values.",
+        "operationId": "TagValues_ReadInterpolatedValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The interpolated data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadInterpolatedTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the interpolated values for the requested tags.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/values-at-times": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests tag values at specific timestamps.",
+        "operationId": "TagValues_ReadValuesAtTimes",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The values-at-times data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadTagValuesAtTimesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the values for the requested tags at the requested times.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/processed": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests processed (aggregated) tag values.",
+        "description": "Processed data queries are used to request aggregated values for tags. The functions \nsupported vary by data source. The DefaultDataFunctions class defines\nconstants for commonly-supported aggregate functions.\n            ",
+        "operationId": "TagValues_ReadProcessedValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The processed data request.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadProcessedTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the aggregated values for the requested tags and data \nfunctions.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessedTagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/supported-aggregations": {
+      "get": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
+        "description": "Processed data queries are used to request aggregated values for tags. The functions \nsupported vary by data source. The DefaultDataFunctions class defines\nconstants for commonly-supported aggregate functions.\n            ",
+        "operationId": "TagValues_GetSupportedAggregateFunctions",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain descriptors for the aggregated function names that can \nbe specified.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataFunctionDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/write/snapshot": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Writes values to an adapter's snapshot. Up to MaxSamplesPerWriteRequest \nvalues can be written in a single request.",
+        "description": "Up to MaxSamplesPerWriteRequest values can be written to the adapter \nin a single request. Subsequent values will be ignored. No corresponding \nWriteTagValueResult object will be returned for these items.\n            ",
+        "operationId": "TagValues_WriteSnapshotValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to write to.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The values to write.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WriteTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of WriteTagValueResult \nobjects (one per sample written).\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WriteTagValueResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/tag-values/{adapterId}/write/history": {
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Writes values to an adapter's historical archive. Up to MaxSamplesPerWriteRequest\nvalues can be written in a single request.",
+        "description": "Up to MaxSamplesPerWriteRequest values can be written to the adapter \nin a single request. Subsequent values will be ignored. No corresponding \nWriteTagValueResult object will be returned for these items.\n            ",
+        "operationId": "TagValues_WriteHistoricalValues",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to write to.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "values",
+          "description": "The values to write.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WriteTagValuesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of WriteTagValueResult \nobjects (one per sample written).\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WriteTagValueResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdapterDescriptor": {
+        "type": "object",
+        "description": "A descriptor for an App Store Connect adapter.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The identifier for the adapter. This can be any type of value, as long as it is unique \nwithin the hosting application, and does not change.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The adapter name.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The adapter description.",
+            "nullable": true
+          }
+        }
+      },
+      "AdapterDescriptorExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterDescriptor"
+          },
+          {
+            "type": "object",
+            "description": "An extended descriptor for an adapter, that includes information about the features that the \nadapter has implemented.",
+            "additionalProperties": false,
+            "properties": {
+              "features": {
+                "type": "array",
+                "description": "The names of the implemented standard adapter features.",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "extensions": {
+                "type": "array",
+                "description": "The names of the implemented extension adapter features.",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "properties": {
+                "type": "object",
+                "description": "Additional adapter properties.",
+                "nullable": true,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AssetModelNode": {
+        "type": "object",
+        "description": "Describes a node in an adapter's asset model.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the node.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The node name.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The node description.",
+            "nullable": true
+          },
+          "parent": {
+            "type": "string",
+            "description": "The parent ID of the node. Top-level nodes will have a value of null.",
+            "nullable": true
+          },
+          "children": {
+            "type": "array",
+            "description": "The IDs of the child nodes of this node.",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "measurements": {
+            "type": "array",
+            "description": "The measurements associated with the node.",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/AssetModelNodeMeasurement"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional properties associated with the node.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssetModelNodeMeasurement": {
+        "type": "object",
+        "description": "Describes a measurement on an asset model node. Note that the measurement can be provided \nfrom a tag on a different adapter to the one that the node is defined on.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The measurement name.",
+            "nullable": true
+          },
+          "adapterId": {
+            "type": "string",
+            "description": "The ID of the adapter that the tag for the measurement is defined on.",
+            "nullable": true
+          },
+          "tag": {
+            "description": "The tag identifier for the measurement.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TagIdentifier"
+              }
+            ]
+          }
+        }
+      },
+      "TagIdentifier": {
+        "type": "object",
+        "description": "Defines basic information for identifying a real-time data tag.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the tag.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The tag name.",
+            "nullable": true
+          }
+        }
+      },
+      "BrowseAssetModelNodesRequest": {
+        "type": "object",
+        "description": "Describes a request to browse nodes in an adapter's asset model.",
+        "additionalProperties": false,
+        "properties": {
+          "parentId": {
+            "type": "string",
+            "description": "The ID of the parent node to start at. Specify null to request top-level \nnodes.",
+            "nullable": true
+          },
+          "depth": {
+            "type": "integer",
+            "description": "The maximum number of hierarchy levels to request. Specify less than one to request all \nlevels below the ParentId.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "The page size for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page number for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          }
+        }
+      },
+      "GetAssetModelNodesRequest": {
+        "type": "object",
+        "description": "Describes a request to get asset model nodes by ID.",
+        "additionalProperties": false,
+        "required": [
+          "nodes"
+        ],
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "description": "The IDs of the nodes to retrieve.",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FindAssetModelNodesRequest": {
+        "type": "object",
+        "description": "Describes a request to search for asset model nodes.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name filter.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description filter.",
+            "nullable": true
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "The page size for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page number for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          }
+        }
+      },
+      "EventMessage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMessageBase"
+          },
+          {
+            "type": "object",
+            "description": "Describes a message generated by e.g. an alarms &amp; events system.",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EventMessageBase": {
+        "type": "object",
+        "description": "Base class describing a message generated by e.g. an alarms &amp; events system.",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier for the event.",
+            "nullable": true
+          },
+          "utcEventTime": {
+            "type": "string",
+            "description": "The UTC timestamp of the event.",
+            "format": "date-time"
+          },
+          "priority": {
+            "description": "The priority associated with the event.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EventPriority"
+              }
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "The event category.",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The event message.",
+            "nullable": true
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional event properties.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EventPriority": {
+        "type": "string",
+        "description": "Describes the priority associated with an event message.",
+        "x-enumNames": [
+          "Unknown",
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ],
+        "enum": [
+          "Unknown",
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ]
+      },
+      "ReadEventMessagesForTimeRangeRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalEventMessagesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve historical event messages using a time range.",
+            "additionalProperties": false,
+            "required": [
+              "utcStartTime",
+              "utcEndTime"
+            ],
+            "properties": {
+              "utcStartTime": {
+                "type": "string",
+                "description": "The UTC start time for the request.",
+                "format": "date-time",
+                "minLength": 1
+              },
+              "utcEndTime": {
+                "type": "string",
+                "description": "The UTC end time for the request.",
+                "format": "date-time",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "ReadHistoricalEventMessagesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Base class for adapter requests related to reading historical event messages.",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "required": [
+              "messageCount"
+            ],
+            "properties": {
+              "direction": {
+                "description": "The event read direction. When Backwards is specified, \nthe resulting events will be returned in descending order of time.",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EventReadDirection"
+                  }
+                ]
+              },
+              "messageCount": {
+                "type": "integer",
+                "description": "The maximum number of event messages to retrieve. A value of less than one is interpreted \nas meaning no limit. The adapter that handles the request can apply its own maximum limit \nto the query.",
+                "format": "int32",
+                "default": 500
+              }
+            }
+          }
+        ]
+      },
+      "EventReadDirection": {
+        "type": "string",
+        "description": "Describes the read direction for a historical event message read operation.",
+        "x-enumNames": [
+          "Forwards",
+          "Backwards"
+        ],
+        "enum": [
+          "Forwards",
+          "Backwards"
+        ]
+      },
+      "AdapterRequest": {
+        "type": "object",
+        "description": "Base class that adapter request objects can inherit from.",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "properties": {
+            "type": "object",
+            "description": "Additional request properties. These can be used to provide bespoke query parameters \nsupported by the adapter.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EventMessageWithCursorPosition": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMessageBase"
+          },
+          {
+            "type": "object",
+            "description": "Describes a message generated by e.g. an alarms &amp; events system that also contains a cursor position.",
+            "additionalProperties": false,
+            "properties": {
+              "cursorPosition": {
+                "type": "string",
+                "description": "The cursor position for the event message.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReadEventMessagesUsingCursorRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalEventMessagesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve historical event messages using a cursor to specified the query start position.",
+            "additionalProperties": false,
+            "properties": {
+              "cursorPosition": {
+                "type": "string",
+                "description": "The cursor position to start the query at.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "WriteEventMessageResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WriteOperationResult"
+          },
+          {
+            "type": "object",
+            "description": "Describes the result of an event message write operation.",
+            "additionalProperties": false,
+            "properties": {
+              "correlationId": {
+                "type": "string",
+                "description": "The optional correlation ID for the operation.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "WriteOperationResult": {
+        "type": "object",
+        "description": "Base class for result objects returned from write operations.",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "description": "Indicates if the write was successful.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WriteStatus"
+              }
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes associated with the write.",
+            "nullable": true
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional properties related to the write.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WriteStatus": {
+        "type": "string",
+        "description": "Describes the status of a write operation.",
+        "x-enumNames": [
+          "Unknown",
+          "Success",
+          "Fail",
+          "Pending"
+        ],
+        "enum": [
+          "Unknown",
+          "Success",
+          "Fail",
+          "Pending"
+        ]
+      },
+      "WriteEventMessagesRequest": {
+        "type": "object",
+        "description": "Describes a request to write event messages to an adapter.",
+        "additionalProperties": false,
+        "required": [
+          "events"
+        ],
+        "properties": {
+          "events": {
+            "type": "array",
+            "description": "The event messages to write.",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/WriteEventMessageItem"
+            }
+          }
+        }
+      },
+      "WriteEventMessageItem": {
+        "type": "object",
+        "description": "Describes an event message being written to an adapter.",
+        "additionalProperties": false,
+        "required": [
+          "eventMessage"
+        ],
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "The optional correlation ID for the operation.",
+            "nullable": true
+          },
+          "eventMessage": {
+            "description": "The event message to write.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EventMessage"
+              }
+            ]
+          }
+        }
+      },
+      "HostInfo": {
+        "type": "object",
+        "description": "Describes the hosting application.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The application name.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The application description.",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The Semantic Versioning v2 (https://semver.org/spec/v2.0.0.html) application version.",
+            "nullable": true
+          },
+          "vendor": {
+            "description": "Information about the application vendor.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VendorInfo"
+              }
+            ]
+          },
+          "properties": {
+            "type": "object",
+            "description": "Custom properties supplied by the hosting application.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "VendorInfo": {
+        "type": "object",
+        "description": "Describes the vendor for the hosting application.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The vendor name.",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The vendor URL.",
+            "nullable": true
+          }
+        }
+      },
+      "TagValueAnnotationQueryResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagDataContainer"
+          },
+          {
+            "type": "object",
+            "description": "Describes a result for an annotations query on a tag.",
+            "additionalProperties": false,
+            "properties": {
+              "annotation": {
+                "description": "The annotation.",
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TagValueAnnotation"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "TagValueAnnotation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagValueAnnotationBase"
+          },
+          {
+            "type": "object",
+            "description": "Describes an annotation on a tag.",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The unique identifier for the annotation.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "TagValueAnnotationBase": {
+        "type": "object",
+        "description": "Describes the base set of properties for a tag value annotation.",
+        "additionalProperties": false,
+        "properties": {
+          "annotationType": {
+            "description": "The annotation type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AnnotationType"
+              }
+            ]
+          },
+          "utcStartTime": {
+            "type": "string",
+            "description": "The UTC start time for the annotation.",
+            "format": "date-time"
+          },
+          "utcEndTime": {
+            "type": "string",
+            "description": "The UTC end time for the annotation. If AnnotationType is \nInstantaneous, this property will always be \nnull.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "description": "The annotation value.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "An additional description or explanation of the annotation.",
+            "nullable": true
+          },
+          "properties": {
+            "type": "object",
+            "description": "Additional annotation properties.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AnnotationType": {
+        "type": "string",
+        "description": "Specifies the type of an annotation.",
+        "x-enumNames": [
+          "Instantaneous",
+          "TimeRange"
+        ],
+        "enum": [
+          "Instantaneous",
+          "TimeRange"
+        ]
+      },
+      "TagDataContainer": {
+        "type": "object",
+        "description": "Describes a base class for data associated with a tag.",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "tagId": {
+            "type": "string",
+            "description": "The tag ID.",
+            "nullable": true
+          },
+          "tagName": {
+            "type": "string",
+            "description": "The tag name.",
+            "nullable": true
+          }
+        }
+      },
+      "ReadAnnotationsRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to read annotations on tag values.",
+            "additionalProperties": false,
+            "required": [
+              "annotationCount"
+            ],
+            "properties": {
+              "annotationCount": {
+                "type": "integer",
+                "description": "The maximum number of annotations to retrieve per tag.",
+                "format": "int32",
+                "default": 50
+              }
+            }
+          }
+        ]
+      },
+      "ReadHistoricalTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadTagDataRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a generic request to retrieve historical data from a set of tags.",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "required": [
+              "utcStartTime",
+              "utcEndTime"
+            ],
+            "properties": {
+              "utcStartTime": {
+                "type": "string",
+                "description": "The UTC start time for the request.",
+                "format": "date-time",
+                "minLength": 1
+              },
+              "utcEndTime": {
+                "type": "string",
+                "description": "The UTC end time for the request.",
+                "format": "date-time",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "ReadTagDataRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Base class for requests that query tags for data.",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "required": [
+              "tags"
+            ],
+            "properties": {
+              "tags": {
+                "type": "array",
+                "description": "The tag names or IDs to query.",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "WriteTagValueAnnotationResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WriteOperationResult"
+          },
+          {
+            "type": "object",
+            "description": "Describes the result of a tag value annotation write operation.",
+            "additionalProperties": false,
+            "properties": {
+              "tagId": {
+                "type": "string",
+                "description": "The ID of the tag that the annotation operation was performed on.",
+                "nullable": true
+              },
+              "annotationId": {
+                "type": "string",
+                "description": "The annotation ID.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "TagDefinition": {
+        "type": "object",
+        "description": "Describes a tag definition.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the tag.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The tag name.",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "description": "The tag measurement category (e.g. temperature, pressure, mass).",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The tag description.",
+            "nullable": true
+          },
+          "units": {
+            "type": "string",
+            "description": "The tag units.",
+            "nullable": true
+          },
+          "dataType": {
+            "description": "The tag's data type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TagDataType"
+              }
+            ]
+          },
+          "states": {
+            "type": "object",
+            "description": "The discrete states for the tag. If DataType is not State, \nthis property will be null.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "description": "Bespoke tag properties.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TagDataType": {
+        "type": "string",
+        "description": "Describes the data type for a tag.",
+        "x-enumNames": [
+          "Numeric",
+          "Text",
+          "State"
+        ],
+        "enum": [
+          "Numeric",
+          "Text",
+          "State"
+        ]
+      },
+      "FindTagsRequest": {
+        "type": "object",
+        "description": "Describes a tag search query.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The tag name filter.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The tag description filter.",
+            "nullable": true
+          },
+          "units": {
+            "type": "string",
+            "description": "The tag units filter.",
+            "nullable": true
+          },
+          "other": {
+            "type": "object",
+            "description": "Additional filters on bespoke tag properties.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "The page size for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page number for the query.",
+            "format": "int32",
+            "default": 10,
+            "maximum": 2147483647.0,
+            "minimum": 1.0
+          }
+        }
+      },
+      "GetTagsRequest": {
+        "type": "object",
+        "description": "Describes a request to get tag definitions by tag ID or name.",
+        "additionalProperties": false,
+        "required": [
+          "tags"
+        ],
+        "properties": {
+          "tags": {
+            "type": "array",
+            "description": "The IDs or names of the tags to retrieve.",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TagValueQueryResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagDataContainer"
+          },
+          {
+            "type": "object",
+            "description": "Describes a value returned by a tag value query.",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "description": "The tag value.",
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TagValue"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "TagValue": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagValueBase"
+          },
+          {
+            "type": "object",
+            "description": "Describes a real-time or historical value on a tag.",
+            "additionalProperties": false,
+            "properties": {
+              "notes": {
+                "type": "string",
+                "description": "Notes associated with the value.",
+                "nullable": true
+              },
+              "error": {
+                "type": "string",
+                "description": "An error message associated with the value.",
+                "nullable": true
+              },
+              "properties": {
+                "type": "object",
+                "description": "Additional value properties.",
+                "nullable": true,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TagValueBase": {
+        "type": "object",
+        "description": "Describes the base set of properties for a tag value.",
+        "additionalProperties": false,
+        "properties": {
+          "utcSampleTime": {
+            "type": "string",
+            "description": "The UTC sample time for the value.",
+            "format": "date-time"
+          },
+          "numericValue": {
+            "type": "number",
+            "description": "The numeric value for the tag. This can differ from the text value on state-based and \nnon-numeric tags.",
+            "format": "double"
+          },
+          "textValue": {
+            "type": "string",
+            "description": "The text value for the tag. This can differ from the numeric value on state-based and \nnon-numeric tags.",
+            "nullable": true
+          },
+          "status": {
+            "description": "The quality status for the value.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TagValueStatus"
+              }
+            ]
+          },
+          "units": {
+            "type": "string",
+            "description": "The value units.",
+            "nullable": true
+          }
+        }
+      },
+      "TagValueStatus": {
+        "type": "string",
+        "description": "Describes the quality status of a tag value.",
+        "x-enumNames": [
+          "Bad",
+          "Unknown",
+          "Good"
+        ],
+        "enum": [
+          "Bad",
+          "Unknown",
+          "Good"
+        ]
+      },
+      "ReadSnapshotTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadTagDataRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request for snapshot (i.e. instantaneous) tag values.",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ReadRawTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve raw tag values.",
+            "additionalProperties": false,
+            "required": [
+              "sampleCount",
+              "boundaryType"
+            ],
+            "properties": {
+              "sampleCount": {
+                "type": "integer",
+                "description": "The maximum number of samples to retrieve per tag. A value of less than one is interpreted \nas meaning no limit. The adapter that handles the request can apply its own maximum limit \nto the query.",
+                "format": "int32",
+                "default": 500
+              },
+              "boundaryType": {
+                "description": "The boundary type to use for the query. This controls if only values inside the query time \nrange should be included in the result, or if the values immediately before and immediately \nafter the query time range should be included.",
+                "default": "Inside",
+                "minLength": 1,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RawDataBoundaryType"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "RawDataBoundaryType": {
+        "type": "string",
+        "description": "Describes a boundary type used when making a raw data query.",
+        "x-enumNames": [
+          "Inside",
+          "Outside"
+        ],
+        "enum": [
+          "Inside",
+          "Outside"
+        ]
+      },
+      "ReadPlotTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request for visualization-friendly tag values.",
+            "additionalProperties": false,
+            "required": [
+              "intervals"
+            ],
+            "properties": {
+              "intervals": {
+                "type": "integer",
+                "description": "The number of time intervals to use in the query. While the sample count may vary according \nto the implementation of the adapter handling the query, callers should expect to receive \na number of samples equal to up to 4-5x the interval count.",
+                "format": "int32",
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "ReadInterpolatedTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request for interpolated data on a set of tags.",
+            "additionalProperties": false,
+            "required": [
+              "sampleInterval"
+            ],
+            "properties": {
+              "sampleInterval": {
+                "type": "string",
+                "description": "The sample interval for the interpolation.",
+                "format": "time-span",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "ReadTagValuesAtTimesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadTagDataRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve tag values at specific sample times.",
+            "additionalProperties": false,
+            "required": [
+              "utcSampleTimes"
+            ],
+            "properties": {
+              "utcSampleTimes": {
+                "type": "array",
+                "description": "The UTC sample times to retrieve values at.",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ProcessedTagValueQueryResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagValueQueryResult"
+          },
+          {
+            "type": "object",
+            "description": "Describes a value returned by a tag value query for processed data.",
+            "additionalProperties": false,
+            "properties": {
+              "dataFunction": {
+                "type": "string",
+                "description": "The data function used to aggregate the tag value.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReadProcessedTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve processed (aggregated) tag values.",
+            "additionalProperties": false,
+            "required": [
+              "dataFunctions",
+              "sampleInterval"
+            ],
+            "properties": {
+              "dataFunctions": {
+                "type": "array",
+                "description": "The aggregate data functions to request.",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sampleInterval": {
+                "type": "string",
+                "description": "The sample interval to use in the aggregation.",
+                "format": "time-span",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "DataFunctionDescriptor": {
+        "type": "object",
+        "description": "Describes a data function that is supported when making a call for historical process data.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The function name.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The function description.",
+            "nullable": true
+          }
+        }
+      },
+      "WriteTagValueResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WriteOperationResult"
+          },
+          {
+            "type": "object",
+            "description": "Describes the result of a tag value write operation.",
+            "additionalProperties": false,
+            "properties": {
+              "correlationId": {
+                "type": "string",
+                "description": "The optional correlation ID for the operation.",
+                "nullable": true
+              },
+              "tagId": {
+                "type": "string",
+                "description": "The ID of the tag.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "WriteTagValuesRequest": {
+        "type": "object",
+        "description": "Describes a request to write snapshot or historical tag values.",
+        "additionalProperties": false,
+        "required": [
+          "values"
+        ],
+        "properties": {
+          "values": {
+            "type": "array",
+            "description": "The values to write.",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/WriteTagValueItem"
+            }
+          }
+        }
+      },
+      "WriteTagValueItem": {
+        "type": "object",
+        "description": "Describes a value being written to a tag.",
+        "additionalProperties": false,
+        "required": [
+          "tagId",
+          "value"
+        ],
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "An optional correlation ID to assign to the write operation.",
+            "nullable": true
+          },
+          "tagId": {
+            "type": "string",
+            "description": "The tag ID.",
+            "minLength": 1
+          },
+          "value": {
+            "description": "The tag value.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TagValueBase"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

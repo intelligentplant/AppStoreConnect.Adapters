@@ -58,9 +58,19 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddDataCoreAdapterMvc();
+                .AddDataCoreAdapterMvc()
+                .AddNewtonsoftJson(options => {
+                    options.UseCamelCasing(false);
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
 
             services.AddSignalR().AddMessagePackProtocol();
+
+            services.AddOpenApiDocument(options => {
+                options.DocumentName = "v1.0";
+                options.Title = "App Store Connect Adapters";
+                options.Description = "HTTP API for querying an App Store Connect adapters host.";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,6 +84,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
             }
 
             app.UseHttpsRedirection();
+
+            app.UseOpenApi();
+            app.UseSwaggerUi3();
 
             app.UseRouting();
 
