@@ -162,7 +162,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The adapter ID to write to.
         /// </param>
-        /// <param name="events">
+        /// <param name="request">
         ///   The event messages to write.
         /// </param>
         /// <param name="cancellationToken">
@@ -180,7 +180,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write")]
         [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
-        public async Task<IActionResult> WriteEventMessages(string adapterId, IEnumerable<WriteEventMessageItem> events, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -199,7 +199,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var itemsWritten = 0;
 
-                foreach (var evt in events) {
+                foreach (var evt in request.Events) {
                     ++itemsWritten;
 
                     if (evt == null) {

@@ -419,7 +419,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
         /// </param>
-        /// <param name="values">
+        /// <param name="request">
         ///   The values to write.
         /// </param>
         /// <param name="cancellationToken">
@@ -437,7 +437,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteSnapshotValues(string adapterId, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -455,7 +455,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var itemsWritten = 0;
 
-                foreach (var value in values) {
+                foreach (var value in request.Values) {
                     ++itemsWritten;
 
                     if (value == null) {
@@ -514,7 +514,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/history")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteHistoricalValues(string adapterId, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequest values, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -532,7 +532,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var itemsWritten = 0;
 
-                foreach (var value in values) {
+                foreach (var value in values.Values) {
                     ++itemsWritten;
 
                     if (value == null) {

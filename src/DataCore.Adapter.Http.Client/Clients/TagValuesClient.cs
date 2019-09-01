@@ -394,13 +394,13 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
-        /// Writes a stream of tag values to an adapter's snapshot.
+        /// Writes tag values to an adapter's snapshot.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="values">
-        ///   The items to write.
+        /// <param name="request">
+        ///   The write request.
         /// </param>
         /// <param name="principal">
         ///   The principal to associate with the outgoing request.
@@ -415,25 +415,21 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="values"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotValuesAsync(string adapterId, IEnumerable<WriteTagValueItem> values, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotValuesAsync(string adapterId, WriteTagValuesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (values == null) {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            values = values.Where(x => x != null).ToArray();
-            if (!values.Any()) {
-                return new WriteTagValueResult[0];
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write/snapshot";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<IEnumerable<WriteTagValueItem>>(values, new JsonMediaTypeFormatter())
+                Content = new ObjectContent<WriteTagValuesRequest>(request, new JsonMediaTypeFormatter())
             }.AddStateProperty(principal);
 
             try {
@@ -450,13 +446,13 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
-        /// Writes a stream of tag values to an adapter's history archive.
+        /// Writes tag values to an adapter's history archive.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="values">
-        ///   The items to write.
+        /// <param name="request">
+        ///   The write request.
         /// </param>
         /// <param name="principal">
         ///   The principal to associate with the outgoing request.
@@ -471,25 +467,21 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="values"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalValuesAsync(string adapterId, IEnumerable<WriteTagValueItem> values, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalValuesAsync(string adapterId, WriteTagValuesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (values == null) {
-                throw new ArgumentNullException(nameof(values));
-            }
+            _client.ValidateObject(request);
 
-            values = values.Where(x => x != null).ToArray();
-            if (!values.Any()) {
-                return new WriteTagValueResult[0];
-            }
-
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write/snapshot";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write/history";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<IEnumerable<WriteTagValueItem>>(values, new JsonMediaTypeFormatter())
+                Content = new ObjectContent<WriteTagValuesRequest>(request, new JsonMediaTypeFormatter())
             }.AddStateProperty(principal);
 
             try {

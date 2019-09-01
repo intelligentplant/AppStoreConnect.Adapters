@@ -64,13 +64,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="depth">
         ///   The maximum depth of node to retrieve.
         /// </param>
+        /// <param name="page">
+        ///   The results page to retrieve.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size for the query.
+        /// </param>
         /// <returns>
         ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
-        public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string start = null, int depth = -1) {
+        public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string start = null, int depth = -1, int page = 1, int pageSize = 10) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -87,7 +93,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 ParentId = string.IsNullOrWhiteSpace(start)
                     ? null
                     : start,
-                Depth = depth
+                Depth = depth,
+                PageSize = pageSize,
+                Page = page
             }, cancellationToken);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);

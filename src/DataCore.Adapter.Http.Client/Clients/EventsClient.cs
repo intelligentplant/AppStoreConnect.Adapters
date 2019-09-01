@@ -151,7 +151,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="events">
+        /// <param name="request">
         ///   The events to write.
         /// </param>
         /// <param name="principal">
@@ -167,25 +167,21 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="events"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(string adapterId, IEnumerable<WriteEventMessageItem> events, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(string adapterId, WriteEventMessagesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (events == null) {
-                throw new ArgumentNullException(nameof(events));
-            }
-
-            events = events.Where(x => x != null).ToArray();
-            if (!events.Any()) {
-                return new WriteEventMessageResult[0];
-            }
+            _client.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<IEnumerable<WriteEventMessageItem>>(events, new JsonMediaTypeFormatter())
+                Content = new ObjectContent<WriteEventMessagesRequest>(request, new JsonMediaTypeFormatter())
             }.AddStateProperty(principal);
 
             try {
