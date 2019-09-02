@@ -2,7 +2,7 @@
 
 An example App Store Connect [adapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) implementation that uses loops over a CSV file to provide tag data.
 
-The adapter options are defined via the [CsvAdapterOptions](./CsvAdapterOptions.cs) class. The `GetCsvStream` property on the class is used by the adapter to obtain a CSV stream to parse.
+The adapter options are defined via the [CsvAdapterOptions](./CsvAdapterOptions.cs) class. The `CsvFile` or `GetCsvStream` properties on the class are used by the adapter to obtain a CSV stream to parse.
 
 # CSV Format
 
