@@ -61,7 +61,7 @@ You can add support for adapter extension features by providing an `ExtensionFea
 var options = new SignalRAdapterProxyOptions() {
     Id = "some-id",
     Name = "some-name",
-    AdapterId = "{SOME_ADAPTER_ID}",
+    RemoteId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
@@ -86,7 +86,7 @@ var options = new SignalRAdapterProxyOptions() {
 var options = new SignalRAdapterProxyOptions() {
     Id = "some-id",
     Name = "some-name",
-    AdapterId = "{SOME_ADAPTER_ID}",
+    RemoteId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
