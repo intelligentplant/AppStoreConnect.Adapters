@@ -6,10 +6,10 @@ Proxy adapter that connects to a remote adapter via ASP.NET Core SignalR.
 # Creating a Proxy Instance
 
 ```csharp
-var descriptor = new AdapterDescriptor("some-id", "some-name");
-
 var options = new SignalRAdapterProxyOptions() {
-    AdapterId = "{SOME_ADAPTER_ID}",
+    Id = "some-id",
+    Name = "some-name",
+    RemoteId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
         var hubRoute = key == null
             ? SignalRAdapterProxy.HubRoute
@@ -21,7 +21,7 @@ var options = new SignalRAdapterProxyOptions() {
     }
 };
 
-var proxy = new SignalRAdapterProxy(descriptor, options);
+var proxy = new SignalRAdapterProxy(Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 ```
 
@@ -59,6 +59,8 @@ You can add support for adapter extension features by providing an `ExtensionFea
 
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
+    Id = "some-id",
+    Name = "some-name",
     AdapterId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
         var hubRoute = key == null
@@ -82,6 +84,8 @@ var options = new SignalRAdapterProxyOptions() {
 
 ```csharp
 var options = new SignalRAdapterProxyOptions() {
+    Id = "some-id",
+    Name = "some-name",
     AdapterId = "{SOME_ADAPTER_ID}",
     ConnectionFactory = key => {
         var hubRoute = key == null
