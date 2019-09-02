@@ -6,22 +6,22 @@ Proxy adapter that connects to a remote adapter via gRPC.
 # Creating a Proxy Instance
 
 ```csharp
-var descriptor = new AdapterDescriptor("some-id", "some-name");
-
 var options = new GrpcAdapterProxyOptions() {
-	AdapterId = "{SOME_ADAPTER_ID}"
+    Id = "some-id",
+    Name = "some-name",
+    RemoteId = "{SOME_ADAPTER_ID}"
 };
 
 // OPTION 1: Use Grpc.Core channel
 var channel = new Grpc.Core.Channel("localhost:5000", Grpc.Core.ChannelCredentials.Insecure);
-var proxy = new GrpcAdapterProxy(descriptor, channel, options);
+var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 
 // OPTION 2: Use HttpClient (requires .NET Core 3.0 due to lack of HTTP/2 support in earlier versions)
 var httpClient = new System.Net.HttpClient() {
     BaseAddress = new Uri("http://localhost:5000")
 };
-var proxy = new GrpcAdapterProxy(descriptor, httpClient, options);
+var proxy = new GrpcAdapterProxy(httpClient, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 ```
 
@@ -57,7 +57,9 @@ gRPC supports both per-channel and per-call authentication. If the remote host s
 
 ```csharp
 var options = new GrpcAdapterProxyOptions() {
-    AdapterId = "{SOME_ADAPTER_ID}",
+    Id = "some-id",
+    Name = "some-name",
+    RemoteId = "{SOME_ADAPTER_ID}",
     GetCallCredentials = async (IAdapterCallContext context) => {
         var accessToken = await GetAccessToken(context);
         return new IClientCallCredentials[] {
@@ -76,7 +78,9 @@ You can add support for adapter extension features by providing an `ExtensionFea
 
 ```csharp
 var options = new GrpcAdapterProxyOptions() {
-    AdapterId = "{SOME_ADAPTER_ID}",
+    Id = "some-id",
+    Name = "some-name",
+    RemoteId = "{SOME_ADAPTER_ID}",
     ExtensionFeatureFactory = (featureName, proxy) => {
         return GetFeatureImplementation(featureName, proxy);
     }
