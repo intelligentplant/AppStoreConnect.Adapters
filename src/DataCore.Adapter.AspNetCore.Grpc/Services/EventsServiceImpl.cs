@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Events.Features;
 using Grpc.Core;
 

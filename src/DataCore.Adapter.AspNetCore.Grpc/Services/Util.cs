@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {

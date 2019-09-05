@@ -28,7 +28,6 @@ The following projects provide support for hosting adapters in ASP.NET Core appl
 * `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a library containing API controllers for use with with ASP.NET Core 2.2 and 3.0 applications.
 * `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2 and 3.0 applications.
 * `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.0 applications.
-* `DataCore.Adapter.Grpc.Server` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Server)) - C# implementations of the gRPC adapter services.
 
 ## Client Libraries and Proxies
 
@@ -36,8 +35,8 @@ There are also projects that allow the creation of proxy adapters, and their cor
 
 * `DataCore.Adapter.AspNetCore.SignalR.Client` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Client)) - a strongly-typed client for querying remote adapters via ASP.NET Core SignalR.
 * `DataCore.Adapter.AspNetCore.SignalR.Proxy` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the strongly-typed SignalR client.
-* `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Client)) - a strongly-typed client for querying remote adapters via gRPC.
-* `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
+* `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc.Client)) - a strongly-typed client for querying remote adapters via gRPC.
+* `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
 * `DataCore.Adapter.Http.Client` ([source](/src/DataCore.Adapter.Http.Client)) - a strongly-typed client for querying remote adapters via the HTTP API.
 
 Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) file can be used to create clients for the HTTP API, or imported into tools like [Postman](https://www.getpostman.com/) in order to test API calls.
@@ -123,4 +122,4 @@ Signing of assemblies (by specifying the `-Sign` flag when running the build scr
 
 # Development and Hosting Without .NET
 
-If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/DataCore.Adapter.Grpc/Protos). Additionally, the [swagger.json](/swagger.json) specification can be used to build a compatible HTTP API using the framework of your choice.
+If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/Protos). Additionally, the [swagger.json](/swagger.json) specification can be used to build a compatible HTTP API using the framework of your choice.

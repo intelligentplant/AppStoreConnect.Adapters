@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />
   </ItemGroup>
 

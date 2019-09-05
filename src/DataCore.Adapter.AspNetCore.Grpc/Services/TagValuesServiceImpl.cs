@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData.Features;
 using Grpc.Core;
 

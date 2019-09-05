@@ -69,7 +69,7 @@ var options = new GrpcAdapterProxyOptions() {
 };
 ```
 
-Note that per-call implementation requires that SSL/TLS authentication is already in place at the channel level.
+Note that per-call authentication requires that SSL/TLS authentication is already in place at the channel level.
 
 
 # Adding Extension Feature Support
