@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Threading;
 
 #if NETSTANDARD2_1
-using System.Net.Http;
 using GrpcNet = Grpc.Net;
 #endif
 
@@ -56,13 +55,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// gRPC channel (when using Grpc.Core for HTTP/2 support).
         /// </summary>
-        private readonly GrpcCore.Channel _channel;
+        private readonly GrpcCore.Channel _coreChannel;
 
 #if NETSTANDARD2_1
         /// <summary>
-        /// HTTP client (when using native HTTP/2 support in .NET Core 3.0+).
+        /// gRPC channe; (when using Grpc.Net.Client HTTP/2 support in .NET Core 3.0+).
         /// </summary>
-        private readonly HttpClient _httpClient;
+        private readonly GrpcNet.Client.GrpcChannel _netChannel;
 #endif
 
         /// <summary>
@@ -72,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified gRPC channel.
+        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcCore.Channel"/>.
         /// </summary>
         /// <param name="channel">
         ///   The channel.
@@ -94,7 +93,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </exception>
         public GrpcAdapterProxy(GrpcCore.Channel channel, IOptions<GrpcAdapterProxyOptions> options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
-            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _coreChannel = channel ?? throw new ArgumentNullException(nameof(channel));
             _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = options?.Value?.GetCallCredentials;
             _extensionFeatureFactory = options?.Value?.ExtensionFeatureFactory;
@@ -103,10 +102,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
 #if NETSTANDARD2_1
 
         /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified HTTP client.
+        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
         /// </summary>
-        /// <param name="httpClient">
-        ///   The HTTP client.
+        /// <param name="channel">
+        ///   The channel.
         /// </param>
         /// <param name="options">
         ///   The proxy options.
@@ -115,7 +114,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The logger factory for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="httpClient"/> is <see langword="null"/>.
+        ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="loggerFactory"/> is <see langword="null"/>.
@@ -123,10 +122,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(HttpClient httpClient, IOptions<GrpcAdapterProxyOptions> options, ILoggerFactory loggerFactory) 
+        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, IOptions<GrpcAdapterProxyOptions> options, ILoggerFactory loggerFactory) 
             : base(options, loggerFactory) {
+
             _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _netChannel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = options?.Value?.GetCallCredentials;
         }
 
@@ -145,12 +145,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
 
 #if NETSTANDARD2_1
-            if (_httpClient != null) {
-                return GrpcNet.Client.GrpcClient.Create<TClient>(_httpClient);
+            if (_netChannel != null) {
+                return (TClient) Activator.CreateInstance(typeof(TClient), _netChannel);
             }
 #endif
 
-            return (TClient) Activator.CreateInstance(typeof(TClient), _channel);
+            return (TClient) Activator.CreateInstance(typeof(TClient), _coreChannel);
         }
 
 
@@ -203,7 +203,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
                         AddFeatures(impl, addStandardFeatures: false);
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -219,8 +221,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
         /// <inheritdoc/>
         protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
-            if (_channel != null) {
-                await _channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
+            if (_coreChannel != null) {
+                await _coreChannel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
         }
 

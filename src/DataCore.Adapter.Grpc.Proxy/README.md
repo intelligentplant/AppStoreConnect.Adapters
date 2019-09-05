@@ -17,11 +17,9 @@ var channel = new Grpc.Core.Channel("localhost:5000", Grpc.Core.ChannelCredentia
 var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 
-// OPTION 2: Use HttpClient (requires .NET Core 3.0 due to lack of HTTP/2 support in earlier versions)
-var httpClient = new System.Net.HttpClient() {
-    BaseAddress = new Uri("http://localhost:5000")
-};
-var proxy = new GrpcAdapterProxy(httpClient, Options.Create(options), NullLoggerFactory.Instance);
+// OPTION 2: Use Grpc.Net.Client channel (requires .NET Core 3.0 due to lack of native HTTP/2 support in earlier versions).
+var channel = Grpc.Net.Client.GrpcChannel.ForAddress("http://localhost:5000");
+var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 ```
 
@@ -87,4 +85,4 @@ var options = new GrpcAdapterProxyOptions() {
 };
 ```
 
-The `CreateClient<TClient>` method on the proxy can be used to create a gRPC client that uses the channel or HTTP client configured when the proxy was created.
+The `CreateClient<TClient>` method on the proxy can be used to create a gRPC client that uses the channel configured when the proxy was created.
