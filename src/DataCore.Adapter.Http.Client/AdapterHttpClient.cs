@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Http.Client {
         ///   A new <see cref="HttpMessageHandler"/> that can be added to the request pipeline for 
         ///   the <see cref="HttpClient"/> used with an <see cref="AdapterHttpClient"/> instance.
         /// </returns>
-        public static HttpMessageHandler CreateRequestTransformHandler(Func<HttpRequestMessage, ClaimsPrincipal, CancellationToken, Task> callback) {
+        public static DelegatingHandler CreateRequestTransformHandler(Func<HttpRequestMessage, ClaimsPrincipal, CancellationToken, Task> callback) {
             if (callback == null) {
                 throw new ArgumentNullException(nameof(callback));
             }
