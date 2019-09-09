@@ -25,6 +25,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         public string Units { get; set; }
 
         /// <summary>
+        /// The tag label filter.
+        /// </summary>
+        public string Label { get; set; }
+
+        /// <summary>
         /// Additional filters on bespoke tag properties.
         /// </summary>
         public IDictionary<string, string> Other { get; set; }

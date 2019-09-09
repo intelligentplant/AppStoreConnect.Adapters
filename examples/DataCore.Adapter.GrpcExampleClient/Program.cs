@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DataCore.Adapter.Grpc;
-using Grpc.Core;
+using Grpc.Net.Client;
 
 namespace DataCore.Adapter.GrpcExampleClient {
     class Program {
         static async Task Main(string[] args) {
             // Include port of the gRPC server as an application argument
-            var port = args.Length > 0 ? args[0] : "52026";
+            var port = args.Length > 0 ? args[0] : "58189";
 
-            var channel = new Channel("localhost:" + port, ChannelCredentials.Insecure);
+            var channel = GrpcChannel.ForAddress("https://localhost:" + port);
 
             var hostInfoClient = new HostInfoService.HostInfoServiceClient(channel);
             var hostInfoResponse = await hostInfoClient.GetHostInfoAsync(new GetHostInfoRequest());
@@ -258,7 +258,7 @@ namespace DataCore.Adapter.GrpcExampleClient {
 
             Console.WriteLine();
 
-            await channel.ShutdownAsync();
+            channel.Dispose();
         }
     }
 }

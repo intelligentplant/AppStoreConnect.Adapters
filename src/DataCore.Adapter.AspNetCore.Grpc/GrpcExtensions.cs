@@ -28,6 +28,15 @@ namespace DataCore.Adapter.Grpc.Server {
                 Units = tag.Units ?? string.Empty
             };
 
+            if (tag.Labels != null) {
+                foreach (var item in tag.Labels) {
+                    if (string.IsNullOrEmpty(item)) {
+                        continue;
+                    }
+                    result.Labels.Add(item);
+                }
+            }
+
             if (tag.Properties != null) {
                 foreach (var item in tag.Properties) {
                     result.Properties.Add(item.Key, item.Value ?? string.Empty);

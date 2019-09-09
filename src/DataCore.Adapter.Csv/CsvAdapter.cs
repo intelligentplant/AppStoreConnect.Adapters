@@ -131,7 +131,7 @@ namespace DataCore.Adapter.Csv {
             if (!item.StartsWith("[") || !item.EndsWith("]")) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return new TagDefinition(item, item, null, null, null, TagDataType.Numeric, null, null);
+                return new TagDefinition(item, item, null, null, null, TagDataType.Numeric, null, null, null);
             }
 
             item = item.TrimStart('[').TrimEnd(']');
@@ -192,6 +192,7 @@ namespace DataCore.Adapter.Csv {
                 states.Count > 0
                     ? states
                     : null,
+                null,
                 null
             );
         }

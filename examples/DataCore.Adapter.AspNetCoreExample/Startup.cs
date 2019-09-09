@@ -55,7 +55,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
             });
 
-            // Add the adapter API controllers to the MVC registration.
+            services.AddGrpc();
+
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddDataCoreAdapterMvc()
@@ -91,6 +92,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
+                endpoints.MapDataCoreGrpcServices();
                 endpoints.MapControllers();
                 endpoints.MapDataCoreAdapterHubs();
             });

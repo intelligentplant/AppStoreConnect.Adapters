@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" Version="0.2.23-pre1" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />
   </ItemGroup>
   

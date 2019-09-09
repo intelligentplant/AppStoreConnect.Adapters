@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Common.Models {
         ///   A collection of validation errors.
         /// </returns>
         protected virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
-            return new ValidationResult[0];
+            return System.Array.Empty<ValidationResult>();
         }
     }
 }

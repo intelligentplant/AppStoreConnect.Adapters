@@ -20,7 +20,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
                 tagDefinition.Units,
                 tagDefinition.DataType.ToAdapterTagDataType(),
                 tagDefinition.States,
-                tagDefinition.Properties
+                tagDefinition.Properties,
+                tagDefinition.Labels
             );
         }
 

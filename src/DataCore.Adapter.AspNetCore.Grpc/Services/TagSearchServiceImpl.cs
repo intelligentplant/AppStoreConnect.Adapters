@@ -26,6 +26,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Name = request.Name,
                 Description = request.Description,
                 Units = request.Units,
+                Label = request.Label,
                 Other = request.Other,
                 PageSize = request.PageSize,
                 Page = request.Page

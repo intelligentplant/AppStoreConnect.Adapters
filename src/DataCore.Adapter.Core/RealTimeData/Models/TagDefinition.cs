@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -50,6 +51,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// </summary>
         public IDictionary<string, string> Properties { get; }
 
+        /// <summary>
+        /// Labels associated with the tag.
+        /// </summary>
+        public IEnumerable<string> Labels { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="TagDefinition"/> object.
@@ -79,13 +85,16 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Additional tag properties.
         /// </param>
+        /// <param name="labels">
+        ///   Labels associated with the tag.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties) {
+        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Category = string.IsNullOrWhiteSpace(category)
@@ -98,6 +107,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
                 ? null
                 : new ReadOnlyDictionary<string, int>(states ?? new Dictionary<string, int>());
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+            Labels = labels?.ToArray() ?? Array.Empty<string>();
         }
 
     }

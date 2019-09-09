@@ -19,7 +19,8 @@ message FindTagsRequest {
     string name = 4;
     string description = 5;
     string units = 6;
-    map<string, string> other = 7;
+    string label = 7;
+    map<string, string> other = 8;
 }
 
 
@@ -46,6 +47,7 @@ message TagDefinition {
     TagDataType data_type = 6;
     map<string, int32> states = 7;
     map<string, string> properties = 8;
+    repeated string labels = 9;
 }
 
 
