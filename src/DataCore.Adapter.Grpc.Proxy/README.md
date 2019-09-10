@@ -17,7 +17,7 @@ var channel = new Grpc.Core.Channel("localhost:5000", Grpc.Core.ChannelCredentia
 var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 
-// OPTION 2: Use Grpc.Net.Client channel (requires .NET Core 3.0 due to lack of native HTTP/2 support in earlier versions).
+// OPTION 2: Use Grpc.Net.Client channel (requires .NET Core 3.0 due to lack of native HTTP/2 support in `HttpClient` in earlier versions).
 var channel = Grpc.Net.Client.GrpcChannel.ForAddress("http://localhost:5000");
 var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
