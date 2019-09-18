@@ -3,11 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.AssetModel.Features;
 
 namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
+
+    /// <summary>
+    /// <see cref="IAssetModelBrowser"/> implementation.
+    /// </summary>
     internal class AssetModelBrowserImpl : ProxyAdapterFeature, IAssetModelBrowser {
 
+        /// <summary>
+        /// Creates a new <see cref="AssetModelBrowserImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public AssetModelBrowserImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.AssetModel.Models.AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.Models.BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
@@ -39,6 +50,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
         }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.AssetModel.Models.AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.Models.GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
@@ -67,6 +79,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
         }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.AssetModel.Models.AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.Models.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateAssetModelNodeChannel();
 

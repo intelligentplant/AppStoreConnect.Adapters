@@ -7,6 +7,15 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel {
     /// </summary>
     internal static class AssetModelExtensions {
 
+        /// <summary>
+        /// Converts a gRPC asset model node to its adapter equivalent.
+        /// </summary>
+        /// <param name="node">
+        ///   The gRPC asset model node.
+        /// </param>
+        /// <returns>
+        ///   The adapter asset model node.
+        /// </returns>
         internal static Adapter.AssetModel.Models.AssetModelNode ToAdapterAssetModelNode(this AssetModelNode node) {
             if (node == null) {
                 return null;

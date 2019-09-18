@@ -9,6 +9,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
         public EventMessagePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, Adapter.Events.Models.EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             var result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), subscriptionType);
             result.Start(context);
@@ -28,6 +29,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
             private readonly bool _activeSubscription;
 
+            /// <inheritdoc/>
             public System.Threading.Channels.ChannelReader<Adapter.Events.Models.EventMessage> Reader { get { return _channel; } }
 
 
