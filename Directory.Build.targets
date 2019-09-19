@@ -30,10 +30,14 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- 
-    Workaround for issue when .NET Core 3.0 app references a .NET Standard 2.1 project: 
-    https://github.com/dotnet/cli/issues/11378#issuecomment-499988244 
-  -->
+  <!-- Workaround https://github.com/NuGet/Home/issues/7001 -->
+  <Target Name="DisableNuGetDeterministicPackaging" BeforeTargets="GenerateNuspec" AfterTargets="CoreCompile">
+    <PropertyGroup>
+      <Deterministic>false</Deterministic>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Workaround https://github.com/dotnet/cli/issues/11378#issuecomment-499988244 -->
   <Target Name="WorkaroundNetStandard" AfterTargets="ResolvePackageAssets" Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
     <ItemGroup>
       <TransitiveFrameworkReference Remove="NETStandard.Library" />
