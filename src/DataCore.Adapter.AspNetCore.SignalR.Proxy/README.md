@@ -3,6 +3,11 @@
 Proxy adapter that connects to a remote adapter via ASP.NET Core SignalR.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR.Proxy](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR.Proxy).
+
+
 # Creating a Proxy Instance
 
 ```csharp

@@ -3,6 +3,11 @@
 Common types and services used when hosting adapters using ASP.NET Core.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common).
+
+
 # Writing an Adapter Accessor
 
 An [IAdapterAccessor](/src/DataCore.Adapter.Abstractions/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.

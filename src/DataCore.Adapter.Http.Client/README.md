@@ -5,6 +5,11 @@
 This client supports polling requests only; as such, it cannot be used to subscribe to receive snapshot tag value changes, or event messages published by remote adapters. For push-related functionality, use the gRPC or SignalR client.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Http.Client](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Http.Client).
+
+
 # Notes
 
 All API routes are relative to the base URL for the HTTP client supplied to the `AdapterHttpClient`. Therefore, you _must_ set a `BaseAddress` property on the `HttpClient` instance i.e.

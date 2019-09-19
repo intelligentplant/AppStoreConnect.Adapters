@@ -3,6 +3,11 @@
 Proxy adapter that connects to a remote adapter via gRPC.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Grpc.Proxy](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Grpc.Proxy).
+
+
 # Creating a Proxy Instance
 
 ```csharp

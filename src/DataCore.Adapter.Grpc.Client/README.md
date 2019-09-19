@@ -3,6 +3,11 @@
 Client for querying remote adapters via [gRPC](https://grpc.io). Client and request objects are automatically generated from the adapter [service definition proto files](../Protos) using the [Grpc.Tools](https://www.nuget.org/packages/Grpc.Tools) NuGet package.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Grpc.Client](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Grpc.Client).
+
+
 # Implementing Per-Call Authentication
 
 gRPC supports both per-channel and per-call authentication. If the remote host supports (or requires) per-call authentication, you can easily construct and add the required metadata entries to the client call, using instances of the [IClientCallCredentials](./Authentication/IClientCallCredentials.cs) interface:

@@ -4,6 +4,12 @@ An example App Store Connect [adapter](/src/DataCore.Adapter.Abstractions/IAdapt
 
 The adapter options are defined via the [CsvAdapterOptions](./CsvAdapterOptions.cs) class. The `CsvFile` or `GetCsvStream` properties on the class are used by the adapter to obtain a CSV stream to parse.
 
+
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Csv](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Csv).
+
+
 # CSV Format
 
 The CSV file must define a header that contains the time stamp field and the names of the tags in the file. The time stamp field is assumed to be the first field in the header, but can be customised via the `TimeStampFieldIndex` property on the [CsvAdapterOptions](./CsvAdapterOptions.cs) class. It does not matter what name is given to the field.

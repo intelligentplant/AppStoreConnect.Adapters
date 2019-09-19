@@ -3,6 +3,11 @@
 This project contains SignalR hubs for querying adapters in an ASP.NET Core application.
 
 
+# Installation
+
+Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR).
+
+
 # Registering Adapters
 
 In most cases, adapters should be registered as singleton services with the ASP.NET Core service collection:
