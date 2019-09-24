@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
-        protected AuthorizationSchemeCallCredentials(string scheme, string value) {
+        public AuthorizationSchemeCallCredentials(string scheme, string value) {
             _scheme = scheme ?? throw new ArgumentNullException(nameof(scheme));
             _value = value ?? throw new ArgumentNullException(nameof(value));
         }
