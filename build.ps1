@@ -7,6 +7,8 @@ Builds this repository.
 This script runs MSBuild on this repository.
 .PARAMETER Configuration
 Specify MSBuild configuration: Debug, Release
+.PARAMETER Clean
+Specifies if the "Clean" target should be run prior to the "Build" target.
 .PARAMETER Pack
 Produce NuGet packages.
 .PARAMETER Sign
@@ -22,6 +24,8 @@ Building release packages.
 [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName='Groups')]
 param(
     [ValidateSet('Debug', 'Release')]$Configuration,
+
+    [switch]$Clean,
 
     [switch]$Pack,
 
@@ -53,6 +57,9 @@ $MSBuildArguments += "/v:$Verbosity"
 
 # Select targets
 $MSBuildTargets = @()
+if ($Clean) {
+    $MSBuildTargets += 'Clean'
+}
 $MSBuildTargets += 'Build'
 if ($Pack) {
     $MSBuildTargets += 'Pack'
@@ -71,6 +78,23 @@ $MSBuildArguments += "/p:Configuration=$Configuration"
 if ($Sign) {
     $MSBuildArguments += "/p:SignOutput=true"
 }
+
+# Configure version numbers to use in build.
+$Version = Get-Content "$PSScriptRoot/build/version.json" | Out-String | ConvertFrom-Json
+$MajorMinorVersion = "$($Version.Major).$($Version.Minor)"
+$MajorMinorPatchVersion = "$($MajorMinorVersion).$($Version.Patch)"
+
+$AssemblyVersion = "$($MajorMinorVersion).0.0"
+$FileVersion = "$($MajorMinorPatchVersion).0"
+if ([string]::IsNullOrEmpty($Version.PreRelease)) {
+    $PackageVersion = $MajorMinorPatchVersion
+} else {
+    $PackageVersion = "$($MajorMinorPatchVersion)-$($Version.PreRelease)"
+}
+
+$MSBuildArguments += "/p:""AssemblyVersion=$($AssemblyVersion)"""
+$MSBuildArguments += "/p:""FileVersion=$($FileVersion)"""
+$MSBuildArguments += "/p:""Version=$($PackageVersion)"""
 
 $local:exit_code = $null
 try {
