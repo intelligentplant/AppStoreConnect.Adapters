@@ -10,6 +10,7 @@ using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using Microsoft.Extensions.Options;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -177,14 +178,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 callOptions
             ).ResponseAsync.ConfigureAwait(false);
 
-            RemoteDescriptor = new Adapter.Common.Models.AdapterDescriptorExtended(
-                response.Adapter.AdapterDescriptor.Id,
-                response.Adapter.AdapterDescriptor.Name,
-                response.Adapter.AdapterDescriptor.Description,
-                response.Adapter.Features,
-                response.Adapter.Extensions,
-                response.Adapter.Properties
-            );
+            RemoteDescriptor = response.Adapter.ToExtendedAdapterDescriptor();
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, response.Adapter.Features);
 

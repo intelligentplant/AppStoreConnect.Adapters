@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
@@ -20,6 +21,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             return result.ToAdapterWriteTagValueAnnotationResult();
         }
+
 
         public async Task<Adapter.RealTimeData.Models.WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, Adapter.RealTimeData.Models.UpdateAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();

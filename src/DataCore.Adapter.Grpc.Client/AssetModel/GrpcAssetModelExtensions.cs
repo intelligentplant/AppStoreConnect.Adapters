@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using DataCore.Adapter.Grpc;
 
-namespace DataCore.Adapter.Grpc.Proxy.AssetModel {
+namespace DataCore.Adapter.AssetModel {
 
     /// <summary>
-    /// Extension methods for converting from gRPC asset model types to their adapter equivalents.
+    /// Extension methods for converting from gRPC types to their adapter equivalents.
     /// </summary>
-    internal static class AssetModelExtensions {
+    public static class GrpcAssetModelExtensions {
 
         /// <summary>
         /// Converts a gRPC asset model node to its adapter equivalent.
@@ -16,18 +17,18 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel {
         /// <returns>
         ///   The adapter asset model node.
         /// </returns>
-        internal static Adapter.AssetModel.Models.AssetModelNode ToAdapterAssetModelNode(this AssetModelNode node) {
+        public static Models.AssetModelNode ToAdapterAssetModelNode(this AssetModelNode node) {
             if (node == null) {
                 return null;
             }
 
-            return new Adapter.AssetModel.Models.AssetModelNode(
+            return new Models.AssetModelNode(
                 node.Id,
                 node.Name,
                 node.Description,
                 node.Parent,
                 node.Children,
-                node.Measurements.Select(x => new Adapter.AssetModel.Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagIdentifier(x.Tag.Id, x.Tag.Name))).ToArray(),
+                node.Measurements.Select(x => new Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagIdentifier(x.Tag.Id, x.Tag.Name))).ToArray(),
                 node.Properties
             );
         }

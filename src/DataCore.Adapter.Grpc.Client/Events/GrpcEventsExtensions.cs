@@ -1,14 +1,20 @@
-﻿using DataCore.Adapter.Grpc.Proxy.Common;
+﻿
+using DataCore.Adapter.Common;
+using DataCore.Adapter.Grpc;
 
-namespace DataCore.Adapter.Grpc.Proxy.Events {
-    internal static class EventsExtensions {
+namespace DataCore.Adapter.Events {
 
-        internal static Adapter.Events.Models.EventMessage ToAdapterEventMessage(this EventMessage eventMessage) {
+    /// <summary>
+    /// Extension methods for converting from gRPC types to their adapter equivalents, and vice versa.
+    /// </summary>
+    public static class GrpcEventsExtensions {
+
+        public static Models.EventMessage ToAdapterEventMessage(this EventMessage eventMessage) {
             if (eventMessage == null) {
                 return null;
             }
 
-            return new Adapter.Events.Models.EventMessage(
+            return new Models.EventMessage(
                 eventMessage.Id,
                 eventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.Priority.ToAdapterEventPriority(),
@@ -19,12 +25,12 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
         }
 
 
-        internal static Adapter.Events.Models.EventMessageWithCursorPosition ToAdapterEventMessage(this EventMessageWithCursorPosition eventMessage) {
+        public static Models.EventMessageWithCursorPosition ToAdapterEventMessage(this EventMessageWithCursorPosition eventMessage) {
             if (eventMessage == null) {
                 return null;
             }
 
-            return new Adapter.Events.Models.EventMessageWithCursorPosition(
+            return new Models.EventMessageWithCursorPosition(
                 eventMessage.EventMessage.Id,
                 eventMessage.EventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.EventMessage.Priority.ToAdapterEventPriority(),
@@ -36,35 +42,35 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
         }
 
 
-        internal static Adapter.Events.Models.EventPriority ToAdapterEventPriority(this EventPriority eventPriority) {
+        public static Models.EventPriority ToAdapterEventPriority(this EventPriority eventPriority) {
             switch (eventPriority) {
                 case EventPriority.Low:
-                    return Adapter.Events.Models.EventPriority.Low;
+                    return Models.EventPriority.Low;
                 case EventPriority.Medium:
-                    return Adapter.Events.Models.EventPriority.Medium;
+                    return Models.EventPriority.Medium;
                 case EventPriority.High:
-                    return Adapter.Events.Models.EventPriority.High;
+                    return Models.EventPriority.High;
                 case EventPriority.Critical:
-                    return Adapter.Events.Models.EventPriority.Critical;
+                    return Models.EventPriority.Critical;
                 case EventPriority.Unknown:
                 default:
-                    return Adapter.Events.Models.EventPriority.Unknown;
+                    return Models.EventPriority.Unknown;
             }
         }
 
 
-        internal static EventReadDirection ToGrpcReadDirection(this Adapter.Events.Models.EventReadDirection readDirection) {
+        public static EventReadDirection ToGrpcReadDirection(this Models.EventReadDirection readDirection) {
             switch (readDirection) {
-                case Adapter.Events.Models.EventReadDirection.Backwards:
+                case Models.EventReadDirection.Backwards:
                     return EventReadDirection.Backwards;
-                case Adapter.Events.Models.EventReadDirection.Forwards:
+                case Models.EventReadDirection.Forwards:
                 default:
                     return EventReadDirection.Forwards;
             }
         }
 
 
-        internal static WriteEventMessageRequest ToGrpcWriteEventMessageItem(this Adapter.Events.Models.WriteEventMessageItem item, string adapterId) {
+        public static WriteEventMessageRequest ToGrpcWriteEventMessageItem(this Models.WriteEventMessageItem item, string adapterId) {
             if (item == null) {
                 return null;
             }
@@ -77,7 +83,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
         }
 
 
-        internal static Adapter.Events.Models.WriteEventMessageResult ToAdapterWriteEventMessageResult(this WriteEventMessageResult result) {
+        public static Models.WriteEventMessageResult ToAdapterWriteEventMessageResult(this WriteEventMessageResult result) {
             if (result == null) {
                 return null;
             }
@@ -100,7 +106,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
         /// <returns>
         ///   The gRPC event message.
         /// </returns>
-        internal static EventMessage ToGrpcEventMessage(this Adapter.Events.Models.EventMessageBase message) {
+        public static EventMessage ToGrpcEventMessage(this Models.EventMessageBase message) {
             if (message == null) {
                 return null;
             }
@@ -132,17 +138,17 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
         /// <returns>
         ///   The gRPC event message priority.
         /// </returns>
-        internal static EventPriority ToGrpcEventPriority(this Adapter.Events.Models.EventPriority priority) {
+        public static EventPriority ToGrpcEventPriority(this Models.EventPriority priority) {
             switch (priority) {
-                case Adapter.Events.Models.EventPriority.Low:
+                case Models.EventPriority.Low:
                     return EventPriority.Low;
-                case Adapter.Events.Models.EventPriority.Medium:
+                case Models.EventPriority.Medium:
                     return EventPriority.Medium;
-                case Adapter.Events.Models.EventPriority.High:
+                case Models.EventPriority.High:
                     return EventPriority.High;
-                case Adapter.Events.Models.EventPriority.Critical:
+                case Models.EventPriority.Critical:
                     return EventPriority.Critical;
-                case Adapter.Events.Models.EventPriority.Unknown:
+                case Models.EventPriority.Unknown:
                 default:
                     return EventPriority.Unknown;
             }

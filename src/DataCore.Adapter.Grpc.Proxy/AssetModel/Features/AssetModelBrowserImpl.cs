@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.AssetModel.Features;
 
 namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {

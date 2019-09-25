@@ -1,18 +1,20 @@
-﻿using DataCore.Adapter.Grpc.Proxy.Common;
+﻿
+using DataCore.Adapter.Common;
+using DataCore.Adapter.Grpc;
 
-namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Extensions for converting from gRPC real-time data types to adapter equivalents.
+    /// Extension methods for converting from gRPC types to their adapter equivalents, and vice versa.
     /// </summary>
-    internal static class RealTimeDataExtensions {
+    public static class GrpcRealTimeDataExtensions {
 
-        internal static Adapter.RealTimeData.Models.TagDefinition ToAdapterTagDefinition(this TagDefinition tagDefinition) {
+        public static Models.TagDefinition ToAdapterTagDefinition(this TagDefinition tagDefinition) {
             if (tagDefinition == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.TagDefinition(
+            return new Models.TagDefinition(
                 tagDefinition.Id,
                 tagDefinition.Name,
                 tagDefinition.Category,
@@ -26,25 +28,25 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagDataType ToAdapterTagDataType(this TagDataType tagDataType) {
+        public static Models.TagDataType ToAdapterTagDataType(this TagDataType tagDataType) {
             switch (tagDataType) {
                 case TagDataType.State:
-                    return Adapter.RealTimeData.Models.TagDataType.State;
+                    return Models.TagDataType.State;
                 case TagDataType.Text:
-                    return Adapter.RealTimeData.Models.TagDataType.Text;
+                    return Models.TagDataType.Text;
                 case TagDataType.Numeric:
                 default:
-                    return Adapter.RealTimeData.Models.TagDataType.Numeric;
+                    return Models.TagDataType.Numeric;
             }
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagValue ToAdapterTagValue(this TagValue tagValue) {
+        public static Models.TagValue ToAdapterTagValue(this TagValue tagValue) {
             if (tagValue == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.TagValue(
+            return new Models.TagValue(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.NumericValue,
                 tagValue.TextValue,
@@ -57,38 +59,38 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
+        public static Models.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
             switch (status) {
                 case TagValueStatus.Good:
-                    return Adapter.RealTimeData.Models.TagValueStatus.Good;
+                    return Models.TagValueStatus.Good;
                 case TagValueStatus.Bad:
-                    return Adapter.RealTimeData.Models.TagValueStatus.Bad;
+                    return Models.TagValueStatus.Bad;
                 case TagValueStatus.Unknown:
                 default:
-                    return Adapter.RealTimeData.Models.TagValueStatus.Unknown;
+                    return Models.TagValueStatus.Unknown;
             }
         }
 
 
-        internal static TagValueStatus ToGrpcTagValueStatus(this Adapter.RealTimeData.Models.TagValueStatus status) {
+        public static TagValueStatus ToGrpcTagValueStatus(this Models.TagValueStatus status) {
             switch (status) {
-                case Adapter.RealTimeData.Models.TagValueStatus.Bad:
+                case Models.TagValueStatus.Bad:
                     return TagValueStatus.Bad;
-                case Adapter.RealTimeData.Models.TagValueStatus.Good:
+                case Models.TagValueStatus.Good:
                     return TagValueStatus.Good;
-                case Adapter.RealTimeData.Models.TagValueStatus.Unknown:
+                case Models.TagValueStatus.Unknown:
                 default:
                     return TagValueStatus.Unknown;
             }
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagValueQueryResult ToAdapterTagValueQueryResult(this TagValueQueryResult result) {
+        public static Models.TagValueQueryResult ToAdapterTagValueQueryResult(this TagValueQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.TagValueQueryResult(
+            return new Models.TagValueQueryResult(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue()
@@ -96,12 +98,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.ProcessedTagValueQueryResult ToAdapterTagValueQueryResult(this ProcessedTagValueQueryResult result) {
+        public static Models.ProcessedTagValueQueryResult ToAdapterTagValueQueryResult(this ProcessedTagValueQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.ProcessedTagValueQueryResult(
+            return new Models.ProcessedTagValueQueryResult(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue(),
@@ -110,30 +112,34 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.DataFunctionDescriptor ToAdapterDataFunctionDescriptor(this DataFunctionDescriptor func) {
+        public static Models.DataFunctionDescriptor ToAdapterDataFunctionDescriptor(this DataFunctionDescriptor func) {
             if (func == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.DataFunctionDescriptor(
+            return new Models.DataFunctionDescriptor(
                 func.Name,
                 func.Description
             );
         }
 
 
-        internal static RawDataBoundaryType ToGrpcRawDataBoundaryType(this Adapter.RealTimeData.Models.RawDataBoundaryType boundaryType) {
+        public static RawDataBoundaryType ToGrpcRawDataBoundaryType(this Models.RawDataBoundaryType boundaryType) {
             switch (boundaryType) {
-                case Adapter.RealTimeData.Models.RawDataBoundaryType.Outside:
+                case Models.RawDataBoundaryType.Outside:
                     return RawDataBoundaryType.Outside;
-                case Adapter.RealTimeData.Models.RawDataBoundaryType.Inside:
+                case Models.RawDataBoundaryType.Inside:
                 default:
                     return RawDataBoundaryType.Inside;
             }
         }
 
 
-        internal static WriteTagValueRequest ToGrpcWriteTagValueRequest(this Adapter.RealTimeData.Models.WriteTagValueItem item, string adapterId) {
+        public static WriteTagValueRequest ToGrpcWriteTagValueRequest(this Models.WriteTagValueItem item, string adapterId) {
+            if (item == null) {
+                return null;
+            }
+            
             return new WriteTagValueRequest() {
                 AdapterId = adapterId,
                 CorrelationId = item.CorrelationId,
@@ -147,8 +153,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.WriteTagValueResult ToAdapterWriteTagValueResult(this WriteTagValueResult result) {
-            return new Adapter.RealTimeData.Models.WriteTagValueResult(
+        public static Models.WriteTagValueResult ToAdapterWriteTagValueResult(this WriteTagValueResult result) {
+            if (result == null) {
+                return null;
+            }
+            
+            return new Models.WriteTagValueResult(
                 result.CorrelationId,
                 result.TagId,
                 result.WriteStatus.ToAdapterWriteStatus(),
@@ -158,12 +168,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagValueAnnotation ToAdapterTagValueAnnotation(this TagValueAnnotation annotation) {
+        public static Models.TagValueAnnotation ToAdapterTagValueAnnotation(this TagValueAnnotation annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.TagValueAnnotation(
+            return new Models.TagValueAnnotation(
                 annotation.Id,
                 annotation.Annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.Annotation.UtcStartTime.ToDateTime(),
@@ -175,23 +185,23 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
+        public static Models.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
             switch (annotationType) {
                 case AnnotationType.TimeRange:
-                    return Adapter.RealTimeData.Models.AnnotationType.TimeRange;
+                    return Models.AnnotationType.TimeRange;
                 case AnnotationType.Instantaneous:
                 default:
-                    return Adapter.RealTimeData.Models.AnnotationType.Instantaneous;
+                    return Models.AnnotationType.Instantaneous;
             }
         }
 
 
-        internal static Adapter.RealTimeData.Models.TagValueAnnotationQueryResult ToAdapterAnnotationQueryResult(this TagValueAnnotationQueryResult result) {
+        public static Models.TagValueAnnotationQueryResult ToAdapterAnnotationQueryResult(this TagValueAnnotationQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return new Adapter.RealTimeData.Models.TagValueAnnotationQueryResult(
+            return new Models.TagValueAnnotationQueryResult(
                 result.TagId,
                 result.TagName,
                 result.Annotation.ToAdapterTagValueAnnotation()
@@ -199,18 +209,18 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static AnnotationType ToGrpcAnnotationType(this Adapter.RealTimeData.Models.AnnotationType annotationType) {
+        public static AnnotationType ToGrpcAnnotationType(this Models.AnnotationType annotationType) {
             switch (annotationType) {
-                case Adapter.RealTimeData.Models.AnnotationType.TimeRange:
+                case Models.AnnotationType.TimeRange:
                     return AnnotationType.TimeRange;
-                case Adapter.RealTimeData.Models.AnnotationType.Instantaneous:
+                case Models.AnnotationType.Instantaneous:
                 default:
                     return AnnotationType.Instantaneous;
             }
         }
 
 
-        internal static TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this Adapter.RealTimeData.Models.TagValueAnnotationBase annotation) {
+        public static TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this Models.TagValueAnnotationBase annotation) {
             if (annotation == null) {
                 return null;
             }
@@ -237,8 +247,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
         }
 
 
-        internal static Adapter.RealTimeData.Models.WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this WriteTagValueAnnotationResult result) {
-            return new Adapter.RealTimeData.Models.WriteTagValueAnnotationResult(
+        public static Models.WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this WriteTagValueAnnotationResult result) {
+            if (result == null) {
+                return null;
+            }
+            
+            return new Models.WriteTagValueAnnotationResult(
                 result.TagId,
                 result.AnnotationId,
                 result.WriteStatus.ToAdapterWriteStatus(),

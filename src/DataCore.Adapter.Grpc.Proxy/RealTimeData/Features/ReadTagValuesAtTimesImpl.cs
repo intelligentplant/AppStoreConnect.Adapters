@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
+using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Features;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
