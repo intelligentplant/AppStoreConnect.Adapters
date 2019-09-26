@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +12,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         public SnapshotTagValuePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
-        public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = new SnapshotTagValueSubscription(this, CreateClient<TagValuesService.TagValuesServiceClient>());
-            result.Start(context);
-            return Task.FromResult<ISnapshotTagValueSubscription>(result);
+            try {
+                await result.Start(context).WithCancellation(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
+                result.Dispose();
+                throw;
+            }
+            return result;
         }
 
 
@@ -43,7 +50,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public void Start(IAdapterCallContext context) {
+            public Task Start(IAdapterCallContext context) {
+                var tcs = new TaskCompletionSource<int>();
+
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
                     lock (_tags) {
@@ -55,19 +64,33 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     };
                     grpcRequest.Tags.AddRange(tags);
 
-                    var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, _feature.GetCallOptions(context, ct));
                     try {
-                        while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                            if (grpcResponse.ResponseStream.Current == null) {
-                                continue;
+                        var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, _feature.GetCallOptions(context, ct));
+                        tcs.TrySetResult(0);
+
+                        try {
+                            while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                                if (grpcResponse.ResponseStream.Current == null) {
+                                    continue;
+                                }
+                                await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
                             }
-                            await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
+                        }
+                        finally {
+                            grpcResponse.Dispose();
                         }
                     }
-                    finally {
-                        grpcResponse.Dispose();
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled();
+                        throw;
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                        throw;
                     }
                 }, false, _shutdownTokenSource.Token);
+
+                return tcs.Task;
             }
 
 

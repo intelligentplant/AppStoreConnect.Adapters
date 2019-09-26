@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -24,13 +25,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public SnapshotTagValuePushImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = new SnapshotTagValueSubscription(
                 AdapterId,
                 GetClient()
             );
-            result.Start();
-            return Task.FromResult<ISnapshotTagValueSubscription>(result);
+
+            try {
+                await result.Start().WithCancellation(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
+                result.Dispose();
+                throw;
+            }
+            return result;
         }
 
         /// <summary>
@@ -91,21 +99,42 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <summary>
             /// Starts the subscription.
             /// </summary>
-            public void Start() {
+            /// <returns>
+            ///   A task that will start the subscription.
+            /// </returns>
+            public Task Start() {
+                var tcs = new TaskCompletionSource<int>();
+
                 _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
                     lock (_tags) {
                         tags = _tags.ToArray();
                     }
 
-                    var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
-                        _adapterId,
-                        tags,
-                        ct
-                    ).ConfigureAwait(false);
+                    ChannelReader<TagValueQueryResult> hubChannel;
+
+                    try {
+                        hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
+                            _adapterId,
+                            tags,
+                            ct
+                        ).ConfigureAwait(false);
+
+                        tcs.TrySetResult(0);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled();
+                        throw;
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                        throw;
+                    }
 
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
                 }, true, _shutdownTokenSource.Token);
+
+                return tcs.Task;
             }
 
 
