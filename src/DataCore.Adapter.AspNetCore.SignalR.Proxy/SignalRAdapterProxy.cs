@@ -16,11 +16,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
-        /// The relative SignalR hub route.
-        /// </summary>
-        public const string HubRoute = "/signalr/data-core/v1.0";
-
-        /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
         private readonly string _remoteAdapterId;

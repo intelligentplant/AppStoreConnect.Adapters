@@ -13,6 +13,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
     public class AdapterSignalRClient : IAsyncDisposable {
 
         /// <summary>
+        /// The relative SignalR hub route.
+        /// </summary>
+        public const string DefaultHubRoute = "/signalr/data-core/v1.0";
+
+        /// <summary>
         /// Indicates if the client has been diposed.
         /// </summary>
         private bool _isDisposed;
