@@ -356,10 +356,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 UtcEnd = utcStartTime
             };
 
+            var iterations = 0;
+
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {
                     break;
                 }
+
+                ++iterations;
+
                 if (val == null) {
                     continue;
                 }
@@ -373,9 +378,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
                     }
 
+                    // Calculate the start/end time for the new bucket that the sample we received 
+                    // should go into.
+
+                    var ticks = sampleInterval.Ticks * (val.Value.UtcSampleTime.Ticks / sampleInterval.Ticks);
+                    var nextBucketStartTime = new DateTime(ticks, DateTimeKind.Utc);
+
                     bucket = new TagValueBucket() {
-                        UtcStart = bucket.UtcEnd,
-                        UtcEnd = bucket.UtcEnd.Add(sampleInterval)
+                        UtcStart = nextBucketStartTime,
+                        UtcEnd = nextBucketStartTime.Add(sampleInterval)
                     };
                 }
 
