@@ -25,9 +25,10 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
 
         /// <summary>
         /// Regex for matching the full path to a certificate in a certificate store e.g. 
-        /// <c>cert:\CurrentUser\My\1234567890abcdef1234567890abcdef123456789</c>
+        /// <c>cert:\CurrentUser\My\1234567890abcdef1234567890abcdef123456789</c>. Both back- and 
+        /// forward-slashes can be used as path separators.
         /// </summary>
-        private static readonly Regex s_certPathWithThumbprintRegex = new Regex(@"^CERT\:\\(?<location>.+?)\\(?<store>.+)\\(?<thumbprint>.+)$", RegexOptions.IgnoreCase);
+        private static readonly Regex s_certPathWithThumbprintRegex = new Regex(@"^CERT\:(?:\\|/)(?<location>.+?)(?:\\|/)(?<store>.+)(?:\\|/)(?<thumbprint>.+)$", RegexOptions.IgnoreCase);
 
 
         /// <summary>
@@ -159,14 +160,16 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
                     continue;
                 }
 
-                PemEncode(certificate.Export(X509ContentType.Cert), CertificateLabel, new[] { 
+                PemEncode(certificate.Export(X509ContentType.Cert), CertificateLabel, new[] {
                     $"# Subject: {certificate.Subject}",
                     $"# Issuer: {certificate.Issuer}",
                     $"# Friendly Name: {(certificate.FriendlyName ?? "<UNSPECIFIED>")}",
                     $"# Thumbprint: {certificate.Thumbprint}",
-                    $"# Validity: from {certificate.NotBefore:yyyy-MM-ddTHH:mm:ss} UTC to {certificate.NotAfter:yyyy-MM-ddTHH:mm:ss} UTC"
+                    $"# Validity: from {certificate.NotBefore:yyyy-MM-ddTHH:mm:ss} UTC to {certificate.NotAfter:yyyy-MM-ddTHH:mm:ss} UTC",
+                    string.Empty
                 }, builder);
 
+                builder.Append('\n');
                 builder.Append('\n');
             }
 
@@ -241,7 +244,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
                 thumbprintOrSubjectName = null;
                 return false;
             }
-
+            
             var loc = m.Groups["location"].Value;
             if (!Enum.TryParse(loc, out location)) {
                 location = default;
@@ -283,7 +286,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
             using (var store = new X509Store(name, location)) {
                 store.Open(OpenFlags.ReadOnly);
                 certificate = LoadCertificates(store, thumbprintOrSubjectName).FirstOrDefault(x => x.Verify());
-                return true;
+                return certificate != null;
             }
         }
 
