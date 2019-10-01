@@ -673,7 +673,7 @@ namespace DataCore.Adapter.Csv {
 
             // Now that we've calculated our initial offset, we need to find the index of the sample time 
             // in the CSV data that, when shifted by our offset, is greater than or equal to utcStartTime.
-            // This will be ur starting point as we iterate over the CSV data.
+            // This will be our starting point as we iterate over the CSV data.
             var startingIndex = 0;
             for (; startingIndex < utcSampleTimes.Length; startingIndex++) {
                 var tmp = utcSampleTimes[startingIndex].Add(offset);
