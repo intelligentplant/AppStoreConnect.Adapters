@@ -14,6 +14,43 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     public static class InterpolationHelper {
 
         /// <summary>
+        /// Interpolates a value between two numeric points.
+        /// </summary>
+        /// <param name="x">
+        ///   The sample time to calculate the value at.
+        /// </param>
+        /// <param name="x0">
+        ///   The first sample time to use in the interpolation.
+        /// </param>
+        /// <param name="x1">
+        ///   The second sample time to use in the interpolation.
+        /// </param>
+        /// <param name="y0">
+        ///   The first numeric value to use in the interpolation.
+        /// </param>
+        /// <param name="y1">
+        ///   The second numeric value to use in the interpolation.
+        /// </param>
+        /// <returns>
+        ///   The interpolated value.
+        /// </returns>
+        public static double InterpolateValue(DateTime x, DateTime x0, DateTime x1, double y0, double y1) {
+            if (double.IsNaN(y0) ||
+                double.IsNaN(y1) ||
+                double.IsInfinity(y0) ||
+                double.IsInfinity(y1)) {
+
+                return double.NaN;
+            }
+            
+            var x0Ticks = x0.Ticks;
+            var x1Ticks = x1.Ticks;
+
+            return y0 + (x.Ticks - x0Ticks) * ((y1 - y0) / (x1Ticks - x0Ticks));
+        }
+
+
+        /// <summary>
         /// Interpolates a value between two numeric samples.
         /// </summary>
         /// <param name="utcSampleTime">
@@ -31,19 +68,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static TagValue InterpolateSample(DateTime utcSampleTime, TagValue valueBefore, TagValue valueAfter) {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
-            if (double.IsNaN(valueBefore.NumericValue) || double.IsNaN(valueAfter.NumericValue) || double.IsInfinity(valueBefore.NumericValue) || double.IsInfinity(valueAfter.NumericValue)) {
-                return TagValueBuilder.CreateFromExisting(valueBefore)
-                    .WithUtcSampleTime(utcSampleTime)
-                    .Build();
+
+            if (valueBefore == null || 
+                valueAfter == null || 
+                double.IsNaN(valueBefore.NumericValue) || 
+                double.IsNaN(valueAfter.NumericValue) || 
+                double.IsInfinity(valueBefore.NumericValue) || 
+                double.IsInfinity(valueAfter.NumericValue)) {
+                
+                return valueBefore == null 
+                    ? null 
+                    : TagValueBuilder.CreateFromExisting(valueBefore)
+                        .WithUtcSampleTime(utcSampleTime)
+                        .Build();
             }
 
-            var x0 = valueBefore.UtcSampleTime.Ticks;
-            var x1 = valueAfter.UtcSampleTime.Ticks;
+            var x0 = valueBefore.UtcSampleTime;
+            var x1 = valueAfter.UtcSampleTime;
 
             var y0 = valueBefore.NumericValue;
             var y1 = valueAfter.NumericValue;
 
-            var nextNumericValue = y0 + (utcSampleTime.Ticks - x0) * ((y1 - y0) / (x1 - x0));
+            var nextNumericValue = InterpolateValue(utcSampleTime, x0, x1, y0, y1);
             var nextTextValue = TagValueBuilder.GetTextValue(nextNumericValue);
             var nextStatusValue = new[] { valueBefore, valueAfter }.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
@@ -112,9 +158,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     : TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
             }
 
-            if (utcSampleTime < valueBefore.UtcSampleTime && utcSampleTime < valueAfter.UtcSampleTime) {
-                throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime);
-            }
+            //if (utcSampleTime < valueBefore.UtcSampleTime && utcSampleTime < valueAfter.UtcSampleTime) {
+            //    throw new ArgumentException(SharedResources.Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime);
+            //}
 
             if (valueBefore.UtcSampleTime > valueAfter.UtcSampleTime) {
                 var tmp = valueBefore;
@@ -237,8 +283,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 var nextSampleTime = sampleTimesEnumerator.Current;
-                TagValue previousValue = null;
-                TagValue previousPreviousValue = null;
+                TagValue value1 = null;
+                TagValue value0 = null;
                 var sampleTimesRemaining = true;
 
                 while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -249,20 +295,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    previousPreviousValue = previousValue;
-                    previousValue = val.Value;
+                    value0 = value1;
+                    value1 = val.Value;
 
-                    if (previousValue.UtcSampleTime > nextSampleTime && previousPreviousValue != null) {
-                        var interpolatedValue = GetValueAtTime(tag, nextSampleTime, previousPreviousValue, previousValue, interpolationCalculationType);
-                        if (sampleTimesEnumerator.MoveNext()) {
-                            nextSampleTime = sampleTimesEnumerator.Current;
-                        }
-                        else {
-                            sampleTimesRemaining = false;
-                        }
-                        
-                        if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                            resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, interpolatedValue));
+                    if (value0 != null) {
+                        while (value1.UtcSampleTime > nextSampleTime && sampleTimesRemaining) {
+                            var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, interpolationCalculationType);
+                            if (sampleTimesEnumerator.MoveNext()) {
+                                nextSampleTime = sampleTimesEnumerator.Current;
+                            }
+                            else {
+                                sampleTimesRemaining = false;
+                            }
+
+                            if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                                resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, interpolatedValue));
+                            }
                         }
                     }
                 }
@@ -272,10 +320,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // additional point for the utcEndTime, based on the two most-recent raw values we processed.  
                 if (!cancellationToken.IsCancellationRequested &&
                     sampleTimesRemaining &&
-                    previousPreviousValue != null &&
-                    previousValue != null) {
+                    value0 != null &&
+                    value1 != null) {
 
-                    var interpolatedValue = GetValueAtTime(tag, nextSampleTime, previousPreviousValue, previousValue, interpolationCalculationType);
+                    var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, interpolationCalculationType);
                     if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, interpolatedValue));
                     }
