@@ -25,24 +25,43 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly string _remoteAdapterId;
 
         /// <summary>
-        /// The descriptor for the remote adapter.
+        /// Information about the remote host.
         /// </summary>
-        private Adapter.Common.Models.AdapterDescriptorExtended _remoteDescriptor;
+        private Common.Models.HostInfo _remoteHostInfo;
 
         /// <summary>
-        /// Lock for accessing <see cref="_remoteDescriptor"/>.
+        /// The descriptor for the remote adapter.
         /// </summary>
-        private readonly object _remoteDescriptorLock = new object();
+        private Common.Models.AdapterDescriptorExtended _remoteDescriptor;
+
+        /// <summary>
+        /// Lock for accessing <see cref="_remoteHostInfo"/> and <see cref="_remoteDescriptor"/>.
+        /// </summary>
+        private readonly object _remoteInfoLock = new object();
 
         /// <inheritdoc/>
-        public Adapter.Common.Models.AdapterDescriptorExtended RemoteDescriptor {
+        public Common.Models.HostInfo RemoteHostInfo {
             get {
-                lock (_remoteDescriptorLock) {
+                lock (_remoteInfoLock) {
+                    return _remoteHostInfo;
+                }
+            }
+            private set {
+                lock (_remoteInfoLock) {
+                    _remoteHostInfo = value;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public Common.Models.AdapterDescriptorExtended RemoteDescriptor {
+            get {
+                lock (_remoteInfoLock) {
                     return _remoteDescriptor;
                 }
             }
             private set {
-                lock (_remoteDescriptorLock) {
+                lock (_remoteInfoLock) {
                     _remoteDescriptor = value;
                 }
             }
@@ -165,25 +184,35 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A task that will perform the initialisation.
         /// </returns>
         private async Task Init(CancellationToken cancellationToken) {
-            var client = CreateClient<AdaptersService.AdaptersServiceClient>();
             var callOptions = new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
                 credentials: GetCallCredentials(null)
             );
 
-            var response = await client.GetAdapterAsync(
+            var hostInfoClient = CreateClient<HostInfoService.HostInfoServiceClient>();
+
+            var getHostInfoResponse = await hostInfoClient.GetHostInfoAsync(
+                new GetHostInfoRequest(),
+                callOptions
+            ).ResponseAsync.ConfigureAwait(false);
+
+            RemoteHostInfo = getHostInfoResponse.HostInfo.ToAdapterHostInfo();
+
+            var adapterClient = CreateClient<AdaptersService.AdaptersServiceClient>();
+
+            var getAdapterResponse = await adapterClient.GetAdapterAsync(
                 new GetAdapterRequest() {
                     AdapterId = _remoteAdapterId
                 }, 
                 callOptions
             ).ResponseAsync.ConfigureAwait(false);
 
-            RemoteDescriptor = response.Adapter.ToExtendedAdapterDescriptor();
+            RemoteDescriptor = getAdapterResponse.Adapter.ToExtendedAdapterDescriptor();
 
-            ProxyAdapterFeature.AddFeaturesToProxy(this, response.Adapter.Features);
+            ProxyAdapterFeature.AddFeaturesToProxy(this, getAdapterResponse.Adapter.Features);
 
             if (_extensionFeatureFactory != null) {
-                foreach (var extensionFeature in response.Adapter.Extensions) {
+                foreach (var extensionFeature in getAdapterResponse.Adapter.Extensions) {
                     if (string.IsNullOrWhiteSpace(extensionFeature)) {
                         continue;
                     }

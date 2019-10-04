@@ -59,8 +59,8 @@ namespace DataCore.Adapter.Common.Models {
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IDictionary<string, string> properties): base(id, name, description) {
-            Features = features?.ToArray() ?? new string[0];
-            Extensions = extensions?.ToArray() ?? new string[0];
+            Features = features?.ToArray() ?? Array.Empty<string>();
+            Extensions = extensions?.ToArray() ?? Array.Empty<string>();
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 

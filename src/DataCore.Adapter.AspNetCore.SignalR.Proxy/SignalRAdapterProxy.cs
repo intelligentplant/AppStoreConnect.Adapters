@@ -21,6 +21,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         private readonly string _remoteAdapterId;
 
         /// <summary>
+        /// Information about the remote host.
+        /// </summary>
+        private HostInfo _remoteHostInfo;
+
+        /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
         private AdapterDescriptorExtended _remoteDescriptor;
@@ -28,17 +33,31 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Lock for accessing <see cref="_remoteDescriptor"/>.
         /// </summary>
-        private readonly object _remoteDescriptorLock = new object();
+        private readonly object _remoteInfoLock = new object();
+
+        /// <inheritdoc/>
+        public Common.Models.HostInfo RemoteHostInfo {
+            get {
+                lock (_remoteInfoLock) {
+                    return _remoteHostInfo;
+                }
+            }
+            private set {
+                lock (_remoteInfoLock) {
+                    _remoteHostInfo = value;
+                }
+            }
+        }
 
         /// <inheritdoc/>
         public AdapterDescriptorExtended RemoteDescriptor {
             get {
-                lock (_remoteDescriptorLock) {
+                lock (_remoteInfoLock) {
                     return _remoteDescriptor;
                 }
             }
             private set {
-                lock (_remoteDescriptorLock) {
+                lock (_remoteInfoLock) {
                     _remoteDescriptor = value;
                 }
             }
@@ -137,6 +156,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </returns>
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
+            RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(cancellationToken).ConfigureAwait(false);
             var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false);
 
             RemoteDescriptor = descriptor;

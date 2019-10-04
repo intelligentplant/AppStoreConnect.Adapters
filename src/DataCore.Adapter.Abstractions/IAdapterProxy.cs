@@ -8,6 +8,11 @@ namespace DataCore.Adapter {
     public interface IAdapterProxy : IAdapter {
 
         /// <summary>
+        /// Gets information about the remote host.
+        /// </summary>
+        HostInfo RemoteHostInfo { get; }
+
+        /// <summary>
         /// Gets the descriptor for the remote adapter.
         /// </summary>
         AdapterDescriptorExtended RemoteDescriptor { get; }
