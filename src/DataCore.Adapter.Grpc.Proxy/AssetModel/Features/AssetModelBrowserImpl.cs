@@ -88,8 +88,8 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
                 var grpcRequest = new FindAssetModelNodesRequest() {
                     AdapterId = AdapterId,
-                    Name = request.Name,
-                    Description = request.Description,
+                    Name = request.Name ?? string.Empty,
+                    Description = request.Description ?? string.Empty,
                     PageSize = request.PageSize,
                     Page = request.Page
                 };

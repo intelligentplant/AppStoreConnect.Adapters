@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 var client = CreateClient<EventsService.EventsServiceClient>();
                 var grpcRequest = new GetEventMessagesUsingCursorPositionRequest() {
                     AdapterId = AdapterId,
-                    CursorPosition = request.CursorPosition,
+                    CursorPosition = request.CursorPosition ?? string.Empty,
                     Direction = request.Direction.ToGrpcReadDirection(),
                     MessageCount = request.MessageCount
                 };

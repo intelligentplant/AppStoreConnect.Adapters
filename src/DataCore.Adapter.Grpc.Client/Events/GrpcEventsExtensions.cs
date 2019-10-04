@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Events {
 
             return new WriteEventMessageRequest() {
                 AdapterId = adapterId,
-                CorrelationId = item.CorrelationId,
+                CorrelationId = item.CorrelationId ?? string.Empty,
                 Message = item.EventMessage.ToGrpcEventMessage()
             };
         }

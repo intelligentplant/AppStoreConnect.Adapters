@@ -142,11 +142,11 @@ namespace DataCore.Adapter.RealTimeData {
             
             return new WriteTagValueRequest() {
                 AdapterId = adapterId,
-                CorrelationId = item.CorrelationId,
-                TagId = item.TagId,
+                CorrelationId = item.CorrelationId ?? string.Empty,
+                TagId = item.TagId ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(item.Value.UtcSampleTime),
                 NumericValue = item.Value.NumericValue,
-                TextValue = item.Value.TextValue,
+                TextValue = item.Value.TextValue ?? string.Empty,
                 Status = item.Value.Status.ToGrpcTagValueStatus(),
                 Units = item.Value.Units ?? string.Empty
             };
@@ -229,8 +229,8 @@ namespace DataCore.Adapter.RealTimeData {
                 AnnotationType = annotation.AnnotationType.ToGrpcAnnotationType(),
                 UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
                 HasUtcEndTime = annotation.UtcEndTime.HasValue,
-                Value = annotation.Value,
-                Description = annotation.Description
+                Value = annotation.Value ?? string.Empty,
+                Description = annotation.Description ?? string.Empty
             };
 
             if (result.HasUtcEndTime) {

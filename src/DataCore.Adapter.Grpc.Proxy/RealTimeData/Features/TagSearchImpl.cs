@@ -16,12 +16,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 var client = CreateClient<TagSearchService.TagSearchServiceClient>();
                 var grpcRequest = new FindTagsRequest() {
                     AdapterId = AdapterId,
-                    Name = request.Name,
-                    Description = request.Description,
-                    Units = request.Units,
+                    Name = request.Name ?? string.Empty,
+                    Description = request.Description ?? string.Empty,
+                    Units = request.Units ?? string.Empty,
                     PageSize = request.PageSize,
                     Page = request.Page,
-                    Label = request.Label
+                    Label = request.Label ?? string.Empty
                 };
                 if (request.Other?.Count > 0) {
                     foreach (var item in request.Other) {
