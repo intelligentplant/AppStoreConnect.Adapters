@@ -46,7 +46,7 @@ if ($Patch) {
     $Version.Patch = $Version.Patch + 1
     $Modified = $true
 }
-if ($PreRelease) {
+if (!($null -eq $PreRelease)) {
     Write-Host('Updating pre-release label.')
     if ([String]::IsNullOrWhiteSpace($PreRelease)) {
         $Version.PreRelease = ''
