@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DataCore.Adapter.Http.Client;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy {
     /// <summary>
@@ -25,6 +26,13 @@ namespace DataCore.Adapter.Http.Proxy {
         /// The proxy that the feature instance belongs to.
         /// </summary>
         private readonly HttpAdapterProxy _proxy;
+
+        /// <summary>
+        /// Gets the proxy's logger.
+        /// </summary>
+        protected ILogger Logger {
+            get { return _proxy.Logger; }
+        }
 
         /// <summary>
         /// The adapter ID for the remote adapter.

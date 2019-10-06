@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.Events.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy.Events {
     /// <summary>
@@ -29,9 +30,14 @@ namespace DataCore.Adapter.Http.Proxy.Events {
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
 
-                var items = await channel.ReadItems(1000, ct).ConfigureAwait(false);
+                const int maxItems = 1000;
+                var items = (await channel.ReadItems(maxItems, ct).ConfigureAwait(false)).ToArray();
+                if (items.Length >= maxItems) {
+                    Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
+                }
+
                 var request = new WriteEventMessagesRequest() { 
-                    Events = items.ToArray()
+                    Events = items
                 };
 
                 var clientResponse = await client.Events.WriteEventMessagesAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);

@@ -43,6 +43,13 @@ namespace DataCore.Adapter.Http.Proxy {
         /// </summary>
         private readonly object _remoteInfoLock = new object();
 
+        /// <summary>
+        /// The proxy's logger.
+        /// </summary>
+        protected internal new ILogger Logger {
+            get { return base.Logger; }
+        }
+
         /// <inheritdoc/>
         public HostInfo RemoteHostInfo {
             get {
