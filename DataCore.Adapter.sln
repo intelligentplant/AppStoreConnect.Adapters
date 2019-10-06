@@ -61,6 +61,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Http.Clien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.SignalR.Client", "src\DataCore.Adapter.AspNetCore.SignalR.Client\DataCore.Adapter.AspNetCore.SignalR.Client.csproj", "{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Http.Proxy", "src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj", "{D9C535E9-CE37-49CB-A04F-008AA2480DC4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +141,10 @@ Global
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -166,6 +172,7 @@ Global
 		{4FA056CC-58A0-4CFE-9134-F645B6B7E0D7} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{EA46F702-8AEA-4EAC-A81C-B924D877DE26} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
+		{D9C535E9-CE37-49CB-A04F-008AA2480DC4} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

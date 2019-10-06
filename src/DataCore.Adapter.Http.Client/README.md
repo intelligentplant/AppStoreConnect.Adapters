@@ -49,7 +49,7 @@ You can then inject the `AdapterHttpClient` directly into e.g. API controllers:
 
 ```csharp
 [ApiController]
-public class MyController: ControllerBase {
+public class MyController : ControllerBase {
 
     private readonly AdapterHttpClient _client;
 

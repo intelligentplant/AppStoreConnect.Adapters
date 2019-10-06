@@ -1,19 +1,27 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common.Models;
-using Microsoft.AspNetCore.SignalR.Client;
+using DataCore.Adapter.Http.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
+namespace DataCore.Adapter.Http.Proxy {
 
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via SignalR.
     /// </summary>
-    public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
+    /// <remarks>
+    ///   In order to apply per-call authorization to adapter calls, use the 
+    ///   <see cref="AdapterHttpClient.CreateRequestTransformHandler"/> method to create a 
+    ///   delegating handler that can set the appropriate authorization on outgoing requests, and 
+    ///   add the handler to the pipeline for the <see cref="HttpClient"/> passed to the 
+    ///   <see cref="HttpAdapterProxy.HttpAdapterProxy"/> constructor. The proxy will pass the 
+    ///   <see cref="IAdapterCallContext.User"/> property from the adapter call to the delegating 
+    ///   handler prior to sending each HTTP request.
+    /// </remarks>
+    public class HttpAdapterProxy : AdapterBase<HttpAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -64,11 +72,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
         /// <summary>
-        /// A factory delegate that can create hub connections.
-        /// </summary>
-        private readonly ConnectionFactory _connectionFactory;
-
-        /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
         private readonly ExtensionFeatureFactory _extensionFeatureFactory;
@@ -76,72 +79,37 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// The client used in standard adapter queries.
         /// </summary>
-        private readonly Lazy<AdapterSignalRClient> _client;
+        private readonly AdapterHttpClient _client;
+
 
         /// <summary>
-        /// Additional hub connections created for extension features.
+        /// Creates a new <see cref="HttpAdapterProxy"/> object.
         /// </summary>
-        private readonly ConcurrentDictionary<string, Lazy<Task<HubConnection>>> _extensionConnections = new ConcurrentDictionary<string, Lazy<Task<HubConnection>>>();
-        
-
-        /// <summary>
-        /// Creates a new <see cref="SignalRAdapterProxy"/> object.
-        /// </summary>
+        /// <param name="client">
+        ///   The Adapter HTTP client to use.
+        /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public SignalRAdapterProxy(IOptions<SignalRAdapterProxyOptions> options, ILoggerFactory loggerFactory) 
+        public HttpAdapterProxy(AdapterHttpClient client, IOptions<HttpAdapterProxyOptions> options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
+            _client = client ?? throw new ArgumentNullException(nameof(client));
             _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _connectionFactory = options?.Value?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = options?.Value?.ExtensionFeatureFactory;
-            _client = new Lazy<AdapterSignalRClient>(() => {
-                return new AdapterSignalRClient(_connectionFactory.Invoke(null), true);
-            }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
         /// <summary>
-        /// Gets the strongly-typed SignalR client for the proxy. This client can be used to query 
-        /// standard adapter features (if supported by the remote adapter).
+        /// Gets the proxy's <see cref="AdapterHttpClient"/>.
         /// </summary>
         /// <returns>
-        ///   An <see cref="AdapterSignalRClient"/> object.
+        ///   An <see cref="AdapterHttpClient"/> instance.
         /// </returns>
-        public AdapterSignalRClient GetClient() {
-            return _client.Value;
-        }
-
-
-        /// <summary>
-        /// Gets or creates an active hub connection for use with an adapter extension feature.
-        /// </summary>
-        /// <param name="key">
-        ///   The key for the extension hub. This cannot be <see langword="null"/> and will be 
-        ///   vendor-specific.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The hub connection.
-        /// </returns>
-        /// <remarks>
-        ///   The connection lifetime is managed by the proxy.
-        /// </remarks>
-        public Task<HubConnection> GetOrCreateExtensionHubConnection(string key, CancellationToken cancellationToken = default) {
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-
-            return _extensionConnections.GetOrAdd(key, k => new Lazy<Task<HubConnection>>(() => Task.Run(async () => {
-                var conn = _connectionFactory.Invoke(k);
-                await conn.StartAsync(StopToken).ConfigureAwait(false);
-                return conn;
-            }), LazyThreadSafetyMode.ExecutionAndPublication)).Value.WithCancellation(cancellationToken);
+        public AdapterHttpClient GetClient() {
+            return _client;
         }
 
 
@@ -156,8 +124,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </returns>
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
-            RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(cancellationToken).ConfigureAwait(false);
-            var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false);
+            RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(null, cancellationToken).ConfigureAwait(false);
+            var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, null, cancellationToken).ConfigureAwait(false);
 
             RemoteDescriptor = descriptor;
 
@@ -192,16 +160,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <inheritdoc/>
-        protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
-            if (_client.IsValueCreated) {
-                if (disposing) {
-                    await _client.Value.DisposeAsync().ConfigureAwait(false);
-                }
-                else {
-                    var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                    await connection.StopAsync(cancellationToken).ConfigureAwait(false);
-                }
-            }
+        protected override Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+            return Task.CompletedTask;
         }
+
     }
 }

@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 
-namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
+namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
     /// <summary>
     /// Implements <see cref="IReadProcessedTagValues"/>.
@@ -18,12 +20,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <param name="proxy">
         ///   The owning proxy.
         /// </param>
-        public ReadProcessedTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
+        public ReadProcessedTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             var client = GetClient();
-            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, cancellationToken).ConfigureAwait(false);
+            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.User, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -32,13 +34,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
-                var hubChannel = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);
+                foreach (var item in clientResponse) {
+                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        ch.TryWrite(item);
+                    }
+                }
             }, true, cancellationToken);
 
             return result;
         }
-        
+
     }
 
 }

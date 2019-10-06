@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -493,6 +494,46 @@ namespace DataCore.Adapter {
                     // Swallow the exception; the background operation should handle these.
                 }
             }, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Reads items from the channel and returns a collection of the items that were read.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel.
+        /// </param>
+        /// <param name="maxItems">
+        ///   The maximum number of items to read from the channel. Specify less than one to read 
+        ///   all items from the channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The items that were read.
+        /// </returns>
+        public static async Task<IEnumerable<T>> ReadItems<T>(this ChannelReader<T> channel, int maxItems = -1, CancellationToken cancellationToken = default) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            var result = new List<T>();
+
+            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (channel.TryRead(out var item)) {
+                    result.Add(item);
+                }
+
+                if (maxItems > 0 && result.Count >= maxItems) {
+                    break;
+                }
+            }
+
+            return result;
         }
 
 

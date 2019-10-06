@@ -1,10 +1,13 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Channels;
 using DataCore.Adapter.Events.Features;
 using DataCore.Adapter.Events.Models;
 
-namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
-
+namespace DataCore.Adapter.Http.Proxy.Events {
     /// <summary>
     /// Implements <see cref="IWriteEventMessages"/>.
     /// </summary>
@@ -16,7 +19,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <param name="proxy">
         ///   The owning proxy.
         /// </param>
-        public WriteEventMessagesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
+        public WriteEventMessagesImpl(HttpAdapterProxy proxy) : base(proxy) { }
+
 
         /// <inheritdoc />
         public ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
@@ -24,8 +28,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
-                var hubChannel = await client.Events.WriteEventMessagesAsync(AdapterId, channel, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+
+                var items = await channel.ReadItems(1000, ct).ConfigureAwait(false);
+                var request = new WriteEventMessagesRequest() { 
+                    Events = items.ToArray()
+                };
+
+                var clientResponse = await client.Events.WriteEventMessagesAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);
+                foreach (var item in clientResponse) {
+                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        ch.TryWrite(item);
+                    }
+                }
             }, true, cancellationToken);
 
             return result;
