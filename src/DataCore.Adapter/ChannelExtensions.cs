@@ -521,7 +521,9 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var result = new List<T>();
+            var result = maxItems > 0 
+                ? new List<T>(maxItems) 
+                : new List<T>(500);
 
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (channel.TryRead(out var item)) {
