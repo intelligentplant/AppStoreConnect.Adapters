@@ -46,17 +46,19 @@ namespace DataCore.Adapter.RealTimeData.Models {
                 }
             }
 
-            foreach (var item in filter.Other) {
-                if (String.IsNullOrWhiteSpace(item.Value)) {
-                    continue;
-                }
+            if (filter.Other != null) {
+                foreach (var item in filter.Other) {
+                    if (String.IsNullOrWhiteSpace(item.Value)) {
+                        continue;
+                    }
 
-                if (!tag.Properties.TryGetValue(item.Key, out var propertyValue)) {
-                    return false;
-                }
+                    if (!tag.Properties.TryGetValue(item.Key, out var propertyValue)) {
+                        return false;
+                    }
 
-                if (!propertyValue.Like(item.Value)) {
-                    return false;
+                    if (!propertyValue.Like(item.Value)) {
+                        return false;
+                    }
                 }
             }
 
