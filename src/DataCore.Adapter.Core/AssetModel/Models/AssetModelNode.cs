@@ -61,7 +61,7 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <param name="parentId">
         ///   The parent ID of the node. Specify <see langword="null"/> for top-level nodes.
         /// </param>
-        /// <param name="childIds">
+        /// <param name="children">
         ///   The IDs of the node's children.
         /// </param>
         /// <param name="measurements">
@@ -76,13 +76,13 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNode(string id, string name, string description, string parentId, IEnumerable<string> childIds, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
+        public AssetModelNode(string id, string name, string description, string parentId, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description;
             Parent = parentId;
-            Children = childIds?.ToArray() ?? new string[0];
-            Measurements = measurements?.ToArray() ?? new AssetModelNodeMeasurement[0];
+            Children = children?.ToArray() ?? Array.Empty<string>();
+            Measurements = measurements?.ToArray() ?? Array.Empty<AssetModelNodeMeasurement>();
             Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
         }
 
