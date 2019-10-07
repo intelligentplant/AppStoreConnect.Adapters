@@ -107,7 +107,7 @@ namespace DataCore.Adapter.Csv {
             }
             System.ComponentModel.DataAnnotations.Validator.ValidateObject(options, new System.ComponentModel.DataAnnotations.ValidationContext(options));
 
-            return await ReadCsvDataInternal(options, cancellationToken);
+            return await ReadCsvDataInternal(options, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -378,6 +378,44 @@ namespace DataCore.Adapter.Csv {
         }
 
 
+        /// <summary>
+        /// Adds tags to the adapter that are not defined in the CSV. Callers should override the 
+        /// <see cref="ReadSnapshotTagValues(IAdapterCallContext, ReadSnapshotTagValuesRequest, ChannelWriter{TagValueQueryResult}, CancellationToken)"/> 
+        /// and <see cref="ReadRawTagValues(IAdapterCallContext, ReadRawTagValuesRequest, ChannelWriter{TagValueQueryResult}, CancellationToken)"/> 
+        /// methods to handle data queries for these tags.
+        /// </summary>
+        /// <param name="tags">
+        ///   The tags to add.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will add the tags.
+        /// </returns>
+        protected async Task AddTags(IEnumerable<TagDefinition> tags, CancellationToken cancellationToken) {
+            if (tags == null) {
+                throw new ArgumentNullException(nameof(tags));
+            }
+
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            var rebuildLookup = false;
+
+            foreach (var tag in tags) {
+                if (tag == null) {
+                    continue;
+                }
+                dataSet.Tags[tag.Id] = tag;
+                rebuildLookup = true;
+            }
+            
+            if (rebuildLookup) {
+                dataSet.TagsByName = dataSet.Tags.Values.ToLookup(x => x.Name);
+            }
+        }
+
+
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
@@ -443,11 +481,48 @@ namespace DataCore.Adapter.Csv {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
-                await ReadSnapshotTagValues(dataSet, request, ch, ct).ConfigureAwait(false);
+                await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
             }, true, cancellationToken);
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Reads snapshot tag values.
+        /// </summary>
+        /// <param name="context">
+        ///   The adapter call context.
+        /// </param>
+        /// <param name="request">
+        ///   The snapshot read request.
+        /// </param>
+        /// <param name="channel">
+        ///   The <see cref="ChannelWriter{T}"/> to write the results to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will retrieve the snapshot tag values and write them to the 
+        ///   <paramref name="channel"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual async Task ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            await ReadSnapshotTagValues(dataSet, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -577,11 +652,48 @@ namespace DataCore.Adapter.Csv {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
-                await ReadRawTagValues(dataSet, request, ch, ct).ConfigureAwait(false);
+                await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);
             }, true, cancellationToken);
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Reads raw tag values.
+        /// </summary>
+        /// <param name="context">
+        ///   The adapter call context.
+        /// </param>
+        /// <param name="request">
+        ///   The raw read request.
+        /// </param>
+        /// <param name="channel">
+        ///   The <see cref="ChannelWriter{T}"/> to write the results to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will retrieve the snapshot tag values and write them to the 
+        ///   <paramref name="channel"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual async Task ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            await ReadRawTagValues(dataSet, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
