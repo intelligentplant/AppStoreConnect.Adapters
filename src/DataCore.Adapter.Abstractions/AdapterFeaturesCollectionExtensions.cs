@@ -14,6 +14,9 @@ namespace DataCore.Adapter {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
@@ -24,6 +27,28 @@ namespace DataCore.Adapter {
             }
 
             return (TFeature) features[typeof(TFeature)];
+        }
+
+
+        /// <summary>
+        /// Checks if the specified adapter feature is defined in the features collection.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The features type.
+        /// </typeparam>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is defined in the collection, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool Contains<TFeature>(this IAdapterFeaturesCollection features) where TFeature : IAdapterFeature {
+            if (features == null) {
+                return false;
+            }
+
+            return features[typeof(TFeature)] != null;
         }
 
 

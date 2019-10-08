@@ -23,7 +23,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowser>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.AssetModel.Models.BrowseAssetModelNodesRequest() {
-                ParentId = request.ParentId,
+                ParentId = string.IsNullOrWhiteSpace(request.ParentId) 
+                    ? null 
+                    : request.ParentId,
                 Depth = request.Depth,
                 PageSize = request.PageSize,
                 Page = request.Page

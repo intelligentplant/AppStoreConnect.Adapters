@@ -52,5 +52,5 @@ message AssetModelNode {
 message AssetModelNodeMeasurement {
     string name = 1;
     string adapter_id = 2;
-    datacore.adapter.TagIdentifier tag = 3;
+    datacore.adapter.TagSummary tag = 3;
 }

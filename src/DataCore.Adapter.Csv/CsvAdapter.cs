@@ -419,7 +419,7 @@ namespace DataCore.Adapter.Csv {
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
-            CheckStarted();
+            CheckStarted(true);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -436,7 +436,7 @@ namespace DataCore.Adapter.Csv {
         /// <inheritdoc/>
         public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
-            CheckStarted();
+            CheckStarted(true);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

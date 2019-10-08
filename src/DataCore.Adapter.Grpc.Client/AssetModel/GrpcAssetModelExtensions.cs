@@ -26,9 +26,11 @@ namespace DataCore.Adapter.AssetModel {
                 node.Id,
                 node.Name,
                 node.Description,
-                node.Parent,
+                string.IsNullOrWhiteSpace(node.Parent) 
+                    ? null 
+                    : node.Parent,
                 node.Children,
-                node.Measurements.Select(x => new Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagIdentifier(x.Tag.Id, x.Tag.Name))).ToArray(),
+                node.Measurements.Select(x => new Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagSummary(x.Tag.Id, x.Tag.Name, x.Tag.Category, x.Tag.Description, x.Tag.Units))).ToArray(),
                 node.Properties
             );
         }

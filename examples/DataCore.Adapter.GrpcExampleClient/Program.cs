@@ -26,21 +26,13 @@ namespace DataCore.Adapter.GrpcExampleClient {
             Console.WriteLine("== Adapters ==");
             foreach (var adapter in adaptersResponse.Adapters) {
                 Console.WriteLine();
-                Console.WriteLine($"{adapter.AdapterDescriptor.Name} (ID: {adapter.AdapterDescriptor.Id})");
-                Console.WriteLine($"    Description: {adapter.AdapterDescriptor.Description}");
-                Console.WriteLine("    Features:");
-                foreach (var feature in adapter.Features) {
-                    Console.WriteLine($"          {feature}");
-                }
-                Console.WriteLine("    Extensions:");
-                foreach (var feature in adapter.Extensions) {
-                    Console.WriteLine($"          {feature}");
-                }
+                Console.WriteLine($"{adapter.Name} (ID: {adapter.Id})");
+                Console.WriteLine($"    Description: {adapter.Description}");
             }
 
             foreach (var adapter in adaptersResponse.Adapters) {
 
-                var adapterId = adapter.AdapterDescriptor.Id;
+                var adapterId = adapter.Id;
 
                 var tagSearchClient = new TagSearchService.TagSearchServiceClient(channel);
                 var tagSearchRequest = new FindTagsRequest() {

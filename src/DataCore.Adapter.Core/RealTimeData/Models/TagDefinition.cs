@@ -8,32 +8,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Describes a tag definition.
     /// </summary>
-    public class TagDefinition : ITagIdentifier {
-
-        /// <summary>
-        /// The unique identifier for the tag.
-        /// </summary>
-        public string Id { get; }
-
-        /// <summary>
-        /// The tag name.
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// The tag measurement category (e.g. temperature, pressure, mass).
-        /// </summary>
-        public string Category { get; }
-
-        /// <summary>
-        /// The tag description.
-        /// </summary>
-        public string Description { get; }
-
-        /// <summary>
-        /// The tag units.
-        /// </summary>
-        public string Units { get; }
+    public class TagDefinition : TagSummary {
 
         /// <summary>
         /// The tag's data type.
@@ -94,14 +69,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels) {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Category = string.IsNullOrWhiteSpace(category)
-                ? string.Empty
-                : category;
-            Description = description;
-            Units = units;
+        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels)
+            : base(id, name, category, description, units) {
             DataType = dataType;
             States = dataType != TagDataType.State
                 ? null

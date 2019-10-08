@@ -20,9 +20,9 @@ namespace DataCore.Adapter.AssetModel.Models {
         public string AdapterId { get; }
 
         /// <summary>
-        /// The tag identifier for the measurement.
+        /// The tag summary for the measurement.
         /// </summary>
-        public TagIdentifier Tag { get; }
+        public TagSummary Tag { get; }
 
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace DataCore.Adapter.AssetModel.Models {
         ///   The ID of the adapter that the tag for the measurement is defined on.
         /// </param>
         /// <param name="tag">
-        ///   The tag identifier for the measurement.
+        ///   The tag summary for the measurement.
         /// </param>
-        public AssetModelNodeMeasurement(string name, string adapterId, TagIdentifier tag) {
+        public AssetModelNodeMeasurement(string name, string adapterId, TagSummary tag) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
             Tag = tag ?? throw new ArgumentNullException(nameof(tag));

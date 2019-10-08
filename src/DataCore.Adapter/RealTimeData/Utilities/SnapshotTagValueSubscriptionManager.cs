@@ -519,62 +519,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Equality comparer for <see cref="TagIdentifier"/> objects.
-        /// </summary>
-        public class TagIdentifierComparer : IEqualityComparer<TagIdentifier> {
-
-            /// <summary>
-            /// <see cref="TagIdentifierComparer"/> that tests for equality based solely on the 
-            /// <see cref="TagIdentifier.Id"/> property.
-            /// </summary>
-            public static TagIdentifierComparer CompareById { get; } = new TagIdentifierComparer();
-
-
-            /// <summary>
-            /// Tests two <see cref="TagIdentifier"/> instances for equality.
-            /// </summary>
-            /// <param name="x">
-            ///   The first instance to compare.
-            /// </param>
-            /// <param name="y">
-            ///   The second instance to compare.
-            /// </param>
-            /// <returns>
-            ///   <see langword="true"/> if the instances are equal, or <see langword="false"/> 
-            ///   otherwise.
-            /// </returns>
-            public bool Equals(TagIdentifier x, TagIdentifier y) {
-                if (x == null && y == null) {
-                    return true;
-                }
-                if (x == null || y == null) {
-                    return false;
-                }
-
-                return string.Equals(x.Id, y.Id, StringComparison.OrdinalIgnoreCase);
-            }
-
-
-            /// <summary>
-            /// Gets the hash code for the specific <see cref="TagIdentifier"/> instance.
-            /// </summary>
-            /// <param name="obj">
-            ///   The instance.
-            /// </param>
-            /// <returns>
-            ///   The hash code for the instance.
-            /// </returns>
-            public int GetHashCode(TagIdentifier obj) {
-                if (obj == null) {
-                    throw new ArgumentNullException(nameof(obj));
-                }
-
-                return obj.GetHashCode();
-            }
-        }
-
-
-        /// <summary>
         /// <see cref="ISnapshotTagValueSubscription"/> implementation.
         /// </summary>
         public class Subscription : ISnapshotTagValueSubscription {
@@ -620,7 +564,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <summary>
             /// The tags that have been added to the subscription.
             /// </summary>
-            private HashSet<TagIdentifier> _subscribedTags = new HashSet<TagIdentifier>(TagIdentifierComparer.CompareById);
+            private HashSet<TagIdentifier> _subscribedTags = new HashSet<TagIdentifier>(TagIdentifierComparer.Id);
 
             /// <summary>
             /// Subscribed tags indexed by ID.
@@ -689,7 +633,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 tagNamesOrIds = tagNamesOrIds
                     ?.Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray() ?? new string[0];
+                    .ToArray() ?? Array.Empty<string>();
 
                 if (!tagNamesOrIds.Any()) {
                     return Count;
@@ -752,7 +696,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 tagNamesOrIds = tagNamesOrIds
                     ?.Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray() ?? new string[0];
+                    .ToArray() ?? Array.Empty<string>();
 
                 if (!tagNamesOrIds.Any()) {
                     return Count;

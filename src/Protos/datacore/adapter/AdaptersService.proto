@@ -13,7 +13,7 @@ service AdaptersService {
 // Gets information about the registered adapters
 message GetAdaptersRequest { }
 message GetAdaptersResponse {
-    repeated ExtendedAdapterDescriptor adapters = 1;
+    repeated AdapterDescriptor adapters = 1;
 }
 
 

@@ -45,6 +45,11 @@ namespace DataCore.Adapter {
         protected bool IsStarted { get; private set; }
 
         /// <summary>
+        /// Indicates if the adapter is starting.
+        /// </summary>
+        private bool _isStarting;
+
+        /// <summary>
         /// Ensures that only one startup attempt can occur at a time.
         /// </summary>
         private readonly SemaphoreSlim _startupLock = new SemaphoreSlim(1, 1);
@@ -99,6 +104,26 @@ namespace DataCore.Adapter {
                 return new ReadOnlyDictionary<string, string>(_properties);
             }
         }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Adapter"/> object.
+        /// </summary>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
+        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   The <paramref name="options"/> are not valid.
+        /// </exception>
+        protected AdapterBase(TAdapterOptions options, ILoggerFactory loggerFactory)
+            : this(Options.Create(options), loggerFactory) {}
 
 
         /// <summary>
@@ -228,7 +253,7 @@ namespace DataCore.Adapter {
             await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try {
                 if (IsStarted) {
-                    throw new InvalidOperationException(Resources.Error_AdapterIsAlreadyStarted);
+                    return;
                 }
                 if (StopToken.IsCancellationRequested) {
                     throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
@@ -241,10 +266,17 @@ namespace DataCore.Adapter {
 
                 try {
                     Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
-                    using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
-                        await StartAsync(ctSource.Token).ConfigureAwait(false);
+
+                    _isStarting = true;
+                    try {
+                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
+                            await StartAsync(ctSource.Token).ConfigureAwait(false);
+                        }
+                        IsStarted = true;
                     }
-                    IsStarted = true;
+                    finally {
+                        _isStarting = false;
+                    }
                     Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
                 }
                 catch (Exception e) {
@@ -315,17 +347,23 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if the adapter has not been started.
         /// </summary>
-        public void CheckStarted() {
-            if (!IsStarted) {
-                throw new InvalidOperationException(Resources.Error_AdapterIsNotStarted);
+        /// <param name="allowStarting">
+        ///   When <see langword="true"/>, an error will not be thrown if the adapter is currently 
+        ///   starting.
+        /// </param>
+        protected void CheckStarted(bool allowStarting = false) {
+            if (IsStarted || (allowStarting && _isStarting)) {
+                return;
             }
+
+            throw new InvalidOperationException(Resources.Error_AdapterIsNotStarted);
         }
 
 
         /// <summary>
         /// Throws an <see cref="ObjectDisposedException"/> if the adapter has been disposed.
         /// </summary>
-        public void CheckDisposed() {
+        protected void CheckDisposed() {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().Name);
             }

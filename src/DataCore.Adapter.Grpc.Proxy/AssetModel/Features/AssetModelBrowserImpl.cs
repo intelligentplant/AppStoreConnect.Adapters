@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
                 var grpcRequest = new BrowseAssetModelNodesRequest() {
                     AdapterId = AdapterId,
-                    ParentId = request.ParentId,
+                    ParentId = request.ParentId ?? string.Empty,
                     Depth = request.Depth,
                     PageSize = request.PageSize,
                     Page = request.Page

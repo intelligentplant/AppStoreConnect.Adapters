@@ -16,14 +16,23 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        private ExtendedAdapterDescriptor ToGrpcAdapterDescriptor(IAdapter adapter) {
+        private AdapterDescriptor ToGrpcAdapterDescriptor(IAdapter adapter) {
+            return new AdapterDescriptor() {
+                Id = adapter.Descriptor.Id,
+                Name = adapter.Descriptor.Name,
+                Description = adapter.Descriptor.Description ?? string.Empty
+            };
+        }
+
+
+        private ExtendedAdapterDescriptor ToGrpcExtendedAdapterDescriptor(IAdapter adapter) {
             var source = adapter.CreateExtendedAdapterDescriptor();
 
             var result = new ExtendedAdapterDescriptor() {
                 AdapterDescriptor = new AdapterDescriptor() {
                     Id = source.Id,
                     Name = source.Name,
-                    Description = source.Description
+                    Description = source.Description ?? string.Empty
                 }
             };
 
@@ -50,7 +59,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             return new GetAdapterResponse() {
                 Adapter = adapter == null 
                     ? null 
-                    : ToGrpcAdapterDescriptor(adapter)
+                    : ToGrpcExtendedAdapterDescriptor(adapter)
             };
         }
 

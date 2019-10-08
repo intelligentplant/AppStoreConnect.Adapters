@@ -38,6 +38,14 @@ message TagIdentifier {
     string name = 2;
 }
 
+message TagSummary {
+    string id = 1;
+    string name = 2;
+    string category = 3;
+    string description = 4;
+    string units = 5;
+}
+
 message TagDefinition {
     string id = 1;
     string name = 2;

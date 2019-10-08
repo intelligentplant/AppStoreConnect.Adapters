@@ -101,9 +101,12 @@ namespace DataCore.Adapter.Grpc.Server {
                     result.Measurements.Add(new AssetModelNodeMeasurement() {
                         Name = item.Name ?? string.Empty,
                         AdapterId = item.AdapterId ?? string.Empty,
-                        Tag = new TagIdentifier() {
+                        Tag = new TagSummary() {
                             Id = item.Tag?.Id ?? string.Empty,
-                            Name = item.Tag?.Name ?? string.Empty
+                            Name = item.Tag?.Name ?? string.Empty,
+                            Category = item.Tag?.Category ?? string.Empty,
+                            Description = item.Tag?.Description ?? string.Empty,
+                            Units = item.Tag?.Units ?? string.Empty
                         }
                     });
                 }
