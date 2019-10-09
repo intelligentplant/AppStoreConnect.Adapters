@@ -93,7 +93,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 ParentId = string.IsNullOrWhiteSpace(start)
                     ? null
                     : start,
-                Depth = depth,
                 PageSize = pageSize,
                 Page = page
             }, cancellationToken);

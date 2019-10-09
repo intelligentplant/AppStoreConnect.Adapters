@@ -26,7 +26,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 ParentId = string.IsNullOrWhiteSpace(request.ParentId) 
                     ? null 
                     : request.ParentId,
-                Depth = request.Depth,
                 PageSize = request.PageSize,
                 Page = request.Page
             };

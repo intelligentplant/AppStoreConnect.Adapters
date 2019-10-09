@@ -19,7 +19,6 @@ message BrowseAssetModelNodesRequest {
     int32 page_size = 2;
     int32 page = 3;
     string parent_id = 4;
-    int32 depth = 5;
 }
 
 
