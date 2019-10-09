@@ -9,7 +9,6 @@ using GrpcNet = Grpc.Net;
 using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
-using Microsoft.Extensions.Options;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Grpc.Proxy {
@@ -111,12 +110,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(GrpcCore.Channel channel, IOptions<GrpcAdapterProxyOptions> options, ILoggerFactory loggerFactory)
+        public GrpcAdapterProxy(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
             _coreChannel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _getCallCredentials = options?.Value?.GetCallCredentials;
-            _extensionFeatureFactory = options?.Value?.ExtensionFeatureFactory;
+            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _getCallCredentials = Options?.GetCallCredentials;
+            _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
         }
 
 #if NETSTANDARD2_1
@@ -142,12 +141,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, IOptions<GrpcAdapterProxyOptions> options, ILoggerFactory loggerFactory) 
+        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, GrpcAdapterProxyOptions options, ILoggerFactory loggerFactory) 
             : base(options, loggerFactory) {
 
-            _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _netChannel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _getCallCredentials = options?.Value?.GetCallCredentials;
+            _getCallCredentials = Options?.GetCallCredentials;
         }
 
 #endif

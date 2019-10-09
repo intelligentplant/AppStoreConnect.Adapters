@@ -6,7 +6,6 @@ using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
@@ -93,11 +92,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public SignalRAdapterProxy(IOptions<SignalRAdapterProxyOptions> options, ILoggerFactory loggerFactory) 
+        public SignalRAdapterProxy(SignalRAdapterProxyOptions options, ILoggerFactory loggerFactory) 
             : base(options, loggerFactory) {
-            _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _connectionFactory = options?.Value?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
-            _extensionFeatureFactory = options?.Value?.ExtensionFeatureFactory;
+            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
+            _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
             _client = new Lazy<AdapterSignalRClient>(() => {
                 return new AdapterSignalRClient(_connectionFactory.Invoke(null), true);
             }, LazyThreadSafetyMode.ExecutionAndPublication);

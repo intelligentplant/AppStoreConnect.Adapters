@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter {
 
@@ -16,7 +15,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The options type for the adapter.
     /// </typeparam>
-    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable where TAdapterOptions : AdapterOptions, new() {
+    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable, IDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the adapter has been disposed.
@@ -29,8 +28,7 @@ namespace DataCore.Adapter {
         private bool _isDisposing;
 
         /// <summary>
-        /// The <typeparamref name="TAdapterOptions"/> monitor subscription, if the constructor overload 
-        /// providing an <see cref="IOptionsMonitor{TOptions}"/> is called.
+        /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
         /// </summary>
         private readonly IDisposable _optionsMonitorSubscription;
 
@@ -105,6 +103,11 @@ namespace DataCore.Adapter {
             }
         }
 
+        /// <summary>
+        /// The adapter options.
+        /// </summary>
+        protected TAdapterOptions Options { get; private set; }
+
 
         /// <summary>
         /// Creates a new <see cref="Adapter"/> object.
@@ -123,48 +126,7 @@ namespace DataCore.Adapter {
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
         protected AdapterBase(TAdapterOptions options, ILoggerFactory loggerFactory)
-            : this(Options.Create(options), loggerFactory) {}
-
-
-        /// <summary>
-        /// Creates a new <see cref="Adapter"/> object.
-        /// </summary>
-        /// <param name="options">
-        ///   The adapter options.
-        /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
-        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="options"/> or <see cref="IOptions{TOptions}.Value"/> is 
-        ///   <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
-        ///   The <paramref name="options"/> are not valid.
-        /// </exception>
-        protected AdapterBase(IOptions<TAdapterOptions> options, ILoggerFactory loggerFactory) {
-            if (options?.Value == null) {
-                throw new ArgumentException(nameof(options));
-            }
-
-            // Validate options.
-            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
-                options.Value,
-                new System.ComponentModel.DataAnnotations.ValidationContext(options.Value),
-                true
-            );
-
-            _descriptor = new AdapterDescriptor(
-                options.Value.Id, 
-                string.IsNullOrWhiteSpace(options.Value.Name) 
-                    ? options.Value.Id 
-                    : options.Value.Name, 
-                options.Value.Description
-            );
-
-            Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-        }
+            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), loggerFactory) { }
 
 
         /// <summary>
@@ -175,10 +137,6 @@ namespace DataCore.Adapter {
         /// <param name="optionsMonitor">
         ///   The monitor for the adapter's options type.
         /// </param>
-        /// <param name="optionsName">
-        ///   The named options to monitor in the <paramref name="optionsMonitor"/>. If the name is
-        ///   <see langword="null"/>, <see cref="Options.DefaultName"/> will be used.
-        /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
         ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
@@ -186,25 +144,15 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="optionsMonitor"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   The named options specified by <paramref name="optionsName"/> cannot be resolved.
-        /// </exception>
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
-        protected AdapterBase(IOptionsMonitor<TAdapterOptions> optionsMonitor, string optionsName, ILoggerFactory loggerFactory) {
+        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, ILoggerFactory loggerFactory) {
             if (optionsMonitor == null) {
                 throw new ArgumentNullException(nameof(optionsMonitor));
             }
 
-            if (optionsName == null) {
-                optionsName = Options.DefaultName;
-            }
-            var options = optionsMonitor.Get(optionsName);
-
-            if (options == null) {
-                throw new ArgumentException(string.Format(Resources.Error_NamedAdapterOptionsNotFound, optionsName), nameof(optionsName));
-            }
+            var options = optionsMonitor.CurrentValue;
 
             // Validate options.
             System.ComponentModel.DataAnnotations.Validator.ValidateObject(
@@ -222,13 +170,9 @@ namespace DataCore.Adapter {
             );
 
             Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            Options = options;
 
-            _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
-                if (!string.Equals(name, optionsName)) {
-                    // These options are for a different adapter of the same type!
-                    return;
-                }
-
+            _optionsMonitorSubscription = optionsMonitor.OnChange((opts) => {
                 // Validate updated options.
                 try {
                     System.ComponentModel.DataAnnotations.Validator.ValidateObject(
@@ -242,6 +186,7 @@ namespace DataCore.Adapter {
                     return;
                 }
 
+                Options = opts;
                 OnOptionsChangeInternal(opts);
             });
         }
@@ -317,6 +262,7 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Disposes of the adapter.
         /// </summary>
@@ -341,6 +287,17 @@ namespace DataCore.Adapter {
                 _isDisposing = false;
                 IsStarted = false;
             }
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+        }
+
+
+        /// <summary>
+        /// Disposes of the adapter.
+        /// </summary>
+        void IDisposable.Dispose() {
+            ((IAsyncDisposable) this).DisposeAsync().GetAwaiter().GetResult();
         }
 
 
@@ -418,8 +375,8 @@ namespace DataCore.Adapter {
                 descriptor = _descriptor;
             }
 
-            if (!string.Equals(options.Name, descriptor.Name) || 
-                !string.Equals(options.Description, descriptor.Description)) {
+            if (!string.Equals(options.Name, descriptor.Name, StringComparison.Ordinal) || 
+                !string.Equals(options.Description, descriptor.Description, StringComparison.Ordinal)) {
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
                         descriptor.Id, // ID cannot change once initially configured!
@@ -439,8 +396,7 @@ namespace DataCore.Adapter {
 
         /// <summary>
         /// Override this method in a subclass to receive notifications when the adapter's options 
-        /// have changed. The method will only be called if an <see cref="IOptionsMonitor{TOptions}"/> 
-        /// was provided when the adapter was created.
+        /// have changed.
         /// </summary>
         /// <param name="options">
         ///   The updated options.

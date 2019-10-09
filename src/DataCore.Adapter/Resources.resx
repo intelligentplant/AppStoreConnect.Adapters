@@ -132,10 +132,6 @@
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>
   </data>
-  <data name="Error_NamedAdapterOptionsNotFound" xml:space="preserve">
-    <value>Unable to find named adapter options "{0}".</value>
-    <comment>{0} - options name</comment>
-  </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
     <value>Object does not implement feature {0}.</value>
     <comment>{0} - feature name</comment>

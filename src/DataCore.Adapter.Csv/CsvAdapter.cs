@@ -13,7 +13,6 @@ using DataCore.Adapter.RealTimeData.Features;
 using DataCore.Adapter.RealTimeData.Models;
 using DataCore.Adapter.RealTimeData.Utilities;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Csv {
 
@@ -27,11 +26,6 @@ namespace DataCore.Adapter.Csv {
         /// The regular expression used to parse tag properties from a tag field.
         /// </summary>
         private static readonly Regex s_tagFieldPropertyRegex = new Regex(@"(?<pname>.+)=(?<pval>.+)\|?", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Adapter options.
-        /// </summary>
-        private readonly CsvAdapterOptions _options;
 
         /// <summary>
         /// CSV parsing task.
@@ -54,25 +48,48 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(IOptions<CsvAdapterOptions> options, ILoggerFactory loggerFactory)
+        public CsvAdapter(CsvAdapterOptions options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
+            AddFeatures();
+        }
 
+
+        /// <summary>
+        /// Creates a new <see cref="CsvAdapter"/> object.
+        /// </summary>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="options"/> fails validation.
+        /// </exception>
+        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, ILoggerFactory loggerFactory)
+            : base(options, loggerFactory) {
+            AddFeatures();
+        }
+
+
+        private void AddFeatures() {
             // Construct adapter features.
             AddFeatures(this);
             AddFeatures(new ReadHistoricalTagValuesHelper(this, this));
 
-            var snapshotPushUpdateInterval = options.Value.SnapshotPushUpdateInterval;
+            var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
                 AddFeatures(new CsvAdapterSnapshotSubscriptionManager(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
             }
-
-            _options = options.Value;
         }
 
 
         /// <inheritdoc/>
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            _csvParseTask = new Lazy<Task<CsvDataSet>>(() => ReadCsvDataInternal(_options, StopToken), LazyThreadSafetyMode.ExecutionAndPublication);
+            _csvParseTask = new Lazy<Task<CsvDataSet>>(() => ReadCsvDataInternal(Options, StopToken), LazyThreadSafetyMode.ExecutionAndPublication);
             await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
         }
 

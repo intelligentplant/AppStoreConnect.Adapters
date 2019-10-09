@@ -106,15 +106,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find named adapter options &quot;{0}&quot;..
-        /// </summary>
-        internal static string Error_NamedAdapterOptionsNotFound {
-            get {
-                return ResourceManager.GetString("Error_NamedAdapterOptionsNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Object does not implement feature {0}..
         /// </summary>
         internal static string Error_NotAFeatureImplementation {

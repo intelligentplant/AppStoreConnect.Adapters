@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Common.Models;
 using DataCore.Adapter.Http.Client;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Http.Proxy {
 
@@ -101,11 +100,11 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public HttpAdapterProxy(AdapterHttpClient client, IOptions<HttpAdapterProxyOptions> options, ILoggerFactory loggerFactory)
+        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, ILoggerFactory loggerFactory)
             : base(options, loggerFactory) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _remoteAdapterId = options?.Value?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _extensionFeatureFactory = options?.Value?.ExtensionFeatureFactory;
+            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
         }
 
 
