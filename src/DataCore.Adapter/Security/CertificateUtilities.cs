@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DataCore.Adapter.Grpc.Client.Authentication {
+namespace DataCore.Adapter.Security {
 
     /// <summary>
     /// Utilities for working with certificates (e.g. to assist with loading PEM-encoded roots for 
