@@ -6,17 +6,17 @@ using DataCore.Adapter.AssetModel.Models;
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
     /// <summary>
-    /// Implements <see cref="IAssetModelBrowser"/>.
+    /// Implements <see cref="IAssetModelBrowse"/>.
     /// </summary>
-    internal class AssetModelBrowserImpl : ProxyAdapterFeature, IAssetModelBrowser {
+    internal class AssetModelBrowseImpl : ProxyAdapterFeature, IAssetModelBrowse {
 
         /// <summary>
-        /// Creates a new <see cref="AssetModelBrowserImpl"/> object.
+        /// Creates a new <see cref="AssetModelBrowseImpl"/> object.
         /// </summary>
         /// <param name="proxy">
         ///   The owning proxy.
         /// </param>
-        public AssetModelBrowserImpl(SignalRAdapterProxy proxy) : base(proxy) { }
+        public AssetModelBrowseImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
         public ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
@@ -44,18 +44,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             return result;
         }
 
-        /// <inheritdoc />
-        public ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
-            }, true, cancellationToken);
-
-            return result;
-        }
 
     }
 }

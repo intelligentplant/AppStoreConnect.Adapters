@@ -538,5 +538,38 @@ namespace DataCore.Adapter {
             return result;
         }
 
+
+        /// <summary>
+        /// Invokes a callback for each item emitted from the channel.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel item type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel.
+        /// </param>
+        /// <param name="callback">
+        ///   The callback function to invoke.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will invoke the <paramref name="callback"/> for each emitted item.
+        /// </returns>
+        public static async Task ForEachAsync<T>(this ChannelReader<T> channel, Func<T, Task> callback, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+            
+            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!channel.TryRead(out var item)) {
+                    continue;
+                }
+
+                await callback.Invoke(item).WithCancellation(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
     }
 }

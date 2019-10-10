@@ -90,7 +90,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return descriptor.Features.Any(f => string.Equals(f, featureName)) || descriptor.Extensions.Any(f => string.Equals(f, featureName));
+            return descriptor.Features.Any(f => string.Equals(f, featureName, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, featureName, StringComparison.Ordinal));
         }
 
     }

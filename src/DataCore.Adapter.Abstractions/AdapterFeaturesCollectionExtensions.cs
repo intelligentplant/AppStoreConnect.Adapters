@@ -70,7 +70,7 @@ namespace DataCore.Adapter {
                 return null;
             }
 
-            var key = features.Keys.FirstOrDefault(x => x.Name.Equals(featureName) || x.FullName.Equals(featureName));
+            var key = features.Keys.FirstOrDefault(x => x.Name.Equals(featureName, StringComparison.Ordinal) || x.FullName.Equals(featureName, StringComparison.Ordinal));
             return key == null
                 ? null
                 : features[key];

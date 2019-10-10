@@ -77,12 +77,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string start = null, int depth = -1, int page = 1, int pageSize = 10) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowser))); // 400
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -136,12 +136,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodesPost(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowser))); // 400
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -188,12 +188,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> GetNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowser))); // 400
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -241,12 +241,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> FindNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowser>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowser))); // 400
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IAssetModelSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
