@@ -73,7 +73,7 @@ namespace DataCore.Adapter {
         private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
 
         /// <inheritdoc/>
-        AdapterDescriptor IAdapter.Descriptor {
+        public AdapterDescriptor Descriptor {
             get {
                 CheckDisposed();
                 lock (_descriptor) {
@@ -83,7 +83,7 @@ namespace DataCore.Adapter {
         }
 
         /// <inheritdoc/>
-        IAdapterFeaturesCollection IAdapter.Features {
+        public IAdapterFeaturesCollection Features {
             get {
                 CheckDisposed();
                 return _features;
@@ -96,7 +96,7 @@ namespace DataCore.Adapter {
         private ConcurrentDictionary<string, string> _properties = new ConcurrentDictionary<string, string>();
 
         /// <inheritdoc/>
-        IDictionary<string, string> IAdapter.Properties {
+        public IDictionary<string, string> Properties {
             get {
                 CheckDisposed();
                 return new ReadOnlyDictionary<string, string>(_properties);
