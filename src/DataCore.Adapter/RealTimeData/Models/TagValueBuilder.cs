@@ -122,7 +122,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         ///   A new <see cref="TagValue"/> object.
         /// </returns>
         public TagValue Build() {
-            return new TagValue(_utcSampleTime, _numericValue, _textValue, _status, _units, _notes, _error, _properties);
+            return TagValue.Create(_utcSampleTime, _numericValue, _textValue, _status, _units, _notes, _error, _properties);
         }
 
 

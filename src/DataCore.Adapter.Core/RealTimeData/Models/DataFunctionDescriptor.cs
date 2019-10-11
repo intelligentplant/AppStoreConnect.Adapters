@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -10,12 +11,13 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The function name.
         /// </summary>
-        public string Name { get; }
+        [Required]
+        public string Name { get; set; }
 
         /// <summary>
         /// The function description.
         /// </summary>
-        public string Description { get; }
+        public string Description { get; set; }
 
 
         /// <summary>
@@ -30,9 +32,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public DataFunctionDescriptor(string name, string description) {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Description = description;
+        public static DataFunctionDescriptor Create(string name, string description) {
+            return new DataFunctionDescriptor() {
+                Name = name ?? throw new ArgumentNullException(nameof(name)),
+                Description = description
+            };
         }
 
     }

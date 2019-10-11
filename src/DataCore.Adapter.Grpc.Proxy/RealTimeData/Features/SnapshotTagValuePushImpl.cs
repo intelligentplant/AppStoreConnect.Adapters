@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             if (grpcResponse.ResponseStream.Current == null) {
                                 continue;
                             }
-                            await ch.WriteAsync(new Adapter.RealTimeData.Models.TagIdentifier(
+                            await ch.WriteAsync(Adapter.RealTimeData.Models.TagIdentifier.Create(
                                 grpcResponse.ResponseStream.Current.Id,
                                 grpcResponse.ResponseStream.Current.Name
                             ), ct).ConfigureAwait(false);

@@ -12,17 +12,17 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// Notes associated with the value.
         /// </summary>
-        public string Notes { get; }
+        public string Notes { get; set; }
 
         /// <summary>
         /// An error message associated with the value.
         /// </summary>
-        public string Error { get; }
+        public string Error { get; set; }
 
         /// <summary>
         /// Additional value properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; }
+        public IDictionary<string, string> Properties { get; set; }
 
 
         /// <summary>
@@ -52,10 +52,17 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public TagValue(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) : base(utcSampleTime, numericValue, textValue, status, units) {
-            Notes = notes;
-            Error = error;
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+        public static TagValue Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) {
+            return new TagValue() {
+                UtcSampleTime = utcSampleTime,
+                NumericValue = numericValue,
+                TextValue = textValue,
+                Status = status,
+                Units = units ?? string.Empty,
+                Notes = notes,
+                Error = error,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

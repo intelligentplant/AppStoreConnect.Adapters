@@ -66,11 +66,11 @@ services.AddSingleton<IAdapter, MyAdapter>();
 // Configure adapter services
 services.AddDataCoreAdapterServices(options => {
     // Host information metadata.
-    options.HostInfo = new Common.Models.HostInfo(
+    options.HostInfo = HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
-        new VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
+        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         new Dictionary<string, string>() {
             { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
         }

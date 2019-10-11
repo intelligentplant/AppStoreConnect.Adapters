@@ -41,21 +41,19 @@ message TagIdentifier {
 message TagSummary {
     string id = 1;
     string name = 2;
-    string category = 3;
-    string description = 4;
-    string units = 5;
+    string description = 3;
+    string units = 4;
 }
 
 message TagDefinition {
     string id = 1;
     string name = 2;
-    string category = 3;
-    string description = 4;
-    string units = 5;
-    TagDataType data_type = 6;
-    map<string, int32> states = 7;
-    map<string, string> properties = 8;
-    repeated string labels = 9;
+    string description = 3;
+    string units = 4;
+    TagDataType data_type = 5;
+    map<string, int32> states = 6;
+    map<string, string> properties = 7;
+    repeated string labels = 8;
 }
 
 

@@ -14,10 +14,9 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.TagDefinition(
+            return Models.TagDefinition.Create(
                 tagDefinition.Id,
                 tagDefinition.Name,
-                tagDefinition.Category,
                 tagDefinition.Description,
                 tagDefinition.Units,
                 tagDefinition.DataType.ToAdapterTagDataType(),
@@ -46,7 +45,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.TagValue(
+            return Models.TagValue.Create(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.NumericValue,
                 tagValue.TextValue,
@@ -90,7 +89,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.TagValueQueryResult(
+            return Models.TagValueQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue()
@@ -103,7 +102,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.ProcessedTagValueQueryResult(
+            return Models.ProcessedTagValueQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue(),
@@ -117,7 +116,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.DataFunctionDescriptor(
+            return Models.DataFunctionDescriptor.Create(
                 func.Name,
                 func.Description
             );
@@ -158,7 +157,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
             
-            return new Models.WriteTagValueResult(
+            return Models.WriteTagValueResult.Create(
                 result.CorrelationId,
                 result.TagId,
                 result.WriteStatus.ToAdapterWriteStatus(),
@@ -173,7 +172,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.TagValueAnnotation(
+            return Models.TagValueAnnotation.Create(
                 annotation.Id,
                 annotation.Annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.Annotation.UtcStartTime.ToDateTime(),
@@ -201,7 +200,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
 
-            return new Models.TagValueAnnotationQueryResult(
+            return Models.TagValueAnnotationQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Annotation.ToAdapterTagValueAnnotation()
@@ -252,7 +251,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return null;
             }
             
-            return new Models.WriteTagValueAnnotationResult(
+            return Models.WriteTagValueAnnotationResult.Create(
                 result.TagId,
                 result.AnnotationId,
                 result.WriteStatus.ToAdapterWriteStatus(),

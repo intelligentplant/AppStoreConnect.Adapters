@@ -148,7 +148,7 @@ namespace DataCore.Adapter.Csv {
             if (!item.StartsWith("[") || !item.EndsWith("]")) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return new TagDefinition(item, item, null, null, null, TagDataType.Numeric, null, null, null);
+                return TagDefinition.Create(item, item, null, null, TagDataType.Numeric, null, null, null);
             }
 
             item = item.TrimStart('[').TrimEnd(']');
@@ -168,7 +168,6 @@ namespace DataCore.Adapter.Csv {
 
             string name;
             string id;
-            string category;
             string description;
             string units;
             string dataType;
@@ -189,12 +188,9 @@ namespace DataCore.Adapter.Csv {
                 }
             }
 
-            return new TagDefinition(
+            return TagDefinition.Create(
                 id ?? name,
                 name ?? id,
-                props.TryGetValue(nameof(category), out category)
-                    ? category
-                    : string.Empty,
                 props.TryGetValue(nameof(description), out description) 
                     ? description 
                     : string.Empty,
@@ -442,7 +438,7 @@ namespace DataCore.Adapter.Csv {
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 foreach (var item in dataSet.Tags.Values.Where(x => x.MatchesFilter(request)).SelectPage(request)) {
-                    ch.TryWrite(item);
+                    ch.TryWrite(TagDefinition.FromExisting(item));
                 }
             }, true, cancellationToken);
 
@@ -461,7 +457,7 @@ namespace DataCore.Adapter.Csv {
                 foreach (var item in request.Tags) {
                     var tag = GetTagByIdOrName(item, dataSet);
                     if (tag != null) {
-                        ch.TryWrite(tag);
+                        ch.TryWrite(TagDefinition.FromExisting(tag));
                     }
                 }
             }, true, cancellationToken);
@@ -594,7 +590,7 @@ namespace DataCore.Adapter.Csv {
                             : valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime <= now);
 
                     if (snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, snapshot));
+                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, snapshot));
                     }
                 }
                 return;
@@ -611,7 +607,7 @@ namespace DataCore.Adapter.Csv {
                     var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime <= now);
 
                     if ( snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, snapshot));
+                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, snapshot));
                     }
                 }
                 return;
@@ -654,7 +650,7 @@ namespace DataCore.Adapter.Csv {
                 var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime.Add(offset) <= now);
 
                 if (snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, TagValueBuilder.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build()));
+                    resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, TagValueBuilder.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build()));
                 }
             }
 
@@ -767,7 +763,7 @@ namespace DataCore.Adapter.Csv {
                     foreach (var value in query) {
                         cancellationToken.ThrowIfCancellationRequested();
                         if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                            writer.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, value));
+                            writer.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, value));
                         }
                     }
                 }
@@ -888,7 +884,7 @@ namespace DataCore.Adapter.Csv {
                             : TagValueBuilder.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
 
                         if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                            writer.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, sample));
+                            writer.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, sample));
                         }
                     }
                 }
@@ -947,7 +943,7 @@ namespace DataCore.Adapter.Csv {
                     foreach (var item in tagNamesOrIds) {
                         var tag = _adapter.GetTagByIdOrName(item, dataSet);
                         if (tag != null) {
-                            ch.TryWrite(new TagIdentifier(tag.Id, tag.Name));
+                            ch.TryWrite(TagIdentifier.Create(tag.Id, tag.Name));
                         }
                     }
                 }, true, cancellationToken);

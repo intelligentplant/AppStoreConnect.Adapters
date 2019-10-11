@@ -29,9 +29,17 @@ namespace DataCore.Adapter.Events.Models {
         /// <param name="properties">
         ///   Additional event properties.
         /// </param>
-        public EventMessage(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties)
-            : base(id, utcEventTime, priority, category, message, properties) { }
-
+        public static EventMessage Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties) {
+            return new EventMessage() {
+                Id = id ?? Guid.NewGuid().ToString(),
+                UtcEventTime = utcEventTime.ToUniversalTime(),
+                Priority = priority,
+                Category = category,
+                Message = message,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
+        }
+    
     }
 
 }

@@ -1,0 +1,153 @@
+﻿[
+  {
+    "Id": "834b8bf9-dcdb-4b45-8574-3bb92809d95f",
+    "Name": "Wind Power",
+    "Description": "Wind Power Energy Company",
+    "Parent": null,
+    "Children": [
+      "a73168d8-b102-4d11-a699-cb35c24ccbed"
+    ],
+    "Measurements": [],
+    "Properties": {}
+  },
+  {
+    "Id": "a73168d8-b102-4d11-a699-cb35c24ccbed",
+    "Name": "UK",
+    "Description": "United Kingdom",
+    "Parent": "834b8bf9-dcdb-4b45-8574-3bb92809d95f",
+    "Children": [
+      "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
+      "601632d0-bab9-42e9-9536-f9124173a3e2"
+    ],
+    "Measurements": [
+      {
+        "Name": "Total Output",
+        "Tag": "/example-org/uk/total-output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
+    "Name": "Wind Farm 1",
+    "Description": "Wind Farm 1 (NE Scotland)",
+    "Parent": "a73168d8-b102-4d11-a699-cb35c24ccbed",
+    "Children": [
+      "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
+      "4904d533-9a48-4d5f-9775-833b175da7ac"
+    ],
+    "Measurements": [
+      {
+        "Name": "Total Output",
+        "Tag": "/example-org/uk/wind-farm-1/total-output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
+    "Name": "Turbine 1",
+    "Description": "Turbine 1 (Wind Farm 1)",
+    "Parent": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
+    "Children": [],
+    "Measurements": [
+      {
+        "Name": "Rotation Speed",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-1/rotation-speed"
+      },
+      {
+        "Name": "Wind Speed",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-1/wind-speed"
+      },
+      {
+        "Name": "Output",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-1/output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "4904d533-9a48-4d5f-9775-833b175da7ac",
+    "Name": "Turbine 2",
+    "Description": "Turbine 2 (Wind Farm 1)",
+    "Parent": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
+    "Children": [],
+    "Measurements": [
+      {
+        "Name": "Rotation Speed",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-2/rotation-speed"
+      },
+      {
+        "Name": "Wind Speed",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-2/wind-speed"
+      },
+      {
+        "Name": "Output",
+        "Tag": "/example-org/uk/wind-farm-1/turbine-2/output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Name": "Wind Farm 2",
+    "Description": "Wind Farm 2 (Shetland)",
+    "Parent": "a73168d8-b102-4d11-a699-cb35c24ccbed",
+    "Children": [
+      "8fc36334-b8c2-4a94-9545-4e45215883f9",
+      "d562652c-6b18-4c78-be58-c563381513dd"
+    ],
+    "Measurements": [
+      {
+        "Name": "Total Output",
+        "Tag": "/example-org/uk/wind-farm-2/total-output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "8fc36334-b8c2-4a94-9545-4e45215883f9",
+    "Name": "Turbine 3",
+    "Description": "Turbine 3 (Wind Farm 2)",
+    "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Children": [],
+    "Measurements": [
+      {
+        "Name": "Rotation Speed",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-3/rotation-speed"
+      },
+      {
+        "Name": "Wind Speed",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-3/wind-speed"
+      },
+      {
+        "Name": "Output",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-3/output"
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Id": "d562652c-6b18-4c78-be58-c563381513dd",
+    "Name": "Turbine 4",
+    "Description": "Turbine 4 (Wind Farm 2)",
+    "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Children": [],
+    "Measurements": [
+      {
+        "Name": "Rotation Speed",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-4/rotation-speed"
+      },
+      {
+        "Name": "Wind Speed",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-4/wind-speed"
+      },
+      {
+        "Name": "Output",
+        "Tag": "/example-org/uk/wind-farm-2/turbine-4/output"
+      }
+    ],
+    "Properties": {}
+  }
+]
+

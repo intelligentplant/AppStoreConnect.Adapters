@@ -15,11 +15,11 @@ namespace DataCore.Adapter.NetFxExample {
 
             // Add adapter services
             services.AddDataCoreAdapterServices(options => {
-                options.HostInfo = new Common.Models.HostInfo(
+                options.HostInfo = Common.Models.HostInfo.Create(
                     "Example .NET Framework Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core 2.2 on .NET Framework",
                     GetType().Assembly.GetName().Version.ToString(),
-                    new Common.Models.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
+                    Common.Models.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     new Dictionary<string, string>() {
                         { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
                     }

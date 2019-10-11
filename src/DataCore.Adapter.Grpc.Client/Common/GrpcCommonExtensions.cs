@@ -12,13 +12,13 @@ namespace DataCore.Adapter.Common {
                 return null;
             }
 
-            return new Models.HostInfo(
+            return Models.HostInfo.Create(
                 hostInfo.Name,
                 hostInfo.Description,
                 hostInfo.Version,
                 hostInfo.VendorInfo == null 
                     ? null 
-                    : new Models.VendorInfo(hostInfo.VendorInfo.Name, hostInfo.VendorInfo.Url),
+                    : Models.VendorInfo.Create(hostInfo.VendorInfo.Name, hostInfo.VendorInfo.Url),
                 hostInfo.Properties
             );
         }
@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Common {
                 return null;
             }
 
-            return new Models.AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
+            return Models.AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
         }
 
 
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Common {
                 return null;
             }
 
-            return new Models.AdapterDescriptorExtended(
+            return Models.AdapterDescriptorExtended.Create(
                 descriptor.AdapterDescriptor?.Id,
                 descriptor.AdapterDescriptor?.Name,
                 descriptor.AdapterDescriptor?.Description,

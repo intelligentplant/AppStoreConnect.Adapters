@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.Events.Models {
 
@@ -12,63 +13,33 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// A unique identifier for the event.
         /// </summary>
-        public string Id { get; }
+        [Required]
+        public string Id { get; set; }
 
         /// <summary>
         /// The UTC timestamp of the event.
         /// </summary>
-        public DateTime UtcEventTime { get; }
+        public DateTime UtcEventTime { get; set; }
 
         /// <summary>
         /// The priority associated with the event.
         /// </summary>
-        public EventPriority Priority { get; }
+        public EventPriority Priority { get; set; }
 
         /// <summary>
         /// The event category.
         /// </summary>
-        public string Category { get; }
+        public string Category { get; set; }
 
         /// <summary>
         /// The event message.
         /// </summary>
-        public string Message { get; }
+        public string Message { get; set; }
 
         /// <summary>
         /// Additional event properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; private set; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="EventMessage"/> object.
-        /// </summary>
-        /// <param name="id">
-        ///   The unique identifier for the event message.
-        /// </param>
-        /// <param name="utcEventTime">
-        ///   The UTC timestamp of the event.
-        /// </param>
-        /// <param name="priority">
-        ///   The event priority.
-        /// </param>
-        /// <param name="category">
-        ///   The event category.
-        /// </param>
-        /// <param name="message">
-        ///   The event message.
-        /// </param>
-        /// <param name="properties">
-        ///   Additional event properties.
-        /// </param>
-        protected EventMessageBase(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties) {
-            Id = id ?? Guid.NewGuid().ToString();
-            UtcEventTime = utcEventTime.ToUniversalTime();
-            Priority = priority;
-            Category = category;
-            Message = message;
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
-        }
+        public IDictionary<string, string> Properties { get; set; }
 
     }
 

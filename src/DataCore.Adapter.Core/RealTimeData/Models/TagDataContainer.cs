@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -10,33 +11,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The tag ID.
         /// </summary>
-        public string TagId { get; }
+        [Required]
+        public string TagId { get; set; }
 
         /// <summary>
         /// The tag name.
         /// </summary>
-        public string TagName { get; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagDataContainer"/> object.
-        /// </summary>
-        /// <param name="tagId">
-        ///   The tag ID.
-        /// </param>
-        /// <param name="tagName">
-        ///   The tag name.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagId"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagName"/> is <see langword="null"/>.
-        /// </exception>
-        protected TagDataContainer(string tagId, string tagName) {
-            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
-            TagName = tagName ?? throw new ArgumentNullException(nameof(tagName));
-        }
+        [Required]
+        public string TagName { get; set; }
 
     }
 }

@@ -38,11 +38,11 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             // Add adapter services
             services.AddDataCoreAdapterServices(options => {
-                options.HostInfo = new Common.Models.HostInfo(
+                options.HostInfo = Common.Models.HostInfo.Create(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
                     GetType().Assembly.GetName().Version.ToString(),
-                    new Common.Models.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com"),
+                    Common.Models.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     new Dictionary<string, string>() {
                         { "Project URL", "https://github.com/intelligentplant/app-store-connect-adapters" }
                     }
@@ -59,11 +59,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddDataCoreAdapterMvc()
-                .AddNewtonsoftJson(options => {
-                    options.UseCamelCasing(false);
-                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                });
+                .AddDataCoreAdapterMvc();
 
             services.AddSignalR().AddMessagePackProtocol();
 

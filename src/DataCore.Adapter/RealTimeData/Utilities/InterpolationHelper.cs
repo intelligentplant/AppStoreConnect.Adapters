@@ -309,7 +309,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                             }
 
                             if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                                resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, interpolatedValue));
+                                resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
                             }
                         }
                     }
@@ -325,7 +325,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, interpolationCalculationType);
                     if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(new TagValueQueryResult(tag.Id, tag.Name, interpolatedValue));
+                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
                     }
                 }
             }

@@ -12,43 +12,34 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The annotation type.
         /// </summary>
-        public AnnotationType AnnotationType { get; }
+        public AnnotationType AnnotationType { get; set; }
 
         /// <summary>
         /// The UTC start time for the annotation.
         /// </summary>
-        public DateTime UtcStartTime { get; }
+        public DateTime UtcStartTime { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// The UTC end time for the annotation. If <see cref="AnnotationType"/> is 
         /// <see cref="AnnotationType.Instantaneous"/>, this property will always be 
         /// <see langword="null"/>.
         /// </summary>
-        public DateTime? UtcEndTime { get; }
+        public DateTime? UtcEndTime { get; set; }
 
         /// <summary>
         /// The annotation value.
         /// </summary>
-        public string Value { get; }
+        public string Value { get; set; }
 
         /// <summary>
         /// An additional description or explanation of the annotation.
         /// </summary>
-        public string Description { get; }
+        public string Description { get; set; }
 
         /// <summary>
         /// Additional annotation properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagValueAnnotationBase"/> with a <see cref="UtcStartTime"/> set to 
-        /// the current UTC time.
-        /// </summary>
-        private TagValueAnnotationBase() {
-            UtcStartTime = DateTime.UtcNow;
-        }
+        public IDictionary<string, string> Properties { get; set; }
 
 
         /// <summary>
@@ -73,15 +64,17 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <param name="properties">
         ///   Additional annotation properties.
         /// </param>
-        public TagValueAnnotationBase(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IDictionary<string, string> properties) : this() {
-            AnnotationType = annotationType;
-            UtcStartTime = utcStartTime.ToUniversalTime();
-            UtcEndTime = annotationType == AnnotationType.Instantaneous
+        public static TagValueAnnotationBase Create(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IDictionary<string, string> properties) {
+            return new TagValueAnnotationBase() {
+                AnnotationType = annotationType,
+                UtcStartTime = utcStartTime.ToUniversalTime(),
+                UtcEndTime = annotationType == AnnotationType.Instantaneous
                 ? null
-                : utcEndTime?.ToUniversalTime();
-            Value = value;
-            Description = description;
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+                : utcEndTime?.ToUniversalTime(),
+                Value = value,
+                Description = description,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

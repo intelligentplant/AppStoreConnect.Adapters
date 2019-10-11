@@ -113,7 +113,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         ///   A new <see cref="TagValueAnnotation"/> object.
         /// </returns>
         public TagValueAnnotation Build() {
-            return new TagValueAnnotation(_id, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
+            return TagValueAnnotation.Create(_id, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
         }
 
 

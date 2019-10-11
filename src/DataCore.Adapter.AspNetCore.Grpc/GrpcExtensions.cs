@@ -20,7 +20,6 @@ namespace DataCore.Adapter.Grpc.Server {
         /// </returns>
         internal static TagDefinition ToGrpcTagDefinition(this RealTimeData.Models.TagDefinition tag) {
             var result = new TagDefinition() {
-                Category = tag.Category,
                 DataType = tag.DataType.ToGrpcTagDataType(),
                 Description = tag.Description ?? string.Empty,
                 Id = tag.Id ?? string.Empty,
@@ -93,10 +92,10 @@ namespace DataCore.Adapter.Grpc.Server {
                 Parent = node.Parent ?? string.Empty
             };
 
-            if (node.Children.Any()) {
+            if (node.Children != null && node.Children.Any()) {
                 result.Children.AddRange(node.Children);
             }
-            if (node.Measurements.Any()) {
+            if (node.Measurements != null && node.Measurements.Any()) {
                 foreach (var item in node.Measurements) {
                     result.Measurements.Add(new AssetModelNodeMeasurement() {
                         Name = item.Name ?? string.Empty,
@@ -104,7 +103,6 @@ namespace DataCore.Adapter.Grpc.Server {
                         Tag = new TagSummary() {
                             Id = item.Tag?.Id ?? string.Empty,
                             Name = item.Tag?.Name ?? string.Empty,
-                            Category = item.Tag?.Category ?? string.Empty,
                             Description = item.Tag?.Description ?? string.Empty,
                             Units = item.Tag?.Units ?? string.Empty
                         }
@@ -307,7 +305,7 @@ namespace DataCore.Adapter.Grpc.Server {
             return new WriteTagValueItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 TagId = writeRequest.TagId,
-                Value = new TagValueBase(
+                Value = TagValueBase.Create(
                     writeRequest.UtcSampleTime.ToDateTime(),
                     writeRequest.NumericValue,
                     writeRequest.TextValue,
@@ -445,7 +443,7 @@ namespace DataCore.Adapter.Grpc.Server {
                 return null;
             }
 
-            return new RealTimeData.Models.TagValueAnnotationBase(
+            return RealTimeData.Models.TagValueAnnotationBase.Create(
                 annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.UtcStartTime.ToDateTime(),
                 annotation.HasUtcEndTime
@@ -503,7 +501,7 @@ namespace DataCore.Adapter.Grpc.Server {
                 Notes = adapterResult.Notes ?? string.Empty
             };
 
-            if (adapterResult.Properties.Count > 0) {
+            if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
                     result.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
@@ -605,7 +603,7 @@ namespace DataCore.Adapter.Grpc.Server {
         internal static Events.Models.WriteEventMessageItem ToAdapterWriteEventMessageItem(this WriteEventMessageRequest writeRequest) {
             return new Events.Models.WriteEventMessageItem() {
                 CorrelationId = writeRequest.CorrelationId,
-                EventMessage = new Events.Models.EventMessage(
+                EventMessage = Events.Models.EventMessage.Create(
                     writeRequest.Message?.Id,
                     writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
                     writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.Models.EventPriority.Unknown,

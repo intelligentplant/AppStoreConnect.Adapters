@@ -10,29 +10,29 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The UTC sample time for the value.
         /// </summary>
-        public DateTime UtcSampleTime { get; }
+        public DateTime UtcSampleTime { get; set; }
 
         /// <summary>
         /// The numeric value for the tag. This can differ from the text value on state-based and 
         /// non-numeric tags.
         /// </summary>
-        public double NumericValue { get; }
+        public double NumericValue { get; set; }
 
         /// <summary>
         /// The text value for the tag. This can differ from the numeric value on state-based and 
         /// non-numeric tags.
         /// </summary>
-        public string TextValue { get; }
+        public string TextValue { get; set; }
 
         /// <summary>
         /// The quality status for the value.
         /// </summary>
-        public TagValueStatus Status { get; }
+        public TagValueStatus Status { get; set; }
 
         /// <summary>
         /// The value units.
         /// </summary>
-        public string Units { get; }
+        public string Units { get; set; }
 
 
         /// <summary>
@@ -51,14 +51,16 @@ namespace DataCore.Adapter.RealTimeData.Models {
         ///   The quality status for the value.
         /// </param>
         /// <param name="units">
-        ///   The value's units.
+        ///   The value units.
         /// </param>
-        public TagValueBase(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units) {
-            UtcSampleTime = utcSampleTime;
-            NumericValue = numericValue;
-            TextValue = textValue;
-            Status = status;
-            Units = units ?? string.Empty;
+        public static TagValueBase Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units) {
+            return new TagValueBase() {
+                UtcSampleTime = utcSampleTime,
+                NumericValue = numericValue,
+                TextValue = textValue,
+                Status = status,
+                Units = units ?? string.Empty
+            };
         }
 
     }

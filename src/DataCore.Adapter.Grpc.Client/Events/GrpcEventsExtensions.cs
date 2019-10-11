@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Events {
                 return null;
             }
 
-            return new Models.EventMessage(
+            return Models.EventMessage.Create(
                 eventMessage.Id,
                 eventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.Priority.ToAdapterEventPriority(),
@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Events {
                 return null;
             }
 
-            return new Models.EventMessageWithCursorPosition(
+            return Models.EventMessageWithCursorPosition.Create(
                 eventMessage.EventMessage.Id,
                 eventMessage.EventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.EventMessage.Priority.ToAdapterEventPriority(),
@@ -88,7 +88,7 @@ namespace DataCore.Adapter.Events {
                 return null;
             }
 
-            return new Adapter.Events.Models.WriteEventMessageResult(
+            return Models.WriteEventMessageResult.Create(
                 result.CorrelationId,
                 result.WriteStatus.ToAdapterWriteStatus(),
                 result.Notes,

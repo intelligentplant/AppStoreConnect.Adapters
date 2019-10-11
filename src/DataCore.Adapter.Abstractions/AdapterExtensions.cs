@@ -27,7 +27,7 @@ namespace DataCore.Adapter {
                 .Features
                     ?.Keys
                     ?.Where(x => x.IsStandardAdapterFeature())
-                .ToArray() ?? new Type[0];
+                .ToArray() ?? Array.Empty<Type>();
 
             var extensionFeatures = adapter
                 .Features
@@ -35,7 +35,7 @@ namespace DataCore.Adapter {
                     ?.Except(standardFeatures)
                 .ToArray();
 
-            return new AdapterDescriptorExtended(
+            return AdapterDescriptorExtended.Create(
                 adapter.Descriptor.Id,
                 adapter.Descriptor.Name,
                 adapter.Descriptor.Description,

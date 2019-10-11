@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -10,7 +11,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The tag value.
         /// </summary>
-        public TagValue Value { get; }
+        [Required]
+        public TagValue Value { get; set; }
 
 
         /// <summary>
@@ -34,8 +36,12 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueQueryResult(string tagId, string tagName, TagValue value): base(tagId, tagName) {
-            Value = value ?? throw new ArgumentNullException(nameof(value));
+        public static TagValueQueryResult Create(string tagId, string tagName, TagValue value) {
+            return new TagValueQueryResult() {
+                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
+                TagName = tagName ?? throw new ArgumentNullException(nameof(tagName)),
+                Value = value ?? throw new ArgumentNullException(nameof(value))
+            };
         }
 
     }
@@ -49,7 +55,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The data function used to aggregate the tag value.
         /// </summary>
-        public string DataFunction { get; }
+        [Required]
+        public string DataFunction { get; set; }
 
 
         /// <summary>
@@ -76,8 +83,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
-        public ProcessedTagValueQueryResult(string tagId, string tagName, TagValue value, string dataFunction) : base(tagId, tagName, value) {
-            DataFunction = dataFunction ?? throw new ArgumentNullException(nameof(dataFunction));
+        public static ProcessedTagValueQueryResult Create(string tagId, string tagName, TagValue value, string dataFunction) {
+            return new ProcessedTagValueQueryResult() {
+                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
+                TagName = tagName ?? throw new ArgumentNullException(nameof(tagName)),
+                Value = value ?? throw new ArgumentNullException(nameof(value)),
+                DataFunction = dataFunction ?? throw new ArgumentNullException(nameof(dataFunction))
+            };
+            
         }
 
     }

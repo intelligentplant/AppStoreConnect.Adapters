@@ -7,16 +7,13 @@ namespace DataCore.Adapter.RealTimeData.Models {
     /// <summary>
     /// Describes summary information about a tag.
     /// </summary>
-    public class TagSummary : TagIdentifier, ITagSummary {
+    public class TagSummary : TagIdentifier {
 
         /// <inheritdoc/>
-        public string Category { get; }
+        public string Description { get; set; }
 
         /// <inheritdoc/>
-        public string Description { get; }
-
-        /// <inheritdoc/>
-        public string Units { get; }
+        public string Units { get; set; }
 
 
         /// <summary>
@@ -27,9 +24,6 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// </param>
         /// <param name="name">
         ///   The tag name.
-        /// </param>
-        /// <param name="category">
-        ///   The tag measurement category (temperature, pressure, mass, etc).
         /// </param>
         /// <param name="description">
         ///   The tag description.
@@ -43,11 +37,13 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagSummary(string id, string name, string category, string description, string units)
-            : base(id, name) {
-            Category = category ?? string.Empty;
-            Description = description ?? string.Empty;
-            Units = units ?? string.Empty;
+        public static TagSummary Create(string id, string name, string description, string units) {
+            return new TagSummary() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
+                Name = name ?? throw new ArgumentNullException(nameof(name)),
+                Description = description ?? string.Empty,
+                Units = units ?? string.Empty
+            };
         }
 
     }

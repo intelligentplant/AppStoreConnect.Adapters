@@ -57,7 +57,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> GetAllAdapters(CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
-            var result = adapters.Select(x => x.Descriptor).OrderBy(x => x.Name).ToArray();
+            var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).OrderBy(x => x.Name).ToArray();
             return Ok(result); // 200
         }
 

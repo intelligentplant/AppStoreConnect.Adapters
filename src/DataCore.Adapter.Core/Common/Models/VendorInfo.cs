@@ -10,12 +10,12 @@ namespace DataCore.Adapter.Common.Models {
         /// <summary>
         /// The vendor name.
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The vendor URL.
         /// </summary>
-        public string Url { get; }
+        public string Url { get; set; }
 
 
         /// <summary>
@@ -27,9 +27,11 @@ namespace DataCore.Adapter.Common.Models {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
-        public VendorInfo(string name, string url) {
-            Name = name?.Trim();
-            Url = url;
+        public static VendorInfo Create(string name, string url) {
+            return new VendorInfo() {
+                Name = name?.Trim(),
+                Url = url
+            };
         }
 
 
@@ -50,7 +52,7 @@ namespace DataCore.Adapter.Common.Models {
                 throw new ArgumentNullException(nameof(vendorInfo));
             }
 
-            return new VendorInfo(vendorInfo.Name, vendorInfo.Url);
+            return Create(vendorInfo.Name, vendorInfo.Url);
         }
 
     }

@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AssetModel {
                 return null;
             }
 
-            return new Models.AssetModelNode(
+            return Models.AssetModelNode.Create(
                 node.Id,
                 node.Name,
                 node.Description,
@@ -30,7 +30,7 @@ namespace DataCore.Adapter.AssetModel {
                     ? null 
                     : node.Parent,
                 node.Children,
-                node.Measurements.Select(x => new Models.AssetModelNodeMeasurement(x.Name, x.AdapterId, new Adapter.RealTimeData.Models.TagSummary(x.Tag.Id, x.Tag.Name, x.Tag.Category, x.Tag.Description, x.Tag.Units))).ToArray(),
+                node.Measurements.Select(x => Models.AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.Models.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units))).ToArray(),
                 node.Properties
             );
         }

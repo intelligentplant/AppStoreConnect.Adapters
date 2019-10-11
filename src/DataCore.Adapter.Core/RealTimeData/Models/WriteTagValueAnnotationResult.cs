@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.RealTimeData.Models {
@@ -12,12 +13,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The ID of the tag that the annotation operation was performed on.
         /// </summary>
-        public string TagId { get; }
+        [Required]
+        public string TagId { get; set; }
 
         /// <summary>
         /// The annotation ID.
         /// </summary>
-        public string AnnotationId { get; }
+        [Required]
+        public string AnnotationId { get; set; }
 
 
         /// <summary>
@@ -41,10 +44,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public WriteTagValueAnnotationResult(string tagId, string annotationId, WriteStatus status, string notes, IDictionary<string, string> properties)
-            : base(status, notes, properties) {
-            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
-            AnnotationId = annotationId ?? throw new ArgumentNullException(nameof(annotationId));
+        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string notes, IDictionary<string, string> properties) {
+            return new WriteTagValueAnnotationResult() {
+                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
+                AnnotationId = annotationId ?? throw new ArgumentNullException(nameof(annotationId)),
+                Status = status,
+                Notes = notes,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

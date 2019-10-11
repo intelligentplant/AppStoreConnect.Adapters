@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.Events.Models {
 
@@ -11,7 +12,8 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// The cursor position for the event message.
         /// </summary>
-        public string CursorPosition { get; }
+        [Required]
+        public string CursorPosition { get; set; }
 
 
         /// <summary>
@@ -38,9 +40,19 @@ namespace DataCore.Adapter.Events.Models {
         /// <param name="cursorPosition">
         ///   The cursor position for the event message.
         /// </param>
-        public EventMessageWithCursorPosition(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties, string cursorPosition)
-            : base(id, utcEventTime, priority, category, message, properties) {
-            CursorPosition = cursorPosition;
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
+        /// </exception>
+        public static EventMessageWithCursorPosition Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties, string cursorPosition) {
+            return new EventMessageWithCursorPosition() {
+                Id = id ?? Guid.NewGuid().ToString(),
+                UtcEventTime = utcEventTime.ToUniversalTime(),
+                Priority = priority,
+                Category = category,
+                Message = message,
+                Properties = properties ?? new Dictionary<string, string>(),
+                CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
+            };
         }
 
     }

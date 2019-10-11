@@ -65,7 +65,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The adapter descriptor.
         /// </summary>
-        private AdapterDescriptor _descriptor;
+        private ReadOnlyAdapterDescriptor _descriptor;
 
         /// <summary>
         /// The adapter features.
@@ -73,7 +73,7 @@ namespace DataCore.Adapter {
         private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
 
         /// <inheritdoc/>
-        public AdapterDescriptor Descriptor {
+        public IAdapterDescriptor Descriptor {
             get {
                 CheckDisposed();
                 lock (_descriptor) {
@@ -161,7 +161,7 @@ namespace DataCore.Adapter {
                 true
             );
 
-            _descriptor = new AdapterDescriptor(
+            _descriptor = new ReadOnlyAdapterDescriptor(
                 options.Id,
                 string.IsNullOrWhiteSpace(options.Name)
                     ? options.Id
@@ -370,7 +370,7 @@ namespace DataCore.Adapter {
 
             // Check if we need to update the descriptor.
 
-            AdapterDescriptor descriptor;
+            IAdapterDescriptor descriptor;
             lock (_descriptor) {
                 descriptor = _descriptor;
             }
@@ -378,7 +378,7 @@ namespace DataCore.Adapter {
             if (!string.Equals(options.Name, descriptor.Name, StringComparison.Ordinal) || 
                 !string.Equals(options.Description, descriptor.Description, StringComparison.Ordinal)) {
                 lock (_descriptor) {
-                    _descriptor = new AdapterDescriptor(
+                    _descriptor = new ReadOnlyAdapterDescriptor(
                         descriptor.Id, // ID cannot change once initially configured!
                         string.IsNullOrWhiteSpace(options.Name)
                             ? options.Id

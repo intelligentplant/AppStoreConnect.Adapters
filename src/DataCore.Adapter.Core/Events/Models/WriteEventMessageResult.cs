@@ -11,7 +11,7 @@ namespace DataCore.Adapter.Events.Models {
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
-        public string CorrelationId { get; }
+        public string CorrelationId { get; set; }
 
         /// <summary>
         /// Creates a new <see cref="WriteEventMessageResult"/> object.
@@ -28,9 +28,13 @@ namespace DataCore.Adapter.Events.Models {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public WriteEventMessageResult(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties) 
-            : base(status, notes, properties) {
-            CorrelationId = correlationId;
+        public static WriteEventMessageResult Create(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties)  {
+            return new WriteEventMessageResult() {
+                CorrelationId = correlationId,
+                Status = status,
+                Notes = notes,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

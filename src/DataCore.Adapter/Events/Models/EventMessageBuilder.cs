@@ -110,7 +110,7 @@ namespace DataCore.Adapter.Events.Models {
         ///   A new <see cref="EventMessage"/> object.
         /// </returns>
         public EventMessage Build() {
-            return new EventMessage(_id, _utcEventTime, _priority, _category, _message, _properties);
+            return EventMessage.Create(_id, _utcEventTime, _priority, _category, _message, _properties);
         }
 
 

@@ -10,7 +10,7 @@ using DataCore.Adapter.RealTimeData.Models;
 namespace DataCore.Adapter.Tests {
     public class ExampleAdapter : IAdapter, IReadSnapshotTagValues, IDisposable {
 
-        public AdapterDescriptor Descriptor { get; }
+        public IAdapterDescriptor Descriptor { get; }
 
         public IAdapterFeaturesCollection Features { get; }
 
@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Tests {
 
 
         public ExampleAdapter() {
-            Descriptor = new AdapterDescriptor("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
+            Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
             var features = new AdapterFeaturesCollection(this);
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager();
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
@@ -63,7 +63,7 @@ namespace DataCore.Adapter.Tests {
                 var channel = Channel.CreateUnbounded<TagIdentifier>();
                 channel.Writer.RunBackgroundOperation((ch, ct) => {
                     foreach (var item in tagNamesOrIds) {
-                        ch.TryWrite(new TagIdentifier(item, item));
+                        ch.TryWrite(TagIdentifier.Create(item, item));
                     }
                 }, true, cancellationToken);
 

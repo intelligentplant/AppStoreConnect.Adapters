@@ -2,10 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>DataCore.Adapter.Example</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+    
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="asset-model.json" />
+    <EmbeddedResource Include="asset-model.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="tag-data.csv" />
+    <EmbeddedResource Include="tag-data.csv" />
   </ItemGroup>
 
 </Project>

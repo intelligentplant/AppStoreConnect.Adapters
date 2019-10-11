@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace DataCore.Adapter.AssetModel.Models {
@@ -13,37 +14,39 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <summary>
         /// The unique identifier for the node.
         /// </summary>
-        public string Id { get; }
+        [Required]
+        public string Id { get; set; }
 
         /// <summary>
         /// The node name.
         /// </summary>
-        public string Name { get; }
+        [Required]
+        public string Name { get; set; }
 
         /// <summary>
         /// The node description.
         /// </summary>
-        public string Description { get; }
+        public string Description { get; set; }
 
         /// <summary>
         /// The parent ID of the node. Top-level nodes will have a value of <see langword="null"/>.
         /// </summary>
-        public string Parent { get; }
+        public string Parent { get; set; }
 
         /// <summary>
         /// The IDs of the child nodes of this node.
         /// </summary>
-        public IEnumerable<string> Children { get; }
+        public IEnumerable<string> Children { get; set; }
 
         /// <summary>
         /// The measurements associated with the node.
         /// </summary>
-        public IEnumerable<AssetModelNodeMeasurement> Measurements { get; }
+        public IEnumerable<AssetModelNodeMeasurement> Measurements { get; set; }
 
         /// <summary>
         /// Additional properties associated with the node.
         /// </summary>
-        public IDictionary<string, string> Properties { get; }
+        public IDictionary<string, string> Properties { get; set; }
 
 
         /// <summary>
@@ -76,14 +79,16 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNode(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Description = description;
-            Parent = parent;
-            Children = children?.ToArray() ?? Array.Empty<string>();
-            Measurements = measurements?.ToArray() ?? Array.Empty<AssetModelNodeMeasurement>();
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+        public static AssetModelNode Create(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
+            return new AssetModelNode() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
+                Name = name ?? throw new ArgumentNullException(nameof(name)),
+                Description = description,
+                Parent = parent,
+                Children = children?.ToArray() ?? Array.Empty<string>(),
+                Measurements = measurements?.ToArray() ?? Array.Empty<AssetModelNodeMeasurement>(),
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

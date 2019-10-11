@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<IEnumerable<AdapterDescriptor>> GetAdapters() {
             var adapters = await AdapterAccessor.GetAdapters(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
-            return adapters.Select(x => x.Descriptor).ToArray();
+            return adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
         }
 
 

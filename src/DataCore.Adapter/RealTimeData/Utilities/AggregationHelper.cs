@@ -405,7 +405,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             foreach (var agg in funcs) {
                 var val = agg.Value.Invoke(tag, bucket);
                 if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    resultChannel.TryWrite(new ProcessedTagValueQueryResult(tag.Id, tag.Name, val, agg.Key));
+                    resultChannel.TryWrite(ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key));
                 }
             }
         }

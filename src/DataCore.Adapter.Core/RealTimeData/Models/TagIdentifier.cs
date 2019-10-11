@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
     /// <summary>
     /// Defines basic information for identifying a real-time data tag.
     /// </summary>
-    public class TagIdentifier : ITagIdentifier {
+    public class TagIdentifier {
 
         /// <summary>
         /// The unique identifier for the tag.
         /// </summary>
-        public string Id { get; }
+        [Required]
+        public string Id { get; set; }
 
         /// <summary>
         /// The tag name.
         /// </summary>
-        public string Name { get; }
+        [Required]
+        public string Name { get; set; }
 
 
         /// <summary>
@@ -34,9 +37,11 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagIdentifier(string id, string name) {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+        public static TagIdentifier Create(string id, string name) {
+            return new TagIdentifier() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
+                Name = name ?? throw new ArgumentNullException(nameof(name))
+            };
         }
 
     }
@@ -116,7 +121,7 @@ namespace DataCore.Adapter.RealTimeData.Models {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-            return obj?.Id.ToUpperInvariant().GetHashCode() ?? default;
+            return obj?.Id?.ToUpperInvariant().GetHashCode() ?? default;
         }
     }
 }

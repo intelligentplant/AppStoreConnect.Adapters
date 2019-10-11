@@ -10,23 +10,22 @@ namespace DataCore.Adapter.Common.Models {
     /// An extended descriptor for an adapter, that includes information about the features that the 
     /// adapter has implemented.
     /// </summary>
-    [Serializable]
-    public class AdapterDescriptorExtended: AdapterDescriptor, ISerializable {
+    public class AdapterDescriptorExtended: AdapterDescriptor {
 
         /// <summary>
         /// The names of the implemented standard adapter features.
         /// </summary>
-        public IEnumerable<string> Features { get; }
+        public IEnumerable<string> Features { get; set; }
 
         /// <summary>
         /// The names of the implemented extension adapter features.
         /// </summary>
-        public IEnumerable<string> Extensions { get; }
+        public IEnumerable<string> Extensions { get; set; }
 
         /// <summary>
         /// Additional adapter properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; }
+        public IDictionary<string, string> Properties { get; set; }
 
 
         /// <summary>
@@ -58,54 +57,20 @@ namespace DataCore.Adapter.Common.Models {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public AdapterDescriptorExtended(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IDictionary<string, string> properties): base(id, name, description) {
-            Features = features?.ToArray() ?? Array.Empty<string>();
-            Extensions = extensions?.ToArray() ?? Array.Empty<string>();
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
+        public static AdapterDescriptorExtended Create(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IDictionary<string, string> properties) {
+            return new AdapterDescriptorExtended() {
+                Id = string.IsNullOrWhiteSpace(id)
+                    ? throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(id))
+                    : id,
+                Name = string.IsNullOrWhiteSpace(name)
+                    ? throw new ArgumentException(SharedResources.Error_AdapterDescriptorNameIsRequired, nameof(name))
+                    : name,
+                Description = description,
+                Features = features?.ToArray() ?? Array.Empty<string>(),
+                Extensions = extensions?.ToArray() ?? Array.Empty<string>(),
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
-
-        /// <summary>
-        /// Creates a new <see cref="AdapterDescriptorExtended"/> object from the provided serialization 
-        /// information.
-        /// </summary>
-        /// <param name="info">
-        ///   The serialization information.
-        /// </param>
-        /// <param name="context">
-        ///   The streaming context.
-        /// </param>
-        public AdapterDescriptorExtended(SerializationInfo info, StreamingContext context): base(info?.GetString("id"), info?.GetString("name"), info?.GetString("description")) {
-            if (info == null) {
-                throw new ArgumentNullException(nameof(info));
-            }
-
-            Features = (string[]) info?.GetValue("features", typeof(string[])) ?? new string[0];
-            Extensions = (string[]) info?.GetValue("extensions", typeof(string[])) ?? new string[0];
-            Properties = new ReadOnlyDictionary<string, string>((Dictionary<string, string>) info?.GetValue("properties", typeof(Dictionary<string, string>)) ?? new Dictionary<string, string>());
-        }
-
-
-        /// <summary>
-        /// Adds serialization information to the provided serialization information object.
-        /// </summary>
-        /// <param name="info">
-        ///   The serialization information.
-        /// </param>
-        /// <param name="context">
-        ///   The streaming context.
-        /// </param>
-        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context) {
-            if (info == null) {
-                throw new ArgumentNullException(nameof(info));
-            }
-
-            info.AddValue("id", Id);
-            info.AddValue("name", Name);
-            info.AddValue("description", Description);
-            info.AddValue("features", Features.ToArray(), typeof(string[]));
-            info.AddValue("extensions", Extensions.ToArray(), typeof(string[]));
-            info.AddValue("properties", new Dictionary<string, string>(Properties), typeof(Dictionary<string, string>));
-        }
     }
 }

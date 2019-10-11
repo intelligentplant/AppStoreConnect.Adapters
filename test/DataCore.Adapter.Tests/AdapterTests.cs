@@ -45,7 +45,7 @@ namespace DataCore.Adapter.Tests {
                     // the subscription's channel.
                     var now = System.DateTime.UtcNow;
                     adapter.WriteSnapshotValue(
-                        new RealTimeData.Models.TagValueQueryResult(
+                        RealTimeData.Models.TagValueQueryResult.Create(
                             "Test Tag 1", 
                             "Test Tag 1", 
                             RealTimeData.Models.TagValueBuilder
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Tests {
                         )
                     );
                     adapter.WriteSnapshotValue(
-                        new RealTimeData.Models.TagValueQueryResult(
+                        RealTimeData.Models.TagValueQueryResult.Create(
                             "Test Tag 1",
                             "Test Tag 1",
                             RealTimeData.Models.TagValueBuilder

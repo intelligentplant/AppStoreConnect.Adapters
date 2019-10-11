@@ -25,7 +25,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Average value over a time period.
         /// </summary>
-        public static DataFunctionDescriptor Average => new DataFunctionDescriptor(
+        public static DataFunctionDescriptor Average { get; } = DataFunctionDescriptor.Create(
             FunctionNameAverage, 
             Resources.DataFunction_Avg_Description
         );
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Minimum value over a time period.
         /// </summary>
-        public static DataFunctionDescriptor Minimum => new DataFunctionDescriptor(
+        public static DataFunctionDescriptor Minimum { get; } = DataFunctionDescriptor.Create(
             FunctionNameMinimum, 
             Resources.DataFunction_Min_Description
         );
@@ -41,7 +41,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Maximum value over a time period.
         /// </summary>
-        public static DataFunctionDescriptor Maximum => new DataFunctionDescriptor(
+        public static DataFunctionDescriptor Maximum { get; } = DataFunctionDescriptor.Create(
             FunctionNameMaximum, 
             Resources.DataFunction_Max_Description
         );

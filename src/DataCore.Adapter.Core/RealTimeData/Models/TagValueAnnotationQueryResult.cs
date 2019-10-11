@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -10,7 +11,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The annotation.
         /// </summary>
-        public TagValueAnnotation Annotation { get; }
+        [Required]
+        public TagValueAnnotation Annotation { get; set; }
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationQueryResult"/> object.
@@ -33,8 +35,13 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="annotation"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueAnnotationQueryResult(string tagId, string tagName, TagValueAnnotation annotation): base(tagId, tagName) {
-            Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation)); 
+        public static TagValueAnnotationQueryResult Create(string tagId, string tagName, TagValueAnnotation annotation) {
+            return new TagValueAnnotationQueryResult() {
+                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
+                TagName = tagName ?? throw new ArgumentNullException(nameof(tagName)),
+                Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation))
+            };
+            
         }
 
     }

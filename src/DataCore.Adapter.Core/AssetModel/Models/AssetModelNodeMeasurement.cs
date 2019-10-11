@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.AssetModel.Models {
@@ -12,17 +13,20 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <summary>
         /// The measurement name.
         /// </summary>
-        public string Name { get; }
+        [Required]
+        public string Name { get; set; }
 
         /// <summary>
         /// The ID of the adapter that the tag for the measurement is defined on.
         /// </summary>
-        public string AdapterId { get; }
+        [Required]
+        public string AdapterId { get; set; }
 
         /// <summary>
         /// The tag summary for the measurement.
         /// </summary>
-        public TagSummary Tag { get; }
+        [Required]
+        public TagSummary Tag { get; set; }
 
 
         /// <summary>
@@ -37,10 +41,21 @@ namespace DataCore.Adapter.AssetModel.Models {
         /// <param name="tag">
         ///   The tag summary for the measurement.
         /// </param>
-        public AssetModelNodeMeasurement(string name, string adapterId, TagSummary tag) {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
-            Tag = tag ?? throw new ArgumentNullException(nameof(tag));
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static AssetModelNodeMeasurement Create(string name, string adapterId, TagSummary tag) {
+            return new AssetModelNodeMeasurement() {
+                Name = name ?? throw new ArgumentNullException(nameof(name)),
+                AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId)),
+                Tag = tag ?? throw new ArgumentNullException(nameof(tag))
+            };
         }
 
     }

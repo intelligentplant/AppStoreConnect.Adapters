@@ -13,23 +13,23 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The tag's data type.
         /// </summary>
-        public TagDataType DataType { get; }
+        public TagDataType DataType { get; set; }
 
         /// <summary>
         /// The discrete states for the tag. If <see cref="DataType"/> is not <see cref="TagDataType.State"/>, 
         /// this property will be <see langword="null"/>.
         /// </summary>
-        public IDictionary<string, int> States { get; }
+        public IDictionary<string, int> States { get; set; }
 
         /// <summary>
         /// Bespoke tag properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; }
+        public IDictionary<string, string> Properties { get; set; }
 
         /// <summary>
         /// Labels associated with the tag.
         /// </summary>
-        public IEnumerable<string> Labels { get; }
+        public IEnumerable<string> Labels { get; set; }
 
 
         /// <summary>
@@ -37,9 +37,6 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// </summary>
         /// <param name="id">
         ///   The tag ID.
-        /// </param>
-        /// <param name="category">
-        ///   The tag measurement category (temperature, pressure, mass, etc).
         /// </param>
         /// <param name="name">
         ///   The tag name.
@@ -69,14 +66,53 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinition(string id, string name, string category, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels)
-            : base(id, name, category, description, units) {
-            DataType = dataType;
-            States = dataType != TagDataType.State
-                ? null
-                : new ReadOnlyDictionary<string, int>(states ?? new Dictionary<string, int>());
-            Properties = new ReadOnlyDictionary<string, string>(properties ?? new Dictionary<string, string>());
-            Labels = labels?.ToArray() ?? Array.Empty<string>();
+        public static TagDefinition Create(string id, string name, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels) {
+            return new TagDefinition() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
+                Name = name ?? throw new ArgumentNullException(nameof(name)),
+                Description = description ?? string.Empty,
+                Units = units ?? string.Empty,
+                DataType = dataType,
+                States = dataType != TagDataType.State
+                    ? null
+                    : states ?? new Dictionary<string, int>(),
+                Properties = properties ?? new Dictionary<string, string>(),
+                Labels = labels?.ToArray() ?? Array.Empty<string>()
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagDefinition"/> object from an existing instance.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag to clone.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagDefinition"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagDefinition FromExisting(TagDefinition tag) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            return Create(
+                tag.Id,
+                tag.Name,
+                tag.Description,
+                tag.Units,
+                tag.DataType,
+                tag.States == null
+                    ? null
+                    : new Dictionary<string, int>(tag.States),
+                tag.Properties == null
+                    ? null
+                    : new Dictionary<string, string>(tag.Properties),
+                tag.Labels
+            );
         }
 
     }

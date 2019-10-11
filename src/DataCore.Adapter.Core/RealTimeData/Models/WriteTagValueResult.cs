@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using DataCore.Adapter.Common.Models;
 
 namespace DataCore.Adapter.RealTimeData.Models {
@@ -12,12 +13,13 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
-        public string CorrelationId { get; }
+        public string CorrelationId { get; set; }
 
         /// <summary>
         /// The ID of the tag.
         /// </summary>
-        public string TagId { get; }
+        [Required]
+        public string TagId { get; set; }
 
 
         /// <summary>
@@ -41,10 +43,14 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public WriteTagValueResult(string correlationId, string tagId, WriteStatus status, string notes, IDictionary<string, string> properties) 
-            : base(status, notes, properties) {
-            CorrelationId = correlationId;
-            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
+        public static WriteTagValueResult Create(string correlationId, string tagId, WriteStatus status, string notes, IDictionary<string, string> properties) {
+            return new WriteTagValueResult() {
+                CorrelationId = correlationId,
+                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
+                Status = status,
+                Notes = notes,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }

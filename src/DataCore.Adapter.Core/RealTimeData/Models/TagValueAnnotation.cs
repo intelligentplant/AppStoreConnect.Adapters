@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData.Models {
 
@@ -11,7 +12,8 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <summary>
         /// The unique identifier for the annotation.
         /// </summary>
-        public string Id { get; }
+        [Required]
+        public string Id { get; set; }
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotation"/> object.
@@ -41,9 +43,18 @@ namespace DataCore.Adapter.RealTimeData.Models {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueAnnotation(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IDictionary<string, string> properties) 
-            : base(annotationType, utcStartTime, utcEndTime, value, description, properties) {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
+        public static TagValueAnnotation Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IDictionary<string, string> properties) {
+            return new TagValueAnnotation() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
+                AnnotationType = annotationType,
+                UtcStartTime = utcStartTime.ToUniversalTime(),
+                UtcEndTime = annotationType == AnnotationType.Instantaneous
+                ? null
+                : utcEndTime?.ToUniversalTime(),
+                Value = value,
+                Description = description,
+                Properties = properties ?? new Dictionary<string, string>()
+            };
         }
 
     }
