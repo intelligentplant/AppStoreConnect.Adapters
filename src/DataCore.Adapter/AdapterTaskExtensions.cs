@@ -7,7 +7,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Extensions for <see cref="Task"/> and <see cref="Task{TResult}"/>.
     /// </summary>
-    public static class TaskExtensions {
+    public static class AdapterTaskExtensions {
 
         /// <summary>
         /// Allows cancellation for a task that doesn't support it. Use this in preference to 
