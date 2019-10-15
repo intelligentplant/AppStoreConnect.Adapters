@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
+using DataCore.Adapter.Events;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy.Events {

@@ -6,7 +6,7 @@ using System.Net.Http.Formatting;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Events.Models;
+using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 

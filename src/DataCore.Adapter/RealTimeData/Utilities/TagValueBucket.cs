@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataCore.Adapter.RealTimeData.Models;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 

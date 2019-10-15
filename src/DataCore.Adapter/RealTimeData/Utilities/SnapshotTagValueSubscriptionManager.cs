@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Features;
-using DataCore.Adapter.RealTimeData.Models;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {

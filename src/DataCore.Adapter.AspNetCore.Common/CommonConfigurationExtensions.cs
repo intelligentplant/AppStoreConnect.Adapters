@@ -2,7 +2,7 @@
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.Extensions.DependencyInjection {

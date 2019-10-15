@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadAnnotationsRequest() {
+            var adapterRequest = new RealTimeData.ReadAnnotationsRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 Tags = request.Tags?.ToArray() ?? new string[0]
@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadAnnotationRequest() {
+            var adapterRequest = new RealTimeData.ReadAnnotationRequest() {
                 TagId = request.TagId,
                 AnnotationId = request.AnnotationId
             };
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.CreateAnnotationRequest() {
+            var adapterRequest = new RealTimeData.CreateAnnotationRequest() {
                 TagId = request.TagId,
                 Annotation = request.Annotation.ToAdapterTagValueAnnotation()
             };
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.UpdateAnnotationRequest() {
+            var adapterRequest = new RealTimeData.UpdateAnnotationRequest() {
                 TagId = request.TagId,
                 AnnotationId = request.AnnotationId,
                 Annotation = request.Annotation.ToAdapterTagValueAnnotation()
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.DeleteAnnotationRequest() {
+            var adapterRequest = new RealTimeData.DeleteAnnotationRequest() {
                 TagId = request.TagId,
                 AnnotationId = request.AnnotationId
             };

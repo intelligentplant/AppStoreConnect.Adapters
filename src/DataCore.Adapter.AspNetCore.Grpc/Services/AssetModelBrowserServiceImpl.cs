@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Features;
+using DataCore.Adapter.AssetModel;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowse>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.AssetModel.Models.BrowseAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.BrowseAssetModelNodesRequest() {
                 ParentId = string.IsNullOrWhiteSpace(request.ParentId) 
                     ? null 
                     : request.ParentId,
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowse>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.AssetModel.Models.GetAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.GetAssetModelNodesRequest() {
                 Nodes = request.Nodes.ToArray()
             };
             Util.ValidateObject(adapterRequest);
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.AssetModel.Models.FindAssetModelNodesRequest() {
+            var adapterRequest = new Adapter.AssetModel.FindAssetModelNodesRequest() {
                 Name = request.Name,
                 Description = request.Description,
                 PageSize = request.PageSize,

@@ -7,38 +7,38 @@ namespace DataCore.Adapter.Common {
     /// </summary>
     public static class GrpcCommonExtensions {
 
-        public static Models.HostInfo ToAdapterHostInfo(this HostInfo hostInfo) {
+        public static HostInfo ToAdapterHostInfo(this Grpc.HostInfo hostInfo) {
             if (hostInfo == null) {
                 return null;
             }
 
-            return Models.HostInfo.Create(
+            return HostInfo.Create(
                 hostInfo.Name,
                 hostInfo.Description,
                 hostInfo.Version,
                 hostInfo.VendorInfo == null 
                     ? null 
-                    : Models.VendorInfo.Create(hostInfo.VendorInfo.Name, hostInfo.VendorInfo.Url),
+                    : VendorInfo.Create(hostInfo.VendorInfo.Name, hostInfo.VendorInfo.Url),
                 hostInfo.Properties
             );
         }
 
 
-        public static Models.AdapterDescriptor ToAdapterDescriptor(this AdapterDescriptor descriptor) {
+        public static AdapterDescriptor ToAdapterDescriptor(this Grpc.AdapterDescriptor descriptor) {
             if (descriptor == null) {
                 return null;
             }
 
-            return Models.AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
+            return AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
         }
 
 
-        public static Models.AdapterDescriptorExtended ToExtendedAdapterDescriptor(this ExtendedAdapterDescriptor descriptor) {
+        public static AdapterDescriptorExtended ToExtendedAdapterDescriptor(this Grpc.ExtendedAdapterDescriptor descriptor) {
             if (descriptor == null) {
                 return null;
             }
 
-            return Models.AdapterDescriptorExtended.Create(
+            return AdapterDescriptorExtended.Create(
                 descriptor.AdapterDescriptor?.Id,
                 descriptor.AdapterDescriptor?.Name,
                 descriptor.AdapterDescriptor?.Description,
@@ -49,17 +49,17 @@ namespace DataCore.Adapter.Common {
         }
 
 
-        public static Models.WriteStatus ToAdapterWriteStatus(this WriteOperationStatus status) {
+        public static WriteStatus ToAdapterWriteStatus(this Grpc.WriteOperationStatus status) {
             switch (status) {
                 case WriteOperationStatus.Success:
-                    return Models.WriteStatus.Success;
+                    return WriteStatus.Success;
                 case WriteOperationStatus.Fail:
-                    return Models.WriteStatus.Fail;
+                    return WriteStatus.Fail;
                 case WriteOperationStatus.Pending:
-                    return Models.WriteStatus.Pending;
+                    return WriteStatus.Pending;
                 case WriteOperationStatus.Unknown:
                 default:
-                    return Models.WriteStatus.Unknown;
+                    return WriteStatus.Unknown;
             }
         }
 

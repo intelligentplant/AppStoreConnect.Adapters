@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Events.Features;
+using DataCore.Adapter.Events;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateEventSubscriptionAlreadyExists, adapterId)));
             }
 
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? Events.Models.EventMessageSubscriptionType.Active : Events.Models.EventMessageSubscriptionType.Passive, cancellationToken).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? Events.EventMessageSubscriptionType.Active : Events.EventMessageSubscriptionType.Passive, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
                     while (!cancellationToken.IsCancellationRequested) {
@@ -57,13 +57,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Events.Models.ReadEventMessagesForTimeRangeRequest() {
+            var adapterRequest = new Events.ReadEventMessagesForTimeRangeRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 MessageCount = request.MessageCount,
                 Direction = request.Direction == EventReadDirection.Forwards
-                    ? Events.Models.EventReadDirection.Forwards
-                    : Events.Models.EventReadDirection.Backwards
+                    ? Events.EventReadDirection.Forwards
+                    : Events.EventReadDirection.Backwards
             };
             Util.ValidateObject(adapterRequest);
 
@@ -84,12 +84,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Events.Models.ReadEventMessagesUsingCursorRequest() {
+            var adapterRequest = new Events.ReadEventMessagesUsingCursorRequest() {
                 CursorPosition = request.CursorPosition,
                 MessageCount = request.MessageCount,
                 Direction = request.Direction == EventReadDirection.Forwards
-                    ? Events.Models.EventReadDirection.Forwards
-                    : Events.Models.EventReadDirection.Backwards
+                    ? Events.EventReadDirection.Forwards
+                    : Events.EventReadDirection.Backwards
             };
             Util.ValidateObject(adapterRequest);
 
@@ -112,7 +112,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<Events.Models.WriteEventMessageItem>>(StringComparer.OrdinalIgnoreCase);
+            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<Events.WriteEventMessageItem>>(StringComparer.OrdinalIgnoreCase);
 
             try {
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -126,7 +126,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
-                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.Models.WriteEventMessageItem>(new System.Threading.Channels.UnboundedChannelOptions() {
+                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new System.Threading.Channels.UnboundedChannelOptions() {
                             AllowSynchronousContinuations = true,
                             SingleReader = true,
                             SingleWriter = true

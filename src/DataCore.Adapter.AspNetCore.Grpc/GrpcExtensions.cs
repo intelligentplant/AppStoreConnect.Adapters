@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Server {
 
@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag definition.
         /// </returns>
-        internal static TagDefinition ToGrpcTagDefinition(this RealTimeData.Models.TagDefinition tag) {
+        internal static TagDefinition ToGrpcTagDefinition(this RealTimeData.TagDefinition tag) {
             var result = new TagDefinition() {
                 DataType = tag.DataType.ToGrpcTagDataType(),
                 Description = tag.Description ?? string.Empty,
@@ -61,13 +61,13 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag data type.
         /// </returns>
-        internal static TagDataType ToGrpcTagDataType(this RealTimeData.Models.TagDataType tagDataType) {
+        internal static TagDataType ToGrpcTagDataType(this RealTimeData.TagDataType tagDataType) {
             switch (tagDataType) {
-                case RealTimeData.Models.TagDataType.Numeric:
+                case RealTimeData.TagDataType.Numeric:
                     return TagDataType.Numeric;
-                case RealTimeData.Models.TagDataType.State:
+                case RealTimeData.TagDataType.State:
                     return TagDataType.State;
-                case RealTimeData.Models.TagDataType.Text:
+                case RealTimeData.TagDataType.Text:
                     return TagDataType.Text;
                 default:
                     return TagDataType.Numeric;
@@ -84,7 +84,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC asset model node.
         /// </returns>
-        internal static AssetModelNode ToGrpcAssetModelNode(this AssetModel.Models.AssetModelNode node) {
+        internal static AssetModelNode ToGrpcAssetModelNode(this AssetModel.AssetModelNode node) {
             var result = new AssetModelNode() {
                 Id = node.Id ?? string.Empty,
                 Name = node.Name ?? string.Empty,
@@ -137,7 +137,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value.
         /// </returns>
-        internal static TagValueQueryResult ToGrpcTagValue(this RealTimeData.Models.TagValue value, string tagId, string tagName, TagValueQueryType queryType) {
+        internal static TagValueQueryResult ToGrpcTagValue(this RealTimeData.TagValue value, string tagId, string tagName, TagValueQueryType queryType) {
             var result = new TagValueQueryResult() {
                 TagId = tagId ?? string.Empty,
                 TagName = tagName ?? string.Empty,
@@ -184,7 +184,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value.
         /// </returns>
-        internal static ProcessedTagValueQueryResult ToGrpcProcessedTagValue(this RealTimeData.Models.TagValue value, string tagId, string tagName, string dataFunction, TagValueQueryType queryType) {
+        internal static ProcessedTagValueQueryResult ToGrpcProcessedTagValue(this RealTimeData.TagValue value, string tagId, string tagName, string dataFunction, TagValueQueryType queryType) {
             var result = new ProcessedTagValueQueryResult() {
                 TagId = tagId ?? string.Empty,
                 TagName = tagName ?? string.Empty,
@@ -220,13 +220,13 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value status.
         /// </returns>
-        internal static TagValueStatus ToGrpcTagValueStatus(this RealTimeData.Models.TagValueStatus status) {
+        internal static TagValueStatus ToGrpcTagValueStatus(this RealTimeData.TagValueStatus status) {
             switch (status) {
-                case RealTimeData.Models.TagValueStatus.Bad:
+                case RealTimeData.TagValueStatus.Bad:
                     return TagValueStatus.Bad;
-                case RealTimeData.Models.TagValueStatus.Good:
+                case RealTimeData.TagValueStatus.Good:
                     return TagValueStatus.Good;
-                case RealTimeData.Models.TagValueStatus.Unknown:
+                case RealTimeData.TagValueStatus.Unknown:
                 default:
                     return TagValueStatus.Unknown;
             }
@@ -242,15 +242,15 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value status.
         /// </returns>
-        internal static RealTimeData.Models.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
+        internal static RealTimeData.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
             switch (status) {
                 case TagValueStatus.Bad:
-                    return RealTimeData.Models.TagValueStatus.Bad;
+                    return RealTimeData.TagValueStatus.Bad;
                 case TagValueStatus.Good:
-                    return RealTimeData.Models.TagValueStatus.Good;
+                    return RealTimeData.TagValueStatus.Good;
                 case TagValueStatus.Unknown:
                 default:
-                    return RealTimeData.Models.TagValueStatus.Unknown;
+                    return RealTimeData.TagValueStatus.Unknown;
             }
         }
 
@@ -264,13 +264,13 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter boundary type.
         /// </returns>
-        internal static RealTimeData.Models.RawDataBoundaryType FromGrpcRawDataBoundaryType(this RawDataBoundaryType boundaryType) {
+        internal static RealTimeData.RawDataBoundaryType FromGrpcRawDataBoundaryType(this RawDataBoundaryType boundaryType) {
             switch (boundaryType) {
                 case RawDataBoundaryType.Outside:
-                    return RealTimeData.Models.RawDataBoundaryType.Outside;
+                    return RealTimeData.RawDataBoundaryType.Outside;
                 case RawDataBoundaryType.Inside:
                 default:
-                    return RealTimeData.Models.RawDataBoundaryType.Inside;
+                    return RealTimeData.RawDataBoundaryType.Inside;
             }
         }
 
@@ -284,7 +284,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC data function descriptor.
         /// </returns>
-        internal static DataFunctionDescriptor ToGrpcDataFunctionDescriptor(this RealTimeData.Models.DataFunctionDescriptor descriptor) {
+        internal static DataFunctionDescriptor ToGrpcDataFunctionDescriptor(this RealTimeData.DataFunctionDescriptor descriptor) {
             return new DataFunctionDescriptor() {
                 Name = descriptor.Name ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty
@@ -328,7 +328,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC write tag value result.
         /// </returns>
-        internal static WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.Models.WriteTagValueResult adapterResult, string adapterId) {
+        internal static WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.WriteTagValueResult adapterResult, string adapterId) {
             var result = new WriteTagValueResult() {
                 AdapterId = adapterId ?? string.Empty,
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
@@ -356,15 +356,15 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC write status.
         /// </returns>
-        internal static WriteOperationStatus ToGrpcWriteOperationStatus(this Common.Models.WriteStatus status) {
+        internal static WriteOperationStatus ToGrpcWriteOperationStatus(this Common.WriteStatus status) {
             switch (status) {
-                case Common.Models.WriteStatus.Fail:
+                case Common.WriteStatus.Fail:
                     return WriteOperationStatus.Fail;
-                case Common.Models.WriteStatus.Pending:
+                case Common.WriteStatus.Pending:
                     return WriteOperationStatus.Pending;
-                case Common.Models.WriteStatus.Success:
+                case Common.WriteStatus.Success:
                     return WriteOperationStatus.Success;
-                case Common.Models.WriteStatus.Unknown:
+                case Common.WriteStatus.Unknown:
                 default:
                     return WriteOperationStatus.Unknown;
             }
@@ -380,7 +380,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value annotation query result.
         /// </returns>
-        internal static TagValueAnnotationQueryResult ToGrpcTagValueAnnotationQueryResult(this RealTimeData.Models.TagValueAnnotationQueryResult annotation) {
+        internal static TagValueAnnotationQueryResult ToGrpcTagValueAnnotationQueryResult(this RealTimeData.TagValueAnnotationQueryResult annotation) {
             var result = new TagValueAnnotationQueryResult() {
                 TagId = annotation.TagId ?? string.Empty,
                 TagName = annotation.TagName ?? string.Empty,
@@ -400,7 +400,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value annotation.
         /// </returns>
-        internal static TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.Models.TagValueAnnotation annotation) {
+        internal static TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.TagValueAnnotation annotation) {
             if (annotation == null) {
                 return null;
             }
@@ -438,12 +438,12 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value annotation.
         /// </returns>
-        internal static RealTimeData.Models.TagValueAnnotationBase ToAdapterTagValueAnnotation(this TagValueAnnotationBase annotation) {
+        internal static RealTimeData.TagValueAnnotationBase ToAdapterTagValueAnnotation(this TagValueAnnotationBase annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            return RealTimeData.Models.TagValueAnnotationBase.Create(
+            return RealTimeData.TagValueAnnotationBase.Create(
                 annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.UtcStartTime.ToDateTime(),
                 annotation.HasUtcEndTime
@@ -465,13 +465,13 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value annotation type.
         /// </returns>
-        internal static RealTimeData.Models.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
+        internal static RealTimeData.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
             switch (annotationType) {
                 case AnnotationType.TimeRange:
-                    return RealTimeData.Models.AnnotationType.TimeRange;
+                    return RealTimeData.AnnotationType.TimeRange;
                 case AnnotationType.Instantaneous:
                 default:
-                    return RealTimeData.Models.AnnotationType.Instantaneous;
+                    return RealTimeData.AnnotationType.Instantaneous;
             }
         }
 
@@ -488,7 +488,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value annotation write result.
         /// </returns>
-        internal static WriteTagValueAnnotationResult ToGrpcWriteTagValueAnnotationResult(this RealTimeData.Models.WriteTagValueAnnotationResult adapterResult, string adapterId) {
+        internal static WriteTagValueAnnotationResult ToGrpcWriteTagValueAnnotationResult(this RealTimeData.WriteTagValueAnnotationResult adapterResult, string adapterId) {
             if (adapterResult == null) {
                 return null;
             }
@@ -520,7 +520,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC event message.
         /// </returns>
-        internal static EventMessage ToGrpcEventMessage(this Events.Models.EventMessageBase message) {
+        internal static EventMessage ToGrpcEventMessage(this Events.EventMessageBase message) {
             var result = new EventMessage() {
                 Category = message.Category ?? string.Empty,
                 Id = message.Id ?? string.Empty,
@@ -548,17 +548,17 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC event message priority.
         /// </returns>
-        internal static EventPriority ToGrpcEventPriority(this Events.Models.EventPriority priority) {
+        internal static EventPriority ToGrpcEventPriority(this Events.EventPriority priority) {
             switch (priority) {
-                case Events.Models.EventPriority.Low:
+                case Events.EventPriority.Low:
                     return EventPriority.Low;
-                case Events.Models.EventPriority.Medium:
+                case Events.EventPriority.Medium:
                     return EventPriority.Medium;
-                case Events.Models.EventPriority.High:
+                case Events.EventPriority.High:
                     return EventPriority.High;
-                case Events.Models.EventPriority.Critical:
+                case Events.EventPriority.Critical:
                     return EventPriority.Critical;
-                case Events.Models.EventPriority.Unknown:
+                case Events.EventPriority.Unknown:
                 default:
                     return EventPriority.Unknown;
             }
@@ -574,19 +574,19 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter event message priority.
         /// </returns>
-        internal static Events.Models.EventPriority ToAdapterEventPriority(this EventPriority priority) {
+        internal static Events.EventPriority ToAdapterEventPriority(this EventPriority priority) {
             switch (priority) {
                 case EventPriority.Low:
-                    return Events.Models.EventPriority.Low;
+                    return Events.EventPriority.Low;
                 case EventPriority.Medium:
-                    return Events.Models.EventPriority.Medium;
+                    return Events.EventPriority.Medium;
                 case EventPriority.High:
-                    return Events.Models.EventPriority.High;
+                    return Events.EventPriority.High;
                 case EventPriority.Critical:
-                    return Events.Models.EventPriority.Critical;
+                    return Events.EventPriority.Critical;
                 case EventPriority.Unknown:
                 default:
-                    return Events.Models.EventPriority.Unknown;
+                    return Events.EventPriority.Unknown;
             }
         }
 
@@ -600,13 +600,13 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value write item.
         /// </returns>
-        internal static Events.Models.WriteEventMessageItem ToAdapterWriteEventMessageItem(this WriteEventMessageRequest writeRequest) {
-            return new Events.Models.WriteEventMessageItem() {
+        internal static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this WriteEventMessageRequest writeRequest) {
+            return new Events.WriteEventMessageItem() {
                 CorrelationId = writeRequest.CorrelationId,
-                EventMessage = Events.Models.EventMessage.Create(
+                EventMessage = Events.EventMessage.Create(
                     writeRequest.Message?.Id,
                     writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
-                    writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.Models.EventPriority.Unknown,
+                    writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.EventPriority.Unknown,
                     writeRequest.Message?.Category,
                     writeRequest.Message?.Message,
                     writeRequest.Message?.Properties
@@ -627,7 +627,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC write event message result.
         /// </returns>
-        internal static WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.Models.WriteEventMessageResult adapterResult, string adapterId) {
+        internal static WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.WriteEventMessageResult adapterResult, string adapterId) {
             var result = new WriteEventMessageResult() {
                 AdapterId = adapterId ?? string.Empty,
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,

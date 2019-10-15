@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {

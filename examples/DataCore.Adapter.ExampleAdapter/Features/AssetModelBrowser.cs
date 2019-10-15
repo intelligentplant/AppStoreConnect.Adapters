@@ -5,8 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Features;
-using DataCore.Adapter.AssetModel.Models;
+using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.Example.Features {
     internal class AssetModelBrowser : IAssetModelBrowse, IAssetModelSearch {
@@ -16,14 +15,14 @@ namespace DataCore.Adapter.Example.Features {
         private IDictionary<string, AssetModelNode> _nodes;
 
 
-        internal async Task Init(string adapterId, RealTimeData.Features.ITagSearch tagSearch, CancellationToken cancellationToken) {
+        internal async Task Init(string adapterId, RealTimeData.ITagSearch tagSearch, CancellationToken cancellationToken) {
             using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(ExampleAdapter), AssetModelJson))
             using (var reader = new System.IO.StreamReader(stream)) {
                 var json = reader.ReadToEnd();
                 var nodeDefinitions = Newtonsoft.Json.JsonConvert.DeserializeObject<AssetModelNodeDefinition[]>(json);
 
                 var tagIdsOrNames = nodeDefinitions.SelectMany(x => x.Measurements.Select(m => m.Tag)).ToArray();
-                var tagsChannel = tagSearch.GetTags(null, new RealTimeData.Models.GetTagsRequest() { 
+                var tagsChannel = tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
                     Tags = tagIdsOrNames
                 }, cancellationToken);
 
@@ -43,7 +42,7 @@ namespace DataCore.Adapter.Example.Features {
                         return AssetModelNodeMeasurement.Create(
                             m.Name,
                             adapterId,
-                            RealTimeData.Models.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units)
+                            RealTimeData.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units)
                         );
                     }).Where(m => m != null),
                     x.Properties

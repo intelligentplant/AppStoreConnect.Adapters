@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Http.Client;
 using Microsoft.Extensions.Logging;
 

@@ -7,7 +7,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         private readonly HostInfo _hostInfo;
 
 
-        public HostInfoServiceImpl(Adapter.Common.Models.HostInfo hostInfo) {
+        public HostInfoServiceImpl(Adapter.Common.HostInfo hostInfo) {
             _hostInfo = hostInfo == null
                 ? null
                 : new HostInfo() {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -119,7 +119,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.Models.ReadSnapshotTagValuesRequest() {
+            var adapterRequest = new Adapter.RealTimeData.ReadSnapshotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 Properties = new Dictionary<string, string>(request.Properties)
             };
@@ -142,7 +142,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadRawTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadRawTagValuesRequest() {
+            var adapterRequest = new RealTimeData.ReadRawTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -169,7 +169,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadPlotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadPlotTagValuesRequest() {
+            var adapterRequest = new RealTimeData.ReadPlotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -195,7 +195,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadInterpolatedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadInterpolatedTagValuesRequest() {
+            var adapterRequest = new RealTimeData.ReadInterpolatedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValuesAtTimes>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadTagValuesAtTimesRequest() {
+            var adapterRequest = new RealTimeData.ReadTagValuesAtTimesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcSampleTimes = request.UtcSampleTimes.Select(x => x.ToDateTime()).ToArray(),
                 Properties = new Dictionary<string, string>(request.Properties)
@@ -259,7 +259,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new RealTimeData.Models.ReadProcessedTagValuesRequest() {
+            var adapterRequest = new RealTimeData.ReadProcessedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
@@ -285,7 +285,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.Models.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
 
             try {
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -336,7 +336,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.Models.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
 
             try {
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {

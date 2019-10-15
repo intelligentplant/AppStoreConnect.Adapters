@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Features;
-using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.RealTimeData;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {

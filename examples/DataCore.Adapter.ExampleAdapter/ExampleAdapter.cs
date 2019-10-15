@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Features;
-using DataCore.Adapter.Events.Features;
+using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Events;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Example {
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Example {
         protected override async Task StartAsync(CancellationToken cancellationToken) {
             await base.StartAsync(cancellationToken).ConfigureAwait(false);
             var adapter = (IAdapter) this;
-            await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<RealTimeData.Features.ITagSearch>(), cancellationToken).ConfigureAwait(false);
+            await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<RealTimeData.ITagSearch>(), cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -64,9 +64,9 @@ namespace DataCore.Adapter.Example {
                     try {
                         while (!_disposedTokenSource.IsCancellationRequested) {
                             await Task.Delay(interval, _disposedTokenSource.Token).ConfigureAwait(false);
-                            OnMessage(Events.Models.EventMessageBuilder
+                            OnMessage(EventMessageBuilder
                                 .Create()
-                                .WithPriority(Events.Models.EventPriority.Low)
+                                .WithPriority(EventPriority.Low)
                                 .WithCategory("System Messages")
                                 .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
                                 .Build()

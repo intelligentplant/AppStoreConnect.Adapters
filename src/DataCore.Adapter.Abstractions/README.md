@@ -12,7 +12,7 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Abstr
 
 All adapters implement the [IAdapter](./IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](./IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](./IAdapterFeature.cs). The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that your adapter can inherit from with methods for registering and unregistering adapter features dynamically.
 
-Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData.Features` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
+Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
 
 
 ## Extension Features
@@ -22,7 +22,7 @@ In addition to standard features that inherit from [IAdapterFeature](./IAdapterF
 
 ## Helper Classes
 
-The [DataCore.Adapter](/src/DataCore.Adapter) project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of [raw, unprocessed tag values](./RealTimeData/Features/IReadRawTagValues.cs), the [ReadHistoricalTagValuesHelper](/src/DataCore.Adapter/DataSource/Utilities/ReadHistoricalTagValuesHelper.cs) class can be used to provide support for [interpolated](./RealTimeData/Features/IReadInterpolatedTagValues.cs), [values-at-times](./RealTimeData/Features/IReadTagValuesAtTimes.cs), [plot](./RealTimeData/Features/IReadPlotTagValues.cs), and [aggregated](./RealTimeData/Features/IReadProcessedTagValues.cs) data queries.
+The [DataCore.Adapter](/src/DataCore.Adapter) project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of [raw, unprocessed tag values](./RealTimeData/IReadRawTagValues.cs), the [ReadHistoricalTagValuesHelper](/src/DataCore.Adapter/DataSource/Utilities/ReadHistoricalTagValuesHelper.cs) class can be used to provide support for [interpolated](./RealTimeData/IReadInterpolatedTagValues.cs), [values-at-times](./RealTimeData/IReadTagValuesAtTimes.cs), [plot](./RealTimeData/IReadPlotTagValues.cs), and [aggregated](./RealTimeData/IReadProcessedTagValues.cs) data queries.
 
 Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. The [DataCore.Adapter](/src/DataCore.Adapter) project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` and classes, to easily create, read from, or write to channels in background tasks:
 

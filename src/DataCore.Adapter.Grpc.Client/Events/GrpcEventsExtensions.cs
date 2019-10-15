@@ -9,12 +9,12 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     public static class GrpcEventsExtensions {
 
-        public static Models.EventMessage ToAdapterEventMessage(this EventMessage eventMessage) {
+        public static EventMessage ToAdapterEventMessage(this Grpc.EventMessage eventMessage) {
             if (eventMessage == null) {
                 return null;
             }
 
-            return Models.EventMessage.Create(
+            return EventMessage.Create(
                 eventMessage.Id,
                 eventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.Priority.ToAdapterEventPriority(),
@@ -25,12 +25,12 @@ namespace DataCore.Adapter.Events {
         }
 
 
-        public static Models.EventMessageWithCursorPosition ToAdapterEventMessage(this EventMessageWithCursorPosition eventMessage) {
+        public static EventMessageWithCursorPosition ToAdapterEventMessage(this Grpc.EventMessageWithCursorPosition eventMessage) {
             if (eventMessage == null) {
                 return null;
             }
 
-            return Models.EventMessageWithCursorPosition.Create(
+            return EventMessageWithCursorPosition.Create(
                 eventMessage.EventMessage.Id,
                 eventMessage.EventMessage.UtcEventTime.ToDateTime(),
                 eventMessage.EventMessage.Priority.ToAdapterEventPriority(),
@@ -42,35 +42,35 @@ namespace DataCore.Adapter.Events {
         }
 
 
-        public static Models.EventPriority ToAdapterEventPriority(this EventPriority eventPriority) {
+        public static EventPriority ToAdapterEventPriority(this Grpc.EventPriority eventPriority) {
             switch (eventPriority) {
-                case EventPriority.Low:
-                    return Models.EventPriority.Low;
-                case EventPriority.Medium:
-                    return Models.EventPriority.Medium;
-                case EventPriority.High:
-                    return Models.EventPriority.High;
-                case EventPriority.Critical:
-                    return Models.EventPriority.Critical;
-                case EventPriority.Unknown:
+                case Grpc.EventPriority.Low:
+                    return EventPriority.Low;
+                case Grpc.EventPriority.Medium:
+                    return EventPriority.Medium;
+                case Grpc.EventPriority.High:
+                    return EventPriority.High;
+                case Grpc.EventPriority.Critical:
+                    return EventPriority.Critical;
+                case Grpc.EventPriority.Unknown:
                 default:
-                    return Models.EventPriority.Unknown;
+                    return EventPriority.Unknown;
             }
         }
 
 
-        public static EventReadDirection ToGrpcReadDirection(this Models.EventReadDirection readDirection) {
+        public static Grpc.EventReadDirection ToGrpcReadDirection(this EventReadDirection readDirection) {
             switch (readDirection) {
-                case Models.EventReadDirection.Backwards:
-                    return EventReadDirection.Backwards;
-                case Models.EventReadDirection.Forwards:
+                case EventReadDirection.Backwards:
+                    return Grpc.EventReadDirection.Backwards;
+                case EventReadDirection.Forwards:
                 default:
-                    return EventReadDirection.Forwards;
+                    return Grpc.EventReadDirection.Forwards;
             }
         }
 
 
-        public static WriteEventMessageRequest ToGrpcWriteEventMessageItem(this Models.WriteEventMessageItem item, string adapterId) {
+        public static Grpc.WriteEventMessageRequest ToGrpcWriteEventMessageItem(this WriteEventMessageItem item, string adapterId) {
             if (item == null) {
                 return null;
             }
@@ -83,12 +83,12 @@ namespace DataCore.Adapter.Events {
         }
 
 
-        public static Models.WriteEventMessageResult ToAdapterWriteEventMessageResult(this WriteEventMessageResult result) {
+        public static WriteEventMessageResult ToAdapterWriteEventMessageResult(this Grpc.WriteEventMessageResult result) {
             if (result == null) {
                 return null;
             }
 
-            return Models.WriteEventMessageResult.Create(
+            return WriteEventMessageResult.Create(
                 result.CorrelationId,
                 result.WriteStatus.ToAdapterWriteStatus(),
                 result.Notes,
@@ -106,12 +106,12 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The gRPC event message.
         /// </returns>
-        public static EventMessage ToGrpcEventMessage(this Models.EventMessageBase message) {
+        public static Grpc.EventMessage ToGrpcEventMessage(this EventMessageBase message) {
             if (message == null) {
                 return null;
             }
 
-            var result = new EventMessage() {
+            var result = new Grpc.EventMessage() {
                 Category = message.Category ?? string.Empty,
                 Id = message.Id ?? string.Empty,
                 Message = message.Message ?? string.Empty,
@@ -138,19 +138,19 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The gRPC event message priority.
         /// </returns>
-        public static EventPriority ToGrpcEventPriority(this Models.EventPriority priority) {
+        public static Grpc.EventPriority ToGrpcEventPriority(this EventPriority priority) {
             switch (priority) {
-                case Models.EventPriority.Low:
-                    return EventPriority.Low;
-                case Models.EventPriority.Medium:
-                    return EventPriority.Medium;
-                case Models.EventPriority.High:
-                    return EventPriority.High;
-                case Models.EventPriority.Critical:
-                    return EventPriority.Critical;
-                case Models.EventPriority.Unknown:
+                case EventPriority.Low:
+                    return Grpc.EventPriority.Low;
+                case EventPriority.Medium:
+                    return Grpc.EventPriority.Medium;
+                case EventPriority.High:
+                    return Grpc.EventPriority.High;
+                case EventPriority.Critical:
+                    return Grpc.EventPriority.Critical;
+                case EventPriority.Unknown:
                 default:
-                    return EventPriority.Unknown;
+                    return Grpc.EventPriority.Unknown;
             }
         }
 

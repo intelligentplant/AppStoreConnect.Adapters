@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Features;
-using DataCore.Adapter.AssetModel.Models;
+using DataCore.Adapter.AssetModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {

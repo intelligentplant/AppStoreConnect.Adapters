@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
+using DataCore.Adapter.Events;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Csv {
 

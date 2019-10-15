@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.Models.FindTagsRequest() {
+            var adapterRequest = new Adapter.RealTimeData.FindTagsRequest() {
                 Name = request.Name,
                 Description = request.Description,
                 Units = request.Units,
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.Models.GetTagsRequest() {
+            var adapterRequest = new Adapter.RealTimeData.GetTagsRequest() {
                 Tags = request.Tags.ToArray()
             };
             Util.ValidateObject(adapterRequest);

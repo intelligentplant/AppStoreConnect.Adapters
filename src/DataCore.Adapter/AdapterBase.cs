@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter {

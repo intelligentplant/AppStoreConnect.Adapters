@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
+using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Http.Proxy.Events {
     /// <summary>

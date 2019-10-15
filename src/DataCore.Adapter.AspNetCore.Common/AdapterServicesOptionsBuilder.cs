@@ -1,6 +1,6 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Authorization;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.AspNetCore {
 

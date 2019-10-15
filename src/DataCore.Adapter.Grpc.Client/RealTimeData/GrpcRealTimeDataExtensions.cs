@@ -9,12 +9,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     public static class GrpcRealTimeDataExtensions {
 
-        public static Models.TagDefinition ToAdapterTagDefinition(this TagDefinition tagDefinition) {
+        public static TagDefinition ToAdapterTagDefinition(this Grpc.TagDefinition tagDefinition) {
             if (tagDefinition == null) {
                 return null;
             }
 
-            return Models.TagDefinition.Create(
+            return TagDefinition.Create(
                 tagDefinition.Id,
                 tagDefinition.Name,
                 tagDefinition.Description,
@@ -27,25 +27,25 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.TagDataType ToAdapterTagDataType(this TagDataType tagDataType) {
+        public static TagDataType ToAdapterTagDataType(this Grpc.TagDataType tagDataType) {
             switch (tagDataType) {
-                case TagDataType.State:
-                    return Models.TagDataType.State;
-                case TagDataType.Text:
-                    return Models.TagDataType.Text;
-                case TagDataType.Numeric:
+                case Grpc.TagDataType.State:
+                    return TagDataType.State;
+                case Grpc.TagDataType.Text:
+                    return TagDataType.Text;
+                case Grpc.TagDataType.Numeric:
                 default:
-                    return Models.TagDataType.Numeric;
+                    return TagDataType.Numeric;
             }
         }
 
 
-        public static Models.TagValue ToAdapterTagValue(this TagValue tagValue) {
+        public static TagValue ToAdapterTagValue(this Grpc.TagValue tagValue) {
             if (tagValue == null) {
                 return null;
             }
 
-            return Models.TagValue.Create(
+            return TagValue.Create(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.NumericValue,
                 tagValue.TextValue,
@@ -58,38 +58,38 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.TagValueStatus ToAdapterTagValueStatus(this TagValueStatus status) {
+        public static TagValueStatus ToAdapterTagValueStatus(this Grpc.TagValueStatus status) {
             switch (status) {
-                case TagValueStatus.Good:
-                    return Models.TagValueStatus.Good;
-                case TagValueStatus.Bad:
-                    return Models.TagValueStatus.Bad;
-                case TagValueStatus.Unknown:
-                default:
-                    return Models.TagValueStatus.Unknown;
-            }
-        }
-
-
-        public static TagValueStatus ToGrpcTagValueStatus(this Models.TagValueStatus status) {
-            switch (status) {
-                case Models.TagValueStatus.Bad:
-                    return TagValueStatus.Bad;
-                case Models.TagValueStatus.Good:
+                case Grpc.TagValueStatus.Good:
                     return TagValueStatus.Good;
-                case Models.TagValueStatus.Unknown:
+                case Grpc.TagValueStatus.Bad:
+                    return TagValueStatus.Bad;
+                case Grpc.TagValueStatus.Unknown:
                 default:
                     return TagValueStatus.Unknown;
             }
         }
 
 
-        public static Models.TagValueQueryResult ToAdapterTagValueQueryResult(this TagValueQueryResult result) {
+        public static Grpc.TagValueStatus ToGrpcTagValueStatus(this TagValueStatus status) {
+            switch (status) {
+                case TagValueStatus.Bad:
+                    return Grpc.TagValueStatus.Bad;
+                case TagValueStatus.Good:
+                    return Grpc.TagValueStatus.Good;
+                case TagValueStatus.Unknown:
+                default:
+                    return Grpc.TagValueStatus.Unknown;
+            }
+        }
+
+
+        public static TagValueQueryResult ToAdapterTagValueQueryResult(this Grpc.TagValueQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return Models.TagValueQueryResult.Create(
+            return TagValueQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue()
@@ -97,12 +97,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.ProcessedTagValueQueryResult ToAdapterTagValueQueryResult(this ProcessedTagValueQueryResult result) {
+        public static ProcessedTagValueQueryResult ToAdapterTagValueQueryResult(this Grpc.ProcessedTagValueQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return Models.ProcessedTagValueQueryResult.Create(
+            return ProcessedTagValueQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Value.ToAdapterTagValue(),
@@ -111,30 +111,30 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.DataFunctionDescriptor ToAdapterDataFunctionDescriptor(this DataFunctionDescriptor func) {
+        public static DataFunctionDescriptor ToAdapterDataFunctionDescriptor(this Grpc.DataFunctionDescriptor func) {
             if (func == null) {
                 return null;
             }
 
-            return Models.DataFunctionDescriptor.Create(
+            return DataFunctionDescriptor.Create(
                 func.Name,
                 func.Description
             );
         }
 
 
-        public static RawDataBoundaryType ToGrpcRawDataBoundaryType(this Models.RawDataBoundaryType boundaryType) {
+        public static Grpc.RawDataBoundaryType ToGrpcRawDataBoundaryType(this RawDataBoundaryType boundaryType) {
             switch (boundaryType) {
-                case Models.RawDataBoundaryType.Outside:
-                    return RawDataBoundaryType.Outside;
-                case Models.RawDataBoundaryType.Inside:
+                case RawDataBoundaryType.Outside:
+                    return Grpc.RawDataBoundaryType.Outside;
+                case RawDataBoundaryType.Inside:
                 default:
-                    return RawDataBoundaryType.Inside;
+                    return Grpc.RawDataBoundaryType.Inside;
             }
         }
 
 
-        public static WriteTagValueRequest ToGrpcWriteTagValueRequest(this Models.WriteTagValueItem item, string adapterId) {
+        public static Grpc.WriteTagValueRequest ToGrpcWriteTagValueRequest(this WriteTagValueItem item, string adapterId) {
             if (item == null) {
                 return null;
             }
@@ -152,12 +152,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.WriteTagValueResult ToAdapterWriteTagValueResult(this WriteTagValueResult result) {
+        public static WriteTagValueResult ToAdapterWriteTagValueResult(this Grpc.WriteTagValueResult result) {
             if (result == null) {
                 return null;
             }
             
-            return Models.WriteTagValueResult.Create(
+            return WriteTagValueResult.Create(
                 result.CorrelationId,
                 result.TagId,
                 result.WriteStatus.ToAdapterWriteStatus(),
@@ -167,12 +167,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.TagValueAnnotation ToAdapterTagValueAnnotation(this TagValueAnnotation annotation) {
+        public static TagValueAnnotation ToAdapterTagValueAnnotation(this Grpc.TagValueAnnotation annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            return Models.TagValueAnnotation.Create(
+            return TagValueAnnotation.Create(
                 annotation.Id,
                 annotation.Annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.Annotation.UtcStartTime.ToDateTime(),
@@ -184,23 +184,23 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.AnnotationType ToAdapterAnnotationType(this AnnotationType annotationType) {
+        public static AnnotationType ToAdapterAnnotationType(this Grpc.AnnotationType annotationType) {
             switch (annotationType) {
-                case AnnotationType.TimeRange:
-                    return Models.AnnotationType.TimeRange;
-                case AnnotationType.Instantaneous:
+                case Grpc.AnnotationType.TimeRange:
+                    return AnnotationType.TimeRange;
+                case Grpc.AnnotationType.Instantaneous:
                 default:
-                    return Models.AnnotationType.Instantaneous;
+                    return AnnotationType.Instantaneous;
             }
         }
 
 
-        public static Models.TagValueAnnotationQueryResult ToAdapterAnnotationQueryResult(this TagValueAnnotationQueryResult result) {
+        public static TagValueAnnotationQueryResult ToAdapterAnnotationQueryResult(this Grpc.TagValueAnnotationQueryResult result) {
             if (result == null) {
                 return null;
             }
 
-            return Models.TagValueAnnotationQueryResult.Create(
+            return TagValueAnnotationQueryResult.Create(
                 result.TagId,
                 result.TagName,
                 result.Annotation.ToAdapterTagValueAnnotation()
@@ -208,23 +208,23 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static AnnotationType ToGrpcAnnotationType(this Models.AnnotationType annotationType) {
+        public static Grpc.AnnotationType ToGrpcAnnotationType(this AnnotationType annotationType) {
             switch (annotationType) {
-                case Models.AnnotationType.TimeRange:
-                    return AnnotationType.TimeRange;
-                case Models.AnnotationType.Instantaneous:
+                case AnnotationType.TimeRange:
+                    return Grpc.AnnotationType.TimeRange;
+                case AnnotationType.Instantaneous:
                 default:
-                    return AnnotationType.Instantaneous;
+                    return Grpc.AnnotationType.Instantaneous;
             }
         }
 
 
-        public static TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this Models.TagValueAnnotationBase annotation) {
+        public static Grpc.TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this TagValueAnnotationBase annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            var result = new TagValueAnnotationBase() {
+            var result = new Grpc.TagValueAnnotationBase() {
                 AnnotationType = annotation.AnnotationType.ToGrpcAnnotationType(),
                 UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcStartTime),
                 HasUtcEndTime = annotation.UtcEndTime.HasValue,
@@ -246,12 +246,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Models.WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this WriteTagValueAnnotationResult result) {
+        public static WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this Grpc.WriteTagValueAnnotationResult result) {
             if (result == null) {
                 return null;
             }
             
-            return Models.WriteTagValueAnnotationResult.Create(
+            return WriteTagValueAnnotationResult.Create(
                 result.TagId,
                 result.AnnotationId,
                 result.WriteStatus.ToAdapterWriteStatus(),

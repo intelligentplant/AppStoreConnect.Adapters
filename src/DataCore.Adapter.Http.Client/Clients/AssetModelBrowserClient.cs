@@ -5,7 +5,7 @@ using System.Net.Http.Formatting;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Models;
+using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 

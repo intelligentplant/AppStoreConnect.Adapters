@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 

@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Features;
+using DataCore.Adapter.RealTimeData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -45,10 +45,10 @@ namespace DataCore.Adapter.Tests {
                     // the subscription's channel.
                     var now = System.DateTime.UtcNow;
                     adapter.WriteSnapshotValue(
-                        RealTimeData.Models.TagValueQueryResult.Create(
+                        TagValueQueryResult.Create(
                             "Test Tag 1", 
                             "Test Tag 1", 
-                            RealTimeData.Models.TagValueBuilder
+                            TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-5))
                                 .WithNumericValue(100)
@@ -56,10 +56,10 @@ namespace DataCore.Adapter.Tests {
                         )
                     );
                     adapter.WriteSnapshotValue(
-                        RealTimeData.Models.TagValueQueryResult.Create(
+                        TagValueQueryResult.Create(
                             "Test Tag 1",
                             "Test Tag 1",
-                            RealTimeData.Models.TagValueBuilder
+                            TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-1))
                                 .WithNumericValue(99)

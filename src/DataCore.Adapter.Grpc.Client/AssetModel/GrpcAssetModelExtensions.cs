@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using DataCore.Adapter.Grpc;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -17,12 +16,12 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The adapter asset model node.
         /// </returns>
-        public static Models.AssetModelNode ToAdapterAssetModelNode(this AssetModelNode node) {
+        public static AssetModelNode ToAdapterAssetModelNode(this Grpc.AssetModelNode node) {
             if (node == null) {
                 return null;
             }
 
-            return Models.AssetModelNode.Create(
+            return AssetModelNode.Create(
                 node.Id,
                 node.Name,
                 node.Description,
@@ -30,7 +29,7 @@ namespace DataCore.Adapter.AssetModel {
                     ? null 
                     : node.Parent,
                 node.Children,
-                node.Measurements.Select(x => Models.AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.Models.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units))).ToArray(),
+                node.Measurements.Select(x => AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units))).ToArray(),
                 node.Properties
             );
         }

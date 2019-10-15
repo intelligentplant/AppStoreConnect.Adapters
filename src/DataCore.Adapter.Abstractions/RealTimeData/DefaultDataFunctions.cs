@@ -1,6 +1,4 @@
-﻿using DataCore.Adapter.RealTimeData.Models;
-
-namespace DataCore.Adapter.RealTimeData {
+﻿namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes default/commonly-supported data functions for aggregation.

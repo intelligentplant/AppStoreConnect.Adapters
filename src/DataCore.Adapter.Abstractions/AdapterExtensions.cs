@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DataCore.Adapter.Common.Models;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 

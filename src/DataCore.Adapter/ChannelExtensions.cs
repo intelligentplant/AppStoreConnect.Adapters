@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AssetModel.Models;
 
 namespace DataCore.Adapter {
 
@@ -121,8 +119,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagDefinition> CreateTagDefinitionChannel(int capacity = TagDefinitionChannelCapacity) {
-            return CreateChannel<RealTimeData.Models.TagDefinition>(capacity);
+        public static Channel<RealTimeData.TagDefinition> CreateTagDefinitionChannel(int capacity = TagDefinitionChannelCapacity) {
+            return CreateChannel<RealTimeData.TagDefinition>(capacity);
         }
 
 
@@ -139,8 +137,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagIdentifier> CreateTagIdentifierChannel(int capacity = TagDefinitionChannelCapacity) {
-            return CreateChannel<RealTimeData.Models.TagIdentifier>(capacity);
+        public static Channel<RealTimeData.TagIdentifier> CreateTagIdentifierChannel(int capacity = TagDefinitionChannelCapacity) {
+            return CreateChannel<RealTimeData.TagIdentifier>(capacity);
         }
 
 
@@ -160,7 +158,7 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateTagValueChannel<T>(int capacity = TagValueChannelCapacity) where T : RealTimeData.Models.TagValueQueryResult {
+        public static Channel<T> CreateTagValueChannel<T>(int capacity = TagValueChannelCapacity) where T : RealTimeData.TagValueQueryResult {
             return CreateChannel<T>(capacity);
         }
 
@@ -174,8 +172,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.WriteTagValueItem> CreateTagValueWriteChannel(int capacity = TagValueChannelCapacity) {
-            return CreateChannel<RealTimeData.Models.WriteTagValueItem>(capacity);
+        public static Channel<RealTimeData.WriteTagValueItem> CreateTagValueWriteChannel(int capacity = TagValueChannelCapacity) {
+            return CreateChannel<RealTimeData.WriteTagValueItem>(capacity);
         }
 
 
@@ -192,8 +190,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.WriteTagValueResult> CreateTagValueWriteResultChannel(int capacity = TagValueChannelCapacity) {
-            return CreateChannel<RealTimeData.Models.WriteTagValueResult>(capacity);
+        public static Channel<RealTimeData.WriteTagValueResult> CreateTagValueWriteResultChannel(int capacity = TagValueChannelCapacity) {
+            return CreateChannel<RealTimeData.WriteTagValueResult>(capacity);
         }
 
 
@@ -210,8 +208,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagAnnotationChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.Models.TagValueAnnotationQueryResult> CreateTagValueAnnotationChannel(int capacity = TagAnnotationChannelCapacity) {
-            return CreateChannel<RealTimeData.Models.TagValueAnnotationQueryResult>(capacity);
+        public static Channel<RealTimeData.TagValueAnnotationQueryResult> CreateTagValueAnnotationChannel(int capacity = TagAnnotationChannelCapacity) {
+            return CreateChannel<RealTimeData.TagValueAnnotationQueryResult>(capacity);
         }
 
 
@@ -234,7 +232,7 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        internal static Channel<T> CreateEventMessageChannel<T>(BoundedChannelFullMode fullMode, int capacity = EventChannelCapacity) where T : Events.Models.EventMessageBase {
+        internal static Channel<T> CreateEventMessageChannel<T>(BoundedChannelFullMode fullMode, int capacity = EventChannelCapacity) where T : Events.EventMessageBase {
             return CreateChannel<T>(capacity, fullMode);
         }
 
@@ -255,7 +253,7 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateEventMessageChannel<T>(int capacity = EventChannelCapacity) where T : Events.Models.EventMessageBase {
+        public static Channel<T> CreateEventMessageChannel<T>(int capacity = EventChannelCapacity) where T : Events.EventMessageBase {
             return CreateEventMessageChannel<T>(BoundedChannelFullMode.Wait, capacity);
         }
 
@@ -269,8 +267,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<Events.Models.WriteEventMessageItem> CreateEventMessageWriteChannel(int capacity = EventChannelCapacity) {
-            return CreateChannel<Events.Models.WriteEventMessageItem>(capacity);
+        public static Channel<Events.WriteEventMessageItem> CreateEventMessageWriteChannel(int capacity = EventChannelCapacity) {
+            return CreateChannel<Events.WriteEventMessageItem>(capacity);
         }
 
 
@@ -287,8 +285,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<Events.Models.WriteEventMessageResult> CreateEventMessageWriteResultChannel(int capacity = EventChannelCapacity) {
-            return CreateChannel<Events.Models.WriteEventMessageResult>(capacity);
+        public static Channel<Events.WriteEventMessageResult> CreateEventMessageWriteResultChannel(int capacity = EventChannelCapacity) {
+            return CreateChannel<Events.WriteEventMessageResult>(capacity);
         }
 
 
@@ -305,8 +303,8 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="AssetModelNodeChannelCapacity"/>.
         /// </remarks>
-        public static Channel<AssetModelNode> CreateAssetModelNodeChannel(int capacity = AssetModelNodeChannelCapacity) {
-            return CreateChannel<AssetModelNode>(capacity);
+        public static Channel<AssetModel.AssetModelNode> CreateAssetModelNodeChannel(int capacity = AssetModelNodeChannelCapacity) {
+            return CreateChannel<AssetModel.AssetModelNode>(capacity);
         }
 
 

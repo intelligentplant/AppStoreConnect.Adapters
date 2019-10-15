@@ -26,12 +26,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Information about the remote host.
         /// </summary>
-        private Common.Models.HostInfo _remoteHostInfo;
+        private Common.HostInfo _remoteHostInfo;
 
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private Common.Models.AdapterDescriptorExtended _remoteDescriptor;
+        private AdapterDescriptorExtended _remoteDescriptor;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteHostInfo"/> and <see cref="_remoteDescriptor"/>.
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly object _remoteInfoLock = new object();
 
         /// <inheritdoc/>
-        public Common.Models.HostInfo RemoteHostInfo {
+        public Common.HostInfo RemoteHostInfo {
             get {
                 lock (_remoteInfoLock) {
                     return _remoteHostInfo;
@@ -53,7 +53,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
         /// <inheritdoc/>
-        public Common.Models.AdapterDescriptorExtended RemoteDescriptor {
+        public Common.AdapterDescriptorExtended RemoteDescriptor {
             get {
                 lock (_remoteInfoLock) {
                     return _remoteDescriptor;

@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 

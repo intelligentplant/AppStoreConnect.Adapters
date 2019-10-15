@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Channels;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
-using DataCore.Adapter.RealTimeData.Features;
-using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.Events;
+using DataCore.Adapter.RealTimeData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {

@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Events.Features;
-using DataCore.Adapter.Events.Models;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events.Utilities {

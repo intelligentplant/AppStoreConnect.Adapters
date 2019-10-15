@@ -1,6 +1,4 @@
-﻿using DataCore.Adapter.Events.Models;
-
-namespace DataCore.Adapter.Events {
+﻿namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Base implementation of <see cref="EventMessageSubscriptionBase"/>.

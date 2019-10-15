@@ -6,7 +6,7 @@ using System.Net.Http.Formatting;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.RealTimeData.Models;
+using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 
