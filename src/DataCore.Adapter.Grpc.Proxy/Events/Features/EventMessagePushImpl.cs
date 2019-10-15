@@ -17,20 +17,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
         }
 
 
-        private class EventMessageSubscription : IEventMessageSubscription {
-
-            private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
+        private class EventMessageSubscription : EventMessageSubscriptionBase {
 
             private readonly EventMessagePushImpl _feature;
 
             private readonly EventsService.EventsServiceClient _client;
 
-            private readonly System.Threading.Channels.Channel<Adapter.Events.Models.EventMessage> _channel = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.Models.EventMessage>();
-
             private readonly bool _activeSubscription;
-
-            /// <inheritdoc/>
-            public System.Threading.Channels.ChannelReader<Adapter.Events.Models.EventMessage> Reader { get { return _channel; } }
 
 
             public EventMessageSubscription(EventMessagePushImpl feature, EventsService.EventsServiceClient client, Adapter.Events.Models.EventMessageSubscriptionType subscriptionType) {
@@ -41,7 +34,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
             public void Start(IAdapterCallContext context) {
-                _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
                         AdapterId = _feature.AdapterId,
                         SubscriptionType = _activeSubscription 
@@ -60,15 +53,22 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     finally {
                         grpcResponse.Dispose();
                     }
-                }, false, _shutdownTokenSource.Token);
+                }, false, SubscriptionCancelled);
             }
 
 
-            public void Dispose() {
-                _shutdownTokenSource.Cancel();
-                _shutdownTokenSource.Dispose();
-                _channel.Writer.TryComplete();
+            /// <inheritdoc />
+            protected override void Dispose(bool disposing) {
+                // Do nothing.
             }
+
+
+            /// <inheritdoc />
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return default;
+            }
+
         }
     }
 }

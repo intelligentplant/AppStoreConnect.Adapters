@@ -228,7 +228,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             private readonly CancellationTokenRegistration _onStreamCancelled;
 
             /// <inheritdoc/>
-            ChannelReader<EventMessage> IEventMessageSubscription.Reader {
+            ChannelReader<EventMessage> IAdapterSubscription<EventMessage>.Reader {
                 get { return _inner.Reader; }
             }
 
@@ -262,10 +262,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             /// <inheritdoc/>
             public void Dispose() {
-                _onDisposed.Invoke();
+                _onDisposed?.Invoke();
                 _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 _inner.Dispose();
+            }
+
+
+            /// <inheritdoc/>
+            public async ValueTask DisposeAsync() {
+                _onDisposed?.Invoke();
+                _onDisposed = null;
+                _onStreamCancelled.Dispose();
+                await _inner.DisposeAsync().ConfigureAwait(false);
             }
         }
 

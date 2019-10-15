@@ -35,7 +35,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 await result.Start().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
-                result.Dispose();
+                ((IDisposable) result).Dispose();
                 throw;
             }
             return result;
@@ -45,12 +45,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <see cref="ISnapshotTagValueSubscription"/> implementation for the 
         /// <see cref="ISnapshotTagValuePush"/> feature.
         /// </summary>
-        private class SnapshotTagValueSubscription : ISnapshotTagValueSubscription {
-
-            /// <summary>
-            /// Fires when the subscription is disposed.
-            /// </summary>
-            private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
+        private class SnapshotTagValueSubscription : SnapshotTagValueSubscriptionBase {
 
             /// <summary>
             /// The adapter ID for the subscription.
@@ -63,20 +58,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             private readonly AdapterSignalRClient _client;
 
             /// <summary>
-            /// The subscription channel.
-            /// </summary>
-            private readonly Channel<TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
-
-            /// <summary>
             /// The tags that have been added to the subscription.
             /// </summary>
             private readonly HashSet<string> _tags = new HashSet<string>();
 
             /// <inheritdoc />
-            public ChannelReader<TagValueQueryResult> Reader { get { return _channel; } }
-
-            /// <inheritdoc />
-            public int Count {
+            public override int Count {
                 get { return _tags.Count; }
             }
 
@@ -105,7 +92,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             public Task Start() {
                 var tcs = new TaskCompletionSource<int>();
 
-                _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
                     lock (_tags) {
                         tags = _tags.ToArray();
@@ -132,14 +119,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     }
 
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, _shutdownTokenSource.Token);
+                }, true, SubscriptionCancelled);
 
                 return tcs.Task;
             }
 
 
             /// <inheritdoc />
-            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
+            public override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel(-1);
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -156,7 +143,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc />
-            public async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToAdd = new List<string>();
                 int count;
 
@@ -183,7 +170,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc />
-            public async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToRemove = new List<string>();
                 int count;
 
@@ -208,14 +195,21 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 ).ConfigureAwait(false);
             }
 
+
             /// <inheritdoc/>
-            public void Dispose() {
-                _shutdownTokenSource.Cancel();
-                _shutdownTokenSource.Dispose();
-                lock (_tags) {
-                    _tags.Clear();
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    lock (_tags) {
+                        _tags.Clear();
+                    }
                 }
-                _channel.Writer.TryComplete();
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return default;
             }
 
         }

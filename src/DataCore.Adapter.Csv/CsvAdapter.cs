@@ -973,7 +973,13 @@ namespace DataCore.Adapter.Csv {
 
             /// <inheritdoc/>
             protected override void OnPollingError(Exception error) {
-                _adapter.Logger.LogError(error, "A snapshot polling error occurred.");
+                _adapter.Logger.LogError(error, Resources.Log_SnapshotPollingError);
+            }
+
+
+            /// <inheritdoc/>
+            protected override void Dispose(bool disposing) {
+                // Do nothing.
             }
 
         }

@@ -25,21 +25,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
-        private class SnapshotTagValueSubscription : ISnapshotTagValueSubscription {
-
-            private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
+        private class SnapshotTagValueSubscription : SnapshotTagValueSubscriptionBase {
 
             private readonly SnapshotTagValuePushImpl _feature;
 
             private readonly TagValuesService.TagValuesServiceClient _client;
 
-            private readonly System.Threading.Channels.Channel<Adapter.RealTimeData.Models.TagValueQueryResult> _channel = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.Models.TagValueQueryResult>();
-
             private readonly HashSet<string> _tags = new HashSet<string>();
 
-            public System.Threading.Channels.ChannelReader<Adapter.RealTimeData.Models.TagValueQueryResult> Reader { get { return _channel; } }
-
-            public int Count {
+            public override int Count {
                 get { return _tags.Count; }
             }
 
@@ -53,7 +47,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             public Task Start(IAdapterCallContext context) {
                 var tcs = new TaskCompletionSource<int>();
 
-                _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                Writer.RunBackgroundOperation(async (ch, ct) => {
                     string[] tags;
                     lock (_tags) {
                         tags = _tags.ToArray();
@@ -88,13 +82,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                         tcs.TrySetException(e);
                         throw;
                     }
-                }, false, _shutdownTokenSource.Token);
+                }, false, SubscriptionCancelled);
 
                 return tcs.Task;
             }
 
 
-            public System.Threading.Channels.ChannelReader<Adapter.RealTimeData.Models.TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
+            public override System.Threading.Channels.ChannelReader<Adapter.RealTimeData.Models.TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -123,7 +117,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToAdd = new List<string>();
                 int count;
 
@@ -153,7 +147,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 var tagsToRemove = new List<string>();
                 int count;
 
@@ -183,13 +177,20 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public void Dispose() {
-                _shutdownTokenSource.Cancel();
-                _shutdownTokenSource.Dispose();
-                lock (_tags) {
-                    _tags.Clear();
+            /// <inheritdoc/>
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    lock (_tags) {
+                        _tags.Clear();
+                    }
                 }
-                _channel.Writer.TryComplete();
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return default;
             }
 
         }

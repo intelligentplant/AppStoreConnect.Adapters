@@ -68,5 +68,14 @@ namespace DataCore.Adapter.Csv {
                 return ResourceManager.GetString("Error_NoCsvFileDefined", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A snapshot polling error occurred..
+        /// </summary>
+        internal static string Log_SnapshotPollingError {
+            get {
+                return ResourceManager.GetString("Log_SnapshotPollingError", resourceCulture);
+            }
+        }
     }
 }

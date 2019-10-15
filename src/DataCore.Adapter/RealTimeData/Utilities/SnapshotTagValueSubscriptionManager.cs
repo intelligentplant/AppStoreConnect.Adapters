@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
     /// <summary>
-    /// Base class for simplifying implementation of the <see cref="Features.ISnapshotTagValuePush"/> 
+    /// Base class for simplifying implementation of the <see cref="ISnapshotTagValuePush"/> 
     /// feature.
     /// </summary>
     public abstract class SnapshotTagValueSubscriptionManager : ISnapshotTagValuePush, IDisposable {
@@ -31,6 +31,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Fires when then object is being disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// A cancellation token that will fire when the <see cref="SnapshotTagValueSubscriptionManager"/> 
+        /// is disposed.
+        /// </summary>
+        protected CancellationToken DisposedToken {
+            get { return _disposedTokenSource.Token; }
+        }
 
         /// <summary>
         /// Holds the current values for subscribed tags.
@@ -79,7 +87,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 catch (Exception e) {
                     Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
                 }
-            }, TaskCreationOptions.LongRunning);
+            }, _disposedTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
 
@@ -521,35 +529,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// <see cref="ISnapshotTagValueSubscription"/> implementation.
         /// </summary>
-        public class Subscription : ISnapshotTagValueSubscription {
-
-            /// <summary>
-            /// Flags if the object has been disposed.
-            /// </summary>
-            private bool _isDisposed;
-
-            /// <summary>
-            /// Fires when then object is being disposed.
-            /// </summary>
-            private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+        public class Subscription : SnapshotTagValueSubscriptionBase {
 
             /// <summary>
             /// The subscription manager that created the subscription.
             /// </summary>
             private readonly SnapshotTagValueSubscriptionManager _subscriptionManager;
 
-            /// <summary>
-            /// The channel for the subscription.
-            /// </summary>
-            private readonly Channel<TagValueQueryResult> _channel;
-
             /// <inheritdoc/>
-            public ChannelReader<TagValueQueryResult> Reader {
-                get { return _channel.Reader; }
-            }
-
-            /// <inheritdoc/>
-            public int Count {
+            public override int Count {
                 get {
                     _subscribedTagsLock.EnterReadLock();
                     try {
@@ -593,7 +581,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// </exception>
             protected internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
                 _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
-                _channel = _subscriptionManager.CreateChannel(5000, BoundedChannelFullMode.DropOldest);
+            }
+
+
+            /// <inheritdoc/>
+            protected override Channel<TagValueQueryResult> CreateChannel() {
+                return _subscriptionManager.CreateChannel(5000, BoundedChannelFullMode.DropOldest);
             }
 
 
@@ -615,7 +608,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <inheritdoc/>
-            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
+            public override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var result = ChannelExtensions.CreateTagIdentifierChannel();
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -629,7 +622,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <inheritdoc/>
-            public async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 tagNamesOrIds = tagNamesOrIds
                     ?.Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -692,7 +685,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
             /// <inheritdoc/>
-            public async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
+            public override async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
                 tagNamesOrIds = tagNamesOrIds
                     ?.Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -762,13 +755,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             ///   The updated value.
             /// </param>
             internal async Task OnValueChanged(TagValueQueryResult value) {
-                if (_isDisposed ||
-                    _disposedTokenSource.IsCancellationRequested ||
-                    _channel.Reader.Completion.IsCompleted) {
+                if (SubscriptionCancelled.IsCancellationRequested) {
                     return;
                 }
 
-                await _channel.Writer.WriteAsync(value, _disposedTokenSource.Token).ConfigureAwait(false);
+                await Writer.WriteAsync(value, SubscriptionCancelled).ConfigureAwait(false);
             }
 
 
@@ -803,43 +794,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
 
-            /// <summary>
-            /// Disposes of the subscription.
-            /// </summary>
-            /// <param name="disposing">
-            ///   Indicates if the subscription is being disposed or finalized.
-            /// </param>
-            protected virtual void Dispose(bool disposing) {
-                if (_isDisposed) {
-                    return;
+            /// <inheritdoc/>
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    _subscriptionManager.OnSubscriptionDisposed(this, _subscribedTags.ToArray());
+                    _subscribedTagsLock.Dispose();
+                    _subscribedTags.Clear();
                 }
-
-                _channel.Writer.TryComplete();
-                _disposedTokenSource.Cancel();
-                _disposedTokenSource.Dispose();
-                _subscriptionManager.OnSubscriptionDisposed(this, _subscribedTags.ToArray());
-                _subscribedTagsLock.Dispose();
-                _subscribedTags.Clear();
-
-                _isDisposed = true;
             }
 
 
-            /// <summary>
-            /// Disposes of the subscription.
-            /// </summary>
-            public void Dispose() {
-                Dispose(true);
-                GC.SuppressFinalize(this);
+            /// <inheritdoc />
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return new ValueTask();
             }
 
 
-            /// <summary>
-            /// Finalizer.
-            /// </summary>
-            ~Subscription() {
-                Dispose(false);
-            }
         }
 
     }

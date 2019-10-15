@@ -36,12 +36,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         /// <see cref="IEventMessageSubscription"/> implementation for the 
         /// <see cref="IEventMessagePush"/> feature.
         /// </summary>
-        private class EventMessageSubscription : IEventMessageSubscription {
-
-            /// <summary>
-            /// Fires when the subscription is disposed.
-            /// </summary>
-            private readonly CancellationTokenSource _shutdownTokenSource = new CancellationTokenSource();
+        private class EventMessageSubscription : EventMessageSubscriptionBase {
 
             /// <summary>
             /// The adapter ID for the subscription.
@@ -54,17 +49,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             private readonly AdapterSignalRClient _client;
 
             /// <summary>
-            /// The channel for the subscription.
-            /// </summary>
-            private readonly Channel<EventMessage> _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(-1);
-
-            /// <summary>
             /// Flags if the subscription is active or passive.
             /// </summary>
             private readonly EventMessageSubscriptionType _subscriptionType;
-
-            /// <inheritdoc />
-            public ChannelReader<EventMessage> Reader { get { return _channel; } }
 
 
             /// <summary>
@@ -89,18 +76,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// Starts the subscription.
             /// </summary>
             public void Start() {
-                _channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_adapterId, _subscriptionType, ct).ConfigureAwait(false);
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, _shutdownTokenSource.Token);
+                }, true, SubscriptionCancelled);
             }
 
+
             /// <inheritdoc />
-            public void Dispose() {
-                _shutdownTokenSource.Cancel();
-                _shutdownTokenSource.Dispose();
-                _channel.Writer.TryComplete();
+            protected override void Dispose(bool disposing) {
+                // Do nothing.
             }
+
+
+            /// <inheritdoc />
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return default;
+            }
+
         }
     }
 }

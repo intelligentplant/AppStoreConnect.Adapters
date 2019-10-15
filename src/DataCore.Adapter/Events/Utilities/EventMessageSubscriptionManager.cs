@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Events.Utilities {
                 catch (Exception e) {
                     Logger.LogError(e, Resources.Log_ErrorInEventSubscriptionManagerPublishLoop);
                 }
-            }, TaskCreationOptions.LongRunning);
+            }, _disposedTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
 
@@ -278,32 +278,12 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// <see cref="IEventMessageSubscription"/> implementation.
         /// </summary>
-        private class Subscription : IEventMessageSubscription {
-
-            /// <summary>
-            /// Flags if the object has been disposed.
-            /// </summary>
-            private bool _isDisposed;
-
-            /// <summary>
-            /// Fires when then object is being disposed.
-            /// </summary>
-            private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+        private class Subscription : EventMessageSubscriptionBase {
 
             /// <summary>
             /// The subscription manager that the subscription is attached to.
             /// </summary>
             private readonly EventMessageSubscriptionManager _subscriptionManager;
-
-            /// <summary>
-            /// The channel that event messages will be written to.
-            /// </summary>
-            private readonly Channel<EventMessage> _channel;
-
-            /// <inheritdoc/>
-            public ChannelReader<EventMessage> Reader {
-                get { return _channel.Reader; }
-            }
 
             /// <summary>
             /// Indicates if the subscription is an active or passive event listener.
@@ -322,12 +302,18 @@ namespace DataCore.Adapter.Events.Utilities {
             /// </param>
             internal Subscription(EventMessageSubscriptionManager subscriptionManager, EventMessageSubscriptionType subscriptionType) {
                 _subscriptionManager = subscriptionManager;
+                
+                IsActive = subscriptionType == EventMessageSubscriptionType.Active;
+            }
+
+            
+            /// <inheritdoc/>
+            protected override Channel<EventMessage> CreateChannel() {
                 // If this is a passive subscription, we do not need to guarantee delivery of the message.
-                _channel = ChannelExtensions.CreateEventMessageChannel<EventMessage>(subscriptionType == EventMessageSubscriptionType.Active 
-                    ? BoundedChannelFullMode.Wait 
+                return ChannelExtensions.CreateEventMessageChannel<EventMessage>(IsActive
+                    ? BoundedChannelFullMode.Wait
                     : BoundedChannelFullMode.DropWrite
                 );
-                IsActive = subscriptionType == EventMessageSubscriptionType.Active;
             }
 
 
@@ -341,7 +327,7 @@ namespace DataCore.Adapter.Events.Utilities {
             ///   A task that will write the message to the event channel.
             /// </returns>
             internal async Task OnMessageReceived(EventMessage message) {
-                if (_isDisposed || _disposedTokenSource.IsCancellationRequested || _channel.Reader.Completion.IsCompleted) {
+                if (SubscriptionCancelled.IsCancellationRequested) {
                     return;
                 }
 
@@ -349,21 +335,22 @@ namespace DataCore.Adapter.Events.Utilities {
                     return;
                 }
 
-                await _channel.Writer.WriteAsync(message, _disposedTokenSource.Token).ConfigureAwait(false);
+                await Writer.WriteAsync(message, SubscriptionCancelled).ConfigureAwait(false);
             }
 
 
             /// <inheritdoc/>
-            public void Dispose() {
-                if (_isDisposed) {
-                    return;
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    _subscriptionManager.OnSubscriptionDisposed(this);
                 }
+            }
 
-                _channel.Writer.TryComplete();
-                _disposedTokenSource.Cancel();
-                _disposedTokenSource.Dispose();
-                _subscriptionManager.OnSubscriptionDisposed(this);
-                _isDisposed = true;
+
+            /// <inheritdoc />
+            protected override ValueTask DisposeAsync(bool disposing) {
+                Dispose(disposing);
+                return new ValueTask();
             }
 
         }

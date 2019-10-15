@@ -25,11 +25,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </summary>
         private readonly TimeSpan _pollingInterval;
 
-        /// <summary>
-        /// Cancellation token source that fires when the object is disposed.
-        /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
 
         /// <summary>
         /// Creates a new <see cref="PollingSnapshotTagValueSubscriptionManager"/> object.
@@ -47,7 +42,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 : pollingInterval;
 
             // Run the dedicated polling task.
-            _ = Task.Factory.StartNew(() => RunSnapshotPollingLoop(_disposedTokenSource.Token), TaskCreationOptions.LongRunning);
+            _ = Task.Factory.StartNew(
+                () => RunSnapshotPollingLoop(DisposedToken),
+                DisposedToken,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
         }
 
 
@@ -143,13 +143,5 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return Task.CompletedTask;
         }
 
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing) {
-            if (disposing) {
-                _disposedTokenSource.Cancel();
-                _disposedTokenSource.Dispose();
-            }
-        }
     }
 }

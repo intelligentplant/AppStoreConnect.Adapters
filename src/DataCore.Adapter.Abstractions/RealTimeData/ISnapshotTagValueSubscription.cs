@@ -10,12 +10,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a subscription for receiving snapshot tag values via push.
     /// </summary>
-    public interface ISnapshotTagValueSubscription : IDisposable {
-
-        /// <summary>
-        /// A channel reader that emitted values can be read from.
-        /// </summary>
-        ChannelReader<TagValueQueryResult> Reader { get; }
+    public interface ISnapshotTagValueSubscription : IAdapterSubscription<TagValueQueryResult> {
 
         /// <summary>
         /// Gets the total number of tags that the subscription is observing.

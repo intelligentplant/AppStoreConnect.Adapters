@@ -122,4 +122,7 @@
     <comment>{0} - CsvFile property name
 {1} - GetCsvStream property name</comment>
   </data>
+  <data name="Log_SnapshotPollingError" xml:space="preserve">
+    <value>A snapshot polling error occurred.</value>
+  </data>
 </root>
