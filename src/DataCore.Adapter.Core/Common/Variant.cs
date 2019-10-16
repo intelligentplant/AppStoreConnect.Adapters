@@ -108,5 +108,17 @@ namespace DataCore.Adapter.Common {
                 : VariantType.Object;
         }
 
+
+        public T GetValueOrDefault<T>() {
+            return GetValueOrDefault<T>(default);
+        }
+
+
+        public T GetValueOrDefault<T>(T defaultValue) {
+            return (Value is T val)
+                ? (T) Value
+                : defaultValue;
+        }
+
     }
 }
