@@ -296,15 +296,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The property value.
         /// </param>
-        /// <param name="valueType">
-        ///   The property value type.
-        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithProperty(string name, object value, VariantType valueType) {
+        public TagValueBuilder WithProperty(string name, object value) {
             if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value, valueType));
+                _properties.Add(AdapterProperty.Create(name, value));
             }
             return this;
         }

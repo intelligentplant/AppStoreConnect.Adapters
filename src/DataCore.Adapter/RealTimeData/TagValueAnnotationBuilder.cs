@@ -213,15 +213,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The property value.
         /// </param>
-        /// <param name="valueType">
-        ///   The property value type.
-        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueAnnotationBuilder"/>.
         /// </returns>
-        public TagValueAnnotationBuilder WithProperty(string name, object value, VariantType valueType) {
+        public TagValueAnnotationBuilder WithProperty(string name, object value) {
             if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value, valueType));
+                _properties.Add(AdapterProperty.Create(name, value));
             }
             return this;
         }

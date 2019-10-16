@@ -199,15 +199,12 @@ namespace DataCore.Adapter.Events {
         /// <param name="value">
         ///   The property value.
         /// </param>
-        /// <param name="valueType">
-        ///   The property value type.
-        /// </param>
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithProperty(string name, object value, VariantType valueType) {
+        public EventMessageBuilder WithProperty(string name, object value) {
             if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value, valueType));
+                _properties.Add(AdapterProperty.Create(name, value));
             }
             return this;
         }
