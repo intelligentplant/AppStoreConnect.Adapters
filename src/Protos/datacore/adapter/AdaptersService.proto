@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "Types.proto";
+
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service AdaptersService {
@@ -37,5 +39,5 @@ message ExtendedAdapterDescriptor {
     AdapterDescriptor adapterDescriptor = 1;
     repeated string features = 2;
     repeated string extensions = 3;
-    map<string, string> properties = 4;
+    repeated AdapterProperty properties = 4;
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -44,13 +45,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string notes, IDictionary<string, string> properties) {
+        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string notes, IEnumerable<AdapterProperty> properties) {
             return new WriteTagValueAnnotationResult() {
                 TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
                 AnnotationId = annotationId ?? throw new ArgumentNullException(nameof(annotationId)),
                 Status = status,
                 Notes = notes,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

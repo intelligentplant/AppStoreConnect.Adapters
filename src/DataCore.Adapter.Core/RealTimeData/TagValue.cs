@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -22,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Additional value properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
 
         /// <summary>
@@ -52,7 +54,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public static TagValue Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IDictionary<string, string> properties) {
+        public static TagValue Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IEnumerable<AdapterProperty> properties) {
             return new TagValue() {
                 UtcSampleTime = utcSampleTime,
                 NumericValue = numericValue,
@@ -61,7 +63,7 @@ namespace DataCore.Adapter.RealTimeData {
                 Units = units ?? string.Empty,
                 Notes = notes,
                 Error = error,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

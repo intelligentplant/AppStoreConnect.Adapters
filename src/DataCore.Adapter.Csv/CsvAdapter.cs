@@ -202,7 +202,7 @@ namespace DataCore.Adapter.Csv {
                         ? dataTypeActual
                         : TagDataType.Numeric,
                 states.Count > 0
-                    ? states
+                    ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null,
                 null,
                 null

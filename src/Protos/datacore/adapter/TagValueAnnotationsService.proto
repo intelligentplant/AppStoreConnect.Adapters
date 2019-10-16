@@ -3,7 +3,7 @@ syntax = "proto3";
 package datacore.adapter;
 
 import "google/protobuf/timestamp.proto";
-import "WriteOperationStatus.proto";
+import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -54,7 +54,7 @@ message TagValueAnnotationBase {
     bool has_utc_end_time = 4;
     string value = 5;
     string description = 6;
-    map<string, string> properties = 7;
+    repeated AdapterProperty properties = 7;
 }
 
 message TagValueAnnotation {
@@ -79,5 +79,5 @@ message WriteTagValueAnnotationResult {
     string annotation_id = 3;
     WriteOperationStatus write_status = 4;
     string notes = 5;
-    map<string, string> properties = 6;
+    repeated AdapterProperty properties = 6;
 }

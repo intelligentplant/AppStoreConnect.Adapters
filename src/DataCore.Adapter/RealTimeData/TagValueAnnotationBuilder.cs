@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -42,15 +44,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Additional annotation properties.
         /// </summary>
-        private readonly Dictionary<string, string> _properties;
+        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
 
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
         /// </summary>
-        private TagValueAnnotationBuilder() {
-            _properties = new Dictionary<string, string>();
-        }
+        private TagValueAnnotationBuilder() { }
 
 
         /// <summary>
@@ -61,18 +61,15 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The existing annotation.
         /// </param>
         private TagValueAnnotationBuilder(TagValueAnnotation existing) {
-            if (existing == null) {
-                _properties = new Dictionary<string, string>();
-                return;
-            }
-
             _id = existing.Id;
             _annotationType = existing.AnnotationType;
             _utcStartTime = existing.UtcStartTime;
             _utcEndTime = existing.UtcEndTime;
             _value = existing.Value;
             _description = existing.Description;
-            _properties = new Dictionary<string, string>(existing.Properties);
+            if (existing.Properties != null) {
+                _properties.AddRange(existing.Properties.Where(x => x != null));
+            }
         }
 
 
@@ -216,12 +213,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The property value.
         /// </param>
+        /// <param name="valueType">
+        ///   The property value type.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueAnnotationBuilder"/>.
         /// </returns>
-        public TagValueAnnotationBuilder WithProperty(string name, string value) {
+        public TagValueAnnotationBuilder WithProperty(string name, object value, VariantType valueType) {
             if (name != null) {
-                _properties[name] = value;
+                _properties.Add(AdapterProperty.Create(name, value, valueType));
             }
             return this;
         }
@@ -236,11 +236,23 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueAnnotationBuilder"/>.
         /// </returns>
-        public TagValueAnnotationBuilder WithProperties(IDictionary<string, string> properties) {
+        public TagValueAnnotationBuilder WithProperties(params AdapterProperty[] properties) {
+            return WithProperties((IEnumerable<AdapterProperty>) properties);
+        }
+
+
+        /// <summary>
+        /// Adds a set of properties to the annotation.
+        /// </summary>
+        /// <param name="properties">
+        ///   The properties.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueAnnotationBuilder"/>.
+        /// </returns>
+        public TagValueAnnotationBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
             if (properties != null) {
-                foreach (var prop in properties) {
-                    _properties[prop.Key] = prop.Value;
-                }
+                _properties.AddRange(properties.Where(x => x != null));
             }
             return this;
         }

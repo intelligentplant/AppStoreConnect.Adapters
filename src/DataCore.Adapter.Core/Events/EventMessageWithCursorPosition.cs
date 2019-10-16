@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
@@ -43,14 +45,14 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
-        public static EventMessageWithCursorPosition Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties, string cursorPosition) {
+        public static EventMessageWithCursorPosition Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties, string cursorPosition) {
             return new EventMessageWithCursorPosition() {
                 Id = id ?? Guid.NewGuid().ToString(),
                 UtcEventTime = utcEventTime.ToUniversalTime(),
                 Priority = priority,
                 Category = category,
                 Message = message,
-                Properties = properties ?? new Dictionary<string, string>(),
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>(),
                 CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
             };
         }

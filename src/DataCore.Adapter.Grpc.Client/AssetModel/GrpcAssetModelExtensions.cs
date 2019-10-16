@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -30,7 +31,7 @@ namespace DataCore.Adapter.AssetModel {
                     : node.Parent,
                 node.Children,
                 node.Measurements.Select(x => AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units))).ToArray(),
-                node.Properties
+                node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 

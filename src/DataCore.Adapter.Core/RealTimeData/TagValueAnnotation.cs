@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -43,7 +45,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueAnnotation Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IDictionary<string, string> properties) {
+        public static TagValueAnnotation Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
             return new TagValueAnnotation() {
                 Id = id ?? throw new ArgumentNullException(nameof(id)),
                 AnnotationType = annotationType,
@@ -53,7 +55,7 @@ namespace DataCore.Adapter.RealTimeData {
                 : utcEndTime?.ToUniversalTime(),
                 Value = value,
                 Description = description,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

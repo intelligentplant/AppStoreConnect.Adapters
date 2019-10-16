@@ -68,7 +68,7 @@ if ([String]::IsNullOrWhiteSpace($Version.PreRelease)) {
 
 if ($Modified) {
     Write-Host("Saving updated version: $($VersionSummary)")
-    $Version | ConvertTo-Json | Out-File $VersionFilePath
+    $Version | ConvertTo-Json | Out-File $VersionFilePath -Encoding utf8
 } else {
     Write-Host("Version has not been modified: $($VersionSummary)")
 }

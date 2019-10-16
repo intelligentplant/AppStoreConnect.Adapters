@@ -9,6 +9,143 @@ namespace DataCore.Adapter.Grpc.Server {
     /// </summary>
     internal static class GrpcExtensions {
 
+        public static Common.VariantType ToAdapterVariantType(this Grpc.VariantType type) {
+            switch (type) {
+                case Grpc.VariantType.Boolean:
+                    return Common.VariantType.Boolean;
+                case Grpc.VariantType.Byte:
+                    return Common.VariantType.Byte;
+                case Grpc.VariantType.Datetime:
+                    return Common.VariantType.DateTime;
+                case Grpc.VariantType.Double:
+                    return Common.VariantType.Double;
+                case Grpc.VariantType.Float:
+                    return Common.VariantType.Float;
+                case Grpc.VariantType.Int16:
+                    return Common.VariantType.Int16;
+                case Grpc.VariantType.Int32:
+                    return Common.VariantType.Int32;
+                case Grpc.VariantType.Int64:
+                    return Common.VariantType.Int64;
+                case Grpc.VariantType.Null:
+                    return Common.VariantType.Null;
+                case Grpc.VariantType.Object:
+                    return Common.VariantType.Object;
+                case Grpc.VariantType.Sbyte:
+                    return Common.VariantType.SByte;
+                case Grpc.VariantType.String:
+                    return Common.VariantType.String;
+                case Grpc.VariantType.Timespan:
+                    return Common.VariantType.TimeSpan;
+                case Grpc.VariantType.Uint16:
+                    return Common.VariantType.UInt16;
+                case Grpc.VariantType.Uint32:
+                    return Common.VariantType.UInt32;
+                case Grpc.VariantType.Uint64:
+                    return Common.VariantType.UInt64;
+                case Grpc.VariantType.Unknown:
+                default:
+                    return Common.VariantType.Unknown;
+            }
+        }
+
+
+        public static Common.Variant ToAdapterVariant(this Grpc.Variant variant) {
+            if (variant == null) {
+                return Common.Variant.Create(null);
+            }
+
+            return Common.Variant.Create(
+                System.Text.Json.JsonSerializer.Deserialize(variant.Value.Span, typeof(object)),
+                variant.Type.ToAdapterVariantType()
+            );
+        }
+
+
+        public static Grpc.VariantType ToGrpcVariantType(this Common.VariantType type) {
+            switch (type) {
+                case Common.VariantType.Boolean:
+                    return Grpc.VariantType.Boolean;
+                case Common.VariantType.Byte:
+                    return Grpc.VariantType.Byte;
+                case Common.VariantType.DateTime:
+                    return Grpc.VariantType.Datetime;
+                case Common.VariantType.Double:
+                    return Grpc.VariantType.Double;
+                case Common.VariantType.Float:
+                    return Grpc.VariantType.Float;
+                case Common.VariantType.Int16:
+                    return Grpc.VariantType.Int16;
+                case Common.VariantType.Int32:
+                    return Grpc.VariantType.Int32;
+                case Common.VariantType.Int64:
+                    return Grpc.VariantType.Int64;
+                case Common.VariantType.Null:
+                    return Grpc.VariantType.Null;
+                case Common.VariantType.Object:
+                    return Grpc.VariantType.Object;
+                case Common.VariantType.SByte:
+                    return Grpc.VariantType.Sbyte;
+                case Common.VariantType.String:
+                    return Grpc.VariantType.String;
+                case Common.VariantType.TimeSpan:
+                    return Grpc.VariantType.Timespan;
+                case Common.VariantType.UInt16:
+                    return Grpc.VariantType.Uint16;
+                case Common.VariantType.UInt32:
+                    return Grpc.VariantType.Uint32;
+                case Common.VariantType.UInt64:
+                    return Grpc.VariantType.Uint64;
+                case Common.VariantType.Unknown:
+                default:
+                    return Grpc.VariantType.Unknown;
+            }
+        }
+
+
+        public static Grpc.Variant ToGrpcVariant(this Common.Variant variant) {
+            if (variant == null) {
+                return new Grpc.Variant() {
+                    Value = Google.Protobuf.ByteString.Empty,
+                    Type = Grpc.VariantType.Null
+                };
+            }
+
+            return new Grpc.Variant() {
+                Value = variant.Value == null
+                    ? Google.Protobuf.ByteString.Empty
+                    : Google.Protobuf.ByteString.CopyFromUtf8(System.Text.Json.JsonSerializer.Serialize(variant.Value)),
+                Type = variant.Type.ToGrpcVariantType()
+            };
+        }
+
+
+        internal static Common.AdapterProperty ToAdapterProperty(this Grpc.AdapterProperty property) {
+            if (property == null) {
+                return null;
+            }
+
+            return Common.AdapterProperty.Create(
+                property.Name,
+                property.Value.ToAdapterVariant()
+            );
+        }
+
+
+        internal static Grpc.AdapterProperty ToGrpcProperty(this Common.AdapterProperty property) {
+            if (property == null) {
+                return null;
+            }
+
+            var result = new Grpc.AdapterProperty() {
+                Name = property.Name ?? string.Empty,
+                Value = property.Value.ToGrpcVariant()
+            };
+
+            return result;
+        }
+
+
         /// <summary>
         /// Converts from an adapter tag definition into its gRPC equivalent.
         /// </summary>
@@ -38,13 +175,19 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (tag.Properties != null) {
                 foreach (var item in tag.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
             if (tag.States != null) {
                 foreach (var item in tag.States) {
-                    result.States.Add(item.Key, item.Value);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.States.Add(item.ToGrpcDigitalState());
                 }
             }
 
@@ -72,6 +215,27 @@ namespace DataCore.Adapter.Grpc.Server {
                 default:
                     return TagDataType.Numeric;
             }
+        }
+
+
+        /// <summary>
+        /// Converts from an adapter digital state to its gRPC equivalent.
+        /// </summary>
+        /// <param name="state">
+        ///   The adapter digital state.
+        /// </param>
+        /// <returns>
+        ///   The gRPC digital state.
+        /// </returns>
+        internal static DigitalState ToGrpcDigitalState(this RealTimeData.DigitalState state) {
+            if (state == null) {
+                return null;
+            }
+
+            return new DigitalState() { 
+                Name = state.Name ?? string.Empty,
+                Value = state.Value
+            };
         }
 
 
@@ -109,9 +273,12 @@ namespace DataCore.Adapter.Grpc.Server {
                     });
                 }
             }
-            if (node.Properties?.Count > 0) {
+            if (node.Properties != null) {
                 foreach (var item in node.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -155,7 +322,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (value.Properties != null) {
                 foreach (var item in value.Properties) {
-                    result.Value.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Value.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -203,7 +373,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (value.Properties != null) {
                 foreach (var item in value.Properties) {
-                    result.Value.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Value.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -339,7 +512,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -421,7 +597,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (annotation.Properties != null) {
                 foreach (var item in annotation.Properties) {
-                    result.Annotation.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Annotation.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -451,7 +630,7 @@ namespace DataCore.Adapter.Grpc.Server {
                     : (DateTime?) null,
                 annotation.Value,
                 annotation.Description,
-                annotation.Properties
+                annotation.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -503,7 +682,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -531,7 +713,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (message.Properties != null) {
                 foreach (var item in message.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -600,7 +785,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value write item.
         /// </returns>
-        internal static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this WriteEventMessageRequest writeRequest) {
+        internal static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this Grpc.WriteEventMessageRequest writeRequest) {
             return new Events.WriteEventMessageItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 EventMessage = Events.EventMessage.Create(
@@ -609,7 +794,7 @@ namespace DataCore.Adapter.Grpc.Server {
                     writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.EventPriority.Unknown,
                     writeRequest.Message?.Category,
                     writeRequest.Message?.Message,
-                    writeRequest.Message?.Properties
+                    writeRequest.Message?.Properties.Select(x => x.ToAdapterProperty())
                 )
             };
         }
@@ -637,7 +822,10 @@ namespace DataCore.Adapter.Grpc.Server {
 
             if (adapterResult.Properties != null) {
                 foreach (var item in adapterResult.Properties) {
-                    result.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 

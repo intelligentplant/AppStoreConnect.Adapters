@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
@@ -39,7 +40,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Additional event properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
     }
 

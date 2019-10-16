@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DataCore.Adapter.Common {
 
@@ -32,7 +33,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Custom properties supplied by the hosting application.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
 
         /// <summary>
@@ -61,7 +62,31 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional host properties.
         /// </param>
-        public static HostInfo Create(string name, string description, string version, VendorInfo vendor, IDictionary<string, string> properties) {
+        public static HostInfo Create(string name, string description, string version, VendorInfo vendor, params AdapterProperty[] properties) {
+            return Create(name, description, version, vendor, (IEnumerable<AdapterProperty>) properties);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HostInfo"/> object.
+        /// </summary>
+        /// <param name="name">
+        ///   The host name.
+        /// </param>
+        /// <param name="description">
+        ///   The host description.
+        /// </param>
+        /// <param name="version">
+        ///   The host version. This will be parsed and converted to a Semantic Versioning v2 version 
+        ///   (https://semver.org/spec/v2.0.0.html).
+        /// </param>
+        /// <param name="vendor">
+        ///   The vendor information.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional host properties.
+        /// </param>
+        public static HostInfo Create(string name, string description, string version, VendorInfo vendor, IEnumerable<AdapterProperty> properties) {
             return new HostInfo() {
                 Name = name?.Trim(),
                 Description = description?.Trim(),
@@ -71,7 +96,7 @@ namespace DataCore.Adapter.Common {
                     ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString()).ToFullString()
                     : new NuGet.Versioning.SemanticVersion(0, 0, 0).ToFullString(),
                 Vendor = vendor,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 
@@ -100,9 +125,7 @@ namespace DataCore.Adapter.Common {
                 hostInfo.Vendor == null
                     ? null
                     : VendorInfo.FromExisting(hostInfo.Vendor),
-                hostInfo.Properties == null 
-                    ? new Dictionary<string, string>() 
-                    : new Dictionary<string, string>(hostInfo.Properties)
+                hostInfo.Properties
             ); ;
         }
 

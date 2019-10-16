@@ -1,4 +1,5 @@
 ﻿
+using System.Linq;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Grpc;
 
@@ -20,8 +21,8 @@ namespace DataCore.Adapter.RealTimeData {
                 tagDefinition.Description,
                 tagDefinition.Units,
                 tagDefinition.DataType.ToAdapterTagDataType(),
-                tagDefinition.States,
-                tagDefinition.Properties,
+                tagDefinition.States.Select(x => x.ToAdapterDigitalState()).ToArray(),
+                tagDefinition.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
                 tagDefinition.Labels
             );
         }
@@ -40,6 +41,15 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        public static DigitalState ToAdapterDigitalState(this Grpc.DigitalState state) {
+            if (state  == null) {
+                return null;
+            }
+
+            return DigitalState.Create(state.Name, state.Value);
+        }
+
+
         public static TagValue ToAdapterTagValue(this Grpc.TagValue tagValue) {
             if (tagValue == null) {
                 return null;
@@ -53,7 +63,7 @@ namespace DataCore.Adapter.RealTimeData {
                 tagValue.Units,
                 tagValue.Notes,
                 tagValue.Error,
-                tagValue.Properties
+                tagValue.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -162,7 +172,7 @@ namespace DataCore.Adapter.RealTimeData {
                 result.TagId,
                 result.WriteStatus.ToAdapterWriteStatus(),
                 result.Notes,
-                result.Properties
+                result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -179,7 +189,7 @@ namespace DataCore.Adapter.RealTimeData {
                 annotation.Annotation.UtcEndTime?.ToDateTime(),
                 annotation.Annotation.Value,
                 annotation.Annotation.Description,
-                annotation.Annotation.Properties
+                annotation.Annotation.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -236,9 +246,12 @@ namespace DataCore.Adapter.RealTimeData {
                 result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
             }
 
-            if (annotation.Properties.Count > 0) {
+            if (annotation.Properties != null) {
                 foreach (var item in annotation.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 
@@ -256,7 +269,7 @@ namespace DataCore.Adapter.RealTimeData {
                 result.AnnotationId,
                 result.WriteStatus.ToAdapterWriteStatus(),
                 result.Notes,
-                result.Properties
+                result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 

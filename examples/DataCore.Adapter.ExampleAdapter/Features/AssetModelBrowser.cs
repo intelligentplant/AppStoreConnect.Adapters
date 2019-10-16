@@ -45,7 +45,7 @@ namespace DataCore.Adapter.Example.Features {
                             RealTimeData.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units)
                         );
                     }).Where(m => m != null),
-                    x.Properties
+                    x.Properties.Select(p => Common.AdapterProperty.Create(p.Key, p.Value))
                 )).ToDictionary(x => x.Id);
             }
         }

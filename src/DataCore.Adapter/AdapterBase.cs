@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -93,13 +94,13 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Adapter properties.
         /// </summary>
-        private ConcurrentDictionary<string, string> _properties = new ConcurrentDictionary<string, string>();
+        private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
 
         /// <inheritdoc/>
-        public IDictionary<string, string> Properties {
+        public IEnumerable<AdapterProperty> Properties {
             get {
                 CheckDisposed();
-                return new ReadOnlyDictionary<string, string>(_properties);
+                return _properties.Values.Select(x => AdapterProperty.FromExisting(x)).ToArray();
             }
         }
 
@@ -526,15 +527,18 @@ namespace DataCore.Adapter {
         /// <param name="value">
         ///   The property value.
         /// </param>
+        /// <param name="valueType">
+        ///   The property value type.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="key"/> i <see langword="null"/>.
         /// </exception>
-        protected void AddProperty(string key, string value) {
+        protected void AddProperty(string key, object value, VariantType valueType) {
             CheckDisposed();
             if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
-            _properties[key] = value;
+            _properties[key] = AdapterProperty.Create(key, value, valueType);
         }
 
 

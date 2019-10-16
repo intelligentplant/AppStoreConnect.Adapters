@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -19,12 +20,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// The discrete states for the tag. If <see cref="DataType"/> is not <see cref="TagDataType.State"/>, 
         /// this property will be <see langword="null"/>.
         /// </summary>
-        public IDictionary<string, int> States { get; set; }
+        public IEnumerable<DigitalState> States { get; set; }
 
         /// <summary>
         /// Bespoke tag properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
         /// <summary>
         /// Labels associated with the tag.
@@ -66,7 +67,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagDefinition Create(string id, string name, string description, string units, TagDataType dataType, IDictionary<string, int> states, IDictionary<string, string> properties, IEnumerable<string> labels) {
+        public static TagDefinition Create(string id, string name, string description, string units, TagDataType dataType, IEnumerable<DigitalState> states, IEnumerable<AdapterProperty> properties, IEnumerable<string> labels) {
             return new TagDefinition() {
                 Id = id ?? throw new ArgumentNullException(nameof(id)),
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
@@ -75,8 +76,8 @@ namespace DataCore.Adapter.RealTimeData {
                 DataType = dataType,
                 States = dataType != TagDataType.State
                     ? null
-                    : states ?? new Dictionary<string, int>(),
-                Properties = properties ?? new Dictionary<string, string>(),
+                    : states?.ToArray() ?? Array.Empty<DigitalState>(),
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>(),
                 Labels = labels?.ToArray() ?? Array.Empty<string>()
             };
         }
@@ -105,12 +106,8 @@ namespace DataCore.Adapter.RealTimeData {
                 tag.Description,
                 tag.Units,
                 tag.DataType,
-                tag.States == null
-                    ? null
-                    : new Dictionary<string, int>(tag.States),
-                tag.Properties == null
-                    ? null
-                    : new Dictionary<string, string>(tag.Properties),
+                tag.States,
+                tag.Properties,
                 tag.Labels
             );
         }

@@ -3,6 +3,7 @@ syntax = "proto3";
 package datacore.adapter;
 
 import "TagSearchService.proto";
+import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -44,7 +45,7 @@ message AssetModelNode {
     string parent = 4;
     repeated string children = 5;
     repeated AssetModelNodeMeasurement measurements = 6;
-    map<string, string> properties = 7;
+    repeated AdapterProperty properties = 7;
 }
 
 

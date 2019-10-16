@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -46,7 +47,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// Additional properties associated with the node.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
 
         /// <summary>
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AssetModelNode Create(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IDictionary<string, string> properties) {
+        public static AssetModelNode Create(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IEnumerable<AdapterProperty> properties) {
             return new AssetModelNode() {
                 Id = id ?? throw new ArgumentNullException(nameof(id)),
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
@@ -87,7 +88,7 @@ namespace DataCore.Adapter.AssetModel {
                 Parent = parent,
                 Children = children?.ToArray() ?? Array.Empty<string>(),
                 Measurements = measurements?.ToArray() ?? Array.Empty<AssetModelNodeMeasurement>(),
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

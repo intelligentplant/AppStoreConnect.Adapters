@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+enum VariantType {
+    VARIANT_TYPE_UNKNOWN = 0;
+    VARIANT_TYPE_NULL = 1;
+    VARIANT_TYPE_OBJECT = 2;
+    VARIANT_TYPE_BOOLEAN = 3;
+    VARIANT_TYPE_SBYTE = 4;
+    VARIANT_TYPE_BYTE = 5;
+    VARIANT_TYPE_INT16 = 6;
+    VARIANT_TYPE_UINT16 = 7;
+    VARIANT_TYPE_INT32 = 8;
+    VARIANT_TYPE_UINT32 = 9;
+    VARIANT_TYPE_INT64 = 10;
+    VARIANT_TYPE_UINT64 = 11;
+    VARIANT_TYPE_FLOAT = 12;
+    VARIANT_TYPE_DOUBLE = 13;
+    VARIANT_TYPE_STRING = 14;
+    VARIANT_TYPE_DATETIME = 15;
+    VARIANT_TYPE_TIMESPAN = 16;
+}
+
+
+message Variant {
+    VariantType type = 1;
+    bytes value = 2;
+}
+
+
+message AdapterProperty {
+    string name = 1;
+    Variant value = 2;
+}
+
+
+message DigitalState {
+    string name = 1;
+    int32 value = 2;
+}
+
+
+enum WriteOperationStatus {
+    WRITE_OPERATION_STATUS_UNKNOWN = 0;
+    WRITE_OPERATION_STATUS_SUCCESS = 1;
+    WRITE_OPERATION_STATUS_FAIL = 2;
+    WRITE_OPERATION_STATUS_PENDING = 3;
+}

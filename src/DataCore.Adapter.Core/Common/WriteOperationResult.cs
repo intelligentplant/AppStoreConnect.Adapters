@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Additional properties related to the write.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
     }
 }

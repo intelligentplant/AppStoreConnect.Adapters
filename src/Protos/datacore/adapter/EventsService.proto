@@ -3,7 +3,7 @@ syntax = "proto3";
 package datacore.adapter;
 
 import "google/protobuf/timestamp.proto";
-import "WriteOperationStatus.proto";
+import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -52,7 +52,7 @@ message EventMessage {
     EventPriority priority = 3;
     string category = 4;
     string message = 5;
-    map<string, string> properties = 6;
+    repeated AdapterProperty properties = 6;
 }
 
 
@@ -95,5 +95,5 @@ message WriteEventMessageResult {
     string adapter_id = 2;
     WriteOperationStatus write_status = 3;
     string notes = 4;
-    map<string, string> properties = 5;
+    repeated AdapterProperty properties = 5;
 }

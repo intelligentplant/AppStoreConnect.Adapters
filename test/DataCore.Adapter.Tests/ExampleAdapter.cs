@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Tests {
 
         public IAdapterFeaturesCollection Features { get; }
 
-        public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
+        public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
 
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 

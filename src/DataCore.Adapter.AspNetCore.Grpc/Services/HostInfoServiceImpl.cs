@@ -22,7 +22,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             if (hostInfo.Properties != null) {
                 foreach (var item in hostInfo.Properties) {
-                    _hostInfo.Properties.Add(item.Key, item.Value);
+                    if (item == null) {
+                        continue;
+                    }
+                    _hostInfo.Properties.Add(item.ToGrpcProperty());
                 }
             }
         }

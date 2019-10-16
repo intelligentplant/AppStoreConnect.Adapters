@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -47,15 +49,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Bespoke tag value properties.
         /// </summary>
-        private readonly Dictionary<string, string> _properties;
+        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
 
 
         /// <summary>
         /// Creates a new <see cref="TagValueBuilder"/> object.
         /// </summary>
-        private TagValueBuilder() {
-            _properties = new Dictionary<string, string>();
-        }
+        private TagValueBuilder() { }
 
 
         /// <summary>
@@ -66,11 +66,6 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The existing value.
         /// </param>
         private TagValueBuilder(TagValue existing) {
-            if (existing == null) {
-                _properties = new Dictionary<string, string>();
-                return;
-            }
-
             _utcSampleTime = existing.UtcSampleTime;
             _numericValue = existing.NumericValue;
             _textValue = existing.TextValue;
@@ -78,7 +73,9 @@ namespace DataCore.Adapter.RealTimeData {
             _units = existing.Units;
             _notes = existing.Notes;
             _error = existing.Error;
-            _properties = new Dictionary<string, string>(existing.Properties);
+            if (existing.Properties != null) {
+                _properties.AddRange(existing.Properties.Where(x => x != null));
+            }
         }
 
 
@@ -299,12 +296,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The property value.
         /// </param>
+        /// <param name="valueType">
+        ///   The property value type.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithProperty(string name, string value) {
+        public TagValueBuilder WithProperty(string name, object value, VariantType valueType) {
             if (name != null) {
-                _properties[name] = value;
+                _properties.Add(AdapterProperty.Create(name, value, valueType));
             }
             return this;
         }
@@ -319,13 +319,23 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithProperties(IEnumerable<KeyValuePair<string, string>> properties) {
+        public TagValueBuilder WithProperties(params AdapterProperty[] properties) {
+            return WithProperties((IEnumerable<AdapterProperty>) properties);
+        }
+
+
+        /// <summary>
+        /// Adds a set of properties to the tag value.
+        /// </summary>
+        /// <param name="properties">
+        ///   The properties.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        public TagValueBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
             if (properties != null) {
-                foreach (var prop in properties) {
-                    if (prop.Key != null) {
-                        _properties[prop.Key] = prop.Value;
-                    }
-                }
+                _properties.AddRange(properties.Where(x => x != null));
             }
             return this;
         }

@@ -5,7 +5,7 @@ package datacore.adapter;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "TagSearchService.proto";
-import "WriteOperationStatus.proto";
+import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
@@ -144,7 +144,7 @@ message TagValue {
     string units = 5;
     string notes = 6;
     string error = 7;
-    map<string, string> properties = 8; 
+    repeated AdapterProperty properties = 8; 
 }
 
 
@@ -201,5 +201,5 @@ message WriteTagValueResult {
     string tag_id = 3;
     WriteOperationStatus write_status = 4;
     string notes = 5;
-    map<string, string> properties = 6;
+    repeated AdapterProperty properties = 6;
 }

@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Additional adapter properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; set; }
 
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public static AdapterDescriptorExtended Create(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IDictionary<string, string> properties) {
+        public static AdapterDescriptorExtended Create(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IEnumerable<AdapterProperty> properties) {
             return new AdapterDescriptorExtended() {
                 Id = string.IsNullOrWhiteSpace(id)
                     ? throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(id))
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Common {
                 Description = description,
                 Features = features?.ToArray() ?? Array.Empty<string>(),
                 Extensions = extensions?.ToArray() ?? Array.Empty<string>(),
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

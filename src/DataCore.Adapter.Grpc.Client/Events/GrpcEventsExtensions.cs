@@ -1,4 +1,5 @@
 ﻿
+using System.Linq;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Grpc;
 
@@ -20,7 +21,7 @@ namespace DataCore.Adapter.Events {
                 eventMessage.Priority.ToAdapterEventPriority(),
                 eventMessage.Category,
                 eventMessage.Message,
-                eventMessage.Properties
+                eventMessage.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -36,7 +37,7 @@ namespace DataCore.Adapter.Events {
                 eventMessage.EventMessage.Priority.ToAdapterEventPriority(),
                 eventMessage.EventMessage.Category,
                 eventMessage.EventMessage.Message,
-                eventMessage.EventMessage.Properties,
+                eventMessage.EventMessage.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
                 eventMessage.CursorPosition
             );
         }
@@ -92,7 +93,7 @@ namespace DataCore.Adapter.Events {
                 result.CorrelationId,
                 result.WriteStatus.ToAdapterWriteStatus(),
                 result.Notes,
-                result.Properties
+                result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -121,7 +122,10 @@ namespace DataCore.Adapter.Events {
 
             if (message.Properties != null) {
                 foreach (var item in message.Properties) {
-                    result.Properties.Add(item.Key, item.Value);
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Properties.Add(item.ToGrpcProperty());
                 }
             }
 

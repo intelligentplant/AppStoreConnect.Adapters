@@ -23,7 +23,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets additional properties associated with the adapter.
         /// </summary>
-        IDictionary<string, string> Properties { get; }
+        IEnumerable<AdapterProperty> Properties { get; }
 
         /// <summary>
         /// Starts the adapter.

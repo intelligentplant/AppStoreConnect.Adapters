@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -28,12 +30,12 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public static WriteEventMessageResult Create(string correlationId, WriteStatus status, string notes, IDictionary<string, string> properties)  {
+        public static WriteEventMessageResult Create(string correlationId, WriteStatus status, string notes, IEnumerable<AdapterProperty> properties)  {
             return new WriteEventMessageResult() {
                 CorrelationId = correlationId,
                 Status = status,
                 Notes = notes,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
 

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "Types.proto";
+
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 
@@ -51,8 +53,8 @@ message TagDefinition {
     string description = 3;
     string units = 4;
     TagDataType data_type = 5;
-    map<string, int32> states = 6;
-    map<string, string> properties = 7;
+    repeated DigitalState states = 6;
+    repeated AdapterProperty properties = 7;
     repeated string labels = 8;
 }
 

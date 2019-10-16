@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
@@ -36,15 +38,13 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Additional event properties.
         /// </summary>
-        private readonly Dictionary<string, string> _properties;
+        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
 
 
         /// <summary>
         /// Creates a new <see cref="EventMessageBuilder"/> object.
         /// </summary>
-        private EventMessageBuilder() {
-            _properties = new Dictionary<string, string>();
-        }
+        private EventMessageBuilder() { }
 
 
         /// <summary>
@@ -55,17 +55,14 @@ namespace DataCore.Adapter.Events {
         ///   The existing value.
         /// </param>
         private EventMessageBuilder(EventMessage existing) {
-            if (existing == null) {
-                _properties = new Dictionary<string, string>();
-                return;
-            }
-
             _id = existing.Id;
             _utcEventTime = existing.UtcEventTime;
             _priority = existing.Priority;
             _category = existing.Category;
             _message = existing.Message;
-            _properties = new Dictionary<string, string>(existing.Properties);
+            if (existing.Properties != null) {
+                _properties.AddRange(existing.Properties.Where(x => x != null));
+            }
         }
 
 
@@ -202,12 +199,15 @@ namespace DataCore.Adapter.Events {
         /// <param name="value">
         ///   The property value.
         /// </param>
+        /// <param name="valueType">
+        ///   The property value type.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithProperty(string name, string value) {
+        public EventMessageBuilder WithProperty(string name, object value, VariantType valueType) {
             if (name != null) {
-                _properties[name] = value;
+                _properties.Add(AdapterProperty.Create(name, value, valueType));
             }
             return this;
         }
@@ -222,13 +222,25 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithProperties(IDictionary<string, string> properties) {
-            if (properties != null) {
-                foreach (var item in properties) {
-                    _properties[item.Key] = item.Value;
-                }
-            }
+        public EventMessageBuilder WithProperties(params AdapterProperty[] properties) {
+            return WithProperties((IEnumerable<AdapterProperty>) properties);
+        }
 
+
+        /// <summary>
+        /// Adds a set of properties to the event.
+        /// </summary>
+        /// <param name="properties">
+        ///   The properties.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="EventMessageBuilder"/>.
+        /// </returns>
+        public EventMessageBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
+            if (properties != null) {
+                _properties.AddRange(properties.Where(x => x != null));
+            }
+            
             return this;
         }
 

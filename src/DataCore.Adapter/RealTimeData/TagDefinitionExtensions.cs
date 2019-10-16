@@ -48,15 +48,16 @@ namespace DataCore.Adapter.RealTimeData {
 
             if (filter.Other != null) {
                 foreach (var item in filter.Other) {
-                    if (String.IsNullOrWhiteSpace(item.Value)) {
+                    if (string.IsNullOrWhiteSpace(item.Value)) {
                         continue;
                     }
 
-                    if (!tag.Properties.TryGetValue(item.Key, out var propertyValue)) {
+                    var prop = tag.Properties?.FirstOrDefault(p => string.Equals(p.Name, item.Key, StringComparison.OrdinalIgnoreCase));
+                    if (prop == null) {
                         return false;
                     }
 
-                    if (!propertyValue.Like(item.Value)) {
+                    if (!Convert.ToString(prop.Value).Like(item.Value)) {
                         return false;
                     }
                 }
@@ -140,7 +141,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             switch (tag.DataType) {
                 case TagDataType.State:
-                    return tag.States.FirstOrDefault(x => x.Value == numericValue).Key ?? TagValueBuilder.GetTextValue(numericValue, provider);
+                    return tag.States.FirstOrDefault(x => x.Value == numericValue)?.Name ?? TagValueBuilder.GetTextValue(numericValue, provider);
                 default:
                     return TagValueBuilder.GetTextValue(numericValue, provider);
             }
@@ -172,8 +173,8 @@ namespace DataCore.Adapter.RealTimeData {
 
             switch (tag.DataType) {
                 case TagDataType.State:
-                    var state = tag.States.FirstOrDefault(x => x.Key.Equals(textValue, StringComparison.OrdinalIgnoreCase));
-                    return state.Key != null
+                    var state = tag.States.FirstOrDefault(x => string.Equals(x.Name, textValue, StringComparison.OrdinalIgnoreCase));
+                    return state != null
                         ? state.Value
                         : double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
                             ? num

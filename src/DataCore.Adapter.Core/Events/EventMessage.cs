@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
@@ -29,14 +31,14 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional event properties.
         /// </param>
-        public static EventMessage Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IDictionary<string, string> properties) {
+        public static EventMessage Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
             return new EventMessage() {
                 Id = id ?? Guid.NewGuid().ToString(),
                 UtcEventTime = utcEventTime.ToUniversalTime(),
                 Priority = priority,
                 Category = category,
                 Message = message,
-                Properties = properties ?? new Dictionary<string, string>()
+                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
             };
         }
     
