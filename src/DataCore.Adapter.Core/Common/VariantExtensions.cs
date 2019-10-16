@@ -1,0 +1,121 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace DataCore.Adapter.Common {
+
+    /// <summary>
+    /// Extensions for <see cref="Variant"/>.
+    /// </summary>
+    public static class VariantExtensions {
+
+        /// <summary>
+        /// Maps from type to variant type.
+        /// </summary>
+        private static readonly Dictionary<Type, VariantType> s_variantTypeMap = new Dictionary<Type, VariantType>() {
+            { typeof(bool), VariantType.Boolean },
+            { typeof(byte), VariantType.Byte },
+            { typeof(DateTime), VariantType.DateTime },
+            { typeof(double), VariantType.Double },
+            { typeof(float), VariantType.Float },
+            { typeof(short), VariantType.Int16 },
+            { typeof(int), VariantType.Int32 },
+            { typeof(long), VariantType.Int64 },
+            { typeof(sbyte), VariantType.SByte },
+            { typeof(string), VariantType.String },
+            { typeof(TimeSpan), VariantType.TimeSpan },
+            { typeof(ushort), VariantType.UInt16 },
+            { typeof(uint), VariantType.UInt32 },
+            { typeof(ulong), VariantType.UInt64 }
+        };
+
+
+        /// <summary>
+        /// Gets the variant type for the specified CLR type.
+        /// </summary>
+        /// <param name="type">
+        ///   The CLR type.
+        /// </param>
+        /// <returns>
+        ///   The corresponding variant type.
+        /// </returns>
+        internal static VariantType GetVariantType(this Type type) {
+            if (type == null) {
+                return VariantType.Unknown;
+            }
+
+            if (s_variantTypeMap.TryGetValue(type, out var variantType)) {
+                return variantType;
+            }
+
+            return type.IsValueType
+                ? VariantType.Unknown
+                : VariantType.Object;
+        }
+
+
+        /// <summary>
+        /// Gets the CLR type that is used to represent the variant type.
+        /// </summary>
+        /// <param name="type">
+        ///   The variant type.
+        /// </param>
+        /// <returns>
+        ///   The CLR type to for the variant type.
+        /// </returns>
+        internal static Type GetType(this VariantType type) {
+            var item = s_variantTypeMap.FirstOrDefault(x => x.Value == type).Key;
+            return item ?? typeof(object);
+        }
+
+
+        /// <summary>
+        /// Gets the variant value cast to the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the variant value.
+        /// </typeparam>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   The variant value cast to an instance of <typeparamref name="T"/>, or the default 
+        ///   value of <typeparamref name="T"/> if the <see cref="Variant.Value"/> is not an
+        ///   instance of <typeparamref name="T"/>.
+        /// </returns>
+        public static T GetValueOrDefault<T>(this Variant variant) {
+            return GetValueOrDefault<T>(variant, default);
+        }
+
+
+        /// <summary>
+        /// Gets the variant value cast to the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the variant value.
+        /// </typeparam>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <param name="defaultValue">
+        ///   The default value to return if the <see cref="Variant.Value"/> is not an instance of 
+        ///   <typeparamref name="T"/>.
+        /// </param>
+        /// <returns>
+        ///   The variant value cast to an instance of <typeparamref name="T"/>, or the provided 
+        ///   default value if the variant <see cref="Variant.Value"/> is not an instance of 
+        ///   <typeparamref name="T"/>.
+        /// </returns>
+        public static T GetValueOrDefault<T>(this Variant variant, T defaultValue) {
+            if (variant == null) {
+                return defaultValue;
+            }
+
+            return (variant.Value is T val)
+                ? val
+                : defaultValue;
+        }
+
+    }
+}
