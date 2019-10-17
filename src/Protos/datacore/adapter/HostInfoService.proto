@@ -17,18 +17,3 @@ message GetHostInfoRequest { }
 message GetHostInfoResponse {
     HostInfo host_info = 1;
 }
-
-
-message HostInfo {
-    string name = 1;
-    string description = 2;
-    string version = 3;
-    VendorInfo vendor_info = 4;
-    repeated AdapterProperty properties = 5;
-}
-
-
-message VendorInfo {
-    string name = 1;
-    string url = 2;
-}

@@ -19,16 +19,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private void SerializeTest(Variant value, JsonSerializerOptions options) {
-            var json = JsonSerializer.Serialize(value, options);
-
-            var match = $"\"Type\":\"{value.Type.ToString()}\"";
-            Assert.IsTrue(json.IndexOf(match) >= 0, $"Expected to find match \"{match}\" in JSON: {json}");
-        }
-
-
         private void RoundTripTest<T>(T value, JsonSerializerOptions options) {
-            var variant = new Variant(value);
+            var variant = Variant.FromValue(value);
             var json = JsonSerializer.Serialize(variant, options);
 
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);

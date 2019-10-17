@@ -162,7 +162,7 @@ namespace DataCore.Adapter.Common {
                     break;
             }
 
-            return new Variant(
+            return Variant.FromValue(
                 value,
                 variant.Type.ToAdapterVariantType()
             );

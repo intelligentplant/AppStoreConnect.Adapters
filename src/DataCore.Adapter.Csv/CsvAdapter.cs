@@ -363,14 +363,13 @@ namespace DataCore.Adapter.Csv {
                         var valuesForTag = values.GetOrAdd(tag.Id, key => new SortedList<DateTime, TagValue>());
 
                         var numericValue = tag.GetNumericValue(unparsedValue, csvConfig.CultureInfo);
-                        var textValue = tag.GetTextValue(numericValue, csvConfig.CultureInfo);
 
                         valuesForTag.Add(
                             sampleTime,
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(sampleTime)
-                                .WithValues(numericValue, textValue)
+                                .WithValue(numericValue)
                                 .WithStatus(TagValueStatus.Good)
                                 .WithUnits(tag.Units)
                                 .Build()

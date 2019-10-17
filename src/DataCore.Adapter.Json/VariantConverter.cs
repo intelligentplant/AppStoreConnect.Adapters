@@ -20,7 +20,6 @@ namespace DataCore.Adapter.Json {
 
             VariantType? valueType = null;
             JsonElement valueElement = default;
-            //ReadOnlySpan<byte> valueBytes = default;
 
             do {
                 if (!reader.Read()) {
@@ -37,15 +36,9 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(Variant.Type), StringComparison.OrdinalIgnoreCase)) {
-                    valueType = Enum.TryParse<VariantType>(reader.GetString(), out var vt)
-                        ? vt
-                        : VariantType.Unknown;
+                    valueType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(Variant.Value), StringComparison.OrdinalIgnoreCase)) {
-                    //JsonSerializer.Deserialize()
-                    //valueBytes = reader.HasValueSequence ?
-                    //    reader.ValueSequence.ToArray() :
-                    //    reader.ValueSpan;
                     valueElement = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
                 }
                 else {
@@ -53,52 +46,44 @@ namespace DataCore.Adapter.Json {
                 }
             } while (reader.TokenType != JsonTokenType.EndObject);
 
-            //if (!valueType.HasValue) {
-            //    return 
-            //}
-
             if (valueType == VariantType.Null) {
                 return Variant.Null;
             }
 
-            //var valueReader = new Utf8JsonReader(valueBytes, reader.CurrentState.Options);
-            //valueReader.Read();
-            //object value;
-
             switch (valueType) {
                 case VariantType.Boolean:
-                    return new Variant(valueElement.GetBoolean(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetBoolean());
                 case VariantType.Byte:
-                    return new Variant(valueElement.GetByte(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetByte());
                 case VariantType.DateTime:
-                    return new Variant(valueElement.GetDateTime(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetDateTime());
                 case VariantType.Double:
-                    return new Variant(valueElement.GetDouble(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetDouble());
                 case VariantType.Float:
-                    return new Variant(valueElement.GetSingle(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetSingle());
                 case VariantType.Int16:
-                    return new Variant(valueElement.GetInt16(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetInt16());
                 case VariantType.Int32:
-                    return new Variant(valueElement.GetInt32(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetInt32());
                 case VariantType.Int64:
-                    return new Variant(valueElement.GetInt64(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetInt64());
                 case VariantType.Object:
-                    return new Variant(valueElement, valueType.Value);
+                    return Variant.FromValue(valueElement);
                 case VariantType.SByte:
-                    return new Variant(valueElement.GetSByte(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetSByte());
                 case VariantType.String:
-                    return new Variant(valueElement.GetString(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetString());
                 case VariantType.TimeSpan:
-                    return new Variant(TimeSpan.TryParse(valueElement.GetString(), out var ts) ? ts : default, valueType.Value);
+                    return Variant.FromValue(TimeSpan.TryParse(valueElement.GetString(), out var ts) ? ts : default);
                 case VariantType.UInt16:
-                    return new Variant(valueElement.GetUInt16(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetUInt16());
                 case VariantType.UInt32:
-                    return new Variant(valueElement.GetUInt32(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetUInt32());
                 case VariantType.UInt64:
-                    return new Variant(valueElement.GetUInt64(), valueType.Value);
+                    return Variant.FromValue(valueElement.GetUInt64());
                 case VariantType.Unknown:
                 default:
-                    return new Variant(valueElement, VariantType.Unknown);
+                    return Variant.FromValue(valueElement);
             }
         }
 
@@ -181,8 +166,8 @@ namespace DataCore.Adapter.Json {
         /// </param>
         private void WriteNullValue(Utf8JsonWriter writer, JsonSerializerOptions options) {
             writer.WriteStartObject();
-            writer.WriteString(options?.PropertyNamingPolicy?.ConvertName(nameof(Variant.Type)) ?? nameof(Variant.Type), VariantType.Null.ToString());
-            writer.WriteNull(options?.PropertyNamingPolicy?.ConvertName(nameof(Variant.Value)));
+            writer.WriteString(options?.ConvertPropertyName(nameof(Variant.Type)), VariantType.Null.ToString());
+            writer.WriteNull(options?.ConvertPropertyName(nameof(Variant.Value)));
             writer.WriteEndObject();
         }
 
@@ -204,8 +189,11 @@ namespace DataCore.Adapter.Json {
         /// </param>
         private void WriteValue<T>(Utf8JsonWriter writer, Variant value, JsonSerializerOptions options) {
             writer.WriteStartObject();
-            writer.WriteString(options?.ConvertPropertyName(nameof(Variant.Type)), value.Type.ToString());
+
             writer.WritePropertyName(options?.ConvertPropertyName(nameof(Variant.Type)));
+            JsonSerializer.Serialize(writer, value.Type, typeof(VariantType), options);
+
+            writer.WritePropertyName(options?.ConvertPropertyName(nameof(Variant.Value)));
             if (typeof(T) == typeof(object)) {
                 JsonSerializer.Serialize(writer, value.Value, typeof(T), options);
             }

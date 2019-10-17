@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package datacore.adapter;
 
-import "TagSearchService.proto";
 import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -35,22 +34,4 @@ message FindAssetModelNodesRequest {
     int32 page = 3;
     string name = 4;
     string description = 5;
-}
-
-
-message AssetModelNode {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-    string parent = 4;
-    repeated string children = 5;
-    repeated AssetModelNodeMeasurement measurements = 6;
-    repeated AdapterProperty properties = 7;
-}
-
-
-message AssetModelNodeMeasurement {
-    string name = 1;
-    string adapter_id = 2;
-    datacore.adapter.TagSummary tag = 3;
 }

@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -51,7 +52,7 @@ namespace DataCore.Adapter.Tests {
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-5))
-                                .WithNumericValue(100)
+                                .WithValue(100)
                                 .Build()
                         )
                     );
@@ -62,7 +63,7 @@ namespace DataCore.Adapter.Tests {
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-1))
-                                .WithNumericValue(99)
+                                .WithValue(99)
                                 .Build()
                         )
                     );
@@ -71,14 +72,14 @@ namespace DataCore.Adapter.Tests {
                         var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
-                        Assert.AreEqual(100, value.Value.NumericValue);
+                        Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
                     }
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
                         var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
-                        Assert.AreEqual(99, value.Value.NumericValue);
+                        Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());
                     }
                 }
             }

@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Null variant.
         /// </summary>
-        public static Variant Null { get; } = new Variant(null);
+        public static Variant Null { get; } = FromValue(null);
 
 
         /// <summary>
@@ -27,7 +27,9 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
-        /// Creates a new <see cref="Variant"/> object.
+        /// Creates a new <see cref="Variant"/> object. It is preferable to call <see cref="FromValue"/> 
+        /// instead of calling the constructor directly, as this allows the <see cref="Type"/> of 
+        /// the variant to be inferred from the value.
         /// </summary>
         /// <param name="value">
         ///   The value.
@@ -48,11 +50,23 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value.
         /// </param>
-        public Variant(object value) {
-            Value = value;
-            Type = value == null
-                ? VariantType.Null 
-                : value.GetType().GetVariantType();
+        /// <param name="typeOverride">
+        ///   When a value is provided, the <see cref="Type"/> of the resulting variant is set to 
+        ///   this value instead of being inferred from the <paramref name="value"/>.
+        /// </param>
+        public static Variant FromValue(object value, VariantType? typeOverride = null) {
+            if (value is Variant v) {
+                return new Variant(v.Value, v.Type);
+            }
+
+            return new Variant(
+                value,
+                typeOverride.HasValue
+                    ? typeOverride.Value
+                    : value == null
+                        ? VariantType.Null
+                        : value.GetType().GetVariantType()
+            );
         }
 
 

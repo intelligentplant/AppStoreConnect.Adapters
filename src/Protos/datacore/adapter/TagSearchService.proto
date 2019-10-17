@@ -31,36 +31,3 @@ message GetTagsRequest {
     string adapter_id = 1;
     repeated string tags = 2;
 }
-
-
-// Tag definition models
-
-message TagIdentifier {
-    string id = 1;
-    string name = 2;
-}
-
-message TagSummary {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-    string units = 4;
-}
-
-message TagDefinition {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-    string units = 4;
-    TagDataType data_type = 5;
-    repeated DigitalState states = 6;
-    repeated AdapterProperty properties = 7;
-    repeated string labels = 8;
-}
-
-
-enum TagDataType {
-    NUMERIC = 0;
-    TEXT = 1;
-    STATE = 2;
-}

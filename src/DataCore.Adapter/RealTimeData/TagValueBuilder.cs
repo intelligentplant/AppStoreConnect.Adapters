@@ -17,14 +17,9 @@ namespace DataCore.Adapter.RealTimeData {
         private DateTime _utcSampleTime = DateTime.UtcNow;
 
         /// <summary>
-        /// The numeric value.
+        /// The value.
         /// </summary>
-        private double _numericValue = double.NaN;
-
-        /// <summary>
-        /// The text value.
-        /// </summary>
-        private string _textValue;
+        private Variant _value = Variant.Null;
 
         /// <summary>
         /// The quality status.
@@ -67,8 +62,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         private TagValueBuilder(TagValue existing) {
             _utcSampleTime = existing.UtcSampleTime;
-            _numericValue = existing.NumericValue;
-            _textValue = existing.TextValue;
+            _value = existing.Value;
             _status = existing.Status;
             _units = existing.Units;
             _notes = existing.Notes;
@@ -119,7 +113,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValue"/> object.
         /// </returns>
         public TagValue Build() {
-            return TagValue.Create(_utcSampleTime, _numericValue, _textValue, _status, _units, _notes, _error, _properties);
+            return TagValue.Create(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
         }
 
 
@@ -157,72 +151,31 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Updates both the numeric and text values. If <paramref name="textValue"/> is 
-        /// <see langword="null"/> or white space, it will be updated by converting 
-        /// <paramref name="numericValue"/> to a string.
+        /// Updates the value.
         /// </summary>
-        /// <param name="numericValue">
-        ///   The numeric value.
-        /// </param>
-        /// <param name="textValue">
-        ///   The text value.
-        /// </param>
-        /// <param name="provider">
-        ///   The format provider to use if a conversion of the numeric value to a string is required.
+        /// <param name="value">
+        ///   The value.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithValues(double numericValue, string textValue, IFormatProvider provider = null) {
-            _numericValue = numericValue;
-            _textValue = string.IsNullOrWhiteSpace(textValue)
-                ? GetTextValue(numericValue, provider)
-                : textValue;
+        public TagValueBuilder WithValue(Variant value) {
+            _value = value;
             return this;
         }
 
 
         /// <summary>
-        /// Updates the numeric value. If the text value is currently <see langword="null"/> or white 
-        /// space, it will be updated as a string-formatted version of the numeric value.
+        /// Updates the value.
         /// </summary>
         /// <param name="value">
-        ///   The numeric value.
-        /// </param>
-        /// <param name="provider">
-        ///   The format provider to use.
+        ///   The value.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithNumericValue(double value, IFormatProvider provider = null) {
-            _numericValue = value;
-            if (string.IsNullOrWhiteSpace(_textValue)) {
-                _textValue = GetTextValue(value, provider);
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Updates the text value. If the numeric value is currently <see cref="double.NaN"/> and 
-        /// the text value can be parsed to a <see cref="double"/>, the numeric value will also be 
-        /// updated.
-        /// </summary>
-        /// <param name="value">
-        ///   The text value.
-        /// </param>
-        /// <param name="provider">
-        ///   The format provider to use.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithTextValue(string value, IFormatProvider provider = null) {
-            _textValue = value;
-            if (!string.IsNullOrWhiteSpace(_textValue) && double.IsNaN(_numericValue) && double.TryParse(value, NumberStyles.Any, provider ?? CultureInfo.InvariantCulture, out var numericValue)) {
-                _numericValue = numericValue;
-            }
+        public TagValueBuilder WithValue<T>(T value) {
+            _value = Variant.FromValue(value);
             return this;
         }
 

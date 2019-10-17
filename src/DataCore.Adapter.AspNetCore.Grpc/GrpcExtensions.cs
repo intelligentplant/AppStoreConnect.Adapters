@@ -121,7 +121,7 @@ namespace DataCore.Adapter.Grpc.Server {
                     break;
             }
 
-            return new Common.Variant(
+            return Common.Variant.FromValue(
                 value,
                 variant.Type.ToAdapterVariantType()
             );
@@ -439,11 +439,10 @@ namespace DataCore.Adapter.Grpc.Server {
                 Value = new TagValue() {
                     Error = value.Error ?? string.Empty,
                     Notes = value.Notes ?? string.Empty,
-                    NumericValue = value.NumericValue,
                     Status = value.Status.ToGrpcTagValueStatus(),
-                    TextValue = value.TextValue ?? string.Empty,
                     Units = value.Units ?? string.Empty,
-                    UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(value.UtcSampleTime)
+                    UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(value.UtcSampleTime),
+                    Value = value.Value.ToGrpcVariant()
                 }
             };
 
@@ -490,11 +489,10 @@ namespace DataCore.Adapter.Grpc.Server {
                 Value = new TagValue() {
                     Error = value.Error ?? string.Empty,
                     Notes = value.Notes ?? string.Empty,
-                    NumericValue = value.NumericValue,
                     Status = value.Status.ToGrpcTagValueStatus(),
-                    TextValue = value.TextValue ?? string.Empty,
                     Units = value.Units ?? string.Empty,
-                    UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(value.UtcSampleTime)
+                    UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(value.UtcSampleTime),
+                    Value = value.Value.ToGrpcVariant()
                 }
             };
 
@@ -607,8 +605,7 @@ namespace DataCore.Adapter.Grpc.Server {
                 TagId = writeRequest.TagId,
                 Value = TagValueBase.Create(
                     writeRequest.UtcSampleTime.ToDateTime(),
-                    writeRequest.NumericValue,
-                    writeRequest.TextValue,
+                    writeRequest.Value.ToAdapterVariant(),
                     writeRequest.Status.ToAdapterTagValueStatus(),
                     writeRequest.Units
                 )

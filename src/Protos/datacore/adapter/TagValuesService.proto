@@ -4,7 +4,6 @@ package datacore.adapter;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "TagSearchService.proto";
 import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -64,10 +63,6 @@ message RemoveTagsFromSnapshotPushChannelResponse {
 }
 
 // Read raw tag values
-enum RawDataBoundaryType {
-    RAW_DATA_BOUNDARY_TYPE_INSIDE = 0;
-    RAW_DATA_BOUNDARY_TYPE_OUTSIDE = 1;
-}
 message ReadRawTagValuesRequest {
     string adapter_id = 1;
     repeated string tags = 2;
@@ -125,81 +120,4 @@ message ReadProcessedTagValuesRequest {
     google.protobuf.Duration sample_interval = 5;
     repeated string data_functions = 6;
     map<string,string> properties = 7;
-}
-
-
-// Tag value models
-enum TagValueStatus {
-    TAG_VALUE_STATUS_BAD = 0;
-    TAG_VALUE_STATUS_UNKNOWN = 64;
-    TAG_VALUE_STATUS_GOOD = 192;
-}
-
-
-message TagValue {
-    google.protobuf.Timestamp utc_sample_time = 1;
-    double numeric_value = 2;
-    string text_value = 3;
-    TagValueStatus status = 4;
-    string units = 5;
-    string notes = 6;
-    string error = 7;
-    repeated AdapterProperty properties = 8; 
-}
-
-
-enum TagValueQueryType {
-    TAG_VALUE_QUERY_TYPE_UNKNOWN = 0;
-    TAG_VALUE_QUERY_TYPE_SNAPSHOT_POLL = 1;
-    TAG_VALUE_QUERY_TYPE_SNAPSHOT_PUSH = 2;
-    TAG_VALUE_QUERY_TYPE_RAW = 3;
-    TAG_VALUE_QUERY_TYPE_PLOT = 4;
-    TAG_VALUE_QUERY_TYPE_INTERPOLATED = 5;
-    TAG_VALUE_QUERY_TYPE_VALUES_AT_TIMES = 6;
-    TAG_VALUE_QUERY_TYPE_PROCESSED = 7;
-}
-
-
-message TagValueQueryResult {
-    string tag_id = 1;
-    string tag_name = 2;
-    TagValueQueryType query_type = 3;
-    TagValue value = 4;
-}
-
-
-message ProcessedTagValueQueryResult {
-    string tag_id = 1;
-    string tag_name = 2;
-    TagValueQueryType query_type = 3;
-    string data_function = 4;
-    TagValue value = 5;
-}
-
-
-message DataFunctionDescriptor {
-    string name = 1;
-    string description = 2;
-}
-
-
-message WriteTagValueRequest {
-    string correlation_id = 1;
-    string adapter_id = 2;
-    string tag_id = 3;
-    google.protobuf.Timestamp utc_sample_time = 4;
-    double numeric_value = 5;
-    string text_value = 6;
-    TagValueStatus status = 7;
-    string units = 8;
-}
-
-
-message WriteTagValueResult {
-    string correlation_id = 1;
-    string adapter_id = 2;
-    string tag_id = 3;
-    WriteOperationStatus write_status = 4;
-    string notes = 5;
-    repeated AdapterProperty properties = 6;
 }

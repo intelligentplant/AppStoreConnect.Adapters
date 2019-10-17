@@ -23,7 +23,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The channel for the subscription.
         /// </summary>
-        private readonly Channel<T> _channel;
+        private readonly Lazy<Channel<T>> _channel;
 
         /// <summary>
         /// Cancellation token source that fires when the object is disposed.
@@ -31,12 +31,12 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <inheritdoc/>
-        public ChannelReader<T> Reader { get { return _channel; } }
+        public ChannelReader<T> Reader { get { return _channel.Value; } }
 
         /// <summary>
         /// The writer for the subscription's channel.
         /// </summary>
-        protected ChannelWriter<T> Writer { get { return _channel; } }
+        protected ChannelWriter<T> Writer { get { return _channel.Value; } }
 
         /// <summary>
         /// A cancellation token that will fire when the subscription is disposed.
@@ -50,9 +50,7 @@ namespace DataCore.Adapter {
         /// Creates a new <see cref="AdapterSubscription{T}"/> obejct.
         /// </summary>
         protected AdapterSubscription() {
-#pragma warning disable CA2214 // Do not call overridable methods in constructors
-            _channel = CreateChannel();
-#pragma warning restore CA2214 // Do not call overridable methods in constructors
+            _channel = new Lazy<Channel<T>>(CreateChannel, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
@@ -76,7 +74,7 @@ namespace DataCore.Adapter {
 
             _disposedTokenSource.Cancel();
             _disposedTokenSource.Dispose();
-            _channel.Writer.TryComplete();
+            Writer.TryComplete();
 
             Dispose(true);
 
@@ -103,7 +101,7 @@ namespace DataCore.Adapter {
 
             _disposedTokenSource.Cancel();
             _disposedTokenSource.Dispose();
-            _channel.Writer.TryComplete();
+            Writer.TryComplete();
 
             await DisposeAsync(true).ConfigureAwait(false);
 

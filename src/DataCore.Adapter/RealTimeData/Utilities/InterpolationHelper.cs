@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -68,12 +69,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
 
-            if (valueBefore == null || 
-                valueAfter == null || 
-                double.IsNaN(valueBefore.NumericValue) || 
-                double.IsNaN(valueAfter.NumericValue) || 
-                double.IsInfinity(valueBefore.NumericValue) || 
-                double.IsInfinity(valueAfter.NumericValue)) {
+            var y0 = valueBefore?.Value.GetValueOrDefault(double.NaN) ?? double.NaN;
+            var y1 = valueAfter?.Value.GetValueOrDefault(double.NaN) ?? double.NaN;
+
+            if ( 
+                double.IsNaN(y0) || 
+                double.IsNaN(y1) || 
+                double.IsInfinity(y0) || 
+                double.IsInfinity(y1)) {
                 
                 return valueBefore == null 
                     ? null 
@@ -85,17 +88,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var x0 = valueBefore.UtcSampleTime;
             var x1 = valueAfter.UtcSampleTime;
 
-            var y0 = valueBefore.NumericValue;
-            var y1 = valueAfter.NumericValue;
-
             var nextNumericValue = InterpolateValue(utcSampleTime, x0, x1, y0, y1);
-            var nextTextValue = TagValueBuilder.GetTextValue(nextNumericValue);
             var nextStatusValue = new[] { valueBefore, valueAfter }.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
-                .WithNumericValue(nextNumericValue)
-                .WithTextValue(nextTextValue)
+                .WithValue(nextNumericValue)
                 .WithStatus(nextStatusValue)
                 .WithUnits(valueBefore.Units)
                 .WithNotes($"Interpolated using samples @ {valueBefore.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z and {valueAfter.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z.")

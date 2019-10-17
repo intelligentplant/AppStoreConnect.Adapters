@@ -26,18 +26,3 @@ message GetAdapterRequest {
 message GetAdapterResponse {
     ExtendedAdapterDescriptor adapter = 1;
 }
-
-
-// Adapter models
-
-message AdapterDescriptor {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-}
-message ExtendedAdapterDescriptor {
-    AdapterDescriptor adapterDescriptor = 1;
-    repeated string features = 2;
-    repeated string extensions = 3;
-    repeated AdapterProperty properties = 4;
-}

@@ -57,8 +57,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             return TagValue.Create(
                 tagValue.UtcSampleTime.ToDateTime(),
-                tagValue.NumericValue,
-                tagValue.TextValue,
+                tagValue.Value.ToAdapterVariant(),
                 tagValue.Status.ToAdapterTagValueStatus(),
                 tagValue.Units,
                 tagValue.Notes,
@@ -154,8 +153,7 @@ namespace DataCore.Adapter.RealTimeData {
                 CorrelationId = item.CorrelationId ?? string.Empty,
                 TagId = item.TagId ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(item.Value.UtcSampleTime),
-                NumericValue = item.Value.NumericValue,
-                TextValue = item.Value.TextValue ?? string.Empty,
+                Value = item.Value.Value.ToGrpcVariant(),
                 Status = item.Value.Status.ToGrpcTagValueStatus(),
                 Units = item.Value.Units ?? string.Empty
             };

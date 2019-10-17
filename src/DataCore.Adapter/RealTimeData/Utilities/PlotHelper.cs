@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -213,20 +214,40 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var significantValues = new HashSet<TagValue>();
 
             if (tag.DataType == TagDataType.Numeric) {
+                var numericValues = bucket.Samples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));
+
                 significantValues.Add(bucket.Samples.First());
                 significantValues.Add(bucket.Samples.Last());
-                significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue <= b.NumericValue ? a : b)); // min
-                significantValues.Add(bucket.Samples.Aggregate((a, b) => a.NumericValue >= b.NumericValue ? a : b)); // max
+                significantValues.Add(bucket.Samples.Aggregate((a, b) => {
+                    var nValA = numericValues[a];
+                    var nValB = numericValues[b];
+                    return nValA <= nValB
+                        ? a
+                        : b;
+                })); // min
+                significantValues.Add(bucket.Samples.Aggregate((a, b) => {
+                    var nValA = numericValues[a];
+                    var nValB = numericValues[b];
+                    return nValA >= nValB
+                        ? a
+                        : b;
+                })); // max
             }
             else {
                 // The tag is not numeric, so we have to add each text value change or quality status 
                 // change in the bucket.
-                var currentState = lastValuePreviousBucket;
+                var currentState = lastValuePreviousBucket?.Value.GetValueOrDefault<string>();
+                var currentQuality = lastValuePreviousBucket?.Status;
+
                 foreach (var item in bucket.Samples) {
-                    if (currentState != null && string.Equals(currentState.TextValue, item.TextValue) && currentState.Status == item.Status) {
+                    var tVal = item.Value.GetValueOrDefault<string>();
+                    if (currentState != null && 
+                        string.Equals(currentState, tVal, StringComparison.Ordinal) && 
+                        currentQuality == item.Status) {
                         continue;
                     }
-                    currentState = item;
+                    currentState = tVal;
+                    currentQuality = item.Status;
                     significantValues.Add(item);
                 }
             }

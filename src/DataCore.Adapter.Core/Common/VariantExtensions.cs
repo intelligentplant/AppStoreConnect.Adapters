@@ -108,9 +108,20 @@ namespace DataCore.Adapter.Common {
         ///   <typeparamref name="T"/>.
         /// </returns>
         public static T GetValueOrDefault<T>(this Variant variant, T defaultValue) {
-            return (variant.Value is T val)
-                ? val
-                : defaultValue;
+            if (variant.Value is T val) {
+                return val;
+            }
+
+            if (variant.Value is IConvertible convertible) {
+                try {
+                    return (T) Convert.ChangeType(convertible, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                }
+                catch {
+                    return defaultValue;
+                }
+            }
+
+            return defaultValue;
         }
 
     }

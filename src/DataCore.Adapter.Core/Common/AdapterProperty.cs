@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Common {
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
                 Value = value is Variant v 
                     ? v 
-                    : new Variant(value)
+                    : Variant.FromValue(value)
             };
         }
 

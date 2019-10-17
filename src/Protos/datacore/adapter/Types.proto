@@ -2,8 +2,13 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
+
+// Variant
 
 enum VariantType {
     VARIANT_TYPE_UNKNOWN = 0;
@@ -32,15 +37,11 @@ message Variant {
 }
 
 
+// General-purpose types
+
 message AdapterProperty {
     string name = 1;
     Variant value = 2;
-}
-
-
-message DigitalState {
-    string name = 1;
-    int32 value = 2;
 }
 
 
@@ -49,4 +50,271 @@ enum WriteOperationStatus {
     WRITE_OPERATION_STATUS_SUCCESS = 1;
     WRITE_OPERATION_STATUS_FAIL = 2;
     WRITE_OPERATION_STATUS_PENDING = 3;
+}
+
+
+// Host Info models
+
+message HostInfo {
+    string name = 1;
+    string description = 2;
+    string version = 3;
+    VendorInfo vendor_info = 4;
+    repeated AdapterProperty properties = 5;
+}
+
+
+message VendorInfo {
+    string name = 1;
+    string url = 2;
+}
+
+
+// Adapter models
+
+message AdapterDescriptor {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+message ExtendedAdapterDescriptor {
+    AdapterDescriptor adapterDescriptor = 1;
+    repeated string features = 2;
+    repeated string extensions = 3;
+    repeated AdapterProperty properties = 4;
+}
+
+
+// Asset Model models
+
+message AssetModelNode {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string parent = 4;
+    repeated string children = 5;
+    repeated AssetModelNodeMeasurement measurements = 6;
+    repeated AdapterProperty properties = 7;
+}
+
+
+message AssetModelNodeMeasurement {
+    string name = 1;
+    string adapter_id = 2;
+    datacore.adapter.TagSummary tag = 3;
+}
+
+
+// Event models
+
+message EventMessage {
+    string id = 1;
+    google.protobuf.Timestamp utc_event_time = 2;
+    EventPriority priority = 3;
+    string category = 4;
+    string message = 5;
+    repeated AdapterProperty properties = 6;
+}
+
+
+message EventMessageWithCursorPosition {
+    string cursor_position = 1;
+    EventMessage event_message = 2;
+}
+
+
+enum EventSubscriptionType {
+    EVENT_SUBSCRIPTION_TYPE_ACTIVE = 0;
+    EVENT_SUBSCRIPTION_TYPE_PASSIVE = 2;
+}
+
+
+enum EventPriority {
+    EVENT_PRIORITY_UNKNOWN = 0;
+    EVENT_PRIORITY_LOW = 1;
+    EVENT_PRIORITY_MEDIUM = 2;
+    EVENT_PRIORITY_HIGH = 3;
+    EVENT_PRIORITY_CRITICAL = 4;
+}
+
+
+enum EventReadDirection {
+    EVENT_READ_DIRECTION_FORWARDS = 0;
+    EVENT_READ_DIRECTION_BACKWARDS = 1;
+}
+
+
+message WriteEventMessageRequest {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    EventMessage message = 3;
+}
+
+
+message WriteEventMessageResult {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    WriteOperationStatus write_status = 3;
+    string notes = 4;
+    repeated AdapterProperty properties = 5;
+}
+
+
+// Tag definition models
+
+message TagIdentifier {
+    string id = 1;
+    string name = 2;
+}
+
+
+message TagSummary {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string units = 4;
+}
+
+
+message TagDefinition {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string units = 4;
+    TagDataType data_type = 5;
+    repeated DigitalState states = 6;
+    repeated AdapterProperty properties = 7;
+    repeated string labels = 8;
+}
+
+
+enum TagDataType {
+    NUMERIC = 0;
+    TEXT = 1;
+    STATE = 2;
+}
+
+
+message DigitalState {
+    string name = 1;
+    int32 value = 2;
+}
+
+// Annotation models
+
+message TagValueAnnotationBase {
+    AnnotationType annotation_type = 1;
+    google.protobuf.Timestamp utc_start_time = 2;
+    google.protobuf.Timestamp utc_end_time = 3;
+    bool has_utc_end_time = 4;
+    string value = 5;
+    string description = 6;
+    repeated AdapterProperty properties = 7;
+}
+
+message TagValueAnnotation {
+    string id = 1;
+    TagValueAnnotationBase annotation = 2;
+}
+
+enum AnnotationType {
+    ANNOTATION_TYPE_INSTANTANEOUS = 0;
+    ANNOTATION_TYPE_TIME_RANGE = 1;
+}
+
+message TagValueAnnotationQueryResult {
+    string tag_id = 1;
+    string tag_name = 2;
+    TagValueAnnotation annotation = 3;
+}
+
+message WriteTagValueAnnotationResult {
+    string adapter_id = 1;
+    string tag_id = 2;
+    string annotation_id = 3;
+    WriteOperationStatus write_status = 4;
+    string notes = 5;
+    repeated AdapterProperty properties = 6;
+}
+
+
+// Tag value models
+
+enum TagValueStatus {
+    TAG_VALUE_STATUS_BAD = 0;
+    TAG_VALUE_STATUS_UNKNOWN = 64;
+    TAG_VALUE_STATUS_GOOD = 192;
+}
+
+
+message TagValue {
+    google.protobuf.Timestamp utc_sample_time = 1;
+    Variant value = 2;
+    TagValueStatus status = 3;
+    string units = 4;
+    string notes = 5;
+    string error = 6;
+    repeated AdapterProperty properties = 7; 
+}
+
+
+enum RawDataBoundaryType {
+    RAW_DATA_BOUNDARY_TYPE_INSIDE = 0;
+    RAW_DATA_BOUNDARY_TYPE_OUTSIDE = 1;
+}
+
+
+enum TagValueQueryType {
+    TAG_VALUE_QUERY_TYPE_UNKNOWN = 0;
+    TAG_VALUE_QUERY_TYPE_SNAPSHOT_POLL = 1;
+    TAG_VALUE_QUERY_TYPE_SNAPSHOT_PUSH = 2;
+    TAG_VALUE_QUERY_TYPE_RAW = 3;
+    TAG_VALUE_QUERY_TYPE_PLOT = 4;
+    TAG_VALUE_QUERY_TYPE_INTERPOLATED = 5;
+    TAG_VALUE_QUERY_TYPE_VALUES_AT_TIMES = 6;
+    TAG_VALUE_QUERY_TYPE_PROCESSED = 7;
+}
+
+
+message TagValueQueryResult {
+    string tag_id = 1;
+    string tag_name = 2;
+    TagValueQueryType query_type = 3;
+    TagValue value = 4;
+}
+
+
+message ProcessedTagValueQueryResult {
+    string tag_id = 1;
+    string tag_name = 2;
+    TagValueQueryType query_type = 3;
+    string data_function = 4;
+    TagValue value = 5;
+}
+
+
+message DataFunctionDescriptor {
+    string name = 1;
+    string description = 2;
+}
+
+
+message WriteTagValueRequest {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    string tag_id = 3;
+    google.protobuf.Timestamp utc_sample_time = 4;
+    Variant value = 5;
+    TagValueStatus status = 7;
+    string units = 8;
+}
+
+
+message WriteTagValueResult {
+    string correlation_id = 1;
+    string adapter_id = 2;
+    string tag_id = 3;
+    WriteOperationStatus write_status = 4;
+    string notes = 5;
+    repeated AdapterProperty properties = 6;
 }

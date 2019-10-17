@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
     /// <summary>
@@ -134,8 +135,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         // previous bucket that we can re-use.
                         var val = TagValueBuilder.Create()
                                     .WithUtcSampleTime(bucket.UtcEnd)
-                                    .WithNumericValue(previousAggregatedValue.NumericValue)
-                                    .WithTextValue(previousAggregatedValue.TextValue)
+                                    .WithValue(previousAggregatedValue.Value)
                                     .WithStatus(previousAggregatedValue.Status)
                                     .WithUnits(previousAggregatedValue.Units)
                                     .Build();
@@ -186,14 +186,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </remarks>
         private static TagValue CalculateAverage(TagDefinition tag, TagValueBucket bucket) {
             var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Min(x => x.NumericValue);
-            var textValue = tag.GetTextValue(numericValue);
+            var numericValue = bucket.Samples.Min(x => x.Value.GetValueOrDefault(double.NaN));
             var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(bucket.UtcEnd)
-                .WithNumericValue(numericValue)
-                .WithTextValue(textValue)
+                .WithValue(numericValue)
                 .WithStatus(status)
                 .WithUnits(tagInfoSample.Units)
                 .Build();
@@ -221,14 +219,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </remarks>
         private static TagValue CalculateMinimum(TagDefinition tag, TagValueBucket bucket) {
             var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Min(x => x.NumericValue);
-            var textValue = tag.GetTextValue(numericValue);
+            var numericValue = bucket.Samples.Min(x => x.Value.GetValueOrDefault(double.NaN));
             var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(bucket.UtcEnd)
-                .WithNumericValue(numericValue)
-                .WithTextValue(textValue)
+                .WithValue(numericValue)
                 .WithStatus(status)
                 .WithUnits(tagInfoSample.Units)
                 .Build();
@@ -256,14 +252,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </remarks>
         private static TagValue CalculateMaximum(TagDefinition tag, TagValueBucket bucket) {
             var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Max(x => x.NumericValue);
-            var textValue = tag.GetTextValue(numericValue);
+            var numericValue = bucket.Samples.Max(x => x.Value.GetValueOrDefault(double.NaN));
             var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(bucket.UtcEnd)
-                .WithNumericValue(numericValue)
-                .WithTextValue(textValue)
+                .WithValue(numericValue)
                 .WithStatus(status)
                 .WithUnits(tagInfoSample.Units)
                 .Build();

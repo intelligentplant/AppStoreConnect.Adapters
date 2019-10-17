@@ -33,11 +33,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="utcSampleTime">
         ///   The UTC sample time.
         /// </param>
-        /// <param name="numericValue">
-        ///   The numeric tag value.
-        /// </param>
-        /// <param name="textValue">
-        ///   The text tag value.
+        /// <param name="value">
+        ///   The tag value.
         /// </param>
         /// <param name="status">
         ///   The quality status for the value.
@@ -54,11 +51,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public static TagValue Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units, string notes, string error, IEnumerable<AdapterProperty> properties) {
+        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units, string notes, string error, IEnumerable<AdapterProperty> properties) {
             return new TagValue() {
                 UtcSampleTime = utcSampleTime,
-                NumericValue = numericValue,
-                TextValue = textValue,
+                Value = value,
                 Status = status,
                 Units = units ?? string.Empty,
                 Notes = notes,

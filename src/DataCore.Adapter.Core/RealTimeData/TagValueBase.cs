@@ -1,4 +1,5 @@
 ﻿using System;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -13,16 +14,9 @@ namespace DataCore.Adapter.RealTimeData {
         public DateTime UtcSampleTime { get; set; }
 
         /// <summary>
-        /// The numeric value for the tag. This can differ from the text value on state-based and 
-        /// non-numeric tags.
+        /// The tag value.
         /// </summary>
-        public double NumericValue { get; set; }
-
-        /// <summary>
-        /// The text value for the tag. This can differ from the numeric value on state-based and 
-        /// non-numeric tags.
-        /// </summary>
-        public string TextValue { get; set; }
+        public Variant Value { get; set; }
 
         /// <summary>
         /// The quality status for the value.
@@ -41,11 +35,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="utcSampleTime">
         ///   The UTC sample time.
         /// </param>
-        /// <param name="numericValue">
-        ///   The numeric tag value.
-        /// </param>
-        /// <param name="textValue">
-        ///   The text tag value.
+        /// <param name="value">
+        ///   The tag value.
         /// </param>
         /// <param name="status">
         ///   The quality status for the value.
@@ -53,11 +44,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public static TagValueBase Create(DateTime utcSampleTime, double numericValue, string textValue, TagValueStatus status, string units) {
+        public static TagValueBase Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
             return new TagValueBase() {
                 UtcSampleTime = utcSampleTime,
-                NumericValue = numericValue,
-                TextValue = textValue,
+                Value = value,
                 Status = status,
                 Units = units ?? string.Empty
             };
