@@ -31,22 +31,16 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value of the property.
         /// </param>
-        /// <param name="valueType">
-        ///   The value type of the property.
-        /// </param>
         /// <returns>
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterProperty Create(string name, object value, VariantType valueType) {
+        public static AdapterProperty Create(string name, Variant value) {
             return new AdapterProperty() { 
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
-                Value = new Variant() {
-                    Value = value,
-                    Type = valueType
-                }
+                Value = value
             };
         }
 
@@ -69,7 +63,9 @@ namespace DataCore.Adapter.Common {
         public static AdapterProperty Create(string name, object value) {
             return new AdapterProperty() {
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
-                Value = Variant.Create(value)
+                Value = value is Variant v 
+                    ? v 
+                    : new Variant(value)
             };
         }
 

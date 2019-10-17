@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
 </Project>

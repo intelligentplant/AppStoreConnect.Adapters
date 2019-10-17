@@ -61,7 +61,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Http.Clien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.SignalR.Client", "src\DataCore.Adapter.AspNetCore.SignalR.Client\DataCore.Adapter.AspNetCore.SignalR.Client.csproj", "{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Http.Proxy", "src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj", "{D9C535E9-CE37-49CB-A04F-008AA2480DC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Http.Proxy", "src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj", "{D9C535E9-CE37-49CB-A04F-008AA2480DC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Json", "src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj", "{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -145,6 +147,10 @@ Global
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -173,6 +179,7 @@ Global
 		{EA46F702-8AEA-4EAC-A81C-B924D877DE26} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
+		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

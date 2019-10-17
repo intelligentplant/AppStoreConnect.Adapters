@@ -16,12 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <Protobuf Include="..\Protos\**\*.proto" GrpcServices="Client" />
     <Content Include="@(Protobuf)" LinkBase="Protos" Pack="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
   </ItemGroup>
   
 </Project>

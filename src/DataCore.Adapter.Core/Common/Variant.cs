@@ -7,42 +7,23 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Describes a variant value.
     /// </summary>
-    public class Variant {
+    public struct Variant {
+
+        /// <summary>
+        /// Null variant.
+        /// </summary>
+        public static Variant Null { get; } = new Variant(null);
+
 
         /// <summary>
         /// The value.
         /// </summary>
-        public object Value { get; set; }
+        public object Value { get; }
 
         /// <summary>
         /// The variant type.
         /// </summary>
-        public VariantType Type { get; set; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="Variant"/> object.
-        /// </summary>
-        /// <param name="value">
-        ///   The value.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="Variant"/> object.
-        /// </returns>
-        public static Variant Create(object value) {
-            if (value == null) {
-                return new Variant() { 
-                    Value = null,
-                    Type = VariantType.Null
-                };
-            }
-
-            if (value is Variant v) {
-                return Create(v.Value, v.Type);
-            }
-
-            return Create(value, value.GetType().GetVariantType());
-        }
+        public VariantType Type { get; }
 
 
         /// <summary>
@@ -52,16 +33,26 @@ namespace DataCore.Adapter.Common {
         ///   The value.
         /// </param>
         /// <param name="type">
-        ///   The value type.
+        ///   The variant type.
         /// </param>
-        /// <returns>
-        ///   A new <see cref="Variant"/> object.
-        /// </returns>
-        public static Variant Create(object value, VariantType type) {
-            return new Variant() {
-                Value = value,
-                Type = type
-            };
+        public Variant(object value, VariantType type) {
+            Value = value;
+            Type = type;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> object that infers the <see cref="VariantType"/> 
+        /// from the value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(object value) {
+            Value = value;
+            Type = value == null
+                ? VariantType.Null 
+                : value.GetType().GetVariantType();
         }
 
 

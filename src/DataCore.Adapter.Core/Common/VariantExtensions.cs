@@ -64,7 +64,7 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The CLR type to for the variant type.
         /// </returns>
-        internal static Type GetType(this VariantType type) {
+        public static Type GetClrType(this VariantType type) {
             var item = s_variantTypeMap.FirstOrDefault(x => x.Value == type).Key;
             return item ?? typeof(object);
         }
@@ -108,10 +108,6 @@ namespace DataCore.Adapter.Common {
         ///   <typeparamref name="T"/>.
         /// </returns>
         public static T GetValueOrDefault<T>(this Variant variant, T defaultValue) {
-            if (variant == null) {
-                return defaultValue;
-            }
-
             return (variant.Value is T val)
                 ? val
                 : defaultValue;

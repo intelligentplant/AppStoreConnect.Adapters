@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using DataCore.Adapter.Common;
+using DataCore.Adapter.Json;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Server {
@@ -52,11 +54,75 @@ namespace DataCore.Adapter.Grpc.Server {
 
         public static Common.Variant ToAdapterVariant(this Grpc.Variant variant) {
             if (variant == null) {
-                return Common.Variant.Create(null);
+                return Common.Variant.Null;
             }
 
-            return Common.Variant.Create(
-                System.Text.Json.JsonSerializer.Deserialize(variant.Value.Span, typeof(object)),
+            var bytes = variant.Value.ToByteArray();
+            object value;
+
+            switch (variant.Type) {
+                case Grpc.VariantType.Boolean:
+                    value = BitConverter.ToBoolean(bytes, 0);
+                    break;
+                case Grpc.VariantType.Byte:
+                    value = bytes?.FirstOrDefault();
+                    break;
+                case Grpc.VariantType.Datetime:
+                    value = DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var dt)
+                        ? dt
+                        : default;
+                    break;
+                case Grpc.VariantType.Double:
+                    value = BitConverter.ToDouble(bytes, 0);
+                    break;
+                case Grpc.VariantType.Float:
+                    value = BitConverter.ToSingle(bytes, 0);
+                    break;
+                case Grpc.VariantType.Int16:
+                    value = BitConverter.ToInt16(bytes, 0);
+                    break;
+                case Grpc.VariantType.Int32:
+                    value = BitConverter.ToInt32(bytes, 0);
+                    break;
+                case Grpc.VariantType.Int64:
+                    value = BitConverter.ToInt64(bytes, 0);
+                    break;
+                case Grpc.VariantType.Null:
+                    value = null;
+                    break;
+                case Grpc.VariantType.Object:
+                    var serializerOptions = new System.Text.Json.JsonSerializerOptions();
+                    serializerOptions.Converters.AddAdapterConverters();
+                    value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions);
+                    break;
+                case Grpc.VariantType.Sbyte:
+                    value = (sbyte) bytes?.FirstOrDefault();
+                    break;
+                case Grpc.VariantType.String:
+                    value = System.Text.Encoding.UTF8.GetString(bytes);
+                    break;
+                case Grpc.VariantType.Timespan:
+                    value = TimeSpan.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var ts)
+                        ? ts
+                        : default;
+                    break;
+                case Grpc.VariantType.Uint16:
+                    value = BitConverter.ToUInt16(bytes, 0);
+                    break;
+                case Grpc.VariantType.Uint32:
+                    value = BitConverter.ToUInt32(bytes, 0);
+                    break;
+                case Grpc.VariantType.Uint64:
+                    value = BitConverter.ToUInt64(bytes, 0);
+                    break;
+                case Grpc.VariantType.Unknown:
+                default:
+                    value = null;
+                    break;
+            }
+
+            return new Common.Variant(
+                value,
                 variant.Type.ToAdapterVariantType()
             );
         }
@@ -104,17 +170,78 @@ namespace DataCore.Adapter.Grpc.Server {
 
 
         public static Grpc.Variant ToGrpcVariant(this Common.Variant variant) {
-            if (variant == null) {
+            if (variant.Value == null) {
                 return new Grpc.Variant() {
                     Value = Google.Protobuf.ByteString.Empty,
                     Type = Grpc.VariantType.Null
                 };
             }
 
+            byte[] bytes;
+
+            switch (variant.Type) {
+                case Common.VariantType.Boolean:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<bool>());
+                    break;
+                case Common.VariantType.Byte:
+                    bytes = new[] { variant.GetValueOrDefault<byte>() };
+                    break;
+                case Common.VariantType.DateTime:
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-mm-ddTHH:mm:ss.fffffffZ"));
+                    break;
+                case Common.VariantType.Double:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<double>());
+                    break;
+                case Common.VariantType.Float:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<float>());
+                    break;
+                case Common.VariantType.Int16:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<short>());
+                    break;
+                case Common.VariantType.Int32:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<int>());
+                    break;
+                case Common.VariantType.Int64:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<long>());
+                    break;
+                case Common.VariantType.Null:
+                    bytes = Array.Empty<byte>();
+                    break;
+                case Common.VariantType.Object:
+                    var serializerOptions = new System.Text.Json.JsonSerializerOptions();
+                    serializerOptions.Converters.AddAdapterConverters();
+                    bytes = System.Text.Encoding.UTF8.GetBytes(
+                        System.Text.Json.JsonSerializer.Serialize(variant.Value, variant.Value?.GetType() ?? typeof(object), serializerOptions)
+                    );
+                    break;
+                case Common.VariantType.SByte:
+                    bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };
+                    break;
+                case Common.VariantType.String:
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault(string.Empty));
+                    break;
+                case Common.VariantType.TimeSpan:
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<TimeSpan>().ToString());
+                    break;
+                case Common.VariantType.UInt16:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ushort>());
+                    break;
+                case Common.VariantType.UInt32:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<uint>());
+                    break;
+                case Common.VariantType.UInt64:
+                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ulong>());
+                    break;
+                case Common.VariantType.Unknown:
+                default:
+                    bytes = Array.Empty<byte>();
+                    break;
+            }
+
             return new Grpc.Variant() {
-                Value = variant.Value == null
-                    ? Google.Protobuf.ByteString.Empty
-                    : Google.Protobuf.ByteString.CopyFromUtf8(System.Text.Json.JsonSerializer.Serialize(variant.Value)),
+                Value = bytes.Length > 0
+                    ? Google.Protobuf.ByteString.CopyFrom(bytes)
+                    : Google.Protobuf.ByteString.Empty,
                 Type = variant.Type.ToGrpcVariantType()
             };
         }
