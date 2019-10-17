@@ -72,9 +72,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override string ToString() {
-            return Value == null
-                ? "{null}"
-                : Value.ToString();
+            return Value?.ToString() ?? "{null}";
         }
 
     }

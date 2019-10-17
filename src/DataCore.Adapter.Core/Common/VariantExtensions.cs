@@ -32,6 +32,22 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
+        /// Tests if a variant contains a null value.
+        /// </summary>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <see cref="Type"/> is <see cref="VariantType.Null"/> 
+        ///   or the <see cref="Variant.Value"/> is <see langword="null"/>, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool IsNull(this Variant variant) {
+            return (variant.Type == VariantType.Null) || (variant.Value == null);
+        }
+
+
+        /// <summary>
         /// Tests if the variant is a numeric type.
         /// </summary>
         /// <param name="variant">
