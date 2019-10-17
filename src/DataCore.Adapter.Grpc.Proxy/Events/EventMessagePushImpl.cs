@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
 
@@ -9,10 +10,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
-            var result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), subscriptionType);
-            result.Start(context);
-            return Task.FromResult<IEventMessageSubscription>(result);
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
+            IEventMessageSubscription result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), subscriptionType);
+            try {
+                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
+            }
+            catch {
+                await result.DisposeAsync().ConfigureAwait(false);
+                throw;
+            }
+            return result;
         }
 
 
@@ -32,7 +39,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             }
 
 
-            public void Start(IAdapterCallContext context) {
+            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
                 Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
                         AdapterId = _feature.AdapterId,
@@ -53,6 +60,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                         grpcResponse.Dispose();
                     }
                 }, false, SubscriptionCancelled);
+
+                return default;
             }
 
 

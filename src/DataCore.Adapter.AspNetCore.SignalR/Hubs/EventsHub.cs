@@ -106,6 +106,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 subscriptionsForConnection.Add(result);
             }
 
+            await result.StartAsync(callContext, cancellationToken).ConfigureAwait(false);
             return result;
         }
 
@@ -226,6 +227,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             private readonly CancellationTokenRegistration _onStreamCancelled;
 
             /// <inheritdoc/>
+            bool IAdapterSubscription<EventMessage>.IsStarted {
+                get { return _inner.IsStarted; }
+            }
+
+            /// <inheritdoc/>
             ChannelReader<EventMessage> IAdapterSubscription<EventMessage>.Reader {
                 get { return _inner.Reader; }
             }
@@ -256,6 +262,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 };
                 _onStreamCancelled = streamCancelled.Register(Dispose);
             }
+
+
+            /// <inheritdoc/>
+            public async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                await _inner.StartAsync(context, cancellationToken).ConfigureAwait(false);
+            } 
 
 
             /// <inheritdoc/>

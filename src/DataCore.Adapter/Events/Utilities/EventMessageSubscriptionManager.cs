@@ -300,7 +300,6 @@ namespace DataCore.Adapter.Events.Utilities {
             /// </param>
             internal Subscription(EventMessageSubscriptionManager subscriptionManager, EventMessageSubscriptionType subscriptionType) {
                 _subscriptionManager = subscriptionManager;
-                
                 IsActive = subscriptionType == EventMessageSubscriptionType.Active;
             }
 
@@ -312,6 +311,13 @@ namespace DataCore.Adapter.Events.Utilities {
                     ? BoundedChannelFullMode.Wait
                     : BoundedChannelFullMode.DropWrite
                 );
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                // No additional setup required.
+                return default;
             }
 
 

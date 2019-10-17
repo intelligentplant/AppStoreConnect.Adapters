@@ -101,7 +101,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A new channel.
         /// </returns>
-        protected Channel<TagValueQueryResult> CreateChannel(int capacity, BoundedChannelFullMode fullMode) {
+        protected internal Channel<TagValueQueryResult> CreateChannel(int capacity, BoundedChannelFullMode fullMode) {
             return capacity > 0
                 ? Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(capacity) {
                     FullMode = fullMode,
@@ -585,6 +585,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <inheritdoc/>
             protected override Channel<TagValueQueryResult> CreateChannel() {
                 return _subscriptionManager.CreateChannel(5000, BoundedChannelFullMode.DropOldest);
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                // No additional setup required.
+                return default;
             }
 
 

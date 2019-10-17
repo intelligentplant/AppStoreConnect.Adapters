@@ -21,6 +21,16 @@ namespace DataCore.Adapter {
         private bool _isDisposed;
 
         /// <summary>
+        /// Lock to prevent multiple attempts to start the subscription at once.
+        /// </summary>
+        private readonly SemaphoreSlim _startupLock = new SemaphoreSlim(1, 1);
+
+        /// <summary>
+        /// Indicates if the subscription has been initialised.
+        /// </summary>
+        private bool _isStarted;
+
+        /// <summary>
         /// The channel for the subscription.
         /// </summary>
         private readonly Lazy<Channel<T>> _channel;
@@ -29,6 +39,9 @@ namespace DataCore.Adapter {
         /// Cancellation token source that fires when the object is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <inheritdoc/>
+        public bool IsStarted { get { return _isStarted; } }
 
         /// <inheritdoc/>
         public ChannelReader<T> Reader { get { return _channel.Value; } }
@@ -67,15 +80,60 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
+        async ValueTask IAdapterSubscription<T>.StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try {
+                if (_isStarted) {
+                    return;
+                }
+                await StartAsync(context, cancellationToken).ConfigureAwait(false);
+                _isStarted = true;
+            }
+            finally {
+                _startupLock.Release();
+            }
+        }
+
+
+        /// <summary>
+        /// Starts the subscription. Implementers should perform any required setup logic for the 
+        /// subscription here.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller. Can be <see langword="null"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform any required setup action.
+        /// </returns>
+        protected abstract ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken);
+
+
+        /// <summary>
+        /// Helper to dispose of common items from both <see cref="Dispose()"/> and 
+        /// <see cref="DisposeAsync()"/>.
+        /// </summary>
+        private void DisposeCommon() {
+            _startupLock.Dispose();
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+            Writer.TryComplete();
+        }
+
+
+        /// <inheritdoc/>
         public void Dispose() {
             if (_isDisposed) {
                 return;
             }
 
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-            Writer.TryComplete();
-
+            DisposeCommon();
             Dispose(true);
 
             _isDisposed = true;
@@ -99,10 +157,7 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-            Writer.TryComplete();
-
+            DisposeCommon();
             await DisposeAsync(true).ConfigureAwait(false);
 
             _isDisposed = true;

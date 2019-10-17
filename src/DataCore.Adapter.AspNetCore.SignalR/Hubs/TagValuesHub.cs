@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? new string[0];
+                .ToArray() ?? Array.Empty<string>();
 
             if (tags.Any()) {
                 await subscription.AddTagsToSubscription(AdapterCallContext, tags, cancellationToken).ConfigureAwait(false);
@@ -203,6 +203,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 subscriptionsForConnection.Add(result);
             }
 
+            await result.StartAsync(callContext, cancellationToken).ConfigureAwait(false);
             return result;
         }
 
@@ -440,6 +441,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             private readonly CancellationTokenRegistration _onStreamCancelled;
 
+            /// <inheritdoc/>
+            public bool IsStarted {
+                get { return _inner.IsStarted; }
+            }
 
             /// <inheritdoc/>
             public ChannelReader<TagValueQueryResult> Reader { get { return _inner.Reader; } }
@@ -457,6 +462,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     }
                 };
                 _onStreamCancelled = streamCancelled.Register(Dispose);
+            }
+
+
+            /// <inheritdoc/>
+            public async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                await _inner.StartAsync(context, cancellationToken).ConfigureAwait(false);
             }
 
 

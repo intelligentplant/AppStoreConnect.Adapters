@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter {
 
@@ -14,9 +14,28 @@ namespace DataCore.Adapter {
     public interface IAdapterSubscription<T> : IDisposable, IAsyncDisposable {
 
         /// <summary>
+        /// Indicates if the subscription has been initialised.
+        /// </summary>
+        bool IsStarted { get; }
+
+        /// <summary>
         /// A channel reader that will emit items published to the subscription.
         /// </summary>
         ChannelReader<T> Reader { get; }
+
+        /// <summary>
+        /// Initialises the subscription.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will initialise the subscription.
+        /// </returns>
+        ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken);
 
     }
 }

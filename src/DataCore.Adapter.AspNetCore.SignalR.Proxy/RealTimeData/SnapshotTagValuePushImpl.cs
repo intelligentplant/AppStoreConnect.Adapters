@@ -24,16 +24,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var result = new SnapshotTagValueSubscription(
+            ISnapshotTagValueSubscription result = new SnapshotTagValueSubscription(
                 AdapterId,
                 GetClient()
             );
 
             try {
-                await result.Start().WithCancellation(cancellationToken).ConfigureAwait(false);
+                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) {
-                ((IDisposable) result).Dispose();
+            catch {
+                await result.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
             return result;
@@ -81,13 +81,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
-            /// <summary>
-            /// Starts the subscription.
-            /// </summary>
-            /// <returns>
-            ///   A task that will start the subscription.
-            /// </returns>
-            public Task Start() {
+            /// <inheritdoc />
+            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var tcs = new TaskCompletionSource<int>();
 
                 Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -119,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
                 }, true, SubscriptionCancelled);
 
-                return tcs.Task;
+                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
 

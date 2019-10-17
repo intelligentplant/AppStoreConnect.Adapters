@@ -12,12 +12,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var result = new SnapshotTagValueSubscription(this, CreateClient<TagValuesService.TagValuesServiceClient>());
+            ISnapshotTagValueSubscription result = new SnapshotTagValueSubscription(this, CreateClient<TagValuesService.TagValuesServiceClient>());
             try {
-                await result.Start(context).WithCancellation(cancellationToken).ConfigureAwait(false);
+                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) {
-                result.Dispose();
+            catch {
+                await result.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
             return result;
@@ -43,7 +43,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            public Task Start(IAdapterCallContext context) {
+            /// <inheritdoc />
+            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
                 var tcs = new TaskCompletionSource<int>();
 
                 Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -83,7 +84,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     }
                 }, false, SubscriptionCancelled);
 
-                return tcs.Task;
+                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
 

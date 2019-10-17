@@ -48,6 +48,24 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
+        /// Tests if the variant has the specified type.
+        /// </summary>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <param name="type">
+        ///   The variant type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant has the specified <paramref name="type"/>, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool Is(this Variant variant, VariantType type) {
+            return variant.Type == type;
+        }
+
+
+        /// <summary>
         /// Tests if the variant is a numeric type.
         /// </summary>
         /// <param name="variant">

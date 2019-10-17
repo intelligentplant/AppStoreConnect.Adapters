@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Events;
@@ -19,14 +20,21 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public EventMessagePushImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
-            var result = new EventMessageSubscription(
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
+            IEventMessageSubscription result = new EventMessageSubscription(
                 AdapterId,
                 GetClient(),
                 subscriptionType
             );
-            result.Start();
-            return Task.FromResult<IEventMessageSubscription>(result);
+
+            try {
+                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
+            }
+            catch {
+                await result.DisposeAsync().ConfigureAwait(false);
+                throw;
+            }
+            return result;
         }
 
         /// <summary>
@@ -69,14 +77,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                 _subscriptionType = subscriptionType;
             }
 
-            /// <summary>
-            /// Starts the subscription.
-            /// </summary>
-            public void Start() {
+            /// <inheritdoc />
+            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
                 Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_adapterId, _subscriptionType, ct).ConfigureAwait(false);
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
                 }, true, SubscriptionCancelled);
+
+                return default;
             }
 
 
