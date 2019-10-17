@@ -43,7 +43,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <see cref="ISnapshotTagValueSubscription"/> implementation for the 
         /// <see cref="ISnapshotTagValuePush"/> feature.
         /// </summary>
-        private class SnapshotTagValueSubscription : SnapshotTagValueSubscriptionBase {
+        private class SnapshotTagValueSubscription : Adapter.RealTimeData.SnapshotTagValueSubscription {
 
             /// <summary>
             /// The adapter ID for the subscription.

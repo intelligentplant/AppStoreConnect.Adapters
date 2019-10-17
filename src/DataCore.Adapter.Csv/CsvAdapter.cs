@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Csv {
         private void AddFeatures() {
             // Construct adapter features.
             AddFeatures(this);
-            AddFeatures(new ReadHistoricalTagValuesHelper(this, this));
+            AddFeatures(new ReadHistoricalTagValues(this, this));
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
@@ -903,7 +903,7 @@ namespace DataCore.Adapter.Csv {
         /// Helper class for providing <see cref="ISnapshotTagValuePush"/> functionality to a 
         /// <see cref="CsvAdapter"/>.
         /// </summary>
-        private class CsvAdapterSnapshotSubscriptionManager : PollingSnapshotTagValueSubscriptionManager {
+        private class CsvAdapterSnapshotSubscriptionManager : PollingSnapshotTagValuePush {
 
             /// <summary>
             /// The owning adapter.

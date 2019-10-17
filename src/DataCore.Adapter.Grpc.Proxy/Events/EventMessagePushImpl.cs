@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
         }
 
 
-        private class EventMessageSubscription : EventMessageSubscriptionBase {
+        private class EventMessageSubscription : Adapter.Events.EventMessageSubscription {
 
             private readonly EventMessagePushImpl _feature;
 

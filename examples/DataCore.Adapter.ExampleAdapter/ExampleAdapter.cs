@@ -53,7 +53,7 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        private class EventsSubscriptionManager : Events.Utilities.EventMessageSubscriptionManager {
+        private class EventsSubscriptionManager : Events.Utilities.EventMessagePush {
 
             private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 

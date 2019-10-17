@@ -11,7 +11,7 @@ namespace DataCore.Adapter.Events.Utilities {
     /// <summary>
     /// Base class for simplifying implementation of the <see cref="IEventMessagePush"/> feature.
     /// </summary>
-    public abstract class EventMessageSubscriptionManager : IEventMessagePush, IDisposable {
+    public abstract class EventMessagePush : IEventMessagePush, IDisposable {
 
         /// <summary>
         /// Logging.
@@ -63,12 +63,12 @@ namespace DataCore.Adapter.Events.Utilities {
 
 
         /// <summary>
-        /// Creates a new <see cref="EventMessageSubscriptionManager"/> object.
+        /// Creates a new <see cref="EventMessagePush"/> object.
         /// </summary>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected EventMessageSubscriptionManager(ILogger logger) {
+        protected EventMessagePush(ILogger logger) {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = Task.Factory.StartNew(async () => {
                 try {
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.Events.Utilities {
 
 
         /// <summary>
-        /// Notifies the <see cref="EventMessageSubscriptionManager"/> that a subscription was disposed.
+        /// Notifies the <see cref="EventMessagePush"/> that a subscription was disposed.
         /// </summary>
         /// <param name="subscription">
         ///   The disposed subscription.
@@ -187,7 +187,7 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// Class finalizer.
         /// </summary>
-        ~EventMessageSubscriptionManager() {
+        ~EventMessagePush() {
             Dispose(false);
         }
 
@@ -196,7 +196,7 @@ namespace DataCore.Adapter.Events.Utilities {
         /// Releases managed and unmanaged resources.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="EventMessageSubscriptionManager"/> is being 
+        ///   <see langword="true"/> if the <see cref="EventMessagePush"/> is being 
         ///   disposed, or <see langword="false"/> if it is being finalized.
         /// </param>
         private void DisposeInternal(bool disposing) {
@@ -226,7 +226,7 @@ namespace DataCore.Adapter.Events.Utilities {
         /// Releases managed and unmanaged resources.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="EventMessageSubscriptionManager"/> is being 
+        ///   <see langword="true"/> if the <see cref="EventMessagePush"/> is being 
         ///   disposed, or <see langword="false"/> if it is being finalized.
         /// </param>
         protected abstract void Dispose(bool disposing);
@@ -276,12 +276,12 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// <see cref="IEventMessageSubscription"/> implementation.
         /// </summary>
-        private class Subscription : EventMessageSubscriptionBase {
+        private class Subscription : EventMessageSubscription {
 
             /// <summary>
             /// The subscription manager that the subscription is attached to.
             /// </summary>
-            private readonly EventMessageSubscriptionManager _subscriptionManager;
+            private readonly EventMessagePush _subscriptionManager;
 
             /// <summary>
             /// Indicates if the subscription is an active or passive event listener.
@@ -298,7 +298,7 @@ namespace DataCore.Adapter.Events.Utilities {
             /// <param name="subscriptionType">
             ///   Indicates if the subscription is an active or passive event listener.
             /// </param>
-            internal Subscription(EventMessageSubscriptionManager subscriptionManager, EventMessageSubscriptionType subscriptionType) {
+            internal Subscription(EventMessagePush subscriptionManager, EventMessageSubscriptionType subscriptionType) {
                 _subscriptionManager = subscriptionManager;
                 IsActive = subscriptionType == EventMessageSubscriptionType.Active;
             }

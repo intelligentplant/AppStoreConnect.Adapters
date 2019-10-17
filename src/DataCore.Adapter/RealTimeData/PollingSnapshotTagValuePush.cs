@@ -6,13 +6,15 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.RealTimeData.Utilities {
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Extends <see cref="SnapshotTagValueSubscriptionManager"/> to provide a snapshot subscription 
-    /// manager that periodically polls for the values of tags that are currently being subscribed to.
+    /// Extends <see cref="SnapshotTagValuePush"/> to provide a snapshot subscription 
+    /// manager that periodically polls for the values of tags that are currently being 
+    /// subscribed to. This can be used to provide push capabilities in an adapter that 
+    /// e.g. only natively supports the <see cref="IReadSnapshotTagValues"/> feature.
     /// </summary>
-    public abstract class PollingSnapshotTagValueSubscriptionManager : SnapshotTagValueSubscriptionManager {
+    public abstract class PollingSnapshotTagValuePush : SnapshotTagValuePush {
 
         /// <summary>
         /// Default polling interval to use.
@@ -26,7 +28,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a new <see cref="PollingSnapshotTagValueSubscriptionManager"/> object.
+        /// Creates a new <see cref="PollingSnapshotTagValuePush"/> object.
         /// </summary>
         /// <param name="pollingInterval">
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
@@ -35,7 +37,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected PollingSnapshotTagValueSubscriptionManager(TimeSpan pollingInterval, ILogger logger) : base(logger) {
+        protected PollingSnapshotTagValuePush(TimeSpan pollingInterval, ILogger logger) : base(logger) {
             _pollingInterval = pollingInterval <= TimeSpan.Zero
                 ? DefaultPollingInterval
                 : pollingInterval;

@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
-        private class SnapshotTagValueSubscription : SnapshotTagValueSubscriptionBase {
+        private class SnapshotTagValueSubscription : Adapter.RealTimeData.SnapshotTagValueSubscription {
 
             private readonly SnapshotTagValuePushImpl _feature;
 

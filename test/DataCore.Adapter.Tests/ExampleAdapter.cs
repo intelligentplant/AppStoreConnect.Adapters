@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private class SnapshotSubscriptionManager : RealTimeData.Utilities.SnapshotTagValueSubscriptionManager {
+        private class SnapshotSubscriptionManager : SnapshotTagValuePush {
 
 
             public SnapshotSubscriptionManager() : base(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance) { }

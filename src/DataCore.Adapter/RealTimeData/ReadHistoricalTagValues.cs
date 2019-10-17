@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.RealTimeData.Utilities;
 
-namespace DataCore.Adapter.RealTimeData.Utilities {
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// A helper class that can add support for <see cref="IReadInterpolatedTagValues"/>, 
-    /// <see cref="IReadPlotTagValues"/> and <see cref="IReadPlotTagValues"/> support to a driver that 
-    /// only natively supports <see cref="IReadRawTagValues"/>.
+    /// <see cref="IReadPlotTagValues"/> and <see cref="IReadPlotTagValues"/> support to an adapter 
+    /// that only natively supports <see cref="IReadRawTagValues"/>.
     /// </summary>
     /// <remarks>
     ///   Interpolated, plot, and processed data queries are handled by querying for raw tag values, 
@@ -17,7 +18,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     ///   calculation or aggregation. Native implementations of the data queries will almost always 
     ///   perform better, and should be used if available.
     /// </remarks>
-    public class ReadHistoricalTagValuesHelper : IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
+    public class ReadHistoricalTagValues : IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
 
         /// <summary>
         /// The tag search provider.
@@ -31,7 +32,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a new <see cref="ReadHistoricalTagValuesHelper"/> object.
+        /// Creates a new <see cref="ReadHistoricalTagValues"/> object.
         /// </summary>
         /// <param name="tagSearchProvider">
         ///   The <see cref="ITagSearch"/> instance that will provide the tag definitions for tags 
@@ -47,7 +48,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValuesHelper(ITagSearch tagSearchProvider, IReadRawTagValues rawValuesProvider) {
+        public ReadHistoricalTagValues(ITagSearch tagSearchProvider, IReadRawTagValues rawValuesProvider) {
             _tagSearchProvider = tagSearchProvider ?? throw new ArgumentNullException(nameof(tagSearchProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
         }

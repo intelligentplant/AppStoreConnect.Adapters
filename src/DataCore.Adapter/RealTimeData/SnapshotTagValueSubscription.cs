@@ -8,7 +8,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Base implementation of <see cref="ISnapshotTagValueSubscription"/>.
     /// </summary>
-    public abstract class SnapshotTagValueSubscriptionBase : AdapterSubscription<TagValueQueryResult>, ISnapshotTagValueSubscription {
+    public abstract class SnapshotTagValueSubscription : AdapterSubscription<TagValueQueryResult>, ISnapshotTagValueSubscription {
 
         /// <inheritdoc/>
         public abstract int Count { get; }

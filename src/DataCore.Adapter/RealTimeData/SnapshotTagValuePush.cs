@@ -7,13 +7,13 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.RealTimeData.Utilities {
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Base class for simplifying implementation of the <see cref="ISnapshotTagValuePush"/> 
     /// feature.
     /// </summary>
-    public abstract class SnapshotTagValueSubscriptionManager : ISnapshotTagValuePush, IDisposable {
+    public abstract class SnapshotTagValuePush : ISnapshotTagValuePush, IDisposable {
 
         /// <summary>
         /// Logging.
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// A cancellation token that will fire when the <see cref="SnapshotTagValueSubscriptionManager"/> 
+        /// A cancellation token that will fire when the <see cref="SnapshotTagValuePush"/> 
         /// is disposed.
         /// </summary>
         protected CancellationToken DisposedToken {
@@ -70,12 +70,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a new <see cref="SnapshotTagValueSubscriptionManager"/> object.
+        /// Creates a new <see cref="SnapshotTagValuePush"/> object.
         /// </summary>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected SnapshotTagValueSubscriptionManager(ILogger logger) {
+        protected SnapshotTagValuePush(ILogger logger) {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _ = Task.Factory.StartNew(async () => {
                 try {
@@ -144,7 +144,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   when subscribing, and you need to add custom logic to the 
         ///   <see cref="Subscription.IsSubscribed(TagValueQueryResult)"/> method to handle this).
         /// </remarks>
-        protected virtual Subscription CreateSubscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
+        protected virtual Subscription CreateSubscription(SnapshotTagValuePush subscriptionManager) {
             return new Subscription(subscriptionManager);
         }
 
@@ -223,7 +223,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Called by a subscription to let the <see cref="SnapshotTagValueSubscriptionManager"/> know 
+        /// Called by a subscription to let the <see cref="SnapshotTagValuePush"/> know 
         /// that tags were added to the subscription.
         /// </summary>
         /// <param name="subscription">
@@ -272,7 +272,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Called by a subscription to let the <see cref="SnapshotTagValueSubscriptionManager"/> know 
+        /// Called by a subscription to let the <see cref="SnapshotTagValuePush"/> know 
         /// that tags were removed from the subscription.
         /// </summary>
         /// <param name="subscription">
@@ -320,7 +320,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Informs the <see cref="SnapshotTagValueSubscriptionManager"/> that snapshot value changes 
+        /// Informs the <see cref="SnapshotTagValuePush"/> that snapshot value changes 
         /// have occurred.
         /// </summary>
         /// <param name="values">
@@ -342,7 +342,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Informs the <see cref="SnapshotTagValueSubscriptionManager"/> that a snapshot value change
+        /// Informs the <see cref="SnapshotTagValuePush"/> that a snapshot value change
         /// has occurred.
         /// </summary>
         /// <param name="value">
@@ -479,7 +479,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Class finalizer.
         /// </summary>
-        ~SnapshotTagValueSubscriptionManager() {
+        ~SnapshotTagValuePush() {
             Dispose(false);
         }
 
@@ -488,7 +488,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Releases managed and unmanaged resources.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="SnapshotTagValueSubscriptionManager"/> is being 
+        ///   <see langword="true"/> if the <see cref="SnapshotTagValuePush"/> is being 
         ///   disposed, or <see langword="false"/> if it is being finalized.
         /// </param>
         private void DisposeInternal(bool disposing) {
@@ -518,7 +518,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Releases managed and unmanaged resources.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="SnapshotTagValueSubscriptionManager"/> is being 
+        ///   <see langword="true"/> if the <see cref="SnapshotTagValuePush"/> is being 
         ///   disposed, or <see langword="false"/> if it is being finalized.
         /// </param>
         protected abstract void Dispose(bool disposing);
@@ -527,12 +527,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// <see cref="ISnapshotTagValueSubscription"/> implementation.
         /// </summary>
-        public class Subscription : SnapshotTagValueSubscriptionBase {
+        public class Subscription : SnapshotTagValueSubscription {
 
             /// <summary>
             /// The subscription manager that created the subscription.
             /// </summary>
-            private readonly SnapshotTagValueSubscriptionManager _subscriptionManager;
+            private readonly SnapshotTagValuePush _subscriptionManager;
 
             /// <inheritdoc/>
             public override int Count {
@@ -577,7 +577,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             /// <exception cref="ArgumentNullException">
             ///   <paramref name="subscriptionManager"/> is <see langword="null"/>.
             /// </exception>
-            protected internal Subscription(SnapshotTagValueSubscriptionManager subscriptionManager) {
+            protected internal Subscription(SnapshotTagValuePush subscriptionManager) {
                 _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
             }
 
@@ -706,7 +706,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 try {
                     foreach (var tag in tagNamesOrIds) {
                         // Try and remove by tag ID.
-                        var existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Id, tag));
+                        var existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Id, tag, StringComparison.Ordinal));
                         if (existing != null) {
                             _subscribedTags.Remove(existing);
                             removed.Add(existing);
