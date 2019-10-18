@@ -64,7 +64,7 @@ namespace DataCore.Adapter.Tests {
                     foreach (var item in tagNamesOrIds) {
                         ch.TryWrite(TagIdentifier.Create(item, item));
                     }
-                }, true, cancellationToken);
+                }, true, null, cancellationToken);
 
                 return channel;
             }

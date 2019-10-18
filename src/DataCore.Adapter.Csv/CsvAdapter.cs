@@ -38,6 +38,10 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the adapter.
         /// </param>
@@ -47,8 +51,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(CsvAdapterOptions options, ILoggerFactory loggerFactory)
-            : base(options, loggerFactory) {
+        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
+            : base(options, backgroundTaskService, loggerFactory) {
             AddFeatures();
         }
 
@@ -59,6 +63,10 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the adapter.
         /// </param>
@@ -68,8 +76,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, ILoggerFactory loggerFactory)
-            : base(options, loggerFactory) {
+        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
+            : base(options, backgroundTaskService, loggerFactory) {
             AddFeatures();
         }
 
@@ -77,11 +85,11 @@ namespace DataCore.Adapter.Csv {
         private void AddFeatures() {
             // Construct adapter features.
             AddFeatures(this);
-            AddFeatures(new ReadHistoricalTagValues(this, this));
+            AddFeatures(new ReadHistoricalTagValues(this, this, TaskScheduler));
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                AddFeatures(new CsvAdapterSnapshotSubscriptionManager(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
+                AddFeatures(new SnapshotTagValuePushImpl(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
             }
         }
 
@@ -438,7 +446,7 @@ namespace DataCore.Adapter.Csv {
                 foreach (var item in dataSet.Tags.Values.Where(x => x.MatchesFilter(request)).SelectPage(request)) {
                     ch.TryWrite(TagDefinition.FromExisting(item));
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
@@ -458,7 +466,7 @@ namespace DataCore.Adapter.Csv {
                         ch.TryWrite(TagDefinition.FromExisting(tag));
                     }
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
@@ -493,7 +501,7 @@ namespace DataCore.Adapter.Csv {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
@@ -664,7 +672,7 @@ namespace DataCore.Adapter.Csv {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
@@ -903,7 +911,7 @@ namespace DataCore.Adapter.Csv {
         /// Helper class for providing <see cref="ISnapshotTagValuePush"/> functionality to a 
         /// <see cref="CsvAdapter"/>.
         /// </summary>
-        private class CsvAdapterSnapshotSubscriptionManager : PollingSnapshotTagValuePush {
+        private class SnapshotTagValuePushImpl : PollingSnapshotTagValuePush {
 
             /// <summary>
             /// The owning adapter.
@@ -912,7 +920,7 @@ namespace DataCore.Adapter.Csv {
 
 
             /// <summary>
-            /// Creates a new <see cref="CsvAdapterSnapshotSubscriptionManager"/> object.
+            /// Creates a new <see cref="SnapshotTagValuePushImpl"/> object.
             /// </summary>
             /// <param name="adapter">
             ///   The owning adapter.
@@ -920,7 +928,7 @@ namespace DataCore.Adapter.Csv {
             /// <param name="pollingInterval">
             ///   The interval to poll for new values at.
             /// </param>
-            public CsvAdapterSnapshotSubscriptionManager(CsvAdapter adapter, TimeSpan pollingInterval) : base(pollingInterval, adapter?.Logger) {
+            public SnapshotTagValuePushImpl(CsvAdapter adapter, TimeSpan pollingInterval) : base(pollingInterval, adapter?.TaskScheduler, adapter?.Logger) {
                 _adapter = adapter;
             }
 
@@ -944,7 +952,7 @@ namespace DataCore.Adapter.Csv {
                             ch.TryWrite(TagIdentifier.Create(tag.Id, tag.Name));
                         }
                     }
-                }, true, cancellationToken);
+                }, true, _adapter.TaskScheduler, cancellationToken);
 
                 return channel;
             }

@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 finally {
                     grpcResponse.Dispose();
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

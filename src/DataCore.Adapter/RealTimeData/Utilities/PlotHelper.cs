@@ -44,6 +44,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data to use in the calculations.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -77,7 +80,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -95,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, rawData, ch, ct), true, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, rawData, ch, ct), true, scheduler, cancellationToken);
 
             return result;
         }

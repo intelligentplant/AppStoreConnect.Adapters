@@ -63,6 +63,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
         /// <summary>
+        /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
+        /// </summary>
+        internal new IBackgroundTaskService TaskScheduler {
+            get { return base.TaskScheduler; }
+        }
+
+        /// <summary>
         /// A factory delegate that can create hub connections.
         /// </summary>
         private readonly ConnectionFactory _connectionFactory;
@@ -81,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// Additional hub connections created for extension features.
         /// </summary>
         private readonly ConcurrentDictionary<string, Lazy<Task<HubConnection>>> _extensionConnections = new ConcurrentDictionary<string, Lazy<Task<HubConnection>>>();
-        
+
 
         /// <summary>
         /// Creates a new <see cref="SignalRAdapterProxy"/> object.
@@ -89,11 +96,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <param name="options">
         ///   The proxy options.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public SignalRAdapterProxy(SignalRAdapterProxyOptions options, ILoggerFactory loggerFactory) 
-            : base(options, loggerFactory) {
+        public SignalRAdapterProxy(SignalRAdapterProxyOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory) 
+            : base(options, backgroundTaskService, loggerFactory) {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;

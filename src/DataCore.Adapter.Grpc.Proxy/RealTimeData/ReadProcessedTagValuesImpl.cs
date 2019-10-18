@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 finally {
                     grpcResponse.Dispose();
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

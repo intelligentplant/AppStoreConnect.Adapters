@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     finally {
                         await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
                     }
-                }, ct);
+                }, TaskScheduler, ct);
 
                 try {
                     while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 finally {
                     grpcStream.Dispose();
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

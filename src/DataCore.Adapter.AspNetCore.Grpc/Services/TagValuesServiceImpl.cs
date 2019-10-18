@@ -14,12 +14,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         private readonly IAdapterAccessor _adapterAccessor;
 
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
         private static readonly ConcurrentDictionary<string, RealTimeData.ISnapshotTagValueSubscription> s_subscriptions = new ConcurrentDictionary<string, RealTimeData.ISnapshotTagValueSubscription>();
 
 
-        public TagValuesServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
+        public TagValuesServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
+            _backgroundTaskService = backgroundTaskService;
         }
 
 
@@ -311,7 +314,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                                 }
                                 await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
                             }
-                        }, cancellationToken);
+                        }, _backgroundTaskService, cancellationToken);
                     }
 
                     var adapterRequest = request.ToAdapterWriteTagValueItem();
@@ -362,7 +365,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                                 }
                                 await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
                             }
-                        }, cancellationToken);
+                        }, _backgroundTaskService, cancellationToken);
                     }
 
                     var adapterRequest = request.ToAdapterWriteTagValueItem();

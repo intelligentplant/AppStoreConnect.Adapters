@@ -24,6 +24,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <returns>
         ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
         ///   the input <paramref name="values"/>.
@@ -34,7 +37,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static ChannelReader<WriteTagValueResult> WriteSnapshotTagValues(this IWriteSnapshotTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken = default) {
+        public static ChannelReader<WriteTagValueResult> WriteSnapshotTagValues(this IWriteSnapshotTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -51,7 +54,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     ch.TryWrite(item);
                 }
-            }, true, cancellationToken);
+            }, true, scheduler, cancellationToken);
 
             return feature.WriteSnapshotTagValues(context, channel, cancellationToken);
         }
@@ -69,6 +72,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="values">
         ///   The event messages to write.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -82,7 +88,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(this IWriteHistoricalTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, CancellationToken cancellationToken = default) {
+        public static ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(this IWriteHistoricalTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -99,7 +105,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     ch.TryWrite(item);
                 }
-            }, true, cancellationToken);
+            }, true, scheduler, cancellationToken);
 
             return feature.WriteHistoricalTagValues(context, channel, cancellationToken);
         }

@@ -22,8 +22,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         /// <inheritdoc />
         public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             IEventMessageSubscription result = new EventMessageSubscription(
-                AdapterId,
-                GetClient(),
+                this,
                 subscriptionType
             );
 
@@ -44,9 +43,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         private class EventMessageSubscription : Adapter.Events.EventMessageSubscription {
 
             /// <summary>
-            /// The adapter ID for the subscription.
+            /// The feature instance.
             /// </summary>
-            private readonly string _adapterId;
+            private readonly EventMessagePushImpl _feature;
 
             /// <summary>
             /// The underlying hub connection.
@@ -62,27 +61,23 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// <summary>
             /// Creates a new <see cref="EventMessageSubscription"/> object.
             /// </summary>
-            /// <param name="adapterId">
-            ///   The adapter ID.
-            /// </param>
-            /// <param name="client">
-            ///   The adapter SignalR client.
+            /// <param name="feature">
+            ///   The feature instance.
             /// </param>
             /// <param name="subscriptionType">
             ///   Flags if the subscription is active or passive.
             /// </param>
-            public EventMessageSubscription(string adapterId, AdapterSignalRClient client, EventMessageSubscriptionType subscriptionType) {
-                _adapterId = adapterId;
-                _client = client;
+            public EventMessageSubscription(EventMessagePushImpl feature, EventMessageSubscriptionType subscriptionType) {
+                _client = feature.GetClient();
                 _subscriptionType = subscriptionType;
             }
 
             /// <inheritdoc />
             protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
                 Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_adapterId, _subscriptionType, ct).ConfigureAwait(false);
+                    var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_feature.AdapterId, _subscriptionType, ct).ConfigureAwait(false);
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, SubscriptionCancelled);
+                }, true, _feature.TaskScheduler, SubscriptionCancelled);
 
                 return default;
             }

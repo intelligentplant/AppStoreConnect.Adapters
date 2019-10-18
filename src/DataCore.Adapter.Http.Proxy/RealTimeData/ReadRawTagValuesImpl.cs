@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                         ch.TryWrite(item);
                     }
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

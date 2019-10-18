@@ -59,7 +59,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     finally {
                         grpcResponse.Dispose();
                     }
-                }, false, SubscriptionCancelled);
+                }, false, _feature.TaskScheduler, SubscriptionCancelled);
 
                 return default;
             }

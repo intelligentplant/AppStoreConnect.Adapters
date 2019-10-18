@@ -26,6 +26,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly TimeSpan _pollingInterval;
 
+        /// <summary>
+        /// The background task service to use.
+        /// </summary>
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
 
         /// <summary>
         /// Creates a new <see cref="PollingSnapshotTagValuePush"/> object.
@@ -34,21 +39,27 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
         ///   <see cref="DefaultPollingInterval"/> will be used.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
+        ///   Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected PollingSnapshotTagValuePush(TimeSpan pollingInterval, ILogger logger) : base(logger) {
+        protected PollingSnapshotTagValuePush(TimeSpan pollingInterval, IBackgroundTaskService backgroundTaskService, ILogger logger) : base(logger) {
             _pollingInterval = pollingInterval <= TimeSpan.Zero
                 ? DefaultPollingInterval
                 : pollingInterval;
 
+            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
+
             // Run the dedicated polling task.
-            _ = Task.Factory.StartNew(
-                () => RunSnapshotPollingLoop(DisposedToken),
-                DisposedToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
+                using (var compositeTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct, DisposedToken)) {
+                    await RunSnapshotPollingLoop(compositeTokenSource.Token).ConfigureAwait(false);
+                }
+            });
         }
 
 
@@ -73,7 +84,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
 
                         var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
-                        channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags, ch, ct), true, cancellationToken);
+                        channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags, ch, ct), true, _backgroundTaskService, cancellationToken);
                         
                         while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.Reader.TryRead(out var val)) {
                             OnValueChanged(val);
@@ -127,7 +138,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         protected override async Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
             var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
-            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, cancellationToken);
+            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, _backgroundTaskService, cancellationToken);
             
             while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!channel.Reader.TryRead(out var val) || val == null) {

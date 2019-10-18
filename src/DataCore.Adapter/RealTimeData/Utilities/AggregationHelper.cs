@@ -288,13 +288,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The channel that will provide the raw data for the aggregation calculations.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
+        public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -336,7 +339,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 result.Writer.TryComplete();
             }
             else {
-                result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, cancellationToken);
+                result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, scheduler, cancellationToken);
             }
 
             return result;

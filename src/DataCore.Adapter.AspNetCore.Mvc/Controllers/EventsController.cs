@@ -26,6 +26,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         private readonly IAdapterAccessor _adapterAccessor;
 
         /// <summary>
+        /// For registering background tasks.
+        /// </summary>
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
+        /// <summary>
         /// The maximum number of event messages that can be returned via an HTTP request.
         /// </summary>
         public const int MaxEventMessagesPerReadRequest = 1000;
@@ -45,9 +50,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public EventsController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
+        /// <param name="backgroundTaskService">
+        ///   Service for registering background tasks.
+        /// </param>
+        public EventsController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+            _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
         }
 
 
@@ -216,7 +225,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                         break;
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             var resultChannel = feature.WriteEventMessages(_callContext, writeChannel, cancellationToken);
             var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);

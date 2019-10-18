@@ -33,6 +33,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             get { return _proxy.RemoteDescriptor?.Id; }
         }
 
+        /// <summary>
+        /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
+        /// </summary>
+        protected IBackgroundTaskService TaskScheduler {
+            get { return _proxy.TaskScheduler; }
+        }
+
 
         /// <summary>
         /// Static constructor.

@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
                         ch.TryWrite(item);
                     }
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

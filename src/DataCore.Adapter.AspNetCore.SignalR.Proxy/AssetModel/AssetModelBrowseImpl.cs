@@ -25,7 +25,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
                 var client = GetClient();
                 var hubChannel = await client.AssetModel.BrowseAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
                 var client = GetClient();
                 var hubChannel = await client.AssetModel.GetAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
                 await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

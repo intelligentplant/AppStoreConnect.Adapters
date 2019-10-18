@@ -24,10 +24,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
-            ISnapshotTagValueSubscription result = new SnapshotTagValueSubscription(
-                AdapterId,
-                GetClient()
-            );
+            ISnapshotTagValueSubscription result = new SnapshotTagValueSubscription(this);
 
             try {
                 await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
@@ -46,9 +43,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         private class SnapshotTagValueSubscription : Adapter.RealTimeData.SnapshotTagValueSubscription {
 
             /// <summary>
-            /// The adapter ID for the subscription.
+            /// The feature instance.
             /// </summary>
-            private readonly string _adapterId;
+            private readonly SnapshotTagValuePushImpl _feature;
 
             /// <summary>
             /// The underlying adapter SignalR client.
@@ -69,15 +66,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <summary>
             /// Creates a new <see cref="SnapshotTagValueSubscription"/> object.
             /// </summary>
-            /// <param name="adapterId">
-            ///   The adapter ID.
+            /// <param name="feature">
+            ///   The feature instance.
             /// </param>
-            /// <param name="client">
-            ///   The adapter SignalR client.
-            /// </param>
-            public SnapshotTagValueSubscription(string adapterId, AdapterSignalRClient client) {
-                _adapterId = adapterId;
-                _client = client;
+            internal SnapshotTagValueSubscription(SnapshotTagValuePushImpl feature) {
+                _feature = feature;
+                _client = _feature.GetClient();
             }
 
 
@@ -95,7 +89,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                     try {
                         hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
-                            _adapterId,
+                            _feature.AdapterId,
                             tags,
                             ct
                         ).ConfigureAwait(false);
@@ -112,7 +106,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     }
 
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, SubscriptionCancelled);
+                }, true, _feature.TaskScheduler, SubscriptionCancelled);
 
                 await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
             }
@@ -124,12 +118,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                 result.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var hubChannel = await _client.TagValues.GetSnapshotTagValueChannelSubscriptionsAsync(
-                        _adapterId,
+                        _feature.AdapterId,
                         ct
                     ).ConfigureAwait(false);
 
                     await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, cancellationToken);
+                }, true, _feature.TaskScheduler, cancellationToken);
 
                 return result;
             }
@@ -155,7 +149,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 }
 
                 return await _client.TagValues.AddTagsToSnapshotTagValueChannelAsync(
-                    _adapterId,
+                    _feature.AdapterId,
                     tagsToAdd,
                     cancellationToken
                 ).ConfigureAwait(false);
@@ -182,7 +176,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 }
 
                 return await _client.TagValues.RemoveTagsFromSnapshotTagValueChannelAsync(
-                    _adapterId,
+                    _feature.AdapterId,
                     tagsToRemove,
                     cancellationToken
                 ).ConfigureAwait(false);

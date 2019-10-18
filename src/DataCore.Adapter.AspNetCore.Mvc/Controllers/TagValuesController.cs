@@ -26,6 +26,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         private readonly IAdapterAccessor _adapterAccessor;
 
         /// <summary>
+        /// The service for registering background tasks.
+        /// </summary>
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
+        /// <summary>
         /// The maximum number of samples that can be requested overall per request.
         /// </summary>
         public const int MaxSamplesPerReadRequest = 20000;
@@ -45,9 +50,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterAccessor">
         ///   The service for accessing running adapters.
         /// </param>
-        public TagValuesController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
+        /// <param name="backgroundTaskService">
+        ///   Service for registering background tasks.
+        /// </param>
+        public TagValuesController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+            _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
         }
 
 
@@ -471,7 +480,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                         break;
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             var resultChannel = feature.WriteSnapshotTagValues(_callContext, writeChannel, cancellationToken);
 
@@ -548,7 +557,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                         break;
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             var resultChannel = feature.WriteHistoricalTagValues(_callContext, writeChannel, cancellationToken);
 

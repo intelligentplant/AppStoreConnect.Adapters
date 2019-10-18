@@ -44,6 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             services.AddSingleton<HostInfo>(sp => HostInfo.FromExisting(options.HostInfo ?? HostInfo.Unspecified));
 
+            services.AddHostedService<AspNetCoreBackgroundTaskService>();
             services.AddHostedService<AdapterInitializer>();
 
             return services;

@@ -14,6 +14,14 @@ namespace DataCore.Adapter.Example.Features {
 
         private IDictionary<string, AssetModelNode> _nodes;
 
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
+
+        internal AssetModelBrowser(IBackgroundTaskService backgroundTaskService) {
+            _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
+
+        }
+
 
         internal async Task Init(string adapterId, RealTimeData.ITagSearch tagSearch, CancellationToken cancellationToken) {
             using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(ExampleAdapter), AssetModelJson))
@@ -64,7 +72,7 @@ namespace DataCore.Adapter.Example.Features {
 
                 BrowseAssetModelNodes(nodes, ch, ref skipCount, ref takeCount);
 
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return channel;
         }
@@ -100,7 +108,7 @@ namespace DataCore.Adapter.Example.Features {
 
                     ch.TryWrite(node);
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return channel;
         }
@@ -123,7 +131,7 @@ namespace DataCore.Adapter.Example.Features {
                 foreach (var node in nodes) {
                     ch.TryWrite(node);
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return channel;
         }

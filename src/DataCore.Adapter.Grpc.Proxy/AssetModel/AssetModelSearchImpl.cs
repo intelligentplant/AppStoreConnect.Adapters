@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 finally {
                     grpcResponse.Dispose();
                 }
-            }, true, cancellationToken);
+            }, true, TaskScheduler, cancellationToken);
 
             return result;
         }

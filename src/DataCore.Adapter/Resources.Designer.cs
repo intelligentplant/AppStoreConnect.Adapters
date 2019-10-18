@@ -142,6 +142,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error in background task {WorkItem}.
+        /// </summary>
+        internal static string Log_ErrorInBackgroundTask {
+            get {
+                return ResourceManager.GetString("Log_ErrorInBackgroundTask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred in the event subscription manager publish loop..
         /// </summary>
         internal static string Log_ErrorInEventSubscriptionManagerPublishLoop {

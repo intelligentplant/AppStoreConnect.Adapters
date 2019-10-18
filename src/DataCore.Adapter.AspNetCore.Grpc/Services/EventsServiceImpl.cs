@@ -13,12 +13,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         private readonly IAdapterAccessor _adapterAccessor;
 
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
         private static readonly ConcurrentDictionary<string, Events.IEventMessageSubscription> s_subscriptions = new ConcurrentDictionary<string, Events.IEventMessageSubscription>();
 
 
-        public EventsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
+        public EventsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
+            _backgroundTaskService = backgroundTaskService;
         }
 
 
@@ -142,7 +145,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                                 }
                                 await responseStream.WriteAsync(val.ToGrpcWriteEventMessageResult(adapterId)).ConfigureAwait(false);
                             }
-                        }, cancellationToken);
+                        }, _backgroundTaskService, cancellationToken);
                     }
 
                     var adapterRequest = request.ToAdapterWriteEventMessageItem();

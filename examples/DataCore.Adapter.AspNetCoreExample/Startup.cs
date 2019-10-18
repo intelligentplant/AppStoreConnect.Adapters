@@ -32,6 +32,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                         IsDataLoopingAllowed = true,
                         CsvFile = "DummySensorData.csv"
                     },
+                    sp.GetRequiredService<IBackgroundTaskService>(),
                     sp.GetRequiredService<ILoggerFactory>()
                 );
             });

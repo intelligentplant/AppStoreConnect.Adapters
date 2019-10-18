@@ -82,7 +82,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                         tcs.TrySetException(e);
                         throw;
                     }
-                }, false, SubscriptionCancelled);
+                }, false, _feature.TaskScheduler, SubscriptionCancelled);
 
                 await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
             }
@@ -111,7 +111,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     finally {
                         grpcResponse.Dispose();
                     }
-                }, true, cancellationToken);
+                }, true, _feature.TaskScheduler, cancellationToken);
 
                 return result;
             }

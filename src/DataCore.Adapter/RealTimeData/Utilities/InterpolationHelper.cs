@@ -191,13 +191,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The channel that will provide the raw data for the interpolation calculations.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetInterpolatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetInterpolatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -215,7 +218,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, GetSampleTimes(utcStartTime, utcEndTime, sampleInterval), InterpolationCalculationType.Interpolate, rawData, ch, ct), true, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, GetSampleTimes(utcStartTime, utcEndTime, sampleInterval), InterpolationCalculationType.Interpolate, rawData, ch, ct), true, scheduler, cancellationToken);
 
             return result;
         }
@@ -233,13 +236,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data for the calculations.
         /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagDefinition tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagDefinition tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -254,7 +260,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, utcSampleTimes.OrderBy(x => x), InterpolationCalculationType.UsePreviousValue, rawData, ch, ct), true, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, utcSampleTimes.OrderBy(x => x), InterpolationCalculationType.UsePreviousValue, rawData, ch, ct), true, scheduler, cancellationToken);
 
             return result;
         }

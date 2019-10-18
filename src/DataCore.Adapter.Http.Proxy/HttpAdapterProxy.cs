@@ -78,6 +78,13 @@ namespace DataCore.Adapter.Http.Proxy {
         }
 
         /// <summary>
+        /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
+        /// </summary>
+        internal new IBackgroundTaskService TaskScheduler {
+            get { return base.TaskScheduler; }
+        }
+
+        /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
         private readonly ExtensionFeatureFactory _extensionFeatureFactory;
@@ -97,11 +104,15 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <param name="options">
         ///   The proxy options.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, ILoggerFactory loggerFactory)
-            : base(options, loggerFactory) {
+        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
+            : base(options, backgroundTaskService, loggerFactory) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;

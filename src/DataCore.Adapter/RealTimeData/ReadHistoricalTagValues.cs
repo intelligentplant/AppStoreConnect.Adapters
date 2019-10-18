@@ -30,6 +30,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly IReadRawTagValues _rawValuesProvider;
 
+        /// <summary>
+        /// For running background operations.
+        /// </summary>
+        private readonly IBackgroundTaskService _backgroundTaskService;
+
 
         /// <summary>
         /// Creates a new <see cref="ReadHistoricalTagValues"/> object.
@@ -42,15 +47,20 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IReadRawTagValues"/> instance that will provide raw tag values to the 
         ///   helper.
         /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
+        ///   Specify <see langword="null"/> to use the default implementation.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagSearchProvider"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagSearch tagSearchProvider, IReadRawTagValues rawValuesProvider) {
+        public ReadHistoricalTagValues(ITagSearch tagSearchProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
             _tagSearchProvider = tagSearchProvider ?? throw new ArgumentNullException(nameof(tagSearchProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
+            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
         }
 
 
@@ -77,7 +87,7 @@ namespace DataCore.Adapter.RealTimeData {
                     }, ct);
 
 
-                    var resultValuesReader = InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, ct);
+                    var resultValuesReader = InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -88,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -118,7 +128,7 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, ct);
+                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -130,7 +140,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -164,7 +174,7 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var resultValuesReader = AggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, ct);
+                    var resultValuesReader = AggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -175,7 +185,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -221,9 +231,9 @@ namespace DataCore.Adapter.RealTimeData {
                                 ch2.TryWrite(val);
                             }
                         }
-                    }, true, ct);
+                    }, true, _backgroundTaskService, ct);
 
-                    var resultValuesReader = InterpolationHelper.GetValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, ct);
+                    var resultValuesReader = InterpolationHelper.GetValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -234,7 +244,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                 }
-            }, true, cancellationToken);
+            }, true, _backgroundTaskService, cancellationToken);
 
             return result;
         }
