@@ -738,7 +738,7 @@ namespace DataCore.Adapter {
                 scheduler = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation(async (ch, ct) => {
+            scheduler.QueueBackgroundChannelOperation((ch, ct) => {
                 func(ch, ct);
             }, channel, cancellationToken);
         }
