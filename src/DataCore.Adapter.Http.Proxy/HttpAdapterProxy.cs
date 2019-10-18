@@ -43,6 +43,12 @@ namespace DataCore.Adapter.Http.Proxy {
         private readonly object _remoteInfoLock = new object();
 
         /// <summary>
+        /// The interval to use between re-polling snapshot values for subscribed tags. Ignored if 
+        /// the remote adapter does not support <see cref="Adapter.RealTimeData.ISnapshotTagValuePush"/>.
+        /// </summary>
+        private readonly TimeSpan _snapshotRefreshInterval;
+
+        /// <summary>
         /// The proxy's logger.
         /// </summary>
         protected internal new ILogger Logger {
@@ -78,13 +84,6 @@ namespace DataCore.Adapter.Http.Proxy {
         }
 
         /// <summary>
-        /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
-        /// </summary>
-        internal new IBackgroundTaskService TaskScheduler {
-            get { return base.TaskScheduler; }
-        }
-
-        /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
         private readonly ExtensionFeatureFactory _extensionFeatureFactory;
@@ -104,18 +103,19 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <param name="options">
         ///   The proxy options.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="loggerFactory">
         ///   The logger factory for the proxy.
         /// </param>
-        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
-            : base(options, backgroundTaskService, loggerFactory) {
+        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
+            : base(options, taskScheduler, loggerFactory) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+            _snapshotRefreshInterval = Options?.TagValuePushInterval ?? TimeSpan.FromMinutes(1);
         }
 
 
@@ -147,6 +147,11 @@ namespace DataCore.Adapter.Http.Proxy {
             RemoteDescriptor = descriptor;
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
+
+            if (Adapter.RealTimeData.SimulatedSnapshotTagValuePush.IsCompatible(this)) {
+                // We are able to simulate tag value push functionality.
+                Adapter.RealTimeData.SimulatedSnapshotTagValuePush.Register(this, _snapshotRefreshInterval);
+            }
 
             if (_extensionFeatureFactory != null) {
                 foreach (var extensionFeature in descriptor.Extensions) {

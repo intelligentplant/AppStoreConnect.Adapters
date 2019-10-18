@@ -121,11 +121,11 @@
     <value>Adapter ID is required.</value>
   </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
-    <value>Error while registering an extension feature implementation: {0}</value>
+    <value>Error while registering an extension feature implementation: {FeatureName}</value>
     <comment>{0} - feature name</comment>
   </data>
   <data name="Log_NoExtensionImplementationAvailable" xml:space="preserve">
-    <value>No implementation available for extension feature: {0}</value>
+    <value>No implementation available for extension feature: {FeatureName}</value>
     <comment>{0} - feature name</comment>
   </data>
 </root>

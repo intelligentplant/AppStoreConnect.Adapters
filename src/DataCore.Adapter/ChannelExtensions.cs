@@ -645,5 +645,65 @@ namespace DataCore.Adapter {
             }
         }
 
+
+        /// <summary>
+        /// Creates a new channel that transforms items emitted from the current channel in a 
+        /// background task.
+        /// </summary>
+        /// <typeparam name="TIn">
+        ///   The input channel item type.
+        /// </typeparam>
+        /// <typeparam name="TOut">
+        ///   The output channel item type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The input channel.
+        /// </param>
+        /// <param name="callback">
+        ///   The transform function to use.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
+        ///   <see langword="null"/> to use the default scheduler.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ChannelReader{T}"/> that will transform and emit items read from 
+        ///   the original channel.
+        /// </returns>
+        public static ChannelReader<TOut> Transform<TIn, TOut>(this ChannelReader<TIn> channel, Func<TIn, TOut> callback, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+            if (callback == null) {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            var result = Channel.CreateUnbounded<TOut>();
+
+            channel.RunBackgroundOperation(async (ch, ct) => { 
+                try {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var item)) {
+                            continue;
+                        }
+
+                        await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
+                        result.Writer.TryWrite(callback(item));
+                    }
+                }
+                catch (Exception e) {
+                    result.Writer.TryComplete(e);
+                }
+                finally {
+                    result.Writer.TryComplete();
+                }
+            }, scheduler, cancellationToken);
+
+            return result;
+        }
+
     }
 }

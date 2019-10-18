@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Http.Proxy {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
+        ///   Looks up a localized string similar to Error while registering an extension feature implementation: {FeatureName}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {
             get {
@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Http.Proxy {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
+        ///   Looks up a localized string similar to No implementation available for extension feature: {FeatureName}.
         /// </summary>
         internal static string Log_NoExtensionImplementationAvailable {
             get {

@@ -20,14 +20,14 @@ namespace DataCore.Adapter.Example {
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
         /// </summary>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="loggerFactory">
         ///   The adapter logger factory.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory) : base(
+        public ExampleAdapter(IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory) : base(
             new Csv.CsvAdapterOptions() {
                 Id = "wind-power",
                 Name = "Wind Power Energy Company",
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Example {
                 SnapshotPushUpdateInterval = 5000,
                 GetCsvStream = () => typeof(ExampleAdapter).Assembly.GetManifestResourceStream(typeof(ExampleAdapter), CsvFile)
             },
-            backgroundTaskService,
+            taskScheduler,
             loggerFactory
         ) {
             // Register additional features!

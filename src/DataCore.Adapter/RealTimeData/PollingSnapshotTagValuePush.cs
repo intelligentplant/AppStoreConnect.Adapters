@@ -11,9 +11,10 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Extends <see cref="SnapshotTagValuePush"/> to provide a snapshot subscription 
     /// manager that periodically polls for the values of tags that are currently being 
-    /// subscribed to. This can be used to provide push capabilities in an adapter that 
-    /// e.g. only natively supports the <see cref="IReadSnapshotTagValues"/> feature.
+    /// subscribed to. See <see cref="SimulatedSnapshotTagValuePush"/> for a concrete 
+    /// implementation of this class.
     /// </summary>
+    /// <seealso cref="SimulatedSnapshotTagValuePush"/>
     public abstract class PollingSnapshotTagValuePush : SnapshotTagValuePush {
 
         /// <summary>
@@ -29,7 +30,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The background task service to use.
         /// </summary>
-        private readonly IBackgroundTaskService _backgroundTaskService;
+        protected IBackgroundTaskService TaskScheduler { get; }
 
 
         /// <summary>
@@ -39,23 +40,23 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The interval between polling queries. If less than or equal to <see cref="TimeSpan.Zero"/>, 
         ///   <see cref="DefaultPollingInterval"/> will be used.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
         ///   Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected PollingSnapshotTagValuePush(TimeSpan pollingInterval, IBackgroundTaskService backgroundTaskService, ILogger logger) : base(logger) {
+        protected PollingSnapshotTagValuePush(TimeSpan pollingInterval, IBackgroundTaskService taskScheduler, ILogger logger) : base(logger) {
             _pollingInterval = pollingInterval <= TimeSpan.Zero
                 ? DefaultPollingInterval
                 : pollingInterval;
 
-            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
+            TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
 
             // Run the dedicated polling task.
 
-            backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
+            taskScheduler.QueueBackgroundWorkItem(async ct => { 
                 using (var compositeTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct, DisposedToken)) {
                     await RunSnapshotPollingLoop(compositeTokenSource.Token).ConfigureAwait(false);
                 }
@@ -84,7 +85,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
 
                         var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
-                        channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags, ch, ct), true, _backgroundTaskService, cancellationToken);
+                        channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags, ch, ct), true, TaskScheduler, cancellationToken);
                         
                         while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.Reader.TryRead(out var val)) {
                             OnValueChanged(val);
@@ -138,7 +139,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         protected override async Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
             var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
-            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, _backgroundTaskService, cancellationToken);
+            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, TaskScheduler, cancellationToken);
             
             while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!channel.Reader.TryRead(out var val) || val == null) {

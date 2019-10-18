@@ -61,6 +61,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adapter {0} is not compatible with {1}..
+        /// </summary>
+        internal static string Error_AdapterDoesNotSupportSimulatedPush {
+            get {
+                return ResourceManager.GetString("Error_AdapterDoesNotSupportSimulatedPush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An adapter cannot be started when it is already running..
         /// </summary>
         internal static string Error_AdapterIsAlreadyStarted {
@@ -138,6 +147,15 @@ namespace DataCore.Adapter {
         internal static string Log_DisposingAdapter {
             get {
                 return ResourceManager.GetString("Log_DisposingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error while refreshing subscribed snapshot tag values..
+        /// </summary>
+        internal static string Log_ErrorDuringSnapshotPushRefresh {
+            get {
+                return ResourceManager.GetString("Log_ErrorDuringSnapshotPushRefresh", resourceCulture);
             }
         }
         

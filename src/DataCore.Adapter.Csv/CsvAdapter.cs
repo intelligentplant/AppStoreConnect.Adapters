@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -51,8 +51,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
-            : base(options, backgroundTaskService, loggerFactory) {
+        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
+            : base(options, taskScheduler, loggerFactory) {
             AddFeatures();
         }
 
@@ -89,7 +89,7 @@ namespace DataCore.Adapter.Csv {
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                AddFeatures(new SnapshotTagValuePushImpl(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)));
+                SimulatedSnapshotTagValuePush.Register(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval));
             }
         }
 
@@ -904,90 +904,6 @@ namespace DataCore.Adapter.Csv {
                 }
             }
             while (@continue);
-        }
-
-
-        /// <summary>
-        /// Helper class for providing <see cref="ISnapshotTagValuePush"/> functionality to a 
-        /// <see cref="CsvAdapter"/>.
-        /// </summary>
-        private class SnapshotTagValuePushImpl : PollingSnapshotTagValuePush {
-
-            /// <summary>
-            /// The owning adapter.
-            /// </summary>
-            private readonly CsvAdapter _adapter;
-
-
-            /// <summary>
-            /// Creates a new <see cref="SnapshotTagValuePushImpl"/> object.
-            /// </summary>
-            /// <param name="adapter">
-            ///   The owning adapter.
-            /// </param>
-            /// <param name="pollingInterval">
-            ///   The interval to poll for new values at.
-            /// </param>
-            public SnapshotTagValuePushImpl(CsvAdapter adapter, TimeSpan pollingInterval) : base(pollingInterval, adapter?.TaskScheduler, adapter?.Logger) {
-                _adapter = adapter;
-            }
-
-
-            /// <inheritdoc/>
-            protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                _adapter.CheckDisposed();
-                _adapter.CheckStarted();
-
-                var channel = Channel.CreateUnbounded<TagIdentifier>(new UnboundedChannelOptions() {
-                    AllowSynchronousContinuations = true,
-                    SingleReader = true,
-                    SingleWriter = true
-                });
-
-                channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var dataSet = await _adapter._csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
-                    foreach (var item in tagNamesOrIds) {
-                        var tag = _adapter.GetTagByIdOrName(item, dataSet);
-                        if (tag != null) {
-                            ch.TryWrite(TagIdentifier.Create(tag.Id, tag.Name));
-                        }
-                    }
-                }, true, _adapter.TaskScheduler, cancellationToken);
-
-                return channel;
-            }
-
-
-            /// <inheritdoc/>
-            protected override async Task GetSnapshotTagValues(IEnumerable<string> tagIds, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
-                _adapter.CheckDisposed();
-                _adapter.CheckStarted();
-
-                var reader = _adapter.ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
-                    Tags = tagIds.ToArray()
-                }, cancellationToken);
-
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value)) {
-                        continue;
-                    }
-
-                    channel.TryWrite(value);
-                }
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnPollingError(Exception error) {
-                _adapter.Logger.LogError(error, Resources.Log_SnapshotPollingError);
-            }
-
-
-            /// <inheritdoc/>
-            protected override void Dispose(bool disposing) {
-                // Do nothing.
-            }
-
         }
 
     }

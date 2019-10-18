@@ -36,7 +36,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Logging.
         /// </summary>
-        protected ILogger Logger { get; }
+        protected internal ILogger Logger { get; }
 
         /// <summary>
         /// Indicates if the adapter has been started.
@@ -61,12 +61,12 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        protected CancellationToken StopToken => _stopTokenSource.Token;
+        public CancellationToken StopToken => _stopTokenSource.Token;
 
         /// <summary>
-        /// A service that can be used by the adapter to run operations in the background.
+        /// Allows the adapter to register work items to be run in the background.
         /// </summary>
-        protected IBackgroundTaskService TaskScheduler { get; }
+        public IBackgroundTaskService TaskScheduler { get; }
 
         /// <summary>
         /// The adapter descriptor.
@@ -121,7 +121,7 @@ namespace DataCore.Adapter {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -135,8 +135,8 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
-        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), backgroundTaskService, loggerFactory) { }
+        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
+            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, loggerFactory) { }
 
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace DataCore.Adapter {
         /// <param name="optionsMonitor">
         ///   The monitor for the adapter's options type.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="taskScheduler">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -161,7 +161,7 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
-        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory) {
+        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory) {
             if (optionsMonitor == null) {
                 throw new ArgumentNullException(nameof(optionsMonitor));
             }
@@ -185,7 +185,7 @@ namespace DataCore.Adapter {
 
             Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             Options = options;
-            TaskScheduler = backgroundTaskService ?? Adapter.BackgroundTaskService.Default;
+            TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
 
             _optionsMonitorSubscription = optionsMonitor.OnChange((opts) => {
                 // Validate updated options.
