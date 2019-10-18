@@ -15,7 +15,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The default background task service.
         /// </summary>
-        internal static IBackgroundTaskService Default { get; } = new DefaultBackgroundTaskService(null);
+        public static IBackgroundTaskService Default { get; } = new DefaultBackgroundTaskService(null);
 
         /// <summary>
         /// Flags if the service has been disposed.
