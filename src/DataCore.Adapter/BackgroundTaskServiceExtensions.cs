@@ -21,8 +21,9 @@ namespace DataCore.Adapter {
         ///   The work item.
         /// </param>
         /// <param name="tokens">
-        ///   Additional cancellation tokens to monitor during the operation. A single, composite 
-        ///   token will be passed to the <paramref name="workItem"/>.
+        ///   Additional cancellation tokens for the operation. A composite token consisting of 
+        ///   these tokens and the lifetime token of the <see cref="IBackgroundTaskService"/> will 
+        ///   be passed to <paramref name="workItem"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="scheduler"/> is <see langword="null"/>.
@@ -45,8 +46,9 @@ namespace DataCore.Adapter {
         ///   The work item.
         /// </param>
         /// <param name="tokens">
-        ///   Additional cancellation tokens to monitor during the operation. A single, composite 
-        ///   token will be passed to the <paramref name="workItem"/>.
+        ///   Additional cancellation tokens for the operation. A composite token consisting of 
+        ///   these tokens and the lifetime token of the <see cref="IBackgroundTaskService"/> will 
+        ///   be passed to <paramref name="workItem"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="scheduler"/> is <see langword="null"/>.
@@ -86,8 +88,9 @@ namespace DataCore.Adapter {
         ///   The work item.
         /// </param>
         /// <param name="tokens">
-        ///   Additional cancellation tokens to monitor during the operation. A single, composite 
-        ///   token will be passed to the <paramref name="workItem"/>.
+        ///   Additional cancellation tokens for the operation. A composite token consisting of 
+        ///   these tokens and the lifetime token of the <see cref="IBackgroundTaskService"/> will 
+        ///   be passed to <paramref name="workItem"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="scheduler"/> is <see langword="null"/>.
@@ -110,8 +113,9 @@ namespace DataCore.Adapter {
         ///   The work item.
         /// </param>
         /// <param name="tokens">
-        ///   Additional cancellation tokens to monitor during the operation. A single, composite 
-        ///   token will be passed to the <paramref name="workItem"/>.
+        ///   Additional cancellation tokens for the operation. A composite token consisting of 
+        ///   these tokens and the lifetime token of the <see cref="IBackgroundTaskService"/> will 
+        ///   be passed to <paramref name="workItem"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="scheduler"/> is <see langword="null"/>.
