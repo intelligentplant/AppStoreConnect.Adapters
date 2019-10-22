@@ -19,14 +19,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         public DateTime UtcEnd { get; set; }
 
         /// <summary>
-        /// The data samples in the bucket.
+        /// Gets the raw data samples for the bucket.
         /// </summary>
-        private readonly List<TagValue> _samples = new List<TagValue>();
+        public IList<TagValue> RawSamples { get; } = new List<TagValue>();
 
         /// <summary>
-        /// Gets the data samples for the bucket.
+        /// Gets the raw samples that were received prior to start of this bucket. This is to 
+        /// allow aggregates that calculate across bucket boundaries (e.g. interpolation) to do so.
         /// </summary>
-        public ICollection<TagValue> Samples { get { return _samples; } }
+        public IList<TagValue> PreBucketSamples { get; } = new List<TagValue>();
 
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// A string represntation of the bucket.
         /// </returns>
         public override string ToString() {
-            return $"{{ UtcStart = {UtcStart:yyyy-MM-ddTHH:mm:ss.fffZ}, UtcEnd = {UtcEnd:yyyy-MM-ddTHH:mm:ss.fffZ}, Sample Count = {Samples.Count} }}";
+            return $"{{ UtcStart = {UtcStart:yyyy-MM-ddTHH:mm:ss.fffZ}, UtcEnd = {UtcEnd:yyyy-MM-ddTHH:mm:ss.fffZ}, Raw Sample Count = {RawSamples.Count} }}";
         }
 
     }

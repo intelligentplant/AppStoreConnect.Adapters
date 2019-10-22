@@ -295,28 +295,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Gets interpolated tag values.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A channel reader that will return the query results.
-        /// </returns>
-        public async Task<ChannelReader<TagValueQueryResult>> ReadInterpolatedTagValues(string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadInterpolatedTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
-            ValidateObject(request);
-            return adapter.Feature.ReadInterpolatedTagValues(AdapterCallContext, request, cancellationToken);
-        }
-
-
-        /// <summary>
         /// Gets tag values at the specified times.
         /// </summary>
         /// <param name="adapterId">

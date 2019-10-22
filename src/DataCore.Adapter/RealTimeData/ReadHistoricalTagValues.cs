@@ -8,9 +8,8 @@ using DataCore.Adapter.RealTimeData.Utilities;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// A helper class that can add support for <see cref="IReadInterpolatedTagValues"/>, 
-    /// <see cref="IReadPlotTagValues"/> and <see cref="IReadPlotTagValues"/> support to an adapter 
-    /// that only natively supports <see cref="IReadRawTagValues"/>.
+    /// A helper class that can add support for <see cref="IReadPlotTagValues"/> and <see cref="IReadProcessedTagValues"/> 
+    /// support to an adapter that only natively supports <see cref="IReadRawTagValues"/>.
     /// </summary>
     /// <remarks>
     ///   Interpolated, plot, and processed data queries are handled by querying for raw tag values, 
@@ -18,7 +17,7 @@ namespace DataCore.Adapter.RealTimeData {
     ///   calculation or aggregation. Native implementations of the data queries will almost always 
     ///   perform better, and should be used if available.
     /// </remarks>
-    public class ReadHistoricalTagValues : IReadInterpolatedTagValues, IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
+    public class ReadHistoricalTagValues : IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
 
         /// <summary>
         /// The tag search provider.
@@ -61,46 +60,6 @@ namespace DataCore.Adapter.RealTimeData {
             _tagSearchProvider = tagSearchProvider ?? throw new ArgumentNullException(nameof(tagSearchProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
             _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
-        }
-
-
-        /// <inheritdoc/>
-        public ChannelReader<TagValueQueryResult> ReadInterpolatedTagValues(IAdapterCallContext context, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
-                    Tags = request.Tags
-                }, ct);
-
-                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
-                        continue;
-                    }
-
-                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                        Tags = new [] { tag.Id },
-                        UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
-                        UtcEndTime = request.UtcEndTime,
-                        SampleCount = 0,
-                        BoundaryType = RawDataBoundaryType.Outside
-                    }, ct);
-
-
-                    var resultValuesReader = InterpolationHelper.GetInterpolatedValues(tag, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
-                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!resultValuesReader.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-
-                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(val);
-                        }
-                    }
-                }
-            }, true, _backgroundTaskService, cancellationToken);
-
-            return result;
         }
 
 

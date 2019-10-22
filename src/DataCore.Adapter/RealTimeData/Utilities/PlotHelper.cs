@@ -353,9 +353,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 if (val.Value.UtcSampleTime >= bucket.UtcEnd) {
-                    if (bucket.Samples.Count > 0) {
+                    if (bucket.RawSamples.Count > 0) {
                         await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
-                        lastValuePreviousBucket = bucket.Samples.Last();
+                        lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
 
                     bucket = new TagValueBucket() {
@@ -364,10 +364,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     };
                 }
 
-                bucket.Samples.Add(val.Value);
+                bucket.RawSamples.Add(val.Value);
             }
 
-            if (bucket.Samples.Count > 0) {
+            if (bucket.RawSamples.Count > 0) {
                 await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -401,18 +401,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var significantValues = new HashSet<TagValue>();
 
             if (tag.DataType == TagDataType.Numeric) {
-                var numericValues = bucket.Samples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));
+                var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));
 
-                significantValues.Add(bucket.Samples.First());
-                significantValues.Add(bucket.Samples.Last());
-                significantValues.Add(bucket.Samples.Aggregate((a, b) => {
+                significantValues.Add(bucket.RawSamples.First());
+                significantValues.Add(bucket.RawSamples.Last());
+                significantValues.Add(bucket.RawSamples.Aggregate((a, b) => {
                     var nValA = numericValues[a];
                     var nValB = numericValues[b];
                     return nValA <= nValB
                         ? a
                         : b;
                 })); // min
-                significantValues.Add(bucket.Samples.Aggregate((a, b) => {
+                significantValues.Add(bucket.RawSamples.Aggregate((a, b) => {
                     var nValA = numericValues[a];
                     var nValB = numericValues[b];
                     return nValA >= nValB
@@ -426,7 +426,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 var currentState = lastValuePreviousBucket?.Value.GetValueOrDefault<string>();
                 var currentQuality = lastValuePreviousBucket?.Status;
 
-                foreach (var item in bucket.Samples) {
+                foreach (var item in bucket.RawSamples) {
                     var tVal = item.Value.GetValueOrDefault<string>();
                     if (currentState != null && 
                         string.Equals(currentState, tVal, StringComparison.Ordinal) && 
@@ -439,7 +439,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            var exceptionValue = bucket.Samples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
+            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
             if (exceptionValue != null) {
                 significantValues.Add(exceptionValue);
             }

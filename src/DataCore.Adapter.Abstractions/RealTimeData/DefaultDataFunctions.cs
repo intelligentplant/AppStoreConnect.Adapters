@@ -8,6 +8,11 @@ namespace DataCore.Adapter.RealTimeData {
     public static class DefaultDataFunctions {
 
         /// <summary>
+        /// Interpolated data function name.
+        /// </summary>
+        private const string FunctionNameInterpolate = "INTERP";
+
+        /// <summary>
         /// Average data function name.
         /// </summary>
         private const string FunctionNameAverage = "AVG";
@@ -31,6 +36,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// Range data function name.
         /// </summary>
         private const string FunctionNameRange = "RANGE";
+
+        /// <summary>
+        /// Interpolation between samples.
+        /// </summary>
+        public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
+            FunctionNameInterpolate,
+            FunctionNameInterpolate,
+            Resources.DataFunction_Interp_Description
+        );
 
         /// <summary>
         /// Average value over a time period.
@@ -82,6 +96,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Collection of all default data functions, used by <see cref="FindByNameOrId"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
+            Interpolate,
             Average,
             Minimum,
             Maximum,

@@ -197,58 +197,6 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
-        /// Polls an adapter for interpolated tag values.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will return the results back to the caller.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="request"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
-        ///   <paramref name="request"/> fails validation.
-        /// </exception>
-        public async Task<IEnumerable<TagValueQueryResult>> ReadInterpolatedTagValuesAsync(string adapterId, ReadInterpolatedTagValuesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-            _client.ValidateObject(request);
-
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/interpolated";
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<ReadInterpolatedTagValuesRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
-
-            try {
-                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                    httpResponse.EnsureSuccessStatusCode();
-
-                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagValueQueryResult>>(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally {
-                httpRequest.RemoveStateProperty().Dispose();
-            }
-        }
-
-
-        /// <summary>
         /// Polls an adapter for tag values at specific timestamps.
         /// </summary>
         /// <param name="adapterId">

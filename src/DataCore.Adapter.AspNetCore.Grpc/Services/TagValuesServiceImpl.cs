@@ -193,32 +193,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        public override async Task ReadInterpolatedTagValues(ReadInterpolatedTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
-            var adapterId = request.AdapterId;
-            var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadInterpolatedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
-
-            var adapterRequest = new RealTimeData.ReadInterpolatedTagValuesRequest() {
-                Tags = request.Tags.ToArray(),
-                UtcStartTime = request.UtcStartTime.ToDateTime(),
-                UtcEndTime = request.UtcEndTime.ToDateTime(),
-                SampleInterval = request.SampleInterval.ToTimeSpan(),
-                Properties = new Dictionary<string, string>(request.Properties)
-            };
-            Util.ValidateObject(adapterRequest);
-
-            var reader = adapter.Feature.ReadInterpolatedTagValues(_adapterCallContext, adapterRequest, cancellationToken);
-
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var val) || val == null) {
-                    continue;
-                }
-
-                await responseStream.WriteAsync(val.Value.ToGrpcTagValue(val.TagId, val.TagName, TagValueQueryType.Interpolated)).ConfigureAwait(false);
-            }
-        }
-
-
         public override async Task ReadTagValuesAtTimes(ReadTagValuesAtTimesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;

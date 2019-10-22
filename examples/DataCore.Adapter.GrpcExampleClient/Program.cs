@@ -170,44 +170,13 @@ namespace DataCore.Adapter.GrpcExampleClient {
 
                 Console.WriteLine();
                 foreach (var tag in tags) {
-                    var interpDataRequest = new ReadInterpolatedTagValuesRequest() {
-                        AdapterId = adapterId,
-                        SampleInterval = histQuerySampleInterval,
-                        UtcStartTime = histQueryStart,
-                        UtcEndTime = histQueryEnd
-                    };
-                    interpDataRequest.Tags.AddRange(new[] { tag.Id });
-
-                    var timer = System.Diagnostics.Stopwatch.StartNew();
-                    using (var interpDataChannel = tagValuesClient.ReadInterpolatedTagValues(interpDataRequest)) {
-                        long samplesRead = 0;
-                        var earliestSample = DateTime.MaxValue;
-                        var latestSample = DateTime.MinValue;
-
-                        while (await interpDataChannel.ResponseStream.MoveNext(default)) {
-                            ++samplesRead;
-                            var sampleTime = interpDataChannel.ResponseStream.Current.Value.UtcSampleTime.ToDateTime();
-                            if (sampleTime < earliestSample) {
-                                earliestSample = sampleTime;
-                            }
-                            if (sampleTime > latestSample) {
-                                latestSample = sampleTime;
-                            }
-                        }
-
-                        Console.WriteLine($"[{tag.Name}] Read {samplesRead} interp samples ({earliestSample:dd-MMM-yy HH:mm:ss} - {latestSample:dd-MMM-yy HH:mm:ss}) in {timer.Elapsed}");
-                    }
-                }
-
-                Console.WriteLine();
-                foreach (var tag in tags) {
                     var aggDataRequest = new ReadProcessedTagValuesRequest() {
                         AdapterId = adapterId,
                         SampleInterval = histQuerySampleInterval,
                         UtcStartTime = histQueryStart,
                         UtcEndTime = histQueryEnd
                     };
-                    aggDataRequest.DataFunctions.AddRange(new[] { "AVG", "MIN", "MAX" });
+                    aggDataRequest.DataFunctions.AddRange(new[] { "INTERP", "AVG", "MIN", "MAX" });
                     aggDataRequest.Tags.AddRange(new[] { tag.Id });
 
                     var timer = System.Diagnostics.Stopwatch.StartNew();

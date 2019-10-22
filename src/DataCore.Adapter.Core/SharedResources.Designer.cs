@@ -106,24 +106,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on..
-        /// </summary>
-        public static string Error_InterpolationRequiresAtLeastOneSample {
-            get {
-                return ResourceManager.GetString("Error_InterpolationRequiresAtLeastOneSample", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to When interpolating or inferring a tag value using raw samples, you must specify a sample that is earlier than the sample time you want to calculate at..
-        /// </summary>
-        public static string Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime {
-            get {
-                return ResourceManager.GetString("Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Interval count must be greater than zero..
         /// </summary>
         public static string Error_IntervalCountMustBeGreaterThanZero {

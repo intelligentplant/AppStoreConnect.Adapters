@@ -79,6 +79,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval..
+        /// </summary>
+        internal static string DataFunction_Interp_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Interp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
         /// </summary>
         internal static string DataFunction_Max_Description {
@@ -93,6 +102,15 @@ namespace DataCore.Adapter {
         internal static string DataFunction_Min_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computes a visualization-friendly data set by selecting significant raw values in each sample interval..
+        /// </summary>
+        internal static string DataFunction_Plot_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Plot_Description", resourceCulture);
             }
         }
         

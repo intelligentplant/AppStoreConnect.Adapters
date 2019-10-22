@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Buffers;
-using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Json {
 
     /// <summary>
-    /// System.Text.Json converter for <see cref="Variant"/>.
+    /// JSON converter for <see cref="Variant"/>.
     /// </summary>
-    public class VariantConverter : JsonConverter<Variant> { 
+    public class VariantConverter : AdapterJsonConverter<Variant> { 
 
         /// <inheritdoc/>
         public override Variant Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             if (reader.TokenType != JsonTokenType.StartObject) {
-                throw new JsonException(Resources.Error_InvalidVariantStructure);
+                ThrowInvalidJsonError();
             }
 
             VariantType? valueType = null;
@@ -23,7 +20,7 @@ namespace DataCore.Adapter.Json {
 
             do {
                 if (!reader.Read()) {
-                    throw new JsonException(Resources.Error_InvalidVariantStructure);
+                    ThrowInvalidJsonError();
                 }
 
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -32,7 +29,7 @@ namespace DataCore.Adapter.Json {
 
                 var propertyName = reader.GetString();
                 if (!reader.Read()) {
-                    throw new JsonException(Resources.Error_InvalidVariantStructure);
+                    ThrowInvalidJsonError();
                 }
 
                 if (string.Equals(propertyName, nameof(Variant.Type), StringComparison.OrdinalIgnoreCase)) {
@@ -166,8 +163,8 @@ namespace DataCore.Adapter.Json {
         /// </param>
         private void WriteNullValue(Utf8JsonWriter writer, JsonSerializerOptions options) {
             writer.WriteStartObject();
-            writer.WriteString(options?.ConvertPropertyName(nameof(Variant.Type)), VariantType.Null.ToString());
-            writer.WriteNull(options?.ConvertPropertyName(nameof(Variant.Value)));
+            writer.WriteString(ConvertPropertyName(nameof(Variant.Type), options), VariantType.Null.ToString());
+            writer.WriteNull(ConvertPropertyName(nameof(Variant.Value), options));
             writer.WriteEndObject();
         }
 
@@ -190,10 +187,10 @@ namespace DataCore.Adapter.Json {
         private void WriteValue<T>(Utf8JsonWriter writer, Variant value, JsonSerializerOptions options) {
             writer.WriteStartObject();
 
-            writer.WritePropertyName(options?.ConvertPropertyName(nameof(Variant.Type)));
+            writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Type), options));
             JsonSerializer.Serialize(writer, value.Type, typeof(VariantType), options);
 
-            writer.WritePropertyName(options?.ConvertPropertyName(nameof(Variant.Value)));
+            writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
             if (typeof(T) == typeof(object)) {
                 JsonSerializer.Serialize(writer, value.Value, typeof(T), options);
             }
@@ -201,13 +198,7 @@ namespace DataCore.Adapter.Json {
                 JsonSerializer.Serialize(writer, value.Value.ToString(), typeof(string), options);
             }
             else {
-                var converter = options?.GetConverter(typeof(T)) as JsonConverter<T>;
-                if (converter == null) {
-                    JsonSerializer.Serialize(writer, value.Value, typeof(T), options);
-                }
-                else {
-                    converter.Write(writer, value.GetValueOrDefault<T>(), options);
-                }
+                JsonSerializer.Serialize(writer, value.GetValueOrDefault<T>(), options);
             }
             writer.WriteEndObject();
 

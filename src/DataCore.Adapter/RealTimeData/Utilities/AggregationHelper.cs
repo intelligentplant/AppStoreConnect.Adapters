@@ -13,159 +13,78 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     /// </summary>
     public static class AggregationHelper {
 
-        #region [ Aggregation Helpers ]
+        #region [ Interpolate ]
 
         /// <summary>
-        /// Aggregates data.
+        /// Calculates the interpolated value at the start time of the provided bucket.
         /// </summary>
         /// <param name="tag">
-        ///   The definition for the tag being aggregated.
+        ///   The tag definition.
         /// </param>
-        /// <param name="utcStartTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="utcEndTime">
-        ///   The UTC end time for the aggregated data set.
-        /// </param>
-        /// <param name="sampleInterval">
-        ///   The sample interval to use between aggregation calculations.
-        /// </param>
-        /// <param name="rawData">
-        ///   The raw data to be aggregated.
-        /// </param>
-        /// <param name="dataFunction">
-        ///   The aggregate name (for information purposes only).
-        /// </param>
-        /// <param name="aggregateFunc">
-        ///   The aggregate function to use.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
-        ///   A collection of aggregated values.
+        ///   The calculated tag value.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="sampleInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="aggregateFunc"/> is <see langword="null"/>.
-        /// </exception>
-        private static IEnumerable<TagValue> GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, IEnumerable<TagValue> rawData, string dataFunction, Func<TagDefinition, DateTime, IEnumerable<TagValue>, IEnumerable<TagValue>> aggregateFunc) {
-            if (tag == null) {
-                throw new ArgumentNullException(nameof(tag));
-            }
-            if (utcStartTime >= utcEndTime) {
-                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
-            }
-            if (sampleInterval <= TimeSpan.Zero) {
-                throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
-            }
-            if (aggregateFunc == null) {
-                throw new ArgumentNullException(nameof(aggregateFunc));
-            }
-            if (String.IsNullOrWhiteSpace(dataFunction)) {
-                dataFunction = "UNKNOWN";
-            }
+        /// <remarks>
+        ///   The status used is the worst-case of the values used in the calculation.
+        /// </remarks>
+        private static IEnumerable<TagValue> CalculateInterpolated(TagDefinition tag, TagValueBucket currentBucket) {
+            TagValue sample0 = null;
+            TagValue sample1 = null;
 
-            // Ensure that we are only working with non-null samples.
-            var rawSamples = rawData?.Where(x => x != null).ToArray() ?? Array.Empty<TagValue>();
-            if (rawSamples.Length == 0) {
-                return Array.Empty<TagValue>();
+            if (currentBucket.RawSamples.Count == 0) {
+                // No samples in the current bucket. We can still extrapolate a value if we have 
+                // at least two samples in the PreBucketSamples collection.
+
+                if (currentBucket.PreBucketSamples.Count == 2) {
+                    sample0 = currentBucket.PreBucketSamples[0];
+                    sample1 = currentBucket.PreBucketSamples[1];
+                }
+                else if (currentBucket.PreBucketSamples.Count > 2) {
+                    var preBucketSamples = currentBucket.PreBucketSamples.Reverse().Take(2).ToArray();
+                    // Samples were reversed; more-recent sample will be at index 0.
+                    sample0 = preBucketSamples[1];
+                    sample1 = preBucketSamples[0];
+                }
             }
+            else {
+                // We have samples in the current bucket. First, check if the first sample in the 
+                // bucket exactly matches the bucket start time. If so, we can return this value 
+                // directly without having to compute anything.
 
-            // Set the initial list capacity based on the time range and sample interval.
-            var capacity = (int) ((utcEndTime - utcStartTime).TotalMilliseconds / sampleInterval.TotalMilliseconds);
-            var result = capacity > 0
-                ? new List<TagValue>(capacity)
-                : new List<TagValue>();
+                sample1 = currentBucket.RawSamples[0];
+                if (sample1.UtcSampleTime == currentBucket.UtcStart) {
+                    return new[] { sample1 };
+                }
 
-            // We'll use an aggregation bucket to keep track of the time period that we are calculating 
-            // the next sample over, and the samples that will be used in the aggregation.
-            var bucket = new TagValueBucket() {
-                UtcStart = utcStartTime.Subtract(sampleInterval),
-                UtcEnd = utcStartTime
-            };
+                if (currentBucket.PreBucketSamples.Count > 0) {
+                    // We have at least one usable sample from the pre-bucket samples collection 
+                    // that we can use as the earlier sample in our interpolation.
 
-            // If the initial bucket covers a period of time that starts before the raw data set that 
-            // we have been given, move the start time of the bucket forward to match the first raw 
-            // sample.
-            var firstSample = rawSamples[0];
+                    sample0 = currentBucket.PreBucketSamples.Last();
+                }
+                else if (currentBucket.RawSamples.Count > 1) {
+                    // If we have more than one sample in the current bucket, we will extrapolate 
+                    // backwards from the first two samples to the bucket start time.
 
-            if (bucket.UtcStart < firstSample.UtcSampleTime) {
-                bucket.UtcStart = firstSample.UtcSampleTime;
-                // Make sure that the end time of the bucket is at least equal to the start time of the bucket.
-                if (bucket.UtcEnd < bucket.UtcStart) {
-                    bucket.UtcEnd = bucket.UtcStart;
+                    sample0 = sample1;
+                    sample1 = currentBucket.RawSamples[1];
                 }
             }
 
-            TagValue previousAggregatedValue = null;
+            var val = InterpolationHelper.GetValueAtTime(
+                tag, 
+                currentBucket.UtcStart, 
+                sample0, 
+                sample1, 
+                InterpolationCalculationType.Interpolate
+            );
 
-            var sampleEnumerator = rawSamples.AsEnumerable().GetEnumerator();
-            while (sampleEnumerator.MoveNext()) {
-                var currentSample = sampleEnumerator.Current;
-
-                // If we've moved past the requested end time, break from the loop.
-                if (currentSample.UtcSampleTime > utcEndTime) {
-                    break;
-                }
-
-                // If we've moved past the end of the bucket, calculate the aggregate for the bucket, 
-                // move to the next bucket, and repeat this process until the end time for the bucket 
-                // is greater than the time stamp for currentSample.
-                //
-                // This allows us to handle situations where we need to produce an aggregated value at 
-                // a set interval, but there is a gap in raw data that is bigger than the required 
-                // interval (e.g. if we are averaging over a 5 minute interval, but there is a gap of 
-                // 30 minutes between raw samples).
-                while (currentSample.UtcSampleTime >= bucket.UtcEnd) {
-                    if (bucket.Samples.Count > 0) {
-                        // There are samples in the bucket; calculate the aggregate value.
-                        var vals = aggregateFunc(tag, bucket.UtcEnd, bucket.Samples);
-                        foreach (var val in vals) {
-                            result.Add(val);
-                            previousAggregatedValue = val;
-                        }
-                        bucket.Samples.Clear();
-                    }
-                    else if (previousAggregatedValue != null) {
-                        // There are no samples in the current bucket, but we have a value from the 
-                        // previous bucket that we can re-use.
-                        var val = TagValueBuilder.Create()
-                                    .WithUtcSampleTime(bucket.UtcEnd)
-                                    .WithValue(previousAggregatedValue.Value)
-                                    .WithStatus(previousAggregatedValue.Status)
-                                    .WithUnits(previousAggregatedValue.Units)
-                                    .Build();
-                            
-                        result.Add(val);
-                        previousAggregatedValue = val;
-                    }
-
-                    // Set the start/end time for the next bucket.
-                    bucket.UtcStart = bucket.UtcEnd;
-                    bucket.UtcEnd = bucket.UtcStart.Add(sampleInterval);
-                }
-
-                bucket.Samples.Add(currentSample);
-            }
-
-            // We have moved past utcEndTime in the raw data by this point.  If we have samples in the 
-            // bucket, and we either haven't calculated a value yet, or the most recent value that we 
-            // calculated has a time stamp less than utcEndTime, calculate a final sample for 
-            // utcEndTime and add it to the result.
-            if (bucket.Samples.Count > 0 && (result.Count == 0 || (result.Count > 0 && result.Last().UtcSampleTime < utcEndTime))) {
-                var vals = aggregateFunc(tag, utcEndTime, bucket.Samples);
-                foreach (var val in vals) {
-                    result.Add(val);
-                }
-            }
-
-            return result;
+            return val == null
+                ? Array.Empty<TagValue>()
+                : new[] { val };
         }
 
         #endregion
@@ -178,28 +97,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="bucket">
-        ///   The values to calculate the average from.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateAverage(TagDefinition tag, TagValueBucket bucket) {
-            if (bucket.Samples.Count == 0) {
+        private static IEnumerable<TagValue> CalculateAverage(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValue>();
             }
 
-            var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = currentBucket.RawSamples.First();
+            var numericValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -217,28 +136,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="bucket">
-        ///   The values to calculate the minimum value from.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateMinimum(TagDefinition tag, TagValueBucket bucket) {
-            if (bucket.Samples.Count == 0) {
+        private static IEnumerable<TagValue> CalculateMinimum(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValue>();
             }
 
-            var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = currentBucket.RawSamples.First();
+            var numericValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -256,28 +175,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="bucket">
-        ///   The values to calculate the maximum value from.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateMaximum(TagDefinition tag, TagValueBucket bucket) {
-            if (bucket.Samples.Count == 0) {
+        private static IEnumerable<TagValue> CalculateMaximum(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValue>();
             }
 
-            var tagInfoSample = bucket.Samples.First();
-            var numericValue = bucket.Samples.Max(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = currentBucket.RawSamples.First();
+            var numericValue = currentBucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -295,18 +214,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="bucket">
-        ///   The values to calculate the value from.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValue> CalculateCount(TagDefinition tag, TagValueBucket bucket) {
-            var numericValue = bucket.Samples.Count();
+        private static IEnumerable<TagValue> CalculateCount(TagDefinition tag, TagValueBucket currentBucket) {
+            var numericValue = currentBucket.RawSamples.Count();
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
                     .WithValue(numericValue)
                     .WithStatus(TagValueStatus.Good)
                     .Build()
@@ -324,31 +243,31 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="bucket">
-        ///   The values to calculate the maximum value from.
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateRange(TagDefinition tag, TagValueBucket bucket) {
-            if (bucket.Samples.Count == 0) {
+        private static IEnumerable<TagValue> CalculateRange(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
                 return null;
             }
 
-            var tagInfoSample = bucket.Samples.First();
-            var minValue = bucket.Samples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var maxValue = bucket.Samples.Max(x => x.Value.GetValueOrDefault(double.NaN));
+            var tagInfoSample = currentBucket.RawSamples.First();
+            var minValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var maxValue = currentBucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
             var numericValue = Math.Abs(maxValue = minValue);
 
-            var status = bucket.Samples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -408,7 +327,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            var funcs = new Dictionary<string, Func<TagDefinition, TagValueBucket, IEnumerable<TagValue>>>();
+            var funcs = new Dictionary<string, AggregateCalculator>();
 
             if (dataFunctions != null) {
                 foreach (var item in dataFunctions) {
@@ -416,20 +335,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    if (string.Equals(item, DefaultDataFunctions.Average.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Average.Name] = CalculateAverage;
+                    if (string.Equals(item, DefaultDataFunctions.Interpolate.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Interpolate.Id] = CalculateInterpolated;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Maximum.Name] = CalculateMaximum;
+                    else if (string.Equals(item, DefaultDataFunctions.Average.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Average.Id] = CalculateAverage;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Minimum.Name] = CalculateMinimum;
+                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Maximum.Id] = CalculateMaximum;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Count.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Count.Name] = CalculateCount;
+                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Minimum.Id] = CalculateMinimum;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Range.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Range.Name] = CalculateCount;
+                    else if (string.Equals(item, DefaultDataFunctions.Count.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Count.Id] = CalculateCount;
+                    }
+                    else if (string.Equals(item, DefaultDataFunctions.Range.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Range.Id] = CalculateCount;
                     }
                 }
             }
@@ -508,7 +430,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 );
             }
 
-            var funcs = new Dictionary<string, Func<TagDefinition, TagValueBucket, IEnumerable<TagValue>>>();
+            var funcs = new Dictionary<string, AggregateCalculator>();
 
             if (dataFunctions != null) {
                 foreach (var item in dataFunctions) {
@@ -516,20 +438,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    if (string.Equals(item, DefaultDataFunctions.Average.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Average.Name] = CalculateAverage;
+                    if (string.Equals(item, DefaultDataFunctions.Interpolate.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Interpolate.Id] = CalculateInterpolated;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Maximum.Name] = CalculateMaximum;
+                    else if (string.Equals(item, DefaultDataFunctions.Average.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Average.Id] = CalculateAverage;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Minimum.Name] = CalculateMinimum;
+                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Maximum.Id] = CalculateMaximum;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Count.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Count.Name] = CalculateCount;
+                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Minimum.Id] = CalculateMinimum;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Range.Name, StringComparison.OrdinalIgnoreCase)) {
-                        funcs[DefaultDataFunctions.Range.Name] = CalculateCount;
+                    else if (string.Equals(item, DefaultDataFunctions.Count.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Count.Id] = CalculateCount;
+                    }
+                    else if (string.Equals(item, DefaultDataFunctions.Range.Id, StringComparison.Ordinal)) {
+                        funcs[DefaultDataFunctions.Range.Id] = CalculateCount;
                     }
                 }
             }
@@ -611,7 +536,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
-        private static async Task GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, Func<TagDefinition, TagValueBucket, IEnumerable<TagValue>>> funcs, CancellationToken cancellationToken) {
+        private static async Task GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
+            var requiresPreBucketSampleTransfer = funcs.ContainsKey(DefaultDataFunctions.Interpolate.Id);
+            
             var bucket = new TagValueBucket() {
                 UtcStart = utcStartTime.Subtract(sampleInterval),
                 UtcEnd = utcStartTime
@@ -643,14 +570,38 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     var ticks = sampleInterval.Ticks * (val.Value.UtcSampleTime.Ticks / sampleInterval.Ticks);
                     var nextBucketStartTime = new DateTime(ticks, DateTimeKind.Utc);
 
-                    bucket = new TagValueBucket() {
+                    var newBucket = new TagValueBucket() {
                         UtcStart = nextBucketStartTime,
                         UtcEnd = nextBucketStartTime.Add(sampleInterval)
                     };
+
+                    // Now, copy over the two latest samples out of the RawSamples and PreBucketSamples 
+                    // for the old bucket into the PreBucketSamples for the new bucket. This is to 
+                    // help with the calculation of interpolated data if required.
+
+                    if (requiresPreBucketSampleTransfer) {
+                        if (bucket.RawSamples.Count == 2) {
+                            foreach (var sample in bucket.RawSamples) {
+                                newBucket.PreBucketSamples.Add(sample);
+                            }
+                        }
+                        else if (bucket.RawSamples.Count > 2) {
+                            foreach (var sample in bucket.RawSamples.Reverse().Take(2).Reverse()) {
+                                newBucket.PreBucketSamples.Add(sample);
+                            }
+                        }
+                        else {
+                            foreach (var sample in bucket.PreBucketSamples.Concat(bucket.RawSamples).Reverse().Take(2).Reverse()) {
+                                newBucket.PreBucketSamples.Add(sample);
+                            }
+                        }
+                    }
+
+                    bucket = newBucket;
                 }
 
                 if (val.Value.UtcSampleTime < utcEndTime) {
-                    bucket.Samples.Add(val.Value);
+                    bucket.RawSamples.Add(val.Value);
                 }
             }
 
@@ -658,12 +609,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
-        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, Func<TagDefinition, TagValueBucket, IEnumerable<TagValue>>> funcs, CancellationToken cancellationToken) {
+        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
             foreach (var agg in funcs) {
                 var vals = agg.Value.Invoke(tag, bucket);
-                if (vals == null) {
+                if (vals == null || !vals.Any()) {
                     continue;
                 }
+
                 foreach (var val in vals) {
                     if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key));
@@ -679,6 +631,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns></returns>
         public static IEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions() {
             return new[] {
+                DefaultDataFunctions.Interpolate,
                 DefaultDataFunctions.Average,
                 DefaultDataFunctions.Maximum,
                 DefaultDataFunctions.Minimum,
@@ -686,6 +639,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 DefaultDataFunctions.Range
             };
         }
+
+        #endregion
+
+        #region [ Inner Types ]
+
+        /// <summary>
+        /// Calculates the aggregated values for the specified bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag that the calculation is being performed for.
+        /// </param>
+        /// <param name="bucket">
+        ///   The bucket to calculate values for.
+        /// </param>
+        /// <returns>
+        ///   The calculated values for the bucket.
+        /// </returns>
+        private delegate IEnumerable<TagValue> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
 
         #endregion
 

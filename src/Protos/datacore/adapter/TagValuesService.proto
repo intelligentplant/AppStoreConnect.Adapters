@@ -20,7 +20,6 @@ service TagValuesService {
     // Historical data polling
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadPlotTagValues (ReadPlotTagValuesRequest) returns (stream TagValueQueryResult);
-    rpc ReadInterpolatedTagValues (ReadInterpolatedTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadTagValuesAtTimes (ReadTagValuesAtTimesRequest) returns (stream TagValueQueryResult);
     rpc GetSupportedDataFunctions (GetSupportedDataFunctionsRequest) returns (GetSupportedDataFunctionsResponse);
     rpc ReadProcessedTagValues (ReadProcessedTagValuesRequest) returns (stream ProcessedTagValueQueryResult);
@@ -81,17 +80,6 @@ message ReadPlotTagValuesRequest {
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
     int32 intervals = 5;
-    map<string,string> properties = 6;
-}
-
-
-// Read interp tag values
-message ReadInterpolatedTagValuesRequest {
-    string adapter_id = 1;
-    repeated string tags = 2;
-    google.protobuf.Timestamp utc_start_time = 3;
-    google.protobuf.Timestamp utc_end_time = 4;
-    google.protobuf.Duration sample_interval = 5;
     map<string,string> properties = 6;
 }
 

@@ -132,12 +132,6 @@
   <data name="Error_EventMessageCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null event message.</value>
   </data>
-  <data name="Error_InterpolationRequiresAtLeastOneSample" xml:space="preserve">
-    <value>When interpolating or inferring a tag value using raw samples, you must specify a values to base the calculation on.</value>
-  </data>
-  <data name="Error_InterpolationRequiresAtLeastOneSampleEarlierThanRequestedSampleTime" xml:space="preserve">
-    <value>When interpolating or inferring a tag value using raw samples, you must specify a sample that is earlier than the sample time you want to calculate at.</value>
-  </data>
   <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
     <value>Interval count must be greater than zero.</value>
   </data>

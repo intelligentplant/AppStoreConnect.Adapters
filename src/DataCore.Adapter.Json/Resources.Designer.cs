@@ -61,6 +61,15 @@ namespace DataCore.Adapter.Json {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified JSON cannot be converted to an instance of {0}..
+        /// </summary>
+        internal static string Error_InvalidJsonStructure {
+            get {
+                return ResourceManager.GetString("Error_InvalidJsonStructure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified JSON does not represent a Variant structure..
         /// </summary>
         internal static string Error_InvalidVariantStructure {

@@ -219,57 +219,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Requests interpolated tag values.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="request">
-        ///   The interpolated data request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   Successful responses contain the interpolated values for the requested tags.
-        /// </returns>
-        [HttpPost]
-        [Route("{adapterId}/interpolated")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
-        public async Task<IActionResult> ReadInterpolatedValues(string adapterId, ReadInterpolatedTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadInterpolatedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
-            }
-            if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadInterpolatedTagValues))); // 400
-            }
-            if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
-            }
-            var feature = resolvedFeature.Feature;
-
-            var reader = feature.ReadInterpolatedTagValues(_callContext, request, cancellationToken);
-
-            var result = new List<TagValueQueryResult>();
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
-                }
-
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
-            }
-
-            return Ok(result); // 200
-        }
-
-
-        /// <summary>
         /// Requests tag values at specific timestamps.
         /// </summary>
         /// <param name="adapterId">
