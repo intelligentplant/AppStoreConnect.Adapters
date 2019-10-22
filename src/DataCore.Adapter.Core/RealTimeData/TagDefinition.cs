@@ -77,7 +77,6 @@ namespace DataCore.Adapter.RealTimeData {
                 States = dataType != TagDataType.State
                     ? null
                     : states?.ToArray() ?? Array.Empty<DigitalState>(),
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>(),
                 Labels = labels?.ToArray() ?? Array.Empty<string>()
             };
         }

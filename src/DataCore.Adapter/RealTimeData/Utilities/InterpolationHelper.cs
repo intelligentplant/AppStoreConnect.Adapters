@@ -218,7 +218,147 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, GetSampleTimes(utcStartTime, utcEndTime, sampleInterval), InterpolationCalculationType.Interpolate, rawData, ch, ct), true, scheduler, cancellationToken);
+            result.Writer.RunBackgroundOperation(
+                (ch, ct) => GetInterpolatedValues(
+                    tag, 
+                    GetSampleTimes(utcStartTime, utcEndTime, sampleInterval), 
+                    InterpolationCalculationType.Interpolate, 
+                    rawData, 
+                    ch, 
+                    ct
+                ), 
+                true, 
+                scheduler, 
+                cancellationToken
+            );
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Performs interpolation on raw tag values.
+        /// </summary>
+        /// <param name="tags">
+        ///   The tags in the query.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The start time for the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The end time for the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval for the data query.
+        /// </param>
+        /// <param name="rawData">
+        ///   The channel that will provide the raw data for the interpolation calculations.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated tag values.
+        /// </returns>
+        public static ChannelReader<TagValueQueryResult> GetInterpolatedValues(IEnumerable<TagDefinition> tags, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+            if (tags == null) {
+                throw new ArgumentNullException(nameof(tags));
+            }
+            if (utcStartTime >= utcEndTime) {
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+            }
+            if (sampleInterval <= TimeSpan.Zero) {
+                throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
+            }
+
+            Channel<TagValueQueryResult> result;
+
+            if (!tags.Any()) {
+                // No tags; complete the channel and return.
+                result = Channel.CreateUnbounded<TagValueQueryResult>();
+                result.Writer.TryComplete();
+                return result;
+            }
+
+            if (tags.Count() == 1) {
+                // Single tag; use the optimised single-tag overload.
+                return GetInterpolatedValues(
+                    tags.First(),
+                    utcStartTime,
+                    utcEndTime,
+                    sampleInterval,
+                    rawData,
+                    scheduler,
+                    cancellationToken
+                );
+            }
+
+            // Multiple tags; create a single result channel, and create individual input channels 
+            // for each tag in the request and redirect each value emitted from the raw data channel 
+            // into the appropriate per-tag input channel.
+
+            result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
+                FullMode = BoundedChannelFullMode.Wait,
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = false
+            });
+
+            var tagLookupById = tags.ToDictionary(x => x.Id);
+
+            var tagRawDataChannels = tags.ToDictionary(x => x.Id, x => Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            }));
+
+            // Redirect values from input channel to per-tag channel.
+            rawData.RunBackgroundOperation(async (ch, ct) => {
+                try {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var val) || val == null) {
+                            continue;
+                        }
+
+                        if (!tagRawDataChannels.TryGetValue(val.TagId, out var perTagChannel)) {
+                            continue;
+                        }
+
+                        if (await perTagChannel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            perTagChannel.Writer.TryWrite(val);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    foreach (var item in tagRawDataChannels.Values) {
+                        item.Writer.TryComplete(e);
+                    }
+                    throw;
+                }
+                finally {
+                    foreach (var item in tagRawDataChannels.Values) {
+                        item.Writer.TryComplete();
+                    }
+                }
+            }, scheduler, cancellationToken);
+
+            // Execute stream for each tag in the query and write all values into the shared 
+            // result channel.
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                await Task.WhenAll(
+                    tagRawDataChannels.Select(x => GetInterpolatedValues(
+                        tagLookupById[x.Key],
+                        GetSampleTimes(utcStartTime, utcEndTime, sampleInterval),
+                        InterpolationCalculationType.Interpolate,
+                        x.Value,
+                        ch,
+                        ct
+                    ))
+                ).WithCancellation(ct).ConfigureAwait(false);
+            }, true, scheduler, cancellationToken);
 
             return result;
         }

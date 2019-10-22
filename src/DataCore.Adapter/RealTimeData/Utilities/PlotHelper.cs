@@ -14,7 +14,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     /// </summary>
     public static class PlotHelper {
 
-        internal static TimeSpan CalculateBucketSize(DateTime utcStartTime, DateTime utcEndTime, int intervals) {
+        /// <summary>
+        /// Calculates the bucket size to use for the specified query time range and interval count.
+        /// </summary>
+        /// <param name="utcStartTime">
+        ///   The UTC start time for the query time range.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time for the query time range.
+        /// </param>
+        /// <param name="intervals">
+        ///   The number of intervals to divide the time range into.
+        /// </param>
+        /// <returns>
+        ///   The time span for each bucket.
+        /// </returns>
+        public static TimeSpan CalculateBucketSize(DateTime utcStartTime, DateTime utcEndTime, int intervals) {
             if (utcStartTime >= utcEndTime) {
                 throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
             }
@@ -27,7 +42,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Creates a visualization-friendly data set suitable for trending.
+        /// Creates a visualization-friendly data set for a single tag that is suitable for trending.
         /// </summary>
         /// <param name="tag">
         ///   The tag definition.
@@ -98,7 +113,176 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, rawData, ch, ct), true, scheduler, cancellationToken);
+            result.Writer.RunBackgroundOperation(
+                (ch, ct) => GetPlotValues(
+                    tag,
+                    utcStartTime,
+                    utcEndTime,
+                    bucketSize,
+                    rawData,
+                    ch,
+                    ct
+                ),
+                true,
+                scheduler,
+                cancellationToken
+            );
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Creates a visualization-friendly data set suitable for trending.
+        /// </summary>
+        /// <param name="tags">
+        ///   The tag definitions in the query.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The UTC start time for the plot data set.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time for the plot data set.
+        /// </param>
+        /// <param name="bucketSize">
+        ///   The bucket size to use when calculating the plot data set.
+        /// </param>
+        /// <param name="rawData">
+        ///   A channel that will provide the raw data to use in the calculations.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit a set of trend-friendly samples.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tags"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="bucketSize"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The plot function works by collecting raw values into buckets. Each bucket covers the 
+        ///   same period of time. The method reads from <paramref name="rawData"/> and adds samples 
+        ///   to the bucket, until it encounters a sample that has a time stamp that is after the 
+        ///   bucket's end time. The function then takes the earliest, latest, minimum and maximum 
+        ///   values in the bucket, as well as the first non-good value in the bucket, and adds them 
+        ///   to the result data set.
+        /// </para>
+        /// 
+        /// <para>
+        ///   It is important then to note that method is not guaranteed to give evenly-spaced time 
+        ///   stamps in the resulting data set, but instead returns a data set that 
+        ///   gives a reasonable approximation of the tag when visualized.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(IEnumerable<TagDefinition> tags, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+            if (tags == null) {
+                throw new ArgumentNullException(nameof(tags));
+            }
+            if (utcStartTime >= utcEndTime) {
+                throw new ArgumentException(SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime, nameof(utcStartTime));
+            }
+            if (bucketSize <= TimeSpan.Zero) {
+                throw new ArgumentException(Resources.Error_BucketSizeMustBeGreaterThanZero, nameof(bucketSize));
+            }
+
+            Channel<TagValueQueryResult> result;
+
+            if (!tags.Any()) {
+                // No tags; complete the channel and return.
+                result = Channel.CreateUnbounded<TagValueQueryResult>();
+                result.Writer.TryComplete();
+                return result;
+            }
+
+            if (tags.Count() == 1) {
+                // Single tag; use the optimised single-tag overload.
+                return GetPlotValues(
+                    tags.First(), 
+                    utcStartTime, 
+                    utcEndTime, 
+                    bucketSize, 
+                    rawData, 
+                    scheduler, 
+                    cancellationToken
+                );
+            }
+
+            // Multiple tags; create a single result channel, and create individual input channels 
+            // for each tag in the request and redirect each value emitted from the raw data channel 
+            // into the appropriate per-tag input channel.
+
+            result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
+                FullMode = BoundedChannelFullMode.Wait,
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = false
+            });
+
+            var tagLookupById = tags.ToDictionary(x => x.Id);
+
+            var tagRawDataChannels = tags.ToDictionary(x => x.Id, x => Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            }));
+
+            // Redirect values from input channel to per-tag channel.
+            rawData.RunBackgroundOperation(async (ch, ct) => {
+                try {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var val) || val == null) {
+                            continue;
+                        }
+
+                        if (!tagRawDataChannels.TryGetValue(val.TagId, out var perTagChannel)) {
+                            continue;
+                        }
+
+                        if (await perTagChannel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            perTagChannel.Writer.TryWrite(val);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    foreach (var item in tagRawDataChannels.Values) {
+                        item.Writer.TryComplete(e);
+                    }
+                    throw;
+                }
+                finally {
+                    foreach (var item in tagRawDataChannels.Values) {
+                        item.Writer.TryComplete();
+                    }
+                }
+            }, scheduler, cancellationToken);
+
+            // Execute stream for each tag in the query and write all values into the shared 
+            // result channel.
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                await Task.WhenAll(
+                    tagRawDataChannels.Select(x => GetPlotValues(
+                        tagLookupById[x.Key],
+                        utcStartTime,
+                        utcEndTime,
+                        bucketSize,
+                        x.Value,
+                        ch,
+                        ct
+                    ))    
+                ).WithCancellation(ct).ConfigureAwait(false);
+            }, true, scheduler, cancellationToken);
 
             return result;
         }

@@ -70,7 +70,16 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval..
+        ///   Looks up a localized string similar to The number of raw samples that have been recorded for the tag over the sample period..
+        /// </summary>
+        internal static string DataFunction_Count_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Count_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
         /// </summary>
         internal static string DataFunction_Max_Description {
             get {
@@ -79,11 +88,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Minimum value calculated over a fixed sample interval..
+        ///   Looks up a localized string similar to Minimum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at..
         /// </summary>
         internal static string DataFunction_Min_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The difference between the minimum value and maximum value over the sample period..
+        /// </summary>
+        internal static string DataFunction_Range_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Range_Description", resourceCulture);
             }
         }
         

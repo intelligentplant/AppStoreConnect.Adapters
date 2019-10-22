@@ -9,7 +9,13 @@ namespace DataCore.Adapter.RealTimeData {
     public sealed class DataFunctionDescriptor {
 
         /// <summary>
-        /// The function name.
+        /// The function ID.
+        /// </summary>
+        [Required]
+        public string Id { get; set; }
+
+        /// <summary>
+        /// The function display name.
         /// </summary>
         [Required]
         public string Name { get; set; }
@@ -23,6 +29,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="DataFunctionDescriptor"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The function ID.
+        /// </param>
         /// <param name="name">
         ///   The function name.
         /// </param>
@@ -30,10 +39,14 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The function description.
         /// </param>
         /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static DataFunctionDescriptor Create(string name, string description) {
+        public static DataFunctionDescriptor Create(string id, string name, string description) {
             return new DataFunctionDescriptor() {
+                Id = id ?? throw new ArgumentNullException(nameof(id)),
                 Name = name ?? throw new ArgumentNullException(nameof(name)),
                 Description = description
             };

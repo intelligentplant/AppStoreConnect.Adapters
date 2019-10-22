@@ -126,6 +126,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return DataFunctionDescriptor.Create(
+                func.Id,
                 func.Name,
                 func.Description
             );

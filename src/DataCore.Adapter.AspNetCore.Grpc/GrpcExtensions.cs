@@ -584,6 +584,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// </returns>
         internal static DataFunctionDescriptor ToGrpcDataFunctionDescriptor(this RealTimeData.DataFunctionDescriptor descriptor) {
             return new DataFunctionDescriptor() {
+                Id = descriptor.Id ?? string.Empty,
                 Name = descriptor.Name ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty
             };

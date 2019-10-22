@@ -294,8 +294,9 @@ message ProcessedTagValueQueryResult {
 
 
 message DataFunctionDescriptor {
-    string name = 1;
-    string description = 2;
+    string id = 1;
+    string name = 2;
+    string description = 3;
 }
 
 

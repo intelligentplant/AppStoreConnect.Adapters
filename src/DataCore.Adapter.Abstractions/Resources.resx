@@ -120,11 +120,17 @@
   <data name="DataFunction_Avg_Description" xml:space="preserve">
     <value>Average value calculated over a fixed sample interval.</value>
   </data>
+  <data name="DataFunction_Count_Description" xml:space="preserve">
+    <value>The number of raw samples that have been recorded for the tag over the sample period.</value>
+  </data>
   <data name="DataFunction_Max_Description" xml:space="preserve">
-    <value>Maximum value calculated over a fixed sample interval.</value>
+    <value>Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.</value>
   </data>
   <data name="DataFunction_Min_Description" xml:space="preserve">
-    <value>Minimum value calculated over a fixed sample interval.</value>
+    <value>Minimum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.</value>
+  </data>
+  <data name="DataFunction_Range_Description" xml:space="preserve">
+    <value>The difference between the minimum value and maximum value over the sample period.</value>
   </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
