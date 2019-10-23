@@ -8,7 +8,7 @@ namespace DataCore.Adapter.AspNetCore {
     /// <summary>
     /// <see cref="IAdapterCallContext"/> implementation for ASP.NET Core.
     /// </summary>
-    public class AdapterCallContext: IAdapterCallContext {
+    public class AdapterCallContext : IAdapterCallContext {
 
         /// <summary>
         /// The <see cref="HttpContext"/> associated with the <see cref="AdapterCallContext"/>.
