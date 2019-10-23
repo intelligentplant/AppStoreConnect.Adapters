@@ -49,6 +49,12 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <param name="fullMode">
         ///   The action to take if a write is attempted on a full channel. Ignored if 
         ///   <paramref name="capacity"/> is less than one.
@@ -56,18 +62,23 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The new channel.
         /// </returns>
-        internal static Channel<T> CreateChannel<T>(int capacity, BoundedChannelFullMode fullMode = BoundedChannelFullMode.Wait) {
+        internal static Channel<T> CreateChannel<T>(
+            int capacity,
+            bool singleReader = true,
+            bool singleWriter = true,
+            BoundedChannelFullMode fullMode = BoundedChannelFullMode.Wait
+        ) {
             return capacity > 0
                 ? Channel.CreateBounded<T>(new BoundedChannelOptions(capacity) {
                     FullMode = fullMode,
                     AllowSynchronousContinuations = true,
-                    SingleReader = true,
-                    SingleWriter = true
+                    SingleReader = singleReader,
+                    SingleWriter = singleWriter
                 })
                 : Channel.CreateUnbounded<T>(new UnboundedChannelOptions() {
                     AllowSynchronousContinuations = true,
-                    SingleReader = true,
-                    SingleWriter = true
+                    SingleReader = singleReader,
+                    SingleWriter = singleWriter
                 });
         }
 
@@ -113,14 +124,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.TagDefinition> CreateTagDefinitionChannel(int capacity = TagDefinitionChannelCapacity) {
-            return CreateChannel<RealTimeData.TagDefinition>(capacity);
+        public static Channel<RealTimeData.TagDefinition> CreateTagDefinitionChannel(
+            int capacity = TagDefinitionChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<RealTimeData.TagDefinition>(capacity, singleReader, singleWriter);
         }
 
 
@@ -131,14 +152,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.TagIdentifier> CreateTagIdentifierChannel(int capacity = TagDefinitionChannelCapacity) {
-            return CreateChannel<RealTimeData.TagIdentifier>(capacity);
+        public static Channel<RealTimeData.TagIdentifier> CreateTagIdentifierChannel(
+            int capacity = TagDefinitionChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<RealTimeData.TagIdentifier>(capacity, singleReader, singleWriter);
         }
 
 
@@ -152,28 +183,52 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateTagValueChannel<T>(int capacity = TagValueChannelCapacity) where T : RealTimeData.TagValueQueryResult {
-            return CreateChannel<T>(capacity);
+        public static Channel<T> CreateTagValueChannel<T>(
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) where T : RealTimeData.TagValueQueryResult {
+            return CreateChannel<T>(capacity, singleReader, singleWriter);
         }
 
 
         /// <summary>
         /// Creates a channel that can be used to write tag values to an adapter.
         /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.WriteTagValueItem> CreateTagValueWriteChannel(int capacity = TagValueChannelCapacity) {
-            return CreateChannel<RealTimeData.WriteTagValueItem>(capacity);
+        public static Channel<RealTimeData.WriteTagValueItem> CreateTagValueWriteChannel(
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<RealTimeData.WriteTagValueItem>(capacity, singleReader, singleWriter);
         }
 
 
@@ -184,14 +239,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.WriteTagValueResult> CreateTagValueWriteResultChannel(int capacity = TagValueChannelCapacity) {
-            return CreateChannel<RealTimeData.WriteTagValueResult>(capacity);
+        public static Channel<RealTimeData.WriteTagValueResult> CreateTagValueWriteResultChannel(
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<RealTimeData.WriteTagValueResult>(capacity, singleReader, singleWriter);
         }
 
 
@@ -202,14 +267,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagAnnotationChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.TagValueAnnotationQueryResult> CreateTagValueAnnotationChannel(int capacity = TagAnnotationChannelCapacity) {
-            return CreateChannel<RealTimeData.TagValueAnnotationQueryResult>(capacity);
+        public static Channel<RealTimeData.TagValueAnnotationQueryResult> CreateTagValueAnnotationChannel(
+            int capacity = TagAnnotationChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<RealTimeData.TagValueAnnotationQueryResult>(capacity, singleReader, singleWriter);
         }
 
 
@@ -226,14 +301,25 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        internal static Channel<T> CreateEventMessageChannel<T>(BoundedChannelFullMode fullMode, int capacity = EventChannelCapacity) where T : Events.EventMessageBase {
-            return CreateChannel<T>(capacity, fullMode);
+        internal static Channel<T> CreateEventMessageChannel<T>(
+            BoundedChannelFullMode fullMode, 
+            int capacity = EventChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) where T : Events.EventMessageBase {
+            return CreateChannel<T>(capacity, singleReader, singleWriter, fullMode);
         }
 
 
@@ -247,28 +333,52 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<T> CreateEventMessageChannel<T>(int capacity = EventChannelCapacity) where T : Events.EventMessageBase {
-            return CreateEventMessageChannel<T>(BoundedChannelFullMode.Wait, capacity);
+        public static Channel<T> CreateEventMessageChannel<T>(
+            int capacity = EventChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) where T : Events.EventMessageBase {
+            return CreateEventMessageChannel<T>(BoundedChannelFullMode.Wait, capacity, singleReader, singleWriter);
         }
 
 
         /// <summary>
         /// Creates a channel that can be used to write event messages to an adapter.
         /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<Events.WriteEventMessageItem> CreateEventMessageWriteChannel(int capacity = EventChannelCapacity) {
-            return CreateChannel<Events.WriteEventMessageItem>(capacity);
+        public static Channel<Events.WriteEventMessageItem> CreateEventMessageWriteChannel(
+            int capacity = EventChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<Events.WriteEventMessageItem>(capacity, singleReader, singleWriter);
         }
 
 
@@ -279,14 +389,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="EventChannelCapacity"/>.
         /// </remarks>
-        public static Channel<Events.WriteEventMessageResult> CreateEventMessageWriteResultChannel(int capacity = EventChannelCapacity) {
-            return CreateChannel<Events.WriteEventMessageResult>(capacity);
+        public static Channel<Events.WriteEventMessageResult> CreateEventMessageWriteResultChannel(
+            int capacity = EventChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<Events.WriteEventMessageResult>(capacity, singleReader, singleWriter);
         }
 
 
@@ -297,14 +417,24 @@ namespace DataCore.Adapter {
         ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
         ///   less than or equal to zero.
         /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
         /// <returns>
         ///   The channel.
         /// </returns>
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="AssetModelNodeChannelCapacity"/>.
         /// </remarks>
-        public static Channel<AssetModel.AssetModelNode> CreateAssetModelNodeChannel(int capacity = AssetModelNodeChannelCapacity) {
-            return CreateChannel<AssetModel.AssetModelNode>(capacity);
+        public static Channel<AssetModel.AssetModelNode> CreateAssetModelNodeChannel(
+            int capacity = AssetModelNodeChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateChannel<AssetModel.AssetModelNode>(capacity, singleReader, singleWriter);
         }
 
 
