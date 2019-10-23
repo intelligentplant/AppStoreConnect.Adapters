@@ -49,8 +49,20 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Throws an <see cref="ObjectDisposedException"/> if the task service has been disposed.
+        /// </summary>
+        protected void ThrowIfDisposed() {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+        }
+
+
         /// <inheritdoc/>
         public void QueueBackgroundWorkItem(Action<CancellationToken> workItem) {
+            ThrowIfDisposed();
+
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
             }
@@ -61,6 +73,8 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         public void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem) {
+            ThrowIfDisposed();
+
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
             }
@@ -82,7 +96,13 @@ namespace DataCore.Adapter {
         ///   A long-running task that will end when the <paramref name="cancellationToken"/> fires.
         /// </returns>
         protected async Task RunAsync(CancellationToken cancellationToken) {
+            ThrowIfDisposed();
+
             while (!cancellationToken.IsCancellationRequested) {
+                if (_isDisposed) {
+                    break;
+                }
+
                 await _queueSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
                 if (!_queue.TryDequeue(out var item)) {
                     continue;
@@ -126,6 +146,13 @@ namespace DataCore.Adapter {
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
                 _queueSignal.Dispose();
+#if NETSTANDARD2_0
+                // .NET Standard 2.0 doesn't have a Clear() method on ConcurrentQueue<T>, so we'll 
+                // empty it ourselves.
+                while (_queue.TryDequeue(out var _)) { }
+#else
+                _queue.Clear();
+#endif
             }
         }
 
@@ -136,9 +163,8 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            Dispose(true);
             _isDisposed = true;
-
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
