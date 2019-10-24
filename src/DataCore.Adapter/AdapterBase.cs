@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter {
@@ -16,7 +17,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The options type for the adapter.
     /// </typeparam>
-    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IAsyncDisposable, IDisposable where TAdapterOptions : AdapterOptions, new() {
+    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IHealthCheck, IAsyncDisposable, IDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the adapter has been disposed.
@@ -136,7 +137,9 @@ namespace DataCore.Adapter {
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
         protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, loggerFactory) { }
+            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, loggerFactory) {
+            AddFeatures(this);
+        }
 
 
         /// <summary>
@@ -165,6 +168,8 @@ namespace DataCore.Adapter {
             if (optionsMonitor == null) {
                 throw new ArgumentNullException(nameof(optionsMonitor));
             }
+
+            AddFeatures(this);
 
             var options = optionsMonitor.CurrentValue;
 
@@ -277,6 +282,32 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <inheritdoc/>
+        async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            if (!IsStarted) {
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription);
+            }
+
+            try {
+                var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
+                if (results == null || !results.Any()) {
+                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription);
+                }
+
+                var resultsArray = results.ToArray();
+
+                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
+                return new HealthCheckResult(compositeStatus, Resources.HealthChecks_CompositeResultDescription, null, null, resultsArray);
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription, e.Message);
+            }
+        }
+
+
 
         /// <summary>
         /// Disposes of the adapter.
@@ -371,8 +402,30 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Performs an adapter health check.
+        /// </summary>
+        /// <param name="context">
+        ///   The call context for the operation, to allow authorization to be applied to the 
+        ///   operation if required.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   health check.
+        /// </returns>
+        /// <remarks>
+        ///   Override this method to perform custom health checks for your adapter.
+        /// </remarks>
+        protected virtual Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            return Task.FromResult<IEnumerable<HealthCheckResult>>(null);
+        }
+
+
+        /// <summary>
         /// Invoked when the adapter detects that its supplied <typeparamref name="TAdapterOptions"/> 
-        /// have changed. This method will only be called if an <see cref="IOptionsMonitor{TOptions}"/> 
+        /// have changed. This method will only be called if an <see cref="IAdapterOptionsMonitor{TAdapterOptions}"/> 
         /// was provided when the adapter was created.
         /// </summary>
         /// <param name="options">
@@ -540,9 +593,6 @@ namespace DataCore.Adapter {
         /// </param>
         /// <param name="value">
         ///   The property value.
-        /// </param>
-        /// <param name="valueType">
-        ///   The property value type.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="key"/> i <see langword="null"/>.

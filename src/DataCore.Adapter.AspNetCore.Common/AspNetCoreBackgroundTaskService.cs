@@ -12,18 +12,9 @@ namespace DataCore.Adapter.AspNetCore {
     /// <see cref="IBackgroundTaskService"/> implementation that runs as an <see cref="IHostedService"/> 
     /// in the ASP.NET Core host.
     /// </summary>
-    public sealed class AspNetCoreBackgroundTaskService : BackgroundTaskService, IHostedService {
+    internal sealed class AspNetCoreBackgroundTaskService : BackgroundTaskService {
 
-        /// <summary>
-        /// The task that dequeues and runs queued background work items.
-        /// </summary>
-        private Task _executingTask;
-
-        /// <summary>
-        /// Fires when <see cref="StopAsync(CancellationToken)"/> is called or the service is 
-        /// disposed.
-        /// </summary>
-        private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
+        internal CancellationToken StoppingToken { get; private set; }
 
 
         /// <summary>
@@ -36,6 +27,82 @@ namespace DataCore.Adapter.AspNetCore {
             : base(loggerFactory) { }
 
 
+        /// <inheritdoc/>
+        protected override void RunBackgroundWorkItem(Action<CancellationToken> workItem) {
+            _ = Task.Run(() => {
+                try {
+                    workItem(StoppingToken);
+                }
+                catch (OperationCanceledException) {
+                    // Do nothing
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorInBackgroundTask, workItem);
+                }
+            }, StoppingToken);
+        }
+
+
+        /// <inheritdoc/>
+        protected override void RunBackgroundWorkItem(Func<CancellationToken, Task> workItem) {
+            _ = Task.Run(async () => {
+                try {
+                    await workItem(StoppingToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    // Do nothing
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorInBackgroundTask, workItem);
+                }
+            }, StoppingToken);
+        }
+
+
+        /// <summary>
+        /// Runs the service.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will fire when the service should stop.
+        /// </param>
+        internal Task RunInternal(CancellationToken cancellationToken) {
+            return RunAsync(cancellationToken);
+        }
+
+    }
+
+
+    internal class AspNetCoreBackgroundTaskServiceRunner : IHostedService {
+
+        /// <summary>
+        /// The task that dequeues and runs queued background work items.
+        /// </summary>
+        private Task _executingTask;
+
+        /// <summary>
+        /// Fires when <see cref="StopAsync(CancellationToken)"/> is called or the service is 
+        /// disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
+
+        /// <summary>
+        /// The background task service.
+        /// </summary>
+        private readonly AspNetCoreBackgroundTaskService _backgroundTaskService;
+
+
+        /// <summary>
+        /// Creates a new <see cref="AspNetCoreBackgroundTaskServiceRunner"/>.
+        /// </summary>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="AspNetCoreBackgroundTaskService"/> that will dequeue and run 
+        ///   background tasks.
+        /// </param>
+        public AspNetCoreBackgroundTaskServiceRunner(IBackgroundTaskService backgroundTaskService) {
+            _backgroundTaskService = (AspNetCoreBackgroundTaskService) backgroundTaskService;
+        }
+
+
         /// <summary>
         /// Triggered when the application host is ready to start the service.
         /// </summary>
@@ -44,7 +111,7 @@ namespace DataCore.Adapter.AspNetCore {
         /// </param>
         public Task StartAsync(CancellationToken cancellationToken) {
             // Store the task we're executing
-            _executingTask = RunAsync(_stoppingCts.Token);
+            _executingTask = _backgroundTaskService.RunInternal(_stoppingCts.Token);
 
             // If the task is completed then return it, this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted) {
@@ -78,45 +145,6 @@ namespace DataCore.Adapter.AspNetCore {
             }
 
         }
-
-
-        /// <inheritdoc/>
-        protected override void RunBackgroundWorkItem(Action<CancellationToken> workItem) {
-            _ = Task.Run(() => {
-                try {
-                    workItem(_stoppingCts.Token);
-                }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorInBackgroundTask, workItem);
-                }
-            }, _stoppingCts.Token);
-        }
-
-
-        /// <inheritdoc/>
-        protected override void RunBackgroundWorkItem(Func<CancellationToken, Task> workItem) {
-            _ = Task.Run(async () => {
-                try {
-                    await workItem(_stoppingCts.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorInBackgroundTask, workItem);
-                }
-            }, _stoppingCts.Token);
-        }
-
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing) {
-            base.Dispose(disposing);
-            _stoppingCts.Cancel();
-        }
-
     }
+
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -85,6 +86,39 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
+        }
+
+
+        /// <summary>
+        /// Performs a health check on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the <see cref="HealthCheckResult"/> for the requested 
+        ///   adapter.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/health-status")]
+        [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
+        public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+            var feature = resolvedFeature.Feature;
+
+            return Ok(await feature.CheckHealthAsync(_callContext, cancellationToken).ConfigureAwait(false)); // 200
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace DataCore.Adapter {
         ///   The ASP.NET Core hosted services.
         /// </param>
         public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter> adapters) : base(authorizationService) {
-            _adapters = adapters?.ToArray() ?? new IAdapter[0];
+            _adapters = adapters?.ToArray() ?? Array.Empty<IAdapter>();
         }
 
 

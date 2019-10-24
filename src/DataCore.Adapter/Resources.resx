@@ -145,6 +145,9 @@
     <value>Object does not implement feature {0}.</value>
     <comment>{0} - feature name</comment>
   </data>
+  <data name="HealthChecks_CompositeResultDescription" xml:space="preserve">
+    <value>Adapter Health</value>
+  </data>
   <data name="Log_AdapterStartupError" xml:space="preserve">
     <value>An error occurred while starting adapter {AdapterId}.</value>
   </data>

@@ -79,6 +79,24 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to SignalR hub connection status is {0}..
+        /// </summary>
+        internal static string HealthCheck_HubConnectionStatusDescription {
+            get {
+                return ResourceManager.GetString("HealthCheck_HubConnectionStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        internal static string HealthCheck_UnknownConnectionState {
+            get {
+                return ResourceManager.GetString("HealthCheck_UnknownConnectionState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {

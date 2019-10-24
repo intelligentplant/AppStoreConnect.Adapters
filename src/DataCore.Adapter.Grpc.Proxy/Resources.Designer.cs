@@ -70,6 +70,15 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to gRPC channel state is {0}..
+        /// </summary>
+        internal static string HealthChecks_ChannelStateDescription {
+            get {
+                return ResourceManager.GetString("HealthChecks_ChannelStateDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {

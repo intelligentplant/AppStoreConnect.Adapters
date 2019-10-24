@@ -9,6 +9,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service AdaptersService {
     rpc GetAdapters(GetAdaptersRequest) returns (GetAdaptersResponse);
     rpc GetAdapter(GetAdapterRequest) returns (GetAdapterResponse);
+    rpc CheckAdapterHealth(CheckAdapterHealthRequest) returns (CheckAdapterHealthResponse);
 }
 
 
@@ -25,4 +26,13 @@ message GetAdapterRequest {
 }
 message GetAdapterResponse {
     ExtendedAdapterDescriptor adapter = 1;
+}
+
+
+// Performs an adapter health check 
+message CheckAdapterHealthRequest { 
+    string adapter_id = 1;
+}
+message CheckAdapterHealthResponse {
+    HealthCheckResult result = 1;
 }

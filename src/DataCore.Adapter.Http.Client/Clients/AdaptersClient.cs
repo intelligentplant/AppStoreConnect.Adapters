@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 
@@ -97,6 +98,45 @@ namespace DataCore.Adapter.Http.Client.Clients {
                     httpResponse.EnsureSuccessStatusCode();
 
                     return await httpResponse.Content.ReadAsAsync<AdapterDescriptorExtended>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the current health check status for an adapter in the remote host.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="principal">
+        ///   The principal to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the adapter health status.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public async Task<HealthCheckResult> CheckAdapterHealthAsync(string adapterId, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/health-status";
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddStateProperty(principal);
+
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<HealthCheckResult>(cancellationToken).ConfigureAwait(false);
                 }
             }
             finally {

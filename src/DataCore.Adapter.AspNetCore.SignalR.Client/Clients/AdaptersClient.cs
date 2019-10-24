@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
@@ -51,7 +52,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
 
         /// <summary>
-        /// Gets extended information about the an adapter in the remote host.
+        /// Gets extended information about an adapter in the remote host.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
@@ -74,6 +75,35 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             return await connection.InvokeAsync<AdapterDescriptorExtended>(
                 "GetAdapter", 
                 adapterId, 
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Requests health check diagnostics for an adapter in the remote host.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return health check diagnostics for the adapter.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public async Task<HealthCheckResult> CheckAdapterHealthAsync(string adapterId, CancellationToken cancellationToken = default) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            return await connection.InvokeAsync<HealthCheckResult>(
+                "CheckAdapterHealth",
+                adapterId,
                 cancellationToken
             ).ConfigureAwait(false);
         }

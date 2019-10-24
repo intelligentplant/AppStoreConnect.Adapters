@@ -6,6 +6,7 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -85,6 +86,21 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
             var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             return adapter.CreateExtendedAdapterDescriptor();
+        }
+
+
+        /// <summary>
+        /// Performs a health check on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   Information about the requested adapter.
+        /// </returns>
+        public async Task<HealthCheckResult> CheckAdapterHealth(string adapterId) {
+            var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            return await adapter.Feature.CheckHealthAsync(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 

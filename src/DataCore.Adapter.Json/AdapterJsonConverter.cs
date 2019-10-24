@@ -48,60 +48,30 @@ namespace DataCore.Adapter.Json {
 
 
         /// <summary>
-        /// Reads an array of values from the specified JSON reader.
+        /// Writes a property name and value to the specified JSON writer.
         /// </summary>
         /// <typeparam name="TValue">
-        ///   The array value type.
-        /// </typeparam>
-        /// <param name="reader">
-        ///   The JSON reader.
-        /// </param>
-        /// <param name="options">
-        ///   The JSON options.
-        /// </param>
-        /// <returns>
-        ///   The array items that were read from the JSON reader.
-        /// </returns>
-        protected IEnumerable<TValue> ReadArrayValues<TValue>(ref Utf8JsonReader reader, JsonSerializerOptions options) {
-            var result = new List<TValue>();
-
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray) {
-                result.Add(JsonSerializer.Deserialize<TValue>(ref reader, options));
-            }
-
-            return result;
-        }
-
-
-        /// <summary>
-        /// Writes a collection of values to the specified JSON writer.
-        /// </summary>
-        /// <typeparam name="TValue">
-        ///   The collection value type.
+        ///   The value type.
         /// </typeparam>
         /// <param name="writer">
         ///   The JSON writer.
         /// </param>
-        /// <param name="values">
-        ///   The values to write.
+        /// <param name="propertyName">
+        ///   The property name.
+        /// </param>
+        /// <param name="value">
+        ///   The property value.
         /// </param>
         /// <param name="options">
         ///   The JSON options.
         /// </param>
-        protected void WriteArrayValues<TValue>(Utf8JsonWriter writer, IEnumerable<TValue> values, JsonSerializerOptions options) {
+        protected void WritePropertyValue<TValue>(Utf8JsonWriter writer, string propertyName, TValue value, JsonSerializerOptions options) {
             if (writer == null) {
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            writer.WriteStartArray();
-
-            if (values != null) {
-                foreach (var item in values) {
-                    JsonSerializer.Serialize(writer, item, options);
-                }
-            }
-
-            writer.WriteEndArray();
+            writer.WritePropertyName(ConvertPropertyName(propertyName, options));
+            JsonSerializer.Serialize(writer, value, options);
         }
 
     }

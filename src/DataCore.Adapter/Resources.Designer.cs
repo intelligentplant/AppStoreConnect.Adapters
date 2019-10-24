@@ -133,6 +133,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adapter Health.
+        /// </summary>
+        internal static string HealthChecks_CompositeResultDescription {
+            get {
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while starting adapter {AdapterId}..
         /// </summary>
         internal static string Log_AdapterStartupError {

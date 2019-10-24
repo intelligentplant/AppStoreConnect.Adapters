@@ -63,5 +63,18 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
         }
 
+
+        public override async Task<CheckAdapterHealthResponse> CheckAdapterHealth(CheckAdapterHealthRequest request, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<Diagnostics.IHealthCheck>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            
+            var result = await adapter.Feature.CheckHealthAsync(_adapterCallContext, context.CancellationToken).ConfigureAwait(false);
+
+            return new CheckAdapterHealthResponse() { 
+                Result = result.ToGrpcHealthCheckResult()
+            };
+        }
+
     }
 }

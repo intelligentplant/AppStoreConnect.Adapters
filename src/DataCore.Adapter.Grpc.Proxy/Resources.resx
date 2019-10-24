@@ -120,6 +120,10 @@
   <data name="Error_AdapterIdIsRequired" xml:space="preserve">
     <value>Adapter ID is required.</value>
   </data>
+  <data name="HealthChecks_ChannelStateDescription" xml:space="preserve">
+    <value>gRPC channel state is {0}.</value>
+    <comment>{0} - channel state</comment>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>
     <comment>{0} - feature name</comment>

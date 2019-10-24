@@ -84,6 +84,20 @@ message ExtendedAdapterDescriptor {
     repeated AdapterProperty properties = 4;
 }
 
+enum HealthStatus {
+    HEALTH_STATUS_UNHEALTHY = 0;
+    HEALTH_STATUS_DEGRADED = 1;
+    HEALTH_STATUS_HEALTHY = 2;
+}
+
+message HealthCheckResult {
+    HealthStatus status = 1;
+    string description = 2;
+    string error = 3;
+    map<string,string> data = 4;
+    repeated HealthCheckResult innerResults = 5;
+}
+
 
 // Asset Model models
 

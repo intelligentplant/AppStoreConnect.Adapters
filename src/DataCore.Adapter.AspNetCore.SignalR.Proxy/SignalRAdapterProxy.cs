@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 
@@ -205,6 +207,65 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     await connection.StopAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var results = new List<HealthCheckResult>();
+
+            if (_client.IsValueCreated) {
+                var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
+                var state = hubConnection.State;
+                var description = string.Format(Resources.HealthCheck_HubConnectionStatusDescription, state.ToString());
+                
+                switch (state) {
+                    case HubConnectionState.Connected:
+                        results.Add(HealthCheckResult.Healthy(description));
+                        break;
+                    case HubConnectionState.Disconnected:
+                        results.Add(HealthCheckResult.Unhealthy(description));
+                        break;
+                    default:
+                        results.Add(HealthCheckResult.Degraded(description));
+                        break;
+                }
+            }
+
+            foreach (var item in _extensionConnections) {
+                var format = string.Concat(Resources.HealthCheck_HubConnectionStatusDescription, " (", item.Key, ")");
+
+                if (!item.Value.IsValueCreated || !item.Value.Value.IsCompleted) {
+                    var description = string.Format(format, Resources.HealthCheck_UnknownConnectionState);
+                    results.Add(HealthCheckResult.Degraded(description));
+                    continue;
+                }
+
+                try {
+                    var hubConnection = await item.Value.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+                    var state = hubConnection.State;
+                    var description = string.Format(format, state.ToString());
+
+                    switch (state) {
+                        case HubConnectionState.Connected:
+                            results.Add(HealthCheckResult.Healthy(description));
+                            break;
+                        case HubConnectionState.Disconnected:
+                            results.Add(HealthCheckResult.Unhealthy(description));
+                            break;
+                        default:
+                            results.Add(HealthCheckResult.Degraded(description));
+                            break;
+                    }
+                }
+                catch (Exception e) {
+                    var description = string.Format(format, Resources.HealthCheck_UnknownConnectionState);
+                    results.Add(HealthCheckResult.Unhealthy(description, e.Message));
+                }
+            }
+
+            return results;
         }
     }
 }

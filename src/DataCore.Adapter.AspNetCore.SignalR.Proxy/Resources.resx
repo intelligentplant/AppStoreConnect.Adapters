@@ -123,6 +123,13 @@
   <data name="Error_ConnectionFactoryIsRequired" xml:space="preserve">
     <value>Connection factory is required.</value>
   </data>
+  <data name="HealthCheck_HubConnectionStatusDescription" xml:space="preserve">
+    <value>SignalR hub connection status is {0}.</value>
+    <comment>{0} - connection status</comment>
+  </data>
+  <data name="HealthCheck_UnknownConnectionState" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>
     <comment>{0} - feature name</comment>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,32 @@ namespace DataCore.Adapter.Json {
     public static class JsonSerializerOptionsExtensions {
 
         /// <summary>
-        /// Registers adapter-related converted.
+        /// Available converters.
+        /// </summary>
+        private static readonly JsonConverter[] s_converters;
+
+
+        /// <summary>
+        /// Class initializer.
+        /// </summary>
+        static JsonSerializerOptionsExtensions() {
+            // Find all concrete JsonConverter types in this assembly, instantiate them, and 
+            // assign them to the s_converters array.
+
+            var jsonConverterType = typeof(JsonConverter);
+            var converterTypes = typeof(JsonSerializerOptionsExtensions)
+                .Assembly
+                .GetTypes()
+                .Where(x => x.IsClass)
+                .Where(x => !x.IsAbstract)
+                .Where(x => jsonConverterType.IsAssignableFrom(x));
+
+            s_converters = converterTypes.Select(x => (JsonConverter) Activator.CreateInstance(x)).ToArray();
+        }
+
+
+        /// <summary>
+        /// Registers adapter-related converters.
         /// </summary>
         /// <param name="converters">
         ///   The JSON serialization options.
@@ -21,7 +47,10 @@ namespace DataCore.Adapter.Json {
                 throw new ArgumentNullException(nameof(converters));
             }
 
-            converters.Add(new VariantConverter());
+            foreach (var item in s_converters) {
+                converters.Add(item);
+            }
+            
         }
 
 

@@ -10,6 +10,8 @@ using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using System.Collections.Generic;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -74,14 +76,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// gRPC channel (when using Grpc.Core for HTTP/2 support).
         /// </summary>
-        private readonly GrpcCore.Channel _coreChannel;
-
-#if NETSTANDARD2_1
-        /// <summary>
-        /// gRPC channe; (when using Grpc.Net.Client HTTP/2 support in .NET Core 3.0+).
-        /// </summary>
-        private readonly GrpcNet.Client.GrpcChannel _netChannel;
-#endif
+        private readonly GrpcCore.ChannelBase _channel;
 
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
@@ -113,7 +108,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </exception>
         public GrpcAdapterProxy(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
             : base(options, taskScheduler, loggerFactory) {
-            _coreChannel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = Options?.GetCallCredentials;
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
@@ -147,7 +142,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             : base(options, taskScheduler, loggerFactory) {
 
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _netChannel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
         }
 
@@ -164,14 +159,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new gRPC client instance.
         /// </returns>
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
-
-#if NETSTANDARD2_1
-            if (_netChannel != null) {
-                return (TClient) Activator.CreateInstance(typeof(TClient), _netChannel);
-            }
-#endif
-
-            return (TClient) Activator.CreateInstance(typeof(TClient), _coreChannel);
+            return (TClient) Activator.CreateInstance(typeof(TClient), _channel);
         }
 
 
@@ -245,9 +233,35 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
         /// <inheritdoc/>
         protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
-            if (_coreChannel != null) {
-                await _coreChannel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
+            if (_channel is GrpcCore.Channel channel) {
+                await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
+        }
+
+
+        protected override async Task<IEnumerable<Diagnostics.HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var results = new List<Diagnostics.HealthCheckResult>();
+
+            if (_channel is GrpcCore.Channel coreChannel) {
+                var state = coreChannel.State;
+                var description = string.Format(Resources.HealthChecks_ChannelStateDescription, state.ToString());
+
+                switch (state) {
+                    case GrpcCore.ChannelState.Ready:
+                        results.Add(Diagnostics.HealthCheckResult.Healthy(description));
+                        break;
+                    case GrpcCore.ChannelState.Shutdown:
+                        results.Add(Diagnostics.HealthCheckResult.Degraded(description));
+                        break;
+                    default:
+                        results.Add(Diagnostics.HealthCheckResult.Unhealthy(description));
+                        break;
+                }
+            }
+
+            // Grpc.Net channel doesn't expose a way of getting the channel state.
+
+            return results;
         }
 
 

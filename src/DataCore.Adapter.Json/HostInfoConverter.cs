@@ -45,7 +45,7 @@ namespace DataCore.Adapter.Json {
                     vendor = JsonSerializer.Deserialize<VendorInfo>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HostInfo.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = ReadArrayValues<AdapterProperty>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<IEnumerable<AdapterProperty>>(ref reader, options);
                 }
                 else {
                     reader.Skip();
@@ -72,8 +72,7 @@ namespace DataCore.Adapter.Json {
             writer.WritePropertyName(ConvertPropertyName(nameof(HostInfo.Vendor), options));
             JsonSerializer.Serialize(writer, value.Vendor, options);
 
-            writer.WritePropertyName(ConvertPropertyName(nameof(HostInfo.Properties), options));
-            WriteArrayValues(writer, value.Properties, options);
+            WritePropertyValue(writer, nameof(HostInfo.Properties), value.Properties, options);
 
             writer.WriteEndObject();
         }
