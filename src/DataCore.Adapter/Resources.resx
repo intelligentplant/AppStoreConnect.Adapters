@@ -137,6 +137,10 @@
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>
   </data>
+  <data name="Error_InvalidBaseDate" xml:space="preserve">
+    <value>Invalid base date: {0}</value>
+    <comment>{0} - base date string</comment>
+  </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
     <value>Object does not implement feature {0}.</value>
     <comment>{0} - feature name</comment>

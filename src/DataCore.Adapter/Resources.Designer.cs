@@ -115,6 +115,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid base date: {0}.
+        /// </summary>
+        internal static string Error_InvalidBaseDate {
+            get {
+                return ResourceManager.GetString("Error_InvalidBaseDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Object does not implement feature {0}..
         /// </summary>
         internal static string Error_NotAFeatureImplementation {
