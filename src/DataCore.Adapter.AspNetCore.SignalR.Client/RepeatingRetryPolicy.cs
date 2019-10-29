@@ -29,6 +29,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// </summary>
         private readonly int[] _retryIntervals;
 
+
         /// <summary>
         /// Creates a new <see cref="RepeatingRetryPolicy"/> with the specified retry intervals.
         /// </summary>
