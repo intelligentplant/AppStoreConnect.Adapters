@@ -1,12 +1,16 @@
 {
-  "x-generator": "NSwag v13.0.6.0 (NJsonSchema v10.0.23.0 (Newtonsoft.Json v12.0.0.0))",
+  "x-generator": "NSwag v13.1.3.0 (NJsonSchema v10.0.27.0 (Newtonsoft.Json v9.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
     "description": "HTTP API for querying an App Store Connect adapters host.",
     "version": "1.0.0"
   },
-  "servers": [],
+  "servers": [
+    {
+      "url": "https://localhost:58189"
+    }
+  ],
   "paths": {
     "/api/data-core/v1.0/adapters": {
       "get": {
@@ -59,6 +63,40 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdapterDescriptorExtended"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-core/v1.0/adapters/{adapterId}/health-status": {
+      "get": {
+        "tags": [
+          "Adapters"
+        ],
+        "summary": "Performs a health check on the specified adapter.",
+        "operationId": "Adapters_CheckAdapterHealth",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the HealthCheckResult for the requested \nadapter.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResult"
                 }
               }
             }
@@ -1138,56 +1176,6 @@
         }
       }
     },
-    "/api/data-core/v1.0/tag-values/{adapterId}/interpolated": {
-      "post": {
-        "tags": [
-          "TagValues"
-        ],
-        "summary": "Requests interpolated tag values.",
-        "operationId": "TagValues_ReadInterpolatedValues",
-        "parameters": [
-          {
-            "name": "adapterId",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the adapter to query.\n            ",
-            "schema": {
-              "type": "string",
-              "nullable": true
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "request",
-          "description": "The interpolated data request.\n            ",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReadInterpolatedTagValuesRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "Successful responses contain the interpolated values for the requested tags.\n            ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TagValueQueryResult"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/data-core/v1.0/tag-values/{adapterId}/values-at-times": {
       "post": {
         "tags": [
@@ -1436,16 +1424,20 @@
         "type": "object",
         "description": "A descriptor for an App Store Connect adapter.",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "description": "The identifier for the adapter. This can be any type of value, as long as it is unique \nwithin the hosting application, and does not change.",
-            "nullable": true
+            "minLength": 1
           },
           "name": {
             "type": "string",
             "description": "The adapter name.",
-            "nullable": true
+            "minLength": 1
           },
           "description": {
             "type": "string",
@@ -1481,31 +1473,174 @@
                 }
               },
               "properties": {
-                "type": "object",
+                "type": "array",
                 "description": "Additional adapter properties.",
                 "nullable": true,
-                "additionalProperties": {
-                  "type": "string"
+                "items": {
+                  "$ref": "#/components/schemas/AdapterProperty"
                 }
               }
             }
           }
         ]
       },
+      "AdapterProperty": {
+        "type": "object",
+        "description": "Describes a custom property associated with an adapter, tag, tag value, event message, etc.",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The property name.",
+            "minLength": 1
+          },
+          "value": {
+            "description": "The property value.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Variant"
+              }
+            ]
+          }
+        }
+      },
+      "Variant": {
+        "type": "object",
+        "description": "Describes a variant value.",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "description": "The value.",
+            "nullable": true
+          },
+          "type": {
+            "description": "The variant type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VariantType"
+              }
+            ]
+          }
+        }
+      },
+      "VariantType": {
+        "type": "integer",
+        "description": "Describes the type of a variant value.",
+        "x-enumNames": [
+          "Unknown",
+          "Null",
+          "Object",
+          "Boolean",
+          "SByte",
+          "Byte",
+          "Int16",
+          "UInt16",
+          "Int32",
+          "UInt32",
+          "Int64",
+          "UInt64",
+          "Float",
+          "Double",
+          "String",
+          "DateTime",
+          "TimeSpan"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      "HealthCheckResult": {
+        "type": "object",
+        "description": "Represents the result of an adapter health check.",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "description": "The status of the health check result.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HealthStatus"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the health check that was performed.",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "description": "The error that occurred when checking the status (if any).",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "description": "Additional data associated with the health check.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "innerResults": {
+            "type": "array",
+            "description": "The inner results that contributed to the status of this result.",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/HealthCheckResult"
+            }
+          }
+        }
+      },
+      "HealthStatus": {
+        "type": "integer",
+        "description": "Represents the reported status of a health check result.",
+        "x-enumNames": [
+          "Unhealthy",
+          "Degraded",
+          "Healthy"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
       "AssetModelNode": {
         "type": "object",
         "description": "Describes a node in an adapter's asset model.",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "description": "The unique identifier for the node.",
-            "nullable": true
+            "minLength": 1
           },
           "name": {
             "type": "string",
             "description": "The node name.",
-            "nullable": true
+            "minLength": 1
           },
           "description": {
             "type": "string",
@@ -1534,11 +1669,11 @@
             }
           },
           "properties": {
-            "type": "object",
+            "type": "array",
             "description": "Additional properties associated with the node.",
             "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
             }
           }
         }
@@ -1547,42 +1682,72 @@
         "type": "object",
         "description": "Describes a measurement on an asset model node. Note that the measurement can be provided \nfrom a tag on a different adapter to the one that the node is defined on.",
         "additionalProperties": false,
+        "required": [
+          "name",
+          "adapterId",
+          "tag"
+        ],
         "properties": {
           "name": {
             "type": "string",
             "description": "The measurement name.",
-            "nullable": true
+            "minLength": 1
           },
           "adapterId": {
             "type": "string",
             "description": "The ID of the adapter that the tag for the measurement is defined on.",
-            "nullable": true
+            "minLength": 1
           },
           "tag": {
-            "description": "The tag identifier for the measurement.",
-            "nullable": true,
+            "description": "The tag summary for the measurement.",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/TagIdentifier"
+                "$ref": "#/components/schemas/TagSummary"
               }
             ]
           }
         }
       },
+      "TagSummary": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagIdentifier"
+          },
+          {
+            "type": "object",
+            "description": "Describes summary information about a tag.",
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "units": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "TagIdentifier": {
         "type": "object",
         "description": "Defines basic information for identifying a real-time data tag.",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "description": "The unique identifier for the tag.",
-            "nullable": true
+            "minLength": 1
           },
           "name": {
             "type": "string",
             "description": "The tag name.",
-            "nullable": true
+            "minLength": 1
           }
         }
       },
@@ -1596,11 +1761,6 @@
             "description": "The ID of the parent node to start at. Specify null to request top-level \nnodes.",
             "nullable": true
           },
-          "depth": {
-            "type": "integer",
-            "description": "The maximum number of hierarchy levels to request. Specify less than one to request all \nlevels below the ParentId.",
-            "format": "int32"
-          },
           "pageSize": {
             "type": "integer",
             "description": "The page size for the query.",
@@ -1613,7 +1773,7 @@
             "type": "integer",
             "description": "The page number for the query.",
             "format": "int32",
-            "default": 10,
+            "default": 1,
             "maximum": 2147483647.0,
             "minimum": 1.0
           }
@@ -1664,7 +1824,7 @@
             "type": "integer",
             "description": "The page number for the query.",
             "format": "int32",
-            "default": 10,
+            "default": 1,
             "maximum": 2147483647.0,
             "minimum": 1.0
           }
@@ -1687,11 +1847,14 @@
         "description": "Base class describing a message generated by e.g. an alarms &amp; events system.",
         "x-abstract": true,
         "additionalProperties": false,
+        "required": [
+          "id"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "description": "A unique identifier for the event.",
-            "nullable": true
+            "minLength": 1
           },
           "utcEventTime": {
             "type": "string",
@@ -1717,17 +1880,17 @@
             "nullable": true
           },
           "properties": {
-            "type": "object",
+            "type": "array",
             "description": "Additional event properties.",
             "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
             }
           }
         }
       },
       "EventPriority": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes the priority associated with an event message.",
         "x-enumNames": [
           "Unknown",
@@ -1737,11 +1900,11 @@
           "Critical"
         ],
         "enum": [
-          "Unknown",
-          "Low",
-          "Medium",
-          "High",
-          "Critical"
+          0,
+          1,
+          2,
+          3,
+          4
         ]
       },
       "ReadEventMessagesForTimeRangeRequest": {
@@ -1769,6 +1932,22 @@
                 "description": "The UTC end time for the request.",
                 "format": "date-time",
                 "minLength": 1
+              },
+              "pageSize": {
+                "type": "integer",
+                "description": "The page size for the query.",
+                "format": "int32",
+                "default": 10,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              "page": {
+                "type": "integer",
+                "description": "The page number for the query.",
+                "format": "int32",
+                "default": 1,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
               }
             }
           }
@@ -1807,15 +1986,15 @@
         ]
       },
       "EventReadDirection": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes the read direction for a historical event message read operation.",
         "x-enumNames": [
           "Forwards",
           "Backwards"
         ],
         "enum": [
-          "Forwards",
-          "Backwards"
+          0,
+          1
         ]
       },
       "AdapterRequest": {
@@ -1843,11 +2022,14 @@
             "type": "object",
             "description": "Describes a message generated by e.g. an alarms &amp; events system that also contains a cursor position.",
             "additionalProperties": false,
+            "required": [
+              "cursorPosition"
+            ],
             "properties": {
               "cursorPosition": {
                 "type": "string",
                 "description": "The cursor position for the event message.",
-                "nullable": true
+                "minLength": 1
               }
             }
           }
@@ -1911,17 +2093,17 @@
             "nullable": true
           },
           "properties": {
-            "type": "object",
+            "type": "array",
             "description": "Additional properties related to the write.",
             "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
             }
           }
         }
       },
       "WriteStatus": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes the status of a write operation.",
         "x-enumNames": [
           "Unknown",
@@ -1930,10 +2112,10 @@
           "Pending"
         ],
         "enum": [
-          "Unknown",
-          "Success",
-          "Fail",
-          "Pending"
+          0,
+          1,
+          2,
+          3
         ]
       },
       "WriteEventMessagesRequest": {
@@ -2007,11 +2189,11 @@
             ]
           },
           "properties": {
-            "type": "object",
+            "type": "array",
             "description": "Custom properties supplied by the hosting application.",
             "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
             }
           }
         }
@@ -2042,10 +2224,12 @@
             "type": "object",
             "description": "Describes a result for an annotations query on a tag.",
             "additionalProperties": false,
+            "required": [
+              "annotation"
+            ],
             "properties": {
               "annotation": {
                 "description": "The annotation.",
-                "nullable": true,
                 "oneOf": [
                   {
                     "$ref": "#/components/schemas/TagValueAnnotation"
@@ -2065,11 +2249,14 @@
             "type": "object",
             "description": "Describes an annotation on a tag.",
             "additionalProperties": false,
+            "required": [
+              "id"
+            ],
             "properties": {
               "id": {
                 "type": "string",
                 "description": "The unique identifier for the annotation.",
-                "nullable": true
+                "minLength": 1
               }
             }
           }
@@ -2110,25 +2297,25 @@
             "nullable": true
           },
           "properties": {
-            "type": "object",
+            "type": "array",
             "description": "Additional annotation properties.",
             "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
             }
           }
         }
       },
       "AnnotationType": {
-        "type": "string",
+        "type": "integer",
         "description": "Specifies the type of an annotation.",
         "x-enumNames": [
           "Instantaneous",
           "TimeRange"
         ],
         "enum": [
-          "Instantaneous",
-          "TimeRange"
+          0,
+          1
         ]
       },
       "TagDataContainer": {
@@ -2136,16 +2323,20 @@
         "description": "Describes a base class for data associated with a tag.",
         "x-abstract": true,
         "additionalProperties": false,
+        "required": [
+          "tagId",
+          "tagName"
+        ],
         "properties": {
           "tagId": {
             "type": "string",
             "description": "The tag ID.",
-            "nullable": true
+            "minLength": 1
           },
           "tagName": {
             "type": "string",
             "description": "The tag name.",
-            "nullable": true
+            "minLength": 1
           }
         }
       },
@@ -2238,80 +2429,73 @@
             "type": "object",
             "description": "Describes the result of a tag value annotation write operation.",
             "additionalProperties": false,
+            "required": [
+              "tagId",
+              "annotationId"
+            ],
             "properties": {
               "tagId": {
                 "type": "string",
                 "description": "The ID of the tag that the annotation operation was performed on.",
-                "nullable": true
+                "minLength": 1
               },
               "annotationId": {
                 "type": "string",
                 "description": "The annotation ID.",
-                "nullable": true
+                "minLength": 1
               }
             }
           }
         ]
       },
       "TagDefinition": {
-        "type": "object",
-        "description": "Describes a tag definition.",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier for the tag.",
-            "nullable": true
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TagSummary"
           },
-          "name": {
-            "type": "string",
-            "description": "The tag name.",
-            "nullable": true
-          },
-          "category": {
-            "type": "string",
-            "description": "The tag measurement category (e.g. temperature, pressure, mass).",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The tag description.",
-            "nullable": true
-          },
-          "units": {
-            "type": "string",
-            "description": "The tag units.",
-            "nullable": true
-          },
-          "dataType": {
-            "description": "The tag's data type.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/TagDataType"
+          {
+            "type": "object",
+            "description": "Describes a tag definition.",
+            "additionalProperties": false,
+            "properties": {
+              "dataType": {
+                "description": "The tag's data type.",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TagDataType"
+                  }
+                ]
+              },
+              "states": {
+                "type": "array",
+                "description": "The discrete states for the tag. If DataType is not State, \nthis property will be null.",
+                "nullable": true,
+                "items": {
+                  "$ref": "#/components/schemas/DigitalState"
+                }
+              },
+              "properties": {
+                "type": "array",
+                "description": "Bespoke tag properties.",
+                "nullable": true,
+                "items": {
+                  "$ref": "#/components/schemas/AdapterProperty"
+                }
+              },
+              "labels": {
+                "type": "array",
+                "description": "Labels associated with the tag.",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
               }
-            ]
-          },
-          "states": {
-            "type": "object",
-            "description": "The discrete states for the tag. If DataType is not State, \nthis property will be null.",
-            "nullable": true,
-            "additionalProperties": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "properties": {
-            "type": "object",
-            "description": "Bespoke tag properties.",
-            "nullable": true,
-            "additionalProperties": {
-              "type": "string"
             }
           }
-        }
+        ]
       },
       "TagDataType": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes the data type for a tag.",
         "x-enumNames": [
           "Numeric",
@@ -2319,10 +2503,30 @@
           "State"
         ],
         "enum": [
-          "Numeric",
-          "Text",
-          "State"
+          0,
+          1,
+          2
         ]
+      },
+      "DigitalState": {
+        "type": "object",
+        "description": "Describes a digital state associated with a tag.",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The state name.",
+            "minLength": 1
+          },
+          "value": {
+            "type": "integer",
+            "description": "The state value.",
+            "format": "int32"
+          }
+        }
       },
       "FindTagsRequest": {
         "type": "object",
@@ -2342,6 +2546,11 @@
           "units": {
             "type": "string",
             "description": "The tag units filter.",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The tag label filter.",
             "nullable": true
           },
           "other": {
@@ -2364,7 +2573,7 @@
             "type": "integer",
             "description": "The page number for the query.",
             "format": "int32",
-            "default": 10,
+            "default": 1,
             "maximum": 2147483647.0,
             "minimum": 1.0
           }
@@ -2397,10 +2606,12 @@
             "type": "object",
             "description": "Describes a value returned by a tag value query.",
             "additionalProperties": false,
+            "required": [
+              "value"
+            ],
             "properties": {
               "value": {
                 "description": "The tag value.",
-                "nullable": true,
                 "oneOf": [
                   {
                     "$ref": "#/components/schemas/TagValue"
@@ -2432,11 +2643,11 @@
                 "nullable": true
               },
               "properties": {
-                "type": "object",
+                "type": "array",
                 "description": "Additional value properties.",
                 "nullable": true,
-                "additionalProperties": {
-                  "type": "string"
+                "items": {
+                  "$ref": "#/components/schemas/AdapterProperty"
                 }
               }
             }
@@ -2453,15 +2664,13 @@
             "description": "The UTC sample time for the value.",
             "format": "date-time"
           },
-          "numericValue": {
-            "type": "number",
-            "description": "The numeric value for the tag. This can differ from the text value on state-based and \nnon-numeric tags.",
-            "format": "double"
-          },
-          "textValue": {
-            "type": "string",
-            "description": "The text value for the tag. This can differ from the numeric value on state-based and \nnon-numeric tags.",
-            "nullable": true
+          "value": {
+            "description": "The tag value.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Variant"
+              }
+            ]
           },
           "status": {
             "description": "The quality status for the value.",
@@ -2479,7 +2688,7 @@
         }
       },
       "TagValueStatus": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes the quality status of a tag value.",
         "x-enumNames": [
           "Bad",
@@ -2487,9 +2696,9 @@
           "Good"
         ],
         "enum": [
-          "Bad",
-          "Unknown",
-          "Good"
+          0,
+          64,
+          192
         ]
       },
       "ReadSnapshotTagValuesRequest": {
@@ -2526,8 +2735,7 @@
               },
               "boundaryType": {
                 "description": "The boundary type to use for the query. This controls if only values inside the query time \nrange should be included in the result, or if the values immediately before and immediately \nafter the query time range should be included.",
-                "default": "Inside",
-                "minLength": 1,
+                "default": 0,
                 "oneOf": [
                   {
                     "$ref": "#/components/schemas/RawDataBoundaryType"
@@ -2539,15 +2747,15 @@
         ]
       },
       "RawDataBoundaryType": {
-        "type": "string",
+        "type": "integer",
         "description": "Describes a boundary type used when making a raw data query.",
         "x-enumNames": [
           "Inside",
           "Outside"
         ],
         "enum": [
-          "Inside",
-          "Outside"
+          0,
+          1
         ]
       },
       "ReadPlotTagValuesRequest": {
@@ -2569,29 +2777,6 @@
                 "format": "int32",
                 "maximum": 2147483647.0,
                 "minimum": 1.0
-              }
-            }
-          }
-        ]
-      },
-      "ReadInterpolatedTagValuesRequest": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ReadHistoricalTagValuesRequest"
-          },
-          {
-            "type": "object",
-            "description": "Describes a request for interpolated data on a set of tags.",
-            "additionalProperties": false,
-            "required": [
-              "sampleInterval"
-            ],
-            "properties": {
-              "sampleInterval": {
-                "type": "string",
-                "description": "The sample interval for the interpolation.",
-                "format": "time-span",
-                "minLength": 1
               }
             }
           }
@@ -2632,11 +2817,14 @@
             "type": "object",
             "description": "Describes a value returned by a tag value query for processed data.",
             "additionalProperties": false,
+            "required": [
+              "dataFunction"
+            ],
             "properties": {
               "dataFunction": {
                 "type": "string",
                 "description": "The data function used to aggregate the tag value.",
-                "nullable": true
+                "minLength": 1
               }
             }
           }
@@ -2678,11 +2866,20 @@
         "type": "object",
         "description": "Describes a data function that is supported when making a call for historical process data.",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "The function ID.",
+            "minLength": 1
+          },
           "name": {
             "type": "string",
-            "description": "The function name.",
-            "nullable": true
+            "description": "The function display name.",
+            "minLength": 1
           },
           "description": {
             "type": "string",
@@ -2700,6 +2897,9 @@
             "type": "object",
             "description": "Describes the result of a tag value write operation.",
             "additionalProperties": false,
+            "required": [
+              "tagId"
+            ],
             "properties": {
               "correlationId": {
                 "type": "string",
@@ -2709,7 +2909,7 @@
               "tagId": {
                 "type": "string",
                 "description": "The ID of the tag.",
-                "nullable": true
+                "minLength": 1
               }
             }
           }

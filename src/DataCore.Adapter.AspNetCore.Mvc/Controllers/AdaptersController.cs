@@ -104,7 +104,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/health-status")]
-        [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
+        [ProducesResponseType(typeof(HealthCheckResult), 200)]
         public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
