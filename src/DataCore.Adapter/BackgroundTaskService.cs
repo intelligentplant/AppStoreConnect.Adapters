@@ -103,7 +103,20 @@ namespace DataCore.Adapter {
                     break;
                 }
 
-                await _queueSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try {
+                    await _queueSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ArgumentNullException) {
+                    // SemaphoreSlim on .NET Framework can throw an ArgumentNullException if it is 
+                    // disposed during an asynchronous wait, because it attempts to lock on an object 
+                    // that has been reset to null. See here for the code in question: 
+                    // https://github.com/microsoft/referencesource/blob/17b97365645da62cf8a49444d979f94a59bbb155/mscorlib/system/threading/SemaphoreSlim.cs#L720
+                    break;
+                }
+
                 if (!_queue.TryDequeue(out var item)) {
                     continue;
                 }
