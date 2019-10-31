@@ -21,6 +21,7 @@ namespace DataCore.Adapter.Json {
             string name = null;
             string description = null;
             string units = null;
+            TagDataType dataType = TagDataType.Unknown;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -44,12 +45,15 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(TagSummary.Units), StringComparison.OrdinalIgnoreCase)) {
                     units = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(TagSummary.DataType), StringComparison.OrdinalIgnoreCase)) {
+                    dataType = JsonSerializer.Deserialize<TagDataType>(ref reader, options);
+                }
                 else {
                     reader.Skip();
                 }
             }
 
-            return TagSummary.Create(id, name, description, units);
+            return TagSummary.Create(id, name, description, units, dataType);
         }
 
 
@@ -65,6 +69,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(TagSummary.Name), value.Name, options);
             WritePropertyValue(writer, nameof(TagSummary.Description), value.Description, options);
             WritePropertyValue(writer, nameof(TagSummary.Units), value.Units, options);
+            WritePropertyValue(writer, nameof(TagSummary.DataType), value.DataType, options);
             writer.WriteEndObject();
         }
 

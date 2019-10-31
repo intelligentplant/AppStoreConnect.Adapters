@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.Message), StringComparison.OrdinalIgnoreCase)) {
                     message = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.Priority), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.Properties), StringComparison.OrdinalIgnoreCase)) {
                     properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.CursorPosition), StringComparison.OrdinalIgnoreCase)) {

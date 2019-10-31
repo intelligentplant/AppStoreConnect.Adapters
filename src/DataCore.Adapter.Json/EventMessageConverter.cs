@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(EventMessage.Message), StringComparison.OrdinalIgnoreCase)) {
                     message = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(EventMessage.Priority), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(EventMessage.Properties), StringComparison.OrdinalIgnoreCase)) {
                     properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
                 }
                 else {

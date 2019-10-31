@@ -35,8 +35,9 @@ namespace DataCore.Adapter.RealTimeData {
                 case Grpc.TagDataType.Text:
                     return TagDataType.Text;
                 case Grpc.TagDataType.Numeric:
-                default:
                     return TagDataType.Numeric;
+                default:
+                    return TagDataType.Unknown;
             }
         }
 

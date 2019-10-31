@@ -9,7 +9,7 @@ using DataCore.Adapter.RealTimeData;
 namespace DataCore.Adapter.Tests {
     public class ExampleAdapter : IAdapter, IReadSnapshotTagValues, IDisposable {
 
-        public IAdapterDescriptor Descriptor { get; }
+        public AdapterDescriptor Descriptor { get; }
 
         public IAdapterFeaturesCollection Features { get; }
 

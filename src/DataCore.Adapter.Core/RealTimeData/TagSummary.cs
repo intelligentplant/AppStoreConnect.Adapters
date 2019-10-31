@@ -9,11 +9,20 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     public class TagSummary : TagIdentifier {
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The tag description.
+        /// </summary>
         public string Description { get; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The tag units.
+        /// </summary>
         public string Units { get; }
+
+        /// <summary>
+        /// The tag data type.
+        /// </summary>
+        public TagDataType DataType { get; }
 
 
         /// <summary>
@@ -31,16 +40,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The tag units.
         /// </param>
+        /// <param name="dataType">
+        ///   The tag data type.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagSummary(string id, string name, string description, string units) 
+        public TagSummary(string id, string name, string description, string units, TagDataType dataType) 
             : base(id, name) {
             Description = description ?? string.Empty;
             Units = units ?? string.Empty;
+            DataType = dataType;
         }
 
 
@@ -59,14 +72,17 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The tag units.
         /// </param>
+        /// <param name="dataType">
+        ///   The tag data type.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagSummary Create(string id, string name, string description, string units) {
-            return new TagSummary(id, name, description, units);
+        public static TagSummary Create(string id, string name, string description, string units, TagDataType dataType) {
+            return new TagSummary(id, name, description, units, dataType);
         }
 
     }

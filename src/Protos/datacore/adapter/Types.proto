@@ -187,6 +187,7 @@ message TagSummary {
     string name = 2;
     string description = 3;
     string units = 4;
+    TagDataType data_type = 5;
 }
 
 
@@ -203,9 +204,10 @@ message TagDefinition {
 
 
 enum TagDataType {
-    NUMERIC = 0;
-    TEXT = 1;
-    STATE = 2;
+    UNKNOWN = 0;
+    NUMERIC = 1;
+    TEXT = 2;
+    STATE = 3;
 }
 
 

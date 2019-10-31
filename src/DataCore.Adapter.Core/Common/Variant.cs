@@ -7,7 +7,7 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Describes a variant value.
     /// </summary>
-    public struct Variant {
+    public struct Variant : IEquatable<Variant> {
 
         /// <summary>
         /// Null variant.
@@ -75,5 +75,47 @@ namespace DataCore.Adapter.Common {
             return Value?.ToString() ?? "{null}";
         }
 
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+            unchecked {
+                // Choose large primes to avoid hashing collisions
+                const int HashingBase = (int) 2166136261;
+                const int HashingMultiplier = 16777619;
+
+                var hash = HashingBase;
+                hash = (hash * HashingMultiplier) ^ Type.GetHashCode();
+                hash = (hash * HashingMultiplier) ^ (ReferenceEquals(Value, null) ? 0 : Value.GetHashCode());
+                return hash;
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) {
+            if (!(obj is Variant v)) {
+                return false;
+            }
+
+            return Equals(v);
+        }
+
+
+        /// <inheritdoc/>
+        public bool Equals(Variant other) {
+            return other.Type == Type && Equals(other.Value, Value);
+        }
+
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant left, Variant right) {
+            return left.Equals(right);
+        }
+
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant left, Variant right) {
+            return !left.Equals(right);
+        }
     }
 }

@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Json {
                     value = JsonSerializer.Deserialize<TagValueExtended>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(ProcessedTagValueQueryResult.DataFunction), StringComparison.OrdinalIgnoreCase)) {
-                    tagName = JsonSerializer.Deserialize<string>(ref reader, options);
+                    dataFunction = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else {
                     reader.Skip();
@@ -63,7 +63,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(ProcessedTagValueQueryResult.TagId), value.TagId, options);
             WritePropertyValue(writer, nameof(ProcessedTagValueQueryResult.TagName), value.TagName, options);
             WritePropertyValue(writer, nameof(ProcessedTagValueQueryResult.Value), value.Value, options);
-            WritePropertyValue(writer, nameof(ProcessedTagValueQueryResult.DataFunction), value.Value, options);
+            WritePropertyValue(writer, nameof(ProcessedTagValueQueryResult.DataFunction), value.DataFunction, options);
             writer.WriteEndObject();
         }
 

@@ -6,6 +6,11 @@
     public enum TagDataType {
 
         /// <summary>
+        /// The data type is unknown.
+        /// </summary>
+        Unknown,
+
+        /// <summary>
         /// The tag contains numeric values.
         /// </summary>
         Numeric,

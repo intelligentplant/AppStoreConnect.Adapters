@@ -12,12 +12,33 @@ namespace DataCore.Adapter.RealTimeData {
         /// The state name.
         /// </summary>
         [Required]
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The state value.
         /// </summary>
-        public int Value { get; set; }
+        public int Value { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="DigitalState"/> object.
+        /// </summary>
+        /// <param name="name">
+        ///   The state name.
+        /// </param>
+        /// <param name="value">
+        ///   The state value.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="DigitalState"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public DigitalState(string name, int value) {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Value = value;
+        }
 
 
         /// <summary>
@@ -36,14 +57,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static DigitalState Create(string name, int value) {
-            if (name == null) {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            return new DigitalState() { 
-                Name = name,
-                Value = value
-            };
+            return new DigitalState(name, value);
         }
 
 

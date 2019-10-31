@@ -402,7 +402,7 @@ namespace DataCore.Adapter.Grpc.Server {
                 case RealTimeData.TagDataType.Text:
                     return TagDataType.Text;
                 default:
-                    return TagDataType.Numeric;
+                    return TagDataType.Unknown;
             }
         }
 
@@ -457,7 +457,8 @@ namespace DataCore.Adapter.Grpc.Server {
                             Id = item.Tag?.Id ?? string.Empty,
                             Name = item.Tag?.Name ?? string.Empty,
                             Description = item.Tag?.Description ?? string.Empty,
-                            Units = item.Tag?.Units ?? string.Empty
+                            Units = item.Tag?.Units ?? string.Empty,
+                            DataType = item.Tag?.DataType.ToGrpcTagDataType() ?? TagDataType.Unknown
                         }
                     });
                 }

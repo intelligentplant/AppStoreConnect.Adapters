@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Example.Features {
                         return AssetModelNodeMeasurement.Create(
                             m.Name,
                             adapterId,
-                            RealTimeData.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units)
+                            RealTimeData.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units, RealTimeData.TagDataType.Numeric)
                         );
                     }).Where(m => m != null),
                     x.Properties.Select(p => Common.AdapterProperty.Create(p.Key, p.Value))
