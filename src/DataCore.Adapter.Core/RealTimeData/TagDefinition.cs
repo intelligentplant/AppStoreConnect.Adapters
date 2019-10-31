@@ -12,8 +12,8 @@ namespace DataCore.Adapter.RealTimeData {
     public class TagDefinition : TagSummary {
 
         /// <summary>
-        /// The discrete states for the tag. If <see cref="DataType"/> is not <see cref="TagDataType.State"/>, 
-        /// this property will be <see langword="null"/>.
+        /// The discrete states for the tag. If <see cref="TagSummary.DataType"/> is not 
+        /// <see cref="TagDataType.State"/>, this property will be <see langword="null"/>.
         /// </summary>
         public IEnumerable<DigitalState> States { get; }
 

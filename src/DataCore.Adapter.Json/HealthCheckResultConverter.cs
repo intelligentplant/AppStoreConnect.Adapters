@@ -6,7 +6,7 @@ using DataCore.Adapter.Diagnostics;
 namespace DataCore.Adapter.Json {
 
     /// <summary>
-    /// JSON converter for <see cref="HostInfo"/>.
+    /// JSON converter for <see cref="HealthCheckResultConverter"/>.
     /// </summary>
     public class HealthCheckResultConverter : AdapterJsonConverter<HealthCheckResult> {
 

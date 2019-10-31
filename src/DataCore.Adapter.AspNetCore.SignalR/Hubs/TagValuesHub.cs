@@ -122,7 +122,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? new string[0];
+                .ToArray() ?? Array.Empty<string>();
 
             if (!tags.Any()) {
                 throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
@@ -155,7 +155,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             tags = tags
                 ?.Where(x => !string.IsNullOrWhiteSpace(x))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? new string[0];
+                .ToArray() ?? Array.Empty<string>();
 
             if (!tags.Any()) {
                 throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));

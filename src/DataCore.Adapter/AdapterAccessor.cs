@@ -50,7 +50,7 @@ namespace DataCore.Adapter {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (adapters == null || !adapters.Any()) {
-                return new IAdapter[0];
+                return Array.Empty<IAdapter>();
             }
 
             var result = new List<IAdapter>(adapters.Count());

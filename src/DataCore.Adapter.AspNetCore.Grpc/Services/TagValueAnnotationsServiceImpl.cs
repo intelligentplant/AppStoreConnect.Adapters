@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
@@ -25,7 +26,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterRequest = new RealTimeData.ReadAnnotationsRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
-                Tags = request.Tags?.ToArray() ?? new string[0]
+                Tags = request.Tags?.ToArray() ?? Array.Empty<string>()
             };
             Util.ValidateObject(adapterRequest);
 

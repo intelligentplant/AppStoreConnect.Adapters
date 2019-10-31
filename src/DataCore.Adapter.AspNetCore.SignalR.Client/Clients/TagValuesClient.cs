@@ -68,7 +68,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
                 adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? new string[0],
+                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -146,7 +146,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             return await connection.InvokeAsync<int>(
                 "AddTagsToSnapshotTagValueChannel",
                 adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? new string[0],
+                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -189,7 +189,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             return await connection.InvokeAsync<int>(
                 "RemoveTagsFromSnapshotTagValueChannel",
                 adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? new string[0],
+                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
                 cancellationToken
             ).ConfigureAwait(false);
         }
