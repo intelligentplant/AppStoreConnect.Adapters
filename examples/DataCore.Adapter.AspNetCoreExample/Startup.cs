@@ -58,6 +58,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                })
                 .AddDataCoreAdapterMvc();
 
             services.AddSignalR().AddMessagePackProtocol();
