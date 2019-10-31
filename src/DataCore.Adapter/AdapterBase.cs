@@ -285,25 +285,39 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             if (!IsStarted) {
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription);
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
             }
 
             try {
                 var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 if (results == null || !results.Any()) {
-                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription);
+                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription_Healthy);
                 }
 
                 var resultsArray = results.ToArray();
 
                 var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
-                return new HealthCheckResult(compositeStatus, Resources.HealthChecks_CompositeResultDescription, null, null, resultsArray);
+                string description;
+
+                switch (compositeStatus) {
+                    case HealthStatus.Unhealthy:
+                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
+                        break;
+                    case HealthStatus.Degraded:
+                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
+                        break;
+                    default:
+                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
+                        break;
+                }
+
+                return new HealthCheckResult(compositeStatus, description, null, null, resultsArray);
             }
             catch (OperationCanceledException) {
                 throw;
             }
             catch (Exception e) {
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription, e.Message);
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
             }
         }
 

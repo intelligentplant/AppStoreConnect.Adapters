@@ -133,11 +133,47 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter Health.
+        ///   Looks up a localized string similar to Overall adapter health is degraded..
         /// </summary>
-        internal static string HealthChecks_CompositeResultDescription {
+        internal static string HealthChecks_CompositeResultDescription_Degraded {
             get {
-                return ResourceManager.GetString("HealthChecks_CompositeResultDescription", resourceCulture);
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription_Degraded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error while performing adapter health checks..
+        /// </summary>
+        internal static string HealthChecks_CompositeResultDescription_Error {
+            get {
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overall adapter health is healthy..
+        /// </summary>
+        internal static string HealthChecks_CompositeResultDescription_Healthy {
+            get {
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription_Healthy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter has not been started..
+        /// </summary>
+        internal static string HealthChecks_CompositeResultDescription_NotStarted {
+            get {
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription_NotStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overall adapter health is unhealthy..
+        /// </summary>
+        internal static string HealthChecks_CompositeResultDescription_Unhealthy {
+            get {
+                return ResourceManager.GetString("HealthChecks_CompositeResultDescription_Unhealthy", resourceCulture);
             }
         }
         

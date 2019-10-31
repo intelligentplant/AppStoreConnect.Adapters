@@ -145,8 +145,20 @@
     <value>Object does not implement feature {0}.</value>
     <comment>{0} - feature name</comment>
   </data>
-  <data name="HealthChecks_CompositeResultDescription" xml:space="preserve">
-    <value>Adapter Health</value>
+  <data name="HealthChecks_CompositeResultDescription_Degraded" xml:space="preserve">
+    <value>Overall adapter health is degraded.</value>
+  </data>
+  <data name="HealthChecks_CompositeResultDescription_Error" xml:space="preserve">
+    <value>Error while performing adapter health checks.</value>
+  </data>
+  <data name="HealthChecks_CompositeResultDescription_Healthy" xml:space="preserve">
+    <value>Overall adapter health is healthy.</value>
+  </data>
+  <data name="HealthChecks_CompositeResultDescription_NotStarted" xml:space="preserve">
+    <value>The adapter has not been started.</value>
+  </data>
+  <data name="HealthChecks_CompositeResultDescription_Unhealthy" xml:space="preserve">
+    <value>Overall adapter health is unhealthy.</value>
   </data>
   <data name="Log_AdapterStartupError" xml:space="preserve">
     <value>An error occurred while starting adapter {AdapterId}.</value>
