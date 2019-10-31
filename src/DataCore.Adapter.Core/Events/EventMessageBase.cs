@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -15,32 +15,63 @@ namespace DataCore.Adapter.Events {
         /// A unique identifier for the event.
         /// </summary>
         [Required]
-        public string Id { get; set; }
+        public string Id { get; }
 
         /// <summary>
         /// The UTC timestamp of the event.
         /// </summary>
-        public DateTime UtcEventTime { get; set; }
+        public DateTime UtcEventTime { get; }
 
         /// <summary>
         /// The priority associated with the event.
         /// </summary>
-        public EventPriority Priority { get; set; }
+        public EventPriority Priority { get; }
 
         /// <summary>
         /// The event category.
         /// </summary>
-        public string Category { get; set; }
+        public string Category { get; }
 
         /// <summary>
         /// The event message.
         /// </summary>
-        public string Message { get; set; }
+        public string Message { get; }
 
         /// <summary>
         /// Additional event properties.
         /// </summary>
-        public IEnumerable<AdapterProperty> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="EventMessageBase"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The event message ID.
+        /// </param>
+        /// <param name="utcEventTime">
+        ///   The UTC event time.
+        /// </param>
+        /// <param name="priority">
+        ///   The event priority.
+        /// </param>
+        /// <param name="category">
+        ///   The event category.
+        /// </param>
+        /// <param name="message">
+        ///   The event message.
+        /// </param>
+        /// <param name="properties">
+        ///   The event properties.
+        /// </param>
+        protected EventMessageBase(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            UtcEventTime = utcEventTime;
+            Priority = priority;
+            Category = category;
+            Message = message;
+            Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
+        }
 
     }
 

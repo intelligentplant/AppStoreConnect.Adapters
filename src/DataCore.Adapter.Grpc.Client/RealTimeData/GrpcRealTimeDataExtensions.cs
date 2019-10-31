@@ -50,12 +50,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static TagValue ToAdapterTagValue(this Grpc.TagValue tagValue) {
+        public static TagValueExtended ToAdapterTagValue(this Grpc.TagValue tagValue) {
             if (tagValue == null) {
                 return null;
             }
 
-            return TagValue.Create(
+            return TagValueExtended.Create(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.Value.ToAdapterVariant(),
                 tagValue.Status.ToAdapterTagValueStatus(),
@@ -176,12 +176,12 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static TagValueAnnotation ToAdapterTagValueAnnotation(this Grpc.TagValueAnnotation annotation) {
+        public static TagValueAnnotationExtended ToAdapterTagValueAnnotation(this Grpc.TagValueAnnotation annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            return TagValueAnnotation.Create(
+            return TagValueAnnotationExtended.Create(
                 annotation.Id,
                 annotation.Annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.Annotation.UtcStartTime.ToDateTime(),
@@ -228,7 +228,7 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        public static Grpc.TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this TagValueAnnotationBase annotation) {
+        public static Grpc.TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this TagValueAnnotation annotation) {
             if (annotation == null) {
                 return null;
             }

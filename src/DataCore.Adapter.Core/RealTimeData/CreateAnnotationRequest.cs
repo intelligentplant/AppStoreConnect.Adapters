@@ -17,7 +17,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The annotation.
         /// </summary>
         [Required]
-        public TagValueAnnotationBase Annotation { get; set; }
+        public TagValueAnnotation Annotation { get; set; }
 
     }
 }

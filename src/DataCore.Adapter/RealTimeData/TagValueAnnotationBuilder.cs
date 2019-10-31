@@ -6,7 +6,7 @@ using DataCore.Adapter.Common;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Helper class for constructing <see cref="TagValueAnnotation"/> objects using a fluent interface.
+    /// Helper class for constructing <see cref="TagValueAnnotationExtended"/> objects using a fluent interface.
     /// </summary>
     public class TagValueAnnotationBuilder {
 
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="existing">
         ///   The existing annotation.
         /// </param>
-        private TagValueAnnotationBuilder(TagValueAnnotation existing) {
+        private TagValueAnnotationBuilder(TagValueAnnotationExtended existing) {
             _id = existing.Id;
             _annotationType = existing.AnnotationType;
             _utcStartTime = existing.UtcStartTime;
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueAnnotationBuilder CreateFromExisting(TagValueAnnotation other) {
+        public static TagValueAnnotationBuilder CreateFromExisting(TagValueAnnotationExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
             }
@@ -104,13 +104,13 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Creates a <see cref="TagValueAnnotation"/> using the configured settings.
+        /// Creates a <see cref="TagValueAnnotationExtended"/> using the configured settings.
         /// </summary>
         /// <returns>
-        ///   A new <see cref="TagValueAnnotation"/> object.
+        ///   A new <see cref="TagValueAnnotationExtended"/> object.
         /// </returns>
-        public TagValueAnnotation Build() {
-            return TagValueAnnotation.Create(_id, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
+        public TagValueAnnotationExtended Build() {
+            return TagValueAnnotationExtended.Create(_id, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
         }
 
 

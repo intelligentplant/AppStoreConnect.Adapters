@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             return result;
         }
 
-        public async Task<Adapter.RealTimeData.TagValueAnnotation> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<Adapter.RealTimeData.TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new ReadAnnotationRequest() {
                 AdapterId = AdapterId,

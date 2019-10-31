@@ -30,10 +30,10 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(VendorInfo.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = reader.GetString();
+                    name = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(VendorInfo.Url), StringComparison.OrdinalIgnoreCase)) {
-                    url = reader.GetString();
+                    url = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else {
                     reader.Skip();
@@ -52,8 +52,8 @@ namespace DataCore.Adapter.Json {
             }
 
             writer.WriteStartObject();
-            writer.WriteString(ConvertPropertyName(nameof(VendorInfo.Name), options), value.Name);
-            writer.WriteString(ConvertPropertyName(nameof(VendorInfo.Url), options), value.Url);
+            WritePropertyValue(writer, nameof(VendorInfo.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(VendorInfo.Url), value.Url, options);
             writer.WriteEndObject();
         }
 

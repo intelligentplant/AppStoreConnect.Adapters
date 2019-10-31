@@ -12,13 +12,34 @@ namespace DataCore.Adapter.RealTimeData {
         /// The tag ID.
         /// </summary>
         [Required]
-        public string TagId { get; set; }
+        public string TagId { get; }
 
         /// <summary>
         /// The tag name.
         /// </summary>
         [Required]
-        public string TagName { get; set; }
+        public string TagName { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagDataContainer"/>.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="tagName">
+        ///   The tag name.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagName"/> is <see langword="null"/>.
+        /// </exception>
+        protected TagDataContainer(string tagId, string tagName) {
+            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
+            TagName = tagName ?? throw new ArgumentNullException(nameof(tagName));
+        }
 
     }
 }

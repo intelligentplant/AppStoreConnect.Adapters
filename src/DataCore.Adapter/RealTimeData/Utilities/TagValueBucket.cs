@@ -21,13 +21,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Gets the raw data samples for the bucket.
         /// </summary>
-        public IList<TagValue> RawSamples { get; } = new List<TagValue>();
+        public IList<TagValueExtended> RawSamples { get; } = new List<TagValueExtended>();
 
         /// <summary>
         /// Gets the raw samples that were received prior to start of this bucket. This is to 
         /// allow aggregates that calculate across bucket boundaries (e.g. interpolation) to do so.
         /// </summary>
-        public IList<TagValue> PreBucketSamples { get; } = new List<TagValue>();
+        public IList<TagValueExtended> PreBucketSamples { get; } = new List<TagValueExtended>();
 
 
         /// <summary>

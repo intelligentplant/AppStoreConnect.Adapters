@@ -36,10 +36,10 @@ namespace DataCore.Adapter.Json {
                     status = JsonSerializer.Deserialize<HealthStatus>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = reader.GetString();
+                    description = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Error), StringComparison.OrdinalIgnoreCase)) {
-                    error = reader.GetString();
+                    error = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Data), StringComparison.OrdinalIgnoreCase)) {
                     data = JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader, options);

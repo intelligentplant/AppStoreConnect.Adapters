@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// The raw tag values read from the CSV, indexed by tag ID and then UTC sample time.
         /// </summary>
-        public IDictionary<string, SortedList<DateTime, TagValue>> Values { get; internal set; }
+        public IDictionary<string, SortedList<DateTime, TagValueExtended>> Values { get; internal set; }
 
         /// <summary>
         /// The earliest UTC sample time read from the CSV.

@@ -12,7 +12,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// The annotation.
         /// </summary>
         [Required]
-        public TagValueAnnotation Annotation { get; set; }
+        public TagValueAnnotationExtended Annotation { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationQueryResult"/> object.
@@ -35,13 +36,35 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="annotation"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueAnnotationQueryResult Create(string tagId, string tagName, TagValueAnnotation annotation) {
-            return new TagValueAnnotationQueryResult() {
-                TagId = tagId ?? throw new ArgumentNullException(nameof(tagId)),
-                TagName = tagName ?? throw new ArgumentNullException(nameof(tagName)),
-                Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation))
-            };
-            
+        public TagValueAnnotationQueryResult(string tagId, string tagName, TagValueAnnotationExtended annotation) 
+            : base(tagId, tagName) {
+            Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation));
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotationQueryResult"/> object.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="tagName">
+        ///   The tag name.
+        /// </param>
+        /// <param name="annotation">
+        ///   The annotation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagName"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="annotation"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueAnnotationQueryResult Create(string tagId, string tagName, TagValueAnnotationExtended annotation) {
+            return new TagValueAnnotationQueryResult(tagId, tagName, annotation);
         }
 
     }

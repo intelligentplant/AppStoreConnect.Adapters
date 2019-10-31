@@ -14,19 +14,47 @@ namespace DataCore.Adapter.AssetModel {
         /// The measurement name.
         /// </summary>
         [Required]
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The ID of the adapter that the tag for the measurement is defined on.
         /// </summary>
         [Required]
-        public string AdapterId { get; set; }
+        public string AdapterId { get; }
 
         /// <summary>
         /// The tag summary for the measurement.
         /// </summary>
         [Required]
-        public TagSummary Tag { get; set; }
+        public TagSummary Tag { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AssetModelNodeMeasurement"/> object.
+        /// </summary>
+        /// <param name="name">
+        ///   The measurement name.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter that the tag for the measurement is defined on.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag summary for the measurement.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeMeasurement(string name, string adapterId, TagSummary tag) {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
+            Tag = tag ?? throw new ArgumentNullException(nameof(tag));
+        }
 
 
         /// <summary>
@@ -51,11 +79,7 @@ namespace DataCore.Adapter.AssetModel {
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
         public static AssetModelNodeMeasurement Create(string name, string adapterId, TagSummary tag) {
-            return new AssetModelNodeMeasurement() {
-                Name = name ?? throw new ArgumentNullException(nameof(name)),
-                AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId)),
-                Tag = tag ?? throw new ArgumentNullException(nameof(tag))
-            };
+            return new AssetModelNodeMeasurement(name, adapterId, tag);
         }
 
     }

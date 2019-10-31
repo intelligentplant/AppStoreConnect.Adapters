@@ -14,12 +14,30 @@ namespace DataCore.Adapter.Common {
         /// The property name.
         /// </summary>
         [Required]
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The property value.
         /// </summary>
-        public Variant Value { get; set; }
+        public Variant Value { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterProperty"/> object.
+        /// </summary>
+        /// <param name="name">
+        ///   The property name.
+        /// </param>
+        /// <param name="value">
+        ///   The value of the property.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public AdapterProperty(string name, Variant value) {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Value = value;
+        }
 
 
         /// <summary>
@@ -38,10 +56,7 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static AdapterProperty Create(string name, Variant value) {
-            return new AdapterProperty() { 
-                Name = name ?? throw new ArgumentNullException(nameof(name)),
-                Value = value
-            };
+            return new AdapterProperty(name, value);
         }
 
 
@@ -61,12 +76,7 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static AdapterProperty Create(string name, object value) {
-            return new AdapterProperty() {
-                Name = name ?? throw new ArgumentNullException(nameof(name)),
-                Value = value is Variant v 
-                    ? v 
-                    : Variant.FromValue(value)
-            };
+            return new AdapterProperty(name, value is Variant v ? v : Variant.FromValue(value));
         }
 
 

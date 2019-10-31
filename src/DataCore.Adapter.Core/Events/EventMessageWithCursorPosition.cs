@@ -15,7 +15,48 @@ namespace DataCore.Adapter.Events {
         /// The cursor position for the event message.
         /// </summary>
         [Required]
-        public string CursorPosition { get; set; }
+        public string CursorPosition { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="EventMessage"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The unique identifier for the event message. If <see langword="null"/>, an 
+        ///   identifier will be generated.
+        /// </param>
+        /// <param name="utcEventTime">
+        ///   The UTC timestamp of the event.
+        /// </param>
+        /// <param name="priority">
+        ///   The event priority.
+        /// </param>
+        /// <param name="category">
+        ///   The event category.
+        /// </param>
+        /// <param name="message">
+        ///   The event message.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional event properties.
+        /// </param>
+        /// <param name="cursorPosition">
+        ///   The cursor position for the event message.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
+        /// </exception>
+        public EventMessageWithCursorPosition(
+            string id, 
+            DateTime utcEventTime, 
+            EventPriority priority, 
+            string category, 
+            string message, 
+            IEnumerable<AdapterProperty> properties, 
+            string cursorPosition
+        ) : base(id, utcEventTime, priority, category, message, properties) {
+            CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition));
+        }
 
 
         /// <summary>
@@ -46,15 +87,7 @@ namespace DataCore.Adapter.Events {
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
         public static EventMessageWithCursorPosition Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties, string cursorPosition) {
-            return new EventMessageWithCursorPosition() {
-                Id = id ?? Guid.NewGuid().ToString(),
-                UtcEventTime = utcEventTime.ToUniversalTime(),
-                Priority = priority,
-                Category = category,
-                Message = message,
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>(),
-                CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
-            };
+            return new EventMessageWithCursorPosition(id, utcEventTime, priority, category, message, properties, cursorPosition);
         }
 
     }

@@ -1,28 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes an annotation on a tag.
+    /// Describes the base set of properties for a tag value annotation.
     /// </summary>
-    public sealed class TagValueAnnotation : TagValueAnnotationBase {
+    public class TagValueAnnotation {
 
         /// <summary>
-        /// The unique identifier for the annotation.
+        /// The annotation type.
         /// </summary>
-        [Required]
-        public string Id { get; set; }
+        public AnnotationType AnnotationType { get; }
+
+        /// <summary>
+        /// The UTC start time for the annotation.
+        /// </summary>
+        public DateTime UtcStartTime { get; }
+
+        /// <summary>
+        /// The UTC end time for the annotation. If <see cref="AnnotationType"/> is 
+        /// <see cref="AnnotationType.Instantaneous"/>, this property will always be 
+        /// <see langword="null"/>.
+        /// </summary>
+        public DateTime? UtcEndTime { get; }
+
+        /// <summary>
+        /// The annotation value.
+        /// </summary>
+        public string Value { get; }
+
+        /// <summary>
+        /// An additional description or explanation of the annotation.
+        /// </summary>
+        public string Description { get; }
+
+        /// <summary>
+        /// Additional annotation properties.
+        /// </summary>
+        public IEnumerable<AdapterProperty> Properties { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotation"/> object.
         /// </summary>
-        /// <param name="id">
-        ///   The annotation ID.
-        /// </param>
         /// <param name="annotationType">
         ///   The annotation type.
         /// </param>
@@ -42,21 +65,42 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Additional annotation properties.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="id"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueAnnotation Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
-            return new TagValueAnnotation() {
-                Id = id ?? throw new ArgumentNullException(nameof(id)),
-                AnnotationType = annotationType,
-                UtcStartTime = utcStartTime.ToUniversalTime(),
-                UtcEndTime = annotationType == AnnotationType.Instantaneous
-                ? null
-                : utcEndTime?.ToUniversalTime(),
-                Value = value,
-                Description = description,
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
-            };
+        public TagValueAnnotation(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
+            AnnotationType = annotationType;
+            UtcStartTime = utcStartTime.ToUniversalTime();
+            UtcEndTime = annotationType == AnnotationType.Instantaneous
+            ? null
+            : utcEndTime?.ToUniversalTime();
+            Value = value;
+            Description = description;
+            Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotation"/> object.
+        /// </summary>
+        /// <param name="annotationType">
+        ///   The annotation type.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The UTC start time for the annotation.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time for the annotation. Ignored when <paramref name="annotationType"/> is 
+        ///   <see cref="AnnotationType.Instantaneous"/>.
+        /// </param>
+        /// <param name="value">
+        ///   The annotation value.
+        /// </param>
+        /// <param name="description">
+        ///   An additional description or explanation of the annotation.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional annotation properties.
+        /// </param>
+        public static TagValueAnnotation Create(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
+            return new TagValueAnnotation(annotationType, utcStartTime, utcEndTime, value, description, properties);
         }
 
     }

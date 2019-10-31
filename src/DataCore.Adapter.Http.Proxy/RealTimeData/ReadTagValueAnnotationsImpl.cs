@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         }
 
         /// <inheritdoc/>
-        public async Task<TagValueAnnotation> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = GetClient();
             return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.User, cancellationToken).ConfigureAwait(false);
         }

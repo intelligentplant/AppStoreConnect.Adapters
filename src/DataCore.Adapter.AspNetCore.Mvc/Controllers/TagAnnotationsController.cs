@@ -113,11 +113,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   Successful responses contain the matching <see cref="TagValueAnnotation"/> object.
+        ///   Successful responses contain the matching <see cref="TagValueAnnotationExtended"/> object.
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/{tagId}/{annotationId}")]
-        [ProducesResponseType(typeof(TagValueAnnotation), 200)]
+        [ProducesResponseType(typeof(TagValueAnnotationExtended), 200)]
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -162,7 +162,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/{tagId}/create")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
-        public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotationBase annotation, CancellationToken cancellationToken) {
+        public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -209,7 +209,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPut]
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
-        public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotationBase annotation, CancellationToken cancellationToken) {
+        public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

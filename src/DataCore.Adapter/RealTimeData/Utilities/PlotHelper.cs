@@ -334,7 +334,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 UtcEnd = utcStartTime.Add(bucketSize)
             };
 
-            TagValue lastValuePreviousBucket = null;
+            TagValueExtended lastValuePreviousBucket = null;
 
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {
@@ -397,8 +397,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   Assumes that the <paramref name="bucket"/> contains at least one sample.
         /// </remarks>
-        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, TagValue lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
-            var significantValues = new HashSet<TagValue>();
+        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
+            var significantValues = new HashSet<TagValueExtended>();
 
             if (tag.DataType == TagDataType.Numeric) {
                 var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));

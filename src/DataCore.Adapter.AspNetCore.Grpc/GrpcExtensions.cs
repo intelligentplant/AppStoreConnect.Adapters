@@ -493,7 +493,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value.
         /// </returns>
-        internal static TagValueQueryResult ToGrpcTagValue(this RealTimeData.TagValue value, string tagId, string tagName, TagValueQueryType queryType) {
+        internal static TagValueQueryResult ToGrpcTagValue(this RealTimeData.TagValueExtended value, string tagId, string tagName, TagValueQueryType queryType) {
             var result = new TagValueQueryResult() {
                 TagId = tagId ?? string.Empty,
                 TagName = tagName ?? string.Empty,
@@ -542,7 +542,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value.
         /// </returns>
-        internal static ProcessedTagValueQueryResult ToGrpcProcessedTagValue(this RealTimeData.TagValue value, string tagId, string tagName, string dataFunction, TagValueQueryType queryType) {
+        internal static ProcessedTagValueQueryResult ToGrpcProcessedTagValue(this RealTimeData.TagValueExtended value, string tagId, string tagName, string dataFunction, TagValueQueryType queryType) {
             var result = new ProcessedTagValueQueryResult() {
                 TagId = tagId ?? string.Empty,
                 TagName = tagName ?? string.Empty,
@@ -666,7 +666,7 @@ namespace DataCore.Adapter.Grpc.Server {
             return new WriteTagValueItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 TagId = writeRequest.TagId,
-                Value = TagValueBase.Create(
+                Value = RealTimeData.TagValue.Create(
                     writeRequest.UtcSampleTime.ToDateTime(),
                     writeRequest.Value.ToAdapterVariant(),
                     writeRequest.Status.ToAdapterTagValueStatus(),
@@ -763,7 +763,7 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The gRPC tag value annotation.
         /// </returns>
-        internal static TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.TagValueAnnotation annotation) {
+        internal static TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.TagValueAnnotationExtended annotation) {
             if (annotation == null) {
                 return null;
             }
@@ -804,12 +804,12 @@ namespace DataCore.Adapter.Grpc.Server {
         /// <returns>
         ///   The adapter tag value annotation.
         /// </returns>
-        internal static RealTimeData.TagValueAnnotationBase ToAdapterTagValueAnnotation(this TagValueAnnotationBase annotation) {
+        internal static RealTimeData.TagValueAnnotation ToAdapterTagValueAnnotation(this TagValueAnnotationBase annotation) {
             if (annotation == null) {
                 return null;
             }
 
-            return RealTimeData.TagValueAnnotationBase.Create(
+            return RealTimeData.TagValueAnnotation.Create(
                 annotation.AnnotationType.ToAdapterAnnotationType(),
                 annotation.UtcStartTime.ToDateTime(),
                 annotation.HasUtcEndTime

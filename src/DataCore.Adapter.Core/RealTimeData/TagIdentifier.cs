@@ -13,13 +13,34 @@ namespace DataCore.Adapter.RealTimeData {
         /// The unique identifier for the tag.
         /// </summary>
         [Required]
-        public string Id { get; set; }
+        public string Id { get; }
 
         /// <summary>
         /// The tag name.
         /// </summary>
         [Required]
-        public string Name { get; set; }
+        public string Name { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagIdentifier"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The unique identifier for the tag.
+        /// </param>
+        /// <param name="name">
+        ///   The tag name.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public TagIdentifier(string id, string name) {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+        }
 
 
         /// <summary>
@@ -38,10 +59,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static TagIdentifier Create(string id, string name) {
-            return new TagIdentifier() {
-                Id = id ?? throw new ArgumentNullException(nameof(id)),
-                Name = name ?? throw new ArgumentNullException(nameof(name))
-            };
+            return new TagIdentifier(id, name);
         }
 
     }

@@ -1,30 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes a real-time or historical value on a tag.
+    /// Describes the base set of properties for a tag value.
     /// </summary>
-    public sealed class TagValue : TagValueBase {
+    public class TagValue {
 
         /// <summary>
-        /// Notes associated with the value.
+        /// The UTC sample time for the value.
         /// </summary>
-        public string Notes { get; set; }
+        public DateTime UtcSampleTime { get; }
 
         /// <summary>
-        /// An error message associated with the value.
+        /// The tag value.
         /// </summary>
-        public string Error { get; set; }
+        public Variant Value { get; }
 
         /// <summary>
-        /// Additional value properties.
+        /// The quality status for the value.
         /// </summary>
-        public IEnumerable<AdapterProperty> Properties { get; set; }
+        public TagValueStatus Status { get; }
+
+        /// <summary>
+        /// The value units.
+        /// </summary>
+        public string Units { get; }
 
 
         /// <summary>
@@ -42,25 +44,31 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        /// <param name="notes">
-        ///   Notes associated with the value.
+        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
+            UtcSampleTime = utcSampleTime;
+            Value = value;
+            Status = status;
+            Units = units;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValue"/> object.
+        /// </summary>
+        /// <param name="utcSampleTime">
+        ///   The UTC sample time.
         /// </param>
-        /// <param name="error">
-        ///   An error message to associate with the value.
+        /// <param name="value">
+        ///   The tag value.
         /// </param>
-        /// <param name="properties">
-        ///   Custom properties associated with the value.
+        /// <param name="status">
+        ///   The quality status for the value.
         /// </param>
-        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units, string notes, string error, IEnumerable<AdapterProperty> properties) {
-            return new TagValue() {
-                UtcSampleTime = utcSampleTime,
-                Value = value,
-                Status = status,
-                Units = units ?? string.Empty,
-                Notes = notes,
-                Error = error,
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
-            };
+        /// <param name="units">
+        ///   The value units.
+        /// </param>
+        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
+            return new TagValue(utcSampleTime, value, status, units);
         }
 
     }

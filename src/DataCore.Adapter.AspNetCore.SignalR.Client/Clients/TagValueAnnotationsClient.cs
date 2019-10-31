@@ -56,14 +56,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<TagValueAnnotation> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken = default) {
+        public async Task<TagValueAnnotationExtended> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             _client.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<TagValueAnnotation>(
+            return await connection.InvokeAsync<TagValueAnnotationExtended>(
                 "ReadAnnotation",
                 adapterId,
                 request,

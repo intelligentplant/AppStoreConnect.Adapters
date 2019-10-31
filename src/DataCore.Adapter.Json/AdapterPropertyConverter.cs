@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AdapterProperty.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = reader.GetString();
+                    name = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AdapterProperty.Value), StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options);
@@ -52,9 +52,8 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
 
-            writer.WriteString(ConvertPropertyName(nameof(AdapterProperty.Name), options), value.Name);
-            writer.WritePropertyName(ConvertPropertyName(nameof(AdapterProperty.Value), options));
-            JsonSerializer.Serialize(writer, value.Value, options);
+            WritePropertyValue(writer, nameof(AdapterProperty.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(AdapterProperty.Value), value.Value, options);
 
             writer.WriteEndObject();
         }

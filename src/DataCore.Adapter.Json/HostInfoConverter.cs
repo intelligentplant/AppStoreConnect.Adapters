@@ -65,13 +65,10 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
 
-            writer.WriteString(ConvertPropertyName(nameof(HostInfo.Name), options), value.Name);
-            writer.WriteString(ConvertPropertyName(nameof(HostInfo.Description), options), value.Description);
-            writer.WriteString(ConvertPropertyName(nameof(HostInfo.Version), options), value.Version);
-
-            writer.WritePropertyName(ConvertPropertyName(nameof(HostInfo.Vendor), options));
-            JsonSerializer.Serialize(writer, value.Vendor, options);
-
+            WritePropertyValue(writer, nameof(HostInfo.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(HostInfo.Description), value.Description, options);
+            WritePropertyValue(writer, nameof(HostInfo.Version), value.Version, options);
+            WritePropertyValue(writer, nameof(HostInfo.Vendor), value.Vendor, options);
             WritePropertyValue(writer, nameof(HostInfo.Properties), value.Properties, options);
 
             writer.WriteEndObject();

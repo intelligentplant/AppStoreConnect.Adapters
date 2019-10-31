@@ -30,13 +30,13 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AdapterDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = reader.GetString();
+                    id = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = reader.GetString();
+                    name = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptor.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = reader.GetString();
+                    description = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else {
                     reader.Skip();
@@ -56,9 +56,9 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
 
-            writer.WriteString(ConvertPropertyName(nameof(AdapterDescriptor.Id), options), value.Id);
-            writer.WriteString(ConvertPropertyName(nameof(AdapterDescriptor.Name), options), value.Name);
-            writer.WriteString(ConvertPropertyName(nameof(AdapterDescriptor.Description), options), value.Description);
+            WritePropertyValue(writer, nameof(AdapterDescriptor.Id), value.Id, options);
+            WritePropertyValue(writer, nameof(AdapterDescriptor.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(AdapterDescriptor.Description), value.Description, options);
 
             writer.WriteEndObject();
         }

@@ -241,7 +241,7 @@ namespace DataCore.Adapter.Csv {
 
             var tags = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
             var sampleTimes = new List<DateTime>();
-            var values = new ConcurrentDictionary<string, SortedList<DateTime, TagValue>>(StringComparer.OrdinalIgnoreCase);
+            var values = new ConcurrentDictionary<string, SortedList<DateTime, TagValueExtended>>(StringComparer.OrdinalIgnoreCase);
 
             var result = new CsvDataSet() {
                 Tags = tags,
@@ -368,7 +368,7 @@ namespace DataCore.Adapter.Csv {
                         }
 
                         var tag = item.Value;
-                        var valuesForTag = values.GetOrAdd(tag.Id, key => new SortedList<DateTime, TagValue>());
+                        var valuesForTag = values.GetOrAdd(tag.Id, key => new SortedList<DateTime, TagValueExtended>());
 
                         var numericValue = tag.GetNumericValue(unparsedValue, csvConfig.CultureInfo);
 
@@ -870,7 +870,7 @@ namespace DataCore.Adapter.Csv {
                     foreach (var tag in tags) {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        SortedList<DateTime, TagValue> csvValuesForTag;
+                        SortedList<DateTime, TagValueExtended> csvValuesForTag;
                         // If there are no raw values for the current tag, or if we have already exceeded 
                         // the maximum number of raw samples we are allowed to use in a query, move to the 
                         // next tag.
@@ -878,7 +878,7 @@ namespace DataCore.Adapter.Csv {
                             continue;
                         }
 
-                        TagValue unmodifiedSample;
+                        TagValueExtended unmodifiedSample;
                         if (!csvValuesForTag.TryGetValue(unmodifiedSampleTime, out unmodifiedSample)) {
                             continue;
                         }

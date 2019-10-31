@@ -14,23 +14,76 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The tag's data type.
         /// </summary>
-        public TagDataType DataType { get; set; }
+        public TagDataType DataType { get; }
 
         /// <summary>
         /// The discrete states for the tag. If <see cref="DataType"/> is not <see cref="TagDataType.State"/>, 
         /// this property will be <see langword="null"/>.
         /// </summary>
-        public IEnumerable<DigitalState> States { get; set; }
+        public IEnumerable<DigitalState> States { get; }
 
         /// <summary>
         /// Bespoke tag properties.
         /// </summary>
-        public IEnumerable<AdapterProperty> Properties { get; set; }
+        public IEnumerable<AdapterProperty> Properties { get; }
 
         /// <summary>
         /// Labels associated with the tag.
         /// </summary>
-        public IEnumerable<string> Labels { get; set; }
+        public IEnumerable<string> Labels { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagDefinition"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="name">
+        ///   The tag name.
+        /// </param>
+        /// <param name="description">
+        ///   The tag description.
+        /// </param>
+        /// <param name="units">
+        ///   The tag units.
+        /// </param>
+        /// <param name="dataType">
+        ///   The data type for the tag.
+        /// </param>
+        /// <param name="states">
+        ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
+        ///   <see cref="TagDataType.State"/>.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional tag properties.
+        /// </param>
+        /// <param name="labels">
+        ///   Labels associated with the tag.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public TagDefinition(
+            string id, 
+            string name, 
+            string description, 
+            string units, 
+            TagDataType dataType, 
+            IEnumerable<DigitalState> states, 
+            IEnumerable<AdapterProperty> properties, 
+            IEnumerable<string> labels
+        ) : base(id, name, description, units) {
+            DataType = dataType;
+            States = dataType != TagDataType.State
+                ? null
+                : states?.ToArray() ?? Array.Empty<DigitalState>();
+            Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
+            Labels = labels?.ToArray() ?? Array.Empty<string>();
+        }
 
 
         /// <summary>
@@ -68,18 +121,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static TagDefinition Create(string id, string name, string description, string units, TagDataType dataType, IEnumerable<DigitalState> states, IEnumerable<AdapterProperty> properties, IEnumerable<string> labels) {
-            return new TagDefinition() {
-                Id = id ?? throw new ArgumentNullException(nameof(id)),
-                Name = name ?? throw new ArgumentNullException(nameof(name)),
-                Description = description ?? string.Empty,
-                Units = units ?? string.Empty,
-                DataType = dataType,
-                States = dataType != TagDataType.State
-                    ? null
-                    : states?.ToArray() ?? Array.Empty<DigitalState>(),
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>(),
-                Labels = labels?.ToArray() ?? Array.Empty<string>()
-            };
+            return new TagDefinition(id, name, description, units, dataType, states, properties, labels);
         }
 
 

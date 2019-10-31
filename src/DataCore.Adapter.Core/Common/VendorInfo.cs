@@ -10,12 +10,27 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The vendor name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The vendor URL.
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="VendorInfo"/> object.
+        /// </summary>
+        /// <param name="name">
+        ///   The vendor name.
+        /// </param>
+        /// <param name="url">
+        ///   The vendor URL.
+        /// </param>
+        public VendorInfo(string name, string url) {
+            Name = name?.Trim();
+            Url = url;
+        }
 
 
         /// <summary>
@@ -28,10 +43,7 @@ namespace DataCore.Adapter.Common {
         ///   The vendor URL.
         /// </param>
         public static VendorInfo Create(string name, string url) {
-            return new VendorInfo() {
-                Name = name?.Trim(),
-                Url = url
-            };
+            return new VendorInfo(name, url);
         }
 
 

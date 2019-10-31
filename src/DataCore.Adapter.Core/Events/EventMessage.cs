@@ -14,7 +14,40 @@ namespace DataCore.Adapter.Events {
         /// Creates a new <see cref="EventMessage"/> object.
         /// </summary>
         /// <param name="id">
-        ///   The unique identifier for the event message.
+        ///   The unique identifier for the event message. If <see langword="null"/>, an 
+        ///   identifier will be generated.
+        /// </param>
+        /// <param name="utcEventTime">
+        ///   The UTC timestamp of the event.
+        /// </param>
+        /// <param name="priority">
+        ///   The event priority.
+        /// </param>
+        /// <param name="category">
+        ///   The event category.
+        /// </param>
+        /// <param name="message">
+        ///   The event message.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional event properties.
+        /// </param>
+        public EventMessage(
+            string id, 
+            DateTime utcEventTime, 
+            EventPriority priority, 
+            string category, 
+            string message, 
+            IEnumerable<AdapterProperty> properties
+        ) : base(id ?? Guid.NewGuid().ToString(), utcEventTime, priority, category, message, properties) { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="EventMessage"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The unique identifier for the event message. If <see langword="null"/>, an 
+        ///   identifier will be generated.
         /// </param>
         /// <param name="utcEventTime">
         ///   The UTC timestamp of the event.
@@ -32,14 +65,7 @@ namespace DataCore.Adapter.Events {
         ///   Additional event properties.
         /// </param>
         public static EventMessage Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
-            return new EventMessage() {
-                Id = id ?? Guid.NewGuid().ToString(),
-                UtcEventTime = utcEventTime.ToUniversalTime(),
-                Priority = priority,
-                Category = category,
-                Message = message,
-                Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>()
-            };
+            return new EventMessage(id, utcEventTime, priority, category, message, properties);
         }
     
     }

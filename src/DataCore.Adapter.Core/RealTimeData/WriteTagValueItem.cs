@@ -22,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The tag value.
         /// </summary>
         [Required]
-        public TagValueBase Value { get; set; }
+        public TagValue Value { get; set; }
 
     }
 }

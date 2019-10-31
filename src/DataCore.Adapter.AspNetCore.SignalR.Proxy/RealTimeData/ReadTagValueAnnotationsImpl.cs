@@ -30,7 +30,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         }
 
         /// <inheritdoc/>
-        public async Task<TagValueAnnotation> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = GetClient();
             return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }

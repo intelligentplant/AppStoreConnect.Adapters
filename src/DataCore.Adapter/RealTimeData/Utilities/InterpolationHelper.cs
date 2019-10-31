@@ -65,7 +65,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The interpolated sample.
         /// </returns>
-        private static TagValue InterpolateSample(DateTime utcSampleTime, TagValue valueBefore, TagValue valueAfter) {
+        private static TagValueExtended InterpolateSample(DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter) {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
 
@@ -122,13 +122,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
         /// </param>
         /// <returns>
-        ///   The calculated <see cref="TagValue"/>, or <see langword="null"/> if a value cannot be 
+        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
         ///   calculated.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValue GetValueAtTime(TagDefinition tag, DateTime utcSampleTime, TagValue valueBefore, TagValue valueAfter, InterpolationCalculationType interpolationType) {
+        public static TagValueExtended GetValueAtTime(TagDefinition tag, DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter, InterpolationCalculationType interpolationType) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -223,8 +223,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 var nextSampleTime = sampleTimesEnumerator.Current;
-                TagValue value1 = null;
-                TagValue value0 = null;
+                TagValueExtended value1 = null;
+                TagValueExtended value0 = null;
                 var sampleTimesRemaining = true;
 
                 while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

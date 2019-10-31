@@ -30,9 +30,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   The status used is the worst-case of the values used in the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateInterpolated(TagDefinition tag, TagValueBucket currentBucket) {
-            TagValue sample0 = null;
-            TagValue sample1 = null;
+        private static IEnumerable<TagValueExtended> CalculateInterpolated(TagDefinition tag, TagValueBucket currentBucket) {
+            TagValueExtended sample0 = null;
+            TagValueExtended sample1 = null;
 
             if (currentBucket.RawSamples.Count == 0) {
                 // No samples in the current bucket. We can still extrapolate a value if we have 
@@ -83,7 +83,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             );
 
             return val == null
-                ? Array.Empty<TagValue>()
+                ? Array.Empty<TagValueExtended>()
                 : new[] { val };
         }
 
@@ -107,9 +107,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateAverage(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateAverage(TagDefinition tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
-                return Array.Empty<TagValue>();
+                return Array.Empty<TagValueExtended>();
             }
 
             var tagInfoSample = currentBucket.RawSamples.First();
@@ -146,9 +146,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateMinimum(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateMinimum(TagDefinition tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
-                return Array.Empty<TagValue>();
+                return Array.Empty<TagValueExtended>();
             }
 
             var tagInfoSample = currentBucket.RawSamples.First();
@@ -185,9 +185,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateMaximum(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateMaximum(TagDefinition tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
-                return Array.Empty<TagValue>();
+                return Array.Empty<TagValueExtended>();
             }
 
             var tagInfoSample = currentBucket.RawSamples.First();
@@ -220,7 +220,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValue> CalculateCount(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateCount(TagDefinition tag, TagValueBucket currentBucket) {
             var numericValue = currentBucket.RawSamples.Count();
 
             return new[] {
@@ -253,7 +253,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValue> CalculateRange(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateRange(TagDefinition tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return null;
             }
@@ -656,7 +656,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated values for the bucket.
         /// </returns>
-        private delegate IEnumerable<TagValue> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
+        private delegate IEnumerable<TagValueExtended> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
 
         #endregion
 

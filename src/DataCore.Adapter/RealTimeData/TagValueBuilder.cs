@@ -7,7 +7,7 @@ using DataCore.Adapter.Common;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Helper class for constructing <see cref="TagValue"/> objects using a fluent interface.
+    /// Helper class for constructing <see cref="TagValueExtended"/> objects using a fluent interface.
     /// </summary>
     public class TagValueBuilder {
 
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        private TagValueBuilder(TagValue existing) {
+        private TagValueBuilder(TagValueExtended existing) {
             _utcSampleTime = existing.UtcSampleTime;
             _value = existing.Value;
             _status = existing.Status;
@@ -97,7 +97,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueBuilder CreateFromExisting(TagValue other) {
+        public static TagValueBuilder CreateFromExisting(TagValueExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
             }
@@ -107,13 +107,13 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Creates a <see cref="TagValue"/> using the configured settings.
+        /// Creates a <see cref="TagValueExtended"/> using the configured settings.
         /// </summary>
         /// <returns>
-        ///   A new <see cref="TagValue"/> object.
+        ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
-        public TagValue Build() {
-            return TagValue.Create(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
+        public TagValueExtended Build() {
+            return TagValueExtended.Create(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
         }
 
 

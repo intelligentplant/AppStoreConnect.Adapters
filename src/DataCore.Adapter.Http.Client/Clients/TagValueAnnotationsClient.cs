@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<TagValueAnnotation> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<TagValueAnnotationExtended> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                     httpResponse.EnsureSuccessStatusCode();
 
-                    return await httpResponse.Content.ReadAsAsync<TagValueAnnotation>(cancellationToken).ConfigureAwait(false);
+                    return await httpResponse.Content.ReadAsAsync<TagValueAnnotationExtended>(cancellationToken).ConfigureAwait(false);
                 }
             }
             finally {
@@ -177,7 +177,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/create";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<TagValueAnnotationBase>(request.Annotation, new JsonMediaTypeFormatter())
+                Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
             }.AddStateProperty(principal);
 
             try {
@@ -229,7 +229,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Put, url) {
-                Content = new ObjectContent<TagValueAnnotationBase>(request.Annotation, new JsonMediaTypeFormatter())
+                Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
             }.AddStateProperty(principal);
 
             try {
