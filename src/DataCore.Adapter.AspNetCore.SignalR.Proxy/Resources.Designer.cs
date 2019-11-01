@@ -97,6 +97,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while running events subscription..
+        /// </summary>
+        internal static string Log_EventsSubscriptionError {
+            get {
+                return ResourceManager.GetString("Log_EventsSubscriptionError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {
@@ -111,6 +120,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         internal static string Log_NoExtensionImplementationAvailable {
             get {
                 return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error while running snapshot tag value subscription..
+        /// </summary>
+        internal static string Log_SnapshotTagValueSubscriptionError {
+            get {
+                return ResourceManager.GetString("Log_SnapshotTagValueSubscriptionError", resourceCulture);
             }
         }
     }

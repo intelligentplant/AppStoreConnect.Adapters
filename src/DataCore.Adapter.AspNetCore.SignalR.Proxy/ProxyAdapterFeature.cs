@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
@@ -25,6 +26,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// The proxy that the feature instance belongs to.
         /// </summary>
         private readonly SignalRAdapterProxy _proxy;
+
+        /// <summary>
+        /// Gets the logger for the proxy.
+        /// </summary>
+        protected ILogger Logger {
+            get { return _proxy.Logger; }
+        }
 
         /// <summary>
         /// The adapter ID for the remote adapter.

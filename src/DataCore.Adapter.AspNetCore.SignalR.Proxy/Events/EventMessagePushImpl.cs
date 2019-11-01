@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Events;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
@@ -70,22 +71,66 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             public EventMessageSubscription(EventMessagePushImpl feature, EventMessageSubscriptionType subscriptionType) {
                 _client = feature.GetClient();
                 _subscriptionType = subscriptionType;
+                _client.Reconnected += OnClientReconnected;
+            }
+
+
+            /// <summary>
+            /// Handles SignalR client reconnections.
+            /// </summary>
+            /// <param name="connectionId">
+            ///   The updated connection ID.
+            /// </param>
+            /// <returns>
+            ///   A task that will re-create the subscription to the remote adapter.
+            /// </returns>
+            private async Task OnClientReconnected(string connectionId) {
+                await CreateSignalRChannel().ConfigureAwait(false);
+            }
+
+
+            /// <summary>
+            /// Creates a SignalR subscription events from the remote adapter and then starts a 
+            /// background task to forward received messages to this subscription's channel.
+            /// </summary>
+            /// <returns>
+            ///   A task that will complete as soon as the subscription has been established. 
+            ///   Forwarding of received events will continue in a background task.
+            /// </returns>
+            private async Task CreateSignalRChannel() {
+                var hubChannel = await _client.Events.CreateEventMessageChannelAsync(
+                    _feature.AdapterId,
+                    _subscriptionType,
+                    SubscriptionCancelled
+                ).ConfigureAwait(false);
+
+                _feature.TaskScheduler.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        await hubChannel.Forward(Writer, ct).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException e) {
+                        // Subscription was cancelled.
+                        Writer.TryComplete(e);
+                    }
+                    catch (Exception e) {
+                        // Another error (e.g. SignalR disconnection) occurred. In this situation, 
+                        // we won't complete the Writer in case we manage to reconnect.
+                        _feature.Logger.LogError(e, Resources.Log_EventsSubscriptionError);
+                    }
+                }, SubscriptionCancelled);
             }
 
             /// <inheritdoc />
-            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var hubChannel = await _client.Events.CreateEventMessageChannelAsync(_feature.AdapterId, _subscriptionType, ct).ConfigureAwait(false);
-                    await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, _feature.TaskScheduler, SubscriptionCancelled);
-
-                return default;
+            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                await CreateSignalRChannel().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
 
             /// <inheritdoc />
             protected override void Dispose(bool disposing) {
-                // Do nothing.
+                if (disposing) {
+                    _client.Reconnected -= OnClientReconnected;
+                }
             }
 
 

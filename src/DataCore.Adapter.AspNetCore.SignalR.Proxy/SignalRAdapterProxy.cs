@@ -17,6 +17,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
+        /// Gets the logger for the proxy.
+        /// </summary>
+        internal new ILogger Logger {
+            get { return base.Logger; }
+        }
+
+        /// <summary>
         /// The ID of the remote adapter.
         /// </summary>
         private readonly string _remoteAdapterId;

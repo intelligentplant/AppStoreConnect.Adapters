@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.RealTimeData;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
@@ -72,43 +73,67 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             internal SnapshotTagValueSubscription(SnapshotTagValuePushImpl feature) {
                 _feature = feature;
                 _client = _feature.GetClient();
+                _client.Reconnected += OnClientReconnected;
+            }
+
+
+            /// <summary>
+            /// Handles SignalR client reconnections.
+            /// </summary>
+            /// <param name="connectionId">
+            ///   The updated connection ID.
+            /// </param>
+            /// <returns>
+            ///   A task that will re-create the subscription to the remote adapter.
+            /// </returns>
+            private async Task OnClientReconnected(string connectionId) {
+                await CreateSignalRChannel().ConfigureAwait(false);
+            }
+
+
+            /// <summary>
+            /// Creates a SignalR subscription for tag values from the remote adapter and then 
+            /// starts a background task to forward received values to this subscription's channel.
+            /// </summary>
+            /// <returns>
+            ///   A task that will complete as soon as the subscription has been established. 
+            ///   Forwarding of received values will continue in a background task.
+            /// </returns>
+            private async Task CreateSignalRChannel() {
+                // If this is a reconnection, we might have remote tags that we need to 
+                // resubscribe to.
+                string[] tags;
+
+                lock (_tags) {
+                    tags = _tags.ToArray();
+                }
+
+                var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
+                    _feature.AdapterId,
+                    tags,
+                    SubscriptionCancelled
+                ).ConfigureAwait(false);
+
+                _feature.TaskScheduler.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        await hubChannel.Forward(Writer, ct).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException e) {
+                        // Subscription was cancelled.
+                        Writer.TryComplete(e);
+                    }
+                    catch (Exception e) {
+                        // Another error (e.g. SignalR disconnection) occurred. In this situation, 
+                        // we won't complete the Writer in case we manage to reconnect.
+                        _feature.Logger.LogError(e, Resources.Log_SnapshotTagValueSubscriptionError);
+                    }
+                }, SubscriptionCancelled);
             }
 
 
             /// <inheritdoc />
             protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var tcs = new TaskCompletionSource<int>();
-
-                Writer.RunBackgroundOperation(async (ch, ct) => {
-                    string[] tags;
-                    lock (_tags) {
-                        tags = _tags.ToArray();
-                    }
-
-                    ChannelReader<TagValueQueryResult> hubChannel;
-
-                    try {
-                        hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
-                            _feature.AdapterId,
-                            tags,
-                            ct
-                        ).ConfigureAwait(false);
-
-                        tcs.TrySetResult(0);
-                    }
-                    catch (OperationCanceledException) {
-                        tcs.TrySetCanceled();
-                        throw;
-                    }
-                    catch (Exception e) {
-                        tcs.TrySetException(e);
-                        throw;
-                    }
-
-                    await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-                }, true, _feature.TaskScheduler, SubscriptionCancelled);
-
-                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
+                await CreateSignalRChannel().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
 
@@ -186,6 +211,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <inheritdoc/>
             protected override void Dispose(bool disposing) {
                 if (disposing) {
+                    _client.Reconnected -= OnClientReconnected;
                     lock (_tags) {
                         _tags.Clear();
                     }

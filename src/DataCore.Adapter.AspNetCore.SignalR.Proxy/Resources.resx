@@ -130,6 +130,9 @@
   <data name="HealthCheck_UnknownConnectionState" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="Log_EventsSubscriptionError" xml:space="preserve">
+    <value>Error while running events subscription.</value>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>
     <comment>{0} - feature name</comment>
@@ -137,5 +140,8 @@
   <data name="Log_NoExtensionImplementationAvailable" xml:space="preserve">
     <value>No implementation available for extension feature: {0}</value>
     <comment>{0} - feature name</comment>
+  </data>
+  <data name="Log_SnapshotTagValueSubscriptionError" xml:space="preserve">
+    <value>Error while running snapshot tag value subscription.</value>
   </data>
 </root>
