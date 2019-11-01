@@ -240,7 +240,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         protected override async Task<IEnumerable<Diagnostics.HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var results = new List<Diagnostics.HealthCheckResult>();
+            var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
+            if (!IsRunning) {
+                return results;
+            }
 
             if (_channel is GrpcCore.Channel coreChannel) {
                 var state = coreChannel.State;

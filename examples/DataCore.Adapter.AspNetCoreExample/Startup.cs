@@ -65,6 +65,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddSignalR().AddMessagePackProtocol();
 
+            services
+                .AddHealthChecks()
+                .AddAdapterHeathChecks();
+
             services.AddOpenApiDocument(options => {
                 options.DocumentName = "v1.0";
                 options.Title = "App Store Connect Adapters";
@@ -93,6 +97,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 endpoints.MapDataCoreGrpcServices();
                 endpoints.MapControllers();
                 endpoints.MapDataCoreAdapterHubs();
+                endpoints.MapHealthChecks("/health");
             });
         }
     }

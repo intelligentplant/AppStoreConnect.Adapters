@@ -212,7 +212,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
         /// <inheritdoc/>
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var results = new List<HealthCheckResult>();
+            var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
+            if (!IsRunning) {
+                return results;
+            }
 
             if (_client.IsValueCreated) {
                 var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);

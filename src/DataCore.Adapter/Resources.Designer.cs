@@ -160,7 +160,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter has not been started..
+        ///   Looks up a localized string similar to The adapter is not running..
         /// </summary>
         internal static string HealthChecks_CompositeResultDescription_NotStarted {
             get {

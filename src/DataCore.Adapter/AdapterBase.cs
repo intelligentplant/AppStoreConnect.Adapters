@@ -42,7 +42,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Indicates if the adapter has been started.
         /// </summary>
-        protected bool IsStarted { get; private set; }
+        protected bool IsRunning { get; private set; }
 
         /// <summary>
         /// Indicates if the adapter is starting.
@@ -79,6 +79,16 @@ namespace DataCore.Adapter {
         /// </summary>
         private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
 
+        /// <summary>
+        /// Adapter properties.
+        /// </summary>
+        private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
+
+        /// <summary>
+        /// The adapter options.
+        /// </summary>
+        protected TAdapterOptions Options { get; private set; }
+
         /// <inheritdoc/>
         public AdapterDescriptor Descriptor {
             get {
@@ -97,10 +107,8 @@ namespace DataCore.Adapter {
             }
         }
 
-        /// <summary>
-        /// Adapter properties.
-        /// </summary>
-        private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
+        /// <inheritdoc/>
+        bool IAdapter.IsRunning { get { return IsRunning; } }
 
         /// <inheritdoc/>
         public IEnumerable<AdapterProperty> Properties {
@@ -109,11 +117,6 @@ namespace DataCore.Adapter {
                 return _properties.Values.Select(x => AdapterProperty.FromExisting(x)).ToArray();
             }
         }
-
-        /// <summary>
-        /// The adapter options.
-        /// </summary>
-        protected TAdapterOptions Options { get; private set; }
 
 
         /// <summary>
@@ -217,7 +220,7 @@ namespace DataCore.Adapter {
             CheckDisposed();
             await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try {
-                if (IsStarted) {
+                if (IsRunning) {
                     return;
                 }
                 if (StopToken.IsCancellationRequested) {
@@ -237,7 +240,7 @@ namespace DataCore.Adapter {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                             await StartAsync(ctSource.Token).ConfigureAwait(false);
                         }
-                        IsStarted = true;
+                        IsRunning = true;
                     }
                     finally {
                         _isStarting = false;
@@ -277,17 +280,13 @@ namespace DataCore.Adapter {
             }
             finally {
                 _stopTokenSource = new CancellationTokenSource();
-                IsStarted = false;
+                IsRunning = false;
             }
         }
 
 
         /// <inheritdoc/>
         async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (!IsStarted) {
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
-            }
-
             try {
                 var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 if (results == null || !results.Any()) {
@@ -345,7 +344,7 @@ namespace DataCore.Adapter {
                 _properties.Clear();
                 _isDisposed = true;
                 _isDisposing = false;
-                IsStarted = false;
+                IsRunning = false;
             }
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
             GC.SuppressFinalize(this);
@@ -369,7 +368,7 @@ namespace DataCore.Adapter {
         ///   starting.
         /// </param>
         protected void CheckStarted(bool allowStarting = false) {
-            if (IsStarted || (allowStarting && _isStarting)) {
+            if (IsRunning || (allowStarting && _isStarting)) {
                 return;
             }
 
@@ -430,10 +429,17 @@ namespace DataCore.Adapter {
         ///   health check.
         /// </returns>
         /// <remarks>
-        ///   Override this method to perform custom health checks for your adapter.
+        ///   Override this method to perform custom health checks for your adapter. The default 
+        ///   implementation will return unhealthy status if <see cref="IsRunning"/> is 
+        ///   <see langword="false"/>.
         /// </remarks>
         protected virtual Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return Task.FromResult<IEnumerable<HealthCheckResult>>(null);
+            if (!IsRunning) {
+                var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
+                return Task.FromResult<IEnumerable<HealthCheckResult>>(new[] { result });
+            }
+
+            return Task.FromResult<IEnumerable<HealthCheckResult>>(Array.Empty<HealthCheckResult>());
         }
 
 

@@ -43,7 +43,9 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
                     try {
                         var feature = x.Features.Get<Adapter.Diagnostics.IHealthCheck>();
                         if (feature == null) {
-                            return Adapter.Diagnostics.HealthCheckResult.Healthy();
+                            return x.IsRunning 
+                                ? Adapter.Diagnostics.HealthCheckResult.Healthy() 
+                                : Adapter.Diagnostics.HealthCheckResult.Unhealthy(Resources.HealthChecks_AdapterNotRunning);
                         }
                         return await feature.CheckHealthAsync(null, cancellationToken).ConfigureAwait(false);
                     }
