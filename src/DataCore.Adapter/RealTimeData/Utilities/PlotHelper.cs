@@ -400,7 +400,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
             var significantValues = new HashSet<TagValueExtended>();
 
-            if (tag.DataType == TagDataType.Numeric) {
+            if (tag.DataType.IsNumericType()) {
                 var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));
 
                 significantValues.Add(bucket.RawSamples.First());

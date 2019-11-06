@@ -103,10 +103,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(new EventMessageWithCursorPosition() {
-                    CursorPosition = msg.CursorPosition,
-                    EventMessage = msg.ToGrpcEventMessage()
-                }).ConfigureAwait(false);
+                await responseStream.WriteAsync(msg.ToGrpcEventMessageWithCursorPosition()).ConfigureAwait(false);
             }
         }
 

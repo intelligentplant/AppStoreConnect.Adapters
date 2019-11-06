@@ -6,14 +6,19 @@
     public enum AnnotationType {
 
         /// <summary>
+        /// The annotation type is unknown.
+        /// </summary>
+        Unknown = 0,
+
+        /// <summary>
         /// The annotation is instantaneous, and applies to a single point in time.
         /// </summary>
-        Instantaneous = 0,
+        Instantaneous = 1,
 
         /// <summary>
         /// The annotation applies to a time range, rather than a single point in time.
         /// </summary>
-        TimeRange = 1
+        TimeRange = 2
 
     }
 }

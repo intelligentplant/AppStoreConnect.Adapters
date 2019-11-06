@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Json {
             string name = null;
             string description = null;
             string units = null;
-            TagDataType dataType = TagDataType.Numeric;
+            VariantType dataType = VariantType.Unknown;
             DigitalState[] states = null;
             AdapterProperty[] properties = null;
             string[] labels = null;
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Json {
                     units = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.DataType), StringComparison.OrdinalIgnoreCase)) {
-                    dataType = JsonSerializer.Deserialize<TagDataType>(ref reader, options);
+                    dataType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.States), StringComparison.OrdinalIgnoreCase)) {
                     states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options);

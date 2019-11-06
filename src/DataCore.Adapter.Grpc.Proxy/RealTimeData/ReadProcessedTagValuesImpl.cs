@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                         if (grpcResponse.ResponseStream.Current == null) {
                             continue;
                         }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
+                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterProcessedTagValueQueryResult(), ct).ConfigureAwait(false);
                     }
                 }
                 finally {

@@ -76,7 +76,22 @@ namespace DataCore.Adapter.Common {
         ///   its value is numeric, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsNumericType(this Variant variant) {
-            switch (variant.Type) {
+            return variant.Type.IsNumericType();
+        }
+
+
+        /// <summary>
+        /// Tests if the variant type is a numeric type.
+        /// </summary>
+        /// <param name="variantType">
+        ///   The variant type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant's <see cref="Variant.Type"/> indicates that 
+        ///   its value is numeric, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsNumericType(this VariantType variantType) {
+            switch (variantType) {
                 case VariantType.Boolean:
                 case VariantType.Byte:
                 case VariantType.Double:

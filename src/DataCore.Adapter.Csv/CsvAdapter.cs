@@ -155,7 +155,7 @@ namespace DataCore.Adapter.Csv {
             if (!item.StartsWith("[") || !item.EndsWith("]")) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return TagDefinition.Create(item, item, null, null, TagDataType.Numeric, null, null, null);
+                return TagDefinition.Create(item, item, null, null, Common.VariantType.Double, null, null, null);
             }
 
             item = item.TrimStart('[').TrimEnd(']');
@@ -205,10 +205,10 @@ namespace DataCore.Adapter.Csv {
                     ? units
                     : string.Empty,
                 states.Count > 0
-                    ? TagDataType.State
-                    : props.TryGetValue(nameof(dataType), out dataType) && Enum.TryParse<TagDataType>(dataType, out var dataTypeActual)
+                    ? Common.VariantType.Int32
+                    : props.TryGetValue(nameof(dataType), out dataType) && Enum.TryParse<Common.VariantType>(dataType, out var dataTypeActual)
                         ? dataTypeActual
-                        : TagDataType.Numeric,
+                        : Common.VariantType.Double,
                 states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null,

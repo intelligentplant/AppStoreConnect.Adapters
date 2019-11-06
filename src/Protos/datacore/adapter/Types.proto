@@ -187,7 +187,7 @@ message TagSummary {
     string name = 2;
     string description = 3;
     string units = 4;
-    TagDataType data_type = 5;
+    VariantType data_type = 5;
 }
 
 
@@ -196,18 +196,10 @@ message TagDefinition {
     string name = 2;
     string description = 3;
     string units = 4;
-    TagDataType data_type = 5;
+    VariantType data_type = 5;
     repeated DigitalState states = 6;
     repeated AdapterProperty properties = 7;
     repeated string labels = 8;
-}
-
-
-enum TagDataType {
-    UNKNOWN = 0;
-    NUMERIC = 1;
-    TEXT = 2;
-    STATE = 3;
 }
 
 
@@ -234,8 +226,9 @@ message TagValueAnnotation {
 }
 
 enum AnnotationType {
-    ANNOTATION_TYPE_INSTANTANEOUS = 0;
-    ANNOTATION_TYPE_TIME_RANGE = 1;
+    ANNOTATION_TYPE_UNKNOWN = 0;
+    ANNOTATION_TYPE_INSTANTANEOUS = 1;
+    ANNOTATION_TYPE_TIME_RANGE = 2;
 }
 
 message TagValueAnnotationQueryResult {
@@ -286,9 +279,8 @@ enum TagValueQueryType {
     TAG_VALUE_QUERY_TYPE_SNAPSHOT_PUSH = 2;
     TAG_VALUE_QUERY_TYPE_RAW = 3;
     TAG_VALUE_QUERY_TYPE_PLOT = 4;
-    TAG_VALUE_QUERY_TYPE_INTERPOLATED = 5;
-    TAG_VALUE_QUERY_TYPE_VALUES_AT_TIMES = 6;
-    TAG_VALUE_QUERY_TYPE_PROCESSED = 7;
+    TAG_VALUE_QUERY_TYPE_VALUES_AT_TIMES = 5;
+    TAG_VALUE_QUERY_TYPE_PROCESSED = 6;
 }
 
 

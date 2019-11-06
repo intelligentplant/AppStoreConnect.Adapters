@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     try {
                         while (await ch2.WaitToReadAsync(ct2).ConfigureAwait(false)) {
                             if (ch2.TryRead(out var item) && item != null) {
-                                await grpcStream.RequestStream.WriteAsync(item.ToGrpcWriteTagValueRequest(AdapterId)).ConfigureAwait(false);
+                                await grpcStream.RequestStream.WriteAsync(item.ToGrpcWriteTagValueItem(AdapterId)).ConfigureAwait(false);
                             }
                         }
                     }

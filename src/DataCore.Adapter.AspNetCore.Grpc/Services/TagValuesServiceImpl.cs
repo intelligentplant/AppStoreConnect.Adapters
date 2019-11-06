@@ -46,7 +46,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     while (!cancellationToken.IsCancellationRequested) {
                         try {
                             var tag = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                            await responseStream.WriteAsync(tag.Value.ToGrpcTagValue(tag.TagId, tag.TagName, TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                            
+                            await responseStream.WriteAsync(tag.Value.ToGrpcTagValueQueryResult(tag.TagId, tag.TagName, TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
                         }
                         catch (OperationCanceledException) {
                             // Do nothing
@@ -135,7 +136,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.Value.ToGrpcTagValue(val.TagId, val.TagName, TagValueQueryType.SnapshotPoll)).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPoll)).ConfigureAwait(false);
             }
         }
 
@@ -150,7 +151,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
                 SampleCount = request.SampleCount,
-                BoundaryType = request.BoundaryType.FromGrpcRawDataBoundaryType(),
+                BoundaryType = request.BoundaryType.ToAdapterRawDataBoundaryType(),
                 Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
@@ -162,7 +163,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.Value.ToGrpcTagValue(val.TagId, val.TagName, TagValueQueryType.Raw)).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.Raw)).ConfigureAwait(false);
             }
         }
 
@@ -188,7 +189,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.Value.ToGrpcTagValue(val.TagId, val.TagName, TagValueQueryType.Plot)).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.Plot)).ConfigureAwait(false);
             }
         }
 
@@ -212,7 +213,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.Value.ToGrpcTagValue(val.TagId, val.TagName, TagValueQueryType.ValuesAtTimes)).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.ValuesAtTimes)).ConfigureAwait(false);
             }
         }
 
@@ -253,7 +254,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     continue;
                 }
 
-                await responseStream.WriteAsync(val.Value.ToGrpcProcessedTagValue(val.TagId, val.TagName, val.DataFunction, TagValueQueryType.Processed)).ConfigureAwait(false);
+                await responseStream.WriteAsync(val.ToGrpcProcessedTagValueQueryResult(TagValueQueryType.Processed)).ConfigureAwait(false);
             }
         }
 

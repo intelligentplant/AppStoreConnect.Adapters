@@ -136,7 +136,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return null;
             }
 
-            if (interpolationType == InterpolationCalculationType.UsePreviousValue || tag.DataType != TagDataType.Numeric) {
+            if (interpolationType == InterpolationCalculationType.UsePreviousValue || !tag.DataType.IsNumericType()) {
                 // We've been asked to repeat the previous value, or this is not a numeric tag, so 
                 // we can't interpolate between two values.
 

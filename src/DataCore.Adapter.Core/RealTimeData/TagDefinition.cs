@@ -13,7 +13,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <summary>
         /// The discrete states for the tag. If <see cref="TagSummary.DataType"/> is not 
-        /// <see cref="TagDataType.State"/>, this property will be <see langword="null"/>.
+        /// <see cref="VariantType.Int32"/>, this property will be <see langword="null"/>.
         /// </summary>
         public IEnumerable<DigitalState> States { get; }
 
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         /// <param name="states">
         ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
-        ///   <see cref="TagDataType.State"/>.
+        ///   <see cref="VariantType.Int32"/>.
         /// </param>
         /// <param name="properties">
         ///   Additional tag properties.
@@ -67,14 +67,14 @@ namespace DataCore.Adapter.RealTimeData {
             string name, 
             string description, 
             string units, 
-            TagDataType dataType, 
+            VariantType dataType, 
             IEnumerable<DigitalState> states, 
             IEnumerable<AdapterProperty> properties, 
             IEnumerable<string> labels
         ) : base(id, name, description, units, dataType) {
-            States = dataType != TagDataType.State
+            States = dataType != VariantType.Int32
                 ? null
-                : states?.ToArray() ?? Array.Empty<DigitalState>();
+                : states?.ToArray();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
             Labels = labels?.ToArray() ?? Array.Empty<string>();
         }
@@ -100,7 +100,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         /// <param name="states">
         ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
-        ///   <see cref="TagDataType.State"/>.
+        ///   <see cref="VariantType.Int32"/>.
         /// </param>
         /// <param name="properties">
         ///   Additional tag properties.
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagDefinition Create(string id, string name, string description, string units, TagDataType dataType, IEnumerable<DigitalState> states, IEnumerable<AdapterProperty> properties, IEnumerable<string> labels) {
+        public static TagDefinition Create(string id, string name, string description, string units, VariantType dataType, IEnumerable<DigitalState> states, IEnumerable<AdapterProperty> properties, IEnumerable<string> labels) {
             return new TagDefinition(id, name, description, units, dataType, states, properties, labels);
         }
 

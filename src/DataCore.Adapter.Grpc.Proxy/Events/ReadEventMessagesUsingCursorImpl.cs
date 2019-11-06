@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 var grpcRequest = new GetEventMessagesUsingCursorPositionRequest() {
                     AdapterId = AdapterId,
                     CursorPosition = request.CursorPosition ?? string.Empty,
-                    Direction = request.Direction.ToGrpcReadDirection(),
+                    Direction = request.Direction.ToGrpcEventReadDirection(),
                     MessageCount = request.MessageCount
                 };
                 var grpcResponse = client.GetEventMessagesUsingCursorPosition(grpcRequest, GetCallOptions(context, ct));
@@ -26,7 +26,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                         if (grpcResponse.ResponseStream.Current == null) {
                             continue;
                         }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterEventMessageWithCursorPosition(), ct).ConfigureAwait(false);
                     }
                 }
                 finally {

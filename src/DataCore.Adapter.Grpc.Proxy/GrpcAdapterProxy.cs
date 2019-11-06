@@ -10,7 +10,6 @@ using GrpcCore = Grpc.Core;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
 using System.Collections.Generic;
 
 namespace DataCore.Adapter.Grpc.Proxy {
@@ -19,6 +18,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
     public class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
+
+        /// <summary>
+        /// Gets the logger for the proxy.
+        /// </summary>
+        internal new ILogger Logger {
+            get { return base.Logger; }
+        }
 
         /// <summary>
         /// The ID of the remote adapter.

@@ -139,12 +139,11 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(tag));
             }
 
-            switch (tag.DataType) {
-                case TagDataType.State:
-                    return tag.States.FirstOrDefault(x => x.Value == numericValue)?.Name ?? TagValueBuilder.GetTextValue(numericValue, provider);
-                default:
-                    return TagValueBuilder.GetTextValue(numericValue, provider);
+            if (tag.DataType == Common.VariantType.Int32 && tag.States != null) {
+                return tag.States.FirstOrDefault(x => x.Value == numericValue)?.Name ?? TagValueBuilder.GetTextValue(numericValue, provider);
             }
+
+            return TagValueBuilder.GetTextValue(numericValue, provider);
         }
 
 
@@ -171,19 +170,18 @@ namespace DataCore.Adapter.RealTimeData {
 
             double num;
 
-            switch (tag.DataType) {
-                case TagDataType.State:
-                    var state = tag.States.FirstOrDefault(x => string.Equals(x.Name, textValue, StringComparison.OrdinalIgnoreCase));
-                    return state != null
-                        ? state.Value
-                        : double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
-                            ? num
-                            : double.NaN;
-                default:
-                    return double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
-                            ? num
-                            : double.NaN;
+            if (tag.DataType == Common.VariantType.Int32 && tag.States != null) {
+                var state = tag.States.FirstOrDefault(x => string.Equals(x.Name, textValue, StringComparison.OrdinalIgnoreCase));
+                return state != null
+                    ? state.Value
+                    : double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
+                        ? num
+                        : double.NaN;
             }
+
+            return double.TryParse(textValue, NumberStyles.Float | NumberStyles.AllowThousands, provider ?? CultureInfo.CurrentCulture, out num)
+                            ? num
+                            : double.NaN;
         }
 
     }

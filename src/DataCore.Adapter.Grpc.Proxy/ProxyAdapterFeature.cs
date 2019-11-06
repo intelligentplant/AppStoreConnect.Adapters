@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy {
@@ -26,6 +27,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// The proxy that the feature instance belongs to.
         /// </summary>
         private readonly GrpcAdapterProxy _proxy;
+
+        /// <summary>
+        /// Gets the logger for the proxy.
+        /// </summary>
+        protected ILogger Logger {
+            get { return _proxy.Logger; }
+        }
 
         /// <summary>
         /// The adapter ID for the remote adapter.

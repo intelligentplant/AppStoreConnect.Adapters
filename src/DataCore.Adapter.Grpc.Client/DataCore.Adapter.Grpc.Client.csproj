@@ -22,6 +22,7 @@
   
   <ItemGroup>
     <Protobuf Include="..\Protos\**\*.proto" GrpcServices="Client" />
+    <Compile Include="..\DataCore.Adapter.AspNetCore.Grpc\GrpcExtensions.cs" Link="GrpcExtensions.cs" />
     <Content Include="@(Protobuf)" LinkBase="Protos" Pack="false" />
   </ItemGroup>
   

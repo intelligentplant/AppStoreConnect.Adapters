@@ -261,8 +261,8 @@ namespace DataCore.Adapter.Tests {
                     "Child2"
                 },
                 new [] {
-                    new AssetModelNodeMeasurement("Measurement1", "AdapterId1", new TagSummary("Id1", "Name1", "Description1", "Units1", TagDataType.Numeric)),
-                    new AssetModelNodeMeasurement("Measurement2", "AdapterId2", new TagSummary("Id2", "Name2", "Description2", "Units2", TagDataType.Text))
+                    new AssetModelNodeMeasurement("Measurement1", "AdapterId1", new TagSummary("Id1", "Name1", "Description1", "Units1", VariantType.Double)),
+                    new AssetModelNodeMeasurement("Measurement2", "AdapterId2", new TagSummary("Id2", "Name2", "Description2", "Units2", VariantType.String))
                 },
                 new [] {
                     AdapterProperty.Create("Prop1", 100),
@@ -317,7 +317,7 @@ namespace DataCore.Adapter.Tests {
             var expected = new AssetModelNodeMeasurement(
                 "Name",
                 "Id",
-                new TagSummary("Id", "Name", "Description", "Units", TagDataType.Numeric)
+                new TagSummary("Id", "Name", "Description", "Units", VariantType.Double)
             );
 
             var json = JsonSerializer.Serialize(expected, options);
@@ -582,7 +582,7 @@ namespace DataCore.Adapter.Tests {
                "Name",
                "Description",
                "Units",
-               TagDataType.State,
+               VariantType.Int32,
                new [] {
                    new DigitalState("State1", 100),
                    new DigitalState("State2", 200)
@@ -658,7 +658,7 @@ namespace DataCore.Adapter.Tests {
                 "Name",
                 "Description",
                 "Units",
-                TagDataType.Numeric
+                VariantType.Double
             );
 
             var json = JsonSerializer.Serialize(expected, options);
