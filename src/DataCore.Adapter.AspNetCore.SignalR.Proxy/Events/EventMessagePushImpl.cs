@@ -69,6 +69,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             ///   Flags if the subscription is active or passive.
             /// </param>
             public EventMessageSubscription(EventMessagePushImpl feature, EventMessageSubscriptionType subscriptionType) {
+                _feature = feature;
                 _client = feature.GetClient();
                 _subscriptionType = subscriptionType;
                 _client.Reconnected += OnClientReconnected;
