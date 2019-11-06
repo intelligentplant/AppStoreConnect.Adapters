@@ -47,10 +47,10 @@ namespace DataCore.Adapter.Common {
         /// </exception>
         public AdapterDescriptor(string id, string name, string description) {
             Id = string.IsNullOrWhiteSpace(id)
-                ? throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(id))
+                ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
                 : id;
             Name = string.IsNullOrWhiteSpace(name)
-                ? throw new ArgumentException(SharedResources.Error_AdapterDescriptorNameIsRequired, nameof(name))
+                ? throw new ArgumentException(SharedResources.Error_NameIsRequired, nameof(name))
                 : name;
             Description = description;
         }

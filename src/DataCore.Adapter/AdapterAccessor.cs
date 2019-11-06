@@ -69,7 +69,7 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         async Task<IAdapter> IAdapterAccessor.GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(SharedResources.Error_AdapterDescriptorIdIsRequired, nameof(adapterId));
+                throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
 
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);

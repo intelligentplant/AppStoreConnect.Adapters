@@ -11,7 +11,7 @@ namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Allows an adapter that implements <see cref="IReadSnapshotTagValues"/> and 
-    /// <see cref="ITagSearch"/> to simulate <see cref="ISnapshotTagValuePush"/> by periodically 
+    /// <see cref="ITagInfo"/> to simulate <see cref="ISnapshotTagValuePush"/> by periodically 
     /// polling for new values for subscribed tags.
     /// </summary>
     public sealed class SimulatedSnapshotTagValuePush : PollingSnapshotTagValuePush {
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            return adapter.Features.Contains<IReadSnapshotTagValues>() && adapter.Features.Contains<ITagSearch>();
+            return adapter.Features.Contains<IReadSnapshotTagValues>() && adapter.Features.Contains<ITagInfo>();
         }
 
 
@@ -107,7 +107,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-            var feature = _adapter.Features.Get<ITagSearch>();
+            var feature = _adapter.Features.Get<ITagInfo>();
             if (feature == null) {
                 var result = Channel.CreateUnbounded<TagIdentifier>();
                 result.Writer.TryComplete();

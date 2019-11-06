@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package datacore.adapter;
 
-import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -206,6 +205,13 @@ message TagDefinition {
 message DigitalState {
     string name = 1;
     int32 value = 2;
+}
+
+
+message DigitalStateSet {
+    string id = 1;
+    string name = 2;
+    repeated DigitalState states = 3;
 }
 
 // Annotation models

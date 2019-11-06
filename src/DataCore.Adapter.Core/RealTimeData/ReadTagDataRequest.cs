@@ -29,7 +29,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
             if (Tags.Any(x => x == null)) {
-                yield return new ValidationResult(SharedResources.Error_TagNameOrIdCannotBeNull, new[] { nameof(Tags) });
+                yield return new ValidationResult(SharedResources.Error_NameOrIdCannotBeNull, new[] { nameof(Tags) });
             }
         }
 

@@ -61,24 +61,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You must specify an adapter ID..
-        /// </summary>
-        public static string Error_AdapterDescriptorIdIsRequired {
-            get {
-                return ResourceManager.GetString("Error_AdapterDescriptorIdIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You must specify an adapter name..
-        /// </summary>
-        public static string Error_AdapterDescriptorNameIsRequired {
-            get {
-                return ResourceManager.GetString("Error_AdapterDescriptorNameIsRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to You cannot specify a null data function name..
         /// </summary>
         public static string Error_DataFunctionCannotBeNull {
@@ -106,6 +88,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify an ID..
+        /// </summary>
+        public static string Error_IdIsRequired {
+            get {
+                return ResourceManager.GetString("Error_IdIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Interval count must be greater than zero..
         /// </summary>
         public static string Error_IntervalCountMustBeGreaterThanZero {
@@ -129,6 +120,24 @@ namespace DataCore.Adapter {
         public static string Error_InvalidTimeStamp {
             get {
                 return ResourceManager.GetString("Error_InvalidTimeStamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must specify a name..
+        /// </summary>
+        public static string Error_NameIsRequired {
+            get {
+                return ResourceManager.GetString("Error_NameIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You cannot specify a null name or ID..
+        /// </summary>
+        public static string Error_NameOrIdCannotBeNull {
+            get {
+                return ResourceManager.GetString("Error_NameOrIdCannotBeNull", resourceCulture);
             }
         }
         
@@ -174,15 +183,6 @@ namespace DataCore.Adapter {
         public static string Error_StartTimeCannotBeGreaterThanOrEqualToEndTime {
             get {
                 return ResourceManager.GetString("Error_StartTimeCannotBeGreaterThanOrEqualToEndTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You cannot specify a null tag name or ID..
-        /// </summary>
-        public static string Error_TagNameOrIdCannotBeNull {
-            get {
-                return ResourceManager.GetString("Error_TagNameOrIdCannotBeNull", resourceCulture);
             }
         }
         

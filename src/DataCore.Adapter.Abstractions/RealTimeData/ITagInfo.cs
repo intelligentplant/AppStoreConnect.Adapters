@@ -4,12 +4,12 @@ using System.Threading.Channels;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Feature for performing tag searches on an adapter.
+    /// Feature for requesting information about tags.
     /// </summary>
-    public interface ITagSearch : IAdapterFeature, ITagInfo {
+    public interface ITagInfo : IAdapterFeature {
 
         /// <summary>
-        /// Performs a tag search.
+        /// Gets tags by ID or name.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
@@ -21,9 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that the search results can be read from.
+        ///   The matching tag definitions.
         /// </returns>
-        ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken);
 
     }
 }

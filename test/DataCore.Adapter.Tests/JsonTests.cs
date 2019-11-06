@@ -368,6 +368,41 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public void DigitalStateSet_ShouldRoundTrip() {
+            var options = GetOptions();
+            var expected = new DigitalStateSet(
+                Guid.NewGuid().ToString(),
+                "StateSetName",
+                new [] {
+                    new DigitalState(
+                        "Name1",
+                        100
+                    ),
+                    new DigitalState(
+                        "Name2",
+                        200
+                    )
+                }
+            );
+
+            var json = JsonSerializer.Serialize(expected, options);
+            var actual = JsonSerializer.Deserialize<DigitalStateSet>(json, options);
+
+            Assert.AreEqual(expected.Id, actual.Id);
+            Assert.AreEqual(expected.Name, actual.Name);
+
+            Assert.AreEqual(expected.States.Count(), actual.States.Count());
+            for (var i = 0; i < expected.States.Count(); i++) {
+                var expectedValue = expected.States.ElementAt(i);
+                var actualValue = actual.States.ElementAt(i);
+
+                Assert.AreEqual(expectedValue.Name, actualValue.Name);
+                Assert.AreEqual(expectedValue.Value, actualValue.Value);
+            }
+        }
+
+
+        [TestMethod]
         public void EventMessage_ShouldRoundTrip() {
             var options = GetOptions();
             var expected = new EventMessage(
@@ -583,9 +618,9 @@ namespace DataCore.Adapter.Tests {
                "Description",
                "Units",
                VariantType.Int32,
-               new [] {
-                   new DigitalState("State1", 100),
-                   new DigitalState("State2", 200)
+               new[] { 
+                   DigitalState.Create("State1", 100),
+                   DigitalState.Create("State2", 200)
                },
                new [] {
                    AdapterProperty.Create("Prop1", 100),

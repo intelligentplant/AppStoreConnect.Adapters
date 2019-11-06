@@ -117,12 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Error_AdapterDescriptorIdIsRequired" xml:space="preserve">
-    <value>You must specify an adapter ID.</value>
-  </data>
-  <data name="Error_AdapterDescriptorNameIsRequired" xml:space="preserve">
-    <value>You must specify an adapter name.</value>
-  </data>
   <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null data function name.</value>
   </data>
@@ -132,6 +126,9 @@
   <data name="Error_EventMessageCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null event message.</value>
   </data>
+  <data name="Error_IdIsRequired" xml:space="preserve">
+    <value>You must specify an ID.</value>
+  </data>
   <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
     <value>Interval count must be greater than zero.</value>
   </data>
@@ -140,6 +137,12 @@
   </data>
   <data name="Error_InvalidTimeStamp" xml:space="preserve">
     <value>Invalid time stamp.</value>
+  </data>
+  <data name="Error_NameIsRequired" xml:space="preserve">
+    <value>You must specify a name.</value>
+  </data>
+  <data name="Error_NameOrIdCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null name or ID.</value>
   </data>
   <data name="Error_NodeIdCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null node ID.</value>
@@ -157,9 +160,6 @@
   </data>
   <data name="Error_StartTimeCannotBeGreaterThanOrEqualToEndTime" xml:space="preserve">
     <value>Start time cannot be greater than or equal to end time.</value>
-  </data>
-  <data name="Error_TagNameOrIdCannotBeNull" xml:space="preserve">
-    <value>You cannot specify a null tag name or ID.</value>
   </data>
   <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
     <value>At least one tag search filter field must be specified.</value>

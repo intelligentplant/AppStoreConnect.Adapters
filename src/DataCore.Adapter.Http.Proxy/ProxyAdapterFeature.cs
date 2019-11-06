@@ -82,6 +82,10 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The features supported by the remote adapter.
         /// </param>
         internal static void AddFeaturesToProxy(HttpAdapterProxy proxy, IEnumerable<string> remoteAdapterFeatures) {
+            // Tracks feature instances as we go, in case the same type implements multiple 
+            // features.
+            var featureInstances = new Dictionary<Type, object>();
+
             foreach (var item in remoteAdapterFeatures) {
                 var implementation = _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
 
@@ -92,7 +96,12 @@ namespace DataCore.Adapter.Http.Proxy {
                     continue;
                 }
 
-                proxy.AddFeature(implementation.Key, Activator.CreateInstance(implementation.Value, proxy));
+                if (!featureInstances.TryGetValue(implementation.Value, out var feature)) {
+                    feature = Activator.CreateInstance(implementation.Value, proxy);
+                    featureInstances[implementation.Value] = feature;
+                }
+
+                proxy.AddFeature(implementation.Key, feature);
             }
         }
 

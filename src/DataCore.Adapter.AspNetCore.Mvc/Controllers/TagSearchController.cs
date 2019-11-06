@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [ApiController]
     [Area("data-core")]
     [Route("api/[area]/v1.0/tags")]
-    public class TagSearchController: ControllerBase {
+    public class TagSearchController : ControllerBase {
 
         /// <summary>
         /// The <see cref="IAdapterCallContext"/> for the calling user.

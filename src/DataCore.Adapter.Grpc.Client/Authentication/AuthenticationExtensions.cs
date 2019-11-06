@@ -7,7 +7,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
     /// <summary>
     /// Extensions for <see cref="IClientCallCredentials"/>.
     /// </summary>
-    public static class Extensions {
+    public static class AuthenticationExtensions {
 
         /// <summary>
         /// Adds a metadata entry to the specified <see cref="GrpcCore.Metadata"/> collection.

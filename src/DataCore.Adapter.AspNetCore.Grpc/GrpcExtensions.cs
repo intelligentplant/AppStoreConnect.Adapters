@@ -885,6 +885,15 @@ namespace DataCore.Adapter {
                 Units = tag.Units ?? string.Empty
             };
 
+            if (tag.States != null) {
+                foreach (var item in tag.States) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.States.Add(item.ToGrpcDigitalState());
+                }
+            }
+
             if (tag.Labels != null) {
                 foreach (var item in tag.Labels) {
                     if (string.IsNullOrEmpty(item)) {
@@ -900,15 +909,6 @@ namespace DataCore.Adapter {
                         continue;
                     }
                     result.Properties.Add(item.ToGrpcProperty());
-                }
-            }
-
-            if (tag.States != null) {
-                foreach (var item in tag.States) {
-                    if (item == null) {
-                        continue;
-                    }
-                    result.States.Add(item.ToGrpcDigitalState());
                 }
             }
 
@@ -943,6 +943,39 @@ namespace DataCore.Adapter {
                 Name = state.Name ?? string.Empty,
                 Value = state.Value
             };
+        }
+
+
+        public static RealTimeData.DigitalStateSet ToAdapterDigitalStateSet(this Grpc.DigitalStateSet set) {
+            if (set == null) {
+                return null;
+            }
+
+            return RealTimeData.DigitalStateSet.Create(set.Id, set.Name, set.States.Select(x => x.ToAdapterDigitalState()));
+        }
+
+
+        public static Grpc.DigitalStateSet ToGrpcDigitalStateSet(this RealTimeData.DigitalStateSet set) {
+            if (set == null) {
+                return null;
+            }
+
+            var result = new Grpc.DigitalStateSet() {
+                Id = set.Id ?? string.Empty,
+                Name = set.Name ?? string.Empty
+            };
+
+            if (set.States != null) {
+                foreach (var item in set.States) {
+                    if (item == null) {
+                        continue;
+                    }
+
+                    result.States.Add(item.ToGrpcDigitalState());
+                }
+            }
+
+            return result;
         }
 
 
