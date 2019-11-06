@@ -117,23 +117,6 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        /// <summary>
-        /// Infrastructure only. <see cref="TagDefinitionExtensions.GetTextValue(TagDefinition, double, IFormatProvider)"/> 
-        /// should be used instead.
-        /// </summary>
-        /// <param name="numericValue">
-        ///   The numeric value.
-        /// </param>
-        /// <param name="provider">
-        ///   The format provider to use.
-        /// </param>
-        /// <returns>
-        ///   The equivalent text value.
-        /// </returns>
-        internal static string GetTextValue(double numericValue, IFormatProvider provider = null) {
-            return numericValue.ToString(provider ?? CultureInfo.CurrentCulture);
-        }
-
 
         /// <summary>
         /// Updates the UTC sample time for the value.
