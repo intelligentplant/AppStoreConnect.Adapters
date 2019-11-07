@@ -137,9 +137,9 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override async Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+        protected override async Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             var channel = CreateChannel(5000, BoundedChannelFullMode.Wait);
-            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tagIds, ch, ct), true, TaskScheduler, cancellationToken);
+            channel.Writer.RunBackgroundOperation((ch, ct) => GetSnapshotTagValues(tags.Select(x => x.Id).ToArray(), ch, ct), true, TaskScheduler, cancellationToken);
             
             while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!channel.Reader.TryRead(out var val) || val == null) {
@@ -152,7 +152,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override Task OnUnsubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+        protected override Task OnUnsubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             return Task.CompletedTask;
         }
 

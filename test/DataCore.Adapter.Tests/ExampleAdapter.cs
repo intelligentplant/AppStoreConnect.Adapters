@@ -72,12 +72,12 @@ namespace DataCore.Adapter.Tests {
             }
 
 
-            protected override Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+            protected override Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
                 return Task.CompletedTask;
             }
 
 
-            protected override Task OnUnsubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken) {
+            protected override Task OnUnsubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
                 return Task.CompletedTask;
             }
 

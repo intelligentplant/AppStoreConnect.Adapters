@@ -240,7 +240,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         private async Task OnTagsAddedToSubscription(Subscription subscription, IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             var length = tags.Count();
-            var newTags = new List<string>(length);
+            var newTags = new List<TagIdentifier>(length);
 
             foreach (var tag in tags) {
                 if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
@@ -255,7 +255,7 @@ namespace DataCore.Adapter.RealTimeData {
                     }
 
                     if (subscribersForTag.Count == 0) {
-                        newTags.Add(tag.Id);
+                        newTags.Add(tag);
                     }
 
                     subscribersForTag.Add(subscription);
@@ -289,7 +289,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         private async Task OnTagsRemovedFromSubscription(Subscription subscription, IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             var length = tags.Count();
-            var tagsToRemove = new List<string>(length);
+            var tagsToRemove = new List<TagIdentifier>(length);
 
             foreach (var tag in tags) {
                 if (string.IsNullOrWhiteSpace(tag.Id)) {
@@ -305,7 +305,7 @@ namespace DataCore.Adapter.RealTimeData {
                     subscribersForTag.Remove(subscription);
                     if (subscribersForTag.Count == 0) {
                         _subscriptionsByTagId.Remove(tag.Id);
-                        tagsToRemove.Add(tag.Id);
+                        tagsToRemove.Add(tag);
                     }
                 }
                 finally {
@@ -430,8 +430,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Called whenever the total subscriber count for a tag changes from zero to greater than zero.
         /// </summary>
-        /// <param name="tagIds">
-        ///   The tag IDs that have been subscribed to.
+        /// <param name="tags">
+        ///   The tag that have been subscribed to.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -442,14 +442,14 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see cref="OnValuesChanged(IEnumerable{TagValueQueryResult})"/> to register the 
         ///   initial value of each tag with the subscription manager.
         /// </returns>
-        protected abstract Task OnSubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken);
+        protected abstract Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken);
 
 
         /// <summary>
         /// Called whenever the total subscriber count for a tag changes from greater than zero to zero.
         /// </summary>
-        /// <param name="tagIds">
-        ///   The tag IDs that have been unsubscribed from.
+        /// <param name="tags">
+        ///   The tags that have been unsubscribed from.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -458,7 +458,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will perform any additional subscription teardown actions required by the 
         ///   adapter.
         /// </returns>
-        protected abstract Task OnUnsubscribe(IEnumerable<string> tagIds, CancellationToken cancellationToken);
+        protected abstract Task OnUnsubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken);
 
 
         /// <summary>
