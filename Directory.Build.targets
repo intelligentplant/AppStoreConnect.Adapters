@@ -6,6 +6,11 @@
   </PropertyGroup>
   <Import Project="$(ParentProject)" Condition=" '$(ParentProject)' != '' " /> 
 
+  <!-- Opt in to FxCop and SourceLink package references by default. -->
+  <PropertyGroup>
+    <IncludeDevelopmentPackages Condition=" '$(IncludeDevelopmentPackages)' == '' ">true</IncludeDevelopmentPackages>
+  </PropertyGroup>
+
   <!-- SourceLink settings -->
   <PropertyGroup>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -14,7 +19,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(IncludeDevelopmentPackages)' == 'true' ">
     <!-- FxCop NuGet Package -->
     <PackageReference Remove="Microsoft.CodeAnalysis.FxCopAnalyzers" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.4">
