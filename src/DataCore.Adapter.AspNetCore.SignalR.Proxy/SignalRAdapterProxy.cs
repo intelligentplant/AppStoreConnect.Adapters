@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 

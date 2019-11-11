@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Events;
 using Grpc.Core;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
     public class EventsServiceImpl : EventsService.EventsServiceBase {

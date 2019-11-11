@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                 options.UseAdapterAccessor<AspNetCoreAdapterAccessor>();
             }
 
-            services.AddSingleton<IBackgroundTaskService, AspNetCoreBackgroundTaskService>();
+            services.AddBackgroundTaskService();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAdapterCallContext, AdapterCallContext>();
 
@@ -44,7 +44,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             services.AddSingleton<HostInfo>(sp => HostInfo.FromExisting(options.HostInfo ?? HostInfo.Unspecified));
-            services.AddHostedService<AspNetCoreBackgroundTaskServiceRunner>();
             services.AddHostedService<AdapterInitializer>();
 
             return services;

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Events;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Example {

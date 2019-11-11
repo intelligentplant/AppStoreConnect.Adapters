@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
 using System.Collections.Generic;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 

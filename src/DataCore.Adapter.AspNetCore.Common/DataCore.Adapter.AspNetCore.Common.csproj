@@ -15,6 +15,10 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="1.0.0" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />

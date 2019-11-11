@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {

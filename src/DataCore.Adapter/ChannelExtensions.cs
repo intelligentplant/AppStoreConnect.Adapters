@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter {
 
@@ -537,7 +538,7 @@ namespace DataCore.Adapter {
                         channel.TryComplete();
                     }
                 }
-            }, cancellationToken);
+            }, null, cancellationToken);
         }
 
 
@@ -598,7 +599,7 @@ namespace DataCore.Adapter {
                         channel.TryComplete();
                     }
                 }
-            }, cancellationToken);
+            }, null, cancellationToken);
         }
 
 
@@ -641,7 +642,7 @@ namespace DataCore.Adapter {
 
             scheduler.QueueBackgroundWorkItem(async ct => {
                 await workItem(channel, ct).ConfigureAwait(false);
-            }, cancellationToken);
+            }, null, cancellationToken);
         }
 
 
@@ -684,7 +685,7 @@ namespace DataCore.Adapter {
 
             scheduler.QueueBackgroundWorkItem(ct => {
                 workItem(channel, ct);
-            }, cancellationToken);
+            }, null, cancellationToken);
         }
 
 

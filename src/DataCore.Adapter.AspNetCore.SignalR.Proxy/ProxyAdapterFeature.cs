@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {

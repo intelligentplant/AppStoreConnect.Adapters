@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter {

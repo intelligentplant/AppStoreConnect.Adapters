@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Http.Client;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy {

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AssetModel;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Example.Features {
     internal class AssetModelBrowser : IAssetModelBrowse, IAssetModelSearch {
