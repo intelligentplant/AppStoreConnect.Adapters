@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                 options.UseAdapterAccessor<AspNetCoreAdapterAccessor>();
             }
 
-            services.AddBackgroundTaskService();
+            services.AddBackgroundTaskService(options.BackgroundTaskServiceOptions);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAdapterCallContext, AdapterCallContext>();
 

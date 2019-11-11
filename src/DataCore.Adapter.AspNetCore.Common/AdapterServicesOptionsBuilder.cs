@@ -15,6 +15,11 @@ namespace DataCore.Adapter.AspNetCore {
         public HostInfo HostInfo { get; set; }
 
         /// <summary>
+        /// A delegate for configuring background task service options.
+        /// </summary>
+        public Action<IntelligentPlant.BackgroundTasks.BackgroundTaskServiceOptions> BackgroundTaskServiceOptions { get; set; }
+
+        /// <summary>
         /// The <see cref="IAdapterAccessor"/> type to use.
         /// </summary>
         internal Type AdapterAccessorType { get; private set; }
