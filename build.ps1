@@ -23,21 +23,29 @@ Building release packages.
 #>
 [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName='Groups')]
 param(
-    [ValidateSet('Debug', 'Release')]$Configuration,
+    [ValidateSet('Debug', 'Release')]
+    [string]
+    $Configuration,
 
-    [switch]$Clean,
+    [switch]
+    $Clean,
 
-    [switch]$Pack,
+    [switch]
+    $Pack,
 
-    [switch]$Sign,
+    [switch]
+    $Sign,
     
-    [string]$Verbosity = 'minimal',
+    [string]
+    $Verbosity = 'minimal',
 
-    [switch]$Help,
+    [switch]
+    $Help,
 
     # Remaining arguments will be passed to MSBuild directly
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$MSBuildArguments
+    [string[]]
+    $MSBuildArguments
 )
 
 Set-StrictMode -Version 2
@@ -46,7 +54,7 @@ $SolutionFile = "$PSScriptRoot/DataCore.Adapter.sln"
 $Artifacts = "$PSScriptRoot/artifacts"
 
 if ($Help) {
-    Get-Help $PSCommandPath
+    Get-Help $PSCommandPath -Detailed
     exit 1
 }
 
@@ -72,7 +80,7 @@ $MSBuildArguments += "/t:$targets"
 if (-not $Configuration) {
     $Configuration = 'Debug'
 }
-$MSBuildArguments += "/p:Configuration=$Configuration"
+$MSBuildArguments += "/p:""Configuration=$Configuration"""
 
 # If the Sign flag is set, add a SignOutput build argument.
 if ($Sign) {
