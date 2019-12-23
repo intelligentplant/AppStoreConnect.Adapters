@@ -1,7 +1,7 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Hubs;
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_1
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 #endif
@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </summary>
         public const string HubRoute = "/signalr/data-core/v1.0";
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_1
 
         /// <summary>
         /// Maps adapter hub endpoints.
