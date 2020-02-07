@@ -249,10 +249,9 @@ namespace DataCore.Adapter.Csv {
                 Values = values,
                 IsDataLoopingAllowed = options.IsDataLoopingAllowed
             };
-
-            var csvConfig = new CsvHelper.Configuration.Configuration() {
-                PrepareHeaderForMatch = (header, index) => header?.Trim()?.ToUpperInvariant(),
-                CultureInfo = options?.CultureInfo ?? CultureInfo.CurrentCulture
+            
+            var csvConfig = new CsvHelper.Configuration.CsvConfiguration(options?.CultureInfo ?? CultureInfo.CurrentCulture) {
+                PrepareHeaderForMatch = (header, index) => header?.Trim()?.ToUpperInvariant()
             };
 
             var timeStampColumnIndex = options.TimeStampFieldIndex;

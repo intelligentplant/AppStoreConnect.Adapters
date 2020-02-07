@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.9.1" />
-    <PackageReference Include="Grpc.Core" Version="2.23.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.23.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
-    <PackageReference Include="System.Text.Json" Version="4.6.0" />
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
+    <PackageReference Include="Grpc.Core" Version="$(GrpcCoreVersion)" />
+    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
   </ItemGroup>
 
   <ItemGroup>

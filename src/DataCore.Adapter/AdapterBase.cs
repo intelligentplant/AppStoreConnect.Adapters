@@ -357,7 +357,7 @@ namespace DataCore.Adapter {
         /// Disposes of the adapter.
         /// </summary>
         void IDisposable.Dispose() {
-            ((IAsyncDisposable) this).DisposeAsync().GetAwaiter().GetResult();
+            Task.Run(() => ((IAsyncDisposable) this).DisposeAsync()).GetAwaiter().GetResult();
         }
 
 

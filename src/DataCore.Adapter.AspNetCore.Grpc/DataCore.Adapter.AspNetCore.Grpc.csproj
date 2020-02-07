@@ -12,10 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.9.1" />
-    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.23.2" />
-    <PackageReference Include="Grpc.Core" Version="2.23.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.23.0" PrivateAssets="all" />
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="$(GrpcAspNetCoreServerVersion)" />
+    <PackageReference Include="Grpc.Core" Version="$(GrpcCoreVersion)" />
+    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -52,6 +52,11 @@ Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) f
 The [examples](/examples) folder contains example host and client applications.
 
 
+# NuGet Package References
+
+Package versions are defined in a [common build properties file](/build/Dependencies.props).
+
+
 # ASP.NET Core Quick Start
 
 1. Create a new ASP.NET Core 3.0 project.

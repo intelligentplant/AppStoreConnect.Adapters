@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jaahas.HttpRequestTransformer" Version="1.0.1" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
+    <PackageReference Include="Jaahas.HttpRequestTransformer" Version="$(JaahasHttpRequestTransformerVersion)" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="$(MicrosoftAspNetWebApiClientVersion)" />
   </ItemGroup>
   
   <ItemGroup>

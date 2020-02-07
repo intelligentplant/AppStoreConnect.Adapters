@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.0.0" />
-    <PackageReference Include="NSwag.AspNetCore" Version="13.1.3" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
+    <PackageReference Include="NSwag.AspNetCore" Version="$(NSwagAspNetCoreVersion)" />
   </ItemGroup>
   
   <ItemGroup>

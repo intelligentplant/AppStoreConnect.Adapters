@@ -1,0 +1,35 @@
+<!-- Contains NuGet package versions used throughout the rest of the repository. -->
+
+<Project>
+  <PropertyGroup>
+    <CsvHelperVersion>15.0.0</CsvHelperVersion>
+    <GoogleProtobufVersion>3.11.3</GoogleProtobufVersion>
+    <GrpcAspNetCoreServerVersion>2.26.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.27.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.26.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.27.0</GrpcToolsVersion>
+    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.0</IntelligentPlantBackgroundTasksAspNetCoreVersion>
+    <IntelligentPlantBackgroundTasksVersion>1.0.0</IntelligentPlantBackgroundTasksVersion>
+    <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
+    <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
+    <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>3.1.1</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.1</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
+    <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
+    <MicrosoftBclAsyncInterfacesVersion>1.1.0</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>2.9.8</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.1</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.1</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftNETTestSdkVersion>16.5.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
+    <MSTestTestAdapterVersion>2.1.0</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion>2.1.0</MSTestTestFrameworkVersion>
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
+    <NSwagAspNetCoreVersion>13.2.2</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>5.4.0</NuGetVersioningVersion>
+    <SystemComponentModelAnnotationsVersion>4.7.0</SystemComponentModelAnnotationsVersion>
+    <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
+    <SystemThreadingChannelsVersion>4.7.0</SystemThreadingChannelsVersion>
+  </PropertyGroup>
+</Project>

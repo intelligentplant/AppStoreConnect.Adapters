@@ -65,7 +65,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Http.Proxy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Json", "src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj", "{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.HealthChecks", "src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj", "{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.HealthChecks", "src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj", "{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
+	ProjectSection(SolutionItems) = preProject
+		build\Dependencies.props = build\Dependencies.props
+		build\increment-version.ps1 = build\increment-version.ps1
+		build\tools.ps1 = build\tools.ps1
+		build\version.json = build\version.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

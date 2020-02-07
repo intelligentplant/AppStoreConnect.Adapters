@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="$(MicrosoftAspNetCoreSignalRVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
