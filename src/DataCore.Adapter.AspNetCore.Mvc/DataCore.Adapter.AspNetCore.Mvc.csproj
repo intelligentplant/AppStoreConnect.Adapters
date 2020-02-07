@@ -1,18 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Mvc</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+<<<<<<< HEAD
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(MicrosoftAspNetCoreMvcVersion)" />
+=======
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+>>>>>>> b36eadda04390a49678217f09fe60ff5635a9479
   </ItemGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
