@@ -22,22 +22,14 @@
   <ItemGroup Condition=" '$(IncludeDevelopmentPackages)' == 'true' ">
     <!-- FxCop NuGet Package -->
     <PackageReference Remove="Microsoft.CodeAnalysis.FxCopAnalyzers" />
-<<<<<<< HEAD
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(MicrosoftCodeAnalysisFxCopAnalyzersVersion)">
-=======
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
->>>>>>> b36eadda04390a49678217f09fe60ff5635a9479
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
 
     <!-- SourceLink NuGet Package -->
     <PackageReference Remove="Microsoft.SourceLink.GitHub" />
-<<<<<<< HEAD
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkGitHubVersion)">
-=======
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
->>>>>>> b36eadda04390a49678217f09fe60ff5635a9479
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

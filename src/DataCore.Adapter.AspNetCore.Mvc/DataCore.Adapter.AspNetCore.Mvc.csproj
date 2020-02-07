@@ -8,13 +8,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-<<<<<<< HEAD
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(MicrosoftAspNetCoreMvcVersion)" />
-=======
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
->>>>>>> b36eadda04390a49678217f09fe60ff5635a9479
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(MicrosoftAspNetCoreMvcVersion)" />
   </ItemGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
