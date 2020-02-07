@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.1.3.0 (NJsonSchema v10.0.27.0 (Newtonsoft.Json v9.0.0.0))",
+  "x-generator": "NSwag v13.2.2.0 (NJsonSchema v10.1.4.0 (Newtonsoft.Json v12.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
@@ -598,11 +598,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful responses contain the matching TagValueAnnotation object.\n            ",
+            "description": "Successful responses contain the matching TagValueAnnotationExtended object.\n            ",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagValueAnnotation"
+                  "$ref": "#/components/schemas/TagValueAnnotationExtended"
                 }
               }
             }
@@ -656,7 +656,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TagValueAnnotationBase"
+                "$ref": "#/components/schemas/TagValueAnnotation"
               }
             }
           },
@@ -768,7 +768,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TagValueAnnotationBase"
+                "$ref": "#/components/schemas/TagValueAnnotation"
               }
             }
           },
@@ -1720,11 +1720,21 @@
             "properties": {
               "description": {
                 "type": "string",
+                "description": "The tag description.",
                 "nullable": true
               },
               "units": {
                 "type": "string",
+                "description": "The tag units.",
                 "nullable": true
+              },
+              "dataType": {
+                "description": "The tag data type.",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/VariantType"
+                  }
+                ]
               }
             }
           }
@@ -2232,7 +2242,7 @@
                 "description": "The annotation.",
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/TagValueAnnotation"
+                    "$ref": "#/components/schemas/TagValueAnnotationExtended"
                   }
                 ]
               }
@@ -2240,10 +2250,10 @@
           }
         ]
       },
-      "TagValueAnnotation": {
+      "TagValueAnnotationExtended": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/TagValueAnnotationBase"
+            "$ref": "#/components/schemas/TagValueAnnotation"
           },
           {
             "type": "object",
@@ -2262,7 +2272,7 @@
           }
         ]
       },
-      "TagValueAnnotationBase": {
+      "TagValueAnnotation": {
         "type": "object",
         "description": "Describes the base set of properties for a tag value annotation.",
         "additionalProperties": false,
@@ -2310,12 +2320,14 @@
         "type": "integer",
         "description": "Specifies the type of an annotation.",
         "x-enumNames": [
+          "Unknown",
           "Instantaneous",
           "TimeRange"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "TagDataContainer": {
@@ -2458,17 +2470,9 @@
             "description": "Describes a tag definition.",
             "additionalProperties": false,
             "properties": {
-              "dataType": {
-                "description": "The tag's data type.",
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/TagDataType"
-                  }
-                ]
-              },
               "states": {
                 "type": "array",
-                "description": "The discrete states for the tag. If DataType is not State, \nthis property will be null.",
+                "description": "The discrete states for the tag. If DataType is not \nInt32, this property will be null.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/DigitalState"
@@ -2492,20 +2496,6 @@
               }
             }
           }
-        ]
-      },
-      "TagDataType": {
-        "type": "integer",
-        "description": "Describes the data type for a tag.",
-        "x-enumNames": [
-          "Numeric",
-          "Text",
-          "State"
-        ],
-        "enum": [
-          0,
-          1,
-          2
         ]
       },
       "DigitalState": {
@@ -2614,7 +2604,7 @@
                 "description": "The tag value.",
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/TagValue"
+                    "$ref": "#/components/schemas/TagValueExtended"
                   }
                 ]
               }
@@ -2622,10 +2612,10 @@
           }
         ]
       },
-      "TagValue": {
+      "TagValueExtended": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/TagValueBase"
+            "$ref": "#/components/schemas/TagValue"
           },
           {
             "type": "object",
@@ -2654,7 +2644,7 @@
           }
         ]
       },
-      "TagValueBase": {
+      "TagValue": {
         "type": "object",
         "description": "Describes the base set of properties for a tag value.",
         "additionalProperties": false,
@@ -2956,7 +2946,7 @@
             "description": "The tag value.",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/TagValueBase"
+                "$ref": "#/components/schemas/TagValue"
               }
             ]
           }
