@@ -38,11 +38,21 @@ namespace DataCore.Adapter.RealTimeData {
         private const string FunctionNameRange = "RANGE";
 
         /// <summary>
+        /// Percent good function name.
+        /// </summary>
+        private const string FunctionNamePercentGood = "PERCENTGOOD";
+        
+        /// <summary>
+        /// Percent bad function name.
+        /// </summary>
+        private const string FunctionNamePercentBad= "PERCENTBAD";
+
+        /// <summary>
         /// Interpolation between samples.
         /// </summary>
         public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
             FunctionNameInterpolate,
-            FunctionNameInterpolate,
+            Resources.DataFunction_Interp_Name,
             Resources.DataFunction_Interp_Description
         );
 
@@ -51,7 +61,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Average { get; } = DataFunctionDescriptor.Create(
             FunctionNameAverage,
-            FunctionNameAverage, 
+            Resources.DataFunction_Avg_Name, 
             Resources.DataFunction_Avg_Description
         );
 
@@ -60,7 +70,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Minimum { get; } = DataFunctionDescriptor.Create(
             FunctionNameMinimum,
-            FunctionNameMinimum,
+            Resources.DataFunction_Min_Name,
             Resources.DataFunction_Min_Description
         );
 
@@ -69,7 +79,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Maximum { get; } = DataFunctionDescriptor.Create(
             FunctionNameMaximum,
-            FunctionNameMaximum,
+            Resources.DataFunction_Max_Name,
             Resources.DataFunction_Max_Description
         );
 
@@ -78,7 +88,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Count { get; } = DataFunctionDescriptor.Create(
             FunctionNameCount,
-            FunctionNameCount,
+            Resources.DataFunction_Count_Name,
             Resources.DataFunction_Count_Description
         );
 
@@ -87,13 +97,31 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Range { get; } = DataFunctionDescriptor.Create(
             FunctionNameRange,
-            FunctionNameRange,
+            Resources.DataFunction_Range_Name,
             Resources.DataFunction_Range_Description
+        );
+
+        /// <summary>
+        /// Percentage of raw samples in a time period that have good-quality status. 
+        /// </summary>
+        public static DataFunctionDescriptor PercentGood { get; } = DataFunctionDescriptor.Create(
+            FunctionNamePercentGood,
+            Resources.DataFunction_PercentGood_Name,
+            Resources.DataFunction_PercentGood_Description
+        );
+
+        /// <summary>
+        /// Percentage of raw samples in a time period that have bad-quality status. 
+        /// </summary>
+        public static DataFunctionDescriptor PercentBad { get; } = DataFunctionDescriptor.Create(
+            FunctionNamePercentBad,
+            Resources.DataFunction_PercentBad_Name,
+            Resources.DataFunction_PercentBad_Description
         );
 
 
         /// <summary>
-        /// Collection of all default data functions, used by <see cref="FindByNameOrId"/>.
+        /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
             Interpolate,
@@ -101,26 +129,28 @@ namespace DataCore.Adapter.RealTimeData {
             Minimum,
             Maximum,
             Count,
-            Range
+            Range,
+            PercentGood,
+            PercentBad
         };
 
 
         /// <summary>
-        /// Finds the specified default <see cref="DataFunctionDescriptor"/> for name or ID.
+        /// Finds the specified default <see cref="DataFunctionDescriptor"/> for a given ID.
         /// </summary>
-        /// <param name="nameOrId">
-        ///   The name or ID of the data function to retrieve.
+        /// <param name="id">
+        ///   The ID of the data function to retrieve.
         /// </param>
         /// <returns>
         ///   The matching <see cref="DataFunctionDescriptor"/>, or <see langword="null"/> if no 
         ///   match was found.
         /// </returns>
-        public static DataFunctionDescriptor FindByNameOrId(string nameOrId) {
-            if (string.IsNullOrEmpty(nameOrId)) {
+        public static DataFunctionDescriptor FindById(string id) {
+            if (string.IsNullOrEmpty(id)) {
                 return null;
             }
 
-            return s_defaultDataFunctions.FirstOrDefault(x => string.Equals(x.Id, nameOrId, System.StringComparison.Ordinal) || string.Equals(x.Name, nameOrId, System.StringComparison.OrdinalIgnoreCase));
+            return s_defaultDataFunctions.FirstOrDefault(x => string.Equals(x.Id, id, System.StringComparison.Ordinal));
         }
 
     }

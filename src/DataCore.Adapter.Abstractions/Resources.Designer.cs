@@ -70,11 +70,29 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average.
+        /// </summary>
+        internal static string DataFunction_Avg_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Avg_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of raw samples that have been recorded for the tag over the sample period..
         /// </summary>
         internal static string DataFunction_Count_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Count_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        internal static string DataFunction_Count_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Count_Name", resourceCulture);
             }
         }
         
@@ -88,11 +106,29 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Interpolated.
+        /// </summary>
+        internal static string DataFunction_Interp_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Interp_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
         /// </summary>
         internal static string DataFunction_Max_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Max_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum.
+        /// </summary>
+        internal static string DataFunction_Max_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Max_Name", resourceCulture);
             }
         }
         
@@ -106,11 +142,47 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Computes a visualization-friendly data set by selecting significant raw values in each sample interval..
+        ///   Looks up a localized string similar to Minimum.
         /// </summary>
-        internal static string DataFunction_Plot_Description {
+        internal static string DataFunction_Min_Name {
             get {
-                return ResourceManager.GetString("DataFunction_Plot_Description", resourceCulture);
+                return ResourceManager.GetString("DataFunction_Min_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status..
+        /// </summary>
+        internal static string DataFunction_PercentBad_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentBad_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percent Bad.
+        /// </summary>
+        internal static string DataFunction_PercentBad_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentBad_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status..
+        /// </summary>
+        internal static string DataFunction_PercentGood_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentGood_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percent Good.
+        /// </summary>
+        internal static string DataFunction_PercentGood_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentGood_Name", resourceCulture);
             }
         }
         
@@ -120,6 +192,15 @@ namespace DataCore.Adapter {
         internal static string DataFunction_Range_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Range_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Range.
+        /// </summary>
+        internal static string DataFunction_Range_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Range_Name", resourceCulture);
             }
         }
         

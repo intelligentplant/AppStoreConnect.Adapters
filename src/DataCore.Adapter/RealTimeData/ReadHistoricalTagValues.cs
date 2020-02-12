@@ -35,6 +35,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
 
+        /// <summary>
+        /// Provides aggregation support.
+        /// </summary>
+        private readonly AggregationHelper _aggregationHelper = new AggregationHelper();
+
 
         /// <summary>
         /// Creates a new <see cref="ReadHistoricalTagValues"/> object.
@@ -106,9 +111,66 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Registers a custom data function that can be used in calls to 
+        /// <see cref="ReadProcessedTagValues"/>.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The function descriptor.
+        /// </param>
+        /// <param name="calculator">
+        ///   The calculation delegate for the aggregate function.
+        /// </param>
+        /// <returns>
+        ///   A flag that indicates if the registration was successful. See the remarks section 
+        ///   for more information.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="calculator"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Registration will fail if another function with the same ID is already registered. 
+        ///   Built-in functions cannot be overridden.
+        /// </remarks>
+        public bool RegisterDataFunction(DataFunctionDescriptor descriptor, AggregateCalculator calculator) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+            if (calculator == null) {
+                throw new ArgumentNullException(nameof(calculator));
+            }
+
+            return _aggregationHelper.RegisterDataFunction(descriptor, calculator);
+        }
+
+
+        /// <summary>
+        /// Unregisters a custom data function previously registered using <see cref="RegisterDataFunction"/>.
+        /// </summary>
+        /// <param name="functionId">
+        ///   The ID of the custom data function.
+        /// </param>
+        /// <returns>
+        ///   A flag that indicates if the registration was removed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="functionId"/> is <see langword="null"/>.
+        /// </exception>
+        public bool UnregisterDataFunction(string functionId) {
+            if (functionId == null) {
+                throw new ArgumentNullException(nameof(functionId));
+            }
+
+            return _aggregationHelper.UnregisterDataFunction(functionId);
+        }
+
+
         /// <inheritdoc/>
         public Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return Task.FromResult(AggregationHelper.GetSupportedDataFunctions());
+            return Task.FromResult(_aggregationHelper.GetSupportedDataFunctions());
         }
 
 
@@ -134,7 +196,7 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct);
 
-                    var resultValuesReader = AggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
+                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;

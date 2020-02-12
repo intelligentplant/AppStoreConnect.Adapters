@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,11 +9,62 @@ using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
+
+    /// <summary>
+    /// Calculates the aggregated values for the specified bucket.
+    /// </summary>
+    /// <param name="tag">
+    ///   The tag that the calculation is being performed for.
+    /// </param>
+    /// <param name="bucket">
+    ///   The bucket to calculate values for.
+    /// </param>
+    /// <returns>
+    ///   The calculated values for the bucket.
+    /// </returns>
+    public delegate IEnumerable<TagValueExtended> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
+
+
     /// <summary>
     /// Utility class for performing data aggregation (e.g. if a data source does not natively 
     /// support aggregation).
     /// </summary>
-    public static class AggregationHelper {
+    public class AggregationHelper {
+
+        #region [ Fields ]
+
+        /// <summary>
+        /// Maps from aggregate ID to the <see cref="AggregateCalculator"/> implementation for 
+        /// default aggregation types.
+        /// </summary>
+        private static readonly Dictionary<string, AggregateCalculator> s_defaultAggregatorMap = new Dictionary<string, AggregateCalculator>(StringComparer.OrdinalIgnoreCase) {
+            { DefaultDataFunctions.Average.Id, CalculateAverage },
+            { DefaultDataFunctions.Count.Id, CalculateCount },
+            { DefaultDataFunctions.Interpolate.Id, CalculateInterpolated },
+            { DefaultDataFunctions.Maximum.Id, CalculateMaximum },
+            { DefaultDataFunctions.Minimum.Id, CalculateMinimum },
+            { DefaultDataFunctions.PercentBad.Id, CalculatePercentBad },
+            { DefaultDataFunctions.PercentGood.Id, CalculatePercentGood },
+            { DefaultDataFunctions.Range.Id, CalculateRange }
+        };
+
+        /// <summary>
+        /// The descriptors for the default supported data functions.
+        /// </summary>
+        private static readonly Lazy<IEnumerable<DataFunctionDescriptor>> s_defaultDataFunctions = new Lazy<IEnumerable<DataFunctionDescriptor>>(() => s_defaultAggregatorMap.Keys.Select(x => DefaultDataFunctions.FindById(x)).ToArray(), LazyThreadSafetyMode.PublicationOnly);
+
+        /// <summary>
+        /// Maps from aggregate ID to descriptor for custom aggregates that have been registered.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, DataFunctionDescriptor> _customAggregates = new ConcurrentDictionary<string, DataFunctionDescriptor>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Maps from aggregate ID to the <see cref="AggregateCalculator"/> implementation for 
+        /// custom aggregation types.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, AggregateCalculator> _customAggregatorMap = new ConcurrentDictionary<string, AggregateCalculator>(StringComparer.OrdinalIgnoreCase);
+
+        #endregion
 
         #region [ Interpolate ]
 
@@ -222,7 +274,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The calculated tag value.
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculateCount(TagDefinition tag, TagValueBucket currentBucket) {
-            var numericValue = currentBucket.RawSamples.Count();
+            var numericValue = currentBucket.RawSamples.Count;
 
             return new[] {
                 TagValueBuilder.Create()
@@ -278,6 +330,76 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         #endregion
 
+        #region [ PercentGood ]
+
+        /// <summary>
+        /// Returns a value describing the percentage of raw samples in the provided bucket that 
+        /// have good quality.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculatePercentGood(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
+                return Array.Empty<TagValueExtended>();
+            }
+
+            var sampleCount = currentBucket.RawSamples.Count;
+            var percentGoodCount = currentBucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
+
+            return new[] {
+                TagValueBuilder.Create()
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithValue((double) percentGoodCount / sampleCount * 100)
+                    .WithUnits("%")
+                    .WithStatus(TagValueStatus.Good)
+                    .Build()
+            };
+        }
+
+        #endregion
+
+        #region [ PercentBad ]
+
+        /// <summary>
+        /// Returns a value describing the percentage of raw samples in the provided bucket that 
+        /// have bad quality.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="currentBucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculatePercentBad(TagDefinition tag, TagValueBucket currentBucket) {
+            if (currentBucket.RawSamples.Count == 0) {
+                return Array.Empty<TagValueExtended>();
+            }
+
+            var sampleCount = currentBucket.RawSamples.Count;
+            var percentBadCount = currentBucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
+
+            return new[] {
+                TagValueBuilder.Create()
+                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithValue((double) percentBadCount / sampleCount * 100)
+                    .WithUnits("%")
+                    .WithStatus(TagValueStatus.Good)
+                    .Build()
+            };
+        }
+
+        #endregion
+
         #region [ Aggregation using Data Function Names ]
 
         /// <summary>
@@ -310,7 +432,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -336,23 +458,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    if (string.Equals(item, DefaultDataFunctions.Interpolate.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Interpolate.Id] = CalculateInterpolated;
+                    if (s_defaultAggregatorMap.TryGetValue(item, out var func)) {
+                        funcs[item] = func;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Average.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Average.Id] = CalculateAverage;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Maximum.Id] = CalculateMaximum;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Minimum.Id] = CalculateMinimum;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Count.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Count.Id] = CalculateCount;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Range.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Range.Id] = CalculateCount;
+                    else if (_customAggregatorMap.TryGetValue(item, out func)) {
+                        funcs[item] = func;
                     }
                 }
             }
@@ -397,7 +507,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public static ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(IEnumerable<TagDefinition> tags, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(IEnumerable<TagDefinition> tags, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
@@ -439,23 +549,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         continue;
                     }
 
-                    if (string.Equals(item, DefaultDataFunctions.Interpolate.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Interpolate.Id] = CalculateInterpolated;
+                    if (s_defaultAggregatorMap.TryGetValue(item, out var func)) {
+                        funcs[item] = func;
                     }
-                    else if (string.Equals(item, DefaultDataFunctions.Average.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Average.Id] = CalculateAverage;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Maximum.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Maximum.Id] = CalculateMaximum;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Minimum.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Minimum.Id] = CalculateMinimum;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Count.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Count.Id] = CalculateCount;
-                    }
-                    else if (string.Equals(item, DefaultDataFunctions.Range.Id, StringComparison.Ordinal)) {
-                        funcs[DefaultDataFunctions.Range.Id] = CalculateCount;
+                    else if (_customAggregatorMap.TryGetValue(item, out func)) {
+                        funcs[item] = func;
                     }
                 }
             }
@@ -540,10 +638,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static async Task GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
             var requiresPreBucketSampleTransfer = funcs.ContainsKey(DefaultDataFunctions.Interpolate.Id);
             
-            var bucket = new TagValueBucket() {
-                UtcStart = utcStartTime.Subtract(sampleInterval),
-                UtcEnd = utcStartTime
-            };
+            var bucket = new TagValueBucket(utcStartTime.Subtract(sampleInterval), utcStartTime);
 
             var iterations = 0;
 
@@ -571,10 +666,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     var ticks = sampleInterval.Ticks * (val.Value.UtcSampleTime.Ticks / sampleInterval.Ticks);
                     var nextBucketStartTime = new DateTime(ticks, DateTimeKind.Utc);
 
-                    var newBucket = new TagValueBucket() {
-                        UtcStart = nextBucketStartTime,
-                        UtcEnd = nextBucketStartTime.Add(sampleInterval)
-                    };
+                    var newBucket = new TagValueBucket(nextBucketStartTime, nextBucketStartTime.Add(sampleInterval));
 
                     // Now, copy over the two latest samples out of the RawSamples and PreBucketSamples 
                     // for the old bucket into the PreBucketSamples for the new bucket. This is to 
@@ -630,34 +722,79 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Gets the descriptors for the data functions supported by the <see cref="AggregationHelper"/>.
         /// </summary>
         /// <returns></returns>
-        public static IEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions() {
-            return new[] {
-                DefaultDataFunctions.Interpolate,
-                DefaultDataFunctions.Average,
-                DefaultDataFunctions.Maximum,
-                DefaultDataFunctions.Minimum,
-                DefaultDataFunctions.Count,
-                DefaultDataFunctions.Range
-            };
+        public IEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions() {
+            return s_defaultDataFunctions.Value.Concat(_customAggregates.Values).ToArray();
         }
 
         #endregion
 
-        #region [ Inner Types ]
+        #region [ Custom Function Registration ]
 
         /// <summary>
-        /// Calculates the aggregated values for the specified bucket.
+        /// Registers a custom data function.
         /// </summary>
-        /// <param name="tag">
-        ///   The tag that the calculation is being performed for.
+        /// <param name="descriptor">
+        ///   The function descriptor.
         /// </param>
-        /// <param name="bucket">
-        ///   The bucket to calculate values for.
+        /// <param name="calculator">
+        ///   The calculation delegate for the aggregate function.
         /// </param>
         /// <returns>
-        ///   The calculated values for the bucket.
+        ///   A flag that indicates if the registration was successful. See the remarks section 
+        ///   for more information.
         /// </returns>
-        private delegate IEnumerable<TagValueExtended> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="calculator"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Registration will fail if another function with the same ID is already registered. 
+        ///   Built-in functions cannot be overridden.
+        /// </remarks>
+        public bool RegisterDataFunction(DataFunctionDescriptor descriptor, AggregateCalculator calculator) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+            if (calculator == null) {
+                throw new ArgumentNullException(nameof(calculator));
+            }
+
+            if (s_defaultAggregatorMap.ContainsKey(descriptor.Id)) {
+                // Don't allow built-in aggregates to be overridden.
+                return false;
+            }
+
+            if (!_customAggregates.TryAdd(descriptor.Id, descriptor)) {
+                return false;
+            }
+
+            _customAggregatorMap[descriptor.Id] = calculator;
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// Unregisters a custom data function.
+        /// </summary>
+        /// <param name="functionId">
+        ///   The ID of the custom data function.
+        /// </param>
+        /// <returns>
+        ///   A flag that indicates if the registration was removed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="functionId"/> is <see langword="null"/>.
+        /// </exception>
+        public bool UnregisterDataFunction(string functionId) {
+            if (functionId == null) {
+                throw new ArgumentNullException(nameof(functionId));
+            }
+
+            return _customAggregates.TryRemove(functionId, out var _) && _customAggregatorMap.TryRemove(functionId, out var _);
+        }
 
         #endregion
 

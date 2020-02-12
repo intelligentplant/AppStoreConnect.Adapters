@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes a data function that is supported when making a call for historical process data.
+    /// Describes a data function that is supported when making a call for processed historical data.
     /// </summary>
     public sealed class DataFunctionDescriptor {
 
