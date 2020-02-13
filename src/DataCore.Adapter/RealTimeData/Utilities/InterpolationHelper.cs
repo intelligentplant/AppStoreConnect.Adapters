@@ -129,7 +129,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueExtended GetValueAtTime(TagDefinition tag, DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter, InterpolationCalculationType interpolationType) {
+        public static TagValueExtended GetValueAtTime(TagSummary tag, DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter, InterpolationCalculationType interpolationType) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -195,7 +195,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagDefinition tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -216,7 +216,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
-        private static async Task GetInterpolatedValues(TagDefinition tag, IEnumerable<DateTime> utcSampleTimes, InterpolationCalculationType interpolationCalculationType, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async Task GetInterpolatedValues(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, InterpolationCalculationType interpolationCalculationType, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             var sampleTimesEnumerator = utcSampleTimes.GetEnumerator();
             try {
                 if (!sampleTimesEnumerator.MoveNext()) {

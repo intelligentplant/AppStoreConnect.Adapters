@@ -9,23 +9,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     public class TagValueBucket {
 
         /// <summary>
-        /// Gets or sets the UTC start time for the bucket.
+        /// The UTC start time for the bucket.
         /// </summary>
         public DateTime UtcStart { get; }
 
         /// <summary>
-        /// Gets or sets the UTC end time for the bucket.
+        /// The UTC end time for the bucket.
         /// </summary>
         public DateTime UtcEnd { get; }
 
         /// <summary>
-        /// Gets the raw data samples for the bucket.
+        /// The raw data samples for the bucket.
         /// </summary>
         public IList<TagValueExtended> RawSamples { get; } = new List<TagValueExtended>();
 
         /// <summary>
-        /// Gets the raw samples that were received prior to start of this bucket. This is to 
-        /// allow aggregates that calculate across bucket boundaries (e.g. interpolation) to do so.
+        /// The last raw samples that were received prior to start of this bucket. Up to two 
+        /// samples are provided. This is to allow aggregates that calculate using values on 
+        /// either side of the bucket boundary (such as interpolation).
         /// </summary>
         public IList<TagValueExtended> PreBucketSamples { get; } = new List<TagValueExtended>();
 

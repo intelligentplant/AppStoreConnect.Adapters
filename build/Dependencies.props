@@ -8,8 +8,8 @@
     <GrpcCoreVersion>2.27.0</GrpcCoreVersion>
     <GrpcNetClientVersion>2.26.0</GrpcNetClientVersion>
     <GrpcToolsVersion>2.27.0</GrpcToolsVersion>
-    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.0</IntelligentPlantBackgroundTasksAspNetCoreVersion>
-    <IntelligentPlantBackgroundTasksVersion>1.0.0</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.1</IntelligentPlantBackgroundTasksAspNetCoreVersion>
+    <IntelligentPlantBackgroundTasksVersion>1.0.1</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>

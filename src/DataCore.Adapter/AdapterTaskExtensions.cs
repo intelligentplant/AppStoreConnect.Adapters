@@ -35,6 +35,10 @@ namespace DataCore.Adapter {
         ///   Modified from https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md#cancelling-uncancellable-operations
         /// </remarks>
         public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken) {
+            if (task == null) {
+                throw new ArgumentNullException(nameof(task));
+            }
+
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // This disposes the registration as soon as one of the tasks trigger
@@ -75,6 +79,10 @@ namespace DataCore.Adapter {
         ///   Modified from https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md#cancelling-uncancellable-operations
         /// </remarks>
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken) {
+            if (task == null) {
+                throw new ArgumentNullException(nameof(task));
+            }
+
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // This disposes the registration as soon as one of the tasks trigger
@@ -88,6 +96,60 @@ namespace DataCore.Adapter {
                 }
 
                 await task.ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new task that cancels if the original task has not completed before the 
+        /// specified delay.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The return type of the task.
+        /// </typeparam>
+        /// <param name="task">
+        ///   The task.
+        /// </param>
+        /// <param name="delay">
+        ///   The cancellation timeout.
+        /// </param>
+        /// <returns>
+        ///   A new task that will cancel if the delay is exceeded.
+        /// </returns>
+        public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan delay) {
+            if (task == null) {
+                throw new ArgumentNullException(nameof(task));
+            }
+
+            using (var cts = new CancellationTokenSource(delay)) {
+                return await task.WithCancellation(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new task that cancels if the original task has not completed before the 
+        /// specified delay.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The return type of the task.
+        /// </typeparam>
+        /// <param name="task">
+        ///   The task.
+        /// </param>
+        /// <param name="delay">
+        ///   The cancellation timeout.
+        /// </param>
+        /// <returns>
+        ///   A new task that will cancel if the delay is exceeded.
+        /// </returns>
+        public static async Task TimeoutAfter(this Task task, TimeSpan delay) {
+            if (task == null) {
+                throw new ArgumentNullException(nameof(task));
+            }
+
+            using (var cts = new CancellationTokenSource(delay)) {
+                await task.WithCancellation(cts.Token).ConfigureAwait(false);
             }
         }
 

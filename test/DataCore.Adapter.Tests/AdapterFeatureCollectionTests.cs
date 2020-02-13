@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataCore.Adapter.Tests {
 
     [TestClass]
-    public class AdapterFeatureCollectionTests {
+    public class AdapterFeatureCollectionTests : TestsBase {
 
         [TestMethod]
         public void AdapterFeatureCollectionShouldBePrePopulated() {

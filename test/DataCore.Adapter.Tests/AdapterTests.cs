@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
     [TestClass]
-    public class AdapterTests {
+    public class AdapterTests : TestsBase {
 
         [TestMethod]
         public void UnsupportedFeatureShouldNotBeFound() {

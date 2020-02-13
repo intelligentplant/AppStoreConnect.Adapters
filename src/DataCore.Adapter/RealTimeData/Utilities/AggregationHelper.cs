@@ -22,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     /// <returns>
     ///   The calculated values for the bucket.
     /// </returns>
-    public delegate IEnumerable<TagValueExtended> AggregateCalculator(TagDefinition tag, TagValueBucket bucket);
+    public delegate IEnumerable<TagValueExtended> AggregateCalculator(TagSummary tag, TagValueBucket bucket);
 
 
     /// <summary>
@@ -83,7 +83,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   The status used is the worst-case of the values used in the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateInterpolated(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket currentBucket) {
             TagValueExtended sample0 = null;
             TagValueExtended sample1 = null;
 
@@ -160,7 +160,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateAverage(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
@@ -199,7 +199,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateMinimum(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
@@ -238,7 +238,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateMaximum(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateMaximum(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
@@ -273,7 +273,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculateCount(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateCount(TagSummary tag, TagValueBucket currentBucket) {
             var numericValue = currentBucket.RawSamples.Count;
 
             return new[] {
@@ -306,7 +306,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateRange(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateRange(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return null;
             }
@@ -345,7 +345,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculatePercentGood(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
@@ -380,7 +380,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculatePercentBad(TagDefinition tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket currentBucket) {
             if (currentBucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
@@ -432,7 +432,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(TagDefinition tag, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+            TagSummary tag, 
+            IEnumerable<string> dataFunctions, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan sampleInterval, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            IBackgroundTaskService scheduler = null, 
+            CancellationToken cancellationToken = default
+        ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -480,6 +489,74 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Performs aggregation on raw tag values.
         /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="dataFunctions">
+        ///   The data functions to apply to the raw data.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The start time for the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The end time for the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval for the data query.
+        /// </param>
+        /// <param name="rawData">
+        ///   The raw data for the aggregation calculations.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated values.
+        /// </returns>
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+            TagSummary tag,
+            IEnumerable<string> dataFunctions,
+            DateTime utcStartTime,
+            DateTime utcEndTime,
+            TimeSpan sampleInterval,
+            IEnumerable<TagValueQueryResult> rawData,
+            IBackgroundTaskService scheduler = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (rawData == null) {
+                throw new ArgumentNullException(nameof(rawData));
+            }
+
+            var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
+
+            foreach (var item in rawData) {
+                channel.Writer.TryWrite(item);
+            }
+            channel.Writer.TryComplete();
+
+            return GetAggregatedValues(
+                tag,
+                dataFunctions,
+                utcStartTime,
+                utcEndTime,
+                sampleInterval,
+                channel,
+                scheduler,
+                cancellationToken
+            );
+        }
+
+
+        /// <summary>
+        /// Performs aggregation on raw tag values.
+        /// </summary>
         /// <param name="tags">
         ///   The tags in the query.
         /// </param>
@@ -507,7 +584,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(IEnumerable<TagDefinition> tags, IEnumerable<string> dataFunctions, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+            IEnumerable<TagSummary> tags, 
+            IEnumerable<string> dataFunctions, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan sampleInterval, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            IBackgroundTaskService scheduler = null, 
+            CancellationToken cancellationToken = default
+        ) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
@@ -635,19 +721,121 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
-        private static async Task GetAggregatedValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan sampleInterval, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
-            var requiresPreBucketSampleTransfer = funcs.ContainsKey(DefaultDataFunctions.Interpolate.Id);
-            
-            var bucket = new TagValueBucket(utcStartTime.Subtract(sampleInterval), utcStartTime);
+        /// <summary>
+        /// Performs aggregation on raw tag values.
+        /// </summary>
+        /// <param name="tags">
+        ///   The tags in the query.
+        /// </param>
+        /// <param name="dataFunctions">
+        ///   The data functions to apply to the raw data.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The start time for the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The end time for the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval for the data query.
+        /// </param>
+        /// <param name="rawData">
+        ///   The raw data for the aggregation calculations.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The background task service to use when writing values into the channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will emit the calculated values.
+        /// </returns>
+        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+            IEnumerable<TagSummary> tags,
+            IEnumerable<string> dataFunctions,
+            DateTime utcStartTime,
+            DateTime utcEndTime,
+            TimeSpan sampleInterval,
+            IEnumerable<TagValueQueryResult> rawData,
+            IBackgroundTaskService scheduler = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (rawData == null) {
+                throw new ArgumentNullException(nameof(rawData));
+            }
 
-            var iterations = 0;
+            var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
+
+            foreach (var item in rawData) {
+                channel.Writer.TryWrite(item);
+            }
+            channel.Writer.TryComplete();
+
+            return GetAggregatedValues(
+                tags,
+                dataFunctions,
+                utcStartTime,
+                utcEndTime,
+                sampleInterval,
+                channel,
+                scheduler,
+                cancellationToken
+            );
+        }
+
+
+        /// <summary>
+        /// Performs aggregation for a tag.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The UTC start time of the data query.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time of the data query.
+        /// </param>
+        /// <param name="sampleInterval">
+        ///   The sample interval.
+        /// </param>
+        /// <param name="rawData">
+        ///   A channel that will provide raw tag values to be aggregated.
+        /// </param>
+        /// <param name="resultChannel">
+        ///   A channel that calculated results will be written to.
+        /// </param>
+        /// <param name="funcs">
+        ///   The aggregations to perform.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will read raw data, aggregate it, and write the results to the output 
+        ///   channel.
+        /// </returns>
+        private static async Task GetAggregatedValues(
+            TagSummary tag, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan sampleInterval, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            ChannelWriter<ProcessedTagValueQueryResult> resultChannel, 
+            IDictionary<string, AggregateCalculator> funcs, 
+            CancellationToken cancellationToken
+        ) {
+            var bucket = new TagValueBucket(utcStartTime.Subtract(sampleInterval), utcStartTime);
 
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {
                     break;
                 }
-
-                ++iterations;
 
                 if (val == null) {
                     continue;
@@ -657,40 +845,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     continue;
                 }
 
-                if (val.Value.UtcSampleTime > bucket.UtcEnd) {
-                    await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
-                    
-                    // Calculate the start/end time for the new bucket that the sample we received 
-                    // should go into.
+                if (val.Value.UtcSampleTime >= bucket.UtcEnd) {
+                    // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
+                    var preBucketSamples = GetPreBucketSamples(bucket);
 
-                    var ticks = sampleInterval.Ticks * (val.Value.UtcSampleTime.Ticks / sampleInterval.Ticks);
-                    var nextBucketStartTime = new DateTime(ticks, DateTimeKind.Utc);
+                    do {
+                        await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+                        bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcEnd.Add(sampleInterval));
 
-                    var newBucket = new TagValueBucket(nextBucketStartTime, nextBucketStartTime.Add(sampleInterval));
-
-                    // Now, copy over the two latest samples out of the RawSamples and PreBucketSamples 
-                    // for the old bucket into the PreBucketSamples for the new bucket. This is to 
-                    // help with the calculation of interpolated data if required.
-
-                    if (requiresPreBucketSampleTransfer) {
-                        if (bucket.RawSamples.Count == 2) {
-                            foreach (var sample in bucket.RawSamples) {
-                                newBucket.PreBucketSamples.Add(sample);
-                            }
+                        // Now, copy over the pre-bucket samples to the new bucket. This is to 
+                        // help with the calculation of interpolated data if required.
+                        foreach (var item in preBucketSamples) {
+                            bucket.PreBucketSamples.Add(item);
                         }
-                        else if (bucket.RawSamples.Count > 2) {
-                            foreach (var sample in bucket.RawSamples.Reverse().Take(2).Reverse()) {
-                                newBucket.PreBucketSamples.Add(sample);
-                            }
-                        }
-                        else {
-                            foreach (var sample in bucket.PreBucketSamples.Concat(bucket.RawSamples).Reverse().Take(2).Reverse()) {
-                                newBucket.PreBucketSamples.Add(sample);
-                            }
-                        }
-                    }
-
-                    bucket = newBucket;
+                    } while (val.Value.UtcSampleTime >= bucket.UtcEnd);
                 }
 
                 if (val.Value.UtcSampleTime < utcEndTime) {
@@ -699,10 +867,79 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+
+            if (bucket.UtcEnd < utcEndTime) {
+                // The raw data ended before the end time for the query. We will keep moving forward 
+                // according to our sample interval, and allow our aggregator the chance to calculate 
+                // values for the remaining buckets.
+
+                // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
+                var preBucketSamples = GetPreBucketSamples(bucket);
+
+                while (bucket.UtcEnd < utcEndTime) {
+                    bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcEnd.Add(sampleInterval));
+                    if (bucket.UtcEnd > utcEndTime) {
+                        // New bucket would end after the query end time, so we don't need to 
+                        // calculate for this bucket.
+                        break;
+                    }
+
+                    foreach (var item in preBucketSamples) {
+                        bucket.PreBucketSamples.Add(item);
+                    }
+
+                    await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
 
 
-        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
+        /// <summary>
+        /// Gets a set of up to two pre-bucket samples to include in the bucket after the specified 
+        /// one. These can be used when e.g. interpolating a value before the first sample in the 
+        /// next bucket.
+        /// </summary>
+        /// <param name="bucket">
+        ///   The current bucket. The returned values should be assigned to <see cref="TagValueBucket.PreBucketSamples"/> 
+        ///   collection in the next bucket.
+        /// </param>
+        /// <returns>
+        ///   A collection of <see cref="TagValueExtended"/> objects.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> GetPreBucketSamples(TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 2) {
+                return bucket.RawSamples.ToArray();
+            }
+            if (bucket.RawSamples.Count > 2) {
+                return bucket.RawSamples.Reverse().Take(2).Reverse().ToArray();
+            }
+
+            return bucket.PreBucketSamples.Concat(bucket.RawSamples).Reverse().Take(2).Reverse().ToArray();
+        }
+
+
+        /// <summary>
+        /// Computes and emits the aggregated samples for a single bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="bucket">
+        ///   The bucket.
+        /// </param>
+        /// <param name="resultChannel">
+        ///   The channel to write the results to.
+        /// </param>
+        /// <param name="funcs">
+        ///   The aggregations to perform.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will compute and emit the aggregated samples for the bucket.
+        /// </returns>
+        private static async Task CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
             foreach (var agg in funcs) {
                 var vals = agg.Value.Invoke(tag, bucket);
                 if (vals == null || !vals.Any()) {

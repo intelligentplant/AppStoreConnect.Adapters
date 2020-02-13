@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataCore.Adapter.Tests {
 
     [TestClass]
-    public class JsonTests {
+    public class JsonTests : TestsBase {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();

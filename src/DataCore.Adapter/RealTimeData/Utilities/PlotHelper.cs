@@ -96,7 +96,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -187,7 +187,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(IEnumerable<TagDefinition> tags, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(IEnumerable<TagSummary> tags, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
@@ -316,7 +316,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A task that will compute the values.
         /// </returns>
-        private static async Task GetPlotValues(TagDefinition tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async Task GetPlotValues(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             // We will determine the values to return for the plot request by creating aggregation 
             // buckets that cover a time range that is equal to the bucketSize. For each bucket, we 
             // will we add up to 5 raw samples into the resulting data set:
@@ -392,7 +392,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   Assumes that the <paramref name="bucket"/> contains at least one sample.
         /// </remarks>
-        private static async Task CalculateAndEmitBucketSamples(TagDefinition tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
+        private static async Task CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
             var significantValues = new HashSet<TagValueExtended>();
 
             if (tag.DataType.IsNumericType()) {
