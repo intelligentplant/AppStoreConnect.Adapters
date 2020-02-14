@@ -24,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The quality status.
         /// </summary>
-        private TagValueStatus _status = TagValueStatus.Unknown;
+        private TagValueStatus _status = TagValueStatus.Good;
 
         /// <summary>
         /// The units.

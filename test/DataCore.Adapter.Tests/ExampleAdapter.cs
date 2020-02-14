@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -40,7 +41,14 @@ namespace DataCore.Adapter.Tests {
 
 
         public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            throw new NotImplementedException();
+            return request.Tags.Select(t => new TagValueQueryResult(
+                t,
+                t,
+                TagValueBuilder.Create()
+                    .WithUtcSampleTime(DateTime.MinValue)
+                    .WithValue(0)
+                    .Build()
+            )).PublishToChannel();
         }
 
 
@@ -73,6 +81,16 @@ namespace DataCore.Adapter.Tests {
 
 
             protected override Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
+                foreach (var tag in tags) {
+                    WriteSnapshotValue(new TagValueQueryResult(
+                        tag.Id,
+                        tag.Name,
+                        TagValueBuilder.Create()
+                            .WithUtcSampleTime(DateTime.MinValue)
+                            .WithValue(0)
+                            .Build()
+                    ));
+                }
                 return Task.CompletedTask;
             }
 

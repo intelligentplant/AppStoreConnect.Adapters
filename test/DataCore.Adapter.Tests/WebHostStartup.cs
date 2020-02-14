@@ -1,35 +1,58 @@
-﻿using DataCore.Adapter.Example;
+﻿using System.Net.Http;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.AspNetCoreExample {
-    public class Startup {
-        public Startup(IConfiguration configuration) {
-            Configuration = configuration;
-        }
+using GrpcCore = Grpc.Core;
+using GrpcNet = Grpc.Net;
+
+namespace DataCore.Adapter.Tests {
+
+    public class WebHostStartup {
+
+        public const string DefaultUrl = "https://localhost:31415";
+
+        public const string AdapterId = "sensor-csv";
+
+        public const string TestTagId = "Sensor_001";
+
+        public const string HttpClientName = "AdapterHttpClient";
+
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services) {
-            // Register our adapters as singletons.
 
-            services.AddSingleton<IAdapter, ExampleAdapter>();
+        public WebHostStartup(IConfiguration configuration) {
+            Configuration = configuration;
+        }
+
+        
+        public void ConfigureServices(IServiceCollection services) {
+            services.AddHttpClient(HttpClientName).ConfigureHttpClient(client => {
+                client.BaseAddress = new System.Uri(DefaultUrl + "/");
+            });
+            services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName);
+
+            services.AddTransient(sp => {
+                return GrpcNet.Client.GrpcChannel.ForAddress(DefaultUrl, new GrpcNet.Client.GrpcChannelOptions() { 
+                    HttpClient = sp.GetService<IHttpClientFactory>().CreateClient(HttpClientName)
+                });
+            });
+
+            // Register our adapter as a singleton.
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 return new Csv.CsvAdapter(
                     new Csv.CsvAdapterOptions() {
-                        Id = "sensor-csv",
+                        Id = AdapterId,
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
-                        CsvFile = "DummySensorData.csv"
+                        GetCsvStream = () => GetType().Assembly.GetManifestResourceStream(GetType(), "DummySensorData.csv")
                     },
                     sp.GetRequiredService<IBackgroundTaskService>(),
                     sp.GetRequiredService<ILoggerFactory>()
@@ -45,12 +68,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
                 );
-
-                // To add authentication and authorization options for adapter API operations, extend 
-                // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
-                // to register your handler.
-
-                //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
             });
 
             services.AddGrpc();
@@ -63,41 +80,19 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 .AddDataCoreAdapterMvc();
 
             services.AddSignalR().AddMessagePackProtocol();
-
-            services
-                .AddHealthChecks()
-                .AddAdapterHeathChecks();
-
-            services.AddOpenApiDocument(options => {
-                options.DocumentName = "v1.0";
-                options.Title = "App Store Connect Adapters";
-                options.Description = "HTTP API for querying an App Store Connect adapters host.";
-            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-            if (env.IsDevelopment()) {
-                app.UseDeveloperExceptionPage();
-            }
-            else {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseOpenApi();
-            app.UseSwaggerUi3();
-
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapDataCoreGrpcServices();
                 endpoints.MapControllers();
                 endpoints.MapDataCoreAdapterHubs();
-                endpoints.MapHealthChecks("/health");
             });
+
+            WebHostInitializer.ApplicationServices = app.ApplicationServices;
         }
     }
 }

@@ -35,7 +35,7 @@ namespace DataCore.Adapter.Example.Features {
                     Tags = tagIdsOrNames
                 }, cancellationToken);
 
-                var tags = await tagsChannel.ReadItems(cancellationToken: cancellationToken).ConfigureAwait(false);
+                var tags = await tagsChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 _nodes = nodeDefinitions.Select(x => AssetModelNode.Create(
                     x.Id,

@@ -894,7 +894,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The items that were read.
         /// </returns>
-        public static async Task<IEnumerable<T>> ReadItems<T>(this ChannelReader<T> channel, int maxItems = -1, CancellationToken cancellationToken = default) {
+        public static async Task<IEnumerable<T>> ToEnumerable<T>(this ChannelReader<T> channel, int maxItems = -1, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -1012,6 +1012,106 @@ namespace DataCore.Adapter {
             }, channel, cancellationToken);
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Creates a new channel that will emit the items and then complete.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="items">
+        ///   The items to publish.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ChannelReader{T}"/> that will emit the items.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="items"/> is <see langword="null"/>.
+        /// </exception>
+        public static ChannelReader<T> PublishToChannel<T>(this IEnumerable<T> items) {
+            if (items == null) {
+                throw new ArgumentNullException(nameof(items));
+            }
+
+            var result = Channel.CreateUnbounded<T>();
+
+            items.PublishToChannel(result);
+
+            result.Writer.TryComplete();
+            return result;
+        }
+
+
+        /// <summary>
+        /// Publishes the items to the specified channel.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="items">
+        ///   The items to publish.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to publish the items to.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="items"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        public static void PublishToChannel<T>(this IEnumerable<T> items, ChannelWriter<T> channel) {
+            if (items == null) {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            foreach (var item in items) {
+                channel.TryWrite(item);
+            }
+        }
+
+
+        /// <summary>
+        /// Publishes the items to the specified channel.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="items">
+        ///   The items to publish.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to publish the items to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="items"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task PublishToChannelAsync<T>(this IEnumerable<T> items, ChannelWriter<T> channel, CancellationToken cancellationToken = default) {
+            if (items == null) {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            foreach (var item in items) {
+                if (!await channel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                    break;
+                }
+
+                channel.TryWrite(item);
+            }
         }
 
     }

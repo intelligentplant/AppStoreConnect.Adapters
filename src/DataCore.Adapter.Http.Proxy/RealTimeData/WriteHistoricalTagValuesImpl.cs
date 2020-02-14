@@ -26,7 +26,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 var client = GetClient();
 
                 const int maxItems = 5000;
-                var items = (await channel.ReadItems(maxItems, ct).ConfigureAwait(false)).ToArray();
+                var items = (await channel.ToEnumerable(maxItems, ct).ConfigureAwait(false)).ToArray();
                 if (items.Length >= maxItems) {
                     Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
                 }

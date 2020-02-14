@@ -159,7 +159,7 @@ namespace DataCore.Adapter.Tests {
                 now,
                 TimeSpan.FromSeconds(15),
                 rawData
-            ).ReadItems().TimeoutAfter(TimeSpan.FromSeconds(30))).ToArray();
+            ).ToEnumerable().TimeoutAfter(TimeSpan.FromSeconds(30))).ToArray();
 
             var expectedResults = new ValueTuple<DateTime, double>[] {
                 (now.AddSeconds(-60), 0),

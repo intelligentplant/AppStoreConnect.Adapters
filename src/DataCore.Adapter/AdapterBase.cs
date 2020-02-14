@@ -184,10 +184,14 @@ namespace DataCore.Adapter {
                 true
             );
 
+            var id = string.IsNullOrWhiteSpace(options.Id) 
+                ? Guid.NewGuid().ToString() 
+                : options.Id;
+
             _descriptor = new AdapterDescriptor(
-                options.Id,
+                id,
                 string.IsNullOrWhiteSpace(options.Name)
-                    ? options.Id
+                    ? id
                     : options.Name,
                 options.Description
             );

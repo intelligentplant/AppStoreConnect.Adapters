@@ -91,6 +91,41 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly ExtensionFeatureFactory _extensionFeatureFactory;
 
 
+#if NETSTANDARD2_1
+
+        /// <summary>
+        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
+        /// </summary>
+        /// <param name="channel">
+        ///   The channel.
+        /// </param>
+        /// <param name="options">
+        ///   The proxy options.
+        /// </param>
+        /// <param name="taskScheduler">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="options"/> does not define an adapter ID.
+        /// </exception>
+        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, GrpcAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
+            : base(options, taskScheduler, loggerFactory) {
+
+            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _getCallCredentials = Options?.GetCallCredentials;
+        }
+
+#endif
+
+
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcCore.Channel"/>.
         /// </summary>
@@ -120,40 +155,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _getCallCredentials = Options?.GetCallCredentials;
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
         }
-
-#if NETSTANDARD2_1
-
-        /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
-        /// </summary>
-        /// <param name="channel">
-        ///   The channel.
-        /// </param>
-        /// <param name="options">
-        ///   The proxy options.
-        /// </param>
-        /// <param name="taskScheduler">
-        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
-        ///   operations. Specify <see langword="null"/> to use the default implementation.
-        /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the proxy.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="options"/> does not define an adapter ID.
-        /// </exception>
-        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, GrpcAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory) 
-            : base(options, taskScheduler, loggerFactory) {
-
-            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _getCallCredentials = Options?.GetCallCredentials;
-        }
-
-#endif
 
 
         /// <summary>
