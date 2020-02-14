@@ -41,6 +41,15 @@ services.AddDataCoreAdapterServices(options => {
 ```
 
 
+# Registering SignalR Services
+
+To register additional services (such as required `System.Text.Json` converters), add the following to your SignalR registration:
+
+```csharp
+services.AddSignalR().AddDataCoreAdapterSignalR();
+```
+
+
 # Registering Endpoints
 
 The adapter hub endpoint is registered in the `Startup.cs` file's `Configure` method as follows:

@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Tests {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();
-            result.Converters.AddAdapterConverters();
+            result.Converters.AddDataCoreAdapterConverters();
 
             return result;
         }

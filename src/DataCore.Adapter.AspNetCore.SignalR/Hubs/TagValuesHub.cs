@@ -323,15 +323,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   The supported data functions for processed data queries.
         /// </returns>
-        public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
-            return await adapter.Feature.GetSupportedDataFunctions(AdapterCallContext, cancellationToken).ConfigureAwait(false); ;
+        public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(string adapterId) {
+            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            return await adapter.Feature.GetSupportedDataFunctions(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false); ;
         }
 
 

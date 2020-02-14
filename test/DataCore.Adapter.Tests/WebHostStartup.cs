@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using DataCore.Adapter.Json;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -79,7 +80,9 @@ namespace DataCore.Adapter.Tests {
                 })
                 .AddDataCoreAdapterMvc();
 
-            services.AddSignalR().AddMessagePackProtocol();
+            services.AddSignalR()
+                .AddDataCoreAdapterSignalR()
+                .AddMessagePackProtocol();
         }
 
         

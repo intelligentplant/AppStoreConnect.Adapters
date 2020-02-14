@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -8,8 +9,12 @@ namespace DataCore.Adapter.Tests {
             return CreateProxy(WebHostStartup.AdapterId);
         }
 
-        protected sealed override string GetTestTagId() {
-            return WebHostStartup.TestTagId;
+        protected sealed override TestTagDetails GetTestTagDetails() {
+            var now = DateTime.UtcNow;
+            return new TestTagDetails(WebHostStartup.TestTagId) { 
+                HistoryStartTime = now.AddDays(-1),
+                HistoryEndTime = now
+            };
         }
 
 

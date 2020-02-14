@@ -359,6 +359,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    if (!httpResponse.IsSuccessStatusCode) {
+                        var res = await httpResponse.Content.ReadAsStringAsync();
+                    }
                     httpResponse.EnsureSuccessStatusCode();
 
                     return await httpResponse.Content.ReadAsAsync<IEnumerable<ProcessedTagValueQueryResult>>(cancellationToken).ConfigureAwait(false);

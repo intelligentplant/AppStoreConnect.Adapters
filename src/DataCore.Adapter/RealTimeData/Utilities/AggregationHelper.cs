@@ -850,7 +850,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     var preBucketSamples = GetPreBucketSamples(bucket);
 
                     do {
-                        await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+                        if (bucket.UtcEnd <= utcEndTime) {
+                            // Only emit the bucket if it is within our time range.
+                            await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+                        }
                         bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcEnd.Add(sampleInterval));
 
                         // Now, copy over the pre-bucket samples to the new bucket. This is to 
@@ -866,7 +869,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+            if (bucket.UtcEnd <= utcEndTime) {
+                // Only emit the bucket if it is within our time range.
+                await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+            }
 
             if (bucket.UtcEnd < utcEndTime) {
                 // The raw data ended before the end time for the query. We will keep moving forward 
@@ -888,7 +894,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         bucket.PreBucketSamples.Add(item);
                     }
 
-                    await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, cancellationToken).ConfigureAwait(false);
+                    await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -933,20 +939,34 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="funcs">
         ///   The aggregations to perform.
         /// </param>
+        /// <param name="utcNotBefore">
+        ///   Values occurring before this time will not be emitted.
+        /// </param>
+        /// <param name="utcNotAfter">
+        ///   Values occurring after this time will not be emitted.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will compute and emit the aggregated samples for the bucket.
         /// </returns>
-        private static async Task CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, ChannelWriter<ProcessedTagValueQueryResult> resultChannel, IDictionary<string, AggregateCalculator> funcs, CancellationToken cancellationToken) {
+        private static async Task CalculateAndEmitBucketSamples(
+            TagSummary tag, 
+            TagValueBucket bucket, 
+            ChannelWriter<ProcessedTagValueQueryResult> resultChannel, 
+            IDictionary<string, AggregateCalculator> funcs, 
+            DateTime utcNotBefore, 
+            DateTime utcNotAfter, 
+            CancellationToken cancellationToken
+        ) {
             foreach (var agg in funcs) {
                 var vals = agg.Value.Invoke(tag, bucket);
                 if (vals == null || !vals.Any()) {
                     continue;
                 }
 
-                foreach (var val in vals) {
+                foreach (var val in vals.Where(v => v.UtcSampleTime >= utcNotBefore && v.UtcSampleTime <= utcNotAfter)) {
                     if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key));
                     }

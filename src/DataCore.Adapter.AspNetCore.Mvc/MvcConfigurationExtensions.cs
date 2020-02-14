@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP3_0
+﻿#if NETCOREAPP3_1
 using DataCore.Adapter.Json;
 #endif
 
@@ -20,8 +20,8 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </returns>
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
-#if NETCOREAPP3_0
-            builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.AddAdapterConverters());
+#if NETCOREAPP3_1
+            builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.AddDataCoreAdapterConverters());
 #endif
 
             return builder;

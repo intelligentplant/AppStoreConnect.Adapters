@@ -2,6 +2,7 @@
 using DataCore.Adapter.AspNetCore.Hubs;
 
 #if NETCOREAPP3_1
+using DataCore.Adapter.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 #endif
@@ -18,6 +19,26 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// SignalR Hub route.
         /// </summary>
         public const string HubRoute = "/signalr/data-core/v1.0";
+
+
+        /// <summary>
+        /// Configures services required for adapter SignalR.
+        /// </summary>
+        /// <param name="builder">
+        ///   The SignalR server builder.
+        /// </param>
+        /// <returns>
+        ///   The SignalR server builder.
+        /// </returns>
+        public static ISignalRServerBuilder AddDataCoreAdapterSignalR(this ISignalRServerBuilder builder) {
+#if NETCOREAPP3_1
+            return builder.AddJsonProtocol(options => {
+                options.PayloadSerializerOptions.Converters.AddDataCoreAdapterConverters();
+            });
+#else
+            return builder;
+#endif
+        }
 
 #if NETCOREAPP3_1
 

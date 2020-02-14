@@ -8,50 +8,61 @@ namespace DataCore.Adapter.RealTimeData {
     public static class DefaultDataFunctions {
 
         /// <summary>
-        /// Interpolated data function name.
+        /// Constants associated with <see cref="DefaultDataFunctions"/>.
         /// </summary>
-        private const string FunctionNameInterpolate = "INTERP";
+#pragma warning disable CA1034 // Nested types should not be visible
+        public static class Constants {
+#pragma warning restore CA1034 // Nested types should not be visible
 
-        /// <summary>
-        /// Average data function name.
-        /// </summary>
-        private const string FunctionNameAverage = "AVG";
+            /// <summary>
+            /// Interpolated data function ID.
+            /// </summary>
+            public const string FunctionIdInterpolate = "INTERP";
 
-        /// <summary>
-        /// Minimum data function name.
-        /// </summary>
-        private const string FunctionNameMinimum = "MIN";
+            /// <summary>
+            /// Average data function ID.
+            /// </summary>
+            public const string FunctionIdAverage = "AVG";
 
-        /// <summary>
-        /// Maximum data function name.
-        /// </summary>
-        private const string FunctionNameMaximum = "MAX";
+            /// <summary>
+            /// Minimum data function ID.
+            /// </summary>
+            public const string FunctionIdMinimum = "MIN";
 
-        /// <summary>
-        /// Count data function name.
-        /// </summary>
-        private const string FunctionNameCount = "COUNT";
+            /// <summary>
+            /// Maximum data function ID.
+            /// </summary>
+            public const string FunctionIdMaximum = "MAX";
 
-        /// <summary>
-        /// Range data function name.
-        /// </summary>
-        private const string FunctionNameRange = "RANGE";
+            /// <summary>
+            /// Count data function ID.
+            /// </summary>
+            public const string FunctionIdCount = "COUNT";
 
-        /// <summary>
-        /// Percent good function name.
-        /// </summary>
-        private const string FunctionNamePercentGood = "PERCENTGOOD";
+            /// <summary>
+            /// Range data function ID.
+            /// </summary>
+            public const string FunctionIdRange = "RANGE";
+
+            /// <summary>
+            /// Percent good function ID.
+            /// </summary>
+            public const string FunctionIdPercentGood = "PERCENTGOOD";
+
+            /// <summary>
+            /// Percent bad function ID.
+            /// </summary>
+            public const string FunctionIdPercentBad = "PERCENTBAD";
+
+        }
+
         
-        /// <summary>
-        /// Percent bad function name.
-        /// </summary>
-        private const string FunctionNamePercentBad= "PERCENTBAD";
 
         /// <summary>
         /// Interpolation between samples.
         /// </summary>
         public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
-            FunctionNameInterpolate,
+            Constants.FunctionIdInterpolate,
             Resources.DataFunction_Interp_Name,
             Resources.DataFunction_Interp_Description
         );
@@ -60,7 +71,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Average value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Average { get; } = DataFunctionDescriptor.Create(
-            FunctionNameAverage,
+            Constants.FunctionIdAverage,
             Resources.DataFunction_Avg_Name, 
             Resources.DataFunction_Avg_Description
         );
@@ -69,7 +80,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Minimum value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Minimum { get; } = DataFunctionDescriptor.Create(
-            FunctionNameMinimum,
+            Constants.FunctionIdMinimum,
             Resources.DataFunction_Min_Name,
             Resources.DataFunction_Min_Description
         );
@@ -78,7 +89,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Maximum value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Maximum { get; } = DataFunctionDescriptor.Create(
-            FunctionNameMaximum,
+            Constants.FunctionIdMaximum,
             Resources.DataFunction_Max_Name,
             Resources.DataFunction_Max_Description
         );
@@ -87,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Recorded values over a time period.
         /// </summary>
         public static DataFunctionDescriptor Count { get; } = DataFunctionDescriptor.Create(
-            FunctionNameCount,
+            Constants.FunctionIdCount,
             Resources.DataFunction_Count_Name,
             Resources.DataFunction_Count_Description
         );
@@ -96,7 +107,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Difference between the minimum and maximum value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Range { get; } = DataFunctionDescriptor.Create(
-            FunctionNameRange,
+            Constants.FunctionIdRange,
             Resources.DataFunction_Range_Name,
             Resources.DataFunction_Range_Description
         );
@@ -105,7 +116,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Percentage of raw samples in a time period that have good-quality status. 
         /// </summary>
         public static DataFunctionDescriptor PercentGood { get; } = DataFunctionDescriptor.Create(
-            FunctionNamePercentGood,
+            Constants.FunctionIdPercentGood,
             Resources.DataFunction_PercentGood_Name,
             Resources.DataFunction_PercentGood_Description
         );
@@ -114,7 +125,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Percentage of raw samples in a time period that have bad-quality status. 
         /// </summary>
         public static DataFunctionDescriptor PercentBad { get; } = DataFunctionDescriptor.Create(
-            FunctionNamePercentBad,
+            Constants.FunctionIdPercentBad,
             Resources.DataFunction_PercentBad_Name,
             Resources.DataFunction_PercentBad_Description
         );

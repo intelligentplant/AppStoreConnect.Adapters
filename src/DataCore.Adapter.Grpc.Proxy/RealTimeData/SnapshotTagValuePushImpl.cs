@@ -60,6 +60,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                     try {
                         var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, _feature.GetCallOptions(context, ct));
+                        // The service will always send us an initial value, even if we didn't 
+                        // include any values in the initial subscribe request.
+                        await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false);
                         tcs.TrySetResult(0);
 
                         try {

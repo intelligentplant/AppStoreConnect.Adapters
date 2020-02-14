@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Tests {
     public class SignalRProxyJsonTests : SignalRProxyTests {
 
         protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
-            return builder.AddJsonProtocol(options => Json.JsonSerializerOptionsExtensions.AddAdapterConverters(options.PayloadSerializerOptions.Converters));
+            return builder.AddJsonProtocol(options => Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.PayloadSerializerOptions.Converters));
         }
 
     }

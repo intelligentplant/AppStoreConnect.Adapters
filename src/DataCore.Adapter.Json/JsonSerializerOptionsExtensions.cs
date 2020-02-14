@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Json {
         /// <param name="converters">
         ///   The JSON serialization options.
         /// </param>
-        public static void AddAdapterConverters(this IList<JsonConverter> converters) {
+        public static void AddDataCoreAdapterConverters(this IList<JsonConverter> converters) {
             if (converters == null) {
                 throw new ArgumentNullException(nameof(converters));
             }

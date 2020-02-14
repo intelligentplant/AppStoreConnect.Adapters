@@ -62,7 +62,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 })
                 .AddDataCoreAdapterMvc();
 
-            services.AddSignalR().AddMessagePackProtocol();
+            services
+                .AddSignalR()
+                .AddDataCoreAdapterSignalR()
+                .AddMessagePackProtocol();
 
             services
                 .AddHealthChecks()

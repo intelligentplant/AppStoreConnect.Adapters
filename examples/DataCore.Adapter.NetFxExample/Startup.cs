@@ -35,7 +35,9 @@ namespace DataCore.Adapter.NetFxExample {
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddDataCoreAdapterMvc();
 
-            services.AddSignalR();
+            services
+                .AddSignalR()
+                .AddDataCoreAdapterSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

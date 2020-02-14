@@ -8,15 +8,15 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class ExampleAdapterTests : AdapterTests<ExampleAdapter> {
 
-        private const string TestTagId1 = "Test Tag 1";
+        private static readonly TestTagDetails TestTag1 = new TestTagDetails("Test Tag 1");
 
 
         protected override ExampleAdapter CreateAdapter() {
             return new ExampleAdapter();
         }
 
-        protected override string GetTestTagId() {
-            return TestTagId1;
+        protected override TestTagDetails GetTestTagDetails() {
+            return TestTag1;
         }
 
 
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Tests {
                     var subscribedTagCount = await subscription.AddTagsToSubscription(
                         context,
                         new[] {
-                            TestTagId1
+                            TestTag1.Id
                         },
                         CancellationToken.None
                     ).ConfigureAwait(false);
@@ -60,8 +60,8 @@ namespace DataCore.Adapter.Tests {
                     var now = System.DateTime.UtcNow;
                     adapter.WriteSnapshotValue(
                         TagValueQueryResult.Create(
-                            TestTagId1,
-                            TestTagId1,
+                            TestTag1.Id,
+                            TestTag1.Id,
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-5))
@@ -71,8 +71,8 @@ namespace DataCore.Adapter.Tests {
                     );
                     adapter.WriteSnapshotValue(
                         TagValueQueryResult.Create(
-                            TestTagId1,
-                            TestTagId1,
+                            TestTag1.Id,
+                            TestTag1.Id,
                             TagValueBuilder
                                 .Create()
                                 .WithUtcSampleTime(now.AddSeconds(-1))

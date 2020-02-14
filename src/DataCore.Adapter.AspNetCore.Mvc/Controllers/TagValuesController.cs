@@ -351,7 +351,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
-        public async Task<IActionResult> GetSupportedAggregateFunctions(string adapterId, CancellationToken cancellationToken) {
+        public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400

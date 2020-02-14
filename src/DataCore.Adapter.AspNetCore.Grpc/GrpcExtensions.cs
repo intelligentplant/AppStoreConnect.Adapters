@@ -248,7 +248,7 @@ namespace DataCore.Adapter {
                     break;
                 case Grpc.VariantType.Object:
                     var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-                    serializerOptions.Converters.AddAdapterConverters();
+                    serializerOptions.Converters.AddDataCoreAdapterConverters();
                     value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions);
                     break;
                 case Grpc.VariantType.Sbyte:
@@ -333,7 +333,7 @@ namespace DataCore.Adapter {
                     break;
                 case Common.VariantType.Object:
                     var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-                    serializerOptions.Converters.AddAdapterConverters();
+                    serializerOptions.Converters.AddDataCoreAdapterConverters();
                     bytes = System.Text.Encoding.UTF8.GetBytes(
                         System.Text.Json.JsonSerializer.Serialize(variant.Value, variant.Value?.GetType() ?? typeof(object), serializerOptions)
                     );

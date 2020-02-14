@@ -40,6 +40,23 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
+
+                    // Send initial value back to indicate that subscription is active.
+                    var subscriptionReadyIndicator = new TagValueQueryResult() { 
+                        TagId = string.Empty,
+                        TagName = string.Empty,
+                        Value = new TagValue() { 
+                            Status = TagValueStatus.Good,
+                            UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow),
+                            Value = new Variant() {
+                                Type = VariantType.String,
+                                Value = Google.Protobuf.ByteString.CopyFromUtf8(key)
+                            }
+                        },
+                        QueryType = TagValueQueryType.Unknown
+                    };
+                    await responseStream.WriteAsync(subscriptionReadyIndicator).ConfigureAwait(false);
+
                     if (request.Tags.Count > 0) {
                         await subscription.AddTagsToSubscription(_adapterCallContext, request.Tags, cancellationToken).ConfigureAwait(false);
                     }
