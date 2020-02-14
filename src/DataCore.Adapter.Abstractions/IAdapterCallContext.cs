@@ -19,6 +19,11 @@ namespace DataCore.Adapter {
         string ConnectionId { get; }
 
         /// <summary>
+        /// The host-specified correlation ID for the current operation.
+        /// </summary>
+        string CorrelationId { get; }
+
+        /// <summary>
         /// Additional items related to the call context.
         /// </summary>
         IDictionary<object, object> Items { get; }

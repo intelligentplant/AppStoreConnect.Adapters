@@ -79,26 +79,28 @@ namespace DataCore.Adapter.Http.Client {
 
         /// <summary>
         /// Creates an <see cref="HttpMessageHandler"/> that can be used to transform an outgoing 
-        /// HTTP request based on a <see cref="ClaimsPrincipal"/> associated with the request. 
+        /// HTTP request based on a <see cref="RequestMetadata"/> object associated with the request. 
         /// This can be used to e.g. dynamically add an <c>Authorize</c> header or client 
-        /// certificate to the request based on the identities of the <see cref="ClaimsPrincipal"/>.
+        /// certificate to the request based on the identities of the <see cref="ClaimsPrincipal"/> 
+        /// associated with the request.
         /// </summary>
         /// <param name="callback">
-        ///   The callback to invoke prior to sending the request. The <see cref="ClaimsPrincipal"/> 
+        ///   The callback to invoke prior to sending the request. The <see cref="RequestMetadata"/> 
         ///   can be <see langword="null"/> if none was provided when invoking the adapter client 
         ///   method.
         /// </param>
         /// <returns>
         ///   A new <see cref="HttpMessageHandler"/> that can be added to the request pipeline for 
-        ///   the <see cref="HttpClient"/> used with an <see cref="AdapterHttpClient"/> instance.
+        ///   the <see cref="System.Net.Http.HttpClient"/> used with an <see cref="AdapterHttpClient"/> 
+        ///   instance.
         /// </returns>
-        public static DelegatingHandler CreateRequestTransformHandler(Func<HttpRequestMessage, ClaimsPrincipal, CancellationToken, Task> callback) {
+        public static DelegatingHandler CreateRequestTransformHandler(Func<HttpRequestMessage, RequestMetadata, CancellationToken, Task> callback) {
             if (callback == null) {
                 throw new ArgumentNullException(nameof(callback));
             }
 
             return new Jaahas.Http.HttpRequestTransformHandler(async (request, cancellationToken) => {
-                await callback(request, request.GetStateProperty<ClaimsPrincipal>(), cancellationToken).ConfigureAwait(false);
+                await callback(request, request.GetStateProperty<RequestMetadata>(), cancellationToken).ConfigureAwait(false);
             });
         }
 

@@ -293,7 +293,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             return GrpcCore.CallCredentials.FromInterceptor(new GrpcCore.AsyncAuthInterceptor(async (authContext, metadata) => {
                 var credentials = await _getCallCredentials(context).ConfigureAwait(false);
-                credentials.AddMetadataEntries(metadata);
+                credentials.CopyToMetadataCollection(metadata);
             }));
         }
 

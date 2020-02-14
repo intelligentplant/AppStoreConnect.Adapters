@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
-                var clientResponse = await client.AssetModel.FindNodesAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);
+                var clientResponse = await client.AssetModel.FindNodesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
                     if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
                         ch.TryWrite(item);

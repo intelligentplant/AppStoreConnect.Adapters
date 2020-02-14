@@ -147,7 +147,18 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new <see cref="GrpcCore.CallOptions"/> object.
         /// </returns>
         protected internal GrpcCore.CallOptions GetCallOptions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return new GrpcCore.CallOptions(cancellationToken: cancellationToken, credentials: _proxy.GetCallCredentials(context));
+            var headers = new GrpcCore.Metadata();
+            if (!string.IsNullOrWhiteSpace(context?.CorrelationId)) {
+                // We have a correlation ID for the context; use it on the outgoing call as 
+                // well.
+                headers.Add("Request-Id", context.CorrelationId);
+            }
+
+            return new GrpcCore.CallOptions(
+                cancellationToken: cancellationToken, 
+                credentials: _proxy.GetCallCredentials(context),
+                headers: headers
+            );
         }
 
     }

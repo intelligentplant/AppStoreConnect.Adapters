@@ -20,9 +20,9 @@ var httpClient = new HttpClient() {
 };
 ```
 
-All query methods optionally accept a `ClaimsPrincipal` as a parameter, allowing you to associate a principal with an outgoing request. This is useful if e.g. you are using a back-channel HTTP connection to query remote adapters on behalf of one of your app's users, and you need to add an `Authorize` header to an outgoing request to represent the calling user.
+All query methods optionally accept a `RequestMetadata` as a parameter, allowing you to associate additional metadata with an outgoing request. This is useful if e.g. you are using a back-channel HTTP connection to query remote adapters on behalf of one of your app's users, and you need to add an `Authorize` header to an outgoing request to represent the calling user.
 
-You can create an `HttpMessageHandler` capable of receiving the `ClaimsPrincipal` and modifying the associated HTTP request by calling the `AdapterHttpClient.CreateRequestTransformHandler` method. This handler can be added to the request pipeline for the `HttpClient` passed into the `AdapterHttpClient` constructor. If you are using ASP.NET Core, you can configure the `AdapterHttpClient` by registering it as a service with the ASP.NET Core dependency injection system:
+You can create an `HttpMessageHandler` capable of receiving the `RequestMetadata` and modifying the associated HTTP request by calling the `AdapterHttpClient.CreateRequestTransformHandler` method. This handler can be added to the request pipeline for the `HttpClient` passed into the `AdapterHttpClient` constructor. If you are using ASP.NET Core, you can configure the `AdapterHttpClient` by registering it as a service with the ASP.NET Core dependency injection system:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services) {
@@ -30,8 +30,8 @@ public void ConfigureServices(IServiceCollection services) {
     services.AddHttpClient<AdapterHttpClient>(options => {
         options.BaseAddress = new Uri("https://my-site.com/");
     })
-    .AddHttpMessageHandler(AdapterHttpClient.CreateRequestTransformHandler(async (request, principal, cancellationToken) => {
-        if (principal == null) {
+    .AddHttpMessageHandler(AdapterHttpClient.CreateRequestTransformHandler(async (request, metadata, cancellationToken) => {
+        if (metadata?.principal == null) {
             return;
         }
 
@@ -58,7 +58,7 @@ public class MyController : ControllerBase {
     }
 
     public async Task<HostInfo> GetAdapterHostInfo(CancellationToken cancellationToken) {
-        return await _client.HostInfo.GetHostInfoAsync(User, cancellationToken);
+        return await _client.HostInfo.GetHostInfoAsync(new RequestMetadata() { Principal = User }, cancellationToken);
     }
 
 }

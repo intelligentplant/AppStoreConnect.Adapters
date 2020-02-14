@@ -8,6 +8,18 @@ Client for querying remote adapters via [gRPC](https://grpc.io). Client and requ
 Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Grpc.Client](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Grpc.Client).
 
 
+# Creating Client Objects
+
+The gRPC services are all defined in the `DataCore.Adapter.Grpc` namespace. For example, to request information about the adapter host:
+
+```csharp
+var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost:58189");
+var client = new DataCore.Adapter.Grpc.HostInfoService.HostInfoServiceClient(channel);
+
+var hostInfo = await (client.GetHostInfoAsync(new GetHostInfoRequest())).HostInfo.ToAdapterHostInfo();
+```
+
+
 # Implementing Per-Call Authentication
 
 gRPC supports both per-channel and per-call authentication. If the remote host supports (or requires) per-call authentication, you can easily construct and add the required metadata entries to the client call, using instances of the [IClientCallCredentials](./Authentication/IClientCallCredentials.cs) interface:

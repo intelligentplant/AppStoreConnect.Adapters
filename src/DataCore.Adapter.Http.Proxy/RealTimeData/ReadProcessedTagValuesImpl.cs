@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// <inheritdoc />
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             var client = GetClient();
-            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.User, cancellationToken).ConfigureAwait(false);
+            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
-                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);
+                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
                     if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
                         ch.TryWrite(item);

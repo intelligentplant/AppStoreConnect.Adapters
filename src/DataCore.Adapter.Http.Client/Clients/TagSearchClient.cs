@@ -48,8 +48,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -66,7 +66,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagDefinition>> FindTagsAsync(string adapterId, FindTagsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagDefinition>> FindTagsAsync(
+            string adapterId, 
+            FindTagsRequest request, 
+            RequestMetadata metadata,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -76,7 +81,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<FindTagsRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -100,8 +105,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -118,7 +123,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagDefinition>> GetTagsAsync(string adapterId, GetTagsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagDefinition>> GetTagsAsync(
+            string adapterId, 
+            GetTagsRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -128,7 +138,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<GetTagsRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

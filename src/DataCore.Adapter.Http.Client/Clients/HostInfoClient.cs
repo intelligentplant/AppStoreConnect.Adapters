@@ -40,8 +40,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// Requests information about the remote adapter host.
         /// </summary>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -49,8 +49,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <returns>
         ///   A task that will return information about the remote host.
         /// </returns>
-        public async Task<HostInfo> GetHostInfoAsync(ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
-            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddStateProperty(principal);
+        public async Task<HostInfo> GetHostInfoAsync(
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

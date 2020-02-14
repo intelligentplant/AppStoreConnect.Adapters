@@ -48,8 +48,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -66,7 +66,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<TagValueAnnotationExtended> ReadAnnotationAsync(string adapterId, ReadAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<TagValueAnnotationExtended> ReadAnnotationAsync(
+            string adapterId, 
+            ReadAnnotationRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -74,7 +79,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddStateProperty(principal);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -98,8 +103,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -116,7 +121,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(string adapterId, ReadAnnotationsRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(
+            string adapterId, 
+            ReadAnnotationsRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -126,7 +136,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<ReadAnnotationsRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -150,8 +160,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -168,7 +178,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> CreateAnnotationAsync(string adapterId, CreateAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> CreateAnnotationAsync(
+            string adapterId, 
+            CreateAnnotationRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -178,7 +193,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -202,8 +217,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -220,7 +235,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> UpdateAnnotationAsync(string adapterId, UpdateAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> UpdateAnnotationAsync(
+            string adapterId, 
+            UpdateAnnotationRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -230,7 +250,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Put, url) {
                 Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -251,11 +271,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="request">
-        ///   The request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="correlationId">
+        ///   The correlation ID for the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -272,7 +292,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<WriteTagValueAnnotationResult> DeleteAnnotationAsync(string adapterId, DeleteAnnotationRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<WriteTagValueAnnotationResult> DeleteAnnotationAsync(
+            string adapterId, 
+            DeleteAnnotationRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -280,7 +305,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Delete, url).AddStateProperty(principal);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Delete, url).AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

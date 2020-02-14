@@ -27,6 +27,11 @@ namespace DataCore.Adapter.AspNetCore {
         }
 
         /// <inheritdoc/>
+        public string CorrelationId {
+            get { return _httpContext.TraceIdentifier; }
+        }
+
+        /// <inheritdoc/>
         public IDictionary<object, object> Items {
             get { return _httpContext.Items; }
         }

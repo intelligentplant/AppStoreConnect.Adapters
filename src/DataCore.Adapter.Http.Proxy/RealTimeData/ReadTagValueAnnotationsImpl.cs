@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();
-                var clientResponse = await client.TagValueAnnotations.ReadAnnotationsAsync(AdapterId, request, context?.User, ct).ConfigureAwait(false);
+                var clientResponse = await client.TagValueAnnotations.ReadAnnotationsAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
                     if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
                         ch.TryWrite(item);
@@ -35,7 +35,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = GetClient();
-            return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.User, cancellationToken).ConfigureAwait(false);
+            return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
         }
     }
 

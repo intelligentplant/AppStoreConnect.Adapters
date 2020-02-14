@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
         /// <param name="metadata">
         ///   The gRPC metadata collection to add the entry to.
         /// </param>
-        public static void AddMetadataEntries(this IEnumerable<IClientCallCredentials> credentials, GrpcCore.Metadata metadata) {
+        public static void CopyToMetadataCollection(this IEnumerable<IClientCallCredentials> credentials, GrpcCore.Metadata metadata) {
             if (credentials == null || metadata == null) {
                 return;
             }

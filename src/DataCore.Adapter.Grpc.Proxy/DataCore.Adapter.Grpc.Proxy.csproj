@@ -7,10 +7,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj" />

@@ -48,8 +48,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -66,7 +66,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<AssetModelNode>> BrowseNodesAsync(string adapterId, BrowseAssetModelNodesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<AssetModelNode>> BrowseNodesAsync(
+            string adapterId, 
+            BrowseAssetModelNodesRequest request, 
+            RequestMetadata metadata,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -76,7 +81,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) { 
                 Content = new ObjectContent<BrowseAssetModelNodesRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -100,8 +105,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -118,7 +123,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<AssetModelNode>> GetNodesAsync(string adapterId, GetAssetModelNodesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<AssetModelNode>> GetNodesAsync(
+            string adapterId, GetAssetModelNodesRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -128,7 +137,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<GetAssetModelNodesRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -152,8 +161,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="request">
         ///   The request.
         /// </param>
-        /// <param name="principal">
-        ///   The principal to associate with the outgoing request.
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -170,7 +179,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<AssetModelNode>> FindNodesAsync(string adapterId, FindAssetModelNodesRequest request, ClaimsPrincipal principal = null, CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<AssetModelNode>> FindNodesAsync(
+            string adapterId, 
+            FindAssetModelNodesRequest request, 
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -180,7 +194,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<FindAssetModelNodesRequest>(request, new JsonMediaTypeFormatter())
-            }.AddStateProperty(principal);
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

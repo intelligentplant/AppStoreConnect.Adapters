@@ -10,6 +10,8 @@ namespace DataCore.Adapter.Tests {
 
         public string ConnectionId { get; } = Guid.NewGuid().ToString();
 
+        public string CorrelationId { get; } = Guid.NewGuid().ToString();
+
         public IDictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
 
