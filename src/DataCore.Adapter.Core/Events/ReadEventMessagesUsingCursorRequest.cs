@@ -1,4 +1,7 @@
-﻿namespace DataCore.Adapter.Events {
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Describes a request to retrieve historical event messages using a cursor to specified the query start position.
@@ -9,6 +12,13 @@
         /// The cursor position to start the query at.
         /// </summary>
         public string CursorPosition { get; set; }
+
+        /// <summary>
+        /// The page size for the query.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        [DefaultValue(10)]
+        public int PageSize { get; set; } = 10;
 
     }
 }

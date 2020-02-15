@@ -18,7 +18,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
                     UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
                     Direction = request.Direction.ToGrpcEventReadDirection(),
-                    MessageCount = request.MessageCount
+                    PageSize = request.PageSize,
+                    Page = request.Page
                 };
                 var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, ct));
 

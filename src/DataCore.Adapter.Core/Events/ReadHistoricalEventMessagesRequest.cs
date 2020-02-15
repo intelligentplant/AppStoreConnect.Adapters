@@ -15,14 +15,5 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         public EventReadDirection Direction { get; set; }
 
-        /// <summary>
-        /// The maximum number of event messages to retrieve. A value of less than one is interpreted 
-        /// as meaning no limit. The adapter that handles the request can apply its own maximum limit 
-        /// to the query.
-        /// </summary>
-        [Required]
-        [DefaultValue(500)]
-        public int MessageCount { get; set; }
-
     }
 }

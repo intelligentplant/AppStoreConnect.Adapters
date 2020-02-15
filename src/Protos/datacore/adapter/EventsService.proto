@@ -30,17 +30,18 @@ message CreateEventPushChannelRequest {
 message GetEventMessagesForTimeRangeRequest {
     string adapter_id = 1;
     EventReadDirection direction = 2;
-    int32 message_count = 3;
     google.protobuf.Timestamp utc_start_time = 4;
     google.protobuf.Timestamp utc_end_time = 5;
     map<string,string> properties = 6;
+    int32 page_size = 7;
+    int32 page = 8;
 }
 
 
 message GetEventMessagesUsingCursorPositionRequest {
     string adapter_id = 1;
     EventReadDirection direction = 2;
-    int32 message_count = 3;
     string cursor_position = 4;
     map<string,string> properties = 5;
+    int32 page_size = 6;
 }

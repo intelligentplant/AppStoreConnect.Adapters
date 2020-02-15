@@ -64,7 +64,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterRequest = new Events.ReadEventMessagesForTimeRangeRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
-                MessageCount = request.MessageCount,
+                PageSize = request.PageSize,
+                Page = request.Page,
                 Direction = request.Direction == EventReadDirection.Forwards
                     ? Events.EventReadDirection.Forwards
                     : Events.EventReadDirection.Backwards
@@ -90,7 +91,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new Events.ReadEventMessagesUsingCursorRequest() {
                 CursorPosition = request.CursorPosition,
-                MessageCount = request.MessageCount,
+                PageSize = request.PageSize,
                 Direction = request.Direction == EventReadDirection.Forwards
                     ? Events.EventReadDirection.Forwards
                     : Events.EventReadDirection.Backwards
