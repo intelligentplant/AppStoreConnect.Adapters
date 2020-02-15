@@ -142,10 +142,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // we can't interpolate between two values.
 
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
-                    TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
+                    return TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
                 }
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
-                    TagValueBuilder.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
+                    return TagValueBuilder.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
                 }
                 return null;
             }
