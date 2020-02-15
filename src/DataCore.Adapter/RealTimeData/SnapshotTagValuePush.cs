@@ -118,14 +118,15 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, CancellationToken cancellationToken) {
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, CancellationToken cancellationToken) {
             var subscription = new Subscription(this);
             if (subscription == null) {
                 throw new InvalidOperationException();
             }
+            await ((ISnapshotTagValueSubscription) subscription).StartAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
             OnSubscriptionCreated(subscription);
 
-            return Task.FromResult<ISnapshotTagValueSubscription>(subscription);
+            return subscription;
         }
 
 

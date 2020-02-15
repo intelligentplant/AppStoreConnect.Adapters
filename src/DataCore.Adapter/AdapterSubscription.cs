@@ -26,11 +26,6 @@ namespace DataCore.Adapter {
         private readonly SemaphoreSlim _startupLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
-        /// Indicates if the subscription has been initialised.
-        /// </summary>
-        private bool _isStarted;
-
-        /// <summary>
         /// The channel for the subscription.
         /// </summary>
         private readonly Lazy<Channel<T>> _channel;
@@ -41,7 +36,7 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <inheritdoc/>
-        public bool IsStarted { get { return _isStarted; } }
+        public bool IsStarted { get; private set; }
 
         /// <inheritdoc/>
         public ChannelReader<T> Reader { get { return _channel.Value; } }
@@ -87,11 +82,11 @@ namespace DataCore.Adapter {
 
             await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try {
-                if (_isStarted) {
+                if (IsStarted) {
                     return;
                 }
                 await StartAsync(context, cancellationToken).ConfigureAwait(false);
-                _isStarted = true;
+                IsStarted = true;
             }
             finally {
                 _startupLock.Release();

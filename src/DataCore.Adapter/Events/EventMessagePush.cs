@@ -96,6 +96,7 @@ namespace DataCore.Adapter.Events.Utilities {
             }
 
             if (added) {
+                await ((IEventMessageSubscription) subscription).StartAsync(context, cancellationToken).ConfigureAwait(false);
                 await OnSubscriptionAdded(_disposedTokenSource.Token).WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
