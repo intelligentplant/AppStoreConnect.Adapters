@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,15 +9,26 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class ExampleAdapterTests : AdapterTests<ExampleAdapter> {
 
-        private static readonly TestTagDetails TestTag1 = new TestTagDetails("Test Tag 1");
+        private static readonly ReadTagValuesQueryDetails TestTag1 = new ReadTagValuesQueryDetails("Test Tag 1");
 
 
         protected override ExampleAdapter CreateAdapter() {
             return new ExampleAdapter();
         }
 
-        protected override TestTagDetails GetTestTagDetails() {
+
+        protected override ReadTagValuesQueryDetails GetReadTagValuesQueryDetails() {
             return TestTag1;
+        }
+
+
+        protected override ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails() {
+            return null;
+        }
+
+
+        protected override Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType) {
+            return Task.CompletedTask;
         }
 
 

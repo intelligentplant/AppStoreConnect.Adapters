@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DataCore.Adapter.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -9,12 +10,25 @@ namespace DataCore.Adapter.Tests {
             return CreateProxy(WebHostStartup.AdapterId);
         }
 
-        protected sealed override TestTagDetails GetTestTagDetails() {
+
+        protected sealed override ReadTagValuesQueryDetails GetReadTagValuesQueryDetails() {
             var now = DateTime.UtcNow;
-            return new TestTagDetails(WebHostStartup.TestTagId) { 
+            return new ReadTagValuesQueryDetails(WebHostStartup.TestTagId) { 
                 HistoryStartTime = now.AddDays(-1),
                 HistoryEndTime = now
             };
+        }
+
+
+        protected sealed override ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails() {
+            // TODO: return correct details.
+            return null;
+        }
+
+
+        protected override Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
+            // TODO: tell the "remote" adapter to emit a test event.
+            return Task.CompletedTask;
         }
 
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,7 +18,11 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract TAdapter CreateAdapter();
 
-        protected abstract TestTagDetails GetTestTagDetails();
+        protected abstract ReadTagValuesQueryDetails GetReadTagValuesQueryDetails();
+
+        protected abstract ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails();
+
+        protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType);
 
 
         [TestInitialize]
@@ -85,7 +90,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetTestTagDetails();
+                var tagDetails = GetReadTagValuesQueryDetails();
                 var tags = await feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { tagDetails.Id }
                 }, default).ToEnumerable();
@@ -108,7 +113,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetTestTagDetails();
+                var tagDetails = GetReadTagValuesQueryDetails();
                 var values = await feature.ReadSnapshotTagValues(context, new ReadSnapshotTagValuesRequest() {
                     Tags = new[] { tagDetails.Id }
                 }, default).ToEnumerable();
@@ -136,9 +141,10 @@ namespace DataCore.Adapter.Tests {
 
                 using (var subscription = await feature.Subscribe(context, default)) {
                     Assert.IsNotNull(subscription);
+                    Assert.IsTrue(subscription.IsStarted);
                     Assert.AreEqual(0, subscription.Count);
 
-                    var tagDetails = GetTestTagDetails();
+                    var tagDetails = GetReadTagValuesQueryDetails();
 
                     var subscribedTagCount = await subscription.AddTagsToSubscription(context, new[] { tagDetails.Id }, default);
                     Assert.AreEqual(1, subscribedTagCount);
@@ -166,7 +172,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetTestTagDetails();
+                var tagDetails = GetReadTagValuesQueryDetails();
 
                 var values = await feature.ReadRawTagValues(
                     context,
@@ -189,7 +195,7 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
-        #region [ IReadRawTagValues ]
+        #region [ IReadPlotTagValues ]
 
         [TestMethod]
         public Task ReadPlotTagValuesRequestShouldReturnResults() {
@@ -200,7 +206,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetTestTagDetails();
+                var tagDetails = GetReadTagValuesQueryDetails();
 
                 var values = await feature.ReadPlotTagValues(
                     context,
@@ -247,7 +253,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetTestTagDetails();
+                var tagDetails = GetReadTagValuesQueryDetails();
                 // Calculate sample interval for 10 buckets.
                 var sampleInterval = TimeSpan.FromSeconds((tagDetails.HistoryEndTime - tagDetails.HistoryStartTime).TotalSeconds / 10);
 
@@ -273,10 +279,237 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
+        #region [ IReadTagValuesAtTimes ]
+
+        [TestMethod]
+        public Task ReadTagValuesAtTimesRequestShouldReturnResults() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IReadTagValuesAtTimes>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IReadTagValuesAtTimes>();
+                    return;
+                }
+
+                var tagDetails = GetReadTagValuesQueryDetails();
+                var sampleTimes = new List<DateTime>();
+                var baseInterval = (tagDetails.HistoryEndTime - tagDetails.HistoryStartTime).TotalSeconds / 50;
+                var counter = 0;
+
+                for (var ts = tagDetails.HistoryStartTime; ts <= tagDetails.HistoryEndTime; ts = ts.AddSeconds(baseInterval * (counter % 10) + 1)) {
+                    ++counter;
+                    sampleTimes.Add(ts);
+                }
+
+                var values = await feature.ReadTagValuesAtTimes(
+                    context,
+                    new ReadTagValuesAtTimesRequest() {
+                        Tags = new[] { tagDetails.Id },
+                        UtcSampleTimes = sampleTimes.ToArray()
+                    },
+                    default
+                ).ToEnumerable();
+
+                Assert.AreEqual(sampleTimes.Count, values.Count());
+                Assert.IsTrue(values.All(v => tagDetails.Id.Equals(v.TagId) || tagDetails.Id.Equals(v.TagName, StringComparison.OrdinalIgnoreCase)));
+
+                for (var i = 0; i < sampleTimes.Count; i++) {
+                    var expectedSampleTime = sampleTimes[i];
+                    var sample = values.ElementAt(i);
+
+                    Assert.AreEqual(expectedSampleTime, sample.Value.UtcSampleTime);
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IEventMessagePush ]
+
+        [TestMethod]
+        public Task ActiveEventMessageSubscriptionShouldReceiveMessages() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IEventMessagePush>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IEventMessagePush>();
+                    return;
+                }
+
+                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Active, default)) {
+                    Assert.IsNotNull(subscription);
+                    Assert.IsTrue(subscription.IsStarted);
+
+                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
+
+                    using (var ctSource = new CancellationTokenSource(1000)) {
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        Assert.IsNotNull(val);
+                    }
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task PassiveEventMessageSubscriptionShouldReceiveMessages() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IEventMessagePush>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IEventMessagePush>();
+                    return;
+                }
+
+                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Passive, default)) {
+                    Assert.IsNotNull(subscription);
+                    Assert.IsTrue(subscription.IsStarted);
+
+                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
+
+                    using (var ctSource = new CancellationTokenSource(1000)) {
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        Assert.IsNotNull(val);
+                    }
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IReadEventMessagesForTimeRange ]
+
+        [DataTestMethod]
+        [DataRow(EventReadDirection.Forwards)]
+        [DataRow(EventReadDirection.Backwards)]
+        public Task ReadEventMessagesForTimeRangeRequestShouldReturnResults(EventReadDirection direction) {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IReadEventMessagesForTimeRange>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IReadEventMessagesForTimeRange>();
+                    return;
+                }
+
+                var queryDetails = GetReadEventMessagesQueryDetails();
+
+                var messages = await feature.ReadEventMessages(
+                    context,
+                    new ReadEventMessagesForTimeRangeRequest() {
+                        UtcStartTime = queryDetails.HistoryStartTime,
+                        UtcEndTime = queryDetails.HistoryEndTime,
+                        PageSize = 10,
+                        Page = 1,
+                        Direction = direction
+                    },
+                    default
+                ).ToEnumerable();
+
+                Assert.IsTrue(messages.Any());
+                Assert.IsTrue(messages.All(m => m.UtcEventTime >= queryDetails.HistoryStartTime && m.UtcEventTime <= queryDetails.HistoryEndTime));
+
+                // Ensure that messages were returned in the correct chronological order.
+                if (direction == EventReadDirection.Forwards) {
+                    Assert.IsTrue(messages.First().UtcEventTime <= messages.Last().UtcEventTime);
+                }
+                else {
+                    Assert.IsTrue(messages.First().UtcEventTime >= messages.Last().UtcEventTime);
+                }
+
+                // Now ensure that the next page does not contain any messages returned in the 
+                // first page, and that the timestamps of the event messages are correct in 
+                // relation to the first page and the read direction.
+
+                var messages2 = await feature.ReadEventMessages(
+                    context,
+                    new ReadEventMessagesForTimeRangeRequest() {
+                        UtcStartTime = queryDetails.HistoryStartTime,
+                        UtcEndTime = queryDetails.HistoryEndTime,
+                        PageSize = 10,
+                        Page = 2,
+                        Direction = direction
+                    },
+                    default
+                ).ToEnumerable();
+
+                if (messages2.Any()) {
+                    if (direction == EventReadDirection.Forwards) {
+                        Assert.IsTrue(messages2.First().UtcEventTime >= messages.Last().UtcEventTime);
+                    }
+                    else {
+                        Assert.IsTrue(messages2.First().UtcEventTime <= messages.Last().UtcEventTime);
+                    }
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IReadEventMessagesForTimeRange ]
+
+        [DataTestMethod]
+        [DataRow(EventReadDirection.Forwards)]
+        [DataRow(EventReadDirection.Backwards)]
+        public Task ReadEventMessagesUsingCursorRequestShouldReturnResults(EventReadDirection direction) {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IReadEventMessagesUsingCursor>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IReadEventMessagesUsingCursor>();
+                    return;
+                }
+
+                var queryDetails = GetReadEventMessagesQueryDetails();
+
+                var messages = await feature.ReadEventMessages(
+                    context,
+                    new ReadEventMessagesUsingCursorRequest() {
+                        CursorPosition = null,
+                        PageSize = 10,
+                        Direction = direction
+                    },
+                    default
+                ).ToEnumerable();
+
+                Assert.IsTrue(messages.Any());
+
+                // Ensure that messages were returned in the correct chronological order.
+                if (direction == EventReadDirection.Forwards) {
+                    Assert.IsTrue(messages.First().UtcEventTime <= messages.Last().UtcEventTime);
+                }
+                else {
+                    Assert.IsTrue(messages.First().UtcEventTime >= messages.Last().UtcEventTime);
+                }
+
+                var nextCursor = messages.Last().CursorPosition;
+                Assert.IsNotNull(nextCursor);
+
+                // Now ensure that the next page does not contain any messages returned in the 
+                // first page, and that the timestamps of the event messages are correct in 
+                // relation to the first page and the read direction.
+
+                var messages2 = await feature.ReadEventMessages(
+                    context,
+                    new ReadEventMessagesUsingCursorRequest() {
+                        CursorPosition = nextCursor,
+                        PageSize = 10,
+                        Direction = direction
+                    },
+                    default
+                ).ToEnumerable();
+
+                if (messages2.Any()) {
+                    if (direction == EventReadDirection.Forwards) {
+                        Assert.IsTrue(messages2.First().UtcEventTime >= messages.Last().UtcEventTime);
+                    }
+                    else {
+                        Assert.IsTrue(messages2.First().UtcEventTime <= messages.Last().UtcEventTime);
+                    }
+                }
+            });
+        }
+
+        #endregion
+
     }
 
 
-    public class TestTagDetails {
+    public class ReadTagValuesQueryDetails {
 
         public string Id { get; }
 
@@ -285,9 +518,18 @@ namespace DataCore.Adapter.Tests {
         public DateTime HistoryEndTime { get; set; }
 
 
-        public TestTagDetails(string id) {
+        public ReadTagValuesQueryDetails(string id) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
+
+    }
+
+
+    public class ReadEventMessagesQueryDetails {
+
+        public DateTime HistoryStartTime { get; set; }
+
+        public DateTime HistoryEndTime { get; set; }
 
     }
 
