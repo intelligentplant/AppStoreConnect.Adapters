@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,7 +65,38 @@ namespace DataCore.Adapter.Tests {
             Assert.Inconclusive($"Feature not implemented: {feature}");
         }
 
-        #region [ ITagSearch Tests ]
+        #region [ IHealthCheck ]
+
+        [TestMethod]
+        public Task CheckHealthRequestShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IHealthCheck>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IHealthCheck>();
+                    return;
+                }
+
+                var health = await feature.CheckHealthAsync(context, default);
+                VerifyHealthCheckResult(health);
+            });
+        }
+
+
+        private void VerifyHealthCheckResult(HealthCheckResult health) {
+            if (health.InnerResults != null && health.InnerResults.Any()) {
+                foreach (var item in health.InnerResults) {
+                    VerifyHealthCheckResult(item);
+                }
+
+                // If there are any inner results, ensure that the overall status matches the 
+                // aggregate status of the inner results.
+                Assert.AreEqual(health.Status, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.Status)));
+            }
+        }
+
+        #endregion
+
+        #region [ ITagSearch ]
 
         [TestMethod]
         public Task FindTagsRequestShouldReturnResults() {
