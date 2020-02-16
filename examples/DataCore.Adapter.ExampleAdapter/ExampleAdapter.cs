@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Example {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
-            AddFeature<IEventMessagePush, EventsSubscriptionManager>(new EventsSubscriptionManager(TimeSpan.FromSeconds(60)));
+            AddFeatures(new InMemoryEventMessageManager(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, Logger));
         }
 
 
@@ -53,52 +53,29 @@ namespace DataCore.Adapter.Example {
 
 
         protected override async Task StartAsync(CancellationToken cancellationToken) {
+            var startup = DateTime.UtcNow;
             await base.StartAsync(cancellationToken).ConfigureAwait(false);
             var adapter = (IAdapter) this;
             await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<RealTimeData.ITagSearch>(), cancellationToken).ConfigureAwait(false);
-        }
 
-
-        private class EventsSubscriptionManager : Events.Utilities.EventMessagePush {
-
-            private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-
-            internal EventsSubscriptionManager(TimeSpan interval) : base(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance) {
-                var startup = DateTime.UtcNow;
-                _ = Task.Run(async () => {
-                    try {
-                        while (!_disposedTokenSource.IsCancellationRequested) {
-                            await Task.Delay(interval, _disposedTokenSource.Token).ConfigureAwait(false);
-                            OnMessage(EventMessageBuilder
+            _ = Task.Run(async () => {
+                try {
+                    while (!StopToken.IsCancellationRequested) {
+                        var evtManager = (InMemoryEventMessageManager) Features.Get<IWriteEventMessages>();
+                        evtManager.WriteEventMessages(
+                            EventMessageBuilder
                                 .Create()
                                 .WithPriority(EventPriority.Low)
                                 .WithCategory("System Messages")
                                 .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
                                 .Build()
-                            );
-                        }
+                        );
+
+                        await Task.Delay(TimeSpan.FromSeconds(60), StopToken).ConfigureAwait(false);
                     }
-                    catch { }
-                });
-            }
-
-
-            protected override Task OnSubscriptionAdded(CancellationToken cancellationToken) {
-                return Task.CompletedTask;
-            }
-
-            protected override Task OnSubscriptionRemoved(CancellationToken cancellationToken) {
-                return Task.CompletedTask;
-            }
-
-            protected override void Dispose(bool disposing) {
-                if (disposing) {
-                    _disposedTokenSource.Cancel();
-                    _disposedTokenSource.Dispose();
                 }
-            }
-
+                catch { }
+            });
         }
 
     }
