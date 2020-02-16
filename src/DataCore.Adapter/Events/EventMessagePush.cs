@@ -6,7 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.Events.Utilities {
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Base class for simplifying implementation of the <see cref="IEventMessagePush"/> feature.
@@ -131,7 +131,9 @@ namespace DataCore.Adapter.Events.Utilities {
         /// <summary>
         /// Sends an event message to subscribers.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">
+        ///   The message.
+        /// </param>
         protected void OnMessage(EventMessage message) {
             if (_isDisposed || _disposedTokenSource.IsCancellationRequested || message == null) {
                 return;

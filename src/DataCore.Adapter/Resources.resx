@@ -190,6 +190,12 @@
   <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
+  <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
+    <value>Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>
+  </data>
+  <data name="Log_InMemoryEventMessageManager_WroteMessage" xml:space="preserve">
+    <value>Wrote event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>
+  </data>
   <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
     <value>Updated adapter options are not valid.</value>
   </data>

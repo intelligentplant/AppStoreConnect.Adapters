@@ -112,6 +112,32 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
+        /// Creates a new <see cref="EventMessageWithCursorPosition"/> using the configured 
+        /// settings and the specified cursor position.
+        /// </summary>
+        /// <param name="cursorPosition">
+        ///   The cursor position.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="EventMessageWithCursorPosition"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
+        /// </exception>
+        public EventMessageWithCursorPosition Build(string cursorPosition) {
+            return EventMessageWithCursorPosition.Create(
+                _id, 
+                _utcEventTime, 
+                _priority, 
+                _category, 
+                _message, 
+                _properties, 
+                cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
+            );
+        }
+
+
+        /// <summary>
         /// Updates the unique identifier for the event message.
         /// </summary>
         /// <param name="id">

@@ -268,6 +268,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}..
+        /// </summary>
+        internal static string Log_InMemoryEventMessageManager_EvictedMessage {
+            get {
+                return ResourceManager.GetString("Log_InMemoryEventMessageManager_EvictedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote event message {id} with cursor position {cursorPosition} and timestamp {timestamp}..
+        /// </summary>
+        internal static string Log_InMemoryEventMessageManager_WroteMessage {
+            get {
+                return ResourceManager.GetString("Log_InMemoryEventMessageManager_WroteMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Updated adapter options are not valid..
         /// </summary>
         internal static string Log_InvalidAdapterOptionsUpdate {
