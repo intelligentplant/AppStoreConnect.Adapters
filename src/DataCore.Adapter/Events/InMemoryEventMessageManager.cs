@@ -38,17 +38,15 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Creates a new <see cref="InMemoryEventMessageManager"/> object.
         /// </summary>
-        /// <param name="capacity">
-        ///   The maximum capacity of the store. When the store reaches capacity, the messages with 
-        ///   the earliest timestamp will be removed to create space for newer messages. Specify 
-        ///   less than one for no limit.
+        /// <param name="options">
+        ///   The store options.
         /// </param>
         /// <param name="logger">
         ///   The logger for the <see cref="InMemoryEventMessageManager"/>.
         /// </param>
-        public InMemoryEventMessageManager(int capacity, ILogger logger) 
+        public InMemoryEventMessageManager(InMemoryEventMessageManagerOptions options, ILogger logger) 
             : base(logger) {
-            _capacity = capacity;
+            _capacity = options?.Capacity ?? -1;
         }
 
 
@@ -282,6 +280,21 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.Dispose();
             }
         }
+
+    }
+
+
+    /// <summary>
+    /// Options for <see cref="InMemoryEventMessageManager"/>.
+    /// </summary>
+    public class InMemoryEventMessageManagerOptions {
+
+        /// <summary>
+        /// The capacity of the store. When the store reaches capacity, the messages with the
+        /// earliest timestamp will be removed to create space for newer messages. Specify 
+        /// less than one for no limit.
+        /// </summary>
+        public int Capacity { get; set; }
 
     }
 }
