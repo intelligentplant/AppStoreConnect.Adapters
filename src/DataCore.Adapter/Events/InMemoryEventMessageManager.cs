@@ -294,7 +294,7 @@ namespace DataCore.Adapter.Events {
         /// earliest timestamp will be removed to create space for newer messages. Specify 
         /// less than one for no limit.
         /// </summary>
-        public int Capacity { get; set; }
+        public int Capacity { get; set; } = 5000;
 
     }
 }
