@@ -108,11 +108,19 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the proxy.
+        /// <param name="logger">
+        ///   The logger for the proxy.
         /// </param>
-        public HttpAdapterProxy(AdapterHttpClient client, HttpAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : base(options, taskScheduler, loggerFactory) {
+        public HttpAdapterProxy(
+            AdapterHttpClient client, 
+            HttpAdapterProxyOptions options, 
+            IBackgroundTaskService taskScheduler, 
+            ILogger<HttpAdapterProxy> logger
+        ) : base(
+            options, 
+            taskScheduler, 
+            logger
+        ) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;

@@ -62,7 +62,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
         /// <inheritdoc/>
-        public Common.AdapterDescriptorExtended RemoteDescriptor {
+        public AdapterDescriptorExtended RemoteDescriptor {
             get {
                 lock (_remoteInfoLock) {
                     return _remoteDescriptor;
@@ -106,8 +106,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the proxy.
+        /// <param name="logger">
+        ///   The logger for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
@@ -115,9 +115,16 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(GrpcNet.Client.GrpcChannel channel, GrpcAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : base(options, taskScheduler, loggerFactory) {
-
+        public GrpcAdapterProxy(
+            GrpcNet.Client.GrpcChannel channel, 
+            GrpcAdapterProxyOptions options, 
+            IBackgroundTaskService taskScheduler, 
+            ILogger<GrpcAdapterProxy> logger
+        ) : base(
+            options, 
+            taskScheduler, 
+            logger
+        ) {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
@@ -139,8 +146,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the proxy.
+        /// <param name="logger">
+        ///   The logger for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
@@ -148,8 +155,16 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
-        public GrpcAdapterProxy(GrpcCore.Channel channel, GrpcAdapterProxyOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : base(options, taskScheduler, loggerFactory) {
+        public GrpcAdapterProxy(
+            GrpcCore.Channel channel, 
+            GrpcAdapterProxyOptions options, 
+            IBackgroundTaskService taskScheduler, 
+            ILogger<GrpcAdapterProxy> logger
+        ) : base(
+            options, 
+            taskScheduler, 
+            logger
+        ) {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = Options?.GetCallCredentials;
