@@ -124,5 +124,96 @@ namespace DataCore.Adapter.Common {
             return !left.Equals(right);
         }
 
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(bool val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator bool(Variant val) => (bool) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(sbyte val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator sbyte(Variant val) => (sbyte) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(byte val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator byte(Variant val) => (byte) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(short val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator short(Variant val) => (short) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(ushort val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ushort(Variant val) => (ushort) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(int val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator int(Variant val) => (int) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(uint val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator uint(Variant val) => (uint) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(long val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator long(Variant val) => (long) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(ulong val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ulong(Variant val) => (ulong) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(float val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator float(Variant val) => (float) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(double val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator double(Variant val) => (double) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(DateTime val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator DateTime(Variant val) => (DateTime) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(TimeSpan val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator TimeSpan(Variant val) => (TimeSpan) val.Value;
+
     }
 }
