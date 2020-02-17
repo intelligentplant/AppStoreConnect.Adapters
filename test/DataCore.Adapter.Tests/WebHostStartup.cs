@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using GrpcCore = Grpc.Core;
 using GrpcNet = Grpc.Net;
 
 namespace DataCore.Adapter.Tests {
@@ -44,20 +43,32 @@ namespace DataCore.Adapter.Tests {
                 });
             });
 
+            // Register an in-memory event manager for use by our adapter. We register this 
+            // separately just to that we can resolve it from test classes to insert required 
+            // test data.
+            services.AddSingleton<Events.InMemoryEventMessageManagerOptions>();
+            services.AddSingleton<Events.InMemoryEventMessageManager>(sp => {
+                return ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageManager>(sp, sp.GetService<ILogger<Events.InMemoryEventMessageManager>>());
+            });
+
             // Register our adapter as a singleton.
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
-                return new Csv.CsvAdapter(
+                var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
+                    sp, 
                     new Csv.CsvAdapterOptions() {
                         Id = AdapterId,
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
                         GetCsvStream = () => GetType().Assembly.GetManifestResourceStream(GetType(), "DummySensorData.csv")
-                    },
-                    sp.GetRequiredService<IBackgroundTaskService>(),
-                    sp.GetRequiredService<ILoggerFactory>()
+                    }
                 );
+
+                // Add in-memory event message management
+                adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageManager>());
+
+                return adapter;
             });
 
             // Add adapter services
