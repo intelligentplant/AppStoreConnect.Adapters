@@ -65,13 +65,13 @@ namespace DataCore.Adapter.AspNetCore {
                 optionsName = Options.DefaultName;
             }
 
-            CurrentValue = optionsMonitor.Get(optionsName);
+            Set(optionsMonitor.Get(optionsName));
             _listenerRegistration = optionsMonitor.OnChange((options, name) => { 
                 if (!string.Equals(optionsName, name, StringComparison.Ordinal)) {
                     return;
                 }
 
-                CurrentValue = options;
+                Set(options);
             });
         }
 

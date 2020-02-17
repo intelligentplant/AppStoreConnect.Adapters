@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DataCore.Adapter {
 
@@ -17,18 +16,10 @@ namespace DataCore.Adapter {
         /// </summary>
         private readonly List<ListenerRegistration> _listeners = new List<ListenerRegistration>();
 
-        private TAdapterOptions _currentValue;
-
         /// <summary>
         /// The current adapter options.
         /// </summary>
-        public TAdapterOptions CurrentValue { 
-            get { return _currentValue; }
-            protected set {
-                _currentValue = value;
-                Notify(_currentValue);
-            }
-        }
+        public TAdapterOptions CurrentValue { get; private set; }
 
 
         /// <summary>
@@ -61,6 +52,18 @@ namespace DataCore.Adapter {
             lock (_listeners) {
                 _listeners.ForEach(l => l.Notify(options));
             }
+        }
+
+
+        /// <summary>
+        /// Updates the current value and notifies listeners about the change.
+        /// </summary>
+        /// <param name="options">
+        ///   The updated options.
+        /// </param>
+        public void Set(TAdapterOptions options) {
+            CurrentValue = options;
+            Notify(CurrentValue);
         }
 
 
