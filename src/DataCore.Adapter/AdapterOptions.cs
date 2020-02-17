@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace DataCore.Adapter {
+﻿namespace DataCore.Adapter {
 
     /// <summary>
     /// Base class for runtime options for adapters deriving from <see cref="AdapterBase{TAdapterOptions}"/>.

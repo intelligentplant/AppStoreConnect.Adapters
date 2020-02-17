@@ -85,7 +85,6 @@ namespace DataCore.Adapter.Csv {
 
         private void AddFeatures() {
             // Construct adapter features.
-            AddFeatures(this);
             AddFeatures(new ReadHistoricalTagValues(this, this, TaskScheduler));
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;

@@ -145,9 +145,7 @@ namespace DataCore.Adapter {
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
         protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) {
-            AddFeatures(this);
-        }
+            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
 
 
         /// <summary>
