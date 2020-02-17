@@ -39,6 +39,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? Events.EventMessageSubscriptionType.Active : Events.EventMessageSubscriptionType.Passive, cancellationToken).ConfigureAwait(false)) {
                 try {
                     s_subscriptions[key] = subscription;
+
+                    // Send initial value back to indicate that subscription is active.
+                    var subscriptionReadyIndicator = new EventMessage() { 
+                        Category = string.Empty,
+                        Id = string.Empty,
+                        Priority = EventPriority.Low,
+                        Message = key,
+                        UtcEventTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
+                    };
+                    await responseStream.WriteAsync(subscriptionReadyIndicator).ConfigureAwait(false);
+
                     while (!cancellationToken.IsCancellationRequested) {
                         try {
                             var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);

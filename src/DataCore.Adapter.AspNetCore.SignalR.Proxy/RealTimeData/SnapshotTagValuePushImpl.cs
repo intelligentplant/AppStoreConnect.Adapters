@@ -115,6 +115,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     SubscriptionCancelled
                 ).ConfigureAwait(false);
 
+                // Wait for initial "subscription ready" message.
+                await hubChannel.ReadAsync().ConfigureAwait(false);
+
+                // Now forward all subsequent messages to the channel for the subscription.
                 _feature.TaskScheduler.QueueBackgroundWorkItem(async ct => {
                     try {
                         await hubChannel.Forward(Writer, ct).ConfigureAwait(false);

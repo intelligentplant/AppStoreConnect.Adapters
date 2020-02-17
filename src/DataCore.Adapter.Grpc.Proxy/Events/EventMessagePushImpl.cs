@@ -39,7 +39,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             }
 
 
-            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+                var tcs = new TaskCompletionSource<int>();
+
                 Writer.RunBackgroundOperation(async (ch, ct) => {
                     var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
                         AdapterId = _feature.AdapterId,
@@ -47,6 +49,11 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                             ? EventSubscriptionType.Active 
                             : EventSubscriptionType.Passive
                     }, _feature.GetCallOptions(context, ct));
+
+                    // The service will always send us an initial message to indicate that the 
+                    // subscription has been registered.
+                    await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false);
+                    tcs.TrySetResult(0);
 
                     try {
                         while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
@@ -61,7 +68,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     }
                 }, false, _feature.TaskScheduler, SubscriptionCancelled);
 
-                return default;
+                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
             }
 
 

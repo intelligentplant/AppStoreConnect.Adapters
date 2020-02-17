@@ -199,7 +199,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             SubscriptionWrapper result;
             lock (subscriptionsForConnection) {
-                result = new SubscriptionWrapper(adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
+                result = new SubscriptionWrapper(Context.ConnectionId, adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
                 subscriptionsForConnection.Add(result);
             }
 
@@ -408,9 +408,17 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         private class SubscriptionWrapper : ISnapshotTagValueSubscription {
 
+            public string ConnectionId { get; }
+
             public string AdapterId { get; }
 
             private readonly ISnapshotTagValueSubscription _inner;
+
+            private readonly Channel<TagValueQueryResult> _channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() { 
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
 
             private Action _onDisposed;
 
@@ -422,13 +430,20 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             /// <inheritdoc/>
-            public ChannelReader<TagValueQueryResult> Reader { get { return _inner.Reader; } }
+            public ChannelReader<TagValueQueryResult> Reader { get { return _channel.Reader; } }
 
             /// <inheritdoc/>
             public int Count { get { return _inner.Count; } }
 
 
-            public SubscriptionWrapper(string adapterId, ISnapshotTagValueSubscription inner, ICollection<SubscriptionWrapper> subscriptionsForConnection, CancellationToken streamCancelled) {
+            public SubscriptionWrapper(
+                string connectionId,
+                string adapterId, 
+                ISnapshotTagValueSubscription inner, 
+                ICollection<SubscriptionWrapper> subscriptionsForConnection, 
+                CancellationToken streamCancelled
+            ) {
+                ConnectionId = connectionId;
                 AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
                 _inner = inner ?? throw new ArgumentNullException(nameof(inner));
                 _onDisposed = () => {
@@ -437,6 +452,28 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     }
                 };
                 _onStreamCancelled = streamCancelled.Register(Dispose);
+                _ = Task.Run(async () => { 
+                    try {
+                        // Send initial value back to indicate that subscription is active.
+                        var subscriptionReadyIndicator = new TagValueQueryResult(
+                            string.Empty, 
+                            string.Empty, 
+                            TagValueBuilder
+                                .Create()
+                                .WithValue(string.Concat(ConnectionId, ':', AdapterId))
+                                .Build()
+                        );
+                        _channel.Writer.TryWrite(subscriptionReadyIndicator);
+
+                        await _inner.Reader.Forward(_channel.Writer, streamCancelled).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        _channel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        _channel.Writer.TryComplete();
+                    }
+                });
             }
 
 
@@ -470,6 +507,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 _inner.Dispose();
+                _channel.Writer.TryComplete();
             }
 
 
@@ -479,6 +517,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 await _inner.DisposeAsync().ConfigureAwait(false);
+                _channel.Writer.TryComplete();
             }
 
         }

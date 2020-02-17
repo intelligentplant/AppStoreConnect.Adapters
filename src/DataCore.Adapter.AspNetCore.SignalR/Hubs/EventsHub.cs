@@ -102,7 +102,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             EventMessageSubscription result;
             lock (subscriptionsForConnection) {
-                result = new EventMessageSubscription(adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
+                result = new EventMessageSubscription(Context.ConnectionId, adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
                 subscriptionsForConnection.Add(result);
             }
 
@@ -207,6 +207,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         private class EventMessageSubscription : IEventMessageSubscription {
 
             /// <summary>
+            /// The connection ID for the subscription.
+            /// </summary>
+            public string ConnectionId { get; }
+
+            /// <summary>
             /// The adapter ID for the subscription.
             /// </summary>
             public string AdapterId { get; }
@@ -215,6 +220,15 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             /// The inner subscription returned by the adapter.
             /// </summary>
             private readonly IEventMessageSubscription _inner;
+
+            /// <summary>
+            /// The channel that will emit values to the subscriber.
+            /// </summary>
+            private readonly Channel<EventMessage> _channel = Channel.CreateUnbounded<EventMessage>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = true,
+                SingleReader = true,
+                SingleWriter = true
+            });
 
             /// <summary>
             /// Called when the subscription is disposed.
@@ -233,13 +247,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             /// <inheritdoc/>
             ChannelReader<EventMessage> IAdapterSubscription<EventMessage>.Reader {
-                get { return _inner.Reader; }
+                get { return _channel.Reader; }
             }
 
 
             /// <summary>
             /// Creates a new <see cref="EventMessageSubscription"/> object.
             /// </summary>
+            /// <param name="connectionId">
+            ///   The SignalR connection ID.
+            /// </param>
             /// <param name="adapterId">
             ///   The adapter ID.
             /// </param>
@@ -252,7 +269,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             /// <param name="streamCancelled">
             ///   A cancellation token that will fire if the streaming request is cancelled by the caller.
             /// </param>
-            internal EventMessageSubscription(string adapterId, IEventMessageSubscription inner, List<EventMessageSubscription> subscriptionsForConnection, CancellationToken streamCancelled) {
+            internal EventMessageSubscription(
+                string connectionId,
+                string adapterId, 
+                IEventMessageSubscription inner, 
+                List<EventMessageSubscription> subscriptionsForConnection, 
+                CancellationToken streamCancelled
+            ) {
+                ConnectionId = connectionId;
                 AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
                 _inner = inner ?? throw new ArgumentNullException(nameof(inner));
                 _onDisposed = () => {
@@ -261,6 +285,25 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     }
                 };
                 _onStreamCancelled = streamCancelled.Register(Dispose);
+                _ = Task.Run(async () => {
+                    try {
+                        // Send initial value back to indicate that subscription is active.
+                        var subscriptionReadyIndicator = EventMessageBuilder
+                            .Create()
+                            .WithPriority(EventPriority.Low)
+                            .WithMessage(string.Concat(ConnectionId, ':', AdapterId))
+                            .Build();
+                        _channel.Writer.TryWrite(subscriptionReadyIndicator);
+
+                        await _inner.Reader.Forward(_channel.Writer, streamCancelled).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        _channel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        _channel.Writer.TryComplete();
+                    }
+                });
             }
 
 
@@ -276,6 +319,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 _inner.Dispose();
+                _channel.Writer.TryComplete();
             }
 
 
@@ -285,6 +329,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 _onDisposed = null;
                 _onStreamCancelled.Dispose();
                 await _inner.DisposeAsync().ConfigureAwait(false);
+                _channel.Writer.TryComplete();
             }
         }
 
