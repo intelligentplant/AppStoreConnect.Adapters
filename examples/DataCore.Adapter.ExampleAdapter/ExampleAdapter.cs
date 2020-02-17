@@ -25,10 +25,10 @@ namespace DataCore.Adapter.Example {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The adapter logger factory.
+        /// <param name="logger">
+        ///   The adapter logger.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory) : base(
+        public ExampleAdapter(IBackgroundTaskService taskScheduler, ILogger<ExampleAdapter> logger) : base(
             new Csv.CsvAdapterOptions() {
                 Id = "wind-power",
                 Name = "Wind Power Energy Company",
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Example {
                 GetCsvStream = () => typeof(ExampleAdapter).Assembly.GetManifestResourceStream(typeof(ExampleAdapter), CsvFile)
             },
             taskScheduler,
-            loggerFactory
+            logger
         ) {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);

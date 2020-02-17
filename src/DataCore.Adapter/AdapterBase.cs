@@ -41,6 +41,11 @@ namespace DataCore.Adapter {
         protected internal ILogger Logger { get; }
 
         /// <summary>
+        /// Scope for the <see cref="Logger"/> that gets set when the adapter is created.
+        /// </summary>
+        private readonly IDisposable _loggerScope;
+
+        /// <summary>
         /// Indicates if the adapter has been started.
         /// </summary>
         protected bool IsRunning { get; private set; }
@@ -130,9 +135,8 @@ namespace DataCore.Adapter {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
-        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
+        /// <param name="logger">
+        ///   The logger for the adapter. Can be <see langword="null"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -140,8 +144,8 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
-        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, loggerFactory) {
+        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
+            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) {
             AddFeatures(this);
         }
 
@@ -158,9 +162,8 @@ namespace DataCore.Adapter {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>. The category name 
-        ///   for the adapter's logger will be <c>{adapter_type_name}.{adapter_name}</c>.
+        /// <param name="logger">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="optionsMonitor"/> is <see langword="null"/>.
@@ -168,7 +171,7 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
-        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory) {
+        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, IBackgroundTaskService taskScheduler, ILogger logger) {
             if (optionsMonitor == null) {
                 throw new ArgumentNullException(nameof(optionsMonitor));
             }
@@ -196,7 +199,8 @@ namespace DataCore.Adapter {
                 options.Description
             );
 
-            Logger = loggerFactory?.CreateLogger(GetType().FullName + "." + _descriptor.Name) ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            _loggerScope = Logger.BeginScope(_descriptor.Id);
             Options = options;
             TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
 
@@ -347,6 +351,7 @@ namespace DataCore.Adapter {
             finally {
                 await _features.DisposeAsync().ConfigureAwait(false);
                 _properties.Clear();
+                _loggerScope.Dispose();
                 _isDisposed = true;
                 _isDisposing = false;
                 IsRunning = false;

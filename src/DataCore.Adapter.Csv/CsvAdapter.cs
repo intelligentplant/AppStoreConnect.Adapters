@@ -43,8 +43,8 @@ namespace DataCore.Adapter.Csv {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the adapter.
+        /// <param name="logger">
+        ///   The logger for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -52,8 +52,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILoggerFactory loggerFactory)
-            : base(options, taskScheduler, loggerFactory) {
+        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger<CsvAdapter> logger)
+            : base(options, taskScheduler, logger) {
             AddFeatures();
         }
 
@@ -68,8 +68,8 @@ namespace DataCore.Adapter.Csv {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="loggerFactory">
-        ///   The logger factory for the adapter.
+        /// <param name="logger">
+        ///   The logger for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -77,8 +77,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
-            : base(options, backgroundTaskService, loggerFactory) {
+        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+            : base(options, backgroundTaskService, logger) {
             AddFeatures();
         }
 

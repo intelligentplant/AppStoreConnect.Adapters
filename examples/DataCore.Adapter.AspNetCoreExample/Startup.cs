@@ -23,17 +23,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services.AddSingleton<IAdapter, ExampleAdapter>();
 
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
-                return new Csv.CsvAdapter(
-                    new Csv.CsvAdapterOptions() {
-                        Id = "sensor-csv",
-                        Name = "Sensor CSV",
-                        Description = "CSV adapter with dummy sensor data",
-                        IsDataLoopingAllowed = true,
-                        CsvFile = "DummySensorData.csv"
-                    },
-                    sp.GetRequiredService<IBackgroundTaskService>(),
-                    sp.GetRequiredService<ILoggerFactory>()
-                );
+                return ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, new Csv.CsvAdapterOptions() {
+                    Id = "sensor-csv",
+                    Name = "Sensor CSV",
+                    Description = "CSV adapter with dummy sensor data",
+                    IsDataLoopingAllowed = true,
+                    CsvFile = "DummySensorData.csv"
+                });
             });
 
             // Add adapter services
