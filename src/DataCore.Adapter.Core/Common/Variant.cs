@@ -5,7 +5,7 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Describes a variant value.
     /// </summary>
-    public struct Variant : IEquatable<Variant> {
+    public struct Variant : IEquatable<Variant>, IFormattable {
 
         /// <summary>
         /// Null variant.
@@ -75,6 +75,14 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
+        public string ToString(string format, IFormatProvider formatProvider) {
+            return (Value is IFormattable formattable)
+                ? formattable.ToString(format, formatProvider)
+                : ToString();
+        }
+
+
+        /// <inheritdoc/>
         public override int GetHashCode() {
             unchecked {
                 // Choose large primes to avoid hashing collisions
@@ -115,5 +123,6 @@ namespace DataCore.Adapter.Common {
         public static bool operator !=(Variant left, Variant right) {
             return !left.Equals(right);
         }
+
     }
 }
