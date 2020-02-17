@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The event messages, sorted by cursor position.
         /// </summary>
-        private readonly SortedList<string, EventMessage> _eventMessages = new SortedList<string, EventMessage>(StringComparer.Ordinal);
+        private readonly SortedList<CursorPosition, EventMessage> _eventMessages = new SortedList<CursorPosition, EventMessage>();
 
         /// <summary>
         /// Lock for accessing <see cref="_eventMessages"/>.
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The cursor position for the message.
         /// </returns>
-        private string WriteEventMessage(EventMessage message) {
+        private CursorPosition WriteEventMessage(EventMessage message) {
             var cursorPosition = CreateCursorPosition(message);
 
             _eventMessagesLock.EnterWriteLock();
@@ -221,24 +221,24 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            KeyValuePair<string, EventMessage>[] messages;
+            KeyValuePair<CursorPosition, EventMessage>[] messages;
 
             _eventMessagesLock.EnterReadLock();
             try {
-                IEnumerable<KeyValuePair<string, EventMessage>> selector;
+                IEnumerable<KeyValuePair<CursorPosition, EventMessage>> selector;
 
                 if (string.IsNullOrWhiteSpace(request.CursorPosition)) {
                     selector = request.Direction == EventReadDirection.Forwards
                         ? _eventMessages
                         : _eventMessages.Reverse();
                 }
-                else if (!_eventMessages.ContainsKey(request.CursorPosition)) {
+                else if (!CursorPosition.TryParse(request.CursorPosition, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
                     return Array.Empty<EventMessageWithCursorPosition>().PublishToChannel();
                 }
                 else {
                     selector = request.Direction == EventReadDirection.Forwards
-                        ? _eventMessages.Where(x => string.CompareOrdinal(request.CursorPosition, x.Key) > 0)
-                        : _eventMessages.Where(x => string.CompareOrdinal(request.CursorPosition, x.Key) < 0).Reverse();
+                        ? _eventMessages.Where(x => x.Key > cursorPosition)
+                        : _eventMessages.Where(x => x.Key < cursorPosition).Reverse();
                 }
 
                 messages = selector
@@ -249,7 +249,7 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
 
-            return messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key)).PublishToChannel();
+            return messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key.ToString())).PublishToChannel();
         }
 
 
@@ -262,8 +262,8 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The cursor position.
         /// </returns>
-        private string CreateCursorPosition(EventMessage message) {
-            return string.Concat(message.UtcEventTime.Ticks, '|', Interlocked.Increment(ref _sequenceId));
+        private CursorPosition CreateCursorPosition(EventMessage message) {
+            return new CursorPosition(message.UtcEventTime.Ticks, Interlocked.Increment(ref _sequenceId));
         }
 
 
@@ -279,6 +279,125 @@ namespace DataCore.Adapter.Events {
                 }
                 _eventMessagesLock.Dispose();
             }
+        }
+
+
+        /// <summary>
+        /// Describes a cursor position for an event message that is sortable via a <see cref="Primary"/> 
+        /// index, and then by a <see cref="Secondary"/> index if two cursor positions have the same 
+        /// primary index.
+        /// </summary>
+        private struct CursorPosition : IComparable<CursorPosition> {
+
+            /// <summary>
+            /// The primary index for the cursor. Cursors are sorted initially by <see cref="Primary"/> 
+            /// and then by <see cref="Secondary"/>.
+            /// </summary>
+            public long Primary;
+
+            /// <summary>
+            /// The secondary index for the cursor, to allow messages with the same <see cref="Primary"/> 
+            /// value to be sorted into order.
+            /// </summary>
+            public long Secondary;
+
+
+            /// <summary>
+            /// Creates a new <see cref="CursorPosition"/>.
+            /// </summary>
+            /// <param name="primary">
+            ///   The primary index for the cursor.
+            /// </param>
+            /// <param name="secondary">
+            ///   The secondary index for the cursor.
+            /// </param>
+            public CursorPosition(long primary, long secondary) {
+                Primary = primary;
+                Secondary = secondary;
+            }
+
+
+            /// <inheritdoc/>
+            public override string ToString() {
+                return string.Concat(Primary, '|', Secondary);
+            }
+
+
+            /// <inheritdoc/>
+            public int CompareTo(CursorPosition other) {
+                if (Primary < other.Primary) {
+                    return -1;
+                }
+                if (Primary > other.Primary) {
+                    return 1;
+                }
+
+                return Secondary < other.Secondary
+                    ? -1
+                    : Secondary > other.Secondary
+                        ? 1
+                        : 0;
+            }
+
+
+            /// <summary>
+            /// Tries to parse the specified value into a <see cref="CursorPosition"/> instance.
+            /// </summary>
+            /// <param name="value">
+            ///   The string to parse.
+            /// </param>
+            /// <param name="cursorPosition">
+            ///   The parsed cursor position.
+            /// </param>
+            /// <returns>
+            ///   <see langword="true"/> if the cursor position was successfully parsed, or 
+            ///   <see langword="false"/> otherwise.
+            /// </returns>
+            public static bool TryParse(string value, out CursorPosition cursorPosition) {
+                if (string.IsNullOrWhiteSpace(value)) {
+                    cursorPosition = default;
+                    return false;
+                }
+
+                var parts = value.Split('|');
+                if (parts.Length != 2) {
+                    cursorPosition = default;
+                    return false;
+                }
+
+                if (!long.TryParse(parts[0], out var ticks) || !long.TryParse(parts[1], out var sequenceId)) {
+                    cursorPosition = default;
+                    return false;
+                }
+
+                cursorPosition = new CursorPosition(ticks, sequenceId);
+                return true;
+            }
+
+
+            /// <inheritdoc/>
+            public static bool operator < (CursorPosition x, CursorPosition y) {
+                return x.CompareTo(y) < 0;
+            }
+
+
+            /// <inheritdoc/>
+            public static bool operator > (CursorPosition x, CursorPosition y) {
+                return x.CompareTo(y) > 0;
+            }
+
+
+            /// <inheritdoc/>
+            public static bool operator <= (CursorPosition x, CursorPosition y) {
+                return x.CompareTo(y) < 0;
+            }
+
+
+            /// <inheritdoc/>
+            public static bool operator >= (CursorPosition x, CursorPosition y) {
+                return x.CompareTo(y) > 0;
+            }
+
         }
 
     }
