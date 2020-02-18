@@ -364,7 +364,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ConfigureAwait(false);
+            var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 

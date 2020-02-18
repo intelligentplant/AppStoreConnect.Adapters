@@ -11,14 +11,30 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         public ReadProcessedTagValuesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
-        public async Task<IEnumerable<Adapter.RealTimeData.DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-            var response = client.GetSupportedDataFunctionsAsync(new GetSupportedDataFunctionsRequest() {
-                AdapterId = AdapterId
-            }, cancellationToken: cancellationToken);
+        public ChannelReader<Adapter.RealTimeData.DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var result = ChannelExtensions.CreateChannel<Adapter.RealTimeData.DataFunctionDescriptor>(-1);
 
-            var result = await response.ResponseAsync.ConfigureAwait(false);
-            return result.DataFunctions.Where(x => x != null).Select(x => x.ToAdapterDataFunctionDescriptor()).ToArray();
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = CreateClient<TagValuesService.TagValuesServiceClient>();
+                var grpcRequest = new GetSupportedDataFunctionsRequest() {
+                    AdapterId = AdapterId
+                };
+
+                var grpcResponse = client.GetSupportedDataFunctions(grpcRequest, GetCallOptions(context, ct));
+                try {
+                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                        if (grpcResponse.ResponseStream.Current == null) {
+                            continue;
+                        }
+                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterDataFunctionDescriptor(), ct).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    grpcResponse.Dispose();
+                }
+            }, true, TaskScheduler, cancellationToken);
+
+            return result;
         }
 
 

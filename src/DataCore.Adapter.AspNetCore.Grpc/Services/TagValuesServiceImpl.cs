@@ -236,17 +236,20 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        public override async Task<GetSupportedDataFunctionsResponse> GetSupportedDataFunctions(GetSupportedDataFunctionsRequest request, ServerCallContext context) {
+        public override async Task GetSupportedDataFunctions(GetSupportedDataFunctionsRequest request, IServerStreamWriter<DataFunctionDescriptor> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var values = await adapter.Feature.GetSupportedDataFunctions(_adapterCallContext, cancellationToken).ConfigureAwait(false);
+            var reader = adapter.Feature.GetSupportedDataFunctions(_adapterCallContext, cancellationToken);
 
-            var result = new GetSupportedDataFunctionsResponse();
-            result.DataFunctions.AddRange(values.Select(x => x.ToGrpcDataFunctionDescriptor()));
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var val) || val == null) {
+                    continue;
+                }
 
-            return result;
+                await responseStream.WriteAsync(val.ToGrpcDataFunctionDescriptor()).ConfigureAwait(false);
+            }
         }
 
 

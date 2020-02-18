@@ -21,9 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A collection describing the available data functions.
+        ///   A channel that will emit the available data functions.
         /// </returns>
-        Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
+        ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// Reads processed (aggregated) data from the adapter.
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel containing the values for the requested tags.
+        ///   A channel that will emit the values for the requested tags.
         /// </returns>
         ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken);
 

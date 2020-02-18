@@ -169,8 +169,8 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return Task.FromResult(_aggregationHelper.GetSupportedDataFunctions());
+        public ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            return _aggregationHelper.GetSupportedDataFunctions().PublishToChannel();
         }
 
 

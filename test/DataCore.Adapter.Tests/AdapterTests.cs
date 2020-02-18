@@ -279,7 +279,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var supportedDataFunctions = await feature.GetSupportedDataFunctions(context, default);
+                var supportedDataFunctions = await feature.GetSupportedDataFunctions(context, default).ToEnumerable();
                 if (!supportedDataFunctions.Any(f => f.Id.Equals(dataFunction))) {
                     Assert.Inconclusive($"Data function {dataFunction} is not supported.");
                     return;

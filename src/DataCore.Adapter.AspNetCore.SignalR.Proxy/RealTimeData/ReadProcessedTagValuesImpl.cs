@@ -20,9 +20,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public ReadProcessedTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var client = GetClient();
-            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, cancellationToken).ConfigureAwait(false);
+        public ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = GetClient();
+                var hubChannel = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, ct).ConfigureAwait(false);
+                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+            }, true, TaskScheduler, cancellationToken);
+
+            return result;
         }
 
         /// <inheritdoc />

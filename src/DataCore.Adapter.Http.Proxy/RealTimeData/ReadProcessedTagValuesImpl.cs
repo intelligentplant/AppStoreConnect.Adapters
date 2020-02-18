@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Proxy.RealTimeData {
@@ -20,9 +18,20 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         public ReadProcessedTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var client = GetClient();
-            return await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
+        public ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = GetClient();
+                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+                foreach (var item in clientResponse) {
+                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        ch.TryWrite(item);
+                    }
+                }
+            }, true, TaskScheduler, cancellationToken);
+
+            return result;
         }
 
         /// <inheritdoc />

@@ -27,6 +27,5 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
 
-
     }
 }

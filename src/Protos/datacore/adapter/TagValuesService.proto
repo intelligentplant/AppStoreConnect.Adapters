@@ -21,7 +21,7 @@ service TagValuesService {
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadPlotTagValues (ReadPlotTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadTagValuesAtTimes (ReadTagValuesAtTimesRequest) returns (stream TagValueQueryResult);
-    rpc GetSupportedDataFunctions (GetSupportedDataFunctionsRequest) returns (GetSupportedDataFunctionsResponse);
+    rpc GetSupportedDataFunctions (GetSupportedDataFunctionsRequest) returns (stream DataFunctionDescriptor);
     rpc ReadProcessedTagValues (ReadProcessedTagValuesRequest) returns (stream ProcessedTagValueQueryResult);
 
     // Write tag values
@@ -97,9 +97,7 @@ message ReadTagValuesAtTimesRequest {
 message GetSupportedDataFunctionsRequest {
     string adapter_id = 1;
 }
-message GetSupportedDataFunctionsResponse {
-    repeated DataFunctionDescriptor data_functions = 1;
-}
+
 message ReadProcessedTagValuesRequest {
     string adapter_id = 1;
     repeated string tags = 2;
