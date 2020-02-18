@@ -21,6 +21,11 @@ namespace DataCore.Adapter.Common {
         /// </summary>
         public Variant Value { get; }
 
+        /// <summary>
+        /// The property description.
+        /// </summary>
+        public string Description { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterProperty"/> object.
@@ -31,12 +36,16 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value of the property.
         /// </param>
+        /// <param name="description">
+        ///   The property description.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterProperty(string name, Variant value) {
+        public AdapterProperty(string name, Variant value, string description = null) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
+            Description = description;
         }
 
 
@@ -49,14 +58,17 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value of the property.
         /// </param>
+        /// <param name="description">
+        ///   The property description.
+        /// </param>
         /// <returns>
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterProperty Create(string name, Variant value) {
-            return new AdapterProperty(name, value);
+        public static AdapterProperty Create(string name, Variant value, string description = null) {
+            return new AdapterProperty(name, value, description);
         }
 
 
@@ -69,14 +81,17 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value of the property.
         /// </param>
+        /// <param name="description">
+        ///   The property description.
+        /// </param>
         /// <returns>
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterProperty Create(string name, object value) {
-            return new AdapterProperty(name, value is Variant v ? v : Variant.FromValue(value));
+        public static AdapterProperty Create(string name, object value, string description = null) {
+            return new AdapterProperty(name, value is Variant v ? v : Variant.FromValue(value), description);
         }
 
 
@@ -97,7 +112,7 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(property));
             }
 
-            return Create(property.Name, property.Value);
+            return Create(property.Name, property.Value, property.Description);
         }
 
     }

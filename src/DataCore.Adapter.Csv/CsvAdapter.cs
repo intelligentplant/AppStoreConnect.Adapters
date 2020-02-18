@@ -9,8 +9,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using CsvHelper;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
-using DataCore.Adapter.RealTimeData.Utilities;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -152,7 +152,7 @@ namespace DataCore.Adapter.Csv {
                 return null;
             }
 
-            if (!item.StartsWith("[") || !item.EndsWith("]")) { 
+            if (!item.StartsWith("[", StringComparison.Ordinal) || !item.EndsWith("]", StringComparison.Ordinal)) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
                 return TagDefinition.Create(item, item, null, null, Common.VariantType.Double, null, null, null);
@@ -466,6 +466,15 @@ namespace DataCore.Adapter.Csv {
             }, true, TaskScheduler, cancellationToken);
 
             return result;
+        }
+
+
+        /// <inheritdoc/>
+        public ChannelReader<AdapterProperty> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted(true);
+
+            return Array.Empty<AdapterProperty>().ToChannel();
         }
 
 

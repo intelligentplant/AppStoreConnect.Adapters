@@ -41,6 +41,7 @@ message Variant {
 message AdapterProperty {
     string name = 1;
     Variant value = 2;
+    string description = 3;
 }
 
 

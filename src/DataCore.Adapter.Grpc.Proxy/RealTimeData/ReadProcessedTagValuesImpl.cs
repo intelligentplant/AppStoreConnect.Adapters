@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<Adapter.RealTimeData.ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.ProcessedTagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.ProcessedTagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagValuesService.TagValuesServiceClient>();

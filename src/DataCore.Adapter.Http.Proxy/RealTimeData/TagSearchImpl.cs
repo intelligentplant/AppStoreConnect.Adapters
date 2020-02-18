@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Proxy.RealTimeData {
@@ -15,6 +16,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         ///   The owning proxy.
         /// </param>
         public TagSearchImpl(HttpAdapterProxy proxy) : base(proxy) { }
+
 
         /// <inheritdoc />
         public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
@@ -33,6 +35,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             return result;
         }
 
+
         /// <inheritdoc />
         public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
@@ -49,5 +52,24 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
             return result;
         }
+
+
+        /// <inheritdoc />
+        public ChannelReader<AdapterProperty> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            var result = ChannelExtensions.CreateChannel<AdapterProperty>(-1);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = GetClient();
+                var clientResponse = await client.TagSearch.GetTagPropertiesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+                foreach (var item in clientResponse) {
+                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        ch.TryWrite(item);
+                    }
+                }
+            }, true, TaskScheduler, cancellationToken);
+
+            return result;
+        }
+
     }
 }

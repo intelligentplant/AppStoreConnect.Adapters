@@ -39,7 +39,11 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                    Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+                    Common.AdapterProperty.Create(
+                        "Project URL", 
+                        "https://github.com/intelligentplant/app-store-connect-adapters",
+                        "GitHub repository URL for the project"
+                    )
                 );
 
                 // To add authentication and authorization options for adapter API operations, extend 

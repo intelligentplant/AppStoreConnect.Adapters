@@ -5,6 +5,7 @@ using System.Net.Http.Formatting;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -145,6 +146,63 @@ namespace DataCore.Adapter.Http.Client.Clients {
                     httpResponse.EnsureSuccessStatusCode();
 
                     return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally {
+                httpRequest.RemoveStateProperty().Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets tag property definitions.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the results back to the caller.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<IEnumerable<AdapterProperty>> GetTagPropertiesAsync(
+            string adapterId,
+            GetTagPropertiesRequest request,
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            _client.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/properties";
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
+                Content = new ObjectContent<GetTagPropertiesRequest>(request, new JsonMediaTypeFormatter())
+            }.AddRequestMetadata(metadata);
+
+            try {
+                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                    httpResponse.EnsureSuccessStatusCode();
+
+                    return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterProperty>>(cancellationToken).ConfigureAwait(false);
                 }
             }
             finally {

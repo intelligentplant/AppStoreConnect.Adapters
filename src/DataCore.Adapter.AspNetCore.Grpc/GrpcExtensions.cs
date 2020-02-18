@@ -387,7 +387,8 @@ namespace DataCore.Adapter {
 
             return Common.AdapterProperty.Create(
                 property.Name,
-                property.Value.ToAdapterVariant()
+                property.Value.ToAdapterVariant(),
+                property.Description
             );
         }
 
@@ -408,7 +409,8 @@ namespace DataCore.Adapter {
 
             var result = new Grpc.AdapterProperty() {
                 Name = property.Name ?? string.Empty,
-                Value = property.Value.ToGrpcVariant()
+                Value = property.Value.ToGrpcVariant(),
+                Description = property.Description ?? string.Empty
             };
 
             return result;

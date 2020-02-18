@@ -10,7 +10,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<Adapter.RealTimeData.TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueAnnotationChannel();
+            var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();

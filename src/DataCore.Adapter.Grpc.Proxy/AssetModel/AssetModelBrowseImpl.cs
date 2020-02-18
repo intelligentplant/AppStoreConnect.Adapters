@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public ChannelReader<Adapter.AssetModel.AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
@@ -51,7 +51,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public ChannelReader<Adapter.AssetModel.AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
+            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();

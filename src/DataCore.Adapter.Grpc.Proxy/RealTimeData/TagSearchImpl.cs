@@ -9,7 +9,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<Adapter.RealTimeData.TagDefinition> FindTags(IAdapterCallContext context, Adapter.RealTimeData.FindTagsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
+            var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagSearchService.TagSearchServiceClient>();
@@ -47,7 +47,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<Adapter.RealTimeData.TagDefinition> GetTags(IAdapterCallContext context, Adapter.RealTimeData.GetTagsRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
+            var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagSearchService.TagSearchServiceClient>();
@@ -63,6 +63,35 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             continue;
                         }
                         await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagDefinition(), ct).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    grpcResponse.Dispose();
+                }
+            }, true, TaskScheduler, cancellationToken);
+
+            return result;
+        }
+
+
+        public ChannelReader<Common.AdapterProperty> GetTagProperties(IAdapterCallContext context, Adapter.RealTimeData.GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            var result = ChannelExtensions.CreateChannel<Common.AdapterProperty>(-1);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = CreateClient<TagSearchService.TagSearchServiceClient>();
+                var grpcRequest = new GetTagPropertiesRequest() {
+                    AdapterId = AdapterId,
+                    PageSize = request.PageSize,
+                    Page = request.Page
+                };
+
+                var grpcResponse = client.GetTagProperties(grpcRequest, GetCallOptions(context, ct));
+                try {
+                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                        if (grpcResponse.ResponseStream.Current == null) {
+                            continue;
+                        }
+                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterProperty(), ct).ConfigureAwait(false);
                     }
                 }
                 finally {

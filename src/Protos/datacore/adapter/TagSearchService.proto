@@ -10,6 +10,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagSearchService {
     rpc FindTags(FindTagsRequest) returns (stream TagDefinition);
     rpc GetTags(GetTagsRequest) returns (stream TagDefinition);
+    rpc GetTagProperties(GetTagPropertiesRequest) returns (stream AdapterProperty);
 }
 
 
@@ -30,4 +31,12 @@ message FindTagsRequest {
 message GetTagsRequest {
     string adapter_id = 1;
     repeated string tags = 2;
+}
+
+
+// Get tag property definitions
+message GetTagPropertiesRequest {
+    string adapter_id = 1;
+    int32 page_size = 2;
+    int32 page = 3;
 }

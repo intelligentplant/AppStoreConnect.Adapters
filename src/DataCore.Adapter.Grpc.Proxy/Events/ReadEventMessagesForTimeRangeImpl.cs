@@ -9,7 +9,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         public ChannelReader<Adapter.Events.EventMessage> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>();
+            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<EventsService.EventsServiceClient>();

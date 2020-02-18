@@ -9,7 +9,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         public ChannelReader<Adapter.RealTimeData.TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagValuesService.TagValuesServiceClient>();

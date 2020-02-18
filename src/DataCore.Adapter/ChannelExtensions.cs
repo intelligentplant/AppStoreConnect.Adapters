@@ -63,7 +63,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The new channel.
         /// </returns>
-        internal static Channel<T> CreateChannel<T>(
+        public static Channel<T> CreateChannel<T>(
             int capacity,
             bool singleReader = true,
             bool singleWriter = true,

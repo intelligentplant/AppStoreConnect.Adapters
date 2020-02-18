@@ -8,7 +8,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         public WriteSnapshotTagValuesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
         public ChannelReader<Adapter.RealTimeData.WriteTagValueResult> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel();
+            var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = CreateClient<TagValuesService.TagValuesServiceClient>();

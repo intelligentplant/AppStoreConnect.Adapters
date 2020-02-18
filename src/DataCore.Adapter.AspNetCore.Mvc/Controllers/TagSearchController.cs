@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,6 +39,80 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public TagSearchController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
             _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+        }
+
+
+        /// <summary>
+        /// Gets tag property definitions from an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="AdapterProperty"/> objects.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/properties")]
+        [ProducesResponseType(typeof(IEnumerable<AdapterProperty>), 200)]
+        public async Task<IActionResult> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Unauthorized(); // 401
+            }
+
+            var feature = resolvedFeature.Feature;
+            var reader = feature.GetTagProperties(_callContext, request, cancellationToken);
+            var tags = new List<AdapterProperty>();
+
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var prop) || prop == null) {
+                    continue;
+                }
+                tags.Add(prop);
+            }
+
+            return Ok(tags); // 200
+        }
+
+
+        /// <summary>
+        /// Gets tag property definitions from an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size.
+        /// </param>
+        /// <param name="page">
+        ///   The results page to return.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/properties")]
+        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        public async Task<IActionResult> GetTagProperties(string adapterId, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+            return await GetTagProperties(adapterId, new GetTagPropertiesRequest() {
+                PageSize = pageSize,
+                Page = page
+            }, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -147,7 +222,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }

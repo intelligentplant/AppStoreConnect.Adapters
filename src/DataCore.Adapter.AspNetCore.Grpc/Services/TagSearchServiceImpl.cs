@@ -17,6 +17,29 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        public override async Task GetTagProperties(GetTagPropertiesRequest request, IServerStreamWriter<AdapterProperty> responseStream, ServerCallContext context) {
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Adapter.RealTimeData.GetTagPropertiesRequest() {
+                PageSize = request.PageSize,
+                Page = request.Page
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var reader = adapter.Feature.GetTagProperties(_adapterCallContext, adapterRequest, cancellationToken);
+
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!reader.TryRead(out var prop) || prop == null) {
+                    continue;
+                }
+
+                await responseStream.WriteAsync(prop.ToGrpcAdapterProperty()).ConfigureAwait(false);
+            }
+        }
+
+
         public override async Task FindTags(FindTagsRequest request, IServerStreamWriter<TagDefinition> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -48,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task GetTags(GetTagsRequest request, IServerStreamWriter<TagDefinition> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.GetTagsRequest() {
                 Tags = request.Tags.ToArray()
