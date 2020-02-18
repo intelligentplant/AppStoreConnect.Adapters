@@ -31,11 +31,6 @@ namespace DataCore.Adapter.Common {
         };
 
         /// <summary>
-        /// The <see cref="ToString()"/> value for a null <see cref="Value"/>.
-        /// </summary>
-        private const string NullTextValue = "{null}";
-
-        /// <summary>
         /// The value.
         /// </summary>
         public object Value { get; }
@@ -112,7 +107,7 @@ namespace DataCore.Adapter.Common {
         ///   otherwise.
         /// </returns>
         public static bool TryParse(string s, VariantType type, IFormatProvider provider, out Variant variant) {
-            if (s == null || string.Equals(s, NullTextValue, StringComparison.Ordinal)) {
+            if (s == null) {
                 variant = Null;
                 return type == VariantType.Null;
             }
@@ -240,14 +235,61 @@ namespace DataCore.Adapter.Common {
         }
 
 
-        /// <inheritdoc/>
+        /// <summary>
+        ///   Formats the value of the current instance.
+        /// </summary>
+        /// <returns>
+        ///   The formatted value.
+        /// </returns>
         public override string ToString() {
-            return Value?.ToString() ?? "{null}";
+            string format = null;
+
+            // Special handling for numeric types to ensure correct round-tripping. 
+            // See https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings
+
+            switch (Type) {
+                case VariantType.Double:
+                    format = "G17";
+                    break;
+                case VariantType.Float:
+                    format = "G9";
+                    break;
+                case VariantType.Byte:
+                case VariantType.Int16:
+                case VariantType.Int32:
+                case VariantType.Int64:
+                case VariantType.SByte:
+                case VariantType.UInt16:
+                case VariantType.UInt32:
+                case VariantType.UInt64:
+                    format = "G";
+                    break;
+            }
+
+            return ToString(format, null);
+        }
+
+
+        /// <summary>
+        /// Formats the value of the current instance using the specified format.
+        /// </summary>
+        /// <param name="format">
+        ///   The format to use.
+        /// </param>
+        /// <returns>
+        ///   The formatted value.
+        /// </returns>
+        public string ToString(string format) {
+            return ToString(format, null);
         }
 
 
         /// <inheritdoc/>
         public string ToString(string format, IFormatProvider formatProvider) {
+            if (Value == null) {
+                return null;
+            }
+
             return (Value is IFormattable formattable)
                 ? formattable.ToString(format, formatProvider)
                 : ToString();
