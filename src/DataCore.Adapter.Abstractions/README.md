@@ -15,6 +15,35 @@ All adapters implement the [IAdapter](./IAdapter.cs) interface. Each adapter imp
 Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
 
 
+## Standard Features
+
+Adapters can define any number of the following standard features:
+
+- Asset Model:
+    - [IAssetModelBrowse](./AssetModel/IAssetModelBrowse.cs)
+    - [IAssetModelSearch](./AssetModel/IAssetModelSearch.cs)
+- Diagnostics:
+    - [IHealthCheck](./Diagostics/IHealthCheck.cs)
+- Events:
+    - [IEventMessagePush](./Events/IEventMessagePush.cs)
+    - [IReadEventMessagesForTimeRange](./Events/IReadEventMessagesForTimeRange.cs)
+    - [IReadEventMessagesUsingCursor](./Events/IReadEventMessagesUsingCursor.cs)
+    - [IWriteEventMessages](./Events/IWriteEventMessages.cs)
+- Real-Time Data:
+    - [IReadPlotTagValues](./RealTimeData/IReadPlotTagValues.cs)
+    - [IReadProcessedTagValues](./RealTimeData/IReadProcessedTagValues.cs)
+    - [IReadRawTagValues](./RealTimeData/IReadRawTagValues.cs)
+    - [IReadSnapshotTagValues](./RealTimeData/IReadSnapshotTagValues.cs)
+    - [IReadTagValueAnnotations](./RealTimeData/IReadTagValueAnnotations.cs)
+    - [IReadTagValuesAtTimes](./RealTimeData/IReadTagValuesAtTimes.cs)
+    - [ISnapshotTagValuePush](./RealTimeData/ISnapshotTagValuePush.cs)
+    - [ITagInfo](./RealTimeData/ITagInfo.cs)
+    - [ITagSearch](./RealTimeData/ITagSearch.cs)
+    - [IWriteHistoricalTagValues](./RealTimeData/IWriteHistoricalTagValues.cs)
+    - [IWriteSnapshotTagValues](./RealTimeData/IWriteSnapshotTagValues.cs)
+    - [IWriteTagValueAnnotations](./RealTimeData/IWriteTagValueAnnotations.cs)
+
+
 ## Extension Features
 
 In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./IAdapterExtensionFeature.cs).
