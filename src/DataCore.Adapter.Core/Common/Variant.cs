@@ -244,7 +244,7 @@ namespace DataCore.Adapter.Common {
         public override string ToString() {
             string format = null;
 
-            // Special handling for numeric types to ensure correct round-tripping. 
+            // Special handling for some types to ensure correct round-tripping. 
             // See https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings
 
             switch (Type) {
@@ -263,6 +263,10 @@ namespace DataCore.Adapter.Common {
                 case VariantType.UInt32:
                 case VariantType.UInt64:
                     format = "G";
+                    break;
+                case VariantType.DateTime:
+                    // ISO 8601 with millisecond precision
+                    format = "yyyy-MM-ddTHH:mm:ss.fffZ";
                     break;
             }
 
