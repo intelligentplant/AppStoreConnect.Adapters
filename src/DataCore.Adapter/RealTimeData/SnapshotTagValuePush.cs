@@ -327,6 +327,18 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="values">
         ///   The value changes.
         /// </param>
+        protected void OnValuesChanged(params TagValueQueryResult[] values) {
+            OnValuesChanged((IEnumerable<TagValueQueryResult>) values);
+        }
+
+
+        /// <summary>
+        /// Informs the <see cref="SnapshotTagValuePush"/> that snapshot value changes 
+        /// have occurred.
+        /// </summary>
+        /// <param name="values">
+        ///   The value changes.
+        /// </param>
         protected void OnValuesChanged(IEnumerable<TagValueQueryResult> values) {
             if (values == null || !values.Any()) {
                 return;
