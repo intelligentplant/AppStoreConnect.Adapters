@@ -265,8 +265,8 @@ namespace DataCore.Adapter.Common {
                     format = "G";
                     break;
                 case VariantType.DateTime:
-                    // ISO 8601 with millisecond precision
-                    format = "yyyy-MM-ddTHH:mm:ss.fffZ";
+                    // ISO 8601-1:2019 extended profile
+                    format = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
                     break;
             }
 
