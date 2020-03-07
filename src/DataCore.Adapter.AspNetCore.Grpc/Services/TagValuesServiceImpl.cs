@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
@@ -55,14 +56,23 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 // Run background operation to push results back to caller.
 
                 subscription.Values.RunBackgroundOperation(async (ch, ct) => {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var val) || val == null) {
-                            continue;
-                        }
+                    while (!ct.IsCancellationRequested) {
+                        try {
+                            var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                            if (val == null) {
+                                continue;
+                            }
 
-                        await responseStream.WriteAsync(
-                            val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
-                        ).ConfigureAwait(false);
+                            await responseStream.WriteAsync(
+                                val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
+                            ).ConfigureAwait(false);
+                        }
+                        catch (ChannelClosedException) {
+                            break;
+                        }
+                        catch (OperationCanceledException) {
+                            break;
+                        }
                     }
                 }, _backgroundTaskService, cancellationToken);
 
