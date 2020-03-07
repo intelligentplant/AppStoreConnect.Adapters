@@ -45,6 +45,12 @@ message AdapterProperty {
 }
 
 
+enum SubscriptionUpdateAction {
+    SUBSCRIPTION_UPDATE_ACTION_SUBSCRIBE = 0;
+    SUBSCRIPTION_UPDATE_ACTION_UNSUBSCRIBE = 1;
+}
+
+
 enum WriteOperationStatus {
     WRITE_OPERATION_STATUS_UNKNOWN = 0;
     WRITE_OPERATION_STATUS_SUCCESS = 1;
@@ -214,6 +220,7 @@ message DigitalStateSet {
     string name = 2;
     repeated DigitalState states = 3;
 }
+
 
 // Annotation models
 

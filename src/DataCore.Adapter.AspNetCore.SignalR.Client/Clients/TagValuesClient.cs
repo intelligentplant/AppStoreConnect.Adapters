@@ -41,12 +41,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="tags">
-        ///   The initial set of tags to subscribe to. Can be <see langword="null"/>. 
-        ///   <see cref="AddTagsToSnapshotTagValueChannelAsync(string, IEnumerable{string}, CancellationToken)"/> 
-        ///   and <see cref="RemoveTagsFromSnapshotTagValueChannelAsync(string, IEnumerable{string}, CancellationToken)"/> 
-        ///   can be used to manage the subscribed tags once a subscription channel has been 
-        ///   created.
+        /// <param name="subscriptionChanges">
+        ///   A channel that will publish tags to add to or remove from the subscription.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation. If this token fires, or the connection is
@@ -59,137 +55,23 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken = default) {
+        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
+            string adapterId, 
+            ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> subscriptionChanges, 
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (subscriptionChanges == null) {
+                throw new ArgumentNullException(nameof(subscriptionChanges));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
                 adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
-                cancellationToken
-            ).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Gets the identifiers for the tags that the client is currently subscribed to via its 
-        /// snapshot subscription channel.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will return a channel that is used to stream the tag identifiers back to 
-        ///   the caller.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <remarks>
-        ///   Requires an active snapshot subscription channel created via 
-        ///   <see cref="CreateSnapshotTagValueChannelAsync(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </remarks>
-        public async Task<ChannelReader<TagIdentifier>> GetSnapshotTagValueChannelSubscriptionsAsync(string adapterId, CancellationToken cancellationToken = default) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<TagIdentifier>(
-                "GetSnapshotTagValueChannelSubscriptions",
-                adapterId,
-                cancellationToken
-            ).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Adds tags to the client's snapshot subscription channel.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="tags">
-        ///   The IDs or names of the tags to subscribe to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will return the total number of subscribed tags following the update.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tags"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        ///   Requires an active snapshot subscription channel created via 
-        ///   <see cref="CreateSnapshotTagValueChannelAsync(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </remarks>
-        public async Task<int> AddTagsToSnapshotTagValueChannelAsync(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken = default) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-            if (tags == null) {
-                throw new ArgumentNullException(nameof(tags));
-            }
-
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<int>(
-                "AddTagsToSnapshotTagValueChannel",
-                adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
-                cancellationToken
-            ).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Removes tags from the client's snapshot subscription channel.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="tags">
-        ///   The IDs or names of the tags to unsubscribe from.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will return the total number of subscribed tags following the update.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tags"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        ///   Requires an active snapshot subscription channel created via 
-        ///   <see cref="CreateSnapshotTagValueChannelAsync(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </remarks>
-        public async Task<int> RemoveTagsFromSnapshotTagValueChannelAsync(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken = default) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-            if (tags == null) {
-                throw new ArgumentNullException(nameof(tags));
-            }
-
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<int>(
-                "RemoveTagsFromSnapshotTagValueChannel",
-                adapterId,
-                tags?.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray() ?? Array.Empty<string>(),
+                subscriptionChanges,
                 cancellationToken
             ).ConfigureAwait(false);
         }

@@ -268,6 +268,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Tag = {tag}, Action = {action}.
+        /// </summary>
+        internal static string Log_ErrorWhileProcessingSnapshotSubscriptionChange {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileProcessingSnapshotSubscriptionChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}..
         /// </summary>
         internal static string Log_InMemoryEventMessageManager_EvictedMessage {
@@ -291,6 +300,24 @@ namespace DataCore.Adapter {
         internal static string Log_InvalidAdapterOptionsUpdate {
             get {
                 return ResourceManager.GetString("Log_InvalidAdapterOptionsUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed with error..
+        /// </summary>
+        internal static string Log_SnapshotValuePublishToSubscriberThrewException {
+            get {
+                return ResourceManager.GetString("Log_SnapshotValuePublishToSubscriberThrewException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed..
+        /// </summary>
+        internal static string Log_SnapshotValuePublishToSubscriberWasUnsuccessful {
+            get {
+                return ResourceManager.GetString("Log_SnapshotValuePublishToSubscriberWasUnsuccessful", resourceCulture);
             }
         }
         

@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -10,18 +9,15 @@ namespace DataCore.Adapter.RealTimeData {
     public interface ISnapshotTagValuePush : IAdapterFeature {
 
         /// <summary>
-        /// Creates a push subscription.
+        /// Creates a snapshot value change subscription.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
-        ///   A subscription object that can be disposed once the subscription is no longer required.
+        ///   A subscription that will publish the received value changes.
         /// </returns>
-        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken);
+        ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context);
 
     }
 }

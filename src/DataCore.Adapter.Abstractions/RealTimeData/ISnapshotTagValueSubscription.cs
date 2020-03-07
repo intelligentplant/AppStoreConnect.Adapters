@@ -1,68 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes a subscription for receiving snapshot tag values via push.
+    /// Describes a snapshot tag value subscription on an adapter.
     /// </summary>
     public interface ISnapshotTagValueSubscription : IAdapterSubscription<TagValueQueryResult> {
 
         /// <summary>
-        /// Gets the total number of tags that the subscription is observing.
+        /// Adds a tag to the subscription.
         /// </summary>
-        int Count { get; }
-
-        /// <summary>
-        /// Gets the tags that the subscription is observing.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="tag">
+        ///   The tag ID or name.
         /// </param>
         /// <returns>
-        ///   A channel that returns the tag identifiers for the subscription's tags.
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the operation was successful.
         /// </returns>
-        ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken);
+        ValueTask<bool> AddTagToSubscription(string tag);
+
 
         /// <summary>
-        /// Adds additional tags to the subscription.
+        /// Removes a tag from the subscription.
         /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
-        /// <param name="tagNamesOrIds">
-        ///   The names or IDs of the tags to subscribe to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="tag">
+        ///   The tag ID or name.
         /// </param>
         /// <returns>
-        ///   The total number of tags held by the subscription following the update.
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the operation was successful.
         /// </returns>
-        Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes tags from the subscription.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
-        /// <param name="tagNamesOrIds">
-        ///   The names or IDs of the tags to unsubscribe from.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The total number of tags held by the subscription following the update.
-        /// </returns>
-        Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
+        ValueTask<bool> RemoveTagFromSubscription(string tag);
 
     }
 }

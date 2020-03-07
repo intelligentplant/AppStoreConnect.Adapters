@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -31,6 +32,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         protected IAdapterAccessor AdapterAccessor { get; }
 
+        /// <summary>
+        /// Task scheduler for running background operations.
+        /// </summary>
+        protected IBackgroundTaskService TaskScheduler { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterHub"/> object.
@@ -44,10 +50,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterAccessor">
         ///   For accessing runtime adapters.
         /// </param>
-        public AdapterHub(HostInfo hostInfo, IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
+        /// <param name="taskScheduler">
+        ///   The background task scheduler to use.
+        /// </param>
+        public AdapterHub(
+            HostInfo hostInfo, 
+            IAdapterCallContext adapterCallContext, 
+            IAdapterAccessor adapterAccessor,
+            IBackgroundTaskService taskScheduler
+        ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterCallContext = adapterCallContext ?? throw new ArgumentNullException(nameof(adapterCallContext));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+            TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
         }
 
 
@@ -191,35 +206,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             Validator.ValidateObject(instance, new ValidationContext(instance), true);
-        }
-
-
-        /// <summary>
-        /// Called when a connection is established.
-        /// </summary>
-        /// <returns>
-        ///   A task that will process the connection.
-        /// </returns>
-        public override Task OnConnectedAsync() {
-            OnTagValuesHubConnected();
-            OnEventsHubConnected();
-            return base.OnConnectedAsync();
-        }
-
-
-        /// <summary>
-        /// Called when a connection is ended.
-        /// </summary>
-        /// <param name="exception">
-        ///   An exception associated with the disconnection.
-        /// </param>
-        /// <returns>
-        ///   A task that will process the disconnection.
-        /// </returns>
-        public override Task OnDisconnectedAsync(Exception exception) {
-            OnTagValuesHubDisconnected();
-            OnEventsHubDisconnected();
-            return base.OnDisconnectedAsync(exception);
         }
 
     }

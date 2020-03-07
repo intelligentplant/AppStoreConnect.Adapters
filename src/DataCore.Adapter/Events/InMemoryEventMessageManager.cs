@@ -51,14 +51,14 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override Task OnSubscriptionAdded(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        protected override void OnSubscriptionAdded() {
+            // Do nothing
         }
 
 
         /// <inheritdoc/>
-        protected override Task OnSubscriptionRemoved(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        protected override void OnSubscriptionRemoved() {
+            // Do nothing.
         }
 
 

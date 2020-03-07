@@ -5,38 +5,46 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Base class for simplifying implementation of the <see cref="ISnapshotTagValuePush"/> 
-    /// feature.
+    /// Default <see cref="ISnapshotTagValuePush"/> implementation. 
     /// </summary>
-    public abstract class SnapshotTagValuePush : ISnapshotTagValuePush, IDisposable {
+    public class SnapshotTagValuePush : ISnapshotTagValuePush, IDisposable {
 
         /// <summary>
-        /// Logging.
-        /// </summary>
-        protected ILogger Logger { get; }
-
-        /// <summary>
-        /// Flags if the object has been disposed.
+        /// Indicates if the object has been disposed.
         /// </summary>
         private bool _isDisposed;
 
         /// <summary>
-        /// Fires when then object is being disposed.
+        /// The scheduler to use when running background tasks.
+        /// </summary>
+        protected IBackgroundTaskService Scheduler { get; }
+
+        /// <summary>
+        /// The logger.
+        /// </summary>
+        protected ILogger Logger { get; }
+
+        /// <summary>
+        /// Fires when the <see cref="SnapshotTagValuePush"/> is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// A cancellation token that will fire when the <see cref="SnapshotTagValuePush"/> 
-        /// is disposed.
+        /// A cancellation token that will fire when the object is disposed.
         /// </summary>
-        protected CancellationToken DisposedToken {
-            get { return _disposedTokenSource.Token; }
-        }
+        protected CancellationToken DisposedToken => _disposedTokenSource.Token;
+
+        /// <summary>
+        /// Stream manager options.
+        /// </summary>
+        private readonly SnapshotTagValueStreamManagerOptions _options;
 
         /// <summary>
         /// Holds the current values for subscribed tags.
@@ -50,18 +58,27 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly Channel<TagValueQueryResult> _masterChannel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = true,
             SingleReader = true,
+            SingleWriter = false
+        });
+
+        /// <summary>
+        /// Channel that is used to publish changes to subscribed tags.
+        /// </summary>
+        private readonly Channel<(TagIdentifier Tag, bool Added)> _tagSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool)>(new UnboundedChannelOptions() {
+            AllowSynchronousContinuations = false,
+            SingleReader = true,
             SingleWriter = true
         });
 
         /// <summary>
         /// All subscriptions.
         /// </summary>
-        private readonly List<Subscription> _subscriptions = new List<Subscription>();
+        private readonly List<SnapshotTagValueSubscription> _subscriptions = new List<SnapshotTagValueSubscription>();
 
         /// <summary>
         /// Maps from tag ID to the subscribers for that tag.
         /// </summary>
-        private readonly Dictionary<string, HashSet<Subscription>> _subscriptionsByTagId = new Dictionary<string, HashSet<Subscription>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, HashSet<SnapshotTagValueSubscription>> _subscriptionsByTagId = new Dictionary<string, HashSet<SnapshotTagValueSubscription>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// For protecting access to <see cref="_subscriptionsByTagId"/>.
@@ -72,94 +89,95 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePush"/> object.
         /// </summary>
+        /// <param name="options">
+        ///   The options.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The scheduler to use when running background tasks.
+        /// </param>
         /// <param name="logger">
-        ///   The logger for the subscription manager.
+        ///   The logger to use.
         /// </param>
-        protected SnapshotTagValuePush(ILogger logger) {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _ = Task.Factory.StartNew(async () => {
-                try {
-                    await PublishToSubscribers(_disposedTokenSource.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
-                }
-            }, _disposedTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        public SnapshotTagValuePush(
+            SnapshotTagValueStreamManagerOptions options, 
+            IBackgroundTaskService scheduler,
+            ILogger logger
+        ) {
+            _options = options ?? new SnapshotTagValueStreamManagerOptions();
+            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+            Scheduler.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
+            Scheduler.QueueBackgroundWorkItem(ProcessValueChangesChannel, DisposedToken);
         }
 
 
         /// <summary>
-        /// Creates a channel that can be used to write snapshot values to.
+        /// Gets the <see cref="TagIdentifier"/> that corresponds to the specified tag name or ID.
         /// </summary>
-        /// <param name="capacity">
-        ///   The capacity of the channel. Specify less than 1 for an unbounded channel.
+        /// <param name="context">
+        ///   The call context for the caller.
         /// </param>
-        /// <param name="fullMode">
-        ///   The action to take if the channel reaches capacity. Ignored if <paramref name="capacity"/> is less than 1.
+        /// <param name="tag">
+        ///   The tag ID or name.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A new channel.
-        /// </returns>
-        protected internal Channel<TagValueQueryResult> CreateChannel(int capacity, BoundedChannelFullMode fullMode) {
-            return capacity > 0
-                ? Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(capacity) {
-                    FullMode = fullMode,
-                    SingleReader = true,
-                    SingleWriter = true,
-                    AllowSynchronousContinuations = true
-                })
-                : Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                    SingleReader = true,
-                    SingleWriter = true,
-                    AllowSynchronousContinuations = true
-                });
-        }
-
-
-        /// <inheritdoc/>
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext adapterCallContext, CancellationToken cancellationToken) {
-            var subscription = new Subscription(this);
-            if (subscription == null) {
-                throw new InvalidOperationException();
-            }
-            await ((ISnapshotTagValueSubscription) subscription).StartAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
-            OnSubscriptionCreated(subscription);
-
-            return subscription;
-        }
-
-
-        /// <summary>
-        /// Creates a new subscription.
-        /// </summary>
-        /// <param name="subscriptionManager">
-        ///   The subscription manager that is creating the subscription.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="Subscription"/> object.
+        ///   A task that will return the <see cref="TagIdentifier"/> for the tag. If the tag does 
+        ///   not exist, or the caller is not authorized to access the tag, the return value will 
+        ///   be <see langword="null"/>.
         /// </returns>
         /// <remarks>
-        ///   Override this method if you need to customise some features of the snapshot tag 
-        ///   value subscription in a subclass (e.g. your adapter supports wildcards in tag names 
-        ///   when subscribing, and you need to add custom logic to the 
-        ///   <see cref="Subscription.IsSubscribed(TagValueQueryResult)"/> method to handle this).
+        ///   If the <see cref="SnapshotTagValueStreamManagerOptions"/> for the manager does not 
+        ///   specify a <see cref="SnapshotTagValueStreamManagerOptions.TagResolver"/> callback, a 
+        ///   <see cref="TagIdentifier"/> using the specified <paramref name="tag"/> as the name 
+        ///   and ID will be returned.
         /// </remarks>
-        protected virtual Subscription CreateSubscription(SnapshotTagValuePush subscriptionManager) {
-            return new Subscription(subscriptionManager);
+        private async ValueTask<TagIdentifier> GetTagIdentifier(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+            if (string.IsNullOrWhiteSpace(tag)) {
+                return null;
+            }
+            
+            return _options.TagResolver == null
+                ? new TagIdentifier(tag, tag)
+                : await _options.TagResolver.Invoke(context, tag, cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <summary>
-        /// Called when a subscription is created.
+        /// Invoked when a tag is added to a subscription.
         /// </summary>
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private void OnSubscriptionCreated(Subscription subscription) {
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        private async Task AddTagToSubscription(SnapshotTagValueSubscriptionImpl subscription, TagIdentifier tag) {
+            if (subscription == null || tag == null) {
+                return;
+            }
+
+            if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
+                await subscription.ValueReceived(value, DisposedToken).ConfigureAwait(false);
+            }
+
+            var isNewSubscription = false;
+
             _subscriptionsLock.EnterWriteLock();
             try {
-                _subscriptions.Add(subscription);
+                if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribers)) {
+                    subscribers = new HashSet<SnapshotTagValueSubscription>();
+                    _subscriptionsByTagId[tag.Id] = subscribers;
+                    isNewSubscription = true;
+                }
+
+                subscribers.Add(subscription);
+                if (isNewSubscription) {
+                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, true));
+                }
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
@@ -168,137 +186,52 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Called when a subscription is disposed.
+        /// Invoked when a tag is removed from a subscription.
         /// </summary>
         /// <param name="subscription">
-        ///   The subscription that was disposed.
+        ///   The subscription.
         /// </param>
-        /// <param name="subscribedTags">
-        ///   The tags that the subscription was subscribed to.
+        /// <param name="tag">
+        ///   The tag.
         /// </param>
-        private void OnSubscriptionDisposed(Subscription subscription, IEnumerable<TagIdentifier> subscribedTags) {
-            if (_isDisposed) {
-                return;
+        private Task RemoveTagFromSubscription(SnapshotTagValueSubscriptionImpl subscription, TagIdentifier tag) {
+            if (subscription == null || tag == null) {
+                return Task.CompletedTask;
             }
 
-            bool removed;
             _subscriptionsLock.EnterWriteLock();
             try {
-                removed = _subscriptions.Remove(subscription);
+                if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribers)) {
+                    // No subscribers
+                    return Task.CompletedTask;
+                }
+
+                subscribers.Remove(subscription);
+                if (subscribers.Count == 0) {
+                    // No subscribers remaining.
+                    _subscriptionsByTagId.Remove(tag.Id);
+                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
+                }
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
             }
 
-            if (removed && subscribedTags.Any() && !_isDisposed && !_disposedTokenSource.IsCancellationRequested) {
-                return;
-            }
-
-            _ = Task.Run(async () => {
-                try {
-                    await OnTagsRemovedFromSubscription(subscription, subscribedTags, _disposedTokenSource.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfSnapshotSubscription);
-                }
-            });
+            return Task.CompletedTask;
         }
 
 
         /// <summary>
-        /// Gets the IDs of all tags that are currently being subscribed to. Implementers can use this 
-        /// method when they need to e.g. reinitialise a real-time push connection to a historian after 
-        /// a connection outage.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The IDs of all subscribed tags.
-        /// </returns>
-        protected Task<IEnumerable<string>> GetSubscribedTags(CancellationToken cancellationToken) {
-            var result = _subscriptionsByTagId.Keys.ToArray();
-            return Task.FromResult<IEnumerable<string>>(result);
-        }
-
-
-        /// <summary>
-        /// Called by a subscription to let the <see cref="SnapshotTagValuePush"/> know 
-        /// that tags were added to the subscription.
+        /// Invoked when a subscription has been cancelled.
         /// </summary>
         /// <param name="subscription">
-        ///   The subscription that was modified.
+        ///   The subscription.
         /// </param>
-        /// <param name="tags">
-        ///   The tags that were added to the subscription.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will register the tag subscriptions.
-        /// </returns>
-        private async Task OnTagsAddedToSubscription(Subscription subscription, IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
-            var length = tags.Count();
-            var newTags = new List<TagIdentifier>(length);
-
-            foreach (var tag in tags) {
-                if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
-                    await subscription.OnValueChanged(value).ConfigureAwait(false);
-                }
-
-                _subscriptionsLock.EnterWriteLock();
-                try {
-                    if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribersForTag)) {
-                        subscribersForTag = new HashSet<Subscription>();
-                        _subscriptionsByTagId[tag.Id] = subscribersForTag;
-                    }
-
-                    if (subscribersForTag.Count == 0) {
-                        newTags.Add(tag);
-                    }
-
-                    subscribersForTag.Add(subscription);
-                }
-                finally {
-                    _subscriptionsLock.ExitWriteLock();
-                }
-            }
-
-            if (newTags.Count > 0) {
-                await OnSubscribe(newTags, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-
-        /// <summary>
-        /// Called by a subscription to let the <see cref="SnapshotTagValuePush"/> know 
-        /// that tags were removed from the subscription.
-        /// </summary>
-        /// <param name="subscription">
-        ///   The subscription that was modified.
-        /// </param>
-        /// <param name="tags">
-        ///   The tags that were removed from the subscription.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will unregister the tag subscriptions.
-        /// </returns>
-        private async Task OnTagsRemovedFromSubscription(Subscription subscription, IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
-            var length = tags.Count();
-            var tagsToRemove = new List<TagIdentifier>(length);
-
-            foreach (var tag in tags) {
-                if (string.IsNullOrWhiteSpace(tag.Id)) {
-                    continue;
-                }
-
-                _subscriptionsLock.EnterWriteLock();
-                try {
+        private void OnSubscriptionCancelled(SnapshotTagValueSubscriptionImpl subscription) {
+            _subscriptionsLock.EnterWriteLock();
+            try {
+                _subscriptions.Remove(subscription);
+                foreach (var tag in subscription.GetSubscribedTags()) {
                     if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribersForTag)) {
                         continue;
                     }
@@ -306,185 +239,229 @@ namespace DataCore.Adapter.RealTimeData {
                     subscribersForTag.Remove(subscription);
                     if (subscribersForTag.Count == 0) {
                         _subscriptionsByTagId.Remove(tag.Id);
-                        tagsToRemove.Add(tag);
+                        _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
                     }
                 }
-                finally {
-                    _subscriptionsLock.ExitWriteLock();
-                }
             }
-
-            if (tagsToRemove.Count > 0) {
-                await OnUnsubscribe(tagsToRemove, cancellationToken).ConfigureAwait(false);
+            finally {
+                _subscriptionsLock.ExitWriteLock();
             }
         }
 
 
         /// <summary>
-        /// Informs the <see cref="SnapshotTagValuePush"/> that snapshot value changes 
-        /// have occurred.
+        /// Called when the number of subscribers for a tag changes from zero to one.
         /// </summary>
-        /// <param name="values">
-        ///   The value changes.
+        /// <param name="tag">
+        ///   The tag.
         /// </param>
-        protected void OnValuesChanged(params TagValueQueryResult[] values) {
-            OnValuesChanged((IEnumerable<TagValueQueryResult>) values);
+        protected virtual void OnTagAddedToSubscription(TagIdentifier tag) {
+            _options.OnTagSubscriptionAdded?.Invoke(tag);
         }
 
 
         /// <summary>
-        /// Informs the <see cref="SnapshotTagValuePush"/> that snapshot value changes 
-        /// have occurred.
+        /// Called when the number of subscribers for a tag changes from one to zero.
         /// </summary>
-        /// <param name="values">
-        ///   The value changes.
+        /// <param name="tag">
+        ///   The tag.
         /// </param>
-        protected void OnValuesChanged(IEnumerable<TagValueQueryResult> values) {
-            if (values == null || !values.Any()) {
-                return;
-            }
+        protected virtual void OnTagRemovedFromSubscription(TagIdentifier tag) {
+            _options.OnTagSubscriptionRemoved?.Invoke(tag);
+            // Remove current value if we are caching it.
+            _currentValueByTagId.TryRemove(tag.Id, out var _);
+        }
 
-            foreach (var value in values) {
-                if (_disposedTokenSource.IsCancellationRequested) {
+
+        /// <summary>
+        /// Starts a long-running that that will read and process subscription changes published 
+        /// to <see cref="_tagSubscriptionChangesChannel"/>.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   A cancellation token that will fire when the task should exit.
+        /// </param>
+        /// <returns>
+        ///   A long-running task.
+        /// </returns>
+        private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
+            while (!cancellationToken.IsCancellationRequested) {
+                if (!await _tagSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                     break;
                 }
 
-                OnValueChanged(value);
-            }
-        }
+                if (!_tagSubscriptionChangesChannel.Reader.TryRead(out var change) || change.Tag == null) {
+                    continue;
+                }
 
-
-        /// <summary>
-        /// Informs the <see cref="SnapshotTagValuePush"/> that a snapshot value change
-        /// has occurred.
-        /// </summary>
-        /// <param name="value">
-        ///   The new value.
-        /// </param>
-        protected void OnValueChanged(TagValueQueryResult value) {
-            if (value == null) {
-                return;
-            }
-
-            if (_currentValueByTagId.TryGetValue(value.TagId, out var previousValue)) {
-                if (previousValue.Value.UtcSampleTime >= value.Value.UtcSampleTime) {
-                    return;
+                try {
+                    if (change.Added) {
+                        OnTagAddedToSubscription(change.Tag);
+                    }
+                    else {
+                        OnTagRemovedFromSubscription(change.Tag);
+                    }
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    Logger.LogError(
+                        e, 
+                        Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange, 
+                        change.Tag, 
+                        change.Added 
+                            ? SubscriptionUpdateAction.Subscribe 
+                            : SubscriptionUpdateAction.Unsubscribe
+                    );
                 }
             }
-
-            _currentValueByTagId[value.TagId] = value;
-            _masterChannel.Writer.TryWrite(value);
         }
 
 
         /// <summary>
-        /// Long-running task that sends tag values to subscribers whenever they are added to the 
-        /// <see cref="_masterChannel"/>.
+        /// Starts a long-running task that will read values published to <see cref="_masterChannel"/> 
+        /// and re-publish them to subscribers for the tag.
         /// </summary>
         /// <param name="cancellationToken">
-        ///   A cancellation token that can be used to stop processing of the queue.
+        ///   A cancellation token that will fire when the task should exit.
         /// </param>
         /// <returns>
-        ///   A task that will complete when the cancellation token fires
+        ///   A long-running task.
         /// </returns>
-        private async Task PublishToSubscribers(CancellationToken cancellationToken) {
-            try {
-                while (await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (_masterChannel.Reader.TryRead(out var value)) {
-                        if (value == null) {
-                            continue;
-                        }
+        private async Task ProcessValueChangesChannel(CancellationToken cancellationToken) {
+            while (!cancellationToken.IsCancellationRequested) {
+                if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    break;
+                }
 
-                        Subscription[] subscribers;
+                if (!_masterChannel.Reader.TryRead(out var value) || value == null) {
+                    continue;
+                }
 
-                        _subscriptionsLock.EnterReadLock();
-                        try {
-                            subscribers = _subscriptions.Where(x => x.IsSubscribed(value)).ToArray();
-                        }
-                        finally {
-                            _subscriptionsLock.ExitReadLock();
-                        }
+                IEnumerable<SnapshotTagValueSubscription> subscribers;
 
-                        if (subscribers.Length == 0) {
-                            continue;
-                        }
+                _subscriptionsLock.EnterReadLock();
+                try {
+                    if (!_subscriptionsByTagId.TryGetValue(value.TagId, out var subs) || subs.Count == 0) {
+                        continue;
+                    }
 
-                        await Task.WhenAll(subscribers.Select(x => x.OnValueChanged(value))).ConfigureAwait(false);
+                    subscribers = subs.ToArray();
+                }
+                finally {
+                    _subscriptionsLock.ExitReadLock();
+                }
+
+                if (!subscribers.Any()) {
+                    continue;
+                }
+
+                foreach (var subscriber in subscribers) {
+                    try {
+                        var success = await subscriber.ValueReceived(value, cancellationToken).ConfigureAwait(false);
+                        if (!success) {
+                            Logger.LogTrace(Resources.Log_SnapshotValuePublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                        }
+                    }
+                    catch (OperationCanceledException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                        Logger.LogError(e, Resources.Log_SnapshotValuePublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
             }
-            catch (OperationCanceledException) {
-                // Cancellation token fired
+        }
+
+
+        /// <inheritdoc/>
+        public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
+            var subscription = new SnapshotTagValueSubscriptionImpl(
+                context,
+                new SnapshotTagValueStreamOptions() { 
+                    TagResolver = GetTagIdentifier,
+                    OnTagAdded = AddTagToSubscription,
+                    OnTagRemoved = RemoveTagFromSubscription,
+                    OnCancelled = OnSubscriptionCancelled
+                }
+            );
+
+            _subscriptionsLock.EnterWriteLock();
+            try {
+                _subscriptions.Add(subscription);
             }
-            catch (ChannelClosedException) {
-                // Channel was closed
+            finally {
+                _subscriptionsLock.ExitWriteLock();
             }
+
+            subscription.Start();
+            return subscription;
         }
 
 
         /// <summary>
-        /// Gets the <see cref="TagIdentifier"/> descriptors for the specified tag names or IDs.
+        /// Publishes a value to subscribers.
         /// </summary>
-        /// <param name="context">
-        ///   The adapter call context for the caller.
-        /// </param>
-        /// <param name="tagNamesOrIds">
-        ///   The tag names or IDs to look up.
+        /// <param name="value">
+        ///   The value to publish.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A reader that returns the matching <see cref="TagIdentifier"/> object.
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the value was published to subscribers.
         /// </returns>
-        protected abstract ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Called whenever the total subscriber count for a tag changes from zero to greater than zero.
-        /// </summary>
-        /// <param name="tags">
-        ///   The tag that have been subscribed to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will perform any additional subscription setup actions required by the 
-        ///   adapter. Implementers should use <see cref="OnValueChanged(TagValueQueryResult)"/> or 
-        ///   <see cref="OnValuesChanged(IEnumerable{TagValueQueryResult})"/> to register the 
-        ///   initial value of each tag with the subscription manager.
-        /// </returns>
-        protected abstract Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Called whenever the total subscriber count for a tag changes from greater than zero to zero.
-        /// </summary>
-        /// <param name="tags">
-        ///   The tags that have been unsubscribed from.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will perform any additional subscription teardown actions required by the 
-        ///   adapter.
-        /// </returns>
-        protected abstract Task OnUnsubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
-        public void Dispose() {
-            if (_isDisposed) {
-                return;
+        public async ValueTask<bool> ValueReceived(TagValueQueryResult value, CancellationToken cancellationToken = default) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
             }
 
-            DisposeInternal(true);
+            // Add the value
+            var lastestValue = _currentValueByTagId.AddOrUpdate(
+                value.TagId, 
+                value, 
+                (key, prev) => prev.Value.UtcSampleTime > value.Value.UtcSampleTime 
+                    ? prev 
+                    : value
+            );
 
-            _isDisposed = true;
+            if (lastestValue != value) {
+                // There was already a later value sent for this tag.
+                return false;
+            }
+
+            _subscriptionsLock.EnterReadLock();
+            try {
+                if (!_subscriptionsByTagId.ContainsKey(value.TagId)) {
+                    // No subscribers for this tag.
+                    return false;
+                }
+            }
+            finally {
+                _subscriptionsLock.ExitReadLock();
+            }
+
+            try {
+                using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
+                    await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
+                    return _masterChannel.Writer.TryWrite(value);
+                }
+            }
+            catch (OperationCanceledException) {
+                if (cancellationToken.IsCancellationRequested) {
+                    // Cancellation token provided by the caller has fired; rethrow the exception.
+                    throw;
+                }
+
+                // The stream manager is being disposed.
+                return false;
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -498,339 +475,95 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Releases managed and unmanaged resources.
+        /// Releases resources held by the <see cref="SnapshotTagValuePush"/>.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="SnapshotTagValuePush"/> is being 
-        ///   disposed, or <see langword="false"/> if it is being finalized.
+        ///   <see langword="true"/> if the object is being disposed, or <see langword="false"/> 
+        ///   if it is being finalized.
         /// </param>
-        private void DisposeInternal(bool disposing) {
-            try {
-                Dispose(disposing);
+        protected virtual void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
             }
-            finally {
+
+            if (disposing) {
+                _isDisposed = true;
                 _masterChannel.Writer.TryComplete();
+                _tagSubscriptionChangesChannel.Writer.TryComplete();
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
-
                 _subscriptionsLock.EnterWriteLock();
                 try {
-                    foreach (var item in _subscriptions.ToArray()) {
-                        item.Dispose();
+                    _subscriptionsByTagId.Clear();
+                    foreach (var subscription in _subscriptions) {
+                        subscription.Dispose();
                     }
+                    _subscriptions.Clear();
                 }
                 finally {
                     _subscriptionsLock.ExitWriteLock();
-                }
-                _subscriptionsLock.Dispose();
-            }
-        }
-
-
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="SnapshotTagValuePush"/> is being 
-        ///   disposed, or <see langword="false"/> if it is being finalized.
-        /// </param>
-        protected abstract void Dispose(bool disposing);
-
-
-        /// <summary>
-        /// <see cref="ISnapshotTagValueSubscription"/> implementation.
-        /// </summary>
-        public class Subscription : SnapshotTagValueSubscription {
-
-            /// <summary>
-            /// The subscription manager that created the subscription.
-            /// </summary>
-            private readonly SnapshotTagValuePush _subscriptionManager;
-
-            /// <inheritdoc/>
-            public override int Count {
-                get {
-                    _subscribedTagsLock.EnterReadLock();
-                    try {
-                        return _subscribedTags.Count;
-                    }
-                    finally {
-                        _subscribedTagsLock.ExitReadLock();
-                    }
+                    _subscriptionsLock.Dispose();
                 }
             }
-
-            /// <summary>
-            /// The tags that have been added to the subscription.
-            /// </summary>
-            private HashSet<TagIdentifier> _subscribedTags = new HashSet<TagIdentifier>(TagIdentifierComparer.Id);
-
-            /// <summary>
-            /// Subscribed tags indexed by ID.
-            /// </summary>
-            private ILookup<string, TagIdentifier> _subscribedTagsById;
-
-            /// <summary>
-            /// Subscribed tags indexed by name.
-            /// </summary>
-            private ILookup<string, TagIdentifier> _subscribedTagsByName;
-
-            /// <summary>
-            /// Lock for accessing field related to tag subscriptions.
-            /// </summary>
-            private readonly ReaderWriterLockSlim _subscribedTagsLock = new ReaderWriterLockSlim();
-
-
-            /// <summary>
-            /// Creates a new <see cref="Subscription"/> object.
-            /// </summary>
-            /// <param name="subscriptionManager">
-            ///   The subscription manager.
-            /// </param>
-            /// <exception cref="ArgumentNullException">
-            ///   <paramref name="subscriptionManager"/> is <see langword="null"/>.
-            /// </exception>
-            protected internal Subscription(SnapshotTagValuePush subscriptionManager) {
-                _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
-            }
-
-
-            /// <inheritdoc/>
-            protected override Channel<TagValueQueryResult> CreateChannel() {
-                return _subscriptionManager.CreateChannel(5000, BoundedChannelFullMode.DropOldest);
-            }
-
-
-            /// <inheritdoc/>
-            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                // No additional setup required.
-                return default;
-            }
-
-
-            /// <summary>
-            /// Gets all tags that the subscription is currently subscribed to.
-            /// </summary>
-            /// <returns>
-            ///   The subscribed tag identifiers.
-            /// </returns>
-            protected internal IEnumerable<TagIdentifier> GetTags() {
-                _subscribedTagsLock.EnterReadLock();
-                try {
-                    return _subscribedTags.ToArray();
-                }
-                finally {
-                    _subscribedTagsLock.ExitReadLock();
-                }
-            }
-
-
-            /// <inheritdoc/>
-            public override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var result = ChannelExtensions.CreateTagIdentifierChannel();
-
-                result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    foreach (var item in GetTags()) {
-                        await ch.WriteAsync(item, ct).ConfigureAwait(false);
-                    }
-                });
-
-                return result;
-            }
-
-
-            /// <inheritdoc/>
-            public override async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                tagNamesOrIds = tagNamesOrIds
-                    ?.Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray() ?? Array.Empty<string>();
-
-                if (!tagNamesOrIds.Any()) {
-                    return Count;
-                }
-
-                var tagsReader = _subscriptionManager.GetTags(context, tagNamesOrIds, cancellationToken);
-                var tagIdentifiers = new List<TagIdentifier>();
-
-                while (await tagsReader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!tagsReader.TryRead(out var tag) || tag == null) {
-                        continue;
-                    }
-
-                    tagIdentifiers.Add(tag);
-                }
-
-                if (tagIdentifiers.Count == 0) {
-                    return Count;
-                }
-
-                TagIdentifier[] newTags;
-
-                _subscribedTagsLock.EnterWriteLock();
-                try {
-                    newTags = tagIdentifiers.Where(x => _subscribedTags.Add(x)).ToArray();
-                    if (newTags.Length > 0) {
-                        RebuildLookups();
-                    }
-                }
-                finally {
-                    _subscribedTagsLock.ExitWriteLock();
-                }
-
-                if (newTags.Length > 0) {
-                    OnTagsAddedToSubscription(newTags);
-                    await _subscriptionManager.OnTagsAddedToSubscription(this, newTags, cancellationToken).ConfigureAwait(false);
-                }
-
-                return Count;
-            }
-
-
-            /// <summary>
-            /// Called when tags are added to the subscription.
-            /// </summary>
-            /// <param name="tags">
-            ///   The tags that were added.
-            /// </param>
-            /// <remarks>
-            ///   Override this method to perform custom logic in a subclass when tags are added 
-            ///   to a subscription.
-            /// </remarks>
-            protected virtual void OnTagsAddedToSubscription(IEnumerable<TagIdentifier> tags) {
-                // Do nothing.
-            }
-
-
-            /// <inheritdoc/>
-            public override async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                tagNamesOrIds = tagNamesOrIds
-                    ?.Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray() ?? Array.Empty<string>();
-
-                if (!tagNamesOrIds.Any()) {
-                    return Count;
-                }
-
-                var removed = new List<TagIdentifier>(tagNamesOrIds.Count());
-
-                _subscribedTagsLock.EnterWriteLock();
-                try {
-                    foreach (var tag in tagNamesOrIds) {
-                        // Try and remove by tag ID.
-                        var existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Id, tag, StringComparison.Ordinal));
-                        if (existing != null) {
-                            _subscribedTags.Remove(existing);
-                            removed.Add(existing);
-                            continue;
-                        }
-
-                        // Now try and remove by tag name.
-                        existing = _subscribedTags.FirstOrDefault(x => string.Equals(x.Name, tag, StringComparison.OrdinalIgnoreCase));
-                        if (existing != null) {
-                            _subscribedTags.Remove(existing);
-                            removed.Add(existing);
-                        }
-                    }
-
-                    if (removed.Count > 0) {
-                        RebuildLookups();
-                    }
-                }
-                finally {
-                    _subscribedTagsLock.ExitWriteLock();
-                }
-
-                if (removed.Count > 0) {
-                    OnTagsRemovedFromSubscription(removed);
-                    await _subscriptionManager.OnTagsRemovedFromSubscription(this, removed, cancellationToken).ConfigureAwait(false);
-                }
-
-                return Count;
-            }
-
-
-            /// <summary>
-            /// Called when tags are removed from the subscription.
-            /// </summary>
-            /// <param name="tags">
-            ///   The tags that were removed.
-            /// </param>
-            /// <remarks>
-            ///   Override this method to perform custom logic in a subclass when tags are added 
-            ///   to a subscription.
-            /// </remarks>
-            protected virtual void OnTagsRemovedFromSubscription(IEnumerable<TagIdentifier> tags) {
-                // Do nothing.
-            }
-
-
-            /// <summary>
-            /// Sends a value change to the observer.
-            /// </summary>
-            /// <param name="value">
-            ///   The updated value.
-            /// </param>
-            internal async Task OnValueChanged(TagValueQueryResult value) {
-                if (SubscriptionCancelled.IsCancellationRequested) {
-                    return;
-                }
-
-                await Writer.WriteAsync(value, SubscriptionCancelled).ConfigureAwait(false);
-            }
-
-
-            /// <summary>
-            /// Rebuilds the subscribed tags lookups. Assumes that a write lock has already been 
-            /// obtained from <see cref="_subscribedTagsLock"/>.
-            /// </summary>
-            private void RebuildLookups() {
-                _subscribedTagsById = _subscribedTags.ToLookup(x => x.Id);
-                _subscribedTagsByName = _subscribedTags.ToLookup(x => x.Name);
-            }
-
-
-            /// <summary>
-            /// Tests if the subscription object holds a subscription for the specified tag value.
-            /// </summary>
-            /// <param name="value">
-            ///   The tag value.
-            /// </param>
-            /// <returns>
-            ///   <see langword="true"/> if a subscription is held for the tag value.
-            /// </returns>
-            protected internal virtual bool IsSubscribed(TagValueQueryResult value) {
-                _subscribedTagsLock.EnterReadLock();
-                try {
-                    return (_subscribedTagsById?.Contains(value.TagId) ?? false) ||
-                           (_subscribedTagsByName?.Contains(value.TagName) ?? false);
-                }
-                finally {
-                    _subscribedTagsLock.ExitReadLock();
-                }
-            }
-
-
-            /// <inheritdoc/>
-            protected override void Dispose(bool disposing) {
-                if (disposing) {
-                    _subscriptionManager.OnSubscriptionDisposed(this, _subscribedTags.ToArray());
-                    _subscribedTagsLock.Dispose();
-                    _subscribedTags.Clear();
-                }
-            }
-
-
-            /// <inheritdoc />
-            protected override ValueTask DisposeAsync(bool disposing) {
-                Dispose(disposing);
-                return new ValueTask();
-            }
-
-
         }
 
     }
 
+
+    /// <summary>
+    /// Options for <see cref="SnapshotTagValuePush"/>
+    /// </summary>
+    public class SnapshotTagValueStreamManagerOptions {
+
+        /// <summary>
+        /// A delegate that will receive tag names or IDs and will return the matching 
+        /// <see cref="TagIdentifier"/>.
+        /// </summary>
+        public Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> TagResolver { get; set; }
+
+        /// <summary>
+        /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
+        /// to one.
+        /// </summary>
+        public Action<TagIdentifier> OnTagSubscriptionAdded { get; set; }
+
+        /// <summary>
+        /// A delegate that is invoked when the number of subscribers for a tag changes from one 
+        /// to zero.
+        /// </summary>
+        public Action<TagIdentifier> OnTagSubscriptionRemoved { get; set; }
+
+
+        /// <summary>
+        /// Creates a delegate compatible with <see cref="TagResolver"/> using an 
+        /// <see cref="ITagInfo"/> feature.
+        /// </summary>
+        /// <param name="feature">
+        ///   The <see cref="ITagInfo"/> feature to use.
+        /// </param>
+        /// <returns>
+        ///   A new delegate.
+        /// </returns>
+        public static Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> CreateTagResolver(ITagInfo feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+
+            return async (context, tag, cancellationToken) => {
+                var ch = feature.GetTags(context, new GetTagsRequest() { 
+                    Tags = new [] { tag }
+                }, cancellationToken);
+
+                try {
+                    return await ch.ReadAsync(cancellationToken).ConfigureAwait(false);
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    return null;
+                }
+            };
+        }
+
+    }
 }

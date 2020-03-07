@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
@@ -17,8 +16,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         private readonly IBackgroundTaskService _backgroundTaskService;
 
-        private static readonly ConcurrentDictionary<string, RealTimeData.ISnapshotTagValueSubscription> s_subscriptions = new ConcurrentDictionary<string, RealTimeData.ISnapshotTagValueSubscription>();
-
 
         public TagValuesServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterCallContext = adapterCallContext;
@@ -27,112 +24,65 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        public override async Task CreateSnapshotPushChannel(CreateSnapshotPushChannelRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
-            var adapterId = request.AdapterId;
+        public override async Task CreateSnapshotPushChannel(
+            IAsyncStreamReader<CreateSnapshotPushChannelRequest> requestStream, 
+            IServerStreamWriter<TagValueQueryResult> responseStream, 
+            ServerCallContext context
+        ) {
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
-            if (s_subscriptions.TryGetValue(key, out var _)) {
-                throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateSnapshotSubscriptionAlreadyExists, adapterId)));
+            // Wait for first subscription change.
+
+            if (!await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                return;
             }
 
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, cancellationToken).ConfigureAwait(false)) {
-                try {
-                    s_subscriptions[key] = subscription;
+            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
+                _adapterCallContext,
+                _adapterAccessor,
+                requestStream.Current?.AdapterId,
+                cancellationToken
+            ).ConfigureAwait(false);
 
-                    // Send initial value back to indicate that subscription is active.
-                    var subscriptionReadyIndicator = new TagValueQueryResult() { 
-                        TagId = string.Empty,
-                        TagName = string.Empty,
-                        Value = new TagValue() { 
-                            Status = TagValueStatus.Good,
-                            UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow),
-                            Value = new Variant() {
-                                Type = VariantType.String,
-                                Value = Google.Protobuf.ByteString.CopyFromUtf8(key)
-                            }
-                        },
-                        QueryType = TagValueQueryType.Unknown
-                    };
-                    await responseStream.WriteAsync(subscriptionReadyIndicator).ConfigureAwait(false);
+            // Create subscription on adapter.
 
-                    if (request.Tags.Count > 0) {
-                        await subscription.AddTagsToSubscription(_adapterCallContext, request.Tags, cancellationToken).ConfigureAwait(false);
-                    }
+            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext)) {
+                if (requestStream.Current.Action == SubscriptionUpdateAction.Subscribe) {
+                    // Push initial tag subscription change to subscription.
+                    await subscription.AddTagToSubscription(requestStream.Current.Tag).ConfigureAwait(false);
+                }
 
-                    while (!cancellationToken.IsCancellationRequested) {
-                        try {
-                            var tag = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                            
-                            await responseStream.WriteAsync(tag.Value.ToGrpcTagValueQueryResult(tag.TagId, tag.TagName, TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                // Run background operation to push results back to caller.
+
+                subscription.Values.RunBackgroundOperation(async (ch, ct) => {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var val) || val == null) {
+                            continue;
                         }
-                        catch (OperationCanceledException) {
-                            // Do nothing
+
+                        await responseStream.WriteAsync(
+                            val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
+                        ).ConfigureAwait(false);
+                    }
+                }, _backgroundTaskService, cancellationToken);
+
+                // Now keep pushing new subscription changes to the subscription.
+
+                while (!cancellationToken.IsCancellationRequested) {
+                    try {
+                        await requestStream.MoveNext(cancellationToken).ConfigureAwait(false);
+                        if (requestStream.Current.Action == SubscriptionUpdateAction.Subscribe) {
+                            await subscription.AddTagToSubscription(requestStream.Current.Tag).ConfigureAwait(false);
+                        }
+                        else {
+                            await subscription.RemoveTagFromSubscription(requestStream.Current.Tag).ConfigureAwait(false);
                         }
                     }
+                    catch (OperationCanceledException) {
+                        // Do nothing
+                    }
                 }
-                finally {
-                    s_subscriptions.TryRemove(key, out var _);
-                }
             }
-        }
-
-
-        public override async Task GetSnapshotPushChannelTags(GetSnapshotPushChannelTagsRequest request, IServerStreamWriter<TagIdentifier> responseStream, ServerCallContext context) {
-            var adapterId = request.AdapterId;
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
-
-            RealTimeData.ISnapshotTagValueSubscription subscription;
-            if (!s_subscriptions.TryGetValue(key, out var o) || (subscription = o as RealTimeData.ISnapshotTagValueSubscription) == null) {
-                throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_SnapshotSubscriptionDoesNotExist, adapterId)));
-            }
-            
-            var cancellationToken = context.CancellationToken;
-            var channel = subscription.GetTags(_adapterCallContext, cancellationToken);
-
-            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!channel.TryRead(out var item) || item == null) {
-                    continue;
-                }
-
-                await responseStream.WriteAsync(new TagIdentifier() {
-                    Id = item.Id,
-                    Name = item.Name
-                }).ConfigureAwait(false);
-            }
-        }
-
-
-        public override async Task<AddTagsToSnapshotPushChannelResponse> AddTagsToSnapshotPushChannel(AddTagsToSnapshotPushChannelRequest request, ServerCallContext context) {
-            var adapterId = request.AdapterId;
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
-            
-            RealTimeData.ISnapshotTagValueSubscription subscription;
-            if (!s_subscriptions.TryGetValue(key, out var o) || (subscription = o as RealTimeData.ISnapshotTagValueSubscription) == null) {
-                throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_SnapshotSubscriptionDoesNotExist, adapterId)));
-            }
-
-            var cancellationToken = context.CancellationToken;
-            return new AddTagsToSnapshotPushChannelResponse() {
-                Count = await subscription.AddTagsToSubscription(_adapterCallContext, request.Tags, cancellationToken).ConfigureAwait(false)
-            };
-        }
-
-
-        public override async Task<RemoveTagsFromSnapshotPushChannelResponse> RemoveTagsFromSnapshotPushChannel(RemoveTagsFromSnapshotPushChannelRequest request, ServerCallContext context) {
-            var adapterId = request.AdapterId;
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(TagValuesServiceImpl)}:{adapterId}".ToUpperInvariant();
-
-            RealTimeData.ISnapshotTagValueSubscription subscription;
-            if (!s_subscriptions.TryGetValue(key, out var o) || (subscription = o as RealTimeData.ISnapshotTagValueSubscription) == null) {
-                throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_SnapshotSubscriptionDoesNotExist, adapterId)));
-            }
-
-            var cancellationToken = context.CancellationToken;
-            return new RemoveTagsFromSnapshotPushChannelResponse() {
-                Count = await subscription.RemoveTagsFromSubscription(_adapterCallContext, request.Tags, cancellationToken).ConfigureAwait(false)
-            };
         }
 
 
