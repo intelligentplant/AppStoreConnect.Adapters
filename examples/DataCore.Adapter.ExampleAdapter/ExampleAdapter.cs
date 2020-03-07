@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Example {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
-            AddFeatures(new InMemoryEventMessageManager(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, Logger));
+            AddFeatures(new InMemoryEventMessageManager(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
         }
 
 
