@@ -59,7 +59,7 @@ Package versions are defined in a [common build properties file](/build/Dependen
 
 # ASP.NET Core Quick Start
 
-1. Create a new ASP.NET Core 3.0 project.
+1. Create a new ASP.NET Core 3.1 project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
 3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that you can inherit from.
 4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
