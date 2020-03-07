@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events {
@@ -41,24 +42,30 @@ namespace DataCore.Adapter.Events {
         /// <param name="options">
         ///   The store options.
         /// </param>
+        /// <param name="scheduler">
+        ///   The schedule to use when running background operations.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the <see cref="InMemoryEventMessageManager"/>.
         /// </param>
-        public InMemoryEventMessageManager(InMemoryEventMessageManagerOptions options, ILogger logger) 
-            : base(logger) {
+        public InMemoryEventMessageManager(
+            InMemoryEventMessageManagerOptions options, 
+            IBackgroundTaskService scheduler, 
+            ILogger logger
+        ) : base(scheduler, logger) {
             _capacity = options?.Capacity ?? -1;
         }
 
 
         /// <inheritdoc/>
-        protected override Task OnSubscriptionAdded(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        protected override void OnSubscriptionAdded() {
+            // Do nothing
         }
 
 
         /// <inheritdoc/>
-        protected override Task OnSubscriptionRemoved(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        protected override void OnSubscriptionRemoved() {
+            // Do nothing.
         }
 
 

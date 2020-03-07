@@ -89,7 +89,13 @@ namespace DataCore.Adapter.Csv {
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                SimulatedSnapshotTagValuePush.Register(this, TimeSpan.FromMilliseconds(snapshotPushUpdateInterval));
+                var simulatedPush = PollingSnapshotTagValuePush.ForAdapter(
+                    this,
+                    TimeSpan.FromMilliseconds(snapshotPushUpdateInterval), 
+                    TaskScheduler, 
+                    Logger
+                );
+                AddFeature(typeof(ISnapshotTagValuePush), simulatedPush);
             }
         }
 
@@ -474,7 +480,7 @@ namespace DataCore.Adapter.Csv {
             CheckDisposed();
             CheckStarted(true);
 
-            return Array.Empty<AdapterProperty>().ToChannel();
+            return Array.Empty<AdapterProperty>().PublishToChannel();
         }
 
 

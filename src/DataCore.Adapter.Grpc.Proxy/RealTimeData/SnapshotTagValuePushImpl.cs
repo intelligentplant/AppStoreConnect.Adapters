@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 
@@ -11,191 +9,76 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         public SnapshotTagValuePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken) {
-            ISnapshotTagValueSubscription result = new SnapshotTagValueSubscription(this, CreateClient<TagValuesService.TagValuesServiceClient>());
-            try {
-                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
-            }
-            catch {
-                await result.DisposeAsync().ConfigureAwait(false);
-                throw;
-            }
+        /// <inheritdoc />
+        public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
+            var result = new Subscription(context, this);
+            result.Start();
+
             return result;
         }
 
 
-        private class SnapshotTagValueSubscription : Adapter.RealTimeData.SnapshotTagValueSubscription {
+        /// <summary>
+        /// <see cref="SnapshotTagValueSubscription"/> implementation that sends/receives data via 
+        /// a SignalR channel.
+        /// </summary>
+        private class Subscription : SnapshotTagValueSubscription {
 
-            private readonly SnapshotTagValuePushImpl _feature;
+            private readonly SnapshotTagValuePushImpl _push;
 
-            private readonly TagValuesService.TagValuesServiceClient _client;
-
-            private readonly HashSet<string> _tags = new HashSet<string>();
-
-            public override int Count {
-                get { return _tags.Count; }
+            /// <summary>
+            /// Creates a new <see cref="Subscription"/>.
+            /// </summary>
+            /// <param name="context">
+            ///   The adapter call context for the subscription owner.
+            /// </param>
+            /// <param name="push">
+            ///   The push feature.
+            /// </param>
+            internal Subscription(
+                IAdapterCallContext context,
+                SnapshotTagValuePushImpl push
+            ) : base(context) {
+                _push = push;
             }
 
 
-            public SnapshotTagValueSubscription(SnapshotTagValuePushImpl feature, TagValuesService.TagValuesServiceClient client) {
-                _feature = feature;
-                _client = client;
-            }
+            protected override async Task ProcessTagsChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
+                var client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
+                var duplexCall = client.CreateSnapshotPushChannel(_push.GetCallOptions(Context, cancellationToken));
 
+                // Run another background task to read subscription changes and pass them to the 
+                // remote service.
+                channel.RunBackgroundOperation(async (ch, ct) => {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var change) || change == null) {
+                            continue;
+                        }
 
-            /// <inheritdoc />
-            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var tcs = new TaskCompletionSource<int>();
-
-                Writer.RunBackgroundOperation(async (ch, ct) => {
-                    string[] tags;
-                    lock (_tags) {
-                        tags = _tags.ToArray();
-                    }
-
-                    var grpcRequest = new CreateSnapshotPushChannelRequest() {
-                        AdapterId = _feature.AdapterId
-                    };
-                    grpcRequest.Tags.AddRange(tags);
-
-                    try {
-                        var grpcResponse = _client.CreateSnapshotPushChannel(grpcRequest, _feature.GetCallOptions(context, ct));
-                        // The service will always send us an initial value, even if we didn't 
-                        // include any values in the initial subscribe request.
-                        await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false);
-                        tcs.TrySetResult(0);
-
-                        try {
-                            while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                                if (grpcResponse.ResponseStream.Current == null) {
-                                    continue;
-                                }
-                                await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
+                        await duplexCall.RequestStream.WriteAsync(
+                            new CreateSnapshotPushChannelRequest() {
+                                AdapterId = _push.AdapterId,
+                                Tag = change.Tag ?? string.Empty,
+                                Action = change.Action == Common.SubscriptionUpdateAction.Subscribe
+                                    ? SubscriptionUpdateAction.Subscribe
+                                    : SubscriptionUpdateAction.Unsubscribe
                             }
-                        }
-                        finally {
-                            grpcResponse.Dispose();
-                        }
+                        ).ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) {
-                        tcs.TrySetCanceled();
-                        throw;
+                }, _push.TaskScheduler, cancellationToken);
+
+                // Read value changes.
+                while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (duplexCall.ResponseStream.Current == null) {
+                        continue;
                     }
-                    catch (Exception e) {
-                        tcs.TrySetException(e);
-                        throw;
-                    }
-                }, false, _feature.TaskScheduler, SubscriptionCancelled);
 
-                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
-            }
-
-
-            public override System.Threading.Channels.ChannelReader<Adapter.RealTimeData.TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var result = ChannelExtensions.CreateTagIdentifierChannel();
-
-                result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var grpcRequest = new GetSnapshotPushChannelTagsRequest() {
-                        AdapterId = _feature.AdapterId
-                    };
-                    
-                    var grpcResponse = _client.GetSnapshotPushChannelTags(grpcRequest, _feature.GetCallOptions(context, ct));
-                    try {
-                        while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                            if (grpcResponse.ResponseStream.Current == null) {
-                                continue;
-                            }
-                            await ch.WriteAsync(Adapter.RealTimeData.TagIdentifier.Create(
-                                grpcResponse.ResponseStream.Current.Id,
-                                grpcResponse.ResponseStream.Current.Name
-                            ), ct).ConfigureAwait(false);
-                        }
-                    }
-                    finally {
-                        grpcResponse.Dispose();
-                    }
-                }, true, _feature.TaskScheduler, cancellationToken);
-
-                return result;
-            }
-
-
-            public override async Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                var tagsToAdd = new List<string>();
-                int count;
-
-                lock (_tags) {
-                    count = _tags.Count;
-
-                    foreach (var tag in tagNamesOrIds) {
-                        if (_tags.Add(tag)) {
-                            tagsToAdd.Add(tag);
-                        }
-                    }
-                }
-
-                if (tagsToAdd.Count == 0) {
-                    return count;
-                }
-
-                var grpcRequest = new AddTagsToSnapshotPushChannelRequest() {
-                    AdapterId = _feature.AdapterId
-                };
-                grpcRequest.Tags.AddRange(tagsToAdd);
-
-                var grpcResponse = _client.AddTagsToSnapshotPushChannelAsync(grpcRequest, _feature.GetCallOptions(context, cancellationToken));
-                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
-
-                return result.Count;
-            }
-
-
-            public override async Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                var tagsToRemove = new List<string>();
-                int count;
-
-                lock (_tags) {
-                    count = _tags.Count;
-
-                    foreach (var tag in tagNamesOrIds) {
-                        if (_tags.Remove(tag)) {
-                            tagsToRemove.Add(tag);
-                        }
-                    }
-                }
-
-                if (tagsToRemove.Count == 0) {
-                    return count;
-                }
-
-                var grpcRequest = new RemoveTagsFromSnapshotPushChannelRequest() {
-                    AdapterId = _feature.AdapterId
-                };
-                grpcRequest.Tags.AddRange(tagsToRemove);
-
-                var grpcResponse = _client.RemoveTagsFromSnapshotPushChannelAsync(grpcRequest, _feature.GetCallOptions(context, cancellationToken));
-                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
-
-                return result.Count;
-            }
-
-
-            /// <inheritdoc/>
-            protected override void Dispose(bool disposing) {
-                if (disposing) {
-                    lock (_tags) {
-                        _tags.Clear();
-                    }
+                    await ValueReceived(
+                        duplexCall.ResponseStream.Current.ToAdapterTagValueQueryResult(), 
+                        cancellationToken
+                    ).ConfigureAwait(false);
                 }
             }
-
-
-            /// <inheritdoc/>
-            protected override ValueTask DisposeAsync(bool disposing) {
-                Dispose(disposing);
-                return default;
-            }
-
         }
 
     }

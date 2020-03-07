@@ -157,9 +157,15 @@ namespace DataCore.Adapter.Http.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
-            if (Adapter.RealTimeData.SimulatedSnapshotTagValuePush.IsCompatible(this)) {
+            if (Adapter.RealTimeData.PollingSnapshotTagValuePush.IsCompatible(this)) {
                 // We are able to simulate tag value push functionality.
-                Adapter.RealTimeData.SimulatedSnapshotTagValuePush.Register(this, _snapshotRefreshInterval);
+                var simulatedPush = Adapter.RealTimeData.PollingSnapshotTagValuePush.ForAdapter(
+                    this, 
+                    _snapshotRefreshInterval, 
+                    TaskScheduler, 
+                    Logger
+                );
+                AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
 
             if (_extensionFeatureFactory != null) {

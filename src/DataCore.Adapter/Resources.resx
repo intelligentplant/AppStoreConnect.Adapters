@@ -190,6 +190,9 @@
   <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
+  <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
+    <value>An error occurred while processing a subscription change: Tag = {tag}, Action = {action}</value>
+  </data>
   <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
     <value>Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>
   </data>
@@ -198,6 +201,12 @@
   </data>
   <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
     <value>Updated adapter options are not valid.</value>
+  </data>
+  <data name="Log_SnapshotValuePublishToSubscriberThrewException" xml:space="preserve">
+    <value>Publish to subscriber with connection ID {connectionId} failed with error.</value>
+  </data>
+  <data name="Log_SnapshotValuePublishToSubscriberWasUnsuccessful" xml:space="preserve">
+    <value>Publish to subscriber with connection ID {connectionId} failed.</value>
   </data>
   <data name="Log_StartedAdapter" xml:space="preserve">
     <value>Started adapter {AdapterId}.</value>

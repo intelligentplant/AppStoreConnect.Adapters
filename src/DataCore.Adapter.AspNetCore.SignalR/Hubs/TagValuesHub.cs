@@ -14,37 +14,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
     public partial class AdapterHub {
 
-        #region [ OnConnected/OnDisconnected ]
-
-        /// <summary>
-        /// Invoked when a new connection is created.
-        /// </summary>
-        private void OnTagValuesHubConnected() {
-            // Store a list of adapter subscriptions in the connection context.
-            Context.Items[typeof(ISnapshotTagValueSubscription)] = new List<SubscriptionWrapper>();
-        }
-
-
-        /// <summary>
-        /// Invoked when a connection is closed.
-        /// </summary>
-        private void OnTagValuesHubDisconnected() {
-            // Remove the adapter subscriptions from the connection context.
-            if (Context.Items.TryGetValue(typeof(ISnapshotTagValueSubscription), out var o)) {
-                Context.Items.Remove(typeof(ISnapshotTagValueSubscription));
-                if (o is List<SubscriptionWrapper> observers) {
-                    lock (observers) {
-                        foreach (var observer in observers.ToArray()) {
-                            observer.Dispose();
-                        }
-                        observers.Clear();
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         #region [ Snapshot Subscription Management ]
 
         /// <summary>
@@ -53,8 +22,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="tags">
-        ///   The tags to subscribe to.
+        /// <param name="subscriptionChanges">
+        ///   A channel that subscription changes will be published to.
         /// </param>
         /// <param name="cancellationToken">
         ///   A cancellation token that will fire when the subscription is no longer required.
@@ -62,165 +31,40 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new tag values.
         /// </returns>
-        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
+            string adapterId, 
+            ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> subscriptionChanges, 
+            CancellationToken cancellationToken
+        ) {
+            // Resolve the adapter and feature.
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = await GetOrCreateSnapshotSubscription(AdapterCallContext, adapter.Adapter, adapter.Feature, cancellationToken).ConfigureAwait(false);
 
-            tags = tags
-                ?.Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? Array.Empty<string>();
+            // Create the subscription.
+            var subscription = adapter.Feature.Subscribe(AdapterCallContext);
 
-            if (tags.Any()) {
-                await subscription.AddTagsToSubscription(AdapterCallContext, tags, cancellationToken).ConfigureAwait(false);
-            }
+            // Run background operation to push incoming changes to the subscription.
+            subscriptionChanges.RunBackgroundOperation(async (ch, ct) => { 
+                try {
+                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!ch.TryRead(out var item) || item == null) {
+                            continue;
+                        }
 
-            return subscription.Reader;
-        }
-
-
-        /// <summary>
-        /// Gets the tags that an existing snapshot subscription is subscribed to. You must create a 
-        /// channel first by calling <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID for the subscription.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A channel reader that the caller can subscribe to to receive the tags that the 
-        ///   subscription holds references to.
-        /// </returns>
-        public async Task<ChannelReader<TagIdentifier>> GetSnapshotTagValueChannelSubscriptions(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
-            var subscription = GetSnapshotSubscription(adapter.Adapter);
-            if (subscription == null) {
-                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
-            }
-
-            return subscription.GetTags(AdapterCallContext, cancellationToken);
-        }
-
-
-        /// <summary>
-        /// Adds tags to an existing snapshot data channel subscription. You must create a channel 
-        /// first by calling <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID for the channel to modify.
-        /// </param>
-        /// <param name="tags">
-        ///   The tags to add to the subscription.
-        /// </param>
-        /// <returns>
-        ///   The total number of tags in the subscription.
-        /// </returns>
-        public async Task<int> AddTagsToSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags) {
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            tags = tags
-                ?.Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? Array.Empty<string>();
-
-            if (!tags.Any()) {
-                throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
-            }
-
-            var subscription = GetSnapshotSubscription(adapter.Adapter);
-            if (subscription == null) {
-                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
-            }
-
-            return await subscription.AddTagsToSubscription(AdapterCallContext, tags, Context.ConnectionAborted).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Removes tags from an existing snapshot data channel subscription. You must create a channel 
-        /// first by calling <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/>.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID for the channel to modify.
-        /// </param>
-        /// <param name="tags">
-        ///   The tags to remove from the subscription.
-        /// </param>
-        /// <returns>
-        ///   The total number of tags in the subscription.
-        /// </returns>
-        public async Task<int> RemoveTagsFromSnapshotTagValueChannel(string adapterId, IEnumerable<string> tags) {
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            tags = tags
-                ?.Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray() ?? Array.Empty<string>();
-
-            if (!tags.Any()) {
-                throw new ArgumentException(Resources.Error_AtLeastOneTagIsRequired, nameof(tags));
-            }
-
-            var subscription = GetSnapshotSubscription(adapter.Adapter);
-            if (subscription == null) {
-                throw new ArgumentException(Resources.Error_AdapterSubscriptionDoesNotExist, nameof(adapterId));
-            }
-
-            return await subscription.RemoveTagsFromSubscription(AdapterCallContext, tags, Context.ConnectionAborted).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Gets or creates a real-time data subscription on the specified adapter.
-        /// </summary>
-        /// <param name="callContext">
-        ///   The call context.
-        /// </param>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="feature">
-        ///   The snapshot push feature for the adapter.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that will fire when the subscription is no longer required.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="ISnapshotTagValueSubscription"/> for the specified adapter.
-        /// </returns>
-        private async Task<ISnapshotTagValueSubscription> GetOrCreateSnapshotSubscription(IAdapterCallContext callContext, IAdapter adapter, ISnapshotTagValuePush feature, CancellationToken cancellationToken) {
-            var subscription = GetSnapshotSubscription(adapter);
-            if (subscription != null) {
-                return subscription;
-            }
-
-            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as List<SubscriptionWrapper>;
-            subscription = await feature.Subscribe(callContext, cancellationToken).ConfigureAwait(false);
-
-            SubscriptionWrapper result;
-            lock (subscriptionsForConnection) {
-                result = new SubscriptionWrapper(Context.ConnectionId, adapter.Descriptor.Id, subscription, subscriptionsForConnection, cancellationToken);
-                subscriptionsForConnection.Add(result);
-            }
-
-            await result.StartAsync(callContext, cancellationToken).ConfigureAwait(false);
-            return result;
-        }
-
-
-        /// <summary>
-        /// Gets an existing real-time data subscription on the specified adapter.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="ISnapshotTagValueSubscription"/> for the specified adapter, or 
-        ///   <see langword="null"/> if a subscription does not exist.
-        /// </returns>
-        private ISnapshotTagValueSubscription GetSnapshotSubscription(IAdapter adapter) {
-            var subscriptionsForConnection = Context.Items[typeof(ISnapshotTagValueSubscription)] as List<SubscriptionWrapper>;
-            return subscriptionsForConnection?.FirstOrDefault(x => string.Equals(x.AdapterId, adapter.Descriptor.Id));
+                        if (item.Action == Common.SubscriptionUpdateAction.Subscribe) {
+                            await subscription.AddTagToSubscription(item.Tag).ConfigureAwait(false);
+                        }
+                        else {
+                            await subscription.RemoveTagFromSubscription(item.Tag).ConfigureAwait(false);
+                        }
+                    }
+                }
+                finally {
+                    subscription.Dispose();
+                }
+            }, TaskScheduler, cancellationToken); 
+            
+            // Return the output channel for the subscription.
+            return subscription.Values;
         }
 
         #endregion
@@ -228,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Polling Data Queries ]
 
         /// <summary>
-        /// Gets snapshot tag values via polling. Use <see cref="CreateSnapshotTagValueChannel(string, IEnumerable{string}, CancellationToken)"/> 
+        /// Gets snapshot tag values via polling. Use <see cref="CreateSnapshotTagValueChannel"/> 
         /// to receive snapshot tag values via push messages.
         /// </summary>
         /// <param name="adapterId">
@@ -399,130 +243,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
             return adapter.Feature.WriteHistoricalTagValues(AdapterCallContext, channel, cancellationToken);
-        }
-
-        #endregion
-
-        #region [ Inner Types ]
-
-        /// <summary>
-        /// Wrapper for <see cref="ISnapshotTagValueSubscription"/> to ensure that the inner subscription is 
-        /// cancelled if a client disconnects or stops the stream. 
-        /// </summary>
-        private class SubscriptionWrapper : ISnapshotTagValueSubscription {
-
-            public string ConnectionId { get; }
-
-            public string AdapterId { get; }
-
-            private readonly ISnapshotTagValueSubscription _inner;
-
-            private readonly Channel<TagValueQueryResult> _channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() { 
-                AllowSynchronousContinuations = true,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
-            private Action _onDisposed;
-
-            private readonly CancellationTokenRegistration _onStreamCancelled;
-
-            /// <inheritdoc/>
-            public bool IsStarted {
-                get { return _inner.IsStarted; }
-            }
-
-            /// <inheritdoc/>
-            public ChannelReader<TagValueQueryResult> Reader { get { return _channel.Reader; } }
-
-            /// <inheritdoc/>
-            public int Count { get { return _inner.Count; } }
-
-
-            public SubscriptionWrapper(
-                string connectionId,
-                string adapterId, 
-                ISnapshotTagValueSubscription inner, 
-                ICollection<SubscriptionWrapper> subscriptionsForConnection, 
-                CancellationToken streamCancelled
-            ) {
-                ConnectionId = connectionId;
-                AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
-                _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-                _onDisposed = () => {
-                    lock (subscriptionsForConnection) {
-                        subscriptionsForConnection.Remove(this);
-                    }
-                };
-                _onStreamCancelled = streamCancelled.Register(Dispose);
-                _ = Task.Run(async () => { 
-                    try {
-                        // Send initial value back to indicate that subscription is active.
-                        var subscriptionReadyIndicator = new TagValueQueryResult(
-                            string.Empty, 
-                            string.Empty, 
-                            TagValueBuilder
-                                .Create()
-                                .WithValue(string.Concat(ConnectionId, ':', AdapterId))
-                                .Build()
-                        );
-                        _channel.Writer.TryWrite(subscriptionReadyIndicator);
-
-                        await _inner.Reader.Forward(_channel.Writer, streamCancelled).ConfigureAwait(false);
-                    }
-                    catch (Exception e) {
-                        _channel.Writer.TryComplete(e);
-                    }
-                    finally {
-                        _channel.Writer.TryComplete();
-                    }
-                });
-            }
-
-
-            /// <inheritdoc/>
-            public async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                await _inner.StartAsync(context, cancellationToken).ConfigureAwait(false);
-            }
-
-
-            /// <inheritdoc/>
-            public ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, CancellationToken cancellationToken) {
-                return _inner.GetTags(context, cancellationToken);
-            }
-
-
-            /// <inheritdoc/>
-            public Task<int> AddTagsToSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                return _inner.AddTagsToSubscription(context, tagNamesOrIds, cancellationToken);
-            }
-
-
-            /// <inheritdoc/>
-            public Task<int> RemoveTagsFromSubscription(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                return _inner.RemoveTagsFromSubscription(context, tagNamesOrIds, cancellationToken);
-            }
-
-
-            /// <inheritdoc/>
-            public void Dispose() {
-                _onDisposed?.Invoke();
-                _onDisposed = null;
-                _onStreamCancelled.Dispose();
-                _inner.Dispose();
-                _channel.Writer.TryComplete();
-            }
-
-
-            /// <inheritdoc/>
-            public async ValueTask DisposeAsync() {
-                _onDisposed?.Invoke();
-                _onDisposed = null;
-                _onStreamCancelled.Dispose();
-                await _inner.DisposeAsync().ConfigureAwait(false);
-                _channel.Writer.TryComplete();
-            }
-
         }
 
         #endregion

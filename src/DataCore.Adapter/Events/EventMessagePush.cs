@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events {
@@ -12,6 +13,11 @@ namespace DataCore.Adapter.Events {
     /// Base class for simplifying implementation of the <see cref="IEventMessagePush"/> feature.
     /// </summary>
     public abstract class EventMessagePush : IEventMessagePush, IDisposable {
+
+        /// <summary>
+        /// The scheduler to use when running background tasks.
+        /// </summary>
+        protected IBackgroundTaskService Scheduler { get; }
 
         /// <summary>
         /// Logging.
@@ -65,26 +71,22 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Creates a new <see cref="EventMessagePush"/> object.
         /// </summary>
+        /// <param name="scheduler">
+        ///   The task scheduler to use when running background operations.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected EventMessagePush(ILogger logger) {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _ = Task.Factory.StartNew(async () => {
-                try {
-                    await PublishToSubscribers(_disposedTokenSource.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorInEventSubscriptionManagerPublishLoop);
-                }
-            }, _disposedTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        protected EventMessagePush(IBackgroundTaskService scheduler, ILogger logger) {
+            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            Scheduler.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
         }
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
-            var subscription = new Subscription(this, subscriptionType);
+        public IEventMessageSubscription Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+            var subscription = new Subscription(context, this, subscriptionType);
 
             bool added;
             lock (_subscriptions) {
@@ -96,8 +98,8 @@ namespace DataCore.Adapter.Events {
             }
 
             if (added) {
-                await ((IEventMessageSubscription) subscription).StartAsync(context, cancellationToken).ConfigureAwait(false);
-                await OnSubscriptionAdded(_disposedTokenSource.Token).WithCancellation(cancellationToken).ConfigureAwait(false);
+                subscription.Start();
+                OnSubscriptionAdded();
             }
 
             return subscription;
@@ -107,25 +109,16 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will perform subscription-related activities.
-        /// </returns>
-        protected abstract Task OnSubscriptionAdded(CancellationToken cancellationToken);
+        protected abstract void OnSubscriptionAdded();
 
 
         /// <summary>
         /// Invoked when a subscription is removed.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   A task that will perform subscription-related activities.
         /// </returns>
-        protected abstract Task OnSubscriptionRemoved(CancellationToken cancellationToken);
+        protected abstract void OnSubscriptionRemoved();
 
 
         /// <summary>
@@ -159,15 +152,7 @@ namespace DataCore.Adapter.Events {
             }
 
             if (removed && !_isDisposed && !_disposedTokenSource.IsCancellationRequested) {
-                _ = Task.Run(async () => {
-                    try {
-                        await OnSubscriptionRemoved(_disposedTokenSource.Token).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfEventMessageSubscription);
-                    }
-                });
+                OnSubscriptionRemoved();
             }
         }
 
@@ -295,32 +280,22 @@ namespace DataCore.Adapter.Events {
             /// <summary>
             /// Creates a new <see cref="Subscription"/> object.
             /// </summary>
+            /// <param name="context">
+            ///   The adapter call context for the subscriber.
+            /// </param>
             /// <param name="subscriptionManager">
             ///   The subscription manager that the subscription is attached to.
             /// </param>
             /// <param name="subscriptionType">
             ///   Indicates if the subscription is an active or passive event listener.
             /// </param>
-            internal Subscription(EventMessagePush subscriptionManager, EventMessageSubscriptionType subscriptionType) {
+            internal Subscription(
+                IAdapterCallContext context,
+                EventMessagePush subscriptionManager, 
+                EventMessageSubscriptionType subscriptionType
+            ) : base(context) {
                 _subscriptionManager = subscriptionManager;
                 IsActive = subscriptionType == EventMessageSubscriptionType.Active;
-            }
-
-            
-            /// <inheritdoc/>
-            protected override Channel<EventMessage> CreateChannel() {
-                // If this is a passive subscription, we do not need to guarantee delivery of the message.
-                return ChannelExtensions.CreateEventMessageChannel<EventMessage>(IsActive
-                    ? BoundedChannelFullMode.Wait
-                    : BoundedChannelFullMode.DropWrite
-                );
-            }
-
-
-            /// <inheritdoc/>
-            protected override ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                // No additional setup required.
-                return default;
             }
 
 
@@ -334,30 +309,16 @@ namespace DataCore.Adapter.Events {
             ///   A task that will write the message to the event channel.
             /// </returns>
             internal async Task OnMessageReceived(EventMessage message) {
-                if (SubscriptionCancelled.IsCancellationRequested) {
-                    return;
-                }
-
-                if (message == null) {
-                    return;
-                }
-
-                await Writer.WriteAsync(message, SubscriptionCancelled).ConfigureAwait(false);
+                await ValueReceived(message, CancellationToken).ConfigureAwait(false);
             }
 
 
             /// <inheritdoc/>
             protected override void Dispose(bool disposing) {
+                base.Dispose(disposing);
                 if (disposing) {
                     _subscriptionManager.OnSubscriptionDisposed(this);
                 }
-            }
-
-
-            /// <inheritdoc />
-            protected override ValueTask DisposeAsync(bool disposing) {
-                Dispose(disposing);
-                return new ValueTask();
             }
 
         }

@@ -171,19 +171,17 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, default)) {
+                using (var subscription = feature.Subscribe(context)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
-                    Assert.AreEqual(0, subscription.Count);
 
                     var tagDetails = GetReadTagValuesQueryDetails();
 
-                    var subscribedTagCount = await subscription.AddTagsToSubscription(context, new[] { tagDetails.Id }, default);
-                    Assert.AreEqual(1, subscribedTagCount);
-                    Assert.AreEqual(subscribedTagCount, subscription.Count);
+                    var subscribeSucceeded = await subscription.AddTagToSubscription(tagDetails.Id);
+                    Assert.IsTrue(subscribeSucceeded);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        var val = await subscription.Values.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                         Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
                     }
@@ -366,14 +364,14 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Active, default)) {
+                using (var subscription = feature.Subscribe(context, EventMessageSubscriptionType.Active)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        var val = await subscription.Values.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                     }
                 }
@@ -390,14 +388,14 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Passive, default)) {
+                using (var subscription = feature.Subscribe(context, EventMessageSubscriptionType.Passive)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        var val = await subscription.Values.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                     }
                 }

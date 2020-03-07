@@ -57,20 +57,23 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
-                using (var subscription = await feature.Subscribe(context, default).ConfigureAwait(false)) {
-                    var subscribedTagCount = await subscription.AddTagsToSubscription(
-                        context,
-                        new[] {
-                            TestTag1.Id
-                        },
-                        CancellationToken.None
+                var subscribedTags = new[] {
+                    new UpdateSnapshotTagValueSubscriptionRequest() {
+                        Tag = TestTag1.Id,
+                        Action = SubscriptionUpdateAction.Subscribe
+                    }
+                }.PublishToChannel();
+
+                using (var subscription = feature.Subscribe(context)) {
+                    var subscribeSucceeded = await subscription.AddTagToSubscription(
+                        TestTag1.Id
                     ).ConfigureAwait(false);
-                    Assert.AreEqual(1, subscribedTagCount, "Incorrect subscribed tag count");
+                    Assert.IsTrue(subscribeSucceeded);
 
                     // Write a couple of values that we should then be able to read out again via 
                     // the subscription's channel.
                     var now = System.DateTime.UtcNow;
-                    adapter.WriteSnapshotValue(
+                    await adapter.WriteSnapshotValue(
                         TagValueQueryResult.Create(
                             TestTag1.Id,
                             TestTag1.Id,
@@ -81,7 +84,7 @@ namespace DataCore.Adapter.Tests {
                                 .Build()
                         )
                     );
-                    adapter.WriteSnapshotValue(
+                    await adapter.WriteSnapshotValue(
                         TagValueQueryResult.Create(
                             TestTag1.Id,
                             TestTag1.Id,
@@ -95,14 +98,14 @@ namespace DataCore.Adapter.Tests {
 
                     // Read initial value.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.IsNotNull(value);
                     }
 
                     // Read first value written above.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
                         Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
@@ -110,7 +113,7 @@ namespace DataCore.Adapter.Tests {
 
                     // Read second value written above.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
                         Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());

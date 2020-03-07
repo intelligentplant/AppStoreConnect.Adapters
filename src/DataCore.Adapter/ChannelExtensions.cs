@@ -85,40 +85,6 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the <see cref="IEnumerable{T}"/> to a <see cref="ChannelReader{T}"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The item type.
-        /// </typeparam>
-        /// <param name="items">
-        ///   The items to write to the channel.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ChannelReader{T}"/> that can be used to read the emitted items.
-        /// </returns>
-        public static ChannelReader<T> ToChannel<T>(this IEnumerable<T> items) {
-            if (items == null) {
-                throw new ArgumentNullException(nameof(items));
-            }
-            
-            var result = CreateChannel<T>(-1);
-            try {
-                foreach (var item in items) {
-                    result.Writer.TryWrite(item);
-                }
-            }
-            catch (Exception e) {
-                result.Writer.TryComplete(e);
-            }
-            finally {
-                result.Writer.TryComplete();
-            }
-
-            return result;
-        }
-
-
-        /// <summary>
         /// Creates a channel that can be used to return results to tag search queries.
         /// </summary>
         /// <param name="capacity">

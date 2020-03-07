@@ -10,15 +10,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
-            IEventMessageSubscription result = new EventMessageSubscription(this, CreateClient<EventsService.EventsServiceClient>(), subscriptionType);
-            try {
-                await result.StartAsync(context, cancellationToken).ConfigureAwait(false);
-            }
-            catch {
-                await result.DisposeAsync().ConfigureAwait(false);
-                throw;
-            }
+        public IEventMessageSubscription Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+            IEventMessageSubscription result = new EventMessageSubscription(
+                this, 
+                context, 
+                subscriptionType
+            );
+            result.Start();
             return result;
         }
 
@@ -27,61 +25,43 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
             private readonly EventMessagePushImpl _feature;
 
-            private readonly EventsService.EventsServiceClient _client;
-
             private readonly bool _activeSubscription;
 
 
-            public EventMessageSubscription(EventMessagePushImpl feature, EventsService.EventsServiceClient client, EventMessageSubscriptionType subscriptionType) {
+            public EventMessageSubscription(
+                EventMessagePushImpl feature, 
+                IAdapterCallContext context,
+                EventMessageSubscriptionType subscriptionType
+            ) : base(context) {
                 _feature = feature;
-                _client = client;
                 _activeSubscription = subscriptionType == EventMessageSubscriptionType.Active;
             }
 
 
-            protected override async ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-                var tcs = new TaskCompletionSource<int>();
-
-                Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var grpcResponse = _client.CreateEventPushChannel(new CreateEventPushChannelRequest() {
+            /// <inheritdoc/>
+            protected override async Task Run(CancellationToken cancellationToken) {
+                var client = _feature.CreateClient<EventsService.EventsServiceClient>();
+                var duplexCall = client.CreateEventPushChannel(
+                    new CreateEventPushChannelRequest() { 
                         AdapterId = _feature.AdapterId,
-                        SubscriptionType = _activeSubscription 
-                            ? EventSubscriptionType.Active 
+                        SubscriptionType = _activeSubscription
+                            ? EventSubscriptionType.Active
                             : EventSubscriptionType.Passive
-                    }, _feature.GetCallOptions(context, ct));
+                    },
+                    _feature.GetCallOptions(Context, cancellationToken)
+                );
 
-                    // The service will always send us an initial message to indicate that the 
-                    // subscription has been registered.
-                    await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false);
-                    tcs.TrySetResult(0);
-
-                    try {
-                        while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                            if (grpcResponse.ResponseStream.Current == null) {
-                                continue;
-                            }
-                            await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
-                        }
+                // Read value changes.
+                while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (duplexCall.ResponseStream.Current == null) {
+                        continue;
                     }
-                    finally {
-                        grpcResponse.Dispose();
-                    }
-                }, false, _feature.TaskScheduler, SubscriptionCancelled);
 
-                await tcs.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
-            }
-
-
-            /// <inheritdoc />
-            protected override void Dispose(bool disposing) {
-                // Do nothing.
-            }
-
-
-            /// <inheritdoc />
-            protected override ValueTask DisposeAsync(bool disposing) {
-                Dispose(disposing);
-                return default;
+                    await ValueReceived(
+                        duplexCall.ResponseStream.Current.ToAdapterEventMessage(),
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                }
             }
 
         }

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Events;
 using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
@@ -15,8 +13,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         private readonly IAdapterAccessor _adapterAccessor;
 
         private readonly IBackgroundTaskService _backgroundTaskService;
-
-        private static readonly ConcurrentDictionary<string, Events.IEventMessageSubscription> s_subscriptions = new ConcurrentDictionary<string, Events.IEventMessageSubscription>();
 
 
         public EventsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
@@ -31,37 +27,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var key = $"{_adapterCallContext.ConnectionId}:{nameof(EventsServiceImpl)}:{adapter.Adapter.Descriptor.Id}:{request.SubscriptionType}".ToUpperInvariant();
-            if (s_subscriptions.TryGetValue(key, out var _)) {
-                throw new RpcException(new Status(StatusCode.AlreadyExists, string.Format(Resources.Error_DuplicateEventSubscriptionAlreadyExists, adapterId)));
-            }
-
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? Events.EventMessageSubscriptionType.Active : Events.EventMessageSubscriptionType.Passive, cancellationToken).ConfigureAwait(false)) {
-                try {
-                    s_subscriptions[key] = subscription;
-
-                    // Send initial value back to indicate that subscription is active.
-                    var subscriptionReadyIndicator = new EventMessage() { 
-                        Category = string.Empty,
-                        Id = string.Empty,
-                        Priority = EventPriority.Low,
-                        Message = key,
-                        UtcEventTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
-                    };
-                    await responseStream.WriteAsync(subscriptionReadyIndicator).ConfigureAwait(false);
-
-                    while (!cancellationToken.IsCancellationRequested) {
-                        try {
-                            var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                            await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) {
-                            // Do nothing
-                        }
+            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive)) {
+                while (!cancellationToken.IsCancellationRequested) {
+                    try {
+                        var msg = await subscription.Values.ReadAsync(cancellationToken).ConfigureAwait(false);
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
-                }
-                finally {
-                    s_subscriptions.TryRemove(key, out var _);
+                    catch (OperationCanceledException) {
+                        // Do nothing
+                    }
                 }
             }
         }

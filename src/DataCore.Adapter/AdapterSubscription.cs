@@ -16,163 +16,147 @@ namespace DataCore.Adapter {
     public abstract class AdapterSubscription<T> : IAdapterSubscription<T> {
 
         /// <summary>
-        /// Flags if the object has been disposed.
+        /// A flag that specifies if the subscription has been disposed.
         /// </summary>
-        private bool _isDisposed;
+        protected bool IsDisposed { get; private set; }
 
         /// <summary>
-        /// Lock to prevent multiple attempts to start the subscription at once.
+        /// Fires when the subscription is disposed.
         /// </summary>
-        private readonly SemaphoreSlim _startupLock = new SemaphoreSlim(1, 1);
+        private readonly CancellationTokenSource _subscriptionCancelled = new CancellationTokenSource();
 
         /// <summary>
-        /// The channel for the subscription.
+        /// Indicates if the subscription has been started.
         /// </summary>
-        private readonly Lazy<Channel<T>> _channel;
+        private int _isStarted;
 
         /// <summary>
-        /// Cancellation token source that fires when the object is disposed.
+        /// Indicates if the subscription has previously been started using the <see cref="Start"/> 
+        /// method. Note that this property does not reset when the subscription is disposed.
         /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <inheritdoc/>
-        public bool IsStarted { get; private set; }
-
-        /// <inheritdoc/>
-        public ChannelReader<T> Reader { get { return _channel.Value; } }
+        public bool IsStarted => _isStarted == 1;
 
         /// <summary>
-        /// The writer for the subscription's channel.
+        /// Channel that will publish received values.
         /// </summary>
-        protected ChannelWriter<T> Writer { get { return _channel.Value; } }
+        private readonly Channel<T> _valuesChannel = Channel.CreateUnbounded<T>();
 
         /// <summary>
-        /// A cancellation token that will fire when the subscription is disposed.
+        /// The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </summary>
-        protected CancellationToken SubscriptionCancelled {
-            get { return _disposedTokenSource.Token; }
-        }
-
+        public IAdapterCallContext Context { get; }
 
         /// <summary>
-        /// Creates a new <see cref="AdapterSubscription{T}"/> obejct.
+        /// A channel that will publish the received values.
         /// </summary>
-        protected AdapterSubscription() {
-            _channel = new Lazy<Channel<T>>(CreateChannel, LazyThreadSafetyMode.ExecutionAndPublication);
-        }
-
+        public ChannelReader<T> Values => _valuesChannel;
 
         /// <summary>
-        /// Creates the <see cref="Channel{T}"/> used by the subscription.
+        /// A cancellation token that will fire when the subscription disposed.
         /// </summary>
-        /// <returns>
-        ///   A new <see cref="Channel{T}"/>. The channel will be closed automatically when the 
-        ///   subscription is disposed.
-        /// </returns>
-        protected virtual Channel<T> CreateChannel() {
-            return Channel.CreateUnbounded<T>();
-        }
+        public CancellationToken CancellationToken => _subscriptionCancelled.Token;
 
+        /// <summary>
+        /// Completes when the subscription is disposed.
+        /// </summary>
+        private readonly TaskCompletionSource<int> _completed = new TaskCompletionSource<int>();
 
-        /// <inheritdoc/>
-        async ValueTask IAdapterSubscription<T>.StartAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (_isDisposed) {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
-
-            await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try {
-                if (IsStarted) {
-                    return;
-                }
-                await StartAsync(context, cancellationToken).ConfigureAwait(false);
-                IsStarted = true;
-            }
-            finally {
-                _startupLock.Release();
-            }
-        }
+        /// <summary>
+        /// A task that will complete when the subscription is disposed.
+        /// </summary>
+        public Task Completed => _completed.Task;
 
 
         /// <summary>
-        /// Starts the subscription. Implementers should perform any required setup logic for the 
-        /// subscription here.
+        /// Creates a new <see cref="AdapterSubscription{T}"/> object.
         /// </summary>
         /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the caller. Can be <see langword="null"/>.
+        ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
+        /// </param>
+        protected AdapterSubscription(IAdapterCallContext context) {
+            Context = context;
+        }
+
+
+        /// <summary>
+        /// Starts the subscription.
+        /// </summary>
+        public void Start() {
+            if (IsDisposed || Interlocked.CompareExchange(ref _isStarted, 1, 0) != 0) {
+                // Already started.
+                return;
+            }
+
+            _ = Task.Run(async () => {
+                try {
+                    await Run(CancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    _valuesChannel.Writer.TryComplete();
+                }
+                catch (ChannelClosedException) {
+                    _valuesChannel.Writer.TryComplete();
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    _valuesChannel.Writer.TryComplete(e);
+                }
+                finally {
+                    _valuesChannel.Writer.TryComplete();
+                }
+            });
+        }
+
+
+        /// <summary>
+        /// Creates a long-running task that runs the subscription until the provided cancellation 
+        /// token fires.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token to observe.
+        /// </param>
+        /// <returns>
+        ///   A long-running task that will complete when the cancellation token fires.
+        /// </returns>
+        protected virtual Task Run(CancellationToken cancellationToken) {
+            return Completed;
+        }
+
+
+        /// <summary>
+        /// Publishes a value to the <see cref="Values"/> channel.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask"/> that will perform any required setup action.
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> that 
+        ///   indicates if the value was published to the subscription.
         /// </returns>
-        protected abstract ValueTask StartAsync(IAdapterCallContext context, CancellationToken cancellationToken);
+        public async ValueTask<bool> ValueReceived(T value, CancellationToken cancellationToken = default) {
+            if (IsDisposed || value == null) {
+                return false;
+            }
 
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken)) {
+                if (await _valuesChannel.Writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                    return _valuesChannel.Writer.TryWrite(value);
+                }
+            }
 
-        /// <summary>
-        /// Helper to dispose of common items from both <see cref="Dispose()"/> and 
-        /// <see cref="DisposeAsync()"/>.
-        /// </summary>
-        private void DisposeCommon() {
-            _startupLock.Dispose();
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-            Writer.TryComplete();
+            return false;
         }
 
 
         /// <inheritdoc/>
         public void Dispose() {
-            if (_isDisposed) {
-                return;
-            }
-
-            DisposeCommon();
             Dispose(true);
-
-            _isDisposed = true;
             GC.SuppressFinalize(this);
         }
-
-
-        /// <summary>
-        /// Releases managed and unmanaged resources used by the subscription.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the subscription is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
-        /// </param>
-        protected abstract void Dispose(bool disposing);
-
-
-        /// <inheritdoc/>
-        public async ValueTask DisposeAsync() {
-            if (_isDisposed) {
-                return;
-            }
-
-            DisposeCommon();
-            await DisposeAsync(true).ConfigureAwait(false);
-
-            _isDisposed = true;
-#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
-            GC.SuppressFinalize(this);
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
-        }
-
-
-        /// <summary>
-        /// Releases managed and unmanaged resources used by the subscription.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the subscription is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that will release the resources.
-        /// </returns>
-        protected abstract ValueTask DisposeAsync(bool disposing);
 
 
         /// <summary>
@@ -180,6 +164,28 @@ namespace DataCore.Adapter {
         /// </summary>
         ~AdapterSubscription() {
             Dispose(false);
+        }
+
+
+        /// <summary>
+        /// Releases subscription resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <see langword="true"/> if the subscription is being disposed, or <see langword="false"/> 
+        ///   if it is being finalized.
+        /// </param>
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                if (IsDisposed) {
+                    return;
+                }
+
+                IsDisposed = true;
+                _valuesChannel.Writer.TryComplete();
+                _subscriptionCancelled.Cancel();
+                _subscriptionCancelled.Dispose();
+                _completed.TrySetResult(0);
+            }
         }
 
     }

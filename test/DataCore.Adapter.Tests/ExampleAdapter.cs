@@ -57,57 +57,34 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public void WriteSnapshotValue(TagValueQueryResult value) {
-            _snapshotSubscriptionManager.WriteSnapshotValue(value);
+        public ValueTask<bool> WriteSnapshotValue(TagValueQueryResult value) {
+            return _snapshotSubscriptionManager.WriteSnapshotValue(value);
         }
 
 
         private class SnapshotSubscriptionManager : SnapshotTagValuePush {
 
 
-            public SnapshotSubscriptionManager() : base(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance) { }
+            public SnapshotSubscriptionManager() : base(null, null, null) { }
 
 
-            protected override ChannelReader<TagIdentifier> GetTags(IAdapterCallContext context, IEnumerable<string> tagNamesOrIds, CancellationToken cancellationToken) {
-                var channel = Channel.CreateUnbounded<TagIdentifier>();
-                channel.Writer.RunBackgroundOperation((ch, ct) => {
-                    foreach (var item in tagNamesOrIds) {
-                        ch.TryWrite(TagIdentifier.Create(item, item));
-                    }
-                }, true, null, cancellationToken);
-
-                return channel;
+            protected override void OnTagAddedToSubscription(TagIdentifier tag) {
+                base.OnTagAddedToSubscription(tag);
+                WriteSnapshotValue(new TagValueQueryResult(
+                    tag.Id,
+                    tag.Name,
+                    TagValueBuilder.Create()
+                        .WithUtcSampleTime(DateTime.MinValue)
+                        .WithValue(0)
+                        .Build()
+                ));
             }
 
 
-            protected override Task OnSubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
-                foreach (var tag in tags) {
-                    WriteSnapshotValue(new TagValueQueryResult(
-                        tag.Id,
-                        tag.Name,
-                        TagValueBuilder.Create()
-                            .WithUtcSampleTime(DateTime.MinValue)
-                            .WithValue(0)
-                            .Build()
-                    ));
-                }
-                return Task.CompletedTask;
+            internal ValueTask<bool> WriteSnapshotValue(TagValueQueryResult value) {
+                return ValueReceived(value);
             }
 
-
-            protected override Task OnUnsubscribe(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
-                return Task.CompletedTask;
-            }
-
-
-            internal void WriteSnapshotValue(TagValueQueryResult value) {
-                OnValuesChanged(new[] { value });
-            }
-
-
-            protected override void Dispose(bool disposing) {
-                // Do nothing
-            }
         }
     }
 }

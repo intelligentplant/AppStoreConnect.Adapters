@@ -12,10 +12,8 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagValuesService {
     // Snapshot polling/push
     rpc ReadSnapshotTagValues (ReadSnapshotTagValuesRequest) returns (stream TagValueQueryResult);
-    rpc CreateSnapshotPushChannel (CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
-    rpc GetSnapshotPushChannelTags (GetSnapshotPushChannelTagsRequest) returns (stream TagIdentifier);
-    rpc AddTagsToSnapshotPushChannel (AddTagsToSnapshotPushChannelRequest) returns (AddTagsToSnapshotPushChannelResponse);
-    rpc RemoveTagsFromSnapshotPushChannel (RemoveTagsFromSnapshotPushChannelRequest) returns (RemoveTagsFromSnapshotPushChannelResponse);
+    rpc CreateSnapshotPushChannel (stream CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
+
     
     // Historical data polling
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
@@ -41,25 +39,10 @@ message ReadSnapshotTagValuesRequest {
 // Snapshot tag value push
 message CreateSnapshotPushChannelRequest {
     string adapter_id = 1;
-    repeated string tags = 2;
+    string tag = 2;
+    SubscriptionUpdateAction action = 3;
 }
-message GetSnapshotPushChannelTagsRequest {
-    string adapter_id = 1;
-}
-message AddTagsToSnapshotPushChannelRequest {
-    string adapter_id = 1;
-    repeated string tags = 2;
-}
-message AddTagsToSnapshotPushChannelResponse {
-    int32 count = 1;
-}
-message RemoveTagsFromSnapshotPushChannelRequest {
-    string adapter_id = 1;
-    repeated string tags = 2;
-}
-message RemoveTagsFromSnapshotPushChannelResponse {
-    int32 count = 1;
-}
+
 
 // Read raw tag values
 message ReadRawTagValuesRequest {
