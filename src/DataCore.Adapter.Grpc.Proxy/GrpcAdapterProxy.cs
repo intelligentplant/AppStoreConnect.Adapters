@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -7,11 +9,10 @@ using GrpcNet = Grpc.Net;
 #endif
 
 using GrpcCore = Grpc.Core;
-using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
-using System.Collections.Generic;
 using IntelligentPlant.BackgroundTasks;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -255,13 +256,32 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         /// <inheritdoc/>
-        protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+        protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_channel is GrpcCore.Channel channel) {
                 await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
         }
 
 
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            if (disposing && _channel is GrpcCore.Channel channel) {
+                Task.Run(() => channel.ShutdownAsync()).GetAwaiter().GetResult();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask DisposeAsync(bool disposing) {
+            await base.DisposeAsync(disposing).ConfigureAwait(false);
+            if (disposing && _channel is GrpcCore.Channel channel) {
+                await channel.ShutdownAsync().ConfigureAwait(false);
+            }
+        }
+
+
+        /// <inheritdoc/>
         protected override async Task<IEnumerable<Diagnostics.HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<Diagnostics.HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
             if (!IsRunning) {
@@ -270,7 +290,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             if (_channel is GrpcCore.Channel coreChannel) {
                 var state = coreChannel.State;
-                var description = string.Format(Resources.HealthChecks_ChannelStateDescription, state.ToString());
+                var description = string.Format(CultureInfo.CurrentCulture, Resources.HealthChecks_ChannelStateDescription, state.ToString());
 
                 switch (state) {
                     case GrpcCore.ChannelState.Ready:

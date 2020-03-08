@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        protected override Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+        protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
         }
 

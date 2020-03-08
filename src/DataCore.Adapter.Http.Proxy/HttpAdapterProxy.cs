@@ -182,7 +182,9 @@ namespace DataCore.Adapter.Http.Proxy {
                         }
                         AddFeatures(impl, addStandardFeatures: false);
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -197,7 +199,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
 
         /// <inheritdoc/>
-        protected override Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+        protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
         }
 

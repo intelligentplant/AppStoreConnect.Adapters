@@ -10,7 +10,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
     /// <summary>
     /// Client for querying remote adapters via ASP.NET Core SignalR.
     /// </summary>
-    public class AdapterSignalRClient : IAsyncDisposable {
+    public class AdapterSignalRClient : IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// The relative SignalR hub route.
@@ -194,6 +194,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             }
 
             Validator.ValidateObject(instance, new ValidationContext(instance), true);
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            if (_isDisposed) {
+                return;
+            }
+
+            _isDisposed = true;
+            if (_disposeConnection) {
+                Task.Run(() => _hubConnection.DisposeAsync()).GetAwaiter().GetResult();
+            }
         }
 
 

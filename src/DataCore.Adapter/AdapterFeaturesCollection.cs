@@ -9,10 +9,10 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Default <see cref="IAdapterFeaturesCollection"/> implementation.
     /// </summary>
-    public class AdapterFeaturesCollection: IAdapterFeaturesCollection, IAsyncDisposable {
+    public sealed class AdapterFeaturesCollection : IAdapterFeaturesCollection, IDisposable, IAsyncDisposable {
 
         /// <summary>
-        /// When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
+        /// When <see langword="true"/>, feature implementations that also implement <see cref="IDisposable"/> 
         /// or <see cref="IAsyncDisposable"/> will be disposed when the collection is disposed.
         /// </summary>
         private bool _disposeFeatures;
@@ -237,13 +237,28 @@ namespace DataCore.Adapter {
         }
 
 
-        /// <summary>
-        /// Asynchronously disposes of any features in the collection that implement 
-        /// <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>.
-        /// </summary>
-        /// <returns>
-        ///   A task that will dispose of the collection.
-        /// </returns>
+        /// <inheritdoc/>
+        public void Dispose() {
+            if (!_disposeFeatures) {
+                _features.Clear();
+                return;
+            }
+
+            var features = _features.Values.ToArray();
+            _features.Clear();
+
+            foreach (var item in features) {
+                if (item is IDisposable d) {
+                    d.Dispose();
+                }
+                else if (item is IAsyncDisposable ad) {
+                    Task.Run(() => ad.DisposeAsync()).GetAwaiter().GetResult();
+                }
+            }
+        }
+
+
+        /// <inheritdoc/>
         public async ValueTask DisposeAsync() {
             if (!_disposeFeatures) {
                 _features.Clear();

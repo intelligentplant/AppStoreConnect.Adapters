@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
@@ -197,7 +198,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                         }
                         AddFeatures(impl, addStandardFeatures: false);
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -212,15 +215,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <inheritdoc/>
-        protected override async Task StopAsync(bool disposing, CancellationToken cancellationToken) {
+        protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_client.IsValueCreated) {
-                if (disposing) {
-                    await _client.Value.DisposeAsync().ConfigureAwait(false);
-                }
-                else {
-                    var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                    await connection.StopAsync(cancellationToken).ConfigureAwait(false);
-                }
+                var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
+                await connection.StopAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -235,7 +233,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             if (_client.IsValueCreated) {
                 var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
                 var state = hubConnection.State;
-                var description = string.Format(Resources.HealthCheck_HubConnectionStatusDescription, state.ToString());
+                var description = string.Format(CultureInfo.CurrentCulture, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString());
                 
                 switch (state) {
                     case HubConnectionState.Connected:
@@ -254,7 +252,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 var format = string.Concat(Resources.HealthCheck_HubConnectionStatusDescription, " (", item.Key, ")");
 
                 if (!item.Value.IsValueCreated || !item.Value.Value.IsCompleted) {
-                    var description = string.Format(format, Resources.HealthCheck_UnknownConnectionState);
+                    var description = string.Format(CultureInfo.CurrentCulture, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Degraded(description));
                     continue;
                 }
@@ -263,7 +261,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     var hubConnection = await item.Value.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
                     var state = hubConnection.State;
-                    var description = string.Format(format, state.ToString());
+                    var description = string.Format(CultureInfo.CurrentCulture, format, state.ToString());
 
                     switch (state) {
                         case HubConnectionState.Connected:
@@ -278,12 +276,31 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     }
                 }
                 catch (Exception e) {
-                    var description = string.Format(format, Resources.HealthCheck_UnknownConnectionState);
+                    var description = string.Format(CultureInfo.CurrentCulture, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Unhealthy(description, e.Message));
                 }
             }
 
             return results;
         }
+
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            if (disposing && _client.IsValueCreated) {
+                _client.Value.Dispose();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask DisposeAsync(bool disposing) {
+            await base.DisposeAsync(disposing).ConfigureAwait(false);
+            if (disposing && _client.IsValueCreated) {
+                await _client.Value.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,27 +12,17 @@ using Microsoft.Extensions.Logging;
 namespace DataCore.Adapter {
 
     /// <summary>
-    /// Base class that adapter implementations can inherit from.
+    /// Base class for adapter implementations.
     /// </summary>
-    /// <typeparam name="TAdapterOptions">
-    ///   The options type for the adapter.
-    /// </typeparam>
-    public abstract class AdapterBase<TAdapterOptions> : IAdapter, IHealthCheck, IAsyncDisposable, IDisposable where TAdapterOptions : AdapterOptions, new() {
+    /// <seealso cref="AdapterBase{TAdapterOptions}"/>
+    public abstract class AdapterBase : IAdapter, IHealthCheck, IDisposable, IAsyncDisposable {
+
+        #region [ Fields / Properties ]
 
         /// <summary>
-        /// Indicates if the adapter has been disposed.
+        /// Indicates if the adapter is disposed.
         /// </summary>
         private bool _isDisposed;
-
-        /// <summary>
-        /// Indicates if the adapter is being disposed.
-        /// </summary>
-        private bool _isDisposing;
-
-        /// <summary>
-        /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
-        /// </summary>
-        private readonly IDisposable _optionsMonitorSubscription;
 
         /// <summary>
         /// Logging.
@@ -90,11 +79,6 @@ namespace DataCore.Adapter {
         /// </summary>
         private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
 
-        /// <summary>
-        /// The adapter options.
-        /// </summary>
-        protected TAdapterOptions Options { get; private set; }
-
         /// <inheritdoc/>
         public AdapterDescriptor Descriptor {
             get {
@@ -124,247 +108,64 @@ namespace DataCore.Adapter {
             }
         }
 
+        #endregion
+
+        #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new <see cref="Adapter"/> object.
+        /// Creates a new <see cref="AdapterBase"/> object.
         /// </summary>
-        /// <param name="options">
-        ///   The adapter options.
+        /// <param name="id">
+        ///   The adapter ID. If <see langword="null"/> or white space, a unique identifier will 
+        ///   be generated.
         /// </param>
-        /// <param name="taskScheduler">
-        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
-        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// <param name="name">
+        ///   The adapter display name. If <see langword="null"/> or white space, the adapter ID 
+        ///   will also be used as the display name.
+        /// </param>
+        /// <param name="description">
+        ///   The adapter description.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
+        ///   Specify <see langword="null"/> to use <see cref="BackgroundTaskService.Default"/>.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the adapter. Can be <see langword="null"/>.
+        ///   The logger to use. Specify <see langword="null"/> to use 
+        ///   <see cref="Microsoft.Extensions.Logging.Abstractions.NullLogger"/>.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="options"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
-        ///   The <paramref name="options"/> are not valid.
-        /// </exception>
-        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
-
-
-        /// <summary>
-        /// Creates a new <see cref="Adapter"/> object that can monitor for changes in 
-        /// configuration. Note that changes in the adapter's ID will be ignored once the adapter 
-        /// has been created.
-        /// </summary>
-        /// <param name="optionsMonitor">
-        ///   The monitor for the adapter's options type.
-        /// </param>
-        /// <param name="taskScheduler">
-        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
-        ///   operations. Specify <see langword="null"/> to use the default implementation.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="optionsMonitor"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
-        ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
-        /// </exception>
-        protected AdapterBase(IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, IBackgroundTaskService taskScheduler, ILogger logger) {
-            if (optionsMonitor == null) {
-                throw new ArgumentNullException(nameof(optionsMonitor));
+        protected AdapterBase(
+            string id, 
+            string name, 
+            string description, 
+            IBackgroundTaskService scheduler, 
+            ILogger logger
+        ) {
+            if (string.IsNullOrWhiteSpace(id)) {
+                id = Guid.NewGuid().ToString();
             }
-
-            AddFeatures(this);
-
-            var options = optionsMonitor.CurrentValue;
-
-            // Validate options.
-            System.ComponentModel.DataAnnotations.Validator.ValidateObject(
-                options,
-                new System.ComponentModel.DataAnnotations.ValidationContext(options),
-                true
-            );
-
-            var id = string.IsNullOrWhiteSpace(options.Id) 
-                ? Guid.NewGuid().ToString() 
-                : options.Id;
-
-            _descriptor = new AdapterDescriptor(
-                id,
-                string.IsNullOrWhiteSpace(options.Name)
-                    ? id
-                    : options.Name,
-                options.Description
-            );
-
+            if (string.IsNullOrWhiteSpace(name)) {
+                name = id;
+            }
+            _descriptor = new AdapterDescriptor(id, name, description);
+            TaskScheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);
-            Options = options;
-            TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
 
-            _optionsMonitorSubscription = optionsMonitor.OnChange((opts) => {
-                // Validate updated options.
-                try {
-                    System.ComponentModel.DataAnnotations.Validator.ValidateObject(
-                        opts,
-                        new System.ComponentModel.DataAnnotations.ValidationContext(opts),
-                        true
-                    );
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_InvalidAdapterOptionsUpdate);
-                    return;
-                }
-
-                Options = opts;
-                OnOptionsChangeInternal(opts);
-            });
+            AddFeatures(this);
         }
 
+        #endregion
 
-        /// <inheritdoc/>
-        async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
-            CheckDisposed();
-            await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try {
-                if (IsRunning) {
-                    return;
-                }
-                if (StopToken.IsCancellationRequested) {
-                    throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
-                }
-
-                string descriptorId;
-                lock (_descriptor) {
-                    descriptorId = _descriptor.Id;
-                }
-
-                try {
-                    Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
-
-                    _isStarting = true;
-                    try {
-                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
-                            await StartAsync(ctSource.Token).ConfigureAwait(false);
-                        }
-                        IsRunning = true;
-                    }
-                    finally {
-                        _isStarting = false;
-                    }
-                    Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
-                    throw;
-                }
-            }
-            finally {
-                _startupLock.Release();
-            }
-        }
-
-
-        /// <inheritdoc/>
-        async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
-            CheckDisposed();
-            CheckStarted();
-
-            string descriptorId;
-            lock (_descriptor) {
-                descriptorId = _descriptor.Id;
-            }
-
-            try {
-                Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
-                _stopTokenSource.Cancel();
-                await StopAsync(false, cancellationToken).ConfigureAwait(false);
-                Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
-            }
-            catch (Exception e) {
-                Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
-                throw;
-            }
-            finally {
-                _stopTokenSource = new CancellationTokenSource();
-                IsRunning = false;
-            }
-        }
-
-
-        /// <inheritdoc/>
-        async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            try {
-                var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
-                if (results == null || !results.Any()) {
-                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription_Healthy);
-                }
-
-                var resultsArray = results.ToArray();
-
-                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
-                string description;
-
-                switch (compositeStatus) {
-                    case HealthStatus.Unhealthy:
-                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
-                        break;
-                    case HealthStatus.Degraded:
-                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
-                        break;
-                    default:
-                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
-                        break;
-                }
-
-                return new HealthCheckResult(compositeStatus, description, null, null, resultsArray);
-            }
-            catch (OperationCanceledException) {
-                throw;
-            }
-            catch (Exception e) {
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
-            }
-        }
-
-
+        #region [ Helper Methods ]
 
         /// <summary>
-        /// Disposes of the adapter.
+        /// Throws an <see cref="ObjectDisposedException"/> if the adapter has been disposed.
         /// </summary>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that represents the dispose operation.
-        /// </returns>
-        async ValueTask IAsyncDisposable.DisposeAsync() {
-            if (_isDisposed || _isDisposing) {
-                return;
+        protected void CheckDisposed() {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().Name);
             }
-            try {
-                _isDisposing = true;
-                Logger.LogInformation(Resources.Log_DisposingAdapter, _descriptor.Id);
-                _optionsMonitorSubscription?.Dispose();
-                _stopTokenSource.Dispose();
-                await StopAsync(true, default).ConfigureAwait(false);
-            }
-            finally {
-                await _features.DisposeAsync().ConfigureAwait(false);
-                _properties.Clear();
-                _loggerScope.Dispose();
-                _isDisposed = true;
-                _isDisposing = false;
-                IsRunning = false;
-            }
-#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
-            GC.SuppressFinalize(this);
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
-        }
-
-
-        /// <summary>
-        /// Disposes of the adapter.
-        /// </summary>
-        void IDisposable.Dispose() {
-            Task.Run(() => ((IAsyncDisposable) this).DisposeAsync()).GetAwaiter().GetResult();
         }
 
 
@@ -385,122 +186,40 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if the adapter has been disposed.
+        /// Updates the name and/or description for the adapter.
         /// </summary>
-        protected void CheckDisposed() {
-            if (_isDisposed) {
-                throw new ObjectDisposedException(GetType().Name);
-            }
-        }
-
-
-        /// <summary>
-        /// Starts the adapter.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="name">
+        ///   The new adapter name. Specify a <see langword="null"/> or white space value to leave 
+        ///   the name unchanged.
         /// </param>
-        /// <returns>
-        ///   A task that represents the start operation.
-        /// </returns>
-        protected abstract Task StartAsync(CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Stops the adapter.
-        /// </summary>
-        /// <param name="disposing">
-        ///   A flag that indicates if the adapter is being stopped because it is being disposed, 
-        ///   or if <see cref="IAdapter.StopAsync(CancellationToken)"/> was explicitly called.
+        /// <param name="description">
+        ///   The new adapter description. Specify <see langword="null"/> to leave the description 
+        ///   unchanged.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that represents the stop operation.
-        /// </returns>
-        protected abstract Task StopAsync(bool disposing, CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Performs an adapter health check.
-        /// </summary>
-        /// <param name="context">
-        ///   The call context for the operation, to allow authorization to be applied to the 
-        ///   operation if required.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
-        ///   health check.
-        /// </returns>
-        /// <remarks>
-        ///   Override this method to perform custom health checks for your adapter. The default 
-        ///   implementation will return unhealthy status if <see cref="IsRunning"/> is 
-        ///   <see langword="false"/>.
-        /// </remarks>
-        protected virtual Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (!IsRunning) {
-                var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
-                return Task.FromResult<IEnumerable<HealthCheckResult>>(new[] { result });
-            }
-
-            return Task.FromResult<IEnumerable<HealthCheckResult>>(Array.Empty<HealthCheckResult>());
-        }
-
-
-        /// <summary>
-        /// Invoked when the adapter detects that its supplied <typeparamref name="TAdapterOptions"/> 
-        /// have changed. This method will only be called if an <see cref="IAdapterOptionsMonitor{TAdapterOptions}"/> 
-        /// was provided when the adapter was created.
-        /// </summary>
-        /// <param name="options">
-        ///   The updated options.
-        /// </param>
-        private void OnOptionsChangeInternal(TAdapterOptions options) {
-            if (options == null) {
-                return;
-            }
-
-            // Check if we need to update the descriptor.
-
-            AdapterDescriptor descriptor;
-            lock (_descriptor) {
-                descriptor = _descriptor;
-            }
-
-            if (!string.Equals(options.Name, descriptor.Name, StringComparison.Ordinal) || 
-                !string.Equals(options.Description, descriptor.Description, StringComparison.Ordinal)) {
+        protected void UpdateDescriptor(string name = null, string description = null) {
+            if (!string.IsNullOrWhiteSpace(name)) {
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
-                        descriptor.Id, // ID cannot change once initially configured!
-                        string.IsNullOrWhiteSpace(options.Name)
-                            ? options.Id
-                            : options.Name,
-                        options.Description
+                        _descriptor.Id, 
+                        name, 
+                        description ?? _descriptor.Description
                     );
                 }
             }
-
-            // Call the handler on the implementing class.
-
-            OnOptionsChange(options);
+            else if (description != null) {
+                lock (_descriptor) {
+                    _descriptor = new AdapterDescriptor(
+                        _descriptor.Id,
+                        _descriptor.Name,
+                        description
+                    );
+                }
+            }
         }
 
+        #endregion
 
-        /// <summary>
-        /// Override this method in a subclass to receive notifications when the adapter's options 
-        /// have changed.
-        /// </summary>
-        /// <param name="options">
-        ///   The updated options.
-        /// </param>
-        protected virtual void OnOptionsChange(TAdapterOptions options) {
-            // Do nothing.
-        }
-
+        #region [ Feature Management ]
 
         /// <summary>
         /// Adds a feature to the adapter.
@@ -612,6 +331,9 @@ namespace DataCore.Adapter {
             _features.Clear();
         }
 
+        #endregion
+
+        #region [ Property Management ]
 
         /// <summary>
         /// Adds a bespoke adapter property.
@@ -661,6 +383,235 @@ namespace DataCore.Adapter {
         /// </summary>
         protected void RemoveAllProperties() {
             _properties.Clear();
+        }
+
+        #endregion
+
+        #region [ Abstract / Virtual Methods ]
+
+        /// <summary>
+        /// Starts the adapter.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that represents the start operation.
+        /// </returns>
+        protected abstract Task StartAsync(CancellationToken cancellationToken);
+
+
+        /// <summary>
+        /// Stops the adapter.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that represents the stop operation.
+        /// </returns>
+        protected abstract Task StopAsync(CancellationToken cancellationToken);
+
+
+        /// <summary>
+        /// Performs an adapter health check.
+        /// </summary>
+        /// <param name="context">
+        ///   The call context for the operation, to allow authorization to be applied to the 
+        ///   operation if required.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   health check.
+        /// </returns>
+        /// <remarks>
+        ///   Override this method to perform custom health checks for your adapter. The default 
+        ///   implementation will return unhealthy status if <see cref="IsRunning"/> is 
+        ///   <see langword="false"/>.
+        /// </remarks>
+        protected virtual Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            if (!IsRunning) {
+                var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
+                return Task.FromResult<IEnumerable<HealthCheckResult>>(new[] { result });
+            }
+
+            return Task.FromResult<IEnumerable<HealthCheckResult>>(Array.Empty<HealthCheckResult>());
+        }
+
+        #endregion
+
+
+        /// <inheritdoc/>
+        async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
+            CheckDisposed();
+            await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try {
+                if (IsRunning) {
+                    return;
+                }
+                if (StopToken.IsCancellationRequested) {
+                    throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
+                }
+
+                var descriptorId = Descriptor.Id;
+
+                try {
+                    Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
+
+                    _isStarting = true;
+                    try {
+                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
+                            await StartAsync(ctSource.Token).ConfigureAwait(false);
+                        }
+                        IsRunning = true;
+                    }
+                    finally {
+                        _isStarting = false;
+                    }
+                    Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
+                    throw;
+                }
+            }
+            finally {
+                _startupLock.Release();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
+            CheckDisposed();
+            CheckStarted();
+
+            var descriptorId = Descriptor.Id;
+
+            try {
+                Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
+                _stopTokenSource.Cancel();
+                await StopAsync(cancellationToken).ConfigureAwait(false);
+                Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
+            }
+            catch (Exception e) {
+                Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
+                throw;
+            }
+            finally {
+                _stopTokenSource = new CancellationTokenSource();
+                IsRunning = false;
+            }
+        }
+
+
+        /// <inheritdoc/>
+        async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            try {
+                var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
+                if (results == null || !results.Any()) {
+                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription_Healthy);
+                }
+
+                var resultsArray = results.ToArray();
+
+                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
+                string description;
+
+                switch (compositeStatus) {
+                    case HealthStatus.Unhealthy:
+                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
+                        break;
+                    case HealthStatus.Degraded:
+                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
+                        break;
+                    default:
+                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
+                        break;
+                }
+
+                return new HealthCheckResult(compositeStatus, description, null, null, resultsArray);
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        /// <inheritdoc/>
+        public async ValueTask DisposeAsync() {
+            await DisposeAsync(true).ConfigureAwait(false);
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+        }
+
+
+        /// <summary>
+        /// Class finalizer.
+        /// </summary>
+        ~AdapterBase() {
+            Dispose(false);
+        }
+
+
+        /// <summary>
+        /// Releases adapter resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <see langword="true"/> if the adapter is being disposed, or <see langword="false"/> 
+        ///   if it is being finalized.
+        /// </param>
+        protected virtual void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (disposing) {
+                _stopTokenSource?.Cancel();
+                _stopTokenSource?.Dispose();
+                _features.Dispose();
+                _properties.Clear();
+                _loggerScope.Dispose();
+                _startupLock.Dispose();
+                _isDisposed = true;
+            }
+        }
+
+
+        /// <summary>
+        /// Asynchronously releases adapter resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <see langword="true"/> if the adapter is being disposed, or <see langword="false"/> 
+        ///   if it is being finalized.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform the operation.
+        /// </returns>
+        /// <remarks>
+        ///   The default implementation of this method calls <see cref="Dispose(bool)"/>. Override 
+        ///   both this method and <see cref="Dispose(bool)"/> if your adapter requires a separate 
+        ///   asynchronous resource cleanup implementation.
+        /// </remarks>
+        protected virtual ValueTask DisposeAsync(bool disposing) {
+            Dispose(disposing);
+            return default;
         }
 
     }
