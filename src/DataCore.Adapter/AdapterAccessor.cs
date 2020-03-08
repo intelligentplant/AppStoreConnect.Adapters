@@ -45,7 +45,7 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
-        async Task<IEnumerable<IAdapter>> IAdapterAccessor.GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<IAdapter>> GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken) {
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -67,7 +67,7 @@ namespace DataCore.Adapter {
         }
 
         /// <inheritdoc/>
-        async Task<IAdapter> IAdapterAccessor.GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+        public async Task<IAdapter> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
@@ -87,7 +87,7 @@ namespace DataCore.Adapter {
         }
 
         /// <inheritdoc/>
-        async Task<ResolvedAdapterFeature<TFeature>> IAdapterAccessor.GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+        public async Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             var adapter = await ((IAdapterAccessor) this).GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return new ResolvedAdapterFeature<TFeature>(null, default, false);
@@ -101,5 +101,6 @@ namespace DataCore.Adapter {
             var isAuthorized = await _authorizationService.AuthorizeAdapterFeature<TFeature>(adapter, context, cancellationToken).ConfigureAwait(false);
             return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
         }
+
     }
 }
