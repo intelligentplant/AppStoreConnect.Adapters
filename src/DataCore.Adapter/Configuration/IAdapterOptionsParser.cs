@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Configuration {
     /// </typeparam>
     public interface IAdapterOptionsParser<TAdapter, TAdapterOptions> 
         where TAdapter : AdapterBase<TAdapterOptions> 
-        where TAdapterOptions : AdapterOptions, new() 
+        where TAdapterOptions : AdapterOptions 
     {
 
         /// <summary>

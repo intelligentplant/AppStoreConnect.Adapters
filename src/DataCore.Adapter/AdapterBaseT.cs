@@ -11,7 +11,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The options type for the adapter.
     /// </typeparam>
-    public abstract class AdapterBase<TAdapterOptions> : AdapterBase where TAdapterOptions : AdapterOptions, new() {
+    public abstract class AdapterBase<TAdapterOptions> : AdapterBase where TAdapterOptions : AdapterOptions {
 
         /// <summary>
         /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
