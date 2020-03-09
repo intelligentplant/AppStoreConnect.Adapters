@@ -377,7 +377,7 @@ namespace DataCore.Adapter.RealTimeData {
         public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
             var subscription = new SnapshotTagValueSubscription(
                 context,
-                new SnapshotTagValueStreamOptions() { 
+                new SnapshotTagValueSubscriptionOptions() { 
                     TagResolver = GetTagIdentifier,
                     OnTagAdded = AddTagToSubscription,
                     OnTagRemoved = RemoveTagFromSubscription,

@@ -14,7 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The stream options.
         /// </summary>
-        private readonly SnapshotTagValueStreamOptions _options;
+        private readonly SnapshotTagValueSubscriptionOptions _options;
 
         /// <summary>
         /// The list of subscribed tags.
@@ -34,14 +34,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="options"/> is <see langword="null"/>.
-        /// </exception>
         public SnapshotTagValueSubscription(
             IAdapterCallContext context,
-            SnapshotTagValueStreamOptions options
+            SnapshotTagValueSubscriptionOptions options
         ) : base(context) {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _options = options;
         }
 
 
@@ -69,10 +66,7 @@ namespace DataCore.Adapter.RealTimeData {
                     continue;
                 }
 
-                var tagInfo = _options.TagResolver == null
-                    ? new TagIdentifier(change.Tag, change.Tag)
-                    : await _options.TagResolver.Invoke(Context, change.Tag, cancellationToken).ConfigureAwait(false);
-
+                var tagInfo = await ResolveTag(Context, change.Tag, cancellationToken).ConfigureAwait(false);
                 if (tagInfo == null) {
                     // Not a valid tag.
                     continue;
@@ -84,9 +78,7 @@ namespace DataCore.Adapter.RealTimeData {
                             _subscribedTags.Add(tagInfo);
                         }
                         // Notify that the tag was added to the subscription.
-                        if (_options.OnTagAdded != null) {
-                            await _options.OnTagAdded.Invoke(this, tagInfo).ConfigureAwait(false);
-                        }
+                        await OnTagAdded(tagInfo).ConfigureAwait(false);
                         break;
                     case Common.SubscriptionUpdateAction.Unsubscribe:
                         var removed = false;
@@ -97,13 +89,94 @@ namespace DataCore.Adapter.RealTimeData {
                                 removed = true;
                             }
                         }
-                        if (removed && _options.OnTagRemoved != null) {
+                        if (removed) {
                             // Notify that the tag was removed from the subscription.
-                            await _options.OnTagRemoved(this, tagInfo).ConfigureAwait(false);
+                            await OnTagRemoved(tagInfo).ConfigureAwait(false);
                         }
                         break;
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Invoked when a tag name or ID must be resolved.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the subscriber.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag name or ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the resolved tag identifier, or 
+        ///   <see langword="null"/> if the tag cannot be resolved.
+        /// </returns>
+        /// <remarks>
+        ///   The default implementation of this method uses <see cref="SnapshotTagValueSubscriptionOptions.TagResolver"/> 
+        ///   on the options supplied to the constructor to resolve tags.
+        /// </remarks>
+        protected virtual async ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+            return _options?.TagResolver == null
+                ? new TagIdentifier(tag, tag)
+                : await _options.TagResolver.Invoke(context, tag, cancellationToken).ConfigureAwait(false);
+
+        }
+
+
+        /// <summary>
+        /// Invoked when a tag is added to the subscription.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag that was added.
+        /// </param>
+        /// <returns>
+        ///   A task that will perform additional operations associated with the event.
+        /// </returns>
+        /// <remarks>
+        ///   The default implementation of this method invokes <see cref="SnapshotTagValueSubscriptionOptions.OnTagAdded"/> 
+        ///   on the options supplied to the constructor.
+        /// </remarks>
+        protected virtual async Task OnTagAdded(TagIdentifier tag) {
+            if (_options?.OnTagAdded != null) {
+                await _options.OnTagAdded.Invoke(this, tag).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Invoked when a tag is removed from the subscription.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag that was removed.
+        /// </param>
+        /// <returns>
+        ///   A task that will perform additional operations associated with the event.
+        /// </returns>
+        /// <remarks>
+        ///   The default implementation of this method invokes <see cref="SnapshotTagValueSubscriptionOptions.OnTagRemoved"/> 
+        ///   on the options supplied to the constructor.
+        /// </remarks>
+        protected virtual async Task OnTagRemoved(TagIdentifier tag) {
+            if (_options?.OnTagRemoved != null) {
+                await _options.OnTagRemoved.Invoke(this, tag).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Invoked when the subscription is cancelled.
+        /// </summary>
+        /// <remarks>
+        /// <remarks>
+        ///   The default implementation of this method invokes <see cref="SnapshotTagValueSubscriptionOptions.OnCancelled"/> 
+        ///   on the options supplied to the constructor.
+        /// </remarks>
+        protected virtual void OnCancelled() {
+            _options?.OnCancelled(this);
         }
 
 
@@ -112,7 +185,7 @@ namespace DataCore.Adapter.RealTimeData {
             base.Dispose(disposing);
             
             if (disposing) {
-                _options?.OnCancelled(this);
+                OnCancelled();
                 lock (_subscribedTags) {
                     _subscribedTags.Clear();
                 }
@@ -123,13 +196,13 @@ namespace DataCore.Adapter.RealTimeData {
 
 
     /// <summary>
-    /// Options for <see cref="SnapshotTagValueSubscriptionBase"/>.
+    /// Options for <see cref="SnapshotTagValueSubscription"/>.
     /// </summary>
-    public class SnapshotTagValueStreamOptions {
+    public class SnapshotTagValueSubscriptionOptions {
 
         /// <summary>
         /// A delegate that will receive tag names or IDs and will return the matching 
-        /// <see cref="TagIdentifier"/> for the tag..
+        /// <see cref="TagIdentifier"/> for the tag.
         /// </summary>
         public Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> TagResolver { get; set; }
 
