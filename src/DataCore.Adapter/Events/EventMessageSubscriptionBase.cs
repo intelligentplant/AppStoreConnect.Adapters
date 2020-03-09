@@ -3,15 +3,15 @@
     /// <summary>
     /// Base implementation of <see cref="IEventMessageSubscription"/>.
     /// </summary>
-    public abstract class EventMessageSubscription : AdapterSubscription<EventMessage>, IEventMessageSubscription { 
+    public abstract class EventMessageSubscriptionBase : AdapterSubscription<EventMessage>, IEventMessageSubscription { 
     
         /// <summary>
-        /// Creates a new <see cref="EventMessageSubscription"/> object.
+        /// Creates a new <see cref="EventMessageSubscriptionBase"/> object.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscriber.
         /// </param>
-        protected EventMessageSubscription(IAdapterCallContext context) 
+        protected EventMessageSubscriptionBase(IAdapterCallContext context) 
             : base(context) { }
 
     }

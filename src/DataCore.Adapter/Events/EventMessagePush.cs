@@ -264,7 +264,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// <see cref="IEventMessageSubscription"/> implementation.
         /// </summary>
-        private class Subscription : EventMessageSubscription {
+        private class Subscription : EventMessageSubscriptionBase {
 
             /// <summary>
             /// The subscription manager that the subscription is attached to.

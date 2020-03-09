@@ -73,12 +73,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// All subscriptions.
         /// </summary>
-        private readonly List<SnapshotTagValueSubscription> _subscriptions = new List<SnapshotTagValueSubscription>();
+        private readonly List<SnapshotTagValueSubscriptionBase> _subscriptions = new List<SnapshotTagValueSubscriptionBase>();
 
         /// <summary>
         /// Maps from tag ID to the subscribers for that tag.
         /// </summary>
-        private readonly Dictionary<string, HashSet<SnapshotTagValueSubscription>> _subscriptionsByTagId = new Dictionary<string, HashSet<SnapshotTagValueSubscription>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, HashSet<SnapshotTagValueSubscriptionBase>> _subscriptionsByTagId = new Dictionary<string, HashSet<SnapshotTagValueSubscriptionBase>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// For protecting access to <see cref="_subscriptionsByTagId"/>.
@@ -155,7 +155,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private async Task AddTagToSubscription(SnapshotTagValueSubscriptionImpl subscription, TagIdentifier tag) {
+        private async Task AddTagToSubscription(SnapshotTagValueSubscription subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return;
             }
@@ -169,7 +169,7 @@ namespace DataCore.Adapter.RealTimeData {
             _subscriptionsLock.EnterWriteLock();
             try {
                 if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribers)) {
-                    subscribers = new HashSet<SnapshotTagValueSubscription>();
+                    subscribers = new HashSet<SnapshotTagValueSubscriptionBase>();
                     _subscriptionsByTagId[tag.Id] = subscribers;
                     isNewSubscription = true;
                 }
@@ -194,7 +194,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private Task RemoveTagFromSubscription(SnapshotTagValueSubscriptionImpl subscription, TagIdentifier tag) {
+        private Task RemoveTagFromSubscription(SnapshotTagValueSubscription subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return Task.CompletedTask;
             }
@@ -227,7 +227,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private void OnSubscriptionCancelled(SnapshotTagValueSubscriptionImpl subscription) {
+        private void OnSubscriptionCancelled(SnapshotTagValueSubscription subscription) {
             _subscriptionsLock.EnterWriteLock();
             try {
                 _subscriptions.Remove(subscription);
@@ -337,7 +337,7 @@ namespace DataCore.Adapter.RealTimeData {
                     continue;
                 }
 
-                IEnumerable<SnapshotTagValueSubscription> subscribers;
+                IEnumerable<SnapshotTagValueSubscriptionBase> subscribers;
 
                 _subscriptionsLock.EnterReadLock();
                 try {
@@ -375,7 +375,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
-            var subscription = new SnapshotTagValueSubscriptionImpl(
+            var subscription = new SnapshotTagValueSubscription(
                 context,
                 new SnapshotTagValueStreamOptions() { 
                     TagResolver = GetTagIdentifier,

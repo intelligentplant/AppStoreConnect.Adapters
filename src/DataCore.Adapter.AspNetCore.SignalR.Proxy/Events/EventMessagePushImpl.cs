@@ -36,7 +36,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         /// <see cref="IEventMessageSubscription"/> implementation for the 
         /// <see cref="IEventMessagePush"/> feature.
         /// </summary>
-        private class EventMessageSubscription : Adapter.Events.EventMessageSubscription {
+        private class EventMessageSubscription : Adapter.Events.EventMessageSubscriptionBase {
 
             /// <summary>
             /// The feature instance.

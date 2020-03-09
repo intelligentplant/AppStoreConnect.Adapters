@@ -19,10 +19,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <summary>
-        /// <see cref="SnapshotTagValueSubscription"/> implementation that sends/receives data via 
+        /// <see cref="SnapshotTagValueSubscriptionBase"/> implementation that sends/receives data via 
         /// a SignalR channel.
         /// </summary>
-        private class Subscription : SnapshotTagValueSubscription {
+        private class Subscription : SnapshotTagValueSubscriptionBase {
 
             private readonly SnapshotTagValuePushImpl _push;
 
