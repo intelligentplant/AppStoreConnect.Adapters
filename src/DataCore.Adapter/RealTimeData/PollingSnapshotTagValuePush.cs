@@ -73,8 +73,8 @@ namespace DataCore.Adapter.RealTimeData {
             IBackgroundTaskService scheduler,
             ILogger logger
         ) : base(
-            new SnapshotTagValueStreamManagerOptions() { 
-                TagResolver = SnapshotTagValueStreamManagerOptions.CreateTagResolver(tagInfoFeature)
+            new SnapshotTagValuePushOptions() { 
+                TagResolver = SnapshotTagValuePushOptions.CreateTagResolver(tagInfoFeature)
             }, 
             scheduler,
             logger

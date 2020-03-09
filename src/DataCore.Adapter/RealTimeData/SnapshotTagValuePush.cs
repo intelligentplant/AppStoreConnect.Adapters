@@ -44,7 +44,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Stream manager options.
         /// </summary>
-        private readonly SnapshotTagValueStreamManagerOptions _options;
+        private readonly SnapshotTagValuePushOptions _options;
 
         /// <summary>
         /// Holds the current values for subscribed tags.
@@ -99,11 +99,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The logger to use.
         /// </param>
         public SnapshotTagValuePush(
-            SnapshotTagValueStreamManagerOptions options, 
+            SnapshotTagValuePushOptions options, 
             IBackgroundTaskService scheduler,
             ILogger logger
         ) {
-            _options = options ?? new SnapshotTagValueStreamManagerOptions();
+            _options = options ?? new SnapshotTagValuePushOptions();
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
@@ -130,8 +130,8 @@ namespace DataCore.Adapter.RealTimeData {
         ///   be <see langword="null"/>.
         /// </returns>
         /// <remarks>
-        ///   If the <see cref="SnapshotTagValueStreamManagerOptions"/> for the manager does not 
-        ///   specify a <see cref="SnapshotTagValueStreamManagerOptions.TagResolver"/> callback, a 
+        ///   If the <see cref="SnapshotTagValuePushOptions"/> for the manager does not 
+        ///   specify a <see cref="SnapshotTagValuePushOptions.TagResolver"/> callback, a 
         ///   <see cref="TagIdentifier"/> using the specified <paramref name="tag"/> as the name 
         ///   and ID will be returned.
         /// </remarks>
@@ -513,7 +513,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Options for <see cref="SnapshotTagValuePush"/>
     /// </summary>
-    public class SnapshotTagValueStreamManagerOptions {
+    public class SnapshotTagValuePushOptions {
 
         /// <summary>
         /// A delegate that will receive tag names or IDs and will return the matching 
