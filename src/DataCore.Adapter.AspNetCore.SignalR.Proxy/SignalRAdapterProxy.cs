@@ -97,6 +97,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Creates a new <see cref="SignalRAdapterProxy"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="options">
         ///   The proxy options.
         /// </param>
@@ -108,10 +112,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   The logger for the proxy.
         /// </param>
         public SignalRAdapterProxy(
+            string id,
             SignalRAdapterProxyOptions options, 
             IBackgroundTaskService taskScheduler, 
             ILogger<SignalRAdapterProxy> logger
         ) : base(
+            id,
             options, 
             taskScheduler, 
             logger

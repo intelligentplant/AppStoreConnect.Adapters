@@ -36,6 +36,10 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// Creates a new <see cref="CsvAdapter"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="options">
         ///   The adapter options.
         /// </param>
@@ -52,8 +56,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger<CsvAdapter> logger)
-            : base(options, taskScheduler, logger) {
+        public CsvAdapter(string id, CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger<CsvAdapter> logger)
+            : base(id, options, taskScheduler, logger) {
             AddFeatures();
         }
 
@@ -61,6 +65,10 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// Creates a new <see cref="CsvAdapter"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="options">
         ///   The adapter options.
         /// </param>
@@ -77,8 +85,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
-            : base(options, backgroundTaskService, logger) {
+        public CsvAdapter(string id, IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+            : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }
 

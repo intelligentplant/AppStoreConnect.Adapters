@@ -98,6 +98,10 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// Creates a new <see cref="HttpAdapterProxy"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="client">
         ///   The Adapter HTTP client to use.
         /// </param>
@@ -112,11 +116,13 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The logger for the proxy.
         /// </param>
         public HttpAdapterProxy(
+            string id,
             AdapterHttpClient client, 
             HttpAdapterProxyOptions options, 
             IBackgroundTaskService taskScheduler, 
             ILogger<HttpAdapterProxy> logger
         ) : base(
+            id,
             options, 
             taskScheduler, 
             logger

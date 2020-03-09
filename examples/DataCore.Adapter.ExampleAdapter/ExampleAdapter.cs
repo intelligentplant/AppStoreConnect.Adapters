@@ -29,8 +29,8 @@ namespace DataCore.Adapter.Example {
         ///   The adapter logger.
         /// </param>
         public ExampleAdapter(IBackgroundTaskService taskScheduler, ILogger<ExampleAdapter> logger) : base(
+            "wind-power",
             new Csv.CsvAdapterOptions() {
-                Id = "wind-power",
                 Name = "Wind Power Energy Company",
                 Description = "An example data source adapter for a wind farm operator",
                 IsDataLoopingAllowed = true,

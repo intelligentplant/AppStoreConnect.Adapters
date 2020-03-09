@@ -56,8 +56,8 @@ namespace DataCore.Adapter.Tests {
             services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
                 var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
                     sp, 
+                    AdapterId,
                     new Csv.CsvAdapterOptions() {
-                        Id = AdapterId,
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,

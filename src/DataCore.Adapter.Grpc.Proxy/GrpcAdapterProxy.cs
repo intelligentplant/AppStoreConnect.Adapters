@@ -97,6 +97,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="channel">
         ///   The channel.
         /// </param>
@@ -117,11 +121,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
         public GrpcAdapterProxy(
+            string id,
             GrpcNet.Client.GrpcChannel channel, 
             GrpcAdapterProxyOptions options, 
             IBackgroundTaskService taskScheduler, 
             ILogger<GrpcAdapterProxy> logger
         ) : base(
+            id,
             options, 
             taskScheduler, 
             logger
@@ -137,6 +143,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcCore.Channel"/>.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="channel">
         ///   The channel.
         /// </param>
@@ -157,11 +167,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   <paramref name="options"/> does not define an adapter ID.
         /// </exception>
         public GrpcAdapterProxy(
+            string id,
             GrpcCore.Channel channel, 
             GrpcAdapterProxyOptions options, 
             IBackgroundTaskService taskScheduler, 
             ILogger<GrpcAdapterProxy> logger
         ) : base(
+            id,
             options, 
             taskScheduler, 
             logger

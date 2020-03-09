@@ -27,6 +27,10 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="Adapter"/> object.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="options">
         ///   The adapter options.
         /// </param>
@@ -43,8 +47,8 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
-        protected AdapterBase(TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
-            : this(new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
+        protected AdapterBase(string id, TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
+            : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
 
 
         /// <summary>
@@ -52,6 +56,10 @@ namespace DataCore.Adapter {
         /// configuration. Note that changes in the adapter's ID will be ignored once the adapter 
         /// has been created.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
         /// <param name="optionsMonitor">
         ///   The monitor for the adapter's options type.
         /// </param>
@@ -69,11 +77,12 @@ namespace DataCore.Adapter {
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
         protected AdapterBase(
+            string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
             IBackgroundTaskService taskScheduler, 
             ILogger logger
         ) : base(
-            optionsMonitor?.CurrentValue?.Id, 
+            id, 
             optionsMonitor?.CurrentValue?.Name, 
             optionsMonitor?.CurrentValue.Description,
             taskScheduler,
