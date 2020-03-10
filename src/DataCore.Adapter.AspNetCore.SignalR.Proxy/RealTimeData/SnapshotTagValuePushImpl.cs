@@ -67,7 +67,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
-            protected override async Task ProcessTagsChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
+            protected override async Task ProcessSubscriptionChangesChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
                 var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
                     _adapterId,
                     channel,

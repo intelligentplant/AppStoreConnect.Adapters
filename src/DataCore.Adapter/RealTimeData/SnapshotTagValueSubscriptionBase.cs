@@ -26,8 +26,8 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override Task Run(CancellationToken cancellationToken) {
-            return ProcessTagsChannel(_tagsChannel, cancellationToken);
+        protected sealed override Task Run(CancellationToken cancellationToken) {
+            return ProcessSubscriptionChangesChannel(_tagsChannel, cancellationToken);
         }
 
 
@@ -89,7 +89,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A long-running task that will run until the channel closes or the cancellation token 
         ///   fires.
         /// </returns>
-        protected abstract Task ProcessTagsChannel(
+        protected abstract Task ProcessSubscriptionChangesChannel(
             ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, 
             CancellationToken cancellationToken
         );

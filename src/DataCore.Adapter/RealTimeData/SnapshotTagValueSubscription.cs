@@ -9,6 +9,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Represents a single subscriber to a <see cref="SnapshotTagValuePush"/>.
     /// </summary>
+    /// <seealso cref="SnapshotTagValuePush"/>
     public class SnapshotTagValueSubscription : SnapshotTagValueSubscriptionBase {
 
         /// <summary>
@@ -57,10 +58,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override async Task ProcessTagsChannel(
+        protected sealed override async Task ProcessSubscriptionChangesChannel(
             ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, 
             CancellationToken cancellationToken
         ) {
+            await Init(cancellationToken).ConfigureAwait(false);
+
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!channel.TryRead(out var change) || change == null || string.IsNullOrWhiteSpace(change.Tag)) {
                     continue;
@@ -96,6 +99,20 @@ namespace DataCore.Adapter.RealTimeData {
                         break;
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Performs any required initialisation tasks when the subscription is started.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will perform any required initialisation tasks.
+        /// </returns>
+        protected virtual Task Init(CancellationToken cancellationToken) {
+            return Task.CompletedTask;
         }
 
 

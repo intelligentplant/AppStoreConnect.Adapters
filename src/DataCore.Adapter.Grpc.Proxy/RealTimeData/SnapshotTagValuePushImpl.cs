@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            protected override async Task ProcessTagsChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
+            protected override async Task ProcessSubscriptionChangesChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
                 var client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
                 var duplexCall = client.CreateSnapshotPushChannel(_push.GetCallOptions(Context, cancellationToken));
 
