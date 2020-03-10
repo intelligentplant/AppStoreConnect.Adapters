@@ -227,6 +227,18 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Gets the current values for the specified tags and publishes them.
+        /// </summary>
+        /// <param name="tags">
+        ///   The tags.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will perform the refresh.
+        /// </returns>
         private async Task RefreshValues(string[] tags, CancellationToken cancellationToken) {
             if (tags.Length == 0) {
                 return;

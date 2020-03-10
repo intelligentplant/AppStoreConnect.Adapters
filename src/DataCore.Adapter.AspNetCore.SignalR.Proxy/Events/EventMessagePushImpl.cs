@@ -93,7 +93,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                         continue;
                     }
 
-                    await ValueReceived(item, cancellationToken).ConfigureAwait(false);
+                    await ValueReceived(item, false, cancellationToken).ConfigureAwait(false);
                 }
             }
 

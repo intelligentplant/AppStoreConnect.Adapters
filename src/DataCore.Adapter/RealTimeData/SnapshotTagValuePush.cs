@@ -135,7 +135,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see cref="TagIdentifier"/> using the specified <paramref name="tag"/> as the name 
         ///   and ID will be returned.
         /// </remarks>
-        private async ValueTask<TagIdentifier> GetTagIdentifier(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+        protected virtual async ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
             if (string.IsNullOrWhiteSpace(tag)) {
                 return null;
             }
@@ -155,13 +155,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private async Task AddTagToSubscription(SnapshotTagValueSubscription subscription, TagIdentifier tag) {
+        private async Task AddTagToSubscription(SnapshotTagValueSubscriptionBase subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return;
             }
 
             if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
-                await subscription.ValueReceived(value, DisposedToken).ConfigureAwait(false);
+                await subscription.ValueReceived(value, true, DisposedToken).ConfigureAwait(false);
             }
 
             var isNewSubscription = false;
@@ -194,7 +194,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private Task RemoveTagFromSubscription(SnapshotTagValueSubscription subscription, TagIdentifier tag) {
+        private Task RemoveTagFromSubscription(SnapshotTagValueSubscriptionBase subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return Task.CompletedTask;
             }
@@ -227,7 +227,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private void OnSubscriptionCancelled(SnapshotTagValueSubscription subscription) {
+        private void OnSubscriptionCancelled(SnapshotTagValueSubscriptionBase subscription) {
             _subscriptionsLock.EnterWriteLock();
             try {
                 _subscriptions.Remove(subscription);
@@ -305,7 +305,7 @@ namespace DataCore.Adapter.RealTimeData {
                 catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(
-                        e, 
+                        e,
                         Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange, 
                         change.Tag, 
                         change.Added 
@@ -357,7 +357,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                 foreach (var subscriber in subscribers) {
                     try {
-                        var success = await subscriber.ValueReceived(value, cancellationToken).ConfigureAwait(false);
+                        var success = await subscriber.ValueReceived(value, false, cancellationToken).ConfigureAwait(false);
                         if (!success) {
                             Logger.LogTrace(Resources.Log_SnapshotValuePublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
@@ -375,15 +375,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
-            var subscription = new SnapshotTagValueSubscription(
-                context,
-                new SnapshotTagValueSubscriptionOptions() { 
-                    TagResolver = GetTagIdentifier,
-                    OnTagAdded = AddTagToSubscription,
-                    OnTagRemoved = RemoveTagFromSubscription,
-                    OnCancelled = OnSubscriptionCancelled
-                }
-            );
+            var subscription = CreateSubscription(context);
 
             _subscriptionsLock.EnterWriteLock();
             try {
@@ -395,6 +387,26 @@ namespace DataCore.Adapter.RealTimeData {
 
             subscription.Start();
             return subscription;
+        }
+
+
+        /// <summary>
+        /// Creates a new subscription.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="SnapshotTagValueSubscriptionBase"/> object.
+        /// </returns>
+        /// <remarks>
+        ///   The subscription should not be started.
+        /// </remarks>
+        protected virtual SnapshotTagValueSubscriptionBase CreateSubscription(IAdapterCallContext context) {
+            return new Subscription(
+                context,
+                this
+            );
         }
 
 
@@ -508,6 +520,58 @@ namespace DataCore.Adapter.RealTimeData {
                     _subscriptionsLock.Dispose();
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Default <see cref="SnapshotTagValueSubscriptionBase"/> implementation used by 
+        /// <see cref="SnapshotTagValuePush"/>.
+        /// </summary>
+        private class Subscription : SnapshotTagValueSubscriptionBase {
+
+            /// <summary>
+            /// The owning <see cref="SnapshotTagValuePush"/> instance.
+            /// </summary>
+            private readonly SnapshotTagValuePush _push;
+
+
+            /// <summary>
+            /// Creates a new <see cref="Subscription"/> object.
+            /// </summary>
+            /// <param name="context">
+            ///   The <see cref="IAdapterCallContext"/> for the subscriber.
+            /// </param>
+            /// <param name="push">
+            ///   The owning <see cref="SnapshotTagValuePush"/> instance.
+            /// </param>
+            internal Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context) {
+                _push = push;
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+                return _push.ResolveTag(context, tag, cancellationToken);
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagAdded(TagIdentifier tag) {
+                return _push.AddTagToSubscription(this, tag);
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagRemoved(TagIdentifier tag) {
+                return _push.RemoveTagFromSubscription(this, tag);
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                _push.OnSubscriptionCancelled(this);
+            }
+
         }
 
     }

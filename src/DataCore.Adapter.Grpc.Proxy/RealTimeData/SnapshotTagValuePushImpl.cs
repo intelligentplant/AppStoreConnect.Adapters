@@ -43,6 +43,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
+            /// <inheritdoc/>
             protected override async Task ProcessSubscriptionChangesChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
                 var client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
                 var duplexCall = client.CreateSnapshotPushChannel(_push.GetCallOptions(Context, cancellationToken));
@@ -75,9 +76,34 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                     await ValueReceived(
                         duplexCall.ResponseStream.Current.ToAdapterTagValueQueryResult(), 
+                        false,
                         cancellationToken
                     ).ConfigureAwait(false);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask<Adapter.RealTimeData.TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+                return new ValueTask<Adapter.RealTimeData.TagIdentifier>(new Adapter.RealTimeData.TagIdentifier(tag, tag));
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagAdded(Adapter.RealTimeData.TagIdentifier tag) {
+                return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagRemoved(Adapter.RealTimeData.TagIdentifier tag) {
+                return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                // Do nothing.
             }
         }
 

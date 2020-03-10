@@ -59,6 +59,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
                     await ValueReceived(
                         duplexCall.ResponseStream.Current.ToAdapterEventMessage(),
+                        false,
                         cancellationToken
                     ).ConfigureAwait(false);
                 }

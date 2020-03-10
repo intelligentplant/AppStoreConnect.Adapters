@@ -130,6 +130,10 @@ namespace DataCore.Adapter {
         /// <param name="value">
         ///   The value.
         /// </param>
+        /// <param name="force">
+        ///   When <see langword="true"/>, the value will be published to the subscription, even 
+        ///   if the subscription is not subscribed to receive the value. 
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -137,8 +141,8 @@ namespace DataCore.Adapter {
         ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> that 
         ///   indicates if the value was published to the subscription.
         /// </returns>
-        public async ValueTask<bool> ValueReceived(T value, CancellationToken cancellationToken = default) {
-            if (IsDisposed || value == null) {
+        public async ValueTask<bool> ValueReceived(T value, bool force = false, CancellationToken cancellationToken = default) {
+            if (IsDisposed || value == null || (!force && !CanReceiveValue(value))) {
                 return false;
             }
 
@@ -149,6 +153,20 @@ namespace DataCore.Adapter {
             }
 
             return false;
+        }
+
+
+        /// <summary>
+        /// Specifies if the subscription should emit the specified value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///   The default implementation of <see cref="CanReceiveValue"/> accepts all incoming 
+        ///   values. Override this method if you need to customise this behaviour.
+        /// </remarks>
+        protected virtual bool CanReceiveValue(T value) {
+            return true;
         }
 
 

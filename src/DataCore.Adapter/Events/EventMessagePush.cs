@@ -339,7 +339,7 @@ namespace DataCore.Adapter.Events {
             ///   A task that will write the message to the event channel.
             /// </returns>
             internal async Task OnMessageReceived(EventMessage message) {
-                await ValueReceived(message, CancellationToken).ConfigureAwait(false);
+                await ValueReceived(message, false, CancellationToken).ConfigureAwait(false);
             }
 
 

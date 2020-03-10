@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
@@ -67,6 +68,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
+            /// <inheritdoc/>
             protected override async Task ProcessSubscriptionChangesChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
                 var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
                     _adapterId,
@@ -75,8 +77,32 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 ).ConfigureAwait(false);
 
                 await hubChannel.ForEachAsync(async val => {
-                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
+                    await ValueReceived(val, false, cancellationToken).ConfigureAwait(false);
                 }, cancellationToken).ConfigureAwait(false);
+            }
+
+
+            /// <inheritdoc/>
+            protected override ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
+                return new ValueTask<TagIdentifier>(new TagIdentifier(tag, tag));
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagAdded(TagIdentifier tag) {
+                return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override Task OnTagRemoved(TagIdentifier tag) {
+                return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                // Do nothing
             }
         }
         
