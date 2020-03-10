@@ -411,13 +411,16 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
         ///   if the value was published to subscribers.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="message"/> is <see langword="null"/>.
+        /// </exception>
         public async ValueTask<bool> ValueReceived(TagValueQueryResult value, CancellationToken cancellationToken = default) {
             if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
 
             // Add the value
-            var lastestValue = _currentValueByTagId.AddOrUpdate(
+            var latestValue = _currentValueByTagId.AddOrUpdate(
                 value.TagId, 
                 value, 
                 (key, prev) => prev.Value.UtcSampleTime > value.Value.UtcSampleTime 
@@ -425,7 +428,7 @@ namespace DataCore.Adapter.RealTimeData {
                     : value
             );
 
-            if (lastestValue != value) {
+            if (latestValue != value) {
                 // There was already a later value sent for this tag.
                 return false;
             }
