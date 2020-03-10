@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     /// <remarks>
     ///   This implementation pushes ephemeral event messages to subscribers. To maintain an 
-    ///   in-memory buffer of historical events, use <see cref="InMemoryEventMessageManager"/>.
+    ///   in-memory buffer of historical events, use <see cref="InMemoryEventMessageStore"/>.
     /// </remarks>
     public class EventMessagePush : IEventMessagePush, IDisposable {
 
