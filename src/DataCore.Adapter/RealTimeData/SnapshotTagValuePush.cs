@@ -412,7 +412,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   if the value was published to subscribers.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="message"/> is <see langword="null"/>.
+        ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
         public async ValueTask<bool> ValueReceived(TagValueQueryResult value, CancellationToken cancellationToken = default) {
             if (value == null) {
