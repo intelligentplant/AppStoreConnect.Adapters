@@ -21,9 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
     public class ReadHistoricalTagValues : IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
 
         /// <summary>
-        /// The tag search provider.
+        /// The tag info provider.
         /// </summary>
-        private readonly ITagSearch _tagSearchProvider;
+        private readonly ITagInfo _tagInfoProvider;
 
         /// <summary>
         /// The raw data provider.
@@ -44,8 +44,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="ReadHistoricalTagValues"/> object.
         /// </summary>
-        /// <param name="tagSearchProvider">
-        ///   The <see cref="ITagSearch"/> instance that will provide the tag definitions for tags 
+        /// <param name="tagInfoProvider">
+        ///   The <see cref="ITagInfo"/> instance that will provide the tag definitions for tags 
         ///   being queried.
         /// </param>
         /// <param name="rawValuesProvider">
@@ -57,13 +57,13 @@ namespace DataCore.Adapter.RealTimeData {
         ///   Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagSearchProvider"/> is <see langword="null"/>.
+        ///   <paramref name="tagInfoProvider"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagSearch tagSearchProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
-            _tagSearchProvider = tagSearchProvider ?? throw new ArgumentNullException(nameof(tagSearchProvider));
+        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
+            _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
             _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
         }
@@ -74,7 +74,7 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
                 }, ct);
 
@@ -179,7 +179,7 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
                 }, ct);
 
@@ -218,7 +218,7 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagSearchProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
                 }, ct);
 
