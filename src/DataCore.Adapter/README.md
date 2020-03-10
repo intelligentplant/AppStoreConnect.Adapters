@@ -22,19 +22,16 @@ Standard adapter features are defined as interfaces in the [DataCore.Adapter.Abs
 
 ## IEventMessagePush
 
-To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) feature to your adapter, you can extend the [EventMessagePush](/src/DataCore.Adapter.Abstractions/Events/EventMessagePush.cs) class. To push values to subscribers, call the `ValueReceived` method on your `EventMessagePush` object.
+To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) feature to your adapter, you can add or extend the [EventMessagePush](/src/DataCore.Adapter.Abstractions/Events/EventMessagePush.cs) class. To push values to subscribers, call the `ValueReceived` method on your `EventMessagePush` object.
+
+If your source supports its own subscription mechanism, you can extend the `EventMessagePush` class to interface with it in the appropriate extension points. In particular, you can override the `CreateSubscription` method if you need to customise the behaviour of the subscription class itself. An example of when you might want to use this option would be if the source you are connecting to requires you to create a separate, authenticated stream for each subscriber, and you prefer to encapsulate that logic inside the subscription class.
 
 
 ## ISnapshotTagValuePush
 
 To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](./RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](./RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis.
 
-If your source supports its own subscription mechanism, you can interface with this mechanism in one of two ways:
-
-1. You can add a `SnapshotTagValuePush` object to your adapter's features, using the `SnapshotTagValuePushOptions` class to provide callbacks for events such as callers subscribing to/unsubscribing from tags.
-2. You can implement `ISnapshotTagValuePush` directly, and then use or extend the [SnapshotTagValuePushSubscription](./RealTimeData/SnapshotTagValuePushSubscription.cs) or [SnapshotTagValuePushSubscriptionBase](./RealTimeData/SnapshotTagValuePushSubscriptionBase.cs) classes to manage individual subscriptions directly.
-
-An example of when you might want to use the second option would be if the source you are connecting to requires you to create a separate, authenticated stream for each subscriber, and you prefer to encapsulate that logic inside the subscription class.
+If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class to interface with it in the appropriate extension points. In particular, you can override the `CreateSubscription` method if you need to customise the behaviour of the subscription class itself. An example of when you might want to use this option would be if the source you are connecting to requires you to create a separate, authenticated stream for each subscriber, and you prefer to encapsulate that logic inside the subscription class.
 
 To push values to subscribers, call the `ValueReceived` method on your `SnapshotTagValuePush` instance. When working directly with subscription objects, you can call the `ValueReceived` method on the subscription.
 
