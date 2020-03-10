@@ -35,6 +35,11 @@ namespace DataCore.Adapter.Events {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
+        /// A cancellation token that will fire when the object is disposed.
+        /// </summary>
+        protected CancellationToken DisposedToken => _disposedTokenSource.Token;
+
+        /// <summary>
         /// The current subscriptions.
         /// </summary>
         private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
@@ -125,13 +130,38 @@ namespace DataCore.Adapter.Events {
         /// Sends an event message to subscribers.
         /// </summary>
         /// <param name="message">
-        ///   The message.
+        ///   The message to publish.
         /// </param>
-        protected void OnMessage(EventMessage message) {
-            if (_isDisposed || _disposedTokenSource.IsCancellationRequested || message == null) {
-                return;
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the value was published to subscribers.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="message"/> is <see langword="null"/>.
+        /// </exception>
+        public async ValueTask<bool> ValueReceived(EventMessage message, CancellationToken cancellationToken = default) {
+            if (message == null) {
+                throw new ArgumentNullException(nameof(message));
             }
-            _masterChannel.Writer.TryWrite(message);
+
+            try {
+                using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
+                    await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
+                    return _masterChannel.Writer.TryWrite(message);
+                }
+            }
+            catch (OperationCanceledException) {
+                if (cancellationToken.IsCancellationRequested) {
+                    // Cancellation token provided by the caller has fired; rethrow the exception.
+                    throw;
+                }
+
+                // The stream manager is being disposed.
+                return false;
+            }
         }
 
 

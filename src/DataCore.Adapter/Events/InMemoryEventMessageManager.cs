@@ -75,10 +75,13 @@ namespace DataCore.Adapter.Events {
         /// <param name="message">
         ///   The message.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   The cursor position for the message.
         /// </returns>
-        private CursorPosition WriteEventMessage(EventMessage message) {
+        private async ValueTask<CursorPosition> WriteEventMessage(EventMessage message, CancellationToken cancellationToken) {
             var cursorPosition = CreateCursorPosition(message);
 
             _eventMessagesLock.EnterWriteLock();
@@ -112,7 +115,8 @@ namespace DataCore.Adapter.Events {
             finally {
                 _eventMessagesLock.ExitWriteLock();
             }
-            OnMessage(message);
+
+            await ValueReceived(message, cancellationToken).ConfigureAwait(false);
 
             return cursorPosition;
         }
@@ -124,8 +128,11 @@ namespace DataCore.Adapter.Events {
         /// <param name="messages">
         ///   The messages.
         /// </param>
-        public void WriteEventMessages(params EventMessage[] messages) {
-            WriteEventMessages((IEnumerable<EventMessage>) messages);
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will write the messages.
+        /// </returns>
+        public ValueTask WriteEventMessages(params EventMessage[] messages) {
+            return WriteEventMessages((IEnumerable<EventMessage>) messages);
         }
 
 
@@ -135,10 +142,13 @@ namespace DataCore.Adapter.Events {
         /// <param name="messages">
         ///   The messages.
         /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will write the messages.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="messages"/> is <see langword="null"/>.
         /// </exception>
-        public void WriteEventMessages(IEnumerable<EventMessage> messages) {
+        public async ValueTask WriteEventMessages(IEnumerable<EventMessage> messages) {
             if (messages == null) {
                 throw new ArgumentNullException(nameof(messages));
             }
@@ -147,7 +157,7 @@ namespace DataCore.Adapter.Events {
                 if (message == null) {
                     continue;
                 }
-                WriteEventMessage(message);
+                await WriteEventMessage(message, DisposedToken).ConfigureAwait(false);
             }
         }
 
@@ -163,7 +173,7 @@ namespace DataCore.Adapter.Events {
                             continue;
                         }
 
-                        var cursorPosition = WriteEventMessage(item.EventMessage);
+                        var cursorPosition = await WriteEventMessage(item.EventMessage, ct).ConfigureAwait(false);
                         if (!await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
                             break;
                         }
