@@ -76,7 +76,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                     await ValueReceived(
                         duplexCall.ResponseStream.Current.ToAdapterTagValueQueryResult(), 
-                        false,
                         cancellationToken
                     ).ConfigureAwait(false);
                 }

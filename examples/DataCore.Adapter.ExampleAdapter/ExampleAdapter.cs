@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Example {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
-            AddFeatures(new InMemoryEventMessageManager(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
+            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
         }
 
 
@@ -61,7 +61,7 @@ namespace DataCore.Adapter.Example {
             _ = Task.Run(async () => {
                 try {
                     while (!StopToken.IsCancellationRequested) {
-                        var evtManager = (InMemoryEventMessageManager) Features.Get<IWriteEventMessages>();
+                        var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
                         evtManager.WriteEventMessages(
                             EventMessageBuilder
                                 .Create()

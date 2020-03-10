@@ -202,10 +202,10 @@
   <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
     <value>Updated adapter options are not valid.</value>
   </data>
-  <data name="Log_SnapshotValuePublishToSubscriberThrewException" xml:space="preserve">
+  <data name="Log_PublishToSubscriberThrewException" xml:space="preserve">
     <value>Publish to subscriber with connection ID {connectionId} failed with error.</value>
   </data>
-  <data name="Log_SnapshotValuePublishToSubscriberWasUnsuccessful" xml:space="preserve">
+  <data name="Log_PublishToSubscriberWasUnsuccessful" xml:space="preserve">
     <value>Publish to subscriber with connection ID {connectionId} failed.</value>
   </data>
   <data name="Log_StartedAdapter" xml:space="preserve">

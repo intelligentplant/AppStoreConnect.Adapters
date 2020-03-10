@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Tests {
             if (!s_historicalTestEventsInitialized) {
                 s_historicalTestEventsInitialized = true;
                 var now = DateTime.UtcNow;
-                var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageManager>();
+                var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
                 var messages = Enumerable.Range(-100, 100).Select(x => EventMessageBuilder
                     .Create()
                     .WithUtcEventTime(now.AddMinutes(x))
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Tests {
 
 
         protected override Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
-            var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageManager>();
+            var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
             eventMessageManager.WriteEventMessages(
                 EventMessageBuilder
                     .Create()

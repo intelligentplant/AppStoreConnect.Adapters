@@ -55,7 +55,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Channel that is used to publish new snapshot values. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
-        private readonly Channel<TagValueQueryResult> _masterChannel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
+        private readonly Channel<(TagValueQueryResult Value, SnapshotTagValueSubscriptionBase[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(TagValueQueryResult, SnapshotTagValueSubscriptionBase[])>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = true,
             SingleReader = true,
             SingleWriter = false
@@ -73,15 +73,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// All subscriptions.
         /// </summary>
-        private readonly List<SnapshotTagValueSubscriptionBase> _subscriptions = new List<SnapshotTagValueSubscriptionBase>();
+        private readonly List<Subscription> _subscriptions = new List<Subscription>();
 
         /// <summary>
-        /// Maps from tag ID to the subscribers for that tag.
+        /// Maps from tag ID to the subscriber count for that tag.
         /// </summary>
-        private readonly Dictionary<string, HashSet<SnapshotTagValueSubscriptionBase>> _subscriptionsByTagId = new Dictionary<string, HashSet<SnapshotTagValueSubscriptionBase>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, int> _subscriberCount = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// For protecting access to <see cref="_subscriptionsByTagId"/>.
+        /// For protecting access to <see cref="_subscriptions"/> and <see cref="_subscriberCount"/>.
         /// </summary>
         private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
@@ -155,26 +155,25 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private async Task AddTagToSubscription(SnapshotTagValueSubscriptionBase subscription, TagIdentifier tag) {
+        private async Task AddTagToSubscription(Subscription subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return;
             }
 
             if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
-                await subscription.ValueReceived(value, true, DisposedToken).ConfigureAwait(false);
+                await subscription.ValueReceived(value, DisposedToken).ConfigureAwait(false);
             }
 
             var isNewSubscription = false;
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribers)) {
-                    subscribers = new HashSet<SnapshotTagValueSubscriptionBase>();
-                    _subscriptionsByTagId[tag.Id] = subscribers;
+                if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
+                    subscriberCount = 0;
                     isNewSubscription = true;
                 }
 
-                subscribers.Add(subscription);
+                _subscriberCount[tag.Id] = ++subscriberCount;
                 if (isNewSubscription) {
                     _tagSubscriptionChangesChannel.Writer.TryWrite((tag, true));
                 }
@@ -194,23 +193,27 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private Task RemoveTagFromSubscription(SnapshotTagValueSubscriptionBase subscription, TagIdentifier tag) {
+        private Task RemoveTagFromSubscription(Subscription subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
                 return Task.CompletedTask;
             }
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribers)) {
+                if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
                     // No subscribers
                     return Task.CompletedTask;
                 }
 
-                subscribers.Remove(subscription);
-                if (subscribers.Count == 0) {
+                --subscriberCount;
+
+                if (subscriberCount == 0) {
                     // No subscribers remaining.
-                    _subscriptionsByTagId.Remove(tag.Id);
+                    _subscriberCount.Remove(tag.Id);
                     _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
+                }
+                else {
+                    _subscriberCount[tag.Id] = subscriberCount;
                 }
             }
             finally {
@@ -227,19 +230,23 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private void OnSubscriptionCancelled(SnapshotTagValueSubscriptionBase subscription) {
+        private void OnSubscriptionCancelled(Subscription subscription) {
             _subscriptionsLock.EnterWriteLock();
             try {
                 _subscriptions.Remove(subscription);
                 foreach (var tag in subscription.GetSubscribedTags()) {
-                    if (!_subscriptionsByTagId.TryGetValue(tag.Id, out var subscribersForTag)) {
+                    if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
                         continue;
                     }
 
-                    subscribersForTag.Remove(subscription);
-                    if (subscribersForTag.Count == 0) {
-                        _subscriptionsByTagId.Remove(tag.Id);
+                    --subscriberCount;
+
+                    if (subscriberCount == 0) {
+                        _subscriberCount.Remove(tag.Id);
                         _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
+                    }
+                    else {
+                        _subscriberCount[tag.Id] = subscriberCount;
                     }
                 }
             }
@@ -333,40 +340,22 @@ namespace DataCore.Adapter.RealTimeData {
                     break;
                 }
 
-                if (!_masterChannel.Reader.TryRead(out var value) || value == null) {
+                if (!_masterChannel.Reader.TryRead(out var item)) {
                     continue;
                 }
 
-                IEnumerable<SnapshotTagValueSubscriptionBase> subscribers;
-
-                _subscriptionsLock.EnterReadLock();
-                try {
-                    if (!_subscriptionsByTagId.TryGetValue(value.TagId, out var subs) || subs.Count == 0) {
-                        continue;
-                    }
-
-                    subscribers = subs.ToArray();
-                }
-                finally {
-                    _subscriptionsLock.ExitReadLock();
-                }
-
-                if (!subscribers.Any()) {
-                    continue;
-                }
-
-                foreach (var subscriber in subscribers) {
+                foreach (var subscriber in item.Subscribers) {
                     try {
-                        var success = await subscriber.ValueReceived(value, false, cancellationToken).ConfigureAwait(false);
+                        var success = await subscriber.ValueReceived(item.Value, cancellationToken).ConfigureAwait(false);
                         if (!success) {
-                            Logger.LogTrace(Resources.Log_SnapshotValuePublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                            Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
                     }
                     catch (OperationCanceledException) { }
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
-                        Logger.LogError(e, Resources.Log_SnapshotValuePublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
             }
@@ -397,12 +386,12 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
         /// </param>
         /// <returns>
-        ///   A new <see cref="SnapshotTagValueSubscriptionBase"/> object.
+        ///   A new <see cref="Subscription"/> object.
         /// </returns>
         /// <remarks>
         ///   The subscription should not be started.
         /// </remarks>
-        protected virtual SnapshotTagValueSubscriptionBase CreateSubscription(IAdapterCallContext context) {
+        protected virtual Subscription CreateSubscription(IAdapterCallContext context) {
             return new Subscription(
                 context,
                 this
@@ -445,21 +434,24 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
+            SnapshotTagValueSubscriptionBase[] subscribers;
+
             _subscriptionsLock.EnterReadLock();
             try {
-                if (!_subscriptionsByTagId.ContainsKey(value.TagId)) {
-                    // No subscribers for this tag.
-                    return false;
-                }
+                subscribers = _subscriptions.Where(x => x.IsSubscribed(value)).ToArray();
             }
             finally {
                 _subscriptionsLock.ExitReadLock();
             }
 
+            if (!subscribers.Any()) {
+                return false;
+            }
+
             try {
                 using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
                     await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
-                    return _masterChannel.Writer.TryWrite(value);
+                    return _masterChannel.Writer.TryWrite((value, subscribers));
                 }
             }
             catch (OperationCanceledException) {
@@ -509,7 +501,7 @@ namespace DataCore.Adapter.RealTimeData {
                 _disposedTokenSource.Dispose();
                 _subscriptionsLock.EnterWriteLock();
                 try {
-                    _subscriptionsByTagId.Clear();
+                    _subscriberCount.Clear();
                     foreach (var subscription in _subscriptions) {
                         subscription.Dispose();
                     }
@@ -527,7 +519,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// Default <see cref="SnapshotTagValueSubscriptionBase"/> implementation used by 
         /// <see cref="SnapshotTagValuePush"/>.
         /// </summary>
-        private class Subscription : SnapshotTagValueSubscriptionBase {
+#pragma warning disable CA1034 // Nested types should not be visible
+        public class Subscription : SnapshotTagValueSubscriptionBase {
+#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// The owning <see cref="SnapshotTagValuePush"/> instance.
@@ -544,8 +538,11 @@ namespace DataCore.Adapter.RealTimeData {
             /// <param name="push">
             ///   The owning <see cref="SnapshotTagValuePush"/> instance.
             /// </param>
-            internal Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context) {
-                _push = push;
+            /// <exception cref="ArgumentNullException">
+            ///   <paramref name="push"/> is <see langword="null"/>.
+            /// </exception>
+            public Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context) {
+                _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 
 

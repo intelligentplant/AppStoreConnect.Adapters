@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements an in-memory event message store that implements push, read, and write operations.
     /// </summary>
-    public class InMemoryEventMessageManager : EventMessagePush, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages {
+    public class InMemoryEventMessageStore : EventMessagePush, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages {
 
         /// <summary>
         /// The event messages, sorted by cursor position.
@@ -37,7 +37,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Creates a new <see cref="InMemoryEventMessageManager"/> object.
+        /// Creates a new <see cref="InMemoryEventMessageStore"/> object.
         /// </summary>
         /// <param name="options">
         ///   The store options.
@@ -46,9 +46,9 @@ namespace DataCore.Adapter.Events {
         ///   The schedule to use when running background operations.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the <see cref="InMemoryEventMessageManager"/>.
+        ///   The logger for the <see cref="InMemoryEventMessageStore"/>.
         /// </param>
-        public InMemoryEventMessageManager(
+        public InMemoryEventMessageStore(
             InMemoryEventMessageManagerOptions options, 
             IBackgroundTaskService scheduler, 
             ILogger logger
@@ -421,7 +421,7 @@ namespace DataCore.Adapter.Events {
 
 
     /// <summary>
-    /// Options for <see cref="InMemoryEventMessageManager"/>.
+    /// Options for <see cref="InMemoryEventMessageStore"/>.
     /// </summary>
     public class InMemoryEventMessageManagerOptions {
 

@@ -18,14 +18,9 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly Channel<UpdateSnapshotTagValueSubscriptionRequest> _tagsChannel = Channel.CreateUnbounded<UpdateSnapshotTagValueSubscriptionRequest>();
 
         /// <summary>
-        /// The list of subscribed tags.
+        /// The subscribed tags.
         /// </summary>
-        private readonly List<TagIdentifier> _subscribedTags = new List<TagIdentifier>();
-
-        /// <summary>
-        /// A lookup from subscribed tag ID to tag identifier object.
-        /// </summary>
-        private ILookup<string, TagIdentifier> _subscribedTagsById;
+        private readonly Dictionary<string, TagIdentifier> _subscribedTags = new Dictionary<string, TagIdentifier>(StringComparer.Ordinal);
 
         /// <summary>
         /// Lock for accessing <see cref="_subscribedTags"/>.
@@ -115,7 +110,7 @@ namespace DataCore.Adapter.RealTimeData {
         public IEnumerable<TagIdentifier> GetSubscribedTags() {
             _subscribedTagsLock.EnterReadLock();
             try {
-                return _subscribedTags.ToArray();
+                return _subscribedTags.Values.ToArray();
             }
             finally {
                 _subscribedTagsLock.ExitReadLock();
@@ -178,13 +173,21 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(tag));
             }
 
-            _subscribedTagsLock.EnterWriteLock();
+            _subscribedTagsLock.EnterUpgradeableReadLock();
             try {
-                _subscribedTags.Add(tag);
-                _subscribedTagsById = _subscribedTags.ToLookup(x => x.Id, StringComparer.Ordinal);
+                if (_subscribedTags.ContainsKey(tag.Id)) {
+                    return;
+                }
+                _subscribedTagsLock.EnterWriteLock();
+                try {
+                    _subscribedTags[tag.Id] = tag;
+                }
+                finally {
+                    _subscribedTagsLock.ExitWriteLock();
+                }
             }
             finally {
-                _subscribedTagsLock.ExitWriteLock();
+                _subscribedTagsLock.ExitUpgradeableReadLock();
             }
             // Notify that the tag was added to the subscription.
             await OnTagAdded(tag).ConfigureAwait(false);
@@ -230,12 +233,7 @@ namespace DataCore.Adapter.RealTimeData {
             var removed = false;
             _subscribedTagsLock.EnterWriteLock();
             try {
-                var toBeRemoved = _subscribedTags.FindIndex(ti => TagIdentifierComparer.Id.Equals(tag, ti));
-                if (toBeRemoved >= 0) {
-                    _subscribedTags.RemoveAt(toBeRemoved);
-                    _subscribedTagsById = _subscribedTags.ToLookup(x => x.Id, StringComparer.Ordinal);
-                    removed = true;
-                }
+                removed = _subscribedTags.Remove(tag.Id);
             }
             finally {
                 _subscribedTagsLock.ExitWriteLock();
@@ -248,15 +246,24 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        /// <inheritdoc/>
-        protected override bool CanReceiveValue(TagValueQueryResult value) {
+        /// <summary>
+        /// Tests if the subscription is subscribed to receive the specified tag value.
+        /// </summary>
+        /// <param name="value">
+        ///   The tag value.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the subscription is subscribed to receive the tag value, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        public virtual bool IsSubscribed(TagValueQueryResult value) {
             if (value == null) {
                 return false;
             }
 
             _subscribedTagsLock.EnterReadLock();
             try {
-                return _subscribedTagsById.Contains(value.TagId);
+                return _subscribedTags.ContainsKey(value.TagId);
             }
             finally {
                 _subscribedTagsLock.ExitReadLock();
@@ -288,17 +295,10 @@ namespace DataCore.Adapter.RealTimeData {
         protected abstract Task OnTagRemoved(TagIdentifier tag);
 
 
-        /// <summary>
-        /// Invoked when the subscription is cancelled.
-        /// </summary>
-        protected abstract void OnCancelled();
-
-
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
             _tagsChannel.Writer.TryComplete();
-            OnCancelled();
             _subscribedTagsLock.EnterWriteLock();
             try {
                 _subscribedTags.Clear();

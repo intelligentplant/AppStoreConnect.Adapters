@@ -48,11 +48,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// </summary>
             private readonly AdapterSignalRClient _client;
 
-            /// <summary>
-            /// Flags if the subscription is active or passive.
-            /// </summary>
-            private readonly EventMessageSubscriptionType _subscriptionType;
-
 
             /// <summary>
             /// Creates a new <see cref="EventMessageSubscription"/> object.
@@ -70,10 +65,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                 EventMessagePushImpl feature,
                 IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType
-            ) : base(context) {
+            ) : base(context, subscriptionType) {
                 _feature = feature;
                 _client = feature.GetClient();
-                _subscriptionType = subscriptionType;
             }
 
 
@@ -81,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             protected override async Task Run(CancellationToken cancellationToken) {
                 var hubChannel = await _client.Events.CreateEventMessageChannelAsync(
                     _feature.AdapterId,
-                    _subscriptionType,
+                    SubscriptionType,
                     CancellationToken
                 ).ConfigureAwait(false);
 
@@ -93,8 +87,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                         continue;
                     }
 
-                    await ValueReceived(item, false, cancellationToken).ConfigureAwait(false);
+                    await ValueReceived(item, cancellationToken).ConfigureAwait(false);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                // Do nothing
             }
 
         }

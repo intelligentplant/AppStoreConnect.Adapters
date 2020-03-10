@@ -6,13 +6,24 @@
     public abstract class EventMessageSubscriptionBase : AdapterSubscription<EventMessage>, IEventMessageSubscription { 
     
         /// <summary>
+        /// The subscription type.
+        /// </summary>
+        public EventMessageSubscriptionType SubscriptionType { get; }
+
+
+        /// <summary>
         /// Creates a new <see cref="EventMessageSubscriptionBase"/> object.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscriber.
         /// </param>
-        protected EventMessageSubscriptionBase(IAdapterCallContext context) 
-            : base(context) { }
+        /// <param name="subscriptionType">
+        ///   The event subscription type.
+        /// </param>
+        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) 
+            : base(context) {
+            SubscriptionType = subscriptionType;
+        }
 
     }
 

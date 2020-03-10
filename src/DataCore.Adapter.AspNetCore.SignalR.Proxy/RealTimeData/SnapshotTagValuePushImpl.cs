@@ -77,7 +77,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 ).ConfigureAwait(false);
 
                 await hubChannel.ForEachAsync(async val => {
-                    await ValueReceived(val, false, cancellationToken).ConfigureAwait(false);
+                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
                 }, cancellationToken).ConfigureAwait(false);
             }
 

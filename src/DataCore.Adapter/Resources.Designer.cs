@@ -306,18 +306,18 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed with error..
         /// </summary>
-        internal static string Log_SnapshotValuePublishToSubscriberThrewException {
+        internal static string Log_PublishToSubscriberThrewException {
             get {
-                return ResourceManager.GetString("Log_SnapshotValuePublishToSubscriberThrewException", resourceCulture);
+                return ResourceManager.GetString("Log_PublishToSubscriberThrewException", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed..
         /// </summary>
-        internal static string Log_SnapshotValuePublishToSubscriberWasUnsuccessful {
+        internal static string Log_PublishToSubscriberWasUnsuccessful {
             get {
-                return ResourceManager.GetString("Log_SnapshotValuePublishToSubscriberWasUnsuccessful", resourceCulture);
+                return ResourceManager.GetString("Log_PublishToSubscriberWasUnsuccessful", resourceCulture);
             }
         }
         

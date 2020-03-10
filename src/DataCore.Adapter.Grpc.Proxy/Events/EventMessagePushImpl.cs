@@ -32,9 +32,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 EventMessagePushImpl feature, 
                 IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType
-            ) : base(context) {
+            ) : base(context, subscriptionType) {
                 _feature = feature;
-                _activeSubscription = subscriptionType == EventMessageSubscriptionType.Active;
+                _activeSubscription = SubscriptionType == EventMessageSubscriptionType.Active;
             }
 
 
@@ -59,10 +59,15 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
                     await ValueReceived(
                         duplexCall.ResponseStream.Current.ToAdapterEventMessage(),
-                        false,
                         cancellationToken
                     ).ConfigureAwait(false);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                // Do nothing
             }
 
         }

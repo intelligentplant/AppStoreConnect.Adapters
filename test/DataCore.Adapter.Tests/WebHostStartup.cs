@@ -47,8 +47,8 @@ namespace DataCore.Adapter.Tests {
             // separately just to that we can resolve it from test classes to insert required 
             // test data.
             services.AddSingleton<Events.InMemoryEventMessageManagerOptions>();
-            services.AddSingleton<Events.InMemoryEventMessageManager>(sp => {
-                return ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageManager>(sp, sp.GetService<ILogger<Events.InMemoryEventMessageManager>>());
+            services.AddSingleton<Events.InMemoryEventMessageStore>(sp => {
+                return ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Events.InMemoryEventMessageStore>>());
             });
 
             // Register our adapter as a singleton.
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Tests {
                 );
 
                 // Add in-memory event message management
-                adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageManager>());
+                adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
 
                 return adapter;
             });
