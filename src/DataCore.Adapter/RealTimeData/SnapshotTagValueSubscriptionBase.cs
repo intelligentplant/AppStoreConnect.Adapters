@@ -34,8 +34,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context)
-            : base(context) { }
+        /// <param name="cancellationToken">
+        ///   A cancellation token that can be used to automatically cancel the subscription.
+        /// </param>
+        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context, CancellationToken cancellationToken = default)
+            : base(context, cancellationToken) { }
 
 
         /// <inheritdoc/>

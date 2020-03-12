@@ -43,5 +43,10 @@ namespace DataCore.Adapter {
         /// </summary>
         void Start();
 
+        /// <summary>
+        /// Cancels the subscription.
+        /// </summary>
+        void Cancel();
+
     }
 }

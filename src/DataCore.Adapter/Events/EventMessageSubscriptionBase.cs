@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.Events {
+﻿using System.Threading;
+
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Base implementation of <see cref="IEventMessageSubscription"/>.
@@ -20,7 +22,10 @@
         /// <param name="subscriptionType">
         ///   The event subscription type.
         /// </param>
-        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) 
+        /// <param name="cancellationToken">
+        ///   A cancellation token that can be used to automatically cancel the subscription.
+        /// </param>
+        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken = default) 
             : base(context) {
             SubscriptionType = subscriptionType;
         }

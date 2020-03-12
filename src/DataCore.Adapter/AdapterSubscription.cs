@@ -18,12 +18,23 @@ namespace DataCore.Adapter {
         /// <summary>
         /// A flag that specifies if the subscription has been disposed.
         /// </summary>
-        protected bool IsDisposed { get; private set; }
+        private bool _isDisposed;
+
+        /// <summary>
+        /// A flag that specifies if the subscription is being disposed.
+        /// </summary>
+        private int _isDisposing;
 
         /// <summary>
         /// Fires when the subscription is disposed.
         /// </summary>
         private readonly CancellationTokenSource _subscriptionCancelled = new CancellationTokenSource();
+
+        /// <summary>
+        /// Registration that will dispose of the subscription if a cancellation token provided to 
+        /// the constructor is cancelled.
+        /// </summary>
+        private readonly CancellationTokenRegistration _cancellationTokenRegistration;
 
         /// <summary>
         /// Indicates if the subscription has been started.
@@ -52,17 +63,17 @@ namespace DataCore.Adapter {
         public ChannelReader<T> Values => _valuesChannel;
 
         /// <summary>
-        /// A cancellation token that will fire when the subscription disposed.
+        /// A cancellation token that will fire when the subscription is cancelled.
         /// </summary>
         public CancellationToken CancellationToken { get; }
 
         /// <summary>
-        /// Completes when the subscription is disposed.
+        /// Completes when the subscription is cancelled.
         /// </summary>
         private readonly TaskCompletionSource<int> _completed = new TaskCompletionSource<int>();
 
         /// <summary>
-        /// A task that will complete when the subscription is disposed.
+        /// A task that will complete when the subscription is cancelled.
         /// </summary>
         public Task Completed => _completed.Task;
 
@@ -73,9 +84,13 @@ namespace DataCore.Adapter {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        protected AdapterSubscription(IAdapterCallContext context) {
+        /// <param name="cancellationToken">
+        ///   A cancellation token that can be used to automatically cancel the subscription.
+        /// </param>
+        protected AdapterSubscription(IAdapterCallContext context, CancellationToken cancellationToken = default) {
             Context = context;
             CancellationToken = _subscriptionCancelled.Token;
+            _cancellationTokenRegistration = cancellationToken.Register(Cancel);
         }
 
 
@@ -83,7 +98,7 @@ namespace DataCore.Adapter {
         /// Starts the subscription.
         /// </summary>
         public void Start() {
-            if (IsDisposed || Interlocked.CompareExchange(ref _isStarted, 1, 0) != 0) {
+            if (_isDisposed || Interlocked.CompareExchange(ref _isStarted, 1, 0) != 0) {
                 // Already started.
                 return;
             }
@@ -139,7 +154,7 @@ namespace DataCore.Adapter {
         ///   indicates if the value was published to the subscription.
         /// </returns>
         public async ValueTask<bool> ValueReceived(T value, CancellationToken cancellationToken = default) {
-            if (IsDisposed || CancellationToken.IsCancellationRequested || value == null) {
+            if (_isDisposing != 0 || _isDisposed || CancellationToken.IsCancellationRequested || value == null) {
                 return false;
             }
 
@@ -150,6 +165,22 @@ namespace DataCore.Adapter {
             }
 
             return false;
+        }
+
+
+        /// <summary>
+        /// Cancels the subscription.
+        /// </summary>
+        public void Cancel() {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (_completed.TrySetResult(0)) {
+                _valuesChannel.Writer.TryComplete();
+                _subscriptionCancelled.Cancel();
+                OnCancelled();
+            }
         }
 
 
@@ -183,16 +214,23 @@ namespace DataCore.Adapter {
         /// </param>
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
-                if (IsDisposed) {
+                if (_isDisposed) {
                     return;
                 }
 
-                IsDisposed = true;
-                _valuesChannel.Writer.TryComplete();
-                _subscriptionCancelled.Cancel();
-                _subscriptionCancelled.Dispose();
-                _completed.TrySetResult(0);
-                OnCancelled();
+                if (Interlocked.CompareExchange(ref _isDisposing, 1, 0) != 0) {
+                    return;
+                }
+
+                try {
+                    Cancel();
+                    _cancellationTokenRegistration.Dispose();
+                    _subscriptionCancelled.Dispose();
+                }
+                finally {
+                    _isDisposed = true;
+                    _isDisposing = 0;
+                }
             }
         }
 
