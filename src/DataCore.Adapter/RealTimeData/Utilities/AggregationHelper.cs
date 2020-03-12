@@ -141,9 +141,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 result.Add(val);
             }
 
-            if (currentBucket.UtcBucketEnd >= currentBucket.UtcQueryEnd) {
-                // This is the final bucket in the query; we need to emit a value at the bucket start 
-                // time and the bucket end time.
+            if (currentBucket.UtcBucketStart < currentBucket.UtcQueryEnd && currentBucket.UtcBucketEnd >= currentBucket.UtcQueryEnd) {
+                // This is the final bucket in the query and the bucket started before the query 
+                // end time; we need to emit a second value at the query end time.
 
                 // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
                 // method if we get two values from the raw samples.
@@ -162,7 +162,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     val = InterpolationHelper.GetValueAtTime(
                         tag,
-                        currentBucket.UtcBucketEnd,
+                        currentBucket.UtcQueryEnd,
                         sample0,
                         sample1,
                         InterpolationCalculationType.Interpolate
@@ -888,10 +888,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     var preBucketSamples = GetPreBucketSamples(bucket);
 
                     do {
-                        if (bucket.UtcBucketEnd <= utcEndTime) {
-                            // Only emit the bucket if it is within our time range.
-                            await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
-                        }
+                        // Emit values from the current bucket and create a new bucket.
+                        await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
                         // Now, copy over the pre-bucket samples to the new bucket. This is to 
@@ -902,13 +900,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd);
                 }
 
-                if (val.Value.UtcSampleTime < utcEndTime) {
+                // Add the sample to the bucket.
+                if (val.Value.UtcSampleTime <= utcEndTime) {
                     bucket.RawSamples.Add(val.Value);
                 }
             }
 
             if (bucket.UtcBucketEnd <= utcEndTime) {
-                // Only emit the bucket if it is within our time range.
+                // Only emit the final bucket if it is within our time range.
                 await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
             }
 
