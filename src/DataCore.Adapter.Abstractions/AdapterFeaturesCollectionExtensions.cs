@@ -31,6 +31,31 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Gets a feature implementation by name instead of type.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="featureName">
+        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        ///   or <see cref="Type.FullName"/> of the feature type.
+        /// </param>
+        /// <returns>
+        ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
+        /// </returns>
+        public static object Get(this IAdapterFeaturesCollection features, string featureName) {
+            if (features == null || string.IsNullOrWhiteSpace(featureName)) {
+                return null;
+            }
+
+            var key = features.Keys.FirstOrDefault(x => x.Name.Equals(featureName, StringComparison.Ordinal) || x.FullName.Equals(featureName, StringComparison.Ordinal));
+            return key == null
+                ? null
+                : features[key];
+        }
+
+
+        /// <summary>
         /// Checks if the specified adapter feature is defined in the features collection.
         /// </summary>
         /// <typeparam name="TFeature">
@@ -49,31 +74,6 @@ namespace DataCore.Adapter {
             }
 
             return features[typeof(TFeature)] != null;
-        }
-
-
-        /// <summary>
-        /// Gets a feature implementation by name instead of type.
-        /// </summary>
-        /// <param name="features">
-        ///   The features collection.
-        /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
-        ///   or <see cref="Type.FullName"/> of the feature type.
-        /// </param>
-        /// <returns>
-        ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
-        /// </returns>
-        public static object GetByName(this IAdapterFeaturesCollection features, string featureName) {
-            if (features == null || string.IsNullOrWhiteSpace(featureName)) {
-                return null;
-            }
-
-            var key = features.Keys.FirstOrDefault(x => x.Name.Equals(featureName, StringComparison.Ordinal) || x.FullName.Equals(featureName, StringComparison.Ordinal));
-            return key == null
-                ? null
-                : features[key];
         }
 
     }
