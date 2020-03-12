@@ -8,7 +8,7 @@ namespace DataCore.Adapter.Tests {
     public class GrpcProxyTests : ProxyAdapterTests<GrpcAdapterProxy> {
 
         protected override GrpcAdapterProxy CreateProxy(string remoteAdapterId) {
-            return ActivatorUtilities.CreateInstance<GrpcAdapterProxy>(ServiceProvider, new GrpcAdapterProxyOptions() {
+            return ActivatorUtilities.CreateInstance<GrpcAdapterProxy>(ServiceProvider, nameof(GrpcProxyTests), new GrpcAdapterProxyOptions() {
                 RemoteId = remoteAdapterId
             });
         }

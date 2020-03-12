@@ -8,7 +8,7 @@ namespace DataCore.Adapter.Tests {
     public abstract class SignalRProxyTests : ProxyAdapterTests<SignalRAdapterProxy> {
 
         protected sealed override SignalRAdapterProxy CreateProxy(string remoteAdapterId) {
-            return ActivatorUtilities.CreateInstance<SignalRAdapterProxy>(ServiceProvider, new SignalRAdapterProxyOptions() {
+            return ActivatorUtilities.CreateInstance<SignalRAdapterProxy>(ServiceProvider, nameof(SignalRProxyTests), new SignalRAdapterProxyOptions() {
                 RemoteId = remoteAdapterId,
                 ConnectionFactory = key => {
                     var builder = new HubConnectionBuilder()
