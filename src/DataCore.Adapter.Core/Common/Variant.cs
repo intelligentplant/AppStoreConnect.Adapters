@@ -293,6 +293,9 @@ namespace DataCore.Adapter.Common {
             if (Value == null) {
                 return null;
             }
+            if (Value is string s) {
+                return s;
+            }
 
             return (Value is IFormattable formattable)
                 ? formattable.ToString(format, formatProvider)
