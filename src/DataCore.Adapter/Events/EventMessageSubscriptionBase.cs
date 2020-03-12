@@ -22,10 +22,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="subscriptionType">
         ///   The event subscription type.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that can be used to automatically cancel the subscription.
-        /// </param>
-        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken = default) 
+        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) 
             : base(context) {
             SubscriptionType = subscriptionType;
         }

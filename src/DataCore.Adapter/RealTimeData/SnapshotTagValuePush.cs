@@ -56,7 +56,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
         private readonly Channel<(TagValueQueryResult Value, SnapshotTagValueSubscriptionBase[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(TagValueQueryResult, SnapshotTagValueSubscriptionBase[])>(new UnboundedChannelOptions() {
-            AllowSynchronousContinuations = true,
+            AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = false
         });
@@ -566,6 +566,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             /// <inheritdoc/>
             protected override void OnCancelled() {
+                base.OnCancelled();
                 _push.OnSubscriptionCancelled(this);
             }
 

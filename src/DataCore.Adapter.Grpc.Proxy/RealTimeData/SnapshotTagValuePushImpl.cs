@@ -99,11 +99,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 return Task.CompletedTask;
             }
 
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                // Do nothing.
-            }
         }
 
     }

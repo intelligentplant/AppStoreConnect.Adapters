@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
                         writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new System.Threading.Channels.UnboundedChannelOptions() {
-                            AllowSynchronousContinuations = true,
+                            AllowSynchronousContinuations = false,
                             SingleReader = true,
                             SingleWriter = true
                         });

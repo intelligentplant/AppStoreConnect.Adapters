@@ -34,11 +34,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that can be used to automatically cancel the subscription.
-        /// </param>
-        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context, CancellationToken cancellationToken = default)
-            : base(context, cancellationToken) { }
+        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context)
+            : base(context) { }
 
 
         /// <inheritdoc/>
@@ -299,9 +296,14 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
+        protected override void OnCancelled() {
+            _tagsChannel.Writer.TryComplete();
+        }
+
+
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            _tagsChannel.Writer.TryComplete();
             _subscribedTagsLock.EnterWriteLock();
             try {
                 _subscribedTags.Clear();

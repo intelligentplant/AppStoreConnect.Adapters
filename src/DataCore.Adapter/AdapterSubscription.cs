@@ -31,12 +31,6 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _subscriptionCancelled = new CancellationTokenSource();
 
         /// <summary>
-        /// Registration that will dispose of the subscription if a cancellation token provided to 
-        /// the constructor is cancelled.
-        /// </summary>
-        private readonly CancellationTokenRegistration _cancellationTokenRegistration;
-
-        /// <summary>
         /// Indicates if the subscription has been started.
         /// </summary>
         private int _isStarted;
@@ -50,7 +44,9 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Channel that will publish received values.
         /// </summary>
-        private readonly Channel<T> _valuesChannel = Channel.CreateUnbounded<T>();
+        private readonly Channel<T> _valuesChannel = Channel.CreateUnbounded<T>(new UnboundedChannelOptions() { 
+            AllowSynchronousContinuations = false
+        });
 
         /// <summary>
         /// The <see cref="IAdapterCallContext"/> for the subscription owner.
@@ -84,13 +80,9 @@ namespace DataCore.Adapter {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that can be used to automatically cancel the subscription.
-        /// </param>
-        protected AdapterSubscription(IAdapterCallContext context, CancellationToken cancellationToken = default) {
+        protected AdapterSubscription(IAdapterCallContext context) {
             Context = context;
             CancellationToken = _subscriptionCancelled.Token;
-            _cancellationTokenRegistration = cancellationToken.Register(Cancel);
         }
 
 
@@ -224,7 +216,6 @@ namespace DataCore.Adapter {
 
                 try {
                     Cancel();
-                    _cancellationTokenRegistration.Dispose();
                     _subscriptionCancelled.Dispose();
                 }
                 finally {

@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Events {
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
         private readonly Channel<EventMessage> _masterChannel = Channel.CreateUnbounded<EventMessage>(new UnboundedChannelOptions() {
-            AllowSynchronousContinuations = true,
+            AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
         });

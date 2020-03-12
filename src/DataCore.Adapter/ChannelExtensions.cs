@@ -72,12 +72,12 @@ namespace DataCore.Adapter {
             return capacity > 0
                 ? Channel.CreateBounded<T>(new BoundedChannelOptions(capacity) {
                     FullMode = fullMode,
-                    AllowSynchronousContinuations = true,
+                    AllowSynchronousContinuations = false,
                     SingleReader = singleReader,
                     SingleWriter = singleWriter
                 })
                 : Channel.CreateUnbounded<T>(new UnboundedChannelOptions() {
-                    AllowSynchronousContinuations = true,
+                    AllowSynchronousContinuations = false,
                     SingleReader = singleReader,
                     SingleWriter = singleWriter
                 });
