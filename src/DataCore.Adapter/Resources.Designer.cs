@@ -133,7 +133,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Overall adapter health is degraded..
+        ///   Looks up a localized string similar to The adapter is running with degraded health status..
         /// </summary>
         internal static string HealthChecks_CompositeResultDescription_Degraded {
             get {
@@ -151,7 +151,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Overall adapter health is healthy..
+        ///   Looks up a localized string similar to The adapter is running with healthy status..
         /// </summary>
         internal static string HealthChecks_CompositeResultDescription_Healthy {
             get {
@@ -169,7 +169,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Overall adapter health is unhealthy..
+        ///   Looks up a localized string similar to The adapter is running with unhealthy status..
         /// </summary>
         internal static string HealthChecks_CompositeResultDescription_Unhealthy {
             get {

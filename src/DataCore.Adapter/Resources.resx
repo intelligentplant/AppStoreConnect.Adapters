@@ -146,19 +146,19 @@
     <comment>{0} - feature name</comment>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Degraded" xml:space="preserve">
-    <value>Overall adapter health is degraded.</value>
+    <value>The adapter is running with degraded health status.</value>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Error" xml:space="preserve">
     <value>Error while performing adapter health checks.</value>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Healthy" xml:space="preserve">
-    <value>Overall adapter health is healthy.</value>
+    <value>The adapter is running with healthy status.</value>
   </data>
   <data name="HealthChecks_CompositeResultDescription_NotStarted" xml:space="preserve">
     <value>The adapter is not running.</value>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Unhealthy" xml:space="preserve">
-    <value>Overall adapter health is unhealthy.</value>
+    <value>The adapter is running with unhealthy status.</value>
   </data>
   <data name="Log_AdapterStartupError" xml:space="preserve">
     <value>An error occurred while starting adapter {AdapterId}.</value>
