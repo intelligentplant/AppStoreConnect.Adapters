@@ -117,13 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Error_AdapterDoesNotSupportSimulatedPush" xml:space="preserve">
-    <value>Adapter {0} is not compatible with {1}.</value>
-    <comment>{0} - adapter ID
-{1} - simulated push class name</comment>
-  </data>
   <data name="Error_AdapterIsAlreadyStarted" xml:space="preserve">
     <value>An adapter cannot be started when it is already running.</value>
+  </data>
+  <data name="Error_AdapterIsNotCompatibleWithHelperClass" xml:space="preserve">
+    <value>Adapter {0} is not compatible with {1}.</value>
+    <comment>{0} - adapter ID
+{1} - helper class name</comment>
   </data>
   <data name="Error_AdapterIsNotStarted" xml:space="preserve">
     <value>The adapter has not been started.</value>

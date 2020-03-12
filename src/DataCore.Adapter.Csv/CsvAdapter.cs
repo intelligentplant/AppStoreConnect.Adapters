@@ -93,15 +93,13 @@ namespace DataCore.Adapter.Csv {
 
         private void AddFeatures() {
             // Construct adapter features.
-            AddFeatures(new ReadHistoricalTagValues(this, this, TaskScheduler));
+            AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
                 var simulatedPush = PollingSnapshotTagValuePush.ForAdapter(
                     this,
-                    TimeSpan.FromMilliseconds(snapshotPushUpdateInterval), 
-                    TaskScheduler, 
-                    Logger
+                    TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)
                 );
                 AddFeature(typeof(ISnapshotTagValuePush), simulatedPush);
             }

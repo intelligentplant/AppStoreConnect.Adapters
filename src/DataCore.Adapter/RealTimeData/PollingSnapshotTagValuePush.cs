@@ -58,7 +58,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
         /// </param>
         /// <param name="logger">
-        ///   The logger to use.
+        ///   The logger to use. Can be <see langword="null"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagInfoFeature"/> is <see langword="null"/>.
@@ -98,11 +98,40 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="pollingInterval">
         ///   The polling interval to use when refreshing values for subscribed tags.
         /// </param>
+        /// <returns>
+        ///   A new <see cref="PollingSnapshotTagValuePush"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapter"/> does not meet the requirements specified by 
+        ///   <see cref="IsCompatible"/>.
+        /// </exception>
+        public static PollingSnapshotTagValuePush ForAdapter(
+            AdapterBase adapter,
+            TimeSpan pollingInterval
+        ) {
+            return ForAdapter(adapter, pollingInterval, adapter?.TaskScheduler, adapter?.Logger);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="PollingSnapshotTagValuePush"/> object for the specified 
+        /// adapter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="pollingInterval">
+        ///   The polling interval to use when refreshing values for subscribed tags.
+        /// </param>
         /// <param name="scheduler">
-        ///   The background task scheduler to use.
+        ///   The scheduler to use when running background tasks. If the value specified is 
+        ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
         /// </param>
         /// <param name="logger">
-        ///   The logger to use.
+        ///   The logger to use. Can be <see langword="null"/>.
         /// </param>
         /// <returns>
         ///   A new <see cref="PollingSnapshotTagValuePush"/> object.
@@ -117,14 +146,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static PollingSnapshotTagValuePush ForAdapter(
             IAdapter adapter,
             TimeSpan pollingInterval,
-            IBackgroundTaskService scheduler,
-            ILogger logger
+            IBackgroundTaskService scheduler = null,
+            ILogger logger = null
         ) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
             if (!IsCompatible(adapter)) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDoesNotSupportSimulatedPush, adapter.Descriptor.Name, nameof(PollingSnapshotTagValuePush)), nameof(adapter));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIsNotCompatibleWithHelperClass, adapter.Descriptor.Name, nameof(PollingSnapshotTagValuePush)), nameof(adapter));
             }
 
             return new PollingSnapshotTagValuePush(

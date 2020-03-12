@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData.Utilities;
 using IntelligentPlant.BackgroundTasks;
 
@@ -52,7 +51,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IReadRawTagValues"/> instance that will provide raw tag values to the 
         ///   helper.
         /// </param>
-        /// <param name="backgroundTaskService">
+        /// <param name="scheduler">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
         ///   Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -62,10 +61,91 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
+        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService scheduler) {
             _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
-            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
+            _backgroundTaskService = scheduler ?? BackgroundTaskService.Default;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="ReadHistoricalTagValues"/> object for the specified adapter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ReadHistoricalTagValues"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapter"/> does not meet the requirements specified by 
+        ///   <see cref="IsCompatible"/>.
+        /// </exception>
+        public static ReadHistoricalTagValues ForAdapter(AdapterBase adapter) {
+            return ForAdapter(adapter, adapter?.TaskScheduler);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="ReadHistoricalTagValues"/> object for the specified adapter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="scheduler">
+        ///   The scheduler to use when running background tasks. If the value specified is 
+        ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ReadHistoricalTagValues"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapter"/> does not meet the requirements specified by 
+        ///   <see cref="IsCompatible"/>.
+        /// </exception>
+        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService scheduler = null) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+
+            if (!IsCompatible(adapter)) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIsNotCompatibleWithHelperClass, adapter.Descriptor.Name, nameof(ReadHistoricalTagValues)), nameof(adapter));
+            }
+
+            return new ReadHistoricalTagValues(
+                adapter.Features.Get<ITagInfo>(), 
+                adapter.Features.Get<IReadRawTagValues>(), 
+                scheduler
+            );
+        }
+
+
+        /// <summary>
+        /// Tests if an adapter is compatible with <see cref="ReadHistoricalTagValues"/>. An 
+        /// adapter is compatible if it implements both <see cref="ITagInfo"/> and 
+        /// <see cref="IReadRawTagValues"/> features.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <paramref name="adapter"/> is compatible with 
+        ///   <see cref="ReadHistoricalTagValues"/>, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsCompatible(IAdapter adapter) {
+            if (adapter == null) {
+                return false;
+            }
+
+            return 
+                adapter.Features.Get<ITagInfo>() != null && 
+                adapter.Features.Get<IReadRawTagValues>() != null;
         }
 
 

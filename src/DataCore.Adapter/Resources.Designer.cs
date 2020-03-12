@@ -61,20 +61,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter {0} is not compatible with {1}..
-        /// </summary>
-        internal static string Error_AdapterDoesNotSupportSimulatedPush {
-            get {
-                return ResourceManager.GetString("Error_AdapterDoesNotSupportSimulatedPush", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An adapter cannot be started when it is already running..
         /// </summary>
         internal static string Error_AdapterIsAlreadyStarted {
             get {
                 return ResourceManager.GetString("Error_AdapterIsAlreadyStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adapter {0} is not compatible with {1}..
+        /// </summary>
+        internal static string Error_AdapterIsNotCompatibleWithHelperClass {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsNotCompatibleWithHelperClass", resourceCulture);
             }
         }
         

@@ -167,9 +167,7 @@ namespace DataCore.Adapter.Http.Proxy {
                 // We are able to simulate tag value push functionality.
                 var simulatedPush = Adapter.RealTimeData.PollingSnapshotTagValuePush.ForAdapter(
                     this, 
-                    _snapshotRefreshInterval, 
-                    TaskScheduler, 
-                    Logger
+                    _snapshotRefreshInterval
                 );
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
