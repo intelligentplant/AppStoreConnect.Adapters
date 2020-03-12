@@ -15,7 +15,7 @@ namespace DataCore.Adapter {
     /// Base class for adapter implementations.
     /// </summary>
     /// <seealso cref="AdapterBase{TAdapterOptions}"/>
-    public abstract class AdapterBase : IAdapter, IHealthCheck, IDisposable, IAsyncDisposable {
+    public abstract class AdapterBase : IAdapter, IHealthCheck {
 
         #region [ Fields / Properties ]
 

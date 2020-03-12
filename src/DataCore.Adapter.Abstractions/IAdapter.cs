@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -8,7 +9,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Describes an App Store Connect adapter.
     /// </summary>
-    public interface IAdapter {
+    public interface IAdapter : IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Gets the adapter descriptor.

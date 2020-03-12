@@ -8,7 +8,7 @@ using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Tests {
-    public class ExampleAdapter : IAdapter, IReadSnapshotTagValues, IDisposable {
+    public class ExampleAdapter : IAdapter, IReadSnapshotTagValues {
 
         public AdapterDescriptor Descriptor { get; }
 
@@ -54,6 +54,12 @@ namespace DataCore.Adapter.Tests {
 
         public void Dispose() {
             _snapshotSubscriptionManager.Dispose();
+        }
+
+
+        public ValueTask DisposeAsync() {
+            Dispose();
+            return default;
         }
 
 
