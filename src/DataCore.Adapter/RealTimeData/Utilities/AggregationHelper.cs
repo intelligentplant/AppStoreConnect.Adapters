@@ -84,92 +84,118 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The status used is the worst-case of the values used in the calculation.
         /// </remarks>
         private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket currentBucket) {
+            var result = new List<TagValueExtended>();
+
             TagValueExtended sample0 = null;
             TagValueExtended sample1 = null;
 
-            if (currentBucket.RawSamples.Count == 0) {
-                // No samples in the current bucket. We can still extrapolate a value if we have 
-                // at least two samples in the PreBucketSamples collection.
+            // First, check if our bucket contains samples, and the first sample exactly matches 
+            // the requested start time.
 
-                if (currentBucket.PreBucketSamples.Count == 2) {
-                    sample0 = currentBucket.PreBucketSamples[0];
-                    sample1 = currentBucket.PreBucketSamples[1];
-                }
-                else if (currentBucket.PreBucketSamples.Count > 2) {
-                    var preBucketSamples = currentBucket.PreBucketSamples.Reverse().Take(2).ToArray();
-                    // Samples were reversed; more-recent sample will be at index 0.
-                    sample0 = preBucketSamples[1];
-                    sample1 = preBucketSamples[0];
-                }
-            }
-            else {
-                // We have samples in the current bucket. First, check if the first sample in the 
-                // bucket exactly matches the bucket start time. If so, we can return this value 
-                // directly without having to compute anything.
+            var interpRequired = true;
 
-                sample1 = currentBucket.RawSamples[0];
-                if (sample1.UtcSampleTime == currentBucket.UtcBucketStart) {
-                    return new[] { sample1 };
-                }
-
-                if (currentBucket.PreBucketSamples.Count > 0) {
-                    // We have at least one usable sample from the pre-bucket samples collection 
-                    // that we can use as the earlier sample in our interpolation.
-
-                    sample0 = currentBucket.PreBucketSamples.Last();
-                }
-                else if (currentBucket.RawSamples.Count > 1) {
-                    // If we have more than one sample in the current bucket, we will extrapolate 
-                    // backwards from the first two samples to the bucket start time.
-
-                    sample0 = sample1;
-                    sample1 = currentBucket.RawSamples[1];
+            if (currentBucket.RawSamples.Count > 0) {
+                var val = currentBucket.RawSamples.First();
+                if (val.UtcSampleTime == currentBucket.UtcBucketStart) {
+                    result.Add(val);
+                    interpRequired = false;
                 }
             }
 
-            var result = new List<TagValueExtended>();
+            if (interpRequired) {
+                if (currentBucket.RawSamples.Count == 0) {
+                    // No samples in the current bucket. We can still extrapolate a value if we have 
+                    // at least two samples in the PreBucketSamples collection.
 
-            var val = InterpolationHelper.GetValueAtTime(
-                tag, 
-                currentBucket.UtcBucketStart, 
-                sample0, 
-                sample1, 
-                InterpolationCalculationType.Interpolate
-            );
+                    if (currentBucket.PreBucketSamples.Count == 2) {
+                        sample0 = currentBucket.PreBucketSamples[0];
+                        sample1 = currentBucket.PreBucketSamples[1];
+                    }
+                    else if (currentBucket.PreBucketSamples.Count > 2) {
+                        var preBucketSamples = currentBucket.PreBucketSamples.Reverse().Take(2).ToArray();
+                        // Samples were reversed; more-recent sample will be at index 0.
+                        sample0 = preBucketSamples[1];
+                        sample1 = preBucketSamples[0];
+                    }
+                }
+                else {
+                    // We have samples in the current bucket.
 
-            if (val != null) {
-                result.Add(val);
+                    sample1 = currentBucket.RawSamples[0];
+
+                    if (currentBucket.PreBucketSamples.Count > 0) {
+                        // We have at least one usable sample from the pre-bucket samples collection 
+                        // that we can use as the earlier sample in our interpolation.
+
+                        sample0 = currentBucket.PreBucketSamples.Last();
+                    }
+                    else if (currentBucket.RawSamples.Count > 1) {
+                        // If we have more than one sample in the current bucket, we will extrapolate 
+                        // backwards from the first two samples to the bucket start time.
+
+                        sample0 = sample1;
+                        sample1 = currentBucket.RawSamples[1];
+                    }
+
+                }
+
+                var val = InterpolationHelper.GetValueAtTime(
+                    tag,
+                    currentBucket.UtcBucketStart,
+                    sample0,
+                    sample1,
+                    InterpolationCalculationType.Interpolate
+                );
+
+                if (val != null) {
+                    result.Add(val);
+                }
             }
 
             if (currentBucket.UtcBucketStart < currentBucket.UtcQueryEnd && currentBucket.UtcBucketEnd >= currentBucket.UtcQueryEnd) {
                 // This is the final bucket in the query and the bucket started before the query 
                 // end time; we need to emit a second value at the query end time.
 
-                // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
-                // method if we get two values from the raw samples.
-                var lastSamples = currentBucket
-                    .RawSamples
-                    .Reverse()
-                    .Concat(currentBucket.PreBucketSamples.Reverse())
-                    .Take(2)
-                    .ToArray();
+                // First, check if the last sample in the bucket is exactly at the query end time.
 
-                if (lastSamples.Length == 2) {
+                interpRequired = true;
+                if (currentBucket.RawSamples.Count > 0) {
+                    if (currentBucket.RawSamples.Count > 0) {
+                        var val = currentBucket.RawSamples.Last();
+                        if (val.UtcSampleTime == currentBucket.UtcQueryEnd) {
+                            result.Add(val);
+                            interpRequired = false;
+                        }
+                    }
+                }
 
-                    // Indices reversed because we reversed the samples above.
-                    sample0 = lastSamples[1];
-                    sample1 = lastSamples[0];
+                if (interpRequired) {
+                    // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
+                    // method if we get two values from the raw samples.
+                    var lastSamples = currentBucket
+                        .RawSamples
+                        .Reverse()
+                        .Concat(currentBucket.PreBucketSamples.Reverse())
+                        .Take(2)
+                        .ToArray();
 
-                    val = InterpolationHelper.GetValueAtTime(
-                        tag,
-                        currentBucket.UtcQueryEnd,
-                        sample0,
-                        sample1,
-                        InterpolationCalculationType.Interpolate
-                    );
+                    if (lastSamples.Length == 2) {
 
-                    if (val != null) {
-                        result.Add(val);
+                        // Indices reversed because we reversed the samples above.
+                        sample0 = lastSamples[1];
+                        sample1 = lastSamples[0];
+
+                        var val = InterpolationHelper.GetValueAtTime(
+                            tag,
+                            currentBucket.UtcQueryEnd,
+                            sample0,
+                            sample1,
+                            InterpolationCalculationType.Interpolate
+                        );
+
+                        if (val != null) {
+                            result.Add(val);
+                        }
                     }
                 }
             }
