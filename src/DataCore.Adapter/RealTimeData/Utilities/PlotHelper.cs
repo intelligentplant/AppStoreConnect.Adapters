@@ -330,7 +330,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // If a sample meets more than one of the above conditions, it will only be added to the 
             // result once.
 
-            var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(bucketSize));
+            var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(bucketSize), utcStartTime, utcEndTime);
 
             TagValueExtended lastValuePreviousBucket = null;
 
@@ -350,13 +350,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     continue;
                 }
 
-                if (val.Value.UtcSampleTime >= bucket.UtcEnd) {
+                if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
                     if (bucket.RawSamples.Count > 0) {
                         await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
                         lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
 
-                    bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcStart.Add(bucketSize));
+                    bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketStart.Add(bucketSize), utcStartTime, utcEndTime);
                 }
 
                 bucket.RawSamples.Add(val.Value);

@@ -108,7 +108,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // directly without having to compute anything.
 
                 sample1 = currentBucket.RawSamples[0];
-                if (sample1.UtcSampleTime == currentBucket.UtcStart) {
+                if (sample1.UtcSampleTime == currentBucket.UtcBucketStart) {
                     return new[] { sample1 };
                 }
 
@@ -127,17 +127,54 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
+            var result = new List<TagValueExtended>();
+
             var val = InterpolationHelper.GetValueAtTime(
                 tag, 
-                currentBucket.UtcStart, 
+                currentBucket.UtcBucketStart, 
                 sample0, 
                 sample1, 
                 InterpolationCalculationType.Interpolate
             );
 
-            return val == null
-                ? Array.Empty<TagValueExtended>()
-                : new[] { val };
+            if (val != null) {
+                result.Add(val);
+            }
+
+            if (currentBucket.UtcBucketEnd >= currentBucket.UtcQueryEnd) {
+                // This is the final bucket in the query; we need to emit a value at the bucket start 
+                // time and the bucket end time.
+
+                // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
+                // method if we get two values from the raw samples.
+                var lastSamples = currentBucket
+                    .RawSamples
+                    .Reverse()
+                    .Concat(currentBucket.PreBucketSamples.Reverse())
+                    .Take(2)
+                    .ToArray();
+
+                if (lastSamples.Length == 2) {
+
+                    // Indices reversed because we reversed the samples above.
+                    sample0 = lastSamples[1];
+                    sample1 = lastSamples[0];
+
+                    val = InterpolationHelper.GetValueAtTime(
+                        tag,
+                        currentBucket.UtcBucketEnd,
+                        sample0,
+                        sample1,
+                        InterpolationCalculationType.Interpolate
+                    );
+
+                    if (val != null) {
+                        result.Add(val);
+                    }
+                }
+            }
+
+            return result.ToArray();
         }
 
         #endregion
@@ -171,7 +208,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -210,7 +247,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -249,7 +286,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -278,7 +315,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(TagValueStatus.Good)
                     .Build()
@@ -320,7 +357,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -355,7 +392,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue((double) percentGoodCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
@@ -390,7 +427,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcEnd)
+                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
                     .WithValue((double) percentBadCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
@@ -830,7 +867,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             IDictionary<string, AggregateCalculator> funcs, 
             CancellationToken cancellationToken
         ) {
-            var bucket = new TagValueBucket(utcStartTime.Subtract(sampleInterval), utcStartTime);
+            var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(sampleInterval), utcStartTime, utcEndTime);
 
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {
@@ -841,27 +878,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     continue;
                 }
 
-                if (val.Value.UtcSampleTime < bucket.UtcStart) {
+                if (val.Value.UtcSampleTime < bucket.UtcBucketStart) {
+                    AddPreBucketSample(bucket, val.Value);
                     continue;
                 }
 
-                if (val.Value.UtcSampleTime >= bucket.UtcEnd) {
+                if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
                     // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
                     var preBucketSamples = GetPreBucketSamples(bucket);
 
                     do {
-                        if (bucket.UtcEnd <= utcEndTime) {
+                        if (bucket.UtcBucketEnd <= utcEndTime) {
                             // Only emit the bucket if it is within our time range.
                             await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                         }
-                        bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcEnd.Add(sampleInterval));
+                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
                         // Now, copy over the pre-bucket samples to the new bucket. This is to 
                         // help with the calculation of interpolated data if required.
                         foreach (var item in preBucketSamples) {
-                            bucket.PreBucketSamples.Add(item);
+                            AddPreBucketSample(bucket, item);
                         }
-                    } while (val.Value.UtcSampleTime >= bucket.UtcEnd);
+                    } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd);
                 }
 
                 if (val.Value.UtcSampleTime < utcEndTime) {
@@ -869,12 +907,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            if (bucket.UtcEnd <= utcEndTime) {
+            if (bucket.UtcBucketEnd <= utcEndTime) {
                 // Only emit the bucket if it is within our time range.
                 await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
             }
 
-            if (bucket.UtcEnd < utcEndTime) {
+            if (bucket.UtcBucketEnd < utcEndTime) {
                 // The raw data ended before the end time for the query. We will keep moving forward 
                 // according to our sample interval, and allow our aggregator the chance to calculate 
                 // values for the remaining buckets.
@@ -882,9 +920,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
                 var preBucketSamples = GetPreBucketSamples(bucket);
 
-                while (bucket.UtcEnd < utcEndTime) {
-                    bucket = new TagValueBucket(bucket.UtcEnd, bucket.UtcEnd.Add(sampleInterval));
-                    if (bucket.UtcEnd > utcEndTime) {
+                while (bucket.UtcBucketEnd < utcEndTime) {
+                    bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
+                    if (bucket.UtcBucketEnd > utcEndTime) {
                         // New bucket would end after the query end time, so we don't need to 
                         // calculate for this bucket.
                         break;
@@ -897,6 +935,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Adds a pre-bucket sample to a bucket. If two or more pre-bucket samples have already 
+        /// been added, the earliest sample will be removed.
+        /// </summary>
+        /// <param name="bucket">
+        ///   The bucket.
+        /// </param>
+        /// <param name="value">
+        ///   The sample.
+        /// </param>
+        private static void AddPreBucketSample(TagValueBucket bucket, TagValueExtended value) {
+            if (bucket.PreBucketSamples.Count >= 2) {
+                bucket.PreBucketSamples.RemoveAt(0);
+            }
+            bucket.PreBucketSamples.Add(value);
         }
 
 

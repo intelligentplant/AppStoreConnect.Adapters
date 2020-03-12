@@ -166,8 +166,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (valueBefore.UtcSampleTime > valueAfter.UtcSampleTime) {
                 var tmp = valueBefore;
-                valueAfter = valueBefore;
-                valueBefore = tmp;
+                valueBefore = valueAfter;
+                valueAfter = tmp;
             }
 
             return InterpolateSample(utcSampleTime, valueBefore, valueAfter);
@@ -256,7 +256,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     }
                 }
 
-                // If the last interpolated point we calculated has a time stamp earlier than the requested 
+                // If the last interpolated point we calculated has a timestamp earlier than the requested 
                 // end time (e.g. if the end time was later than the last raw sample), we'll calculate an 
                 // additional point for the utcEndTime, based on the two most-recent raw values we processed.  
                 if (!cancellationToken.IsCancellationRequested &&

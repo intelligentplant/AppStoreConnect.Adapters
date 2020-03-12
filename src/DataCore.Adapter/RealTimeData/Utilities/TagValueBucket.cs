@@ -11,12 +11,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// The UTC start time for the bucket.
         /// </summary>
-        public DateTime UtcStart { get; }
+        public DateTime UtcBucketStart { get; }
 
         /// <summary>
         /// The UTC end time for the bucket.
         /// </summary>
-        public DateTime UtcEnd { get; }
+        public DateTime UtcBucketEnd { get; }
+
+        /// <summary>
+        /// The overall UTC start time for the query.
+        /// </summary>
+        public DateTime UtcQueryStart { get; }
+
+        /// <summary>
+        /// The overall UTC end time for the query.
+        /// </summary>
+        public DateTime UtcQueryEnd { get; }
 
         /// <summary>
         /// The raw data samples for the bucket.
@@ -34,15 +44,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Creates a new <see cref="TagValueBucket"/> object.
         /// </summary>
-        /// <param name="utcStart">
+        /// <param name="utcBucketStart">
         ///   The UTC start time for the bucket.
         /// </param>
-        /// <param name="utcEnd">
+        /// <param name="utcBucketEnd">
         ///   The UTC end time for the bucket.
         /// </param>
-        public TagValueBucket(DateTime utcStart, DateTime utcEnd) {
-            UtcStart = utcStart;
-            UtcEnd = utcEnd;
+        /// <param name="utcQueryStart">
+        ///   The overall UTC start time for the query.
+        /// </param>
+        /// <param name="utcQueryEnd">
+        ///   The overall UTC end time for the query.
+        /// </param>
+        public TagValueBucket(DateTime utcBucketStart, DateTime utcBucketEnd, DateTime utcQueryStart, DateTime utcQueryEnd) {
+            UtcBucketStart = utcBucketStart;
+            UtcBucketEnd = utcBucketEnd;
+            UtcQueryStart = utcQueryStart;
+            UtcQueryEnd = utcQueryEnd;
         }
 
 
@@ -53,7 +71,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// A string represntation of the bucket.
         /// </returns>
         public override string ToString() {
-            return $"{{ UtcStart = {UtcStart:yyyy-MM-ddTHH:mm:ss.fffZ}, UtcEnd = {UtcEnd:yyyy-MM-ddTHH:mm:ss.fffZ}, Raw Sample Count = {RawSamples.Count} }}";
+            return $"{{ UtcStart = {UtcBucketStart:yyyy-MM-ddTHH:mm:ss.fffZ}, UtcEnd = {UtcBucketEnd:yyyy-MM-ddTHH:mm:ss.fffZ}, Raw Sample Count = {RawSamples.Count} }}";
         }
 
     }

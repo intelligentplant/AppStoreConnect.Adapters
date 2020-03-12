@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Tests {
 
                 return new[] { 
                     TagValueBuilder.Create()
-                        .WithUtcSampleTime(bucket.UtcEnd)
+                        .WithUtcSampleTime(bucket.UtcBucketEnd)
                         .WithValue(val)
                         .Build()
                 };
