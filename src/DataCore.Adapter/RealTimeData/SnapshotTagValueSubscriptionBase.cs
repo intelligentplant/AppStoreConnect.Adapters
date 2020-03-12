@@ -148,7 +148,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   if the operation was successful.
         /// </returns>
         public async ValueTask<bool> AddTagToSubscription(string tag) {
-            if (string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
+            if (CancellationToken.IsCancellationRequested || string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
                 return false;
             }
 
@@ -169,7 +169,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will add the tag to the subscription.
         /// </returns>
         private async Task AddTagToSubscription(TagIdentifier tag) {
-            if (tag == null) {
+            if (CancellationToken.IsCancellationRequested || tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
 
@@ -205,7 +205,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   if the operation was successful.
         /// </returns>
         public async ValueTask<bool> RemoveTagFromSubscription(string tag) {
-            if (string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
+            if (CancellationToken.IsCancellationRequested || string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
                 return false;
             }
 
@@ -226,7 +226,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will remove the tag from the subscription.
         /// </returns>
         private async Task RemoveTagFromSubscription(TagIdentifier tag) {
-            if (tag == null) {
+            if (CancellationToken.IsCancellationRequested || tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
 
@@ -257,7 +257,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   or <see langword="false"/> otherwise.
         /// </returns>
         public virtual bool IsSubscribed(TagValueQueryResult value) {
-            if (value == null) {
+            if (CancellationToken.IsCancellationRequested || value == null) {
                 return false;
             }
 
@@ -304,14 +304,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            _subscribedTagsLock.EnterWriteLock();
-            try {
-                _subscribedTags.Clear();
-            }
-            finally {
-                _subscribedTagsLock.ExitWriteLock();
-                _subscribedTagsLock.Dispose();
-            }
+            _subscribedTags.Clear();
+            _subscribedTagsLock.Dispose();
         }
 
     }
