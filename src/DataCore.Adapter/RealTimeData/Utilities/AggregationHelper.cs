@@ -74,7 +74,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
@@ -83,7 +83,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   The status used is the worst-case of the values used in the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket currentBucket) {
+        private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket bucket) {
             var result = new List<TagValueExtended>();
 
             TagValueExtended sample0 = null;
@@ -94,25 +94,25 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var interpRequired = true;
 
-            if (currentBucket.RawSamples.Count > 0) {
-                var val = currentBucket.RawSamples.First();
-                if (val.UtcSampleTime == currentBucket.UtcBucketStart) {
+            if (bucket.RawSamples.Count > 0) {
+                var val = bucket.RawSamples.First();
+                if (val.UtcSampleTime == bucket.UtcBucketStart) {
                     result.Add(val);
                     interpRequired = false;
                 }
             }
 
             if (interpRequired) {
-                if (currentBucket.RawSamples.Count == 0) {
+                if (bucket.RawSamples.Count == 0) {
                     // No samples in the current bucket. We can still extrapolate a value if we have 
                     // at least two samples in the PreBucketSamples collection.
 
-                    if (currentBucket.PreBucketSamples.Count == 2) {
-                        sample0 = currentBucket.PreBucketSamples[0];
-                        sample1 = currentBucket.PreBucketSamples[1];
+                    if (bucket.PreBucketSamples.Count == 2) {
+                        sample0 = bucket.PreBucketSamples[0];
+                        sample1 = bucket.PreBucketSamples[1];
                     }
-                    else if (currentBucket.PreBucketSamples.Count > 2) {
-                        var preBucketSamples = currentBucket.PreBucketSamples.Reverse().Take(2).ToArray();
+                    else if (bucket.PreBucketSamples.Count > 2) {
+                        var preBucketSamples = bucket.PreBucketSamples.Reverse().Take(2).ToArray();
                         // Samples were reversed; more-recent sample will be at index 0.
                         sample0 = preBucketSamples[1];
                         sample1 = preBucketSamples[0];
@@ -121,27 +121,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 else {
                     // We have samples in the current bucket.
 
-                    sample1 = currentBucket.RawSamples[0];
+                    sample1 = bucket.RawSamples[0];
 
-                    if (currentBucket.PreBucketSamples.Count > 0) {
+                    if (bucket.PreBucketSamples.Count > 0) {
                         // We have at least one usable sample from the pre-bucket samples collection 
                         // that we can use as the earlier sample in our interpolation.
 
-                        sample0 = currentBucket.PreBucketSamples.Last();
+                        sample0 = bucket.PreBucketSamples.Last();
                     }
-                    else if (currentBucket.RawSamples.Count > 1) {
+                    else if (bucket.RawSamples.Count > 1) {
                         // If we have more than one sample in the current bucket, we will extrapolate 
                         // backwards from the first two samples to the bucket start time.
 
                         sample0 = sample1;
-                        sample1 = currentBucket.RawSamples[1];
+                        sample1 = bucket.RawSamples[1];
                     }
 
                 }
 
                 var val = InterpolationHelper.GetValueAtTime(
                     tag,
-                    currentBucket.UtcBucketStart,
+                    bucket.UtcBucketStart,
                     sample0,
                     sample1,
                     InterpolationCalculationType.Interpolate
@@ -152,17 +152,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            if (currentBucket.UtcBucketStart < currentBucket.UtcQueryEnd && currentBucket.UtcBucketEnd >= currentBucket.UtcQueryEnd) {
+            if (bucket.UtcBucketStart < bucket.UtcQueryEnd && bucket.UtcBucketEnd >= bucket.UtcQueryEnd) {
                 // This is the final bucket in the query and the bucket started before the query 
                 // end time; we need to emit a second value at the query end time.
 
                 // First, check if the last sample in the bucket is exactly at the query end time.
 
                 interpRequired = true;
-                if (currentBucket.RawSamples.Count > 0) {
-                    if (currentBucket.RawSamples.Count > 0) {
-                        var val = currentBucket.RawSamples.Last();
-                        if (val.UtcSampleTime == currentBucket.UtcQueryEnd) {
+                if (bucket.RawSamples.Count > 0) {
+                    if (bucket.RawSamples.Count > 0) {
+                        var val = bucket.RawSamples.Last();
+                        if (val.UtcSampleTime == bucket.UtcQueryEnd) {
                             result.Add(val);
                             interpRequired = false;
                         }
@@ -172,10 +172,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 if (interpRequired) {
                     // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
                     // method if we get two values from the raw samples.
-                    var lastSamples = currentBucket
+                    var lastSamples = bucket
                         .RawSamples
                         .Reverse()
-                        .Concat(currentBucket.PreBucketSamples.Reverse())
+                        .Concat(bucket.PreBucketSamples.Reverse())
                         .Take(2)
                         .ToArray();
 
@@ -187,7 +187,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                         var val = InterpolationHelper.GetValueAtTime(
                             tag,
-                            currentBucket.UtcQueryEnd,
+                            bucket.UtcQueryEnd,
                             sample0,
                             sample1,
                             InterpolationCalculationType.Interpolate
@@ -213,31 +213,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
 
-            var tagInfoSample = currentBucket.RawSamples.First();
-            var numericValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = bucket.RawSamples.First();
+            var numericValue = bucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = bucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -252,31 +253,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
 
-            var tagInfoSample = currentBucket.RawSamples.First();
-            var numericValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = bucket.RawSamples.First();
+            var numericValue = bucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = bucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -291,31 +293,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateMaximum(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculateMaximum(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
 
-            var tagInfoSample = currentBucket.RawSamples.First();
-            var numericValue = currentBucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
-            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var tagInfoSample = bucket.RawSamples.First();
+            var numericValue = bucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
+            var status = bucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -330,20 +333,21 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculateCount(TagSummary tag, TagValueBucket currentBucket) {
-            var numericValue = currentBucket.RawSamples.Count;
+        private static IEnumerable<TagValueExtended> CalculateCount(TagSummary tag, TagValueBucket bucket) {
+            var numericValue = bucket.RawSamples.Count;
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(TagValueStatus.Good)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -359,34 +363,35 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
         /// <remarks>
-        ///   The status used is the worst-case of all of the <paramref name="currentBucket"/> values used in 
+        ///   The status used is the worst-case of all of the <paramref name="bucket"/> values used in 
         ///   the calculation.
         /// </remarks>
-        private static IEnumerable<TagValueExtended> CalculateRange(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculateRange(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return null;
             }
 
-            var tagInfoSample = currentBucket.RawSamples.First();
-            var minValue = currentBucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
-            var maxValue = currentBucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
+            var tagInfoSample = bucket.RawSamples.First();
+            var minValue = bucket.RawSamples.Min(x => x.Value.GetValueOrDefault(double.NaN));
+            var maxValue = bucket.RawSamples.Max(x => x.Value.GetValueOrDefault(double.NaN));
             var numericValue = Math.Abs(maxValue = minValue);
 
-            var status = currentBucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var status = bucket.RawSamples.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -402,26 +407,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
 
-            var sampleCount = currentBucket.RawSamples.Count;
-            var percentGoodCount = currentBucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
+            var sampleCount = bucket.RawSamples.Count;
+            var percentGoodCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue((double) percentGoodCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }
@@ -437,26 +443,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="tag">
         ///   The tag definition.
         /// </param>
-        /// <param name="currentBucket">
+        /// <param name="bucket">
         ///   The values for the current bucket.
         /// </param>
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket currentBucket) {
-            if (currentBucket.RawSamples.Count == 0) {
+        private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.RawSamples.Count == 0) {
                 return Array.Empty<TagValueExtended>();
             }
 
-            var sampleCount = currentBucket.RawSamples.Count;
-            var percentBadCount = currentBucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
+            var sampleCount = bucket.RawSamples.Count;
+            var percentBadCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(currentBucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketEnd)
                     .WithValue((double) percentBadCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
+                    .WithNotes(bucket.ToString())
                     .Build()
             };
         }

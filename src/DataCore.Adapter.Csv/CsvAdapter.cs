@@ -452,7 +452,7 @@ namespace DataCore.Adapter.Csv {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
-                foreach (var item in dataSet.Tags.Values.Where(x => x.MatchesFilter(request)).SelectPage(request)) {
+                foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
                     ch.TryWrite(TagDefinition.FromExisting(item));
                 }
             }, true, TaskScheduler, cancellationToken);

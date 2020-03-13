@@ -71,7 +71,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// A string represntation of the bucket.
         /// </returns>
         public override string ToString() {
-            return $"{{ UtcStart = {UtcBucketStart:yyyy-MM-ddTHH:mm:ss.fffZ}, UtcEnd = {UtcBucketEnd:yyyy-MM-ddTHH:mm:ss.fffZ}, Raw Sample Count = {RawSamples.Count} }}";
+            return $"{{ Bucket Start: {UtcBucketStart:yyyy-MM-ddTHH:mm:ss.fffZ}, Bucket End: {UtcBucketEnd:yyyy-MM-ddTHH:mm:ss.fffZ} }}";
         }
 
     }
