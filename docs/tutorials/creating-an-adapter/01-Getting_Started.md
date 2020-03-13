@@ -1,13 +1,13 @@
 # Tutorial - Creating an Adapter
 
-_This is part 1 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
+_This is part 1 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)._
 
 
 ## Getting Started
 
-In this tutorial, we will create a bare-bones adapter, using the `AdapterBase` base class. In later chapters, we will extend our adapter to implement different features.
+_The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-01)._
 
-The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-01).
+In this tutorial, we will create a bare-bones adapter, using the `AdapterBase` base class. In later chapters, we will extend our adapter to implement different features.
 
 To get started, create a new .NET Core 3.1 console app project called `MyAdapter` using Visual Studio or `dotnet new`:
 

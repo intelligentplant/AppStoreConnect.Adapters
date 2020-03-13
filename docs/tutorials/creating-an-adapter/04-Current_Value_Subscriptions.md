@@ -1,9 +1,11 @@
 # Tutorial - Creating an Adapter
 
-_This is part 4 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
+_This is part 4 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)._
 
 
 # Current Value Subscriptions
+
+_The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-04)._
 
 Adapters can interface with tens of thousands of different measurements, which may be changing value very rapidly. It can often be inefficient to poll large numbers of tags for snapshot values. Instead of polling, it is far more efficient to create a persistent connection to the adapter, choose tags that we want to subscribe to, and have the adapter push those values back to us as they change. 
 

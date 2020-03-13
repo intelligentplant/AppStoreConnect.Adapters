@@ -1,9 +1,11 @@
 # Tutorial - Creating an Adapter
 
-_This is part 2 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
+_This is part 2 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)._
 
 
 ## Reading Current Values
+
+_The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-02)._
 
 In order to make our adapter useful, we need to start adding functionality to it. In this chapter, we will add the ability to read current values for instrument measurements to our adapter. Current values are also referred to as snapshot values. In this tutorial, we will return random numerical values for all measurements. In a real-world example, you might be returning readings from IoT sensors, instruments in an industrial process, Windows performance counters, and so on. An instrument measurement can also be referred to as a tag. 
 

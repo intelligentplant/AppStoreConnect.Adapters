@@ -1,11 +1,13 @@
 # Tutorial - Creating an Adapter
 
-_This is part 3 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
+_This is part 3 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)._
 
 
 ## Tag Searches
 
-In the [previous chapter](./02 - Reading Current Values.md), we implemented the `IReadSnapshotTagValues` feature. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the `ITagSearch` feature to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags.
+_The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-03)._
+
+In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` feature. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the `ITagSearch` feature to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags.
 
 First of all, we will extend our `Adapter` class to implement the `ITagSearch` interface:
 

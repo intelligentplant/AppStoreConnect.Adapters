@@ -1,9 +1,11 @@
 # Tutorial - Creating an Adapter
 
-_This is part 5 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
+_This is part 5 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)._
 
 
 ## Historical Value Queries
+
+_The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-05)._
 
 At this point, we have an adapter that allows callers to browse the available measurements, poll them, and subscribe to receive value changes in real-time. These are already useful features (and in some cases, are the extent of what e.g. an IoT device can provide us with). However, in many cases, we need to interface with systems that also allow us to request the value of a tag over a time range. In some cases, we might only be able to ask for the raw tag values (that is, the values that have been recorded in a database, a CSV file, or some other source). In other cases (e.g. when we are connecting to an industrial plant historian such as OSIsoft PI, or an OPC UA server), we might be able to ask the external source to compute aggregated values for tags, such as the average value of a tag over each hour in the previous 24 hour time period.
 
