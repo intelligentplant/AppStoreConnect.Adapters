@@ -146,8 +146,6 @@ The `ReadHistoricalTagValues` class implements all functions defined in `Default
 
 ## Testing
 
-## Testing
-
 Modify the `Run` method in `Program.cs` as follows:
 
 ```csharp

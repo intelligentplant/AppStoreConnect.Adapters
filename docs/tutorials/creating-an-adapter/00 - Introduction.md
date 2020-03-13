@@ -10,9 +10,9 @@ All source code from the tutorial is available [here](/examples/tutorials/creati
 
 The tutorial consists of the following parts:
 
-- [Part 1 - Getting Started](01 - Getting Started.md)
-- [Part 2 - Reading Current Values](02 - Reading Current Values.md)
-- [Part 3 - Tag Searches](03 - Tag Searches.md)
-- [Part 4 - Current Value Subscriptions](04 - Current Value Subscriptions.md)
-- [Part 5 - Historical Value Queries](05 - Historical Value Queries.md)
-- [Part 6 - Adapter Configuration Options](06 - Adapter Configuration Options.md)
+- [Part 1 - Getting Started](/docs/tutorials/creating-an-adapter/01 - Getting Started.md)
+- [Part 2 - Reading Current Values](/docs/tutorials/creating-an-adapter/02 - Reading Current Values.md)
+- [Part 3 - Tag Searches](/docs/tutorials/creating-an-adapter/03 - Tag Searches.md)
+- [Part 4 - Current Value Subscriptions](/docs/tutorials/creating-an-adapter/04 - Current Value Subscriptions.md)
+- [Part 5 - Historical Value Queries](/docs/tutorials/creating-an-adapter/05 - Historical Value Queries.md)
+- [Part 6 - Adapter Configuration Options](/docs/tutorials/creating-an-adapter/06 - Adapter Configuration Options.md)
