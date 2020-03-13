@@ -1,6 +1,6 @@
 # Tutorial - Creating an Adapter
 
-_This is part 4 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00 - Introduction.md)_
+_This is part 4 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
 
 
 # Current Value Subscriptions
@@ -144,4 +144,4 @@ Note that the `ISnapshotTagValuePush` is included in the adapter's features, eve
 
 ## Next Steps
 
-In the [next chapter](05 - Historical Value Queries.md), we will implement historical tag value queries, and allow callers to requested aggregated data with the use of another helper class.
+In the [next chapter](05-Historical_Value_Queries.md), we will implement historical tag value queries, and allow callers to requested aggregated data with the use of another helper class.

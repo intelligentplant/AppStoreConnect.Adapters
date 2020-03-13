@@ -1,6 +1,6 @@
 # Tutorial - Creating an Adapter
 
-_This is part 2 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00 - Introduction.md)_
+_This is part 2 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
 
 
 ## Reading Current Values
@@ -163,4 +163,4 @@ Note that the `IReadSnapshotTagValues` feature has automatically been detected a
 
 ## Next Steps
 
-In the [next chapter](03 - Tag Searches.md), we will allow callers to search for available tags on our adapter and restrict data queries to only those tags.
+In the [next chapter](03-Tag_Searches.md), we will allow callers to search for available tags on our adapter and restrict data queries to only those tags.

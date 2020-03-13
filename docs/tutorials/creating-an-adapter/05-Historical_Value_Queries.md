@@ -1,6 +1,6 @@
 # Tutorial - Creating an Adapter
 
-_This is part 5 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00 - Introduction.md)_
+_This is part 5 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00-Introduction.md)_
 
 
 ## Historical Value Queries
@@ -357,4 +357,4 @@ After displaying the usual adapter information, the method will now display the 
 
 ## Next Steps
 
-In the [final chapter](06 - Adapter Configuration Options.md), we will modify our adapter to accept a set of configurable options, instead of hard-coding its settings.
+In the [next chapter](06-Adapter_Configuration_Options.md), we will modify our adapter to accept a set of configurable options, instead of hard-coding its settings.
