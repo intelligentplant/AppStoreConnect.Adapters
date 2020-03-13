@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,21 @@ namespace DataCore.Adapter {
     public abstract class AdapterBase : IAdapter, IHealthCheck {
 
         #region [ Fields / Properties ]
+
+        /// <summary>
+        /// Maximum length for an adapter ID.
+        /// </summary>
+        public const int MaxIdLength = 100;
+
+        /// <summary>
+        /// Maximum length for an adapter name.
+        /// </summary>
+        public const int MaxNameLength = 200;
+
+        /// <summary>
+        /// Maximum length for an adapter description.
+        /// </summary>
+        public const int MaxDescriptionLength = 500;
 
         /// <summary>
         /// Indicates if the adapter is disposed.
@@ -134,12 +150,21 @@ namespace DataCore.Adapter {
         ///   The logger to use. Specify <see langword="null"/> to use 
         ///   <see cref="Microsoft.Extensions.Logging.Abstractions.NullLogger"/>.
         /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is longer than <see cref="MaxIdLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is longer than <see cref="MaxNameLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="description"/> is longer than <see cref="MaxDescriptionLength"/>.
+        /// </exception>
         protected AdapterBase(
             string id, 
-            string name, 
-            string description, 
-            IBackgroundTaskService scheduler, 
-            ILogger logger
+            string name = null, 
+            string description = null, 
+            IBackgroundTaskService scheduler = null, 
+            ILogger logger = null
         ) {
             if (string.IsNullOrWhiteSpace(id)) {
                 id = Guid.NewGuid().ToString();
@@ -147,6 +172,17 @@ namespace DataCore.Adapter {
             if (string.IsNullOrWhiteSpace(name)) {
                 name = id;
             }
+
+            if (id.Length > MaxIdLength) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, MaxIdLength), nameof(id));
+            }
+            if (name.Length > MaxNameLength) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterNameIsTooLong, MaxNameLength), nameof(name));
+            }
+            if (description != null && description.Length > MaxDescriptionLength) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, MaxDescriptionLength), nameof(description));
+            }
+
             _descriptor = new AdapterDescriptor(id, name, description);
             TaskScheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;

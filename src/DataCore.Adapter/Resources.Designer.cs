@@ -61,6 +61,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum adapter description length is {0}..
+        /// </summary>
+        internal static string Error_AdapterDescriptionIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_AdapterDescriptionIsTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum adapter ID length is {0}..
+        /// </summary>
+        internal static string Error_AdapterIdIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_AdapterIdIsTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An adapter cannot be started when it is already running..
         /// </summary>
         internal static string Error_AdapterIsAlreadyStarted {
@@ -93,6 +111,15 @@ namespace DataCore.Adapter {
         internal static string Error_AdapterIsStopping {
             get {
                 return ResourceManager.GetString("Error_AdapterIsStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum adapter name length is {0}..
+        /// </summary>
+        internal static string Error_AdapterNameIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_AdapterNameIsTooLong", resourceCulture);
             }
         }
         

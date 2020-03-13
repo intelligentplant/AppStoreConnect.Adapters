@@ -47,8 +47,12 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
-        protected AdapterBase(string id, TAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger logger)
-            : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
+        protected AdapterBase(
+            string id, 
+            TAdapterOptions options, 
+            IBackgroundTaskService taskScheduler = null, 
+            ILogger logger = null
+        ) : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
 
 
         /// <summary>
@@ -79,12 +83,12 @@ namespace DataCore.Adapter {
         protected AdapterBase(
             string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
-            IBackgroundTaskService taskScheduler, 
-            ILogger logger
+            IBackgroundTaskService taskScheduler = null, 
+            ILogger logger = null
         ) : base(
             id, 
             optionsMonitor?.CurrentValue?.Name, 
-            optionsMonitor?.CurrentValue.Description,
+            optionsMonitor?.CurrentValue?.Description,
             taskScheduler,
             logger
         ) {

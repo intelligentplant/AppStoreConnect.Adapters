@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Error_AdapterDescriptionIsTooLong" xml:space="preserve">
+    <value>Maximum adapter description length is {0}.</value>
+  </data>
+  <data name="Error_AdapterIdIsTooLong" xml:space="preserve">
+    <value>Maximum adapter ID length is {0}.</value>
+  </data>
   <data name="Error_AdapterIsAlreadyStarted" xml:space="preserve">
     <value>An adapter cannot be started when it is already running.</value>
   </data>
@@ -130,6 +136,9 @@
   </data>
   <data name="Error_AdapterIsStopping" xml:space="preserve">
     <value>The adapter is currently stopping and cannot be started until this operation completes.</value>
+  </data>
+  <data name="Error_AdapterNameIsTooLong" xml:space="preserve">
+    <value>Maximum adapter name length is {0}.</value>
   </data>
   <data name="Error_BucketSizeMustBeGreaterThanZero" xml:space="preserve">
     <value>The bucket size for plot calculations must be greater than zero.</value>
