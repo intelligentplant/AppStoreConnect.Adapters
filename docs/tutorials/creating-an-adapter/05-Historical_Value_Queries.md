@@ -110,7 +110,7 @@ In our `for` loop, we move forwards in time from our query start time to query e
 
 At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the `DataCore.Adapter.RealTimeData.ReadHistoricalTagValues` helper class.
 
-The `ReadHistoricalTagValues` provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `System.Threading.Channels.Channel<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
+The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `System.Threading.Channels.Channel<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
 
 Registering `ReadHistoricalTagValues` is a simple change to our adapter's constructor:
 
@@ -173,6 +173,16 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var readRawFeature = adapter.GetFeature<IReadRawTagValues>();
         var readProcessedFeature = adapter.GetFeature<IReadProcessedTagValues>();
 
+        Console.WriteLine();
+        Console.WriteLine("  Supported Aggregations:");
+        var funcs = new List<DataFunctionDescriptor>();
+        await foreach (var func in readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken).ReadAllAsync()) {
+            funcs.Add(func);
+            Console.WriteLine($"    - {func.Id}");
+            Console.WriteLine($"      - Name: {func.Name}");
+            Console.WriteLine($"      - Description: {func.Description}");
+        }
+
         var tags = tagSearchFeature.FindTags(
             context,
             new FindTagsRequest() {
@@ -193,16 +203,6 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         Console.WriteLine("  Properties:");
         foreach (var prop in tag.Properties) {
             Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-        }
-
-        Console.WriteLine();
-        Console.WriteLine("  Supported Aggregations:");
-        var funcs = new List<DataFunctionDescriptor>();
-        await foreach (var func in readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken).ReadAllAsync()) {
-            funcs.Add(func);
-            Console.WriteLine($"    - {func.Id}");
-            Console.WriteLine($"      - Name: {func.Name}");
-            Console.WriteLine($"      - Description: {func.Description}");
         }
 
         var now = DateTime.UtcNow;
