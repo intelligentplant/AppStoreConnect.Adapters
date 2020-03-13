@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -251,6 +252,29 @@ namespace DataCore.Adapter {
                     );
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Validates a request object passed to an adapter feature method.
+        /// </summary>
+        /// <typeparam name="TRequest">
+        ///   The request type.
+        /// </typeparam>
+        /// <param name="request">
+        ///   The request object.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        protected virtual void ValidateRequest<TRequest>(TRequest request) {
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            Validator.ValidateObject(request, new ValidationContext(request), true);
         }
 
         #endregion
