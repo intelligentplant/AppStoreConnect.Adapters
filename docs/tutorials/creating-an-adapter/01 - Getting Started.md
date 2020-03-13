@@ -1,6 +1,6 @@
 # Tutorial - Creating an Adapter
 
-_This is part 1 of a tutorial series about creating an adapter. The introduction to the series can be found [here](./00 - Introduction.md)_
+_This is part 1 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00 - Introduction.md)_
 
 
 ## Getting Started
@@ -189,4 +189,4 @@ The `Run` method will display information about the adapter, including the imple
 
 ## Next Steps
 
-In the [next chapter](./02 - Reading Current Values.md), we will start adding more standard feature implementations to our new adapter.
+In the [next chapter](02 - Reading Current Values.md), we will start adding more standard feature implementations to our new adapter.

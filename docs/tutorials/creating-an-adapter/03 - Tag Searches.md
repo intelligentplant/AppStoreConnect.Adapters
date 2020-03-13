@@ -1,6 +1,6 @@
 # Tutorial - Creating an Adapter
 
-_This is part 3 of a tutorial series about creating an adapter. The introduction to the series can be found [here](./00 - Introduction.md)_
+_This is part 3 of a tutorial series about creating an adapter. The introduction to the series can be found [here](00 - Introduction.md)_
 
 
 ## Tag Searches
@@ -328,4 +328,4 @@ Note that the `ITagSearch` and `ITagInfo` features have been added to our adapte
 
 ## Next Steps
 
-In the [next chapter](./04 - Current Value Subscriptions.md), we will allow callers to create a subscription on our adapter and receive snapshot value changes as they occur.
+In the [next chapter](04 - Current Value Subscriptions.md), we will allow callers to create a subscription on our adapter and receive snapshot value changes as they occur.
