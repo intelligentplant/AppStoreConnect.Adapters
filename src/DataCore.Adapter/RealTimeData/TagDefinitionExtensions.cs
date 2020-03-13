@@ -68,32 +68,6 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Selects a page of tag definitions based on the paging settings in a search filter. The 
-        /// tags are assumed to match the term filters in the filter object.
-        /// </summary>
-        /// <param name="tags">
-        ///   The tags to select from.
-        /// </param>
-        /// <param name="filter">
-        ///   The search filter.
-        /// </param>
-        /// <returns>
-        ///   The selected tags. Tags will be ordered by name before applying the paging.
-        /// </returns>
-        public static IEnumerable<TagDefinition> SelectPage(this IEnumerable<TagDefinition> tags, FindTagsRequest filter) {
-            if (tags == null) {
-                return null;
-            }
-
-            if (filter == null) {
-                return tags;
-            }
-
-            return tags.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).Skip(filter.PageSize * (filter.Page - 1)).Take(filter.PageSize);
-        }
-
-
-        /// <summary>
         /// Applies filter terms to the specified tags and selects a page of results.
         /// </summary>
         /// <param name="tags">
@@ -114,7 +88,7 @@ namespace DataCore.Adapter.RealTimeData {
                 return tags;
             }
 
-            return tags.Where(x => x.MatchesFilter(filter)).SelectPage(filter);
+            return tags.Where(x => x.MatchesFilter(filter)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(filter);
         }
 
     }

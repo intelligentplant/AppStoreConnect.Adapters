@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes a request to get tag definitions by tag ID or name.
     /// </summary>
-    public sealed class GetTagsRequest : IValidatableObject {
+    public sealed class GetTagsRequest : AdapterRequest {
 
         /// <summary>
         /// The IDs or names of the tags to retrieve.
@@ -26,21 +27,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A collection of validation errors.
         /// </returns>
-        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext) {
-            return Validate(validationContext);
-        }
-
-
-        /// <summary>
-        /// Validates the object.
-        /// </summary>
-        /// <param name="validationContext">
-        ///   The validation context.
-        /// </param>
-        /// <returns>
-        ///   A collection of validation errors.
-        /// </returns>
-        private IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
+        protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
             if (Tags.Any(x => x == null)) {
                 yield return new ValidationResult(SharedResources.Error_NameOrIdCannotBeNull, new[] { nameof(Tags) });
             }

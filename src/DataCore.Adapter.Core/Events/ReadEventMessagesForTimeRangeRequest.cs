@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Describes a request to retrieve historical event messages using a time range.
     /// </summary>
-    public class ReadEventMessagesForTimeRangeRequest : ReadHistoricalEventMessagesRequest {
+    public class ReadEventMessagesForTimeRangeRequest : ReadHistoricalEventMessagesRequest, IPageableAdapterRequest {
 
         /// <summary>
         /// The UTC start time for the request.

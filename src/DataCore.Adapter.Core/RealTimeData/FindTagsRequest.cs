@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes a tag search query.
     /// </summary>
-    public sealed class FindTagsRequest {
+    public sealed class FindTagsRequest : PageableAdapterRequest {
 
         /// <summary>
         /// The tag name filter.
@@ -33,20 +32,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// Additional filters on bespoke tag properties.
         /// </summary>
         public IDictionary<string, string> Other { get; set; }
-
-        /// <summary>
-        /// The page size for the query.
-        /// </summary>
-        [Range(1, int.MaxValue)]
-        [DefaultValue(10)]
-        public int PageSize { get; set; } = 10;
-
-        /// <summary>
-        /// The page number for the query.
-        /// </summary>
-        [Range(1, int.MaxValue)]
-        [DefaultValue(1)]
-        public int Page { get; set; } = 1;
 
     }
 }
