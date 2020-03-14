@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="0.10.2-alpha" />
+    <!-- AdapterPackageVersion is defined in Directory.Build.props in the solution folder. -->
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="$(AdapterPackageVersion)" />
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ _This is part 1 of a tutorial series about creating an adapter. The introduction
 
 _The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-01)._
 
-In this tutorial, we will create a bare-bones adapter, using the `AdapterBase` base class. In later chapters, we will extend our adapter to implement different features.
+In this tutorial, we will create a bare-bones adapter, using the [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) base class. In later chapters, we will extend our adapter to implement different features, and explore other base classes available to us.
 
 To get started, create a new .NET Core 3.1 console app project called `MyAdapter` using Visual Studio or `dotnet new`:
 
@@ -22,7 +22,14 @@ Next, we will add a package reference to the [IntelligentPlant.AppStoreConnect.A
 Now, create a new class called `Adapter`, and extend `AdapterBase`:
 
 ```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using DataCore.Adapter;
+using DataCore.Adapter.Diagnostics;
+using IntelligentPlant.BackgroundTasks;
+using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
     public class Adapter : AdapterBase {
@@ -86,7 +93,7 @@ AddProperty("Startup Time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
 All adapters can define bespoke properties. When writing an adapter that connects to an external system, this can be used to provide contextual information such as the vendor, software version, user name, and so on.
 
-At this stage, we have a fully-working adapter implementation, albeit one that we have not yet added any features to. However, `AdapterBase` does provide an implementation for one adapter feature automatically: `IHealthCheck`. The `IHealthCheck` feature is used to report on the current health of an adapter. This can be used to verify the health of e.g. connections to remote systems that the adapter speaks to.
+At this stage, we have a fully-working adapter implementation, albeit one that we have not yet added any features to. However, `AdapterBase` does provide an implementation for one adapter feature automatically: [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagnostics/IHealthCheck.cs). The `IHealthCheck` feature is used to report on the current health of an adapter. This can be used to verify the health of e.g. connections to remote systems that the adapter speaks to.
 
 We can customise the health checks that our adapter performs by overriding the `CheckHealthAsync` method:
 
@@ -101,7 +108,7 @@ protected override Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(
 }
 ```
 
-Note that the `CheckHealthAsync` method accepts an `IAdapterCallContext` object as one of its parameters. This object is used by adapter features to provide information about the calling user, so that the adapter can decide whether or not to authorize the call. When hosting adapters in ASP.NET Core using the [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common) package, an `IAdapterCallContext` that is constructed from the `HttpContext` for the caller is passed to the adapter.
+Note that the `CheckHealthAsync` method accepts an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object as one of its parameters. This object is used by adapter features to provide information about the calling user, so that the adapter can decide whether or not to authorize the call. When hosting adapters in ASP.NET Core using the [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Common) package, an `IAdapterCallContext` that is constructed from the `HttpContext` for the caller is passed to the adapter.
 
 
 ## Testing

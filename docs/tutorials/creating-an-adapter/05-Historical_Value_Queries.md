@@ -141,7 +141,7 @@ Note that, in this case, we are using the `AddFeatures` method inherited from `A
 
 ### A Note on Data Function Descriptors
 
-The `IReadProcessedTagValues` feature consists of two parts: the `ReadProcessedTagValues` method performs the actual data queries, and the `GetSupportedDataFunctions` method returns information about what sort of aggregation is supported by the adapter. The `GetSupportedDataFunctions` method returns `DataFunctionDescriptor` objects that describe the available aggregates. The `DefaultDataFunctions` class defines commonly-implemented data functions that can be re-used in compatible adapters. 
+The `IReadProcessedTagValues` feature consists of two parts: the `ReadProcessedTagValues` method performs the actual data queries, and the `GetSupportedDataFunctions` method returns information about what sort of aggregation is supported by the adapter. The `GetSupportedDataFunctions` method returns `DataFunctionDescriptor` objects that describe the available aggregates. The [DefaultDataFunctions](/src/DataCore.Adapter.Abstractions/RealTimeData/DefaultDataFunctions.cs) class defines commonly-implemented data functions that can be re-used in compatible adapters. 
 
 The `ReadHistoricalTagValues` class implements all functions defined in `DefaultDataFunctions`; it is also possible to define custom aggregate functions and add them to a `ReadHistoricalTagValues` instance using its `RegisterDataFunction` method.
 

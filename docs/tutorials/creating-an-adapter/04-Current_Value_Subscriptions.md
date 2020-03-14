@@ -112,7 +112,7 @@ After displaying the usual adapter information, the `Run` method will create a n
 
 Once the background operation has been registered, the method waits for the subscription's `Completed` property (a `Task`) to complete before existing. The task will complete when the subscription is cancelled. In the program's `Main` method in part 1, we added an event handler that will cancel the cancellation token when `CTRL+C` is pressed.
 
-Run the program and wait until it receives a few value updates. You should see output similar to the following:
+Run the program and wait until it receives a few value updates, and then press `CTRL+C` to cancel the subscription and exit. You should see output similar to the following:
 
 ```
 [example]

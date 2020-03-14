@@ -9,7 +9,7 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 In order to make our adapter useful, we need to start adding functionality to it. In this chapter, we will add the ability to read current values for instrument measurements to our adapter. Current values are also referred to as snapshot values. In this tutorial, we will return random numerical values for all measurements. In a real-world example, you might be returning readings from IoT sensors, instruments in an industrial process, Windows performance counters, and so on. An instrument measurement can also be referred to as a tag. 
 
-Reading snapshot values is defined using the `IReadSnapshotTagValues` adapter feature. We'll extend our adapter class to implement this interface:
+Reading snapshot values is defined using the [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) adapter feature. We'll extend our adapter class to implement this interface:
 
 ```csharp
 public class Adapter : AdapterBase, IReadSnapshotTagValues {
@@ -93,7 +93,7 @@ TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
 
 The `TaskScheduler` property is the `IBackgroundTaskService` that was passed into our constructor. A default implementation is provided if the constructor parameter was `null`. The `QueueBackgroundChannelOperation` extension method allows us to write values to our channel's writer (`result.Writer` in this case) in a background task. The `true` parameter indicates that the channel's writer should be completed once the background operation finishes.
 
-The background operation itself is specified using a lambda function that accepts the channel writer, and a `CancellationToken` that will fire when either the `cancellationToken` parameter fires, or the adapter is disposed. In our lambda, we simply write a value into the channel for every tag specified in the request. The `TagValueBuilder` class simplifies the creation of tag values.
+The background operation itself is specified using a lambda function that accepts the channel writer, and a `CancellationToken` that will fire when either the `cancellationToken` parameter fires, or the adapter is disposed. In our lambda, we simply write a value into the channel for every tag specified in the request. The [TagValueBuilder](/src/DataCore.Adapter/RealTimeData/TagValueBuilder.cs) class simplifies the creation of tag values.
 
 Note that we don't do any sort of checks on whether the tags specified in the request are valid (beyond ensuring that they are not `null` or white space). We will add this in later.
 
