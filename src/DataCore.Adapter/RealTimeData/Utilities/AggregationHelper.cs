@@ -234,7 +234,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -274,7 +274,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -314,7 +314,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -344,7 +344,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(TagValueStatus.Good)
                     .WithNotes(bucket.ToString())
@@ -387,7 +387,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
                     .WithUnits(tagInfoSample.Units)
@@ -423,7 +423,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue((double) percentGoodCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
@@ -459,7 +459,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             return new[] {
                 TagValueBuilder.Create()
-                    .WithUtcSampleTime(bucket.UtcBucketEnd)
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue((double) percentBadCount / sampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
@@ -917,7 +917,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
-                    // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
+                    // The sample we have just received is later than the end time for the current 
+                    // bucket.
+
+                    // Determine the pre-bucket samples that we need to copy to the new bucket e.g. 
+                    // to help with interpolation.
                     var preBucketSamples = GetPreBucketSamples(bucket);
 
                     do {
@@ -925,8 +929,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
-                        // Now, copy over the pre-bucket samples to the new bucket. This is to 
-                        // help with the calculation of interpolated data if required.
+                        // Now, copy over the pre-bucket samples to the new bucket.
                         foreach (var item in preBucketSamples) {
                             AddPreBucketSample(bucket, item);
                         }
