@@ -9,6 +9,26 @@ namespace DataCore.Adapter.Common {
     public struct Variant : IEquatable<Variant>, IFormattable {
 
         /// <summary>
+        /// Default string format to use for date-time variant values (ISO 8601-1:2019 extended profile).
+        /// </summary>
+        public const string DefaultDateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+
+        /// <summary>
+        /// Default string format to use for double-precision variant values.
+        /// </summary>
+        public const string DefaultDoubleFormat = "G17";
+
+        /// <summary>
+        /// Default string format to use for single-precision variant values.
+        /// </summary>
+        public const string DefaultFloatFormat = "G9";
+
+        /// <summary>
+        /// Default string format to use for integral variant values.
+        /// </summary>
+        public const string DefaultIntegralFormat = "G";
+
+        /// <summary>
         /// Null variant.
         /// </summary>
         public static Variant Null { get; } = FromValue(null);
@@ -252,10 +272,10 @@ namespace DataCore.Adapter.Common {
 
             switch (type) {
                 case VariantType.Double:
-                    format = "G17";
+                    format = DefaultDoubleFormat;
                     break;
                 case VariantType.Float:
-                    format = "G9";
+                    format = DefaultFloatFormat;
                     break;
                 case VariantType.Byte:
                 case VariantType.Int16:
@@ -265,11 +285,10 @@ namespace DataCore.Adapter.Common {
                 case VariantType.UInt16:
                 case VariantType.UInt32:
                 case VariantType.UInt64:
-                    format = "G";
+                    format = DefaultIntegralFormat;
                     break;
                 case VariantType.DateTime:
-                    // ISO 8601-1:2019 extended profile
-                    format = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+                    format = DefaultDateTimeFormat;
                     break;
             }
 

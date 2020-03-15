@@ -230,5 +230,32 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("SnapshotTagValue_Unspecified_Value", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bad Quality.
+        /// </summary>
+        public static string TagValueStatus_Bad {
+            get {
+                return ResourceManager.GetString("TagValueStatus_Bad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Good Quality.
+        /// </summary>
+        public static string TagValueStatus_Good {
+            get {
+                return ResourceManager.GetString("TagValueStatus_Good", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Quality.
+        /// </summary>
+        public static string TagValueStatus_Unknown {
+            get {
+                return ResourceManager.GetString("TagValueStatus_Unknown", resourceCulture);
+            }
+        }
     }
 }

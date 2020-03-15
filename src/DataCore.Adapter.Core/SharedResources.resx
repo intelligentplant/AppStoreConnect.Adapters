@@ -176,4 +176,13 @@
   <data name="SnapshotTagValue_Unspecified_Value" xml:space="preserve">
     <value>Unspecified</value>
   </data>
+  <data name="TagValueStatus_Bad" xml:space="preserve">
+    <value>Bad Quality</value>
+  </data>
+  <data name="TagValueStatus_Good" xml:space="preserve">
+    <value>Good Quality</value>
+  </data>
+  <data name="TagValueStatus_Unknown" xml:space="preserve">
+    <value>Unknown Quality</value>
+  </data>
 </root>

@@ -95,11 +95,18 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         public string ToString(string format, IFormatProvider formatProvider) {
             var formattedValue = Value.ToString(format ?? Variant.GetDefaultFormat(Value.Type), formatProvider);
+            var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
+            var formattedStatus = Status == TagValueStatus.Good
+                ? SharedResources.TagValueStatus_Good
+                : Status == TagValueStatus.Bad
+                    ? SharedResources.TagValueStatus_Bad
+                    : SharedResources.TagValueStatus_Unknown;
+
             if (string.IsNullOrWhiteSpace(Units)) {
-                return formattedValue;
+                return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, "]");
             }
 
-            return string.Concat(formattedValue, ' ', Units);
+            return string.Concat(formattedValue, " ", Units, " @ ", formattedTimestamp, " [", formattedStatus, "]");
         }
 
     }
