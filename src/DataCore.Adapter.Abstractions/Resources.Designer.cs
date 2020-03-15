@@ -61,7 +61,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Average value calculated over a fixed sample interval..
+        ///   Looks up a localized string similar to Average value calculated over sample interval..
         /// </summary>
         internal static string DataFunction_Avg_Description {
             get {
@@ -79,7 +79,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The number of raw samples that have been recorded for the tag over the sample period..
+        ///   Looks up a localized string similar to The number of good-quality raw samples that have been recorded for the tag at each sample interval..
         /// </summary>
         internal static string DataFunction_Count_Description {
             get {
@@ -93,6 +93,24 @@ namespace DataCore.Adapter {
         internal static string DataFunction_Count_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Count_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The difference between the earliest good-quality value and latest good-quality value in each sample interval..
+        /// </summary>
+        internal static string DataFunction_Delta_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Delta_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delta.
+        /// </summary>
+        internal static string DataFunction_Delta_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Delta_Name", resourceCulture);
             }
         }
         
@@ -115,7 +133,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
+        ///   Looks up a localized string similar to Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
         /// </summary>
         internal static string DataFunction_Max_Description {
             get {
@@ -133,7 +151,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Minimum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at..
+        ///   Looks up a localized string similar to Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at..
         /// </summary>
         internal static string DataFunction_Min_Description {
             get {
@@ -205,7 +223,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The difference between the minimum value and maximum value over the sample period..
+        ///   Looks up a localized string similar to The difference between the minimum good-quality value and maximum good-quality value in each sample interval..
         /// </summary>
         internal static string DataFunction_Range_Description {
             get {

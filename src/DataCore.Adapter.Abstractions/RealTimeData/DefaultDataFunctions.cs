@@ -46,6 +46,11 @@ namespace DataCore.Adapter.RealTimeData {
             public const string FunctionIdRange = "RANGE";
 
             /// <summary>
+            /// Delta data function ID.
+            /// </summary>
+            public const string FunctionIdDelta = "DELTA";
+
+            /// <summary>
             /// Percent good function ID.
             /// </summary>
             public const string FunctionIdPercentGood = "PERCENTGOOD";
@@ -156,6 +161,22 @@ namespace DataCore.Adapter.RealTimeData {
         );
 
         /// <summary>
+        /// Difference between the earliest and latest value over a time period.
+        /// </summary>
+        public static DataFunctionDescriptor Delta { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdDelta,
+            Resources.DataFunction_Delta_Name,
+            Resources.DataFunction_Delta_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
+        );
+
+        /// <summary>
         /// Percentage of raw samples in a time period that have good-quality status. 
         /// </summary>
         public static DataFunctionDescriptor PercentGood { get; } = DataFunctionDescriptor.Create(
@@ -198,6 +219,7 @@ namespace DataCore.Adapter.RealTimeData {
             Maximum,
             Count,
             Range,
+            Delta,
             PercentGood,
             PercentBad
         };
