@@ -270,7 +270,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
-                        UtcStartTime = request.UtcStartTime.Subtract(request.SampleInterval),
+                        UtcStartTime = request.UtcStartTime,
                         UtcEndTime = request.UtcEndTime,
                         SampleCount = 0,
                         BoundaryType = RawDataBoundaryType.Outside
