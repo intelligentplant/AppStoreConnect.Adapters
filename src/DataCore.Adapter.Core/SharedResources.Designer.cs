@@ -250,11 +250,11 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown Quality.
+        ///   Looks up a localized string similar to Uncertain Quality.
         /// </summary>
-        public static string TagValueStatus_Unknown {
+        public static string TagValueStatus_Uncertain {
             get {
-                return ResourceManager.GetString("TagValueStatus_Unknown", resourceCulture);
+                return ResourceManager.GetString("TagValueStatus_Uncertain", resourceCulture);
             }
         }
     }

@@ -1278,9 +1278,9 @@ namespace DataCore.Adapter {
                     return RealTimeData.TagValueStatus.Bad;
                 case Grpc.TagValueStatus.Good:
                     return RealTimeData.TagValueStatus.Good;
-                case Grpc.TagValueStatus.Unknown:
+                case Grpc.TagValueStatus.Uncertain:
                 default:
-                    return RealTimeData.TagValueStatus.Unknown;
+                    return RealTimeData.TagValueStatus.Uncertain;
             }
         }
 
@@ -1300,9 +1300,9 @@ namespace DataCore.Adapter {
                     return Grpc.TagValueStatus.Bad;
                 case RealTimeData.TagValueStatus.Good:
                     return Grpc.TagValueStatus.Good;
-                case RealTimeData.TagValueStatus.Unknown:
+                case RealTimeData.TagValueStatus.Uncertain:
                 default:
-                    return Grpc.TagValueStatus.Unknown;
+                    return Grpc.TagValueStatus.Uncertain;
             }
         }
 

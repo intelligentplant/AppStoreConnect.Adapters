@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Json {
 
             DateTime utcSampleTime = default;
             Variant value = Variant.Null;
-            TagValueStatus status = TagValueStatus.Unknown;
+            TagValueStatus status = TagValueStatus.Uncertain;
             string units = null;
             string notes = null;
             string error = null;

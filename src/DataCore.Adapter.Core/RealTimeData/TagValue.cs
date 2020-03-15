@@ -100,7 +100,7 @@ namespace DataCore.Adapter.RealTimeData {
                 ? SharedResources.TagValueStatus_Good
                 : Status == TagValueStatus.Bad
                     ? SharedResources.TagValueStatus_Bad
-                    : SharedResources.TagValueStatus_Unknown;
+                    : SharedResources.TagValueStatus_Uncertain;
 
             if (string.IsNullOrWhiteSpace(Units)) {
                 return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, "]");

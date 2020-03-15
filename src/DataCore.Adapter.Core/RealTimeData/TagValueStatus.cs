@@ -11,9 +11,9 @@
         Bad = 0,
 
         /// <summary>
-        /// The quality of the value is unknown.
+        /// The quality of the value is unknown or uncertain.
         /// </summary>
-        Unknown = 64,
+        Uncertain = 64,
 
         /// <summary>
         /// The quality of the status is good.

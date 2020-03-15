@@ -265,7 +265,7 @@ message WriteTagValueAnnotationResult {
 
 enum TagValueStatus {
     TAG_VALUE_STATUS_BAD = 0;
-    TAG_VALUE_STATUS_UNKNOWN = 64;
+    TAG_VALUE_STATUS_UNCERTAIN = 64;
     TAG_VALUE_STATUS_GOOD = 192;
 }
 

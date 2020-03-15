@@ -182,7 +182,7 @@
   <data name="TagValueStatus_Good" xml:space="preserve">
     <value>Good Quality</value>
   </data>
-  <data name="TagValueStatus_Unknown" xml:space="preserve">
-    <value>Unknown Quality</value>
+  <data name="TagValueStatus_Uncertain" xml:space="preserve">
+    <value>Uncertain Quality</value>
   </data>
 </root>
