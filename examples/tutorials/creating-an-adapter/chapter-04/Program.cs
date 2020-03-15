@@ -77,7 +77,7 @@ namespace MyAdapter {
                     Console.WriteLine("  Snapshot Value:");
                     subscription.Values.RunBackgroundOperation(async (ch, ct) => {
                         await foreach (var value in ch.ReadAllAsync(ct)) {
-                            Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                            Console.WriteLine($"    - {value.Value}");
                         }
                     }, null, cancellationToken);
 

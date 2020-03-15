@@ -77,7 +77,7 @@ namespace MyAdapter {
 
                     Console.WriteLine("  Snapshot Value:");
                     await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-                        Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                        Console.WriteLine($"    - {value.Value}");
                     }
                 }
             }

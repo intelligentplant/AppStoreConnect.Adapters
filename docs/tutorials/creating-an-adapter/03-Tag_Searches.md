@@ -7,7 +7,7 @@ _This is part 3 of a tutorial series about creating an adapter. The introduction
 
 _The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-03)._
 
-In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` feature. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the `ITagSearch` feature to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags.
+In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` feature. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the [ITagSearch](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagSearch.cs) feature to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags.
 
 First of all, we will extend our `Adapter` class to implement the `ITagSearch` interface:
 
@@ -17,7 +17,7 @@ public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues {
 }
 ```
 
-The `ITagSearch` feature uses the `TagDefinition` class to describe available tags. Tags can be identifier using both the tag name, and a unique tag identifier. The recommended behaviour for adapters is that tag names should be case-insensitive, but that identifiers should be case-sensitive. We will add two dictionaries to our adapter, to index tag definitions by both ID and name:
+The `ITagSearch` feature uses the [TagDefinition](/src/DataCore.Adapter.Core/RealTimeData/TagDefinition.cs) class to describe available tags. Tags can be identifier using both the tag name, and a unique tag identifier. The recommended behaviour for adapters is that tag names should be case-insensitive, but that identifiers should be case-sensitive. We will add two dictionaries to our adapter, to index tag definitions by both ID and name:
 
 ```csharp
 private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>();
@@ -76,7 +76,7 @@ The `CreateMinimumValueProperty` and `CreateMaximumValueProperty` methods create
 
 The `TagDefinition` can hold a variety of information about a tag in addition to the ID and name, including: a description, engineering units, data type, discrete tag states (if required), custom properties, and labels/categories. In our implementation above, we specify that our tags return `double` values, with an inclusive minimum value of zero and an exclusive maximum value of one.
 
-Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another feature, named `ITagInfo`. `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
+Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another feature, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
 
 ```csharp
 public ChannelReader<TagDefinition> GetTags(
@@ -125,7 +125,7 @@ public ChannelReader<AdapterProperty> GetTagProperties(
 }
 ```
 
-The `GetTagPropertiesRequest` implements the `IPageableAdapterRequest` interface, meaning that it specifies a page size and page number to apply to the tag properties. The `SelectPage` extension method allows us to apply the paging specified in an `IPageableAdapterRequest` to any `IOrderedEnumerable<T>`. The `PublishToChannel` extension method will take any `IEnumerable<T>` and return a `ChannelReader<T>` that will emit the contents of the enumerable.
+The `GetTagPropertiesRequest` implements the [IPageableAdapterRequest](/src/DataCore.Adapter.Core/Common/IPageableAdapterRequest.cs) interface, meaning that it specifies a page size and page number to apply to the tag properties. The `SelectPage` extension method allows us to apply the paging specified in an `IPageableAdapterRequest` to any `IOrderedEnumerable<T>`. The `PublishToChannel` extension method will take any `IEnumerable<T>` and return a `ChannelReader<T>` that will emit the contents of the enumerable.
 
 `GetTagProperties` is important, because we can opt to allow callers to `FindTags` to include search filters that match against custom tag properties. In this case, `GetTagProperties` is the way that the available properties can be discovered.
 
@@ -253,7 +253,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
 
             Console.WriteLine("  Snapshot Value:");
             await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-                Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                Console.WriteLine($"    - {value.Value}");
             }
         }
     }
@@ -267,7 +267,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-13T11:43:10Z
+    - Startup Time = 2020-03-15T15:49:02Z
   Features:
     - IHealthCheck
     - IReadSnapshotTagValues
@@ -282,7 +282,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - MinValue = 0
     - MaxValue = 1
   Snapshot Value:
-    - 0.6593990599081847 @ 2020-03-13T11:43:11Z
+    - 0.29634930393488579 @ 2020-03-15T15:49:02.8638725Z [Good Quality]
 
 [Tag Details]
   Name: RandomValue_2
@@ -292,7 +292,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - MinValue = 0
     - MaxValue = 1
   Snapshot Value:
-    - 0.34843095501346094 @ 2020-03-13T11:43:11Z
+    - 0.31871352732121644 @ 2020-03-15T15:49:02.8783799Z [Good Quality]
 
 [Tag Details]
   Name: RandomValue_3
@@ -302,7 +302,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - MinValue = 0
     - MaxValue = 1
   Snapshot Value:
-    - 0.497461529680277 @ 2020-03-13T11:43:11Z
+    - 0.70797695950976436 @ 2020-03-15T15:49:02.9000434Z [Good Quality]
 
 [Tag Details]
   Name: RandomValue_4
@@ -312,7 +312,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - MinValue = 0
     - MaxValue = 1
   Snapshot Value:
-    - 0.545395824380869 @ 2020-03-13T11:43:11Z
+    - 0.543595817658862 @ 2020-03-15T15:49:02.9048014Z [Good Quality]
 
 [Tag Details]
   Name: RandomValue_5
@@ -322,7 +322,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - MinValue = 0
     - MaxValue = 1
   Snapshot Value:
-    - 0.9330774778188567 @ 2020-03-13T11:43:11Z
+    - 0.8137845079478736 @ 2020-03-15T15:49:02.9101078Z [Good Quality]
 ```
 
 Note that the `ITagSearch` and `ITagInfo` features have been added to our adapter's feature set.

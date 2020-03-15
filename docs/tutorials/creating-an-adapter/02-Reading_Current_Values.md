@@ -136,7 +136,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         Console.WriteLine();
         Console.WriteLine("  Snapshot Values:");
         await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-            Console.WriteLine($"    [{value.TagName}] - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+            Console.WriteLine($"    [{value.TagName}] - {value.Value}");
         }
 
     }
@@ -150,14 +150,14 @@ After displaying the initial adapter information, the `Run` method will now ask 
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-13T09:47:00Z
+    - Startup Time = 2020-03-15T15:47:49Z
   Features:
     - IHealthCheck
     - IReadSnapshotTagValues
 
   Snapshot Values:
-    [Example 1] - 0.3399448005202901 @ 2020-03-13T09:47:01Z
-    [Example 2] - 0.9451578869228987 @ 2020-03-13T09:47:01Z
+    [Example 1] - 0.018230217051799509 @ 2020-03-15T15:47:49.5409937Z [Good Quality]
+    [Example 2] - 0.4756016398200773 @ 2020-03-15T15:47:49.5423744Z [Good Quality]
 ```
 
 Note that the `IReadSnapshotTagValues` feature has automatically been detected and added to the list of available features.

@@ -60,7 +60,7 @@ namespace MyAdapter {
                 Console.WriteLine();
                 Console.WriteLine("  Snapshot Values:");
                 await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-                    Console.WriteLine($"    [{value.TagName}] - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                    Console.WriteLine($"    [{value.TagName}] - {value.Value}");
                 }
 
             }

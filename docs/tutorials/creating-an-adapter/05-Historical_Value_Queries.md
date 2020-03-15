@@ -11,10 +11,10 @@ At this point, we have an adapter that allows callers to browse the available me
 
 Adapters can implement several features related to historical data queries, namely:
 
-- `IReadRawTagValues` - for reading raw, unprocessed historical values.
-- `IReadPlotTagValues` - for reading values that will be visualized on e.g. a line chart. Implementations of this feature will typically perform some sort of selection algorithm to return meaningful values over a query time range.
-- `IReadTagValuesAtTimes` - for requesting the values of tags at specific historical sample times.
-- `IReadProcessedTagValues` - for requesting aggregated or interpolated tag values at fixed sample intervals.
+- [IReadRawTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadRawTagValues.cs) - for reading raw, unprocessed historical values.
+- [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) - for reading values that will be visualized on e.g. a line chart. Implementations of this feature will typically perform some sort of selection algorithm to return meaningful values over a query time range.
+- [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs) - for requesting the values of tags at specific historical sample times.
+- [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs) - for requesting aggregated or interpolated tag values at fixed sample intervals.
 
 If you are interfacing with an industrial plant historian, the historian may already implement most of these capabilities; consult the vendor's API documention for details. 
 
@@ -34,7 +34,7 @@ private Random GetRng(TagDefinition tag, DateTime startAt) {
 }
 ```
 
-Next, we will implement the `IReadRawTagValues.ReadRawTagValues` method:
+Next, we will implement the `ReadRawTagValues` method:
 
 ```csharp
 public ChannelReader<TagValueQueryResult> ReadRawTagValues(
@@ -106,9 +106,9 @@ for (var ts = request.UtcStartTime; ts <= request.UtcEndTime && (request.SampleC
 }
 ```
 
-In our `for` loop, we move forwards in time from our query start time to query end time, advancing 3-8 seconds every time (the upper boundary of 9 in the call to `System.Random.Next` is exclusive). We stop when we exceed our query end time, or if we emit the maximum number of samples requested by the caller for the tag. At each iteration, we emit a value using the timestamp for our cursor, and we also specify the _quality_ of the value, using the `TagValueStatus` enum. The status allows your adapter to inform the caller if the value is trust-worthy. Typically, an instrument report a non-good status of a value if it detected a fault in the instrument calibration for example.
+In our `for` loop, we move forwards in time from our query start time to query end time, advancing 3-8 seconds every time (the upper boundary of 9 in the call to `System.Random.Next` is exclusive). We stop when we exceed our query end time, or if we emit the maximum number of samples requested by the caller for the tag. At each iteration, we emit a value using the timestamp for our cursor, and we also specify the _quality_ of the value, using the [TagValueStatus](/src/DataCore.Adapter.Core/RealTimeData/TagValueStatus.cs) enum. The status allows your adapter to inform the caller if the value is trust-worthy. Typically, an instrument report a non-good status of a value if it detected a fault in the instrument calibration for example.
 
-At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the `DataCore.Adapter.RealTimeData.ReadHistoricalTagValues` helper class.
+At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) helper class.
 
 The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `System.Threading.Channels.Channel<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
 
@@ -141,7 +141,7 @@ Note that, in this case, we are using the `AddFeatures` method inherited from `A
 
 ### A Note on Data Function Descriptors
 
-The `IReadProcessedTagValues` feature consists of two parts: the `ReadProcessedTagValues` method performs the actual data queries, and the `GetSupportedDataFunctions` method returns information about what sort of aggregation is supported by the adapter. The `GetSupportedDataFunctions` method returns `DataFunctionDescriptor` objects that describe the available aggregates. The [DefaultDataFunctions](/src/DataCore.Adapter.Abstractions/RealTimeData/DefaultDataFunctions.cs) class defines commonly-implemented data functions that can be re-used in compatible adapters. 
+The `IReadProcessedTagValues` feature consists of two parts: the `ReadProcessedTagValues` method performs the actual data queries, and the `GetSupportedDataFunctions` method returns information about what sort of aggregation is supported by the adapter. The `GetSupportedDataFunctions` method returns [DataFunctionDescriptor](/src/DataCore.Adapter.Core/RealTimeData/DataFunctionDescriptor.cs) objects that describe the available aggregates. The [DefaultDataFunctions](/src/DataCore.Adapter.Abstractions/RealTimeData/DefaultDataFunctions.cs) class defines commonly-implemented data functions that can be re-used in compatible adapters. 
 
 The `ReadHistoricalTagValues` class implements all functions defined in `DefaultDataFunctions`; it is also possible to define custom aggregate functions and add them to a `ReadHistoricalTagValues` instance using its `RegisterDataFunction` method.
 
@@ -206,40 +206,43 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
 
         var now = DateTime.UtcNow;
+        var start = now.AddMinutes(-1);
+        var end = now;
+        var sampleInterval = TimeSpan.FromSeconds(20);
 
         Console.WriteLine();
-        Console.WriteLine("  Raw Values:");
+        Console.WriteLine($"  Raw Values ({start:HH:mm:ss} - {end:HH:mm:ss} UTC):");
         var rawValues = readRawFeature.ReadRawTagValues(
             context,
             new ReadRawTagValuesRequest() {
                 Tags = new[] { tag.Id },
-                UtcStartTime = now.AddMinutes(-1),
-                UtcEndTime = now
+                UtcStartTime = start,
+                UtcEndTime = end
             },
             cancellationToken
         );
         await foreach (var value in rawValues.ReadAllAsync(cancellationToken)) {
-            Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+            Console.WriteLine($"    - {value.Value}");
         }
 
         foreach (var func in funcs) {
             Console.WriteLine();
-            Console.WriteLine($"  {func.Name} Values:");
+            Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
 
             var processedValues = readProcessedFeature.ReadProcessedTagValues(
                 context,
-                new ReadProcessedTagValuesRequest() { 
+                new ReadProcessedTagValuesRequest() {
                     Tags = new[] { tag.Id },
                     DataFunctions = new[] { func.Id },
-                    UtcStartTime = now.AddMinutes(-1),
-                    UtcEndTime = now,
-                    SampleInterval = TimeSpan.FromSeconds(20)
+                    UtcStartTime = start,
+                    UtcEndTime = end,
+                    SampleInterval = sampleInterval
                 },
                 cancellationToken
             );
 
             await foreach (var value in processedValues.ReadAllAsync(cancellationToken)) {
-                Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                Console.WriteLine($"    - {value.Value}");
             }
         }
     }

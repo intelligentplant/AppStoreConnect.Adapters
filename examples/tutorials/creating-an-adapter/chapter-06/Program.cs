@@ -89,43 +89,43 @@ namespace MyAdapter {
                 }
 
                 var now = DateTime.UtcNow;
+                var start = now.AddMinutes(-1);
+                var end = now;
+                var sampleInterval = TimeSpan.FromSeconds(20);
 
                 Console.WriteLine();
-                Console.WriteLine("  Raw Values:");
+                Console.WriteLine($"  Raw Values ({start:HH:mm:ss} - {end:HH:mm:ss} UTC):");
                 var rawValues = readRawFeature.ReadRawTagValues(
                     context,
                     new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
-                        UtcStartTime = now.AddMinutes(-1),
-                        UtcEndTime = now
+                        UtcStartTime = start,
+                        UtcEndTime = end
                     },
                     cancellationToken
                 );
                 await foreach (var value in rawValues.ReadAllAsync(cancellationToken)) {
-                    Console.WriteLine($"    - {value.Value.Value} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z [{value.Value.Status.ToString()}]");
+                    Console.WriteLine($"    - {value.Value}");
                 }
 
                 foreach (var func in funcs) {
                     Console.WriteLine();
-                    Console.WriteLine($"  {func.Name} Values:");
+                    Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
 
                     var processedValues = readProcessedFeature.ReadProcessedTagValues(
                         context,
-                        new ReadProcessedTagValuesRequest() { 
+                        new ReadProcessedTagValuesRequest() {
                             Tags = new[] { tag.Id },
                             DataFunctions = new[] { func.Id },
-                            UtcStartTime = now.AddMinutes(-1),
-                            UtcEndTime = now,
-                            SampleInterval = TimeSpan.FromSeconds(20)
+                            UtcStartTime = start,
+                            UtcEndTime = end,
+                            SampleInterval = sampleInterval
                         },
                         cancellationToken
                     );
 
                     await foreach (var value in processedValues.ReadAllAsync(cancellationToken)) {
-                        object val = string.IsNullOrWhiteSpace(value.Value.Units)
-                            ? value.Value.Value
-                            : (object) $"{value.Value.Value} {value.Value.Units}";
-                        Console.WriteLine($"    - {val} @ {value.Value.UtcSampleTime:yyyy-MM-ddTHH:mm:ss}Z");
+                        Console.WriteLine($"    - {value.Value}");
                     }
                 }
             }

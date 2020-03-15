@@ -178,14 +178,16 @@ namespace MyAdapter {
 }
 ```
 
-The `Run` method will display information about the adapter, including the implemented features. It will then call the `IHealthCheck.CheckHealthAsync` method and display the health check results. When you run the program, you will see output like the following:
+The `Run` method will display information about the adapter, including the implemented features. It will then call the `IHealthCheck.CheckHealthAsync` method and display the health check results. Note also that our `Main` method is configured to cancel the `CancellationToken` that is passed to the `Run` method when we press `CTRL+C`. This will come in useful later.
+
+When you run the program, you will see output like the following:
 
 ```
 [example]
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-13T08:27:12Z
+    - Startup Time = 2020-03-15T15:46:17Z
   Features:
     - IHealthCheck
   Health:
