@@ -187,6 +187,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Timestamp.
+        /// </summary>
+        internal static string DataFunction_Property_Timestamp {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_Timestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method used to calculate the timestamp for the function..
+        /// </summary>
+        internal static string DataFunction_Property_Timestamp_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_Timestamp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The difference between the minimum value and maximum value over the sample period..
         /// </summary>
         internal static string DataFunction_Range_Description {
@@ -201,6 +219,60 @@ namespace DataCore.Adapter {
         internal static string DataFunction_Range_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Range_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of Earliest Value.
+        /// </summary>
+        internal static string DataFunction_Timestamp_EarliestValue {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_EarliestValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End of Interval.
+        /// </summary>
+        internal static string DataFunction_Timestamp_EndOfInterval {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_EndOfInterval", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of Latest Value.
+        /// </summary>
+        internal static string DataFunction_Timestamp_LatestValue {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_LatestValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of Maximum Value.
+        /// </summary>
+        internal static string DataFunction_Timestamp_MaximumValue {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_MaximumValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of Minimum Value.
+        /// </summary>
+        internal static string DataFunction_Timestamp_MinimumValue {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_MinimumValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start of Interval.
+        /// </summary>
+        internal static string DataFunction_Timestamp_StartOfInterval {
+            get {
+                return ResourceManager.GetString("DataFunction_Timestamp_StartOfInterval", resourceCulture);
             }
         }
         

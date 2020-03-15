@@ -229,4 +229,16 @@
   <data name="Log_StoppingAdapter" xml:space="preserve">
     <value>Stopping adapter {AdapterId} (disposing: false).</value>
   </data>
+  <data name="TagValue_ProcessedValue_Error" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="TagValue_ProcessedValue_NoData" xml:space="preserve">
+    <value>No good-quality data available in bucket.</value>
+  </data>
+  <data name="TagValue_Properties_BucketEnd" xml:space="preserve">
+    <value>Bucket End</value>
+  </data>
+  <data name="TagValue_Properties_BucketStart" xml:space="preserve">
+    <value>Bucket Start</value>
+  </data>
 </root>

@@ -339,7 +339,10 @@ namespace DataCore.Adapter.Tests {
             var expected = new DataFunctionDescriptor(
                 "Id",
                 "Name",
-                "Description"
+                "Description",
+                new[] { 
+                    AdapterProperty.Create("prop1", "value1", "description1")
+                }
             );
 
             var json = JsonSerializer.Serialize(expected, options);
@@ -348,6 +351,13 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Name, actual.Name);
             Assert.AreEqual(expected.Description, actual.Description);
+            foreach (var prop in expected.Properties) {
+                var actualProp = actual.Properties.FirstOrDefault(p => p.Name.Equals(prop.Name));
+                Assert.IsNotNull(actualProp);
+                Assert.AreEqual(prop.Name, actualProp.Name);
+                Assert.AreEqual(prop.Value, actualProp.Value);
+                Assert.AreEqual(prop.Description, actualProp.Description);
+            }
         }
 
 

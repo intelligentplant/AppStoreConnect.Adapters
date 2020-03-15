@@ -1507,7 +1507,8 @@ namespace DataCore.Adapter {
             return RealTimeData.DataFunctionDescriptor.Create(
                 descriptor.Id,
                 descriptor.Name,
-                descriptor.Description
+                descriptor.Description,
+                descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
 
@@ -1526,11 +1527,22 @@ namespace DataCore.Adapter {
                 return null;
             }
             
-            return new Grpc.DataFunctionDescriptor() {
+            var result = new Grpc.DataFunctionDescriptor() {
                 Id = descriptor.Id ?? string.Empty,
                 Name = descriptor.Name ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty
             };
+
+            if (descriptor.Properties != null && descriptor.Properties.Any()) {
+                foreach (var prop in descriptor.Properties) {
+                    if (prop == null) {
+                        continue;
+                    }
+                    result.Properties.Add(prop.ToGrpcAdapterProperty());
+                }
+            }
+
+            return result;
         }
 
 

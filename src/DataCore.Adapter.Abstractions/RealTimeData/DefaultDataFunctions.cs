@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -64,7 +65,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdInterpolate,
             Resources.DataFunction_Interp_Name,
-            Resources.DataFunction_Interp_Description
+            Resources.DataFunction_Interp_Description,
+            new [] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp, 
+                    string.Concat(Resources.DataFunction_Timestamp_StartOfInterval, '/', Resources.DataFunction_Timestamp_EndOfInterval), 
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -73,7 +81,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Average { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdAverage,
             Resources.DataFunction_Avg_Name, 
-            Resources.DataFunction_Avg_Description
+            Resources.DataFunction_Avg_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -82,7 +97,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Minimum { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdMinimum,
             Resources.DataFunction_Min_Name,
-            Resources.DataFunction_Min_Description
+            Resources.DataFunction_Min_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_MinimumValue,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -91,7 +113,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Maximum { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdMaximum,
             Resources.DataFunction_Max_Name,
-            Resources.DataFunction_Max_Description
+            Resources.DataFunction_Max_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_MaximumValue,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -100,7 +129,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Count { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdCount,
             Resources.DataFunction_Count_Name,
-            Resources.DataFunction_Count_Description
+            Resources.DataFunction_Count_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -109,7 +145,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor Range { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdRange,
             Resources.DataFunction_Range_Name,
-            Resources.DataFunction_Range_Description
+            Resources.DataFunction_Range_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -118,7 +161,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor PercentGood { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdPercentGood,
             Resources.DataFunction_PercentGood_Name,
-            Resources.DataFunction_PercentGood_Description
+            Resources.DataFunction_PercentGood_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
         /// <summary>
@@ -127,7 +177,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static DataFunctionDescriptor PercentBad { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdPercentBad,
             Resources.DataFunction_PercentBad_Name,
-            Resources.DataFunction_PercentBad_Description
+            Resources.DataFunction_PercentBad_Description,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_Timestamp,
+                    Resources.DataFunction_Timestamp_StartOfInterval,
+                    Resources.DataFunction_Property_Timestamp_Description
+                )
+            }
         );
 
 

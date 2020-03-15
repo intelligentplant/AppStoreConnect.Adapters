@@ -83,6 +83,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     ? null 
                     : TagValueBuilder.CreateFromExisting(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
+                        .WithStatus(valueBefore.Status == TagValueStatus.Good ? TagValueStatus.Good : TagValueStatus.Uncertain)
                         .Build();
             }
 
@@ -90,7 +91,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var x1 = valueAfter.UtcSampleTime;
 
             var nextNumericValue = InterpolateValue(utcSampleTime, x0, x1, y0, y1);
-            var nextStatusValue = new[] { valueBefore, valueAfter }.Aggregate(TagValueStatus.Good, (q, val) => val.Status < q ? val.Status : q); // Worst-case status
+            var nextStatusValue = valueBefore.Status == TagValueStatus.Good && valueAfter.Status == TagValueStatus.Good
+                ? TagValueStatus.Good
+                : TagValueStatus.Uncertain;
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)

@@ -159,11 +159,35 @@
   <data name="DataFunction_PercentGood_Name" xml:space="preserve">
     <value>Percent Good</value>
   </data>
+  <data name="DataFunction_Property_Timestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="DataFunction_Property_Timestamp_Description" xml:space="preserve">
+    <value>The method used to calculate the timestamp for the function.</value>
+  </data>
   <data name="DataFunction_Range_Description" xml:space="preserve">
     <value>The difference between the minimum value and maximum value over the sample period.</value>
   </data>
   <data name="DataFunction_Range_Name" xml:space="preserve">
     <value>Range</value>
+  </data>
+  <data name="DataFunction_Timestamp_EarliestValue" xml:space="preserve">
+    <value>Timestamp of Earliest Value</value>
+  </data>
+  <data name="DataFunction_Timestamp_EndOfInterval" xml:space="preserve">
+    <value>End of Interval</value>
+  </data>
+  <data name="DataFunction_Timestamp_LatestValue" xml:space="preserve">
+    <value>Timestamp of Latest Value</value>
+  </data>
+  <data name="DataFunction_Timestamp_MaximumValue" xml:space="preserve">
+    <value>Timestamp of Maximum Value</value>
+  </data>
+  <data name="DataFunction_Timestamp_MinimumValue" xml:space="preserve">
+    <value>Timestamp of Minimum Value</value>
+  </data>
+  <data name="DataFunction_Timestamp_StartOfInterval" xml:space="preserve">
+    <value>Start of Interval</value>
   </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>

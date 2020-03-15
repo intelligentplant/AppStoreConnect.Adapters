@@ -383,5 +383,41 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ERROR.
+        /// </summary>
+        internal static string TagValue_ProcessedValue_Error {
+            get {
+                return ResourceManager.GetString("TagValue_ProcessedValue_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No good-quality data available in bucket..
+        /// </summary>
+        internal static string TagValue_ProcessedValue_NoData {
+            get {
+                return ResourceManager.GetString("TagValue_ProcessedValue_NoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bucket End.
+        /// </summary>
+        internal static string TagValue_Properties_BucketEnd {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_BucketEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bucket Start.
+        /// </summary>
+        internal static string TagValue_Properties_BucketStart {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_BucketStart", resourceCulture);
+            }
+        }
     }
 }

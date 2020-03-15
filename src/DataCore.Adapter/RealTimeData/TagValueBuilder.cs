@@ -273,5 +273,26 @@ namespace DataCore.Adapter.RealTimeData {
             return this;
         }
 
+
+        /// <summary>
+        /// Adds a set of properties to the tag value being calculated from a bucket.
+        /// </summary>
+        /// <param name="bucket">
+        ///   The bucket.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        internal TagValueBuilder WithBucketProperties(Utilities.TagValueBucket bucket) {
+            if (bucket != null) {
+                return WithProperties(
+                    AdapterProperty.Create(Resources.TagValue_Properties_BucketStart, bucket.UtcBucketStart),
+                    AdapterProperty.Create(Resources.TagValue_Properties_BucketEnd, bucket.UtcBucketEnd)
+                );
+            }
+
+            return this;
+        }
+
     }
 }

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -25,6 +28,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public string Description { get; }
 
+        /// <summary>
+        /// Bespoke properties associated with the data function.
+        /// </summary>
+        public IEnumerable<AdapterProperty> Properties { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="DataFunctionDescriptor"/> object.
@@ -38,16 +46,17 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="description">
         ///   The function description.
         /// </param>
+        /// <param name="properties">
+        ///   Additional properties associated with the function.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public DataFunctionDescriptor(string id, string name, string description) {
+        public DataFunctionDescriptor(string id, string name, string description, IEnumerable<AdapterProperty> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Name = string.IsNullOrWhiteSpace(name) ? id : name;
             Description = description;
+            Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
 
 
@@ -63,14 +72,14 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="description">
         ///   The function description.
         /// </param>
+        /// <param name="properties">
+        ///   Additional properties associated with the function.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public static DataFunctionDescriptor Create(string id, string name, string description) {
-            return new DataFunctionDescriptor(id, name, description);
+        public static DataFunctionDescriptor Create(string id, string name = null, string description = null, IEnumerable<AdapterProperty> properties = null) {
+            return new DataFunctionDescriptor(id, name ?? id, description, properties);
         }
 
     }
