@@ -236,18 +236,21 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
-        ///   Formats the value of the current instance.
+        /// Gets the default string format to use for the specified <see cref="VariantType"/>.
         /// </summary>
+        /// <param name="type">
+        ///   The <see cref="VariantType"/>.
+        /// </param>
         /// <returns>
-        ///   The formatted value.
+        ///   The default format to use when <see cref="ToString()"/> is called.
         /// </returns>
-        public override string ToString() {
+        public static string GetDefaultFormat(VariantType type) {
             string format = null;
 
             // Special handling for some types to ensure correct round-tripping. 
             // See https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings
 
-            switch (Type) {
+            switch (type) {
                 case VariantType.Double:
                     format = "G17";
                     break;
@@ -270,7 +273,18 @@ namespace DataCore.Adapter.Common {
                     break;
             }
 
-            return ToString(format, null);
+            return format;
+        }
+
+
+        /// <summary>
+        ///   Formats the value of the current instance.
+        /// </summary>
+        /// <returns>
+        ///   The formatted value.
+        /// </returns>
+        public override string ToString() {
+            return ToString(GetDefaultFormat(Type), null);
         }
 
 

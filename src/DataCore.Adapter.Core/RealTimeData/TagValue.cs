@@ -6,7 +6,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes the base set of properties for a tag value.
     /// </summary>
-    public class TagValue {
+    public class TagValue : IFormattable {
 
         /// <summary>
         /// The UTC sample time for the value.
@@ -69,6 +69,37 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
             return new TagValue(utcSampleTime, value, status, units);
+        }
+
+
+        /// <inheritdoc/>
+        public override string ToString() {
+            return ToString(null, null);
+        }
+
+
+        /// <summary>
+        /// Formats the value of the current instance using the specified format.
+        /// </summary>
+        /// <param name="format">
+        ///   The format to use.
+        /// </param>
+        /// <returns>
+        ///   The formatted value.
+        /// </returns>
+        public string ToString(string format) {
+            return ToString(format, null);
+        }
+
+
+        /// <inheritdoc/>
+        public string ToString(string format, IFormatProvider formatProvider) {
+            var formattedValue = Value.ToString(format ?? Variant.GetDefaultFormat(Value.Type), formatProvider);
+            if (string.IsNullOrWhiteSpace(Units)) {
+                return formattedValue;
+            }
+
+            return string.Concat(formattedValue, ' ', Units);
         }
 
     }
