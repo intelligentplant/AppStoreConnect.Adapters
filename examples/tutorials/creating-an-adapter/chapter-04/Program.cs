@@ -48,7 +48,7 @@ namespace MyAdapter {
                 var tagSearchFeature = adapter.GetFeature<ITagSearch>();
                 var snapshotPushFeature = adapter.GetFeature<ISnapshotTagValuePush>();
 
-                using (var subscription = snapshotPushFeature.Subscribe(context))
+                using (var subscription = await snapshotPushFeature.Subscribe(context))
                 using (cancellationToken.Register(() => subscription.Cancel())) {
                     var tags = tagSearchFeature.FindTags(
                         context,
