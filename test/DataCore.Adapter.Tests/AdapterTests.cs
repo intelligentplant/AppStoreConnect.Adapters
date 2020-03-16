@@ -171,7 +171,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = feature.Subscribe(context)) {
+                using (var subscription = await feature.Subscribe(context)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
@@ -364,7 +364,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = feature.Subscribe(context, EventMessageSubscriptionType.Active)) {
+                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Active)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
@@ -388,7 +388,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = feature.Subscribe(context, EventMessageSubscriptionType.Passive)) {
+                using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Passive)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 

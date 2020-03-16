@@ -51,9 +51,9 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
+        protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
             var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
-            eventMessageManager.WriteEventMessages(
+            await eventMessageManager.WriteEventMessages(
                 EventMessageBuilder
                     .Create()
                     .WithUtcEventTime(DateTime.UtcNow)
@@ -62,7 +62,6 @@ namespace DataCore.Adapter.Tests {
                     .WithPriority(EventPriority.Low)
                     .Build()
             );
-            return Task.CompletedTask;
         }
 
 

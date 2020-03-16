@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
@@ -27,8 +28,16 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType) {
-            return Task.CompletedTask;
+        protected override async Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType) {
+            await adapter.WriteTestEventMessage(
+                EventMessageBuilder
+                    .Create()
+                    .WithUtcEventTime(DateTime.UtcNow)
+                    .WithCategory(TestContext.FullyQualifiedTestClassName)
+                    .WithMessage(TestContext.TestName)
+                    .WithPriority(EventPriority.Low)
+                    .Build()
+            );
         }
 
 
@@ -64,7 +73,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }.PublishToChannel();
 
-                using (var subscription = feature.Subscribe(context)) {
+                using (var subscription = await feature.Subscribe(context)) {
                     var subscribeSucceeded = await subscription.AddTagToSubscription(
                         TestTag1.Id
                     ).ConfigureAwait(false);

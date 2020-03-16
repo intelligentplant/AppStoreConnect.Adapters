@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Tests {
@@ -20,12 +21,16 @@ namespace DataCore.Adapter.Tests {
 
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 
+        private readonly EventSubscriptionManager _eventSubscriptionManager;
+
 
         public ExampleAdapter() {
             Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
             var features = new AdapterFeaturesCollection(this);
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager();
+            _eventSubscriptionManager = new EventSubscriptionManager();
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
+            features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
             Features = features;
         }
 
@@ -64,7 +69,12 @@ namespace DataCore.Adapter.Tests {
 
 
         public ValueTask<bool> WriteSnapshotValue(TagValueQueryResult value) {
-            return _snapshotSubscriptionManager.WriteSnapshotValue(value);
+            return _snapshotSubscriptionManager.ValueReceived(value);
+        }
+
+
+        public ValueTask<bool> WriteTestEventMessage(EventMessage msg) {
+            return _eventSubscriptionManager.ValueReceived(msg);
         }
 
 
@@ -76,20 +86,22 @@ namespace DataCore.Adapter.Tests {
 
             protected override void OnTagAddedToSubscription(TagIdentifier tag) {
                 base.OnTagAddedToSubscription(tag);
-                WriteSnapshotValue(new TagValueQueryResult(
+                ValueReceived(new TagValueQueryResult(
                     tag.Id,
                     tag.Name,
                     TagValueBuilder.Create()
                         .WithUtcSampleTime(DateTime.MinValue)
                         .WithValue(0)
                         .Build()
-                ));
+                )).GetAwaiter().GetResult();
             }
 
+        }
 
-            internal ValueTask<bool> WriteSnapshotValue(TagValueQueryResult value) {
-                return ValueReceived(value);
-            }
+
+        private class EventSubscriptionManager : EventMessagePush {
+
+            public EventSubscriptionManager() : base(null, null) { }
 
         }
     }

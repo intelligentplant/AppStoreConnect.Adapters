@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Tests {
 
                 return new[] { 
                     TagValueBuilder.Create()
-                        .WithUtcSampleTime(bucket.UtcBucketEnd)
+                        .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(val)
                         .Build()
                 };
@@ -134,21 +134,19 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var rawValues = new[] {
-                // Bucket 1: no values
-
-                // Bucket 2
+                // Bucket 1
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
 
-                // Bucket 3: no values
+                // Bucket 2: no values
 
-                // Bucket 4
+                // Bucket 3
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
 
-                // Bucket 5: no values
+                // Bucket 4: no values
             };
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
 
@@ -162,11 +160,10 @@ namespace DataCore.Adapter.Tests {
             ).ToEnumerable().TimeoutAfter(TimeSpan.FromSeconds(30))).ToArray();
 
             var expectedResults = new ValueTuple<DateTime, double>[] {
-                (now.AddSeconds(-60), 0),
-                (now.AddSeconds(-45), 3),
-                (now.AddSeconds(-30), 0),
-                (now.AddSeconds(-15), 3),
-                (now, 0)
+                (now.AddSeconds(-60), 3),
+                (now.AddSeconds(-45), 0),
+                (now.AddSeconds(-30), 3),
+                (now.AddSeconds(-15), 0),
             };
 
             Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
@@ -177,8 +174,8 @@ namespace DataCore.Adapter.Tests {
 
                 var expectedResult = expectedResults[i];
 
-                Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime);
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Sample Time: {sample.Value.UtcSampleTime:dd-MMM-yy HH:mm:ss}");
+                Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
