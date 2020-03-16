@@ -263,6 +263,6 @@ When you run the program, you should see output similar to the following:
 
 ## Next Steps
 
-This is the last part of this tutorial. It is recommended that you explore the remaining standard adapter features, and try adding more features to the example adapter that we have built!
+This is the last part of this tutorial. It is recommended that you explore the remaining [standard adapter features](/src/DataCore.Adapter.Abstractions), and try adding more features to the example adapter that we have built!
 
 If you want to host an adapter in an ASP.NET Core application, you can explore the projects in this repository for adding endpoints for querying adapters using [API controllers](/src/DataCore.Adapter.AspNetCore.Mvc), [SignalR](/src/DataCore.Adapter.AspNetCore.SignalR), and [gRPC](/src/DataCore.Adapter.AspNetCore.Grpc).
