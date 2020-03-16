@@ -70,7 +70,7 @@ The `CalculateSampleTime` method will take a timestamp and round it down to the 
 
 The `SinusoidWave` method will calculate a value for us using the provided sample time, period, and amplitude. The wave is assumed to start at midnight on the current UTC day, but can be offset using the `offset` parameter.
 
-Let's walk through the `ReadSnapshotTagValues` method. First of all, we validate the reqest that is passed to the method:
+Let's walk through the `ReadSnapshotTagValues` method. First of all, we validate the request that is passed to the method:
 
 ```csharp
 ValidateRequest(request);
