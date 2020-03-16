@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
+using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
     internal class EventMessagePushImpl : ProxyAdapterFeature, IEventMessagePush {
@@ -10,13 +11,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public IEventMessageSubscription Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
-            IEventMessageSubscription result = new EventMessageSubscription(
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+            var result = new EventMessageSubscription(
                 this, 
                 context, 
                 subscriptionType
             );
-            result.Start();
+            await result.Start().ConfigureAwait(false);
             return result;
         }
 
@@ -26,6 +27,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             private readonly EventMessagePushImpl _feature;
 
             private readonly bool _activeSubscription;
+
+            private GrpcCore.AsyncServerStreamingCall<EventMessage> _streamingCall;
 
 
             public EventMessageSubscription(
@@ -39,10 +42,10 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
             /// <inheritdoc/>
-            protected override async Task Run(CancellationToken cancellationToken) {
+            protected override async Task Init(CancellationToken cancellationToken) {
                 var client = _feature.CreateClient<EventsService.EventsServiceClient>();
-                var duplexCall = client.CreateEventPushChannel(
-                    new CreateEventPushChannelRequest() { 
+                _streamingCall = client.CreateEventPushChannel(
+                    new CreateEventPushChannelRequest() {
                         AdapterId = _feature.AdapterId,
                         SubscriptionType = _activeSubscription
                             ? EventSubscriptionType.Active
@@ -51,14 +54,25 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     _feature.GetCallOptions(Context, cancellationToken)
                 );
 
+                // Wait for the initial "subscription created" placeholder message.
+                await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false);
+            }
+
+
+            /// <inheritdoc/>
+            protected override async Task RunSubscription(CancellationToken cancellationToken) {
+                if (_streamingCall == null) {
+                    return;
+                }
+
                 // Read value changes.
-                while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (duplexCall.ResponseStream.Current == null) {
+                while (await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (_streamingCall.ResponseStream.Current == null) {
                         continue;
                     }
 
                     await ValueReceived(
-                        duplexCall.ResponseStream.Current.ToAdapterEventMessage(),
+                        _streamingCall.ResponseStream.Current.ToAdapterEventMessage(),
                         cancellationToken
                     ).ConfigureAwait(false);
                 }
@@ -67,7 +81,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
             /// <inheritdoc/>
             protected override void OnCancelled() {
-                // Do nothing
+                base.OnCancelled();
+                _streamingCall?.Dispose();
             }
 
         }

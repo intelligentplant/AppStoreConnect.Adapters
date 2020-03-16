@@ -34,7 +34,7 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(feature));
             }
             
-            var result = feature.Subscribe(context);
+            var result = await feature.Subscribe(context).ConfigureAwait(false);
 
             if (tags != null) {
                 foreach (var tag in tags) {

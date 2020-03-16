@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -15,9 +16,10 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <returns>
-        ///   A subscription that will publish the received value changes.
+        ///   A task that will create and start a subscription object that can be disposed once 
+        ///   the subscription is no longer required.
         /// </returns>
-        ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context);
+        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context);
 
     }
 }

@@ -27,7 +27,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
+                // Send initial value back to indicate that subscription is active.
+                var subscriptionReadyIndicator = EventMessageBuilder
+                    .Create()
+                    .WithPriority(Events.EventPriority.Low)
+                    .WithMessage(string.Concat(_adapterCallContext.ConnectionId, ':', adapter.Adapter.Descriptor.Id))
+                    .Build();
+
+                await responseStream.WriteAsync(subscriptionReadyIndicator.ToGrpcEventMessage()).ConfigureAwait(false);
+
                 while (!cancellationToken.IsCancellationRequested) {
                     try {
                         var msg = await subscription.Values.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -35,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     }
                     catch (OperationCanceledException) {
                         // Do nothing
-                    }
+                    }catch (System.Threading.Channels.ChannelClosedException) { }
                 }
             }
         }

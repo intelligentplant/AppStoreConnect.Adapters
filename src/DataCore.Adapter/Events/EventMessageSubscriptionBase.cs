@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Events {
 
@@ -25,6 +26,49 @@ namespace DataCore.Adapter.Events {
         protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) 
             : base(context) {
             SubscriptionType = subscriptionType;
+        }
+
+
+        /// <inheritdoc/>
+        protected sealed override async Task Run(CancellationToken cancellationToken) {
+            await Init(cancellationToken).ConfigureAwait(false);
+            OnRunning();
+            await RunSubscription(cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Performs any required initialisation tasks when the subscription is started.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will perform any required initialisation tasks.
+        /// </returns>
+        protected virtual Task Init(CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Starts a long-running task that will run the subscription until the provided 
+        /// cancellation token fires.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the long-running task.
+        /// </param>
+        /// <returns>
+        ///   A long-running task.
+        /// </returns>
+        protected virtual Task RunSubscription(CancellationToken cancellationToken) {
+            return Completed;
+        }
+
+
+        /// <inheritdoc/>
+        protected override void OnCancelled() {
+            // Do nothing.
         }
 
     }

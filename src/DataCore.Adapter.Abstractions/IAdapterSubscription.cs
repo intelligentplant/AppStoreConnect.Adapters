@@ -24,12 +24,12 @@ namespace DataCore.Adapter {
         IAdapterCallContext Context { get; }
 
         /// <summary>
-        /// A cancellation token that will fire when the subscription is disposed.
+        /// A cancellation token that will fire when the subscription completes.
         /// </summary>
         CancellationToken CancellationToken { get; }
 
         /// <summary>
-        /// A task that will complete when the subscription is disposed.
+        /// A task that will complete when the subscription completes.
         /// </summary>
         Task Completed { get; }
 
@@ -37,11 +37,6 @@ namespace DataCore.Adapter {
         /// A channel reader that will emit items published to the subscription.
         /// </summary>
         ChannelReader<T> Values { get; }
-
-        /// <summary>
-        /// Starts the subscription.
-        /// </summary>
-        void Start();
 
         /// <summary>
         /// Cancels the subscription.

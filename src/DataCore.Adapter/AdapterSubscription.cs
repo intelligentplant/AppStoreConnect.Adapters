@@ -31,15 +31,20 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _subscriptionCancelled = new CancellationTokenSource();
 
         /// <summary>
-        /// Indicates if the subscription has been started.
+        /// Indicates if <see cref="Start"/> has been called.
         /// </summary>
-        private int _isStarted;
+        private int _hasStartBeenCalled;
+
+        /// <summary>
+        /// Completes once the subscription has started.
+        /// </summary>
+        private TaskCompletionSource<int> _ready = new TaskCompletionSource<int>();
 
         /// <summary>
         /// Indicates if the subscription has previously been started using the <see cref="Start"/> 
         /// method. Note that this property does not reset when the subscription is disposed.
         /// </summary>
-        public bool IsStarted => _isStarted == 1;
+        public bool IsStarted => _ready.Task.IsCompleted && !_ready.Task.IsFaulted && !_ready.Task.IsCanceled;
 
         /// <summary>
         /// Channel that will publish received values.
@@ -89,10 +94,10 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Starts the subscription.
         /// </summary>
-        public void Start() {
-            if (_isDisposed || Interlocked.CompareExchange(ref _isStarted, 1, 0) != 0) {
+        public Task Start() {
+            if (_isDisposed || Interlocked.CompareExchange(ref _hasStartBeenCalled, 1, 0) != 0) {
                 // Already started.
-                return;
+                return _ready.Task;
             }
 
             _ = Task.Run(async () => {
@@ -114,6 +119,16 @@ namespace DataCore.Adapter {
                     _valuesChannel.Writer.TryComplete();
                 }
             });
+
+            return _ready.Task;
+        }
+
+
+        /// <summary>
+        /// Marks the subscription as running.
+        /// </summary>
+        internal void OnRunning() {
+            _ready.TrySetResult(0);
         }
 
 
@@ -128,6 +143,7 @@ namespace DataCore.Adapter {
         ///   A long-running task that will complete when the cancellation token fires.
         /// </returns>
         protected virtual Task Run(CancellationToken cancellationToken) {
+            OnRunning();
             return Completed;
         }
 
@@ -169,6 +185,7 @@ namespace DataCore.Adapter {
             }
 
             if (_completed.TrySetResult(0)) {
+                _ready.TrySetCanceled();
                 _valuesChannel.Writer.TryComplete();
                 _subscriptionCancelled.Cancel();
                 OnCancelled();

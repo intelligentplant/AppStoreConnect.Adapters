@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Events;
@@ -20,14 +21,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
 
         /// <inheritdoc />
-        public IEventMessageSubscription Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
             var result = new EventMessageSubscription(
                 this,
                 context,
                 subscriptionType
             );
 
-            result.Start();
+            await result.Start().ConfigureAwait(false);
             return result;
         }
 
@@ -47,6 +48,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// The underlying hub connection.
             /// </summary>
             private readonly AdapterSignalRClient _client;
+
+            /// <summary>
+            /// The channel reader to read messages from.
+            /// </summary>
+            private ChannelReader<EventMessage> _eventsChannel;
 
 
             /// <summary>
@@ -72,29 +78,31 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
 
             /// <inheritdoc/>
-            protected override async Task Run(CancellationToken cancellationToken) {
-                var hubChannel = await _client.Events.CreateEventMessageChannelAsync(
+            protected override async Task Init(CancellationToken cancellationToken) {
+                _eventsChannel = await _client.Events.CreateEventMessageChannelAsync(
                     _feature.AdapterId,
                     SubscriptionType,
                     CancellationToken
                 ).ConfigureAwait(false);
 
-                // Wait for initial "subscription ready" message.
-                await hubChannel.ReadAsync().ConfigureAwait(false);
+                // Wait for the initial "subscription created" placeholder message.
+                await _eventsChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-                while (await hubChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!hubChannel.TryRead(out var item) || item == null) {
+
+            /// <inheritdoc/>
+            protected override async Task RunSubscription(CancellationToken cancellationToken) {
+                if (_eventsChannel == null) {
+                    return;
+                }
+
+                while (await _eventsChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!_eventsChannel.TryRead(out var item) || item == null) {
                         continue;
                     }
 
                     await ValueReceived(item, cancellationToken).ConfigureAwait(false);
                 }
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                // Do nothing
             }
 
         }

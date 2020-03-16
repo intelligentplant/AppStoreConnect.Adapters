@@ -41,7 +41,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         protected sealed override async Task Run(CancellationToken cancellationToken) {
             await Init(cancellationToken).ConfigureAwait(false);
-            await ProcessSubscriptionChangesChannel(_tagsChannel, cancellationToken).ConfigureAwait(false);
+            OnRunning();
+            await RunSubscription(_tagsChannel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -53,13 +54,13 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The channel.
         /// </param>
         /// <param name="cancellationToken">
-        ///   The cancellation token.
+        ///   The cancellation token for the long-running task.
         /// </param>
         /// <returns>
         ///   A long-running task that will run until the channel closes or the cancellation token 
         ///   fires.
         /// </returns>
-        protected virtual async Task ProcessSubscriptionChangesChannel(
+        protected virtual async Task RunSubscription(
             ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel,
             CancellationToken cancellationToken
         ) {

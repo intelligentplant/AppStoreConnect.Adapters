@@ -47,7 +47,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             // Create subscription on adapter.
 
-            using (var subscription = adapter.Feature.Subscribe(_adapterCallContext)) {
+            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext).ConfigureAwait(false)) {
+                if (cancellationToken.IsCancellationRequested) {
+                    return;
+                }
+
                 if (requestStream.Current.Action == SubscriptionUpdateAction.Subscribe) {
                     // Push initial tag subscription change to subscription.
                     await subscription.AddTagToSubscription(requestStream.Current.Tag).ConfigureAwait(false);

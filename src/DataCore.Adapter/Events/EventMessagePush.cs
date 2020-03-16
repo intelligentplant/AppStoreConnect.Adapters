@@ -94,20 +94,24 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public IEventMessageSubscription Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
             var subscription = CreateSubscription(context, subscriptionType);
 
             bool added;
-            lock (_subscriptions) {
+            _subscriptionsLock.EnterWriteLock();
+            try {
                 added = _subscriptions.Add(subscription);
                 if (added) {
                     HasSubscriptions = _subscriptions.Count > 0;
                     HasActiveSubscriptions = _subscriptions.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
                 }
             }
+            finally {
+                _subscriptionsLock.ExitWriteLock();
+            }
 
             if (added) {
-                subscription.Start();
+                await subscription.Start().ConfigureAwait(false);
                 OnSubscriptionAdded();
             }
 

@@ -21,9 +21,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
             var result = new Subscription(context, AdapterId, GetClient());
-            result.Start();
+            await result.Start().ConfigureAwait(false);
 
             return result;
         }
@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc/>
-            protected override async Task ProcessSubscriptionChangesChannel(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
+            protected override async Task RunSubscription(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
                 var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
                     _adapterId,
                     channel,

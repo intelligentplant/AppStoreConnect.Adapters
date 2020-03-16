@@ -35,23 +35,39 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = adapter.Feature.Subscribe(AdapterCallContext, subscriptionType);
+            var subscription = await adapter.Feature.Subscribe(AdapterCallContext, subscriptionType).ConfigureAwait(false);
+
+            var result = Channel.CreateUnbounded<EventMessage>();
 
             // Run background operation to dispose of the subscription when the cancellation token 
             // fires.
             TaskScheduler.QueueBackgroundWorkItem(async ct => {
                 try {
-                    // Wait until the cancellation token fires.
-                    await subscription.Completed.WithCancellation(ct).ConfigureAwait(false);
+                    // Send initial value back to indicate that subscription is active.
+                    var subscriptionReadyIndicator = EventMessageBuilder
+                        .Create()
+                        .WithPriority(EventPriority.Low)
+                        .WithMessage(string.Concat(AdapterCallContext.ConnectionId, ':', adapter.Adapter.Descriptor.Id))
+                        .Build();
+
+                    await result.Writer.WriteAsync(subscriptionReadyIndicator, ct).ConfigureAwait(false);
+
+                    while (await subscription.Values.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!subscription.Values.TryRead(out var item) || item == null) {
+                            continue;
+                        }
+
+                        await result.Writer.WriteAsync(item, ct).ConfigureAwait(false);
+                    }
                 }
                 catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
                 finally {
                     subscription.Dispose();
                 }
             }, null, cancellationToken);
 
-            // Return the output channel for the subscription.
-            return subscription.Values;
+            return result;
         }
 
         #endregion

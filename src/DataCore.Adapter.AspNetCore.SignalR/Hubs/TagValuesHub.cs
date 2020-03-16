@@ -40,7 +40,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = adapter.Feature.Subscribe(AdapterCallContext);
+            var subscription = await adapter.Feature.Subscribe(AdapterCallContext).ConfigureAwait(false);
 
             // Run background operation to push incoming changes to the subscription.
             subscriptionChanges.RunBackgroundOperation(async (ch, ct) => { 

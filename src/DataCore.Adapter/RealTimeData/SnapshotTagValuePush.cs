@@ -363,7 +363,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public ISnapshotTagValueSubscription Subscribe(IAdapterCallContext context) {
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
             var subscription = CreateSubscription(context);
 
             _subscriptionsLock.EnterWriteLock();
@@ -374,7 +374,7 @@ namespace DataCore.Adapter.RealTimeData {
                 _subscriptionsLock.ExitWriteLock();
             }
 
-            subscription.Start();
+            await subscription.Start().ConfigureAwait(false);
             return subscription;
         }
 
