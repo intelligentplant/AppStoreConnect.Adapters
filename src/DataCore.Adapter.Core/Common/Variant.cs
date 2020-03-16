@@ -457,6 +457,13 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
+        public static implicit operator Variant(string val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator string(Variant val) => (string) val.Value;
+
+
+        /// <inheritdoc/>
         public static implicit operator Variant(DateTime val) => FromValue(val);
 
         /// <inheritdoc/>
