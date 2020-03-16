@@ -15,7 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Channel that will publish changes to tag subscriptions.
         /// </summary>
-        private readonly Channel<UpdateSnapshotTagValueSubscriptionRequest> _tagsChannel = Channel.CreateUnbounded<UpdateSnapshotTagValueSubscriptionRequest>();
+        private readonly Channel<SnapshotTagValueSubscriptionChange> _tagsChannel = Channel.CreateUnbounded<SnapshotTagValueSubscriptionChange>();
 
         /// <summary>
         /// The subscribed tags.
@@ -61,27 +61,35 @@ namespace DataCore.Adapter.RealTimeData {
         ///   fires.
         /// </returns>
         protected virtual async Task RunSubscription(
-            ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel,
+            ChannelReader<SnapshotTagValueSubscriptionChange> channel,
             CancellationToken cancellationToken
         ) {
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!channel.TryRead(out var change) || change == null || string.IsNullOrWhiteSpace(change.Tag)) {
+                if (!channel.TryRead(out var change) || change == null) {
                     continue;
                 }
 
-                var tagInfo = await ResolveTag(Context, change.Tag, cancellationToken).ConfigureAwait(false);
+                var tagInfo = await ResolveTag(Context, change.Request.Tag, cancellationToken).ConfigureAwait(false);
                 if (tagInfo == null) {
                     // Not a valid tag.
                     continue;
                 }
 
-                switch (change.Action) {
-                    case Common.SubscriptionUpdateAction.Subscribe:
-                        await AddTagToSubscription(tagInfo).ConfigureAwait(false);
-                        break;
-                    case Common.SubscriptionUpdateAction.Unsubscribe:
-                        await RemoveTagFromSubscription(tagInfo).ConfigureAwait(false);
-                        break;
+                try {
+                    switch (change.Request.Action) {
+                        case Common.SubscriptionUpdateAction.Subscribe:
+                            await AddTagToSubscription(tagInfo).ConfigureAwait(false);
+                            break;
+                        case Common.SubscriptionUpdateAction.Unsubscribe:
+                            await RemoveTagFromSubscription(tagInfo).ConfigureAwait(false);
+                            break;
+                    }
+
+                    change.SetResult(true);
+                }
+                catch {
+                    change.SetResult(false);
+                    throw;
                 }
             }
         }
@@ -153,10 +161,12 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            return _tagsChannel.Writer.TryWrite(new UpdateSnapshotTagValueSubscriptionRequest() { 
+            var request = new SnapshotTagValueSubscriptionChange(new UpdateSnapshotTagValueSubscriptionRequest() {
                 Tag = tag,
                 Action = Common.SubscriptionUpdateAction.Subscribe
             });
+
+            return _tagsChannel.Writer.TryWrite(request) && await request.Completed.ConfigureAwait(false);
         }
 
 
@@ -210,10 +220,12 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            return _tagsChannel.Writer.TryWrite(new UpdateSnapshotTagValueSubscriptionRequest() {
+            var request = new SnapshotTagValueSubscriptionChange(new UpdateSnapshotTagValueSubscriptionRequest() {
                 Tag = tag,
                 Action = Common.SubscriptionUpdateAction.Unsubscribe
             });
+
+            return _tagsChannel.Writer.TryWrite(request) && await request.Completed.ConfigureAwait(false);
         }
 
 

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter;
@@ -22,7 +23,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var result = new Subscription(context, AdapterId, GetClient());
+            var result = new Subscription(context, AdapterId, this);
             await result.Start().ConfigureAwait(false);
 
             return result;
@@ -41,9 +42,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             private readonly string _adapterId;
 
             /// <summary>
-            /// The SignalR client.
+            /// The feature.
             /// </summary>
-            private readonly Client.AdapterSignalRClient _client;
+            private readonly SnapshotTagValuePushImpl _push;
 
 
             /// <summary>
@@ -55,26 +56,46 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <param name="adapterId">
             ///   The adapter ID.
             /// </param>
-            /// <param name="client">
-            ///   The SignalR client.
+            /// <param name="push">
+            ///   The push feature.
             /// </param>
             internal Subscription(
                 IAdapterCallContext context, 
                 string adapterId,
-                Client.AdapterSignalRClient client
+                SnapshotTagValuePushImpl push
             ) : base (context) {
                 _adapterId = adapterId;
-                _client = client;
+                _push = push;
             }
 
 
             /// <inheritdoc/>
-            protected override async Task RunSubscription(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
-                var hubChannel = await _client.TagValues.CreateSnapshotTagValueChannelAsync(
+            protected override async Task RunSubscription(ChannelReader<SnapshotTagValueSubscriptionChange> channel, CancellationToken cancellationToken) {
+                var subChangesChannel = Channel.CreateUnbounded<UpdateSnapshotTagValueSubscriptionRequest>();
+                
+                var hubChannel = await _push.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
                     _adapterId,
-                    channel,
+                    subChangesChannel,
                     cancellationToken
                 ).ConfigureAwait(false);
+
+                channel.RunBackgroundOperation(async (ch, ct) => { 
+                    try {
+                        while (!ct.IsCancellationRequested) {
+                            var change = await ch.ReadAsync(ct).ConfigureAwait(false);
+                            try {
+                                await subChangesChannel.Writer.WriteAsync(change.Request, ct).ConfigureAwait(false);
+                                change.SetResult(true);
+                            }
+                            catch {
+                                change.SetResult(false);
+                                throw;
+                            }
+                        }
+                    }
+                    catch (ChannelClosedException) { }
+                    catch (OperationCanceledException) { }
+                }, _push.TaskScheduler, cancellationToken);
 
                 await hubChannel.ForEachAsync(async val => {
                     await ValueReceived(val, cancellationToken).ConfigureAwait(false);

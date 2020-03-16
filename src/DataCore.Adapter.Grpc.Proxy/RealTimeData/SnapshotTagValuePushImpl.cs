@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc/>
-            protected override async Task RunSubscription(ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> channel, CancellationToken cancellationToken) {
+            protected override async Task RunSubscription(ChannelReader<SnapshotTagValueSubscriptionChange> channel, CancellationToken cancellationToken) {
                 var client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
                 var duplexCall = client.CreateSnapshotPushChannel(_push.GetCallOptions(Context, cancellationToken));
 
@@ -56,15 +56,22 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             continue;
                         }
 
-                        await duplexCall.RequestStream.WriteAsync(
-                            new CreateSnapshotPushChannelRequest() {
-                                AdapterId = _push.AdapterId,
-                                Tag = change.Tag ?? string.Empty,
-                                Action = change.Action == Common.SubscriptionUpdateAction.Subscribe
-                                    ? SubscriptionUpdateAction.Subscribe
-                                    : SubscriptionUpdateAction.Unsubscribe
-                            }
-                        ).ConfigureAwait(false);
+                        try {
+                            await duplexCall.RequestStream.WriteAsync(
+                                new CreateSnapshotPushChannelRequest() {
+                                    AdapterId = _push.AdapterId,
+                                    Tag = change.Request.Tag ?? string.Empty,
+                                    Action = change.Request.Action == Common.SubscriptionUpdateAction.Subscribe
+                                        ? SubscriptionUpdateAction.Subscribe
+                                        : SubscriptionUpdateAction.Unsubscribe
+                                }
+                            ).ConfigureAwait(false);
+                            change.SetResult(true);
+                        }
+                        catch {
+                            change.SetResult(false);
+                            throw;
+                        }
                     }
                 }, _push.TaskScheduler, cancellationToken);
 

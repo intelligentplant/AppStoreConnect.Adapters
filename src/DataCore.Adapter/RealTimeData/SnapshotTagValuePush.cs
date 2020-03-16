@@ -64,7 +64,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Channel that is used to publish changes to subscribed tags.
         /// </summary>
-        private readonly Channel<(TagIdentifier Tag, bool Added)> _tagSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool)>(new UnboundedChannelOptions() {
+        private readonly Channel<(TagIdentifier Tag, bool Added, TaskCompletionSource<bool> Processed)> _tagSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
@@ -165,6 +165,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             var isNewSubscription = false;
+            TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
@@ -175,12 +176,20 @@ namespace DataCore.Adapter.RealTimeData {
 
                 _subscriberCount[tag.Id] = ++subscriberCount;
                 if (isNewSubscription) {
-                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, true));
+                    processed = new TaskCompletionSource<bool>();
+                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, true, processed));
                 }
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
             }
+
+            if (processed == null) {
+                return;
+            }
+
+            // Wait for change to be processed.
+            await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
         }
 
 
@@ -193,16 +202,18 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        private Task RemoveTagFromSubscription(Subscription subscription, TagIdentifier tag) {
+        private async Task RemoveTagFromSubscription(Subscription subscription, TagIdentifier tag) {
             if (subscription == null || tag == null) {
-                return Task.CompletedTask;
+                return;
             }
+
+            TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
                 if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
                     // No subscribers
-                    return Task.CompletedTask;
+                    return;
                 }
 
                 --subscriberCount;
@@ -210,7 +221,8 @@ namespace DataCore.Adapter.RealTimeData {
                 if (subscriberCount == 0) {
                     // No subscribers remaining.
                     _subscriberCount.Remove(tag.Id);
-                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
+                    processed = new TaskCompletionSource<bool>();
+                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false, processed));
                 }
                 else {
                     _subscriberCount[tag.Id] = subscriberCount;
@@ -220,7 +232,12 @@ namespace DataCore.Adapter.RealTimeData {
                 _subscriptionsLock.ExitWriteLock();
             }
 
-            return Task.CompletedTask;
+            if (processed == null) {
+                return;
+            }
+
+            // Wait for change to be processed.
+            await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
         }
 
 
@@ -243,7 +260,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     if (subscriberCount == 0) {
                         _subscriberCount.Remove(tag.Id);
-                        _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false));
+                        _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false, null));
                     }
                     else {
                         _subscriberCount[tag.Id] = subscriberCount;
@@ -307,10 +324,18 @@ namespace DataCore.Adapter.RealTimeData {
                     else {
                         OnTagRemovedFromSubscription(change.Tag);
                     }
+
+                    if (change.Processed != null) {
+                        change.Processed.TrySetResult(true);
+                    }
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
+                    if (change.Processed != null) {
+                        change.Processed.TrySetException(e);
+                    }
+
                     Logger.LogError(
                         e,
                         Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange, 
