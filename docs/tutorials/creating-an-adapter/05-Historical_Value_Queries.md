@@ -240,7 +240,7 @@ After displaying the usual adapter information, the method will now display the 
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-16T10:01:04Z
+    - Startup Time = 2020-03-16T10:44:02Z
   Features:
     - IHealthCheck
     - IReadSnapshotTagValues
@@ -256,30 +256,48 @@ After displaying the usual adapter information, the method will now display the 
     - AVG
       - Name: Average
       - Description: Average value calculated over sample interval.
+      - Properties:
+        - Timestamp = Start of Interval
     - COUNT
       - Name: Count
       - Description: The number of good-quality raw samples that have been recorded for the tag at each sample interval.
+      - Properties:
+        - Timestamp = Start of Interval
     - INTERP
       - Name: Interpolated
       - Description: Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval.
+      - Properties:
+        - Timestamp = Start of Interval/End of Interval
     - MAX
       - Name: Maximum
       - Description: Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.
+      - Properties:
+        - Timestamp = Timestamp of Maximum Value
     - MIN
       - Name: Minimum
       - Description: Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.
+      - Properties:
+        - Timestamp = Timestamp of Minimum Value
     - PERCENTBAD
       - Name: Percent Bad
       - Description: At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status.
+      - Properties:
+        - Timestamp = Start of Interval
     - PERCENTGOOD
       - Name: Percent Good
       - Description: At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status.
+      - Properties:
+        - Timestamp = Start of Interval
     - RANGE
       - Name: Range
       - Description: The difference between the minimum good-quality value and maximum good-quality value in each sample interval.
+      - Properties:
+        - Timestamp = Start of Interval
     - DELTA
       - Name: Delta
       - Description: The difference between the earliest good-quality value and latest good-quality value in each sample interval.
+      - Properties:
+        - Timestamp = Start of Interval
 
 [Tag Details]
   Name: Sinusoid_Wave
@@ -288,70 +306,70 @@ After displaying the usual adapter information, the method will now display the 
   Properties:
     - Wave Type = Sinusoid
 
-  Raw Values (10:00:49.949 - 10:01:04.949 UTC):
-    - -0.91354545764273565 @ 2020-03-16T10:00:49.0000000Z [Good Quality]
-    - -0.86602540378456849 @ 2020-03-16T10:00:50.0000000Z [Good Quality]
-    - -0.80901699437505792 @ 2020-03-16T10:00:51.0000000Z [Good Quality]
-    - -0.74314482547747207 @ 2020-03-16T10:00:52.0000000Z [Good Quality]
-    - -0.66913060635922939 @ 2020-03-16T10:00:53.0000000Z [Good Quality]
-    - -0.5877852522928193 @ 2020-03-16T10:00:54.0000000Z [Good Quality]
-    - -0.50000000000030842 @ 2020-03-16T10:00:55.0000000Z [Good Quality]
-    - -0.40673664307606017 @ 2020-03-16T10:00:56.0000000Z [Good Quality]
-    - -0.3090169943751499 @ 2020-03-16T10:00:57.0000000Z [Good Quality]
-    - -0.20791169081789751 @ 2020-03-16T10:00:58.0000000Z [Good Quality]
-    - -0.10452846326817497 @ 2020-03-16T10:00:59.0000000Z [Bad Quality]
-    - -4.5273592163435493E-13 @ 2020-03-16T10:01:00.0000000Z [Good Quality]
-    - 0.10452846326727447 @ 2020-03-16T10:01:01.0000000Z [Good Quality]
-    - 0.20791169081745664 @ 2020-03-16T10:01:02.0000000Z [Good Quality]
-    - 0.30901699437472124 @ 2020-03-16T10:01:03.0000000Z [Bad Quality]
-    - 0.40673664307564839 @ 2020-03-16T10:01:04.0000000Z [Good Quality]
-    - 0.49999999999991812 @ 2020-03-16T10:01:05.0000000Z [Good Quality]
+  Raw Values (10:43:47.916 - 10:44:02.916 UTC):
+    - -0.97814760073386076 @ 2020-03-16T10:43:47.0000000Z [Bad Quality]
+    - -0.95105651629521326 @ 2020-03-16T10:43:48.0000000Z [Good Quality]
+    - -0.91354545764265038 @ 2020-03-16T10:43:49.0000000Z [Good Quality]
+    - -0.86602540378469095 @ 2020-03-16T10:43:50.0000000Z [Good Quality]
+    - -0.80901699437520191 @ 2020-03-16T10:43:51.0000000Z [Bad Quality]
+    - -0.74314482547763605 @ 2020-03-16T10:43:52.0000000Z [Good Quality]
+    - -0.66913060635907351 @ 2020-03-16T10:43:53.0000000Z [Good Quality]
+    - -0.58778525229264955 @ 2020-03-16T10:43:54.0000000Z [Good Quality]
+    - -0.50000000000012679 @ 2020-03-16T10:43:55.0000000Z [Good Quality]
+    - -0.40673664307628399 @ 2020-03-16T10:43:56.0000000Z [Good Quality]
+    - -0.30901699437538294 @ 2020-03-16T10:43:57.0000000Z [Good Quality]
+    - -0.20791169081813718 @ 2020-03-16T10:43:58.0000000Z [Good Quality]
+    - -0.10452846326796639 @ 2020-03-16T10:43:59.0000000Z [Good Quality]
+    - -2.429996360213911E-13 @ 2020-03-16T10:44:00.0000000Z [Good Quality]
+    - 0.10452846326748305 @ 2020-03-16T10:44:01.0000000Z [Good Quality]
+    - 0.207911690817217 @ 2020-03-16T10:44:02.0000000Z [Good Quality]
+    - 0.30901699437448821 @ 2020-03-16T10:44:03.0000000Z [Good Quality]
 
   Average Values (00:00:05 sample interval):
-    - -0.73502061645782946 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - -0.35591633206735401 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
-    - 0.17979419928998169 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+    - -0.86844305080004769 @ 2020-03-16T10:43:47.9169319Z [Uncertain Quality]
+    - -0.49453389922070334 @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - -3.2930325133406767E-13 @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 
   Count Values (00:00:05 sample interval):
-    - 5 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - 4 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
-    - 4 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+    - 4 @ 2020-03-16T10:43:47.9169319Z [Uncertain Quality]
+    - 5 @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - 5 @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 
   Interpolated Values (00:00:05 sample interval):
-    - -0.86844380862153447 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - -0.50446759339555458 @ 2020-03-16T10:00:54.9491077Z [Good Quality]
-    - -0.0053196939116126329 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
-    - 0.49948311409899337 @ 2020-03-16T10:01:04.9491077Z [Uncertain Quality]
+    - -0.95330692120647131 @ 2020-03-16T10:43:47.9169319Z [Uncertain Quality]
+    - -0.67527882691423613 @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - -0.21631031628456082 @ 2020-03-16T10:43:57.9169319Z [Good Quality]
+    - 0.3027070700825269 @ 2020-03-16T10:44:02.9169319Z [Good Quality]
 
   Maximum Values (00:00:05 sample interval):
-    - -0.5877852522928193 @ 2020-03-16T10:00:54.0000000Z [Good Quality]
-    - -0.20791169081789751 @ 2020-03-16T10:00:58.0000000Z [Uncertain Quality]
-    - 0.40673664307564839 @ 2020-03-16T10:01:04.0000000Z [Uncertain Quality]
+    - -0.74314482547763605 @ 2020-03-16T10:43:52.0000000Z [Uncertain Quality]
+    - -0.30901699437538294 @ 2020-03-16T10:43:57.0000000Z [Good Quality]
+    - 0.207911690817217 @ 2020-03-16T10:44:02.0000000Z [Good Quality]
 
   Minimum Values (00:00:05 sample interval):
-    - -0.86602540378456849 @ 2020-03-16T10:00:50.0000000Z [Good Quality]
-    - -0.50000000000030842 @ 2020-03-16T10:00:55.0000000Z [Uncertain Quality]
-    - -4.5273592163435493E-13 @ 2020-03-16T10:01:00.0000000Z [Uncertain Quality]
+    - -0.95105651629521326 @ 2020-03-16T10:43:48.0000000Z [Uncertain Quality]
+    - -0.66913060635907351 @ 2020-03-16T10:43:53.0000000Z [Good Quality]
+    - -0.20791169081813718 @ 2020-03-16T10:43:58.0000000Z [Good Quality]
 
   Percent Bad Values (00:00:05 sample interval):
-    - 0 % @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - 20 % @ 2020-03-16T10:00:54.9491077Z [Good Quality]
-    - 20 % @ 2020-03-16T10:00:59.9491077Z [Good Quality]
+    - 20 % @ 2020-03-16T10:43:47.9169319Z [Good Quality]
+    - 0 % @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - 0 % @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 
   Percent Good Values (00:00:05 sample interval):
-    - 100 % @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - 80 % @ 2020-03-16T10:00:54.9491077Z [Good Quality]
-    - 80 % @ 2020-03-16T10:00:59.9491077Z [Good Quality]
+    - 80 % @ 2020-03-16T10:43:47.9169319Z [Good Quality]
+    - 100 % @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - 100 % @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 
   Range Values (00:00:05 sample interval):
-    - 0.27824015149174919 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - 0.29208830918241091 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
-    - 0.40673664307610113 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+    - 0.20791169081757721 @ 2020-03-16T10:43:47.9169319Z [Uncertain Quality]
+    - 0.36011361198369057 @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - 0.41582338163535415 @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 
   Delta Values (00:00:05 sample interval):
-    - 0.27824015149174919 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
-    - 0.29208830918241091 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
-    - 0.40673664307610113 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+    - 0.20791169081757721 @ 2020-03-16T10:43:47.9169319Z [Uncertain Quality]
+    - 0.36011361198369057 @ 2020-03-16T10:43:52.9169319Z [Good Quality]
+    - 0.41582338163535415 @ 2020-03-16T10:43:57.9169319Z [Good Quality]
 ```
 
 Note that the output of several functions contains values with `Uncertain` quality. A lot of the built-in aggregates only operate on good-quality values, and will return `Uncertain` for the quality status if any values in the time interval they operated on are non-good quality.

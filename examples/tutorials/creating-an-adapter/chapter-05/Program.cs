@@ -58,6 +58,10 @@ namespace MyAdapter {
                     Console.WriteLine($"    - {func.Id}");
                     Console.WriteLine($"      - Name: {func.Name}");
                     Console.WriteLine($"      - Description: {func.Description}");
+                    Console.WriteLine("      - Properties:");
+                    foreach (var prop in func.Properties) {
+                        Console.WriteLine($"        - {prop.Name} = {prop.Value}");
+                    }
                 }
 
                 var tags = tagSearchFeature.FindTags(
