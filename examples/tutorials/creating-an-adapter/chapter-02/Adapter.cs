@@ -21,6 +21,18 @@ namespace MyAdapter {
         ) : base(id, name, description, scheduler, logger) { }
 
 
+        private static DateTime CalculateSampleTime(DateTime queryTime) {
+            var offset = queryTime.Ticks % TimeSpan.TicksPerSecond;
+            return queryTime.Subtract(TimeSpan.FromTicks(offset));
+        }
+
+
+        private static double SinusoidWave(DateTime sampleTime, TimeSpan offset, double period, double amplitude) {
+            var time = (sampleTime - DateTime.UtcNow.Date.Add(offset)).TotalSeconds;
+            return amplitude * (Math.Sin(2 * Math.PI * (1 / period) * time));
+        }
+
+
         protected override Task StartAsync(CancellationToken cancellationToken) {
             AddProperty("Startup Time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
             return Task.CompletedTask;
@@ -49,8 +61,7 @@ namespace MyAdapter {
         ) {
             ValidateRequest(request);
             var result = Channel.CreateUnbounded<TagValueQueryResult>();
-
-            var rnd = new Random();
+            var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
             TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
                 foreach (var tag in request.Tags) {
@@ -66,7 +77,8 @@ namespace MyAdapter {
                         tag,
                         TagValueBuilder
                             .Create()
-                            .WithValue(rnd.NextDouble())
+                            .WithUtcSampleTime(sampleTime)
+                            .WithValue(SinusoidWave(sampleTime, TimeSpan.Zero, 60, 1))
                             .Build()
                     ));
                 }

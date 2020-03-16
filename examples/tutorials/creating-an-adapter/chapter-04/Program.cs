@@ -53,7 +53,7 @@ namespace MyAdapter {
                     var tags = tagSearchFeature.FindTags(
                         context,
                         new FindTagsRequest() {
-                            Name = "*",
+                            Name = "Sin*",
                             PageSize = 1
                         },
                         cancellationToken

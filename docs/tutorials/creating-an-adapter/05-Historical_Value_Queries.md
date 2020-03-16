@@ -26,14 +26,6 @@ public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRaw
 }
 ```
 
-Up until now, we have been generating completely random values for our tags every time we poll them. However, it would be helpful now to generate idempotent result sets (that is, the same query should return the same result every time). In order to do this, we'll start by adding a helper method to our adapter that, for a given tag and query start time, will return us a `System.Random` object that will always be created using the same seed value:
-
-```csharp
-private Random GetRng(TagDefinition tag, DateTime startAt) {
-    return new Random((tag.GetHashCode() + startAt.GetHashCode()).GetHashCode());
-}
-```
-
 Next, we will implement the `ReadRawTagValues` method:
 
 ```csharp
@@ -57,22 +49,17 @@ public ChannelReader<TagValueQueryResult> ReadRawTagValues(
                 continue;
             }
 
-            var intervalRnd = GetRng(t, request.UtcStartTime);
             var sampleCount = 0;
+            var ts = CalculateSampleTime(request.UtcStartTime).AddSeconds(-1);
+            var rnd = new Random(ts.GetHashCode());
 
-            for (var ts = request.UtcStartTime; ts <= request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount); ts = ts.AddSeconds(intervalRnd.Next(3, 9))) {
-                var rnd = GetRng(t, ts);
-                ch.TryWrite(new TagValueQueryResult(
-                    t.Id,
-                    t.Name,
-                    TagValueBuilder
-                        .Create()
-                        .WithUtcSampleTime(ts)
-                        .WithValue(rnd.NextDouble())
-                        .WithStatus(rnd.NextDouble() <= 0.7 ? TagValueStatus.Good : TagValueStatus.Bad)
-                        .Build()
-                ));
-            }
+            do {
+                ts = ts.AddSeconds(1);
+                if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
+                    continue;
+                }
+                ch.TryWrite(CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
+            } while (ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
         }
         
     }, result.Writer, true, cancellationToken);
@@ -84,29 +71,25 @@ public ChannelReader<TagValueQueryResult> ReadRawTagValues(
 Let's take a closer look at the part of the method that emits values for a given tag (variable `t`):
 
 ```csharp
-var intervalRnd = GetRng(t, request.UtcStartTime);
 var sampleCount = 0;
 ```
 
-The `intervalRnd` variable is a `System.Random` that we will use to randomly choose the time interval between raw samples. This is just to allow us to show raw values at slightly irregular times, in the same way that signals from IoT devices or other sources might not arrive at exact intervals. We use the `sampleCount` variable to keep track of the number of samples we have emitted for each tag, because the caller can optionally limit the maximum number of samples they want to retrieve for each tag.
+We use the `sampleCount` variable to keep track of the number of samples we have emitted for each tag, because the caller can optionally limit the maximum number of samples they want to retrieve for each tag.
 
 ```csharp
-for (var ts = request.UtcStartTime; ts <= request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount); ts = ts.AddSeconds(intervalRnd.Next(3, 9))) {
-    var rnd = GetRng(t, ts);
-    ch.TryWrite(new TagValueQueryResult(
-        t.Id,
-        t.Name,
-        TagValueBuilder
-            .Create()
-            .WithUtcSampleTime(ts)
-            .WithValue(rnd.NextDouble())
-            .WithStatus(rnd.NextDouble() <= 0.7 ? TagValueStatus.Good : TagValueStatus.Bad)
-            .Build()
-    ));
-}
+var ts = CalculateSampleTime(request.UtcStartTime).AddSeconds(-1);
+var rnd = new Random(ts.GetHashCode());
+
+do {
+    ts = ts.AddSeconds(1);
+    if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
+        continue;
+    }
+    ch.TryWrite(CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
+} while (ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
 ```
 
-In our `for` loop, we move forwards in time from our query start time to query end time, advancing 3-8 seconds every time (the upper boundary of 9 in the call to `System.Random.Next` is exclusive). We stop when we exceed our query end time, or if we emit the maximum number of samples requested by the caller for the tag. At each iteration, we emit a value using the timestamp for our cursor, and we also specify the _quality_ of the value, using the [TagValueStatus](/src/DataCore.Adapter.Core/RealTimeData/TagValueStatus.cs) enum. The status allows your adapter to inform the caller if the value is trust-worthy. Typically, an instrument report a non-good status of a value if it detected a fault in the instrument calibration for example.
+We want our raw sample points to be calculated at the start of each second, so our first step is to calculate the timestamp of the first sample we will calculate. The `ReadRawTagValuesRequest` class includes a `BoundaryType` property, which a caller can use to specify if they only want raw values falling inside the query time range, or if they also want to receive the raw values immediately before and immediately after the boundary times. In our `do..while` loop, we check to see if we should skip the current sample time based on the query's boundary type. We calculate and emit the value if required, and then advance the timestamp forwards by 1 second until we reach the query end time, or we retrieve the maximum sample count specified by the caller. For each sample, we randomly decide if the quality status of the sample should be good or bad; this will have an effect on how aggregated values are calculated (see below).
 
 At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) helper class.
 
@@ -186,7 +169,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var tags = tagSearchFeature.FindTags(
             context,
             new FindTagsRequest() {
-                Name = "*",
+                Name = "Sin*",
                 PageSize = 1
             },
             cancellationToken
@@ -206,18 +189,19 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
 
         var now = DateTime.UtcNow;
-        var start = now.AddMinutes(-1);
+        var start = now.AddSeconds(-15);
         var end = now;
-        var sampleInterval = TimeSpan.FromSeconds(20);
+        var sampleInterval = TimeSpan.FromSeconds(5);
 
         Console.WriteLine();
-        Console.WriteLine($"  Raw Values ({start:HH:mm:ss} - {end:HH:mm:ss} UTC):");
+        Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
         var rawValues = readRawFeature.ReadRawTagValues(
             context,
             new ReadRawTagValuesRequest() {
                 Tags = new[] { tag.Id },
                 UtcStartTime = start,
-                UtcEndTime = end
+                UtcEndTime = end,
+                BoundaryType = RawDataBoundaryType.Outside
             },
             cancellationToken
         );
@@ -249,14 +233,14 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
 }
 ```
 
-After displaying the usual adapter information, the method will now display the ID, name and description of each supported aggregate function (that is, each data function supported by the `ReadHistoricalTagValues` class), retrieve a single tag, and then request raw historical data, followed by aggregated data for each data function. When you run the program, you should see output similar to the following:
+After displaying the usual adapter information, the method will now display the ID, name and description of each supported aggregate function (that is, each data function supported by the `ReadHistoricalTagValues` class), retrieve a single tag, and then request raw historical data for the last 15 seconds, followed by aggregated data for each data function for the same time range, using a sample interval of 5 seconds. When you run the program, you should see output similar to the following:
 
 ```
 [example]
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-13T14:53:22Z
+    - Startup Time = 2020-03-16T10:01:04Z
   Features:
     - IHealthCheck
     - IReadSnapshotTagValues
@@ -271,19 +255,19 @@ After displaying the usual adapter information, the method will now display the 
   Supported Aggregations:
     - AVG
       - Name: Average
-      - Description: Average value calculated over a fixed sample interval.
+      - Description: Average value calculated over sample interval.
     - COUNT
       - Name: Count
-      - Description: The number of raw samples that have been recorded for the tag over the sample period.
+      - Description: The number of good-quality raw samples that have been recorded for the tag at each sample interval.
     - INTERP
       - Name: Interpolated
       - Description: Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval.
     - MAX
       - Name: Maximum
-      - Description: Maximum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.
+      - Description: Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.
     - MIN
       - Name: Minimum
-      - Description: Minimum value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.
+      - Description: Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.
     - PERCENTBAD
       - Name: Percent Bad
       - Description: At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status.
@@ -292,72 +276,85 @@ After displaying the usual adapter information, the method will now display the 
       - Description: At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status.
     - RANGE
       - Name: Range
-      - Description: The difference between the minimum value and maximum value over the sample period.
+      - Description: The difference between the minimum good-quality value and maximum good-quality value in each sample interval.
+    - DELTA
+      - Name: Delta
+      - Description: The difference between the earliest good-quality value and latest good-quality value in each sample interval.
 
 [Tag Details]
-  Name: RandomValue_1
+  Name: Sinusoid_Wave
   ID: 1
-  Description: A tag that returns a random value
+  Description: A tag that returns a sinusoid wave value
   Properties:
-    - MinValue = 0
-    - MaxValue = 1
+    - Wave Type = Sinusoid
 
-  Raw Values:
-    - 0.3663978219807138 @ 2020-03-13T14:52:22Z [Good]
-    - 0.24800059304013877 @ 2020-03-13T14:52:27Z [Good]
-    - 0.8894961177788191 @ 2020-03-13T14:52:30Z [Bad]
-    - 0.5386314590175783 @ 2020-03-13T14:52:35Z [Good]
-    - 0.9884358481450173 @ 2020-03-13T14:52:39Z [Good]
-    - 0.6318752037509695 @ 2020-03-13T14:52:47Z [Good]
-    - 0.8349552787071817 @ 2020-03-13T14:52:50Z [Good]
-    - 0.6747278341440148 @ 2020-03-13T14:52:53Z [Good]
-    - 0.5977883057658506 @ 2020-03-13T14:52:58Z [Bad]
-    - 0.6658352420971893 @ 2020-03-13T14:53:03Z [Good]
-    - 0.27325396299048044 @ 2020-03-13T14:53:07Z [Bad]
-    - 0.4306695789241556 @ 2020-03-13T14:53:12Z [Good]
-    - 0.7912188837263822 @ 2020-03-13T14:53:17Z [Good]
+  Raw Values (10:00:49.949 - 10:01:04.949 UTC):
+    - -0.91354545764273565 @ 2020-03-16T10:00:49.0000000Z [Good Quality]
+    - -0.86602540378456849 @ 2020-03-16T10:00:50.0000000Z [Good Quality]
+    - -0.80901699437505792 @ 2020-03-16T10:00:51.0000000Z [Good Quality]
+    - -0.74314482547747207 @ 2020-03-16T10:00:52.0000000Z [Good Quality]
+    - -0.66913060635922939 @ 2020-03-16T10:00:53.0000000Z [Good Quality]
+    - -0.5877852522928193 @ 2020-03-16T10:00:54.0000000Z [Good Quality]
+    - -0.50000000000030842 @ 2020-03-16T10:00:55.0000000Z [Good Quality]
+    - -0.40673664307606017 @ 2020-03-16T10:00:56.0000000Z [Good Quality]
+    - -0.3090169943751499 @ 2020-03-16T10:00:57.0000000Z [Good Quality]
+    - -0.20791169081789751 @ 2020-03-16T10:00:58.0000000Z [Good Quality]
+    - -0.10452846326817497 @ 2020-03-16T10:00:59.0000000Z [Bad Quality]
+    - -4.5273592163435493E-13 @ 2020-03-16T10:01:00.0000000Z [Good Quality]
+    - 0.10452846326727447 @ 2020-03-16T10:01:01.0000000Z [Good Quality]
+    - 0.20791169081745664 @ 2020-03-16T10:01:02.0000000Z [Good Quality]
+    - 0.30901699437472124 @ 2020-03-16T10:01:03.0000000Z [Bad Quality]
+    - 0.40673664307564839 @ 2020-03-16T10:01:04.0000000Z [Good Quality]
+    - 0.49999999999991812 @ 2020-03-16T10:01:05.0000000Z [Good Quality]
 
-  Average Values:
-    - 0.3663978219807138 @ 2020-03-13T14:52:42Z
-    - 0.04379721593288575 @ 2020-03-13T14:53:02Z
-    - 0.5375642732426358 @ 2020-03-13T14:53:22Z
+  Average Values (00:00:05 sample interval):
+    - -0.73502061645782946 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - -0.35591633206735401 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
+    - 0.17979419928998169 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
 
-  Count Values:
-    - 4 @ 2020-03-13T14:52:42Z
-    - 4 @ 2020-03-13T14:53:02Z
-    - 4 @ 2020-03-13T14:53:22Z
+  Count Values (00:00:05 sample interval):
+    - 5 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - 4 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
+    - 4 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
 
-  Interpolated Values:
-    - 0.3663978219807138 @ 2020-03-13T14:52:22Z
-    - 0.6779562119291891 @ 2020-03-13T14:52:42Z
-    - 0.5375642732426358 @ 2020-03-13T14:53:02Z
-    - 0.651539593307087 @ 2020-03-13T14:53:22Z
+  Interpolated Values (00:00:05 sample interval):
+    - -0.86844380862153447 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - -0.50446759339555458 @ 2020-03-16T10:00:54.9491077Z [Good Quality]
+    - -0.0053196939116126329 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+    - 0.49948311409899337 @ 2020-03-16T10:01:04.9491077Z [Uncertain Quality]
 
-  Maximum Values:
-    - 0.9884358481450173 @ 2020-03-13T14:52:42Z
-    - 0.5977883057658506 @ 2020-03-13T14:53:02Z
-    - 0.7872863396943017 @ 2020-03-13T14:53:22Z
+  Maximum Values (00:00:05 sample interval):
+    - -0.5877852522928193 @ 2020-03-16T10:00:54.0000000Z [Good Quality]
+    - -0.20791169081789751 @ 2020-03-16T10:00:58.0000000Z [Uncertain Quality]
+    - 0.40673664307564839 @ 2020-03-16T10:01:04.0000000Z [Uncertain Quality]
 
-  Minimum Values:
-    - 0.3663978219807138 @ 2020-03-13T14:52:42Z
-    - 0.04379721593288575 @ 2020-03-13T14:53:02Z
-    - 0.5375642732426358 @ 2020-03-13T14:53:22Z
+  Minimum Values (00:00:05 sample interval):
+    - -0.86602540378456849 @ 2020-03-16T10:00:50.0000000Z [Good Quality]
+    - -0.50000000000030842 @ 2020-03-16T10:00:55.0000000Z [Uncertain Quality]
+    - -4.5273592163435493E-13 @ 2020-03-16T10:01:00.0000000Z [Uncertain Quality]
 
-  Percent Bad Values:
-    - 25 % @ 2020-03-13T14:52:42Z
-    - 50 % @ 2020-03-13T14:53:02Z
-    - 0 % @ 2020-03-13T14:53:22Z
+  Percent Bad Values (00:00:05 sample interval):
+    - 0 % @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - 20 % @ 2020-03-16T10:00:54.9491077Z [Good Quality]
+    - 20 % @ 2020-03-16T10:00:59.9491077Z [Good Quality]
 
-  Percent Good Values:
-    - 75 % @ 2020-03-13T14:52:42Z
-    - 50 % @ 2020-03-13T14:53:02Z
-    - 100 % @ 2020-03-13T14:53:22Z
+  Percent Good Values (00:00:05 sample interval):
+    - 100 % @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - 80 % @ 2020-03-16T10:00:54.9491077Z [Good Quality]
+    - 80 % @ 2020-03-16T10:00:59.9491077Z [Good Quality]
 
-  Range Values:
-    - 0.3663978219807138 @ 2020-03-13T14:52:42Z
-    - 0.04379721593288575 @ 2020-03-13T14:53:02Z
-    - 0.5375642732426358 @ 2020-03-13T14:53:22Z
+  Range Values (00:00:05 sample interval):
+    - 0.27824015149174919 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - 0.29208830918241091 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
+    - 0.40673664307610113 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
+
+  Delta Values (00:00:05 sample interval):
+    - 0.27824015149174919 @ 2020-03-16T10:00:49.9491077Z [Good Quality]
+    - 0.29208830918241091 @ 2020-03-16T10:00:54.9491077Z [Uncertain Quality]
+    - 0.40673664307610113 @ 2020-03-16T10:00:59.9491077Z [Uncertain Quality]
 ```
+
+Note that the output of several functions contains values with `Uncertain` quality. A lot of the built-in aggregates only operate on good-quality values, and will return `Uncertain` for the quality status if any values in the time interval they operated on are non-good quality.
 
 
 ## Next Steps

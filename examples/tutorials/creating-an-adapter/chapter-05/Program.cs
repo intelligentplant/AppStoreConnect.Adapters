@@ -63,7 +63,7 @@ namespace MyAdapter {
                 var tags = tagSearchFeature.FindTags(
                     context,
                     new FindTagsRequest() {
-                        Name = "*",
+                        Name = "Sin*",
                         PageSize = 1
                     },
                     cancellationToken
@@ -83,18 +83,19 @@ namespace MyAdapter {
                 }
 
                 var now = DateTime.UtcNow;
-                var start = now.AddMinutes(-1);
+                var start = now.AddSeconds(-15);
                 var end = now;
-                var sampleInterval = TimeSpan.FromSeconds(20);
+                var sampleInterval = TimeSpan.FromSeconds(5);
 
                 Console.WriteLine();
-                Console.WriteLine($"  Raw Values ({start:HH:mm:ss} - {end:HH:mm:ss} UTC):");
+                Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
                 var rawValues = readRawFeature.ReadRawTagValues(
                     context,
                     new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
                         UtcStartTime = start,
-                        UtcEndTime = end
+                        UtcEndTime = end,
+                        BoundaryType = RawDataBoundaryType.Outside
                     },
                     cancellationToken
                 );

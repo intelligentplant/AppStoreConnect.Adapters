@@ -33,12 +33,12 @@ public Adapter(
 ) {
     AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
         this, 
-        TimeSpan.FromSeconds(5)
+        TimeSpan.FromSeconds(1)
     ));
 }
 ```
 
-Note that we don't add `ISnapshotTagValuePush` to the interface implementations for our adapter class. Instead, we use the `AddFeature<TFeature, TFeatureImpl>` method to register the `PollingSnapshotTagValuePush` object that we are delegating this feature to. We can use the static `PollingSnapshotTagValuePush.ForAdapter` method to create and wire up an instance of the class for us, specifying that we will update the current value of any subscribed tag every 5 seconds.
+Note that we don't add `ISnapshotTagValuePush` to the interface implementations for our adapter class. Instead, we use the `AddFeature<TFeature, TFeatureImpl>` method to register the `PollingSnapshotTagValuePush` object that we are delegating this feature to. We can use the static `PollingSnapshotTagValuePush.ForAdapter` method to create and wire up an instance of the class for us, specifying that we will update the current value of any subscribed tag every second.
 
 That's it! We've done everything we need to do in order to enable snapshot tag value subscriptions on our adapter.
 
@@ -74,7 +74,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
             var tags = tagSearchFeature.FindTags(
                 context,
                 new FindTagsRequest() {
-                    Name = "*",
+                    Name = "Sin*",
                     PageSize = 1
                 },
                 cancellationToken
@@ -108,7 +108,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
 }
 ```
 
-After displaying the usual adapter information, the `Run` method will create a new subscription, and will then register a callback with the method's cancellation token parameter to cancel the subscription when the cancellation token fires. The method then searches for a single tag, and then adds that tag to the subscription. It then uses the `RunBackgroundOperation` extension method on the subscription's `Values` property (a `ChannelReader<T>`) to values read from the channel and print them to the screen.
+After displaying the usual adapter information, the `Run` method will create a new subscription, and will then register a callback with the method's cancellation token parameter to cancel the subscription when the cancellation token fires. The method then searches for a single tag with a name starting with `Sin` (i.e. our `Sinusoid_Wave` tag), and then adds that tag to the subscription. It then uses the `RunBackgroundOperation` extension method on the subscription's `Values` property (a `ChannelReader<T>`) to values read from the channel and print them to the screen.
 
 Once the background operation has been registered, the method waits for the subscription's `Completed` property (a `Task`) to complete before existing. The task will complete when the subscription is cancelled. In the program's `Main` method in part 1, we added an event handler that will cancel the cancellation token when `CTRL+C` is pressed.
 
@@ -119,7 +119,7 @@ Run the program and wait until it receives a few value updates, and then press `
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-15T15:49:49Z
+    - Startup Time = 2020-03-16T10:00:32Z
   Features:
     - IHealthCheck
     - IReadSnapshotTagValues
@@ -128,17 +128,16 @@ Run the program and wait until it receives a few value updates, and then press `
     - ISnapshotTagValuePush
 
 [Tag Details]
-  Name: RandomValue_1
+  Name: Sinusoid_Wave
   ID: 1
-  Description: A tag that returns a random value
+  Description: A tag that returns a sinusoid wave value
   Properties:
-    - MinValue = 0
-    - MaxValue = 1
+    - Wave Type = Sinusoid
   Snapshot Value:
-    - 0.73174110089044142 @ 2020-03-15T15:49:49.7356818Z [Good Quality]
-    - 0.62086032499599286 @ 2020-03-15T15:49:54.6586521Z [Good Quality]
-    - 0.37351385521400432 @ 2020-03-15T15:49:59.6730600Z [Good Quality]
-    - 0.098981641744720586 @ 2020-03-15T15:50:04.6782167Z [Good Quality]
+    - -0.2079116908175784 @ 2020-03-16T10:00:32.0000000Z [Good Quality]
+    - -0.30901699437483965 @ 2020-03-16T10:00:33.0000000Z [Good Quality]
+    - -0.40673664307534668 @ 2020-03-16T10:00:34.0000000Z [Good Quality]
+    - -0.49999999999963213 @ 2020-03-16T10:00:35.0000000Z [Bad Quality]
 ```
 
 Note that the `ISnapshotTagValuePush` is included in the adapter's features, even though we did not explicitly implement this interface on our adapter class!

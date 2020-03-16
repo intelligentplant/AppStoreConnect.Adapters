@@ -35,36 +35,30 @@ namespace MyAdapter {
         ) {
             AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
                 this, 
-                TimeSpan.FromSeconds(5)
+                TimeSpan.FromSeconds(1)
             ));
         }
 
 
-        private AdapterProperty CreateMinimumValueProperty(double min) {
-            return new AdapterProperty("MinValue", min, "The inclusive minimum value for the tag");
-        }
-
-
-        private AdapterProperty CreateMaximumValueProperty(double max) {
-            return new AdapterProperty("MaxValue", max, "The exclusive maximum value for the tag");
+        private AdapterProperty CreateWaveTypeProperty(string waveType) {
+            return AdapterProperty.Create("Wave Type", waveType ?? "Sinusoid", "The wave type for the tag");
         }
 
 
         private void CreateTags() {
-            for (var i = 0; i < 5; i++) {
-                var tagId = (i + 1).ToString();
-                var tagName = string.Concat("RandomValue_", tagId);
-                // Our tags can have a minimum value of 0 and a maximum value of 1. We'll add 
-                // properties to the tag to describe this.
-                var tagProperties = new[] { 
-                    CreateMinimumValueProperty(0),
-                    CreateMaximumValueProperty(1)
+            var i = 0;
+            foreach (var waveType in new[] { "Sinusoid", "Sawtooth", "Square", "Triangle" }) {
+                ++i;
+                var tagId = i.ToString();
+                var tagName = string.Concat(waveType, "_Wave");
+                var tagProperties = new[] {
+                    CreateWaveTypeProperty(waveType)
                 };
 
                 var tag = new TagDefinition(
                     tagId,
                     tagName,
-                    "A tag that returns a random value",
+                    $"A tag that returns a {waveType.ToLower()} wave value",
                     null,
                     VariantType.Double,
                     null,
@@ -81,6 +75,71 @@ namespace MyAdapter {
         private void DeleteTags() {
             _tagsById.Clear();
             _tagsByName.Clear();
+        }
+
+
+        private static DateTime CalculateSampleTime(DateTime queryTime) {
+            var offset = queryTime.Ticks % TimeSpan.TicksPerSecond;
+            return queryTime.Subtract(TimeSpan.FromTicks(offset));
+        }
+
+
+        private static double SinusoidWave(DateTime sampleTime, double period, double amplitude) {
+            var time = (sampleTime - DateTime.UtcNow.Date).TotalSeconds;
+            return amplitude * (Math.Sin(2 * Math.PI * (1 / period) * time));
+        }
+
+
+        private static double SawtoothWave(DateTime sampleTime, double period, double amplitude) {
+            var time = (sampleTime - DateTime.UtcNow.Date).TotalSeconds;
+            return (2 * amplitude / Math.PI) * Math.Atan(1 / Math.Tan(Math.PI / period * time));
+        }
+
+
+        private static double SquareWave(DateTime sampleTime, double period, double amplitude) {
+            return Math.Sign(SinusoidWave(sampleTime, period, amplitude));
+        }
+
+
+        private static double TriangleWave(DateTime sampleTime, double period, double amplitude) {
+            var time = (sampleTime - DateTime.UtcNow.Date).TotalSeconds;
+            return (2 * amplitude / Math.PI) * Math.Asin(Math.Sin(2 * Math.PI / period * time));
+        }
+
+
+        private static TagValueQueryResult CalculateValueForTag(
+            TagDefinition tag,
+            DateTime utcSampleTime,
+            TagValueStatus status
+        ) {
+            var waveType = tag.Properties.FindProperty("Wave Type")?.Value.GetValueOrDefault("Sinusoid");
+            double value;
+
+            switch (waveType) {
+                case "Sawtooth":
+                    value = SawtoothWave(utcSampleTime, 60, 1);
+                    break;
+                case "Square":
+                    value = SquareWave(utcSampleTime, 60, 1);
+                    break;
+                case "Triangle":
+                    value = TriangleWave(utcSampleTime, 60, 1);
+                    break;
+                default:
+                    value = SinusoidWave(utcSampleTime, 60, 1);
+                    break;
+            }
+
+            return new TagValueQueryResult(
+                tag.Id,
+                tag.Name,
+                TagValueBuilder
+                    .Create()
+                    .WithUtcSampleTime(utcSampleTime)
+                    .WithValue(value)
+                    .WithStatus(status)
+                    .Build()
+            );
         }
 
 
@@ -113,8 +172,7 @@ namespace MyAdapter {
             CancellationToken cancellationToken
         ) {
             return new[] {
-                CreateMinimumValueProperty(0),
-                CreateMaximumValueProperty(1)
+                CreateWaveTypeProperty(null)
             }.OrderBy(x => x.Name).SelectPage(request).PublishToChannel();
         }
 
@@ -168,14 +226,13 @@ namespace MyAdapter {
 
 
         public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
-            IAdapterCallContext context, 
-            ReadSnapshotTagValuesRequest request, 
+            IAdapterCallContext context,
+            ReadSnapshotTagValuesRequest request,
             CancellationToken cancellationToken
         ) {
             ValidateRequest(request);
             var result = Channel.CreateUnbounded<TagValueQueryResult>();
-
-            var rnd = new Random();
+            var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
             TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
                 foreach (var tag in request.Tags) {
@@ -189,14 +246,8 @@ namespace MyAdapter {
                         continue;
                     }
 
-                    ch.TryWrite(new TagValueQueryResult(
-                        t.Id,
-                        t.Name,
-                        TagValueBuilder
-                            .Create()
-                            .WithValue(rnd.NextDouble())
-                            .Build()
-                    ));
+                    var rnd = new Random(sampleTime.GetHashCode());
+                    ch.TryWrite(CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
                 }
             }, result.Writer, true, cancellationToken);
 

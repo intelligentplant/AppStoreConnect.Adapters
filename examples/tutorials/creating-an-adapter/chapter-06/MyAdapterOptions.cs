@@ -3,9 +3,9 @@
 namespace MyAdapter {
     public class MyAdapterOptions : AdapterOptions {
 
-        public double MinValue { get; set; } = 0;
+        public double Period { get; set; } = 60;
 
-        public double MaxValue { get; set; } = 1;
+        public double Amplitude { get; set; } = 1;
 
     }
 }
