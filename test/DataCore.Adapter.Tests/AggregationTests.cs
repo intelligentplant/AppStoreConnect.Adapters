@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionShouldBeRegistered() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionRegistrationShouldFailOnSecondAttempt() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Tests {
             Assert.IsTrue(registered);
             Assert.IsTrue(aggregationHelper.GetSupportedDataFunctions().Any(x => x.Id.Equals(descriptor.Id)));
 
-            var descriptor2 = new DataFunctionDescriptor(TestContext.TestName, "Test2", "A custom function");
+            var descriptor2 = new DataFunctionDescriptor(TestContext.TestName, "Test2", "A custom function", null);
             var registered2 = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void CustomDataFunctionShouldBeUnregistered() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void CustomDataFunctionDeregistrationShouldFailOnSecondAttempt() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionRegistrationShouldFailWhenDefaultFunctionIdIsUsed() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(DefaultDataFunctions.Average.Id, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(DefaultDataFunctions.Average.Id, "Test", "A custom function", null);
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -105,7 +105,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task CustomDataFunctionShouldCalculateValues() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function");
+            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = bucket.RawSamples.Count == 0
