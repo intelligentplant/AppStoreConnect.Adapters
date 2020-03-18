@@ -5,16 +5,10 @@ namespace DataCore.Adapter.Configuration {
     /// <summary>
     /// Describes a parser that can parse options for an adapter based on a pre-defined text schema.
     /// </summary>
-    /// <typeparam name="TAdapter">
-    ///   The adapter type.
-    /// </typeparam>
     /// <typeparam name="TAdapterOptions">
     ///   The adapter options type.
     /// </typeparam>
-    public interface IAdapterOptionsParser<TAdapter, TAdapterOptions> 
-        where TAdapter : AdapterBase<TAdapterOptions> 
-        where TAdapterOptions : AdapterOptions 
-    {
+    public interface IAdapterOptionsParser<TAdapterOptions> where TAdapterOptions : AdapterOptions {
 
         /// <summary>
         /// Gets the schema for the adapter options.

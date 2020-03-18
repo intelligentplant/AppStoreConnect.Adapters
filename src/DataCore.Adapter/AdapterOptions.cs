@@ -12,12 +12,24 @@ namespace DataCore.Adapter {
         /// used as the name.
         /// </summary>
         [MaxLength(AdapterBase.MaxNameLength)]
+        [Display(
+            ResourceType = typeof(AdapterOptionsResources), 
+            Name = nameof(AdapterOptionsResources.AdapterOptions_Name_DisplayName),
+            Description = nameof(AdapterOptionsResources.AdapterOptions_Name_Description),
+            Order = 0
+        )]
         public string Name { get; set; }
 
         /// <summary>
         /// The adapter description.
         /// </summary>
         [MaxLength(AdapterBase.MaxDescriptionLength)]
+        [Display(
+            ResourceType = typeof(AdapterOptionsResources),
+            Name = nameof(AdapterOptionsResources.AdapterOptions_Description_DisplayName),
+            Description = nameof(AdapterOptionsResources.AdapterOptions_Description_Description),
+            Order = 1
+        )]
         public string Description { get; set; }
 
     }
