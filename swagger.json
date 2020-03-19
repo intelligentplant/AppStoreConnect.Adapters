@@ -789,6 +789,113 @@
         }
       }
     },
+    "/api/data-core/v1.0/tags/{adapterId}/properties": {
+      "post": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Gets tag property definitions from an adapter.",
+        "operationId": "TagSearch_GetTagPropertiesAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTagPropertiesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of AdapterProperty objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdapterProperty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Gets tag property definitions from an adapter.",
+        "operationId": "TagSearch_GetTagProperties",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 2
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The results page to return.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of AdapterProperty objects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/data-core/v1.0/tags/{adapterId}/find": {
       "post": {
         "tags": [
@@ -1284,7 +1391,7 @@
         ],
         "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions \nsupported vary by data source. The DefaultDataFunctions class defines\nconstants for commonly-supported aggregate functions.\n            ",
-        "operationId": "TagValues_GetSupportedAggregateFunctions",
+        "operationId": "TagValues_GetSupportedDataFunctions",
         "parameters": [
           {
             "name": "adapterId",
@@ -1504,6 +1611,11 @@
                 "$ref": "#/components/schemas/Variant"
               }
             ]
+          },
+          "description": {
+            "type": "string",
+            "description": "The property description.",
+            "nullable": true
           }
         }
       },
@@ -1762,83 +1874,119 @@
         }
       },
       "BrowseAssetModelNodesRequest": {
-        "type": "object",
-        "description": "Describes a request to browse nodes in an adapter's asset model.",
-        "additionalProperties": false,
-        "properties": {
-          "parentId": {
-            "type": "string",
-            "description": "The ID of the parent node to start at. Specify null to request top-level \nnodes.",
-            "nullable": true
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
           },
-          "pageSize": {
-            "type": "integer",
-            "description": "The page size for the query.",
-            "format": "int32",
-            "default": 10,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
-          },
-          "page": {
-            "type": "integer",
-            "description": "The page number for the query.",
-            "format": "int32",
-            "default": 1,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
+          {
+            "type": "object",
+            "description": "Describes a request to browse nodes in an adapter's asset model.",
+            "additionalProperties": false,
+            "properties": {
+              "parentId": {
+                "type": "string",
+                "description": "The ID of the parent node to start at. Specify null to request top-level \nnodes.",
+                "nullable": true
+              }
+            }
           }
-        }
+        ]
       },
-      "GetAssetModelNodesRequest": {
+      "PageableAdapterRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Base class for adapter requests that support paging.",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "properties": {
+              "pageSize": {
+                "type": "integer",
+                "description": "The page size for the query.",
+                "format": "int32",
+                "default": 10,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              "page": {
+                "type": "integer",
+                "description": "The page number for the query.",
+                "format": "int32",
+                "default": 1,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "AdapterRequest": {
         "type": "object",
-        "description": "Describes a request to get asset model nodes by ID.",
+        "description": "Base class that adapter request objects can inherit from.",
+        "x-abstract": true,
         "additionalProperties": false,
-        "required": [
-          "nodes"
-        ],
         "properties": {
-          "nodes": {
-            "type": "array",
-            "description": "The IDs of the nodes to retrieve.",
-            "minItems": 1,
-            "items": {
+          "properties": {
+            "type": "object",
+            "description": "Additional request properties. These can be used to provide bespoke query parameters \nsupported by the adapter.",
+            "nullable": true,
+            "additionalProperties": {
               "type": "string"
             }
           }
         }
       },
-      "FindAssetModelNodesRequest": {
-        "type": "object",
-        "description": "Describes a request to search for asset model nodes.",
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name filter.",
-            "nullable": true
+      "GetAssetModelNodesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
           },
-          "description": {
-            "type": "string",
-            "description": "The description filter.",
-            "nullable": true
-          },
-          "pageSize": {
-            "type": "integer",
-            "description": "The page size for the query.",
-            "format": "int32",
-            "default": 10,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
-          },
-          "page": {
-            "type": "integer",
-            "description": "The page number for the query.",
-            "format": "int32",
-            "default": 1,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
+          {
+            "type": "object",
+            "description": "Describes a request to get asset model nodes by ID.",
+            "additionalProperties": false,
+            "required": [
+              "nodes"
+            ],
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "description": "The IDs of the nodes to retrieve.",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           }
-        }
+        ]
+      },
+      "FindAssetModelNodesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to search for asset model nodes.",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name filter.",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "description": "The description filter.",
+                "nullable": true
+              }
+            }
+          }
+        ]
       },
       "EventMessage": {
         "allOf": [
@@ -1973,9 +2121,6 @@
             "description": "Base class for adapter requests related to reading historical event messages.",
             "x-abstract": true,
             "additionalProperties": false,
-            "required": [
-              "messageCount"
-            ],
             "properties": {
               "direction": {
                 "description": "The event read direction. When Backwards is specified, \nthe resulting events will be returned in descending order of time.",
@@ -1984,12 +2129,6 @@
                     "$ref": "#/components/schemas/EventReadDirection"
                   }
                 ]
-              },
-              "messageCount": {
-                "type": "integer",
-                "description": "The maximum number of event messages to retrieve. A value of less than one is interpreted \nas meaning no limit. The adapter that handles the request can apply its own maximum limit \nto the query.",
-                "format": "int32",
-                "default": 500
               }
             }
           }
@@ -2006,22 +2145,6 @@
           0,
           1
         ]
-      },
-      "AdapterRequest": {
-        "type": "object",
-        "description": "Base class that adapter request objects can inherit from.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "properties": {
-            "type": "object",
-            "description": "Additional request properties. These can be used to provide bespoke query parameters \nsupported by the adapter.",
-            "nullable": true,
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        }
       },
       "EventMessageWithCursorPosition": {
         "allOf": [
@@ -2059,6 +2182,14 @@
                 "type": "string",
                 "description": "The cursor position to start the query at.",
                 "nullable": true
+              },
+              "pageSize": {
+                "type": "integer",
+                "description": "The page size for the query.",
+                "format": "int32",
+                "default": 10,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
               }
             }
           }
@@ -2460,6 +2591,18 @@
           }
         ]
       },
+      "GetTagPropertiesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to retrieve tag property definitions.",
+            "additionalProperties": false
+          }
+        ]
+      },
       "TagDefinition": {
         "allOf": [
           {
@@ -2519,73 +2662,71 @@
         }
       },
       "FindTagsRequest": {
-        "type": "object",
-        "description": "Describes a tag search query.",
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The tag name filter.",
-            "nullable": true
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
           },
-          "description": {
-            "type": "string",
-            "description": "The tag description filter.",
-            "nullable": true
-          },
-          "units": {
-            "type": "string",
-            "description": "The tag units filter.",
-            "nullable": true
-          },
-          "label": {
-            "type": "string",
-            "description": "The tag label filter.",
-            "nullable": true
-          },
-          "other": {
+          {
             "type": "object",
-            "description": "Additional filters on bespoke tag properties.",
-            "nullable": true,
-            "additionalProperties": {
-              "type": "string"
+            "description": "Describes a tag search query.",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The tag name filter.",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "description": "The tag description filter.",
+                "nullable": true
+              },
+              "units": {
+                "type": "string",
+                "description": "The tag units filter.",
+                "nullable": true
+              },
+              "label": {
+                "type": "string",
+                "description": "The tag label filter.",
+                "nullable": true
+              },
+              "other": {
+                "type": "object",
+                "description": "Additional filters on bespoke tag properties.",
+                "nullable": true,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
             }
-          },
-          "pageSize": {
-            "type": "integer",
-            "description": "The page size for the query.",
-            "format": "int32",
-            "default": 10,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
-          },
-          "page": {
-            "type": "integer",
-            "description": "The page number for the query.",
-            "format": "int32",
-            "default": 1,
-            "maximum": 2147483647.0,
-            "minimum": 1.0
           }
-        }
+        ]
       },
       "GetTagsRequest": {
-        "type": "object",
-        "description": "Describes a request to get tag definitions by tag ID or name.",
-        "additionalProperties": false,
-        "required": [
-          "tags"
-        ],
-        "properties": {
-          "tags": {
-            "type": "array",
-            "description": "The IDs or names of the tags to retrieve.",
-            "minItems": 1,
-            "items": {
-              "type": "string"
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to get tag definitions by tag ID or name.",
+            "additionalProperties": false,
+            "required": [
+              "tags"
+            ],
+            "properties": {
+              "tags": {
+                "type": "array",
+                "description": "The IDs or names of the tags to retrieve.",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           }
-        }
+        ]
       },
       "TagValueQueryResult": {
         "allOf": [
@@ -2682,7 +2823,7 @@
         "description": "Describes the quality status of a tag value.",
         "x-enumNames": [
           "Bad",
-          "Unknown",
+          "Uncertain",
           "Good"
         ],
         "enum": [
@@ -2854,7 +2995,7 @@
       },
       "DataFunctionDescriptor": {
         "type": "object",
-        "description": "Describes a data function that is supported when making a call for historical process data.",
+        "description": "Describes a data function that is supported when making a call for processed historical data.",
         "additionalProperties": false,
         "required": [
           "id",
@@ -2875,6 +3016,14 @@
             "type": "string",
             "description": "The function description.",
             "nullable": true
+          },
+          "properties": {
+            "type": "array",
+            "description": "Bespoke properties associated with the data function.",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/AdapterProperty"
+            }
           }
         }
       },
