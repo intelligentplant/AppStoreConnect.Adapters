@@ -132,7 +132,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             var result = await feature.ReadAnnotation(_callContext, new ReadAnnotationRequest() {
-                TagId = tagId,
+                Tag = tagId,
                 AnnotationId = annotationId
             }, cancellationToken).ConfigureAwait(false);
 
@@ -176,7 +176,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             var result = await feature.CreateAnnotation(_callContext, new CreateAnnotationRequest() {
-                TagId = tagId,
+                Tag = tagId,
                 Annotation = annotation
             }, cancellationToken).ConfigureAwait(false);
 
@@ -223,7 +223,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             var result = await feature.UpdateAnnotation(_callContext, new UpdateAnnotationRequest() {
-                TagId = tagId,
+                Tag = tagId,
                 AnnotationId = annotationId,
                 Annotation = annotation
             }, cancellationToken).ConfigureAwait(false);
@@ -268,7 +268,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             var result = await feature.DeleteAnnotation(_callContext, new DeleteAnnotationRequest() {
-                TagId = tagId,
+                Tag = tagId,
                 AnnotationId = annotationId
             }, cancellationToken).ConfigureAwait(false);
 

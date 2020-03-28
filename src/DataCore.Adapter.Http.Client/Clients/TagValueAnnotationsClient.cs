@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Get, url).AddRequestMetadata(metadata);
 
@@ -189,7 +189,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/create";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/create";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
                 Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
@@ -246,7 +246,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Put, url) {
                 Content = new ObjectContent<TagValueAnnotation>(request.Annotation, new JsonMediaTypeFormatter())
@@ -303,7 +303,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             _client.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.TagId)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Delete, url).AddRequestMetadata(metadata);
 

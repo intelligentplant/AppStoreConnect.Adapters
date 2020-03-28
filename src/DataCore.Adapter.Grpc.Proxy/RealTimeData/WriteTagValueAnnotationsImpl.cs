@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new CreateAnnotationRequest() {
                 AdapterId = AdapterId,
-                TagId = request.TagId ?? string.Empty,
+                Tag = request.Tag ?? string.Empty,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
             var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
@@ -26,7 +26,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new UpdateAnnotationRequest() {
                 AdapterId = AdapterId,
-                TagId = request.TagId ?? string.Empty,
+                Tag = request.Tag ?? string.Empty,
                 AnnotationId = request.AnnotationId ?? string.Empty,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
@@ -36,11 +36,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             return result.ToAdapterWriteTagValueAnnotationResult();
         }
 
+
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, Adapter.RealTimeData.DeleteAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new DeleteAnnotationRequest() {
                 AdapterId = AdapterId,
-                TagId = request.TagId ?? string.Empty,
+                Tag = request.Tag ?? string.Empty,
                 AnnotationId = request.AnnotationId ?? string.Empty
             };
             var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));

@@ -1,17 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes a request to get an annotation by ID.
     /// </summary>
-    public class ReadAnnotationRequest {
+    public class ReadAnnotationRequest : AdapterRequest {
 
         /// <summary>
-        /// The tag ID for the annotation.
+        /// The tag ID or name for the annotation.
         /// </summary>
         [Required]
-        public string TagId { get; set; }
+        public string Tag { get; set; }
 
         /// <summary>
         /// The annotation ID.

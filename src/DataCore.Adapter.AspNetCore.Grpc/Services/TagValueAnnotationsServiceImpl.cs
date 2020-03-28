@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IReadTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.ReadAnnotationRequest() {
-                TagId = request.TagId,
+                Tag = request.Tag,
                 AnnotationId = request.AnnotationId
             };
             Util.ValidateObject(adapterRequest);
@@ -64,7 +64,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.CreateAnnotationRequest() {
-                TagId = request.TagId,
+                Tag = request.Tag,
                 Annotation = request.Annotation.ToAdapterTagValueAnnotation()
             };
             Util.ValidateObject(adapterRequest);
@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.UpdateAnnotationRequest() {
-                TagId = request.TagId,
+                Tag = request.Tag,
                 AnnotationId = request.AnnotationId,
                 Annotation = request.Annotation.ToAdapterTagValueAnnotation()
             };
@@ -97,7 +97,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IWriteTagValueAnnotations>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.DeleteAnnotationRequest() {
-                TagId = request.TagId,
+                Tag = request.Tag,
                 AnnotationId = request.AnnotationId
             };
             Util.ValidateObject(adapterRequest);

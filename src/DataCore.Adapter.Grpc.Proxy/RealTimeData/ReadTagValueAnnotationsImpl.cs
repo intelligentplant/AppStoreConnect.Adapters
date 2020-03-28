@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new ReadAnnotationRequest() {
                 AdapterId = AdapterId,
-                TagId = request.TagId,
+                Tag = request.Tag,
                 AnnotationId = request.AnnotationId
             };
 

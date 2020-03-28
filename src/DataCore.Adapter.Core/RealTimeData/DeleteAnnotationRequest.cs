@@ -8,10 +8,10 @@ namespace DataCore.Adapter.RealTimeData {
     public class DeleteAnnotationRequest {
 
         /// <summary>
-        /// The tag ID.
+        /// The tag ID or name.
         /// </summary>
         [Required]
-        public string TagId { get; set; }
+        public string Tag { get; set; }
 
         /// <summary>
         /// The annotation ID.

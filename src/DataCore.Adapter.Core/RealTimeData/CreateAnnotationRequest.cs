@@ -8,10 +8,10 @@ namespace DataCore.Adapter.RealTimeData {
     public class CreateAnnotationRequest {
 
         /// <summary>
-        /// The ID of the tag that the annotation is associated with.
+        /// The ID or name of the tag that the annotation is associated with.
         /// </summary>
         [Required]
-        public string TagId { get; set; }
+        public string Tag { get; set; }
 
         /// <summary>
         /// The annotation.
