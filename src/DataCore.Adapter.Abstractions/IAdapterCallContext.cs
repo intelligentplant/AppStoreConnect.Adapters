@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Claims;
 
 namespace DataCore.Adapter {
@@ -22,6 +23,11 @@ namespace DataCore.Adapter {
         /// The host-specified correlation ID for the current operation.
         /// </summary>
         string CorrelationId { get; }
+
+        /// <summary>
+        /// The <see cref="System.Globalization.CultureInfo"/> for the caller.
+        /// </summary>
+        CultureInfo CultureInfo { get; }
 
         /// <summary>
         /// Additional items related to the call context.

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 
 namespace DataCore.Adapter.AspNetCore {
 
@@ -14,7 +16,6 @@ namespace DataCore.Adapter.AspNetCore {
         /// The <see cref="HttpContext"/> associated with the <see cref="AdapterCallContext"/>.
         /// </summary>
         private readonly HttpContext _httpContext;
-
 
         /// <inheritdoc/>
         public ClaimsPrincipal User {
@@ -29,6 +30,11 @@ namespace DataCore.Adapter.AspNetCore {
         /// <inheritdoc/>
         public string CorrelationId {
             get { return _httpContext.TraceIdentifier; }
+        }
+
+        /// <inheritdoc/>
+        public CultureInfo CultureInfo {
+            get { return _httpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture; }
         }
 
         /// <inheritdoc/>

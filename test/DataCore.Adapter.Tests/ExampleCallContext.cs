@@ -4,20 +4,9 @@ using System.Security.Claims;
 using System.Security.Principal;
 
 namespace DataCore.Adapter.Tests {
-    public class ExampleCallContext : IAdapterCallContext {
+    public class ExampleCallContext : DefaultAdapterCallContext {
 
-        public ClaimsPrincipal User { get; }
-
-        public string ConnectionId { get; } = Guid.NewGuid().ToString();
-
-        public string CorrelationId { get; } = Guid.NewGuid().ToString();
-
-        public IDictionary<object, object> Items { get; } = new Dictionary<object, object>();
-
-
-        private ExampleCallContext(ClaimsPrincipal user) {
-            User = user;
-        }
+        private ExampleCallContext(ClaimsPrincipal user) : base(user) { }
 
 
         public static ExampleCallContext ForPrincipal(ClaimsPrincipal principal) {
