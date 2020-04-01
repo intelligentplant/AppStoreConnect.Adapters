@@ -447,6 +447,52 @@ namespace DataCore.Adapter {
 
         #endregion
 
+        #region [ Health Checks ]
+
+        /// <summary>
+        /// Checks the health of all adapter features that implement <see cref="IFeatureHealthCheck"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The call context for the operation, to allow authorization to be applied to the 
+        ///   operation if required.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   health check.
+        /// </returns>
+        protected async Task<IEnumerable<HealthCheckResult>> CheckFeatureHealthAsync(
+            IAdapterCallContext context, 
+            CancellationToken cancellationToken
+        ) {
+            if (!IsRunning) {
+                return Array.Empty<HealthCheckResult>();
+            }
+
+            var result = new List<HealthCheckResult>();
+            
+            foreach (var key in _features.Keys.ToArray()) {
+                if (cancellationToken.IsCancellationRequested) {
+                    return Array.Empty<HealthCheckResult>();
+                }
+
+                var feature = _features[key];
+
+                if (feature == null || feature == this || !(feature is IFeatureHealthCheck healthCheck)) {
+                    continue;
+                }
+
+                var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
+                result.Add(HealthCheckResult.Composite(new[] { featureHealth }, key.Name));
+            }
+
+            return result;
+        }
+
+        #endregion
+
         #region [ Abstract / Virtual Methods ]
 
         /// <summary>
@@ -490,15 +536,16 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   Override this method to perform custom health checks for your adapter. The default 
         ///   implementation will return unhealthy status if <see cref="IsRunning"/> is 
-        ///   <see langword="false"/>.
+        ///   <see langword="false"/>, or a collection of health check results for all features 
+        ///   implementing <see cref="IFeatureHealthCheck"/> otherwise.
         /// </remarks>
-        protected virtual Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+        protected virtual async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             if (!IsRunning) {
                 var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
-                return Task.FromResult<IEnumerable<HealthCheckResult>>(new[] { result });
+                return new[] { result };
             }
 
-            return Task.FromResult<IEnumerable<HealthCheckResult>>(Array.Empty<HealthCheckResult>());
+            return await CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion
