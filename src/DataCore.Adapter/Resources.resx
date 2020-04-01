@@ -169,11 +169,17 @@
   <data name="HealthChecks_CompositeResultDescription_Unhealthy" xml:space="preserve">
     <value>The adapter is running with unhealthy status.</value>
   </data>
+  <data name="HealthChecks_Data_ActiveSubscriberCount" xml:space="preserve">
+    <value>Active Subscriber Count</value>
+  </data>
   <data name="HealthChecks_Data_ConnectionId" xml:space="preserve">
     <value>Connection ID</value>
   </data>
   <data name="HealthChecks_Data_CorrelationId" xml:space="preserve">
     <value>Correlation ID</value>
+  </data>
+  <data name="HealthChecks_Data_PassiveSubscriberCount" xml:space="preserve">
+    <value>Passive Subscriber Count</value>
   </data>
   <data name="HealthChecks_Data_SubscriberCount" xml:space="preserve">
     <value>Subscriber Count</value>

@@ -233,7 +233,6 @@ namespace DataCore.Adapter.Events {
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             Subscription[] subscriptions;
-            int subscribedTagCount;
 
             _subscriptionsLock.EnterReadLock();
             try {
@@ -245,7 +244,8 @@ namespace DataCore.Adapter.Events {
 
 
             var result = HealthCheckResult.Healthy(data: new Dictionary<string, string>() {
-                { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) }
+                { Resources.HealthChecks_Data_ActiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo) },
+                { Resources.HealthChecks_Data_PassiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo) }
             });
 
             return Task.FromResult(result);

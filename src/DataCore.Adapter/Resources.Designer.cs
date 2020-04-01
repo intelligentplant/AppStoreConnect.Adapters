@@ -205,6 +205,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Active Subscriber Count.
+        /// </summary>
+        internal static string HealthChecks_Data_ActiveSubscriberCount {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_ActiveSubscriberCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connection ID.
         /// </summary>
         internal static string HealthChecks_Data_ConnectionId {
@@ -219,6 +228,15 @@ namespace DataCore.Adapter {
         internal static string HealthChecks_Data_CorrelationId {
             get {
                 return ResourceManager.GetString("HealthChecks_Data_CorrelationId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Passive Subscriber Count.
+        /// </summary>
+        internal static string HealthChecks_Data_PassiveSubscriberCount {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_PassiveSubscriberCount", resourceCulture);
             }
         }
         
