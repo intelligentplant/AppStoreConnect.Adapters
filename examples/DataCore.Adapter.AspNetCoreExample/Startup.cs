@@ -1,12 +1,10 @@
 ﻿using DataCore.Adapter.Example;
-using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
@@ -18,6 +16,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+            services.AddLocalization();
+
             // Register our adapters as singletons.
 
             services.AddSingleton<IAdapter, ExampleAdapter>();
@@ -88,9 +88,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
             }
 
             app.UseHttpsRedirection();
-
             app.UseOpenApi();
             app.UseSwaggerUi3();
+
+            app.UseRequestLocalization();
 
             app.UseRouting();
 
