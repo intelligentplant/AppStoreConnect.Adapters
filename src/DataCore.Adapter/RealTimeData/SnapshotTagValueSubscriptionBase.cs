@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -34,8 +35,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context)
-            : base(context) { }
+        /// <param name="id">
+        ///   An identifier for the subscription.
+        /// </param>
+        protected SnapshotTagValueSubscriptionBase(IAdapterCallContext context, string id)
+            : base(context, id) { }
+
+
+        /// <inheritdoc/>
+        protected sealed override TagValueQueryResult GetSubscriptionReadyValue() {
+            return new TagValueQueryResult(
+                string.Empty, 
+                string.Empty, 
+                TagValueBuilder
+                    .Create()
+                    .WithValue(Id)
+                    .Build()
+            );
+        }
 
 
         /// <inheritdoc/>

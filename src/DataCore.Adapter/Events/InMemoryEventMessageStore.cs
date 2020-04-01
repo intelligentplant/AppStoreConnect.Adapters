@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Events {
             InMemoryEventMessageManagerOptions options, 
             IBackgroundTaskService scheduler, 
             ILogger logger
-        ) : base(scheduler, logger) {
+        ) : base(options, scheduler, logger) {
             _capacity = options?.Capacity ?? -1;
         }
 
@@ -423,7 +423,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Options for <see cref="InMemoryEventMessageStore"/>.
     /// </summary>
-    public class InMemoryEventMessageManagerOptions {
+    public class InMemoryEventMessageManagerOptions : EventMessagePushOptions {
 
         /// <summary>
         /// The capacity of the store. When the store reaches capacity, the messages with the

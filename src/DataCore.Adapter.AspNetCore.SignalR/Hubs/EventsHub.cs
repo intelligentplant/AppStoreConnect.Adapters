@@ -43,15 +43,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // fires.
             TaskScheduler.QueueBackgroundWorkItem(async ct => {
                 try {
-                    // Send initial value back to indicate that subscription is active.
-                    var subscriptionReadyIndicator = EventMessageBuilder
-                        .Create()
-                        .WithPriority(EventPriority.Low)
-                        .WithMessage(string.Concat(AdapterCallContext.ConnectionId, ':', adapter.Adapter.Descriptor.Id))
-                        .Build();
-
-                    await result.Writer.WriteAsync(subscriptionReadyIndicator, ct).ConfigureAwait(false);
-
                     while (await subscription.Values.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!subscription.Values.TryRead(out var item) || item == null) {
                             continue;

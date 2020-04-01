@@ -63,7 +63,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 IAdapterCallContext context, 
                 string adapterId,
                 SnapshotTagValuePushImpl push
-            ) : base (context) {
+            ) : base (context, adapterId) {
                 _adapterId = adapterId;
                 _push = push;
             }
@@ -98,6 +98,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 }, _push.TaskScheduler, cancellationToken);
 
                 await hubChannel.ForEachAsync(async val => {
+                    if (val == null || string.IsNullOrWhiteSpace(val.TagId)) {
+                        return;
+                    }
                     await ValueReceived(val, cancellationToken).ConfigureAwait(false);
                 }, cancellationToken).ConfigureAwait(false);
             }

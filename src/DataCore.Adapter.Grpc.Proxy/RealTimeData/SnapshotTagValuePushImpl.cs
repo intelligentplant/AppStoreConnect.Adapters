@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             internal Subscription(
                 IAdapterCallContext context,
                 SnapshotTagValuePushImpl push
-            ) : base(context) {
+            ) : base(context, push.AdapterId) {
                 _push = push;
             }
 
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                 // Read value changes.
                 while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (duplexCall.ResponseStream.Current == null) {
+                    if (duplexCall.ResponseStream.Current == null || string.IsNullOrWhiteSpace(duplexCall.ResponseStream.Current.TagId)) {
                         continue;
                     }
 

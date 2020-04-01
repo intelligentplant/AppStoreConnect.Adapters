@@ -20,12 +20,25 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscriber.
         /// </param>
+        /// <param name="id">
+        ///   An identifier for the subscription
+        /// </param>
         /// <param name="subscriptionType">
         ///   The event subscription type.
         /// </param>
-        protected EventMessageSubscriptionBase(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) 
-            : base(context) {
+        protected EventMessageSubscriptionBase(IAdapterCallContext context, string id, EventMessageSubscriptionType subscriptionType) 
+            : base(context, id) {
             SubscriptionType = subscriptionType;
+        }
+
+
+        /// <inheritdoc/>
+        protected sealed override EventMessage GetSubscriptionReadyValue() {
+            return EventMessageBuilder
+                .Create()
+                .WithPriority(EventPriority.Low)
+                .WithMessage(Id)
+                .Build();
         }
 
 

@@ -205,6 +205,60 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connection ID.
+        /// </summary>
+        internal static string HealthChecks_Data_ConnectionId {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_ConnectionId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Correlation ID.
+        /// </summary>
+        internal static string HealthChecks_Data_CorrelationId {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_CorrelationId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Subscriber Count.
+        /// </summary>
+        internal static string HealthChecks_Data_SubscriberCount {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_SubscriberCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag Count.
+        /// </summary>
+        internal static string HealthChecks_Data_TagCount {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_TagCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User.
+        /// </summary>
+        internal static string HealthChecks_Data_UserName {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_UserName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Emit Time.
+        /// </summary>
+        internal static string HealthChecks_Data_UtcLastEmit {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_UtcLastEmit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while starting adapter {AdapterId}..
         /// </summary>
         internal static string Log_AdapterStartupError {

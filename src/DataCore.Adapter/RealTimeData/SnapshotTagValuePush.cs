@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Default <see cref="ISnapshotTagValuePush"/> implementation. 
     /// </summary>
-    public class SnapshotTagValuePush : ISnapshotTagValuePush, IDisposable {
+    public class SnapshotTagValuePush : ISnapshotTagValuePush, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -42,7 +43,7 @@ namespace DataCore.Adapter.RealTimeData {
         protected CancellationToken DisposedToken => _disposedTokenSource.Token;
 
         /// <summary>
-        /// Stream manager options.
+        /// Feature options.
         /// </summary>
         private readonly SnapshotTagValuePushOptions _options;
 
@@ -90,7 +91,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Creates a new <see cref="SnapshotTagValuePush"/> object.
         /// </summary>
         /// <param name="options">
-        ///   The options.
+        ///   The feature options.
         /// </param>
         /// <param name="scheduler">
         ///   The scheduler to use when running background tasks.
@@ -492,6 +493,30 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
+        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            Subscription[] subscriptions;
+            int subscribedTagCount;
+
+            _subscriptionsLock.EnterReadLock();
+            try {
+                subscriptions = _subscriptions.ToArray();
+                subscribedTagCount = _subscriberCount.Count;
+            }
+            finally {
+                _subscriptionsLock.ExitReadLock();
+            }
+            
+
+            var result = HealthCheckResult.Healthy(data: new Dictionary<string, string>() {
+                { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) },
+                { Resources.HealthChecks_Data_TagCount, subscribedTagCount.ToString(context?.CultureInfo) }
+            });
+
+            return Task.FromResult(result);
+        }
+
+
+        /// <inheritdoc/>
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -566,7 +591,7 @@ namespace DataCore.Adapter.RealTimeData {
             /// <exception cref="ArgumentNullException">
             ///   <paramref name="push"/> is <see langword="null"/>.
             /// </exception>
-            public Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context) {
+            public Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context, push?._options?.AdapterId) {
                 _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 
@@ -604,6 +629,11 @@ namespace DataCore.Adapter.RealTimeData {
     /// Options for <see cref="SnapshotTagValuePush"/>
     /// </summary>
     public class SnapshotTagValuePushOptions {
+
+        /// <summary>
+        /// The adapter name to use when creating subscription IDs.
+        /// </summary>
+        public string AdapterId { get; set; }
 
         /// <summary>
         /// A delegate that will receive tag names or IDs and will return the matching 

@@ -71,7 +71,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                 EventMessagePushImpl feature,
                 IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType
-            ) : base(context, subscriptionType) {
+            ) : base(context, feature.AdapterId, subscriptionType) {
                 _feature = feature;
                 _client = feature.GetClient();
             }

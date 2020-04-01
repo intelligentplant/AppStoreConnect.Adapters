@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Diagnostics;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -16,7 +17,7 @@ namespace DataCore.Adapter.Events {
     ///   This implementation pushes ephemeral event messages to subscribers. To maintain an 
     ///   in-memory buffer of historical events, use <see cref="InMemoryEventMessageStore"/>.
     /// </remarks>
-    public class EventMessagePush : IEventMessagePush, IDisposable {
+    public class EventMessagePush : IEventMessagePush, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
         /// The scheduler to use when running background tasks.
@@ -44,9 +45,14 @@ namespace DataCore.Adapter.Events {
         protected CancellationToken DisposedToken => _disposedTokenSource.Token;
 
         /// <summary>
+        /// Feature options.
+        /// </summary>
+        private readonly EventMessagePushOptions _options;
+
+        /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly HashSet<EventMessageSubscriptionBase> _subscriptions = new HashSet<EventMessageSubscriptionBase>();
+        private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
 
         /// <summary>
         /// For protecting access to <see cref="_subscriptions"/>.
@@ -80,13 +86,17 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Creates a new <see cref="EventMessagePush"/> object.
         /// </summary>
+        /// <param name="options">
+        ///   The feature options.
+        /// </param>
         /// <param name="scheduler">
         ///   The task scheduler to use when running background operations.
         /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected EventMessagePush(IBackgroundTaskService scheduler, ILogger logger) {
+        protected EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
+            _options = options ?? new EventMessagePushOptions();
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             Scheduler.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
@@ -196,7 +206,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="subscription">
         ///   The disposed subscription.
         /// </param>
-        private void OnSubscriptionCancelled(EventMessageSubscriptionBase subscription) {
+        private void OnSubscriptionCancelled(Subscription subscription) {
             if (_isDisposed) {
                 return;
             }
@@ -217,6 +227,28 @@ namespace DataCore.Adapter.Events {
             if (removed) {
                 OnSubscriptionRemoved();
             }
+        }
+
+
+        /// <inheritdoc/>
+        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            Subscription[] subscriptions;
+            int subscribedTagCount;
+
+            _subscriptionsLock.EnterReadLock();
+            try {
+                subscriptions = _subscriptions.ToArray();
+            }
+            finally {
+                _subscriptionsLock.ExitReadLock();
+            }
+
+
+            var result = HealthCheckResult.Healthy(data: new Dictionary<string, string>() {
+                { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) }
+            });
+
+            return Task.FromResult(result);
         }
 
 
@@ -249,7 +281,7 @@ namespace DataCore.Adapter.Events {
                 return;
             }
 
-            if (disposing) { 
+            if (disposing) {
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
                 _masterChannel.Writer.TryComplete();
@@ -349,10 +381,10 @@ namespace DataCore.Adapter.Events {
             ///   The subscription manager that the subscription is attached to.
             /// </param>
             public Subscription(
-                IAdapterCallContext context, 
+                IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType,
                 EventMessagePush push
-            ) : base(context, subscriptionType) {
+            ) : base(context, push?._options?.AdapterId, subscriptionType) {
                 _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 
@@ -363,6 +395,19 @@ namespace DataCore.Adapter.Events {
             }
 
         }
+
+    }
+
+
+    /// <summary>
+    /// Options for <see cref="EventMessagePushOptions"/>
+    /// </summary>
+    public class EventMessagePushOptions {
+
+        /// <summary>
+        /// The adapter name to use when creating subscription IDs.
+        /// </summary>
+        public string AdapterId { get; set; }
 
     }
 }

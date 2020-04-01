@@ -41,6 +41,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="PollingSnapshotTagValuePush"/> object.
         /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
         /// <param name="tagInfoFeature">
         ///   An <see cref="ITagInfo"/> adapter feature that will be used to resolve tag 
         ///   identifiers.
@@ -67,6 +70,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="readSnapshotFeature"/> is <see langword="null"/>.
         /// </exception>
         private PollingSnapshotTagValuePush(
+            string adapterId,
             ITagInfo tagInfoFeature, 
             IReadSnapshotTagValues readSnapshotFeature, 
             TimeSpan pollingInterval,
@@ -74,6 +78,7 @@ namespace DataCore.Adapter.RealTimeData {
             ILogger logger
         ) : base(
             new SnapshotTagValuePushOptions() { 
+                AdapterId = adapterId,
                 TagResolver = SnapshotTagValuePushOptions.CreateTagResolver(tagInfoFeature)
             }, 
             scheduler,
@@ -157,6 +162,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return new PollingSnapshotTagValuePush(
+                adapter.Descriptor.Id,
                 adapter.Features.Get<ITagInfo>(),
                 adapter.Features.Get<IReadSnapshotTagValues>(),
                 pollingInterval,

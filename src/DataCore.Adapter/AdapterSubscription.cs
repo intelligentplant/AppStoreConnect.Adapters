@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter {
 
@@ -14,6 +13,11 @@ namespace DataCore.Adapter {
     ///   The subscription item type.
     /// </typeparam>
     public abstract class AdapterSubscription<T> : IAdapterSubscription<T> {
+
+        /// <summary>
+        /// A suffix that will be incremented and added to the end of any subscription ID.
+        /// </summary>
+        private static long s_idSuffix;
 
         /// <summary>
         /// A flag that specifies if the subscription has been disposed.
@@ -59,6 +63,11 @@ namespace DataCore.Adapter {
         public IAdapterCallContext Context { get; }
 
         /// <summary>
+        /// The identifier for the subscription.
+        /// </summary>
+        public string Id { get; }
+
+        /// <summary>
         /// A channel that will publish the received values.
         /// </summary>
         public ChannelReader<T> Values => _valuesChannel;
@@ -78,6 +87,11 @@ namespace DataCore.Adapter {
         /// </summary>
         public Task Completed => _completed.Task;
 
+        /// <summary>
+        /// The UTC timestamp that the subscription last emitted a value at.
+        /// </summary>
+        protected DateTime UtcLastEmit { get; private set; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterSubscription{T}"/> object.
@@ -85,8 +99,42 @@ namespace DataCore.Adapter {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
-        protected AdapterSubscription(IAdapterCallContext context) {
+        /// <param name="id">
+        ///   The identifier for the subscription.
+        /// </param>
+        protected AdapterSubscription(IAdapterCallContext context, string id) {
             Context = context;
+
+            // Construct an ID.
+            var idBuilder = new System.Text.StringBuilder();
+
+            if (Context?.CorrelationId != null) {
+                // Use correlation ID if supplied.
+                idBuilder.Append(Context.CorrelationId);
+                idBuilder.Append(':');
+            }
+            else if (Context?.ConnectionId != null) {
+                // Otherwise use connection ID if supplied.
+                idBuilder.Append(Context.ConnectionId);
+                idBuilder.Append(':');
+            }
+
+            if (!string.IsNullOrWhiteSpace(Context?.User?.Identity?.Name)) {
+                // Add user name if supplied.
+                idBuilder.Append(Context.User.Identity.Name);
+                idBuilder.Append(':');
+            }
+
+            // Now append supplied ID, or create an identifier if not specified.
+            idBuilder.Append(string.IsNullOrWhiteSpace(id)
+                ? Guid.NewGuid().ToString()
+                : id.Trim()
+            );
+
+            idBuilder.Append(':');
+            idBuilder.Append(Interlocked.Increment(ref s_idSuffix));
+
+            Id = idBuilder.ToString();
             CancellationToken = _subscriptionCancelled.Token;
         }
 
@@ -128,8 +176,19 @@ namespace DataCore.Adapter {
         /// Marks the subscription as running.
         /// </summary>
         internal void OnRunning() {
+            _valuesChannel.Writer.TryWrite(GetSubscriptionReadyValue());
             _ready.TrySetResult(0);
         }
+
+
+        /// <summary>
+        /// Gets an initial value that will be written to the subscriber when the subscription 
+        /// is operational.
+        /// </summary>
+        /// <returns>
+        ///   The initial value.
+        /// </returns>
+        protected abstract T GetSubscriptionReadyValue(); 
 
 
         /// <summary>
@@ -168,7 +227,12 @@ namespace DataCore.Adapter {
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken)) {
                 if (await _valuesChannel.Writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    return _valuesChannel.Writer.TryWrite(value);
+                    var result = _valuesChannel.Writer.TryWrite(value);
+                    if (result) {
+                        UtcLastEmit = DateTime.UtcNow;
+                    }
+
+                    return result;
                 }
             }
 

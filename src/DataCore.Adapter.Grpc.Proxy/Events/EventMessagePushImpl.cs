@@ -35,7 +35,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 EventMessagePushImpl feature, 
                 IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType
-            ) : base(context, subscriptionType) {
+            ) : base(context, feature.AdapterId, subscriptionType) {
                 _feature = feature;
                 _activeSubscription = SubscriptionType == EventMessageSubscriptionType.Active;
             }
