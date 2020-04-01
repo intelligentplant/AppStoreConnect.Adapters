@@ -101,7 +101,7 @@ namespace DataCore.Adapter.Tests {
 
         private class EventSubscriptionManager : EventMessagePush {
 
-            public EventSubscriptionManager() : base(null, null) { }
+            public EventSubscriptionManager() : base(null, null, null) { }
 
         }
     }

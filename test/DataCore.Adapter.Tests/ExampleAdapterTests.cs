@@ -74,6 +74,9 @@ namespace DataCore.Adapter.Tests {
                 }.PublishToChannel();
 
                 using (var subscription = await feature.Subscribe(context)) {
+                    // Skip on ready value.
+                    await subscription.Values.ReadAsync(default);
+
                     var subscribeSucceeded = await subscription.AddTagToSubscription(
                         TestTag1.Id
                     ).ConfigureAwait(false);

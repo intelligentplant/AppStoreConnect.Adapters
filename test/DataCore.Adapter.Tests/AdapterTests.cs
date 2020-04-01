@@ -175,6 +175,9 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
+                    // Skip on ready value.
+                    await subscription.Values.ReadAsync(default);
+
                     var tagDetails = GetReadTagValuesQueryDetails();
 
                     var subscribeSucceeded = await subscription.AddTagToSubscription(tagDetails.Id);
@@ -368,6 +371,9 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
+                    // Skip on ready value.
+                    await subscription.Values.ReadAsync(default);
+
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
@@ -391,6 +397,9 @@ namespace DataCore.Adapter.Tests {
                 using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Passive)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
+
+                    // Skip on ready value.
+                    await subscription.Values.ReadAsync(default);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 
