@@ -23,7 +23,9 @@ namespace DataCore.Adapter {
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
+#pragma warning disable CA1043 // Use Integral Or String Argument For Indexers
         object this[Type key] { get; }
+#pragma warning restore CA1043 // Use Integral Or String Argument For Indexers
 
     }
 }
