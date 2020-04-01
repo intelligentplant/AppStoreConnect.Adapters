@@ -251,6 +251,8 @@ namespace DataCore.Adapter.Csv {
                 throw new ArgumentException($"Invalid time zone ID: {options.TimeZone}.", nameof(options));
             }
 
+            var cultureInfo = options?.CultureInfo ?? CultureInfo.CurrentCulture;
+
             var tags = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
             var sampleTimes = new List<DateTime>();
             var values = new ConcurrentDictionary<string, SortedList<DateTime, TagValueExtended>>(StringComparer.OrdinalIgnoreCase);
@@ -261,7 +263,7 @@ namespace DataCore.Adapter.Csv {
                 IsDataLoopingAllowed = options.IsDataLoopingAllowed
             };
             
-            var csvConfig = new CsvHelper.Configuration.CsvConfiguration(options?.CultureInfo ?? CultureInfo.CurrentCulture) {
+            var csvConfig = new CsvHelper.Configuration.CsvConfiguration(cultureInfo) {
                 PrepareHeaderForMatch = (header, index) => header?.Trim()?.ToUpperInvariant()
             };
 
@@ -269,7 +271,7 @@ namespace DataCore.Adapter.Csv {
             var columnIndexToTagMap = new Dictionary<int, TagDefinition>();
 
             if (string.IsNullOrWhiteSpace(options.CsvFile) && options.GetCsvStream == null) {
-                throw new ArgumentException(string.Format(Resources.Error_NoCsvFileDefined, nameof(CsvAdapterOptions.CsvFile), nameof(CsvAdapterOptions.GetCsvStream)), nameof(options));
+                throw new ArgumentException(string.Format(cultureInfo, Resources.Error_NoCsvFileDefined, nameof(CsvAdapterOptions.CsvFile), nameof(CsvAdapterOptions.GetCsvStream)), nameof(options));
             }
 
             Func<Stream> getCsvStream;
