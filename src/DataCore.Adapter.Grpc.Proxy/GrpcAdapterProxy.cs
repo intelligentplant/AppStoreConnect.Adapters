@@ -302,7 +302,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             if (_channel is GrpcCore.Channel coreChannel) {
                 var state = coreChannel.State;
-                var description = string.Format(CultureInfo.CurrentCulture, Resources.HealthChecks_ChannelStateDescription, state.ToString());
+                var description = string.Format(context?.CultureInfo, Resources.HealthChecks_ChannelStateDescription, state.ToString());
 
                 switch (state) {
                     case GrpcCore.ChannelState.Ready:

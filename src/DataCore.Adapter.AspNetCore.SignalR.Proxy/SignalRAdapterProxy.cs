@@ -239,7 +239,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             if (_client.IsValueCreated) {
                 var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
                 var state = hubConnection.State;
-                var description = string.Format(CultureInfo.CurrentCulture, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString());
+                var description = string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString());
                 
                 switch (state) {
                     case HubConnectionState.Connected:
@@ -258,7 +258,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 var format = string.Concat(Resources.HealthCheck_HubConnectionStatusDescription, " (", item.Key, ")");
 
                 if (!item.Value.IsValueCreated || !item.Value.Value.IsCompleted) {
-                    var description = string.Format(CultureInfo.CurrentCulture, format, Resources.HealthCheck_UnknownConnectionState);
+                    var description = string.Format(context?.CultureInfo, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Degraded(description));
                     continue;
                 }
@@ -267,7 +267,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     var hubConnection = await item.Value.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
                     var state = hubConnection.State;
-                    var description = string.Format(CultureInfo.CurrentCulture, format, state.ToString());
+                    var description = string.Format(context?.CultureInfo, format, state.ToString());
 
                     switch (state) {
                         case HubConnectionState.Connected:
@@ -282,7 +282,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     }
                 }
                 catch (Exception e) {
-                    var description = string.Format(CultureInfo.CurrentCulture, format, Resources.HealthCheck_UnknownConnectionState);
+                    var description = string.Format(context?.CultureInfo, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Unhealthy(description, e.Message));
                 }
             }
