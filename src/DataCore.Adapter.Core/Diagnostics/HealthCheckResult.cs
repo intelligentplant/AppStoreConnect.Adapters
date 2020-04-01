@@ -66,6 +66,38 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <summary>
+        /// Creates a new <see cref="HealthCheckResult"/> that is the composite of the specified 
+        /// inner results.
+        /// </summary>
+        /// <param name="innerResults">
+        ///   The inner results. Can be <see langword="null"/>.
+        /// </param>
+        /// <param name="description">
+        ///   A description of the check that was performed. Can be <see langword="null"/>.
+        /// </param>
+        /// <param name="data">
+        ///   Additional data associated with the health check. Can be <see langword="null"/>.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HealthCheckResult"/>.
+        /// </returns>
+        public static HealthCheckResult Composite(IEnumerable<HealthCheckResult> innerResults, string description = null, IDictionary<string, string> data = null) {
+            if (innerResults == null) {
+                return Healthy(description, data);
+            }
+
+            switch (GetAggregateHealthStatus(innerResults.Select(x => x.Status))) {
+                case HealthStatus.Unhealthy:
+                    return Unhealthy(description, null, data, innerResults);
+                case HealthStatus.Degraded:
+                    return Degraded(description, null, data, innerResults);
+                default:
+                    return Healthy(description, data, innerResults);
+            }
+        }
+
+
+        /// <summary>
         /// Creates a new <see cref="HealthCheckResult"/> with healthy status.
         /// </summary>
         /// <param name="description">
