@@ -58,14 +58,14 @@ namespace DataCore.Adapter {
         });
 
         /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the subscription owner.
-        /// </summary>
-        public IAdapterCallContext Context { get; }
-
-        /// <summary>
         /// The identifier for the subscription.
         /// </summary>
         public string Id { get; }
+
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the subscription owner.
+        /// </summary>
+        public IAdapterCallContext Context { get; }
 
         /// <summary>
         /// A channel that will publish the received values.
@@ -108,22 +108,24 @@ namespace DataCore.Adapter {
             // Construct an ID.
             var idBuilder = new System.Text.StringBuilder();
 
+            if (string.IsNullOrWhiteSpace(Context?.User?.Identity?.Name)) {
+                // No user name supplied.
+                idBuilder.Append(Resources.AdapterSubscription_AnonymousUserName);
+            }
+            else {
+                idBuilder.Append(Context.User.Identity.Name);
+            }
+            idBuilder.Append(':');
+
             if (Context?.CorrelationId != null) {
                 // Use correlation ID if supplied.
                 idBuilder.Append(Context.CorrelationId);
-                idBuilder.Append(':');
             }
             else if (Context?.ConnectionId != null) {
                 // Otherwise use connection ID if supplied.
                 idBuilder.Append(Context.ConnectionId);
-                idBuilder.Append(':');
             }
-
-            if (!string.IsNullOrWhiteSpace(Context?.User?.Identity?.Name)) {
-                // Add user name if supplied.
-                idBuilder.Append(Context.User.Identity.Name);
-                idBuilder.Append(':');
-            }
+            idBuilder.Append(':');
 
             // Now append supplied ID, or create an identifier if not specified.
             idBuilder.Append(string.IsNullOrWhiteSpace(id)

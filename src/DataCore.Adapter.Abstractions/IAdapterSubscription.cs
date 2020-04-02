@@ -14,6 +14,11 @@ namespace DataCore.Adapter {
     public interface IAdapterSubscription<T> : IDisposable {
 
         /// <summary>
+        /// An identifier for the subscription.
+        /// </summary>
+        string Id { get; }
+
+        /// <summary>
         /// Indicates if the subscription has been initialised.
         /// </summary>
         bool IsStarted { get; }

@@ -61,6 +61,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Anonymous&gt;.
+        /// </summary>
+        internal static string AdapterSubscription_AnonymousUserName {
+            get {
+                return ResourceManager.GetString("AdapterSubscription_AnonymousUserName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum adapter description length is {0}..
         /// </summary>
         internal static string Error_AdapterDescriptionIsTooLong {
