@@ -175,8 +175,10 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
-                    // Skip on ready value.
-                    await subscription.Reader.ReadAsync(default);
+                    // Check on ready value.
+                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
+                    Assert.IsNotNull(onReadyMessage);
+                    Assert.AreEqual(subscription.Id, onReadyMessage.Value.Value.ToString());
 
                     var tagDetails = GetReadTagValuesQueryDetails();
 
@@ -371,8 +373,10 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
-                    // Skip on ready value.
-                    await subscription.Reader.ReadAsync(default);
+                    // Check on ready value.
+                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
+                    Assert.IsNotNull(onReadyMessage);
+                    Assert.AreEqual(subscription.Id, onReadyMessage.Message);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
@@ -398,8 +402,10 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
-                    // Skip on ready value.
-                    await subscription.Reader.ReadAsync(default);
+                    // Check on ready value.
+                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
+                    Assert.IsNotNull(onReadyMessage);
+                    Assert.AreEqual(subscription.Id, onReadyMessage.Message);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 

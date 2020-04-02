@@ -53,15 +53,32 @@ namespace DataCore.Adapter.Tests {
 
         protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
             var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
-            await eventMessageManager.WriteEventMessages(
-                EventMessageBuilder
+            
+            var msg = EventMessageBuilder
                     .Create()
                     .WithUtcEventTime(DateTime.UtcNow)
                     .WithCategory(TestContext.FullyQualifiedTestClassName)
                     .WithMessage(TestContext.TestName)
                     .WithPriority(EventPriority.Low)
-                    .Build()
-            );
+                    .Build();
+
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<EventMessage> onPublish = evt => { 
+                if (evt.Id.Equals(msg.Id)) {
+                    tcs.TrySetResult(true);
+                }
+            };
+            eventMessageManager.Publish += onPublish;
+
+            await eventMessageManager.WriteEventMessages(msg);
+
+            try {
+                // Wait for the message to actually be published.
+                await tcs.Task;
+            }
+            finally {
+                eventMessageManager.Publish -= onPublish;
+            }
         }
 
 
