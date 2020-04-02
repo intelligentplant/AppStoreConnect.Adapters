@@ -175,11 +175,6 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
-                    // Check on ready value.
-                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
-                    Assert.IsNotNull(onReadyMessage);
-                    Assert.AreEqual(subscription.Id, onReadyMessage.Value.Value.ToString());
-
                     var tagDetails = GetReadTagValuesQueryDetails();
 
                     var subscribeSucceeded = await subscription.AddTagToSubscription(tagDetails.Id);
@@ -373,11 +368,6 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
-                    // Check on ready value.
-                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
-                    Assert.IsNotNull(onReadyMessage);
-                    Assert.AreEqual(subscription.Id, onReadyMessage.Message);
-
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
@@ -401,11 +391,6 @@ namespace DataCore.Adapter.Tests {
                 using (var subscription = await feature.Subscribe(context, EventMessageSubscriptionType.Passive)) {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
-
-                    // Check on ready value.
-                    var onReadyMessage = await subscription.Reader.ReadAsync(default);
-                    Assert.IsNotNull(onReadyMessage);
-                    Assert.AreEqual(subscription.Id, onReadyMessage.Message);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 
