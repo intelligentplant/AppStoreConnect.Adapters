@@ -9,7 +9,7 @@ namespace DataCore.Adapter {
     /// Describes a subscription to an adapter.
     /// </summary>
     /// <typeparam name="T">
-    ///   The type of item that is received by the subscription.
+    ///   The type of item that is emitted by the subscription.
     /// </typeparam>
     public interface IAdapterSubscription<T> : IDisposable {
 
