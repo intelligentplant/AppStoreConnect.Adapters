@@ -180,19 +180,8 @@ namespace DataCore.Adapter {
         /// Marks the subscription as running.
         /// </summary>
         internal void OnRunning() {
-            _valuesChannel.Writer.TryWrite(GetSubscriptionReadyValue());
             _ready.TrySetResult(0);
         }
-
-
-        /// <summary>
-        /// Gets an initial value that will be written to the subscriber when the subscription 
-        /// is operational.
-        /// </summary>
-        /// <returns>
-        ///   The initial value.
-        /// </returns>
-        protected abstract T GetSubscriptionReadyValue(); 
 
 
         /// <summary>

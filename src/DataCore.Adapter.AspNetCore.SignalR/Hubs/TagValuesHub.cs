@@ -42,6 +42,31 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Create the subscription.
             var subscription = await adapter.Feature.Subscribe(AdapterCallContext).ConfigureAwait(false);
 
+            var result = Channel.CreateUnbounded<TagValueQueryResult>();
+
+            // Send a "subscription ready" event so that the caller knows that the stream is 
+            // now up-and-running at this end.
+            var onReady = new TagValueQueryResult(
+                string.Empty,
+                string.Empty,
+                TagValueBuilder
+                    .Create()
+                    .WithValue(subscription.Id)
+                    .Build()
+            );
+            await result.Writer.WriteAsync(onReady);
+
+            // Run background operation to forward values emitted from the subscription.
+            subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
+                while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    if (!ch.TryRead(out var item) || item == null) {
+                        continue;
+                    }
+
+                    await result.Writer.WriteAsync(item, ct).ConfigureAwait(false);
+                }
+            }, TaskScheduler, cancellationToken);
+
             // Run background operation to push incoming changes to the subscription.
             subscriptionChanges.RunBackgroundOperation(async (ch, ct) => { 
                 try {
@@ -64,7 +89,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }, TaskScheduler, cancellationToken); 
             
             // Return the output channel for the subscription.
-            return subscription.Reader;
+            return result;
         }
 
         #endregion

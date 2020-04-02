@@ -45,19 +45,6 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected sealed override TagValueQueryResult GetSubscriptionReadyValue() {
-            return new TagValueQueryResult(
-                string.Empty, 
-                string.Empty, 
-                TagValueBuilder
-                    .Create()
-                    .WithValue(Id)
-                    .Build()
-            );
-        }
-
-
-        /// <inheritdoc/>
         protected sealed override async Task Run(CancellationToken cancellationToken) {
             await Init(cancellationToken).ConfigureAwait(false);
             OnRunning();

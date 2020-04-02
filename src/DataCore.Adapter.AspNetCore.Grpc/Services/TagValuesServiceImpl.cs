@@ -32,7 +32,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ) {
             var cancellationToken = context.CancellationToken;
 
-            // Wait for first subscription change.
+            // Wait for first subscription change. We can't actually create our subscription until 
+            // the first change comes in, because we have no way of knowing which adapter to 
+            // actually subscribe to before then.
 
             if (!await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                 return;

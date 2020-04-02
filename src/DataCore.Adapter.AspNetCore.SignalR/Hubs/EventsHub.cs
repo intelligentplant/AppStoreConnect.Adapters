@@ -39,6 +39,15 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             var result = Channel.CreateUnbounded<EventMessage>();
 
+            // Send a "subscription ready" event so that the caller knows that the stream is 
+            // now up-and-running at this end.
+            var onReady = EventMessageBuilder
+                .Create()
+                .WithPriority(EventPriority.Low)
+                .WithMessage(subscription.Id)
+                .Build();
+            await result.Writer.WriteAsync(onReady);
+
             // Run background operation to dispose of the subscription when the cancellation token 
             // fires.
             TaskScheduler.QueueBackgroundWorkItem(async ct => {

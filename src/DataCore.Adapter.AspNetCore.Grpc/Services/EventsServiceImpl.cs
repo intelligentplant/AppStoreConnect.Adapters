@@ -28,6 +28,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
+
+                // Send a "subscription ready" event so that the caller knows that the stream is 
+                // now up-and-running at this end.
+                var onReady = EventMessageBuilder
+                    .Create()
+                    .WithPriority(Events.EventPriority.Low)
+                    .WithMessage(subscription.Id)
+                    .Build();
+
+                await responseStream.WriteAsync(onReady.ToGrpcEventMessage()).ConfigureAwait(false);
+                
                 while (!cancellationToken.IsCancellationRequested) {
                     try {
                         var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);

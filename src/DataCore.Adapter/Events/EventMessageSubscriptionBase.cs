@@ -35,16 +35,6 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected sealed override EventMessage GetSubscriptionReadyValue() {
-            return EventMessageBuilder
-                .Create()
-                .WithPriority(EventPriority.Low)
-                .WithMessage(Id)
-                .Build();
-        }
-
-
-        /// <inheritdoc/>
         protected sealed override async Task Run(CancellationToken cancellationToken) {
             await Init(cancellationToken).ConfigureAwait(false);
             OnRunning();
