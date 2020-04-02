@@ -559,7 +559,7 @@ namespace DataCore.Adapter.RealTimeData {
                 _subscriptionsLock.EnterWriteLock();
                 try {
                     _subscriberCount.Clear();
-                    foreach (var subscription in _subscriptions) {
+                    foreach (var subscription in _subscriptions.ToArray()) {
                         subscription.Dispose();
                     }
                     _subscriptions.Clear();
