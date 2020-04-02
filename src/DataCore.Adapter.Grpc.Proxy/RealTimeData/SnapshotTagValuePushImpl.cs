@@ -75,9 +75,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     }
                 }, _push.TaskScheduler, cancellationToken);
 
+                // Wait for and discard the initial "subscription created" placeholder.
+                await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false);
+
                 // Read value changes.
                 while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (duplexCall.ResponseStream.Current == null || string.IsNullOrWhiteSpace(duplexCall.ResponseStream.Current.TagId)) {
+                    if (duplexCall.ResponseStream.Current == null) {
                         continue;
                     }
 

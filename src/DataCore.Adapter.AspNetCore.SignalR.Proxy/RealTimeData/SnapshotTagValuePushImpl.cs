@@ -97,8 +97,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     catch (OperationCanceledException) { }
                 }, _push.TaskScheduler, cancellationToken);
 
+                // Wait for and discard the initial "subscription created" placeholder.
+                await hubChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+
                 await hubChannel.ForEachAsync(async val => {
-                    if (val == null || string.IsNullOrWhiteSpace(val.TagId)) {
+                    if (val == null) {
                         return;
                     }
                     await ValueReceived(val, cancellationToken).ConfigureAwait(false);
