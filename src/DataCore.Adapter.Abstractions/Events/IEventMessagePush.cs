@@ -23,6 +23,11 @@ namespace DataCore.Adapter.Events {
         ///   A task that will create and start a subscription object that can be disposed once 
         ///   the subscription is no longer required.
         /// </returns>
+        /// <remarks>
+        ///   When the <see cref="IEventMessageSubscription"/> is created, it must immediately 
+        ///   publish a message to the subscriber to indicate that the subscription is operational. 
+        ///   It is the responsibility of the subscriber to read and discard this message.
+        /// </remarks>
         Task<IEventMessageSubscription> Subscribe(
             IAdapterCallContext context, 
             EventMessageSubscriptionType subscriptionType

@@ -19,6 +19,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will create and start a subscription object that can be disposed once 
         ///   the subscription is no longer required.
         /// </returns>
+        /// <remarks>
+        ///   When the <see cref="ISnapshotTagValueSubscription"/> is created, it must immediately 
+        ///   publish a value to the subscriber to indicate that the subscription is operational. 
+        ///   It is the responsibility of the subscriber to read and discard this value.
+        /// </remarks>
         Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context);
 
     }
