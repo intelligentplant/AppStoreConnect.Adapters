@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Tests {
 
                 using (var subscription = await feature.Subscribe(context)) {
                     // Skip on ready value.
-                    await subscription.Values.ReadAsync(default);
+                    await subscription.Reader.ReadAsync(default);
 
                     var subscribeSucceeded = await subscription.AddTagToSubscription(
                         TestTag1.Id
@@ -110,14 +110,14 @@ namespace DataCore.Adapter.Tests {
 
                     // Read initial value.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.IsNotNull(value);
                     }
 
                     // Read first value written above.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
                         Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Tests {
 
                     // Read second value written above.
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Values.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
                         ctSource.Token.ThrowIfCancellationRequested();
                         Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
                         Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());

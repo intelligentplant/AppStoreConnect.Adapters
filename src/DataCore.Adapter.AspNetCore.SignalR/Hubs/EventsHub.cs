@@ -43,8 +43,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // fires.
             TaskScheduler.QueueBackgroundWorkItem(async ct => {
                 try {
-                    while (await subscription.Values.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!subscription.Values.TryRead(out var item) || item == null) {
+                    while (await subscription.Reader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                        if (!subscription.Reader.TryRead(out var item) || item == null) {
                             continue;
                         }
 

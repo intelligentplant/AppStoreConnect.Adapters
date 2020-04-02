@@ -70,7 +70,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// A channel that will publish the received values.
         /// </summary>
-        public ChannelReader<T> Values => _valuesChannel;
+        public ChannelReader<T> Reader => _valuesChannel;
 
         /// <summary>
         /// A cancellation token that will fire when the subscription is cancelled.
@@ -210,7 +210,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Publishes a value to the <see cref="Values"/> channel.
+        /// Publishes a value to the <see cref="Reader"/> channel.
         /// </summary>
         /// <param name="value">
         ///   The value.

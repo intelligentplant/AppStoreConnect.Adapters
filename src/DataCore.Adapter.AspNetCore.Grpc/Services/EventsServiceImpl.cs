@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
                 while (!cancellationToken.IsCancellationRequested) {
                     try {
-                        var msg = await subscription.Values.ReadAsync(cancellationToken).ConfigureAwait(false);
+                        var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                         await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException) {

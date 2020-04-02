@@ -41,7 +41,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// A channel reader that will emit items published to the subscription.
         /// </summary>
-        ChannelReader<T> Values { get; }
+        ChannelReader<T> Reader { get; }
 
         /// <summary>
         /// Cancels the subscription.

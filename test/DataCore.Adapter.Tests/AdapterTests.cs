@@ -176,7 +176,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     // Skip on ready value.
-                    await subscription.Values.ReadAsync(default);
+                    await subscription.Reader.ReadAsync(default);
 
                     var tagDetails = GetReadTagValuesQueryDetails();
 
@@ -184,7 +184,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscribeSucceeded);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Values.ReadAsync(ctSource.Token);
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                         Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
                     }
@@ -372,12 +372,12 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     // Skip on ready value.
-                    await subscription.Values.ReadAsync(default);
+                    await subscription.Reader.ReadAsync(default);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Values.ReadAsync(ctSource.Token);
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                     }
                 }
@@ -399,12 +399,12 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     // Skip on ready value.
-                    await subscription.Values.ReadAsync(default);
+                    await subscription.Reader.ReadAsync(default);
 
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Values.ReadAsync(ctSource.Token);
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
                     }
                 }

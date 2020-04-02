@@ -59,7 +59,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                 // Run background operation to push results back to caller.
 
-                subscription.Values.RunBackgroundOperation(async (ch, ct) => {
+                subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
                     while (!ct.IsCancellationRequested) {
                         try {
                             var val = await ch.ReadAsync(ct).ConfigureAwait(false);

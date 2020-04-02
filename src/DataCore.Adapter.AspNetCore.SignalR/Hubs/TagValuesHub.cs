@@ -64,7 +64,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }, TaskScheduler, cancellationToken); 
             
             // Return the output channel for the subscription.
-            return subscription.Values;
+            return subscription.Reader;
         }
 
         #endregion
