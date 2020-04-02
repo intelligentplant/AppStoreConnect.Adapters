@@ -82,6 +82,11 @@ namespace DataCore.Adapter.Events {
             SingleWriter = true
         });
 
+        /// <summary>
+        /// Emits all messages that are published to the internal master channel.
+        /// </summary>
+        public event Action<EventMessage> Publish;
+
 
         /// <summary>
         /// Creates a new <see cref="EventMessagePush"/> object.
@@ -318,6 +323,8 @@ namespace DataCore.Adapter.Events {
                         if (message == null) {
                             continue;
                         }
+
+                        Publish?.Invoke(message);
 
                         EventMessageSubscriptionBase[] subscribers;
 

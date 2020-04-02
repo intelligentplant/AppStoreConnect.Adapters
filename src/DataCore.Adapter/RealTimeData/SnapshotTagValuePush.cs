@@ -86,6 +86,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
+        /// <summary>
+        /// Emits all values that are published to the internal master channel.
+        /// </summary>
+        public event Action<TagValueQueryResult> Publish;
+
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePush"/> object.
@@ -369,6 +374,8 @@ namespace DataCore.Adapter.RealTimeData {
                 if (!_masterChannel.Reader.TryRead(out var item)) {
                     continue;
                 }
+
+                Publish?.Invoke(item.Value);
 
                 foreach (var subscriber in item.Subscribers) {
                     try {
