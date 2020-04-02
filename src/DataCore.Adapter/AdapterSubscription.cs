@@ -58,7 +58,7 @@ namespace DataCore.Adapter {
         });
 
         /// <summary>
-        /// The identifier for the subscription.
+        /// The fully-qualified identifier for the subscription.
         /// </summary>
         public string Id { get; }
 
@@ -100,7 +100,9 @@ namespace DataCore.Adapter {
         ///   The <see cref="IAdapterCallContext"/> for the subscription owner.
         /// </param>
         /// <param name="id">
-        ///   The identifier for the subscription.
+        ///   An identifier for the subscription (e.g. the ID of the adapter that the subscription 
+        ///   is being created on). The value does not have to be unique; a fully-qualified 
+        ///   identifier will be generated using this value.
         /// </param>
         protected AdapterSubscription(IAdapterCallContext context, string id) {
             Context = context;
