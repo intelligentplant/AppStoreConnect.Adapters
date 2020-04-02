@@ -28,6 +28,22 @@ var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFac
 await proxy.StartAsync(cancellationToken);
 ```
 
+## A Note on Self-Signed Certificates and Grpc.Core
+
+If you use the `Grpc.Core.Channel` class to connect to host that is using SSL and a self-signed certificate, you will have to provide the certificate to the `SslCredentials` constructor as a PEM-encoded string, as the certification path will not exist in the SSL roots provided by `Grpc.Core`. The [DataCore.Adapter.Security.CertificateUtilities](/src/DataCore.Adapter/Security/CertificateUtilities.cs) class contains helper methods that can convert an `X509Certificate2` into the required format, as well as load a certificate from a certificate store:
+
+```csharp
+var certPath = "cert:/CurrentUser/My/{some thumbprint or subject}";
+
+var sslCredentials = CertificateUtilities.TryLoadCertificateFromStore(certPath, out var cert)
+    ? new SslCredentials(CertificateUtilities.PemEncode(cert))
+    : new SslCredentials();
+
+var channel = new Grpc.Core.Channel("localhost:5000", sslCredentials);
+```
+
+A `Grpc.Net.Client` channel will happily connect to a host using a self-signed certificate without any additional configuration required, as long as the certificate is trusted by the client machine.
+
 
 # Using the Proxy
 
