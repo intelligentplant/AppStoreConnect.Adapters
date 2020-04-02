@@ -277,6 +277,50 @@ namespace DataCore.Adapter {
             Validator.ValidateObject(request, new ValidationContext(request), true);
         }
 
+
+        /// <summary>
+        /// Checks the health of all adapter features that implement <see cref="IFeatureHealthCheck"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The call context for the operation, to allow authorization to be applied to the 
+        ///   operation if required.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   health check.
+        /// </returns>
+        protected async Task<IEnumerable<HealthCheckResult>> CheckFeatureHealthAsync(
+            IAdapterCallContext context,
+            CancellationToken cancellationToken
+        ) {
+            if (!IsRunning) {
+                return Array.Empty<HealthCheckResult>();
+            }
+
+            var result = new List<HealthCheckResult>();
+            var processedFeatures = new HashSet<object>();
+
+            foreach (var key in _features.Keys.ToArray()) {
+                if (cancellationToken.IsCancellationRequested) {
+                    return Array.Empty<HealthCheckResult>();
+                }
+
+                var feature = _features[key];
+
+                if (feature == null || feature == this || !processedFeatures.Add(feature) || !(feature is IFeatureHealthCheck healthCheck)) {
+                    continue;
+                }
+
+                var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
+                result.Add(HealthCheckResult.Composite(new[] { featureHealth }, key.Name));
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region [ Feature Management ]
@@ -443,52 +487,6 @@ namespace DataCore.Adapter {
         /// </summary>
         protected void RemoveAllProperties() {
             _properties.Clear();
-        }
-
-        #endregion
-
-        #region [ Health Checks ]
-
-        /// <summary>
-        /// Checks the health of all adapter features that implement <see cref="IFeatureHealthCheck"/>.
-        /// </summary>
-        /// <param name="context">
-        ///   The call context for the operation, to allow authorization to be applied to the 
-        ///   operation if required.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
-        ///   health check.
-        /// </returns>
-        protected async Task<IEnumerable<HealthCheckResult>> CheckFeatureHealthAsync(
-            IAdapterCallContext context, 
-            CancellationToken cancellationToken
-        ) {
-            if (!IsRunning) {
-                return Array.Empty<HealthCheckResult>();
-            }
-
-            var result = new List<HealthCheckResult>();
-            
-            foreach (var key in _features.Keys.ToArray()) {
-                if (cancellationToken.IsCancellationRequested) {
-                    return Array.Empty<HealthCheckResult>();
-                }
-
-                var feature = _features[key];
-
-                if (feature == null || feature == this || !(feature is IFeatureHealthCheck healthCheck)) {
-                    continue;
-                }
-
-                var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
-                result.Add(HealthCheckResult.Composite(new[] { featureHealth }, key.Name));
-            }
-
-            return result;
         }
 
         #endregion
