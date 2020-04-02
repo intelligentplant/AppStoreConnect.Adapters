@@ -53,6 +53,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     },
                     _feature.GetCallOptions(Context, cancellationToken)
                 );
+
+                // Wait for and discard the initial "subscription created" placeholder message.
+                await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false);
             }
 
 
@@ -61,9 +64,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 if (_streamingCall == null) {
                     return;
                 }
-
-                // Wait for and discard the initial "subscription created" placeholder message.
-                await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false);
 
                 // Read value changes.
                 while (await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {

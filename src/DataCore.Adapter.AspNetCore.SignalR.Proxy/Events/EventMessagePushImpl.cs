@@ -84,6 +84,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                     SubscriptionType,
                     CancellationToken
                 ).ConfigureAwait(false);
+
+                // Wait for and discard the initial "subscription created" placeholder message.
+                await _eventsChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
             }
 
 
@@ -92,9 +95,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                 if (_eventsChannel == null) {
                     return;
                 }
-
-                // Wait for and discard the initial "subscription created" placeholder message.
-                await _eventsChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 while (await _eventsChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                     if (!_eventsChannel.TryRead(out var item) || item == null) {
