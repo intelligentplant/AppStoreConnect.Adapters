@@ -1,35 +1,54 @@
 <!-- Contains NuGet package versions used throughout the rest of the repository. -->
 
 <Project>
+
+  <!-- CoreFX Packages -->
   <PropertyGroup>
-    <CsvHelperVersion>15.0.0</CsvHelperVersion>
-    <GoogleProtobufVersion>3.11.3</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.26.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.27.0</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.26.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.27.0</GrpcToolsVersion>
-    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
-    <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>
-    <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
+    <SystemComponentModelAnnotationsVersion>4.7.0</SystemComponentModelAnnotationsVersion>
+    <SystemTextJsonVersion>4.7.1</SystemTextJsonVersion>
+    <SystemThreadingChannelsVersion>4.7.0</SystemThreadingChannelsVersion>
+  </PropertyGroup>
+  
+  <!-- ASP.NET Core/Microsoft Extension Packages -->
+  <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>3.1.1</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.1</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>3.1.3</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>1.1.0</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.3</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.3</MicrosoftExtensionsLoggingAbstractionsVersion>
+  </PropertyGroup>
+  
+  <!-- gRPC Packages -->
+  <PropertyGroup>
+    <GoogleProtobufVersion>3.11.4</GoogleProtobufVersion>
+    <GrpcAspNetCoreServerVersion>2.27.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.27.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.27.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.27.0</GrpcToolsVersion>
+  </PropertyGroup>
+  
+  <!-- Dev/Test/Benchmark Packages -->
+  <PropertyGroup>
+    <BenchmarkDotNetVersion>0.12.0</BenchmarkDotNetVersion>
     <MicrosoftCodeAnalysisFxCopAnalyzersVersion>2.9.8</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.1</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.1</MicrosoftExtensionsLoggingAbstractionsVersion>
     <MicrosoftNETTestSdkVersion>16.5.0</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MSTestTestAdapterVersion>2.1.0</MSTestTestAdapterVersion>
-    <MSTestTestFrameworkVersion>2.1.0</MSTestTestFrameworkVersion>
+    <MSTestTestAdapterVersion>2.1.1</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion>2.1.1</MSTestTestFrameworkVersion>
+  </PropertyGroup>
+  
+  <!-- Other Packages -->
+  <PropertyGroup>
+    <CsvHelperVersion>15.0.3</CsvHelperVersion>
+    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
+    <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>
+    <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.2.2</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.4.0</NuGetVersioningVersion>
-    <SystemComponentModelAnnotationsVersion>4.7.0</SystemComponentModelAnnotationsVersion>
-    <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
-    <SystemThreadingChannelsVersion>4.7.0</SystemThreadingChannelsVersion>
+    <NSwagAspNetCoreVersion>13.3.0</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>5.5.0</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>
