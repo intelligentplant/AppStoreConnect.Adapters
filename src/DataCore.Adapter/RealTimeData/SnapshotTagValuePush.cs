@@ -514,7 +514,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
             
 
-            var result = HealthCheckResult.Healthy(data: new Dictionary<string, string>() {
+            var result = HealthCheckResult.Healthy(nameof(SnapshotTagValuePush), data: new Dictionary<string, string>() {
                 { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) },
                 { Resources.HealthChecks_Data_TagCount, subscribedTagCount.ToString(context?.CultureInfo) }
             });

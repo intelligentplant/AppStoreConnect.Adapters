@@ -44,13 +44,13 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
                         var feature = x.Features.Get<Adapter.Diagnostics.IHealthCheck>();
                         if (feature == null) {
                             return x.IsRunning 
-                                ? Adapter.Diagnostics.HealthCheckResult.Healthy() 
-                                : Adapter.Diagnostics.HealthCheckResult.Unhealthy(Resources.HealthChecks_AdapterNotRunning);
+                                ? Adapter.Diagnostics.HealthCheckResult.Healthy(null) 
+                                : Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, Resources.HealthChecks_AdapterNotRunning);
                         }
                         return await feature.CheckHealthAsync(null, cancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception e) {
-                        return Adapter.Diagnostics.HealthCheckResult.Unhealthy(error: e.ToString());
+                        return Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
                     }
                 }, cancellationToken)
             }).ToArray();

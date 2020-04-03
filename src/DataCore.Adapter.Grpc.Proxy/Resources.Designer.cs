@@ -70,11 +70,56 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to gRPC channel state is {0}. See inner results for remote adapter health..
+        /// </summary>
+        internal static string HealthCheck_ChannelStateDescription {
+            get {
+                return ResourceManager.GetString("HealthCheck_ChannelStateDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to gRPC channel state is {0}..
         /// </summary>
-        internal static string HealthChecks_ChannelStateDescription {
+        internal static string HealthCheck_ChannelStateDescriptionNoInnerResults {
             get {
-                return ResourceManager.GetString("HealthChecks_ChannelStateDescription", resourceCulture);
+                return ResourceManager.GetString("HealthCheck_ChannelStateDescriptionNoInnerResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gRPC Connection.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_Connection {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_Connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Adapter Health.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_RemoteAdapter {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_RemoteAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to See inner results for remote adapter health..
+        /// </summary>
+        internal static string HealthCheck_GrpcNetClientDescription {
+            get {
+                return ResourceManager.GetString("HealthCheck_GrpcNetClientDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The remote adapter does not implement health checks..
+        /// </summary>
+        internal static string HealthCheck_RemoteAdapterHealthNotSupported {
+            get {
+                return ResourceManager.GetString("HealthCheck_RemoteAdapterHealthNotSupported", resourceCulture);
             }
         }
         

@@ -314,8 +314,18 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
+                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key.Name);
                 var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
-                result.Add(HealthCheckResult.Composite(new[] { featureHealth }, key.Name));
+                
+                // Create new result that uses normalised name.
+                result.Add(new HealthCheckResult(
+                    healthCheckName, 
+                    featureHealth.Status, 
+                    featureHealth.Description, 
+                    featureHealth.Error, 
+                    featureHealth.Data, 
+                    featureHealth.InnerResults
+                ));
             }
 
             return result;
@@ -638,7 +648,7 @@ namespace DataCore.Adapter {
                         break;
                 }
 
-                return new HealthCheckResult(compositeStatus, description, null, null, resultsArray);
+                return new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
             }
             catch (OperationCanceledException) {
                 throw;

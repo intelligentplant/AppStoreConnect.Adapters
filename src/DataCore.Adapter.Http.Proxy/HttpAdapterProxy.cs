@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Http.Client;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
@@ -205,6 +207,75 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <inheritdoc/>
         protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Checks the health of the remote adapter.
+        /// </summary>
+        /// <param name="context">
+        ///   The context for the caller.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the health check result.
+        /// </returns>
+        private async Task<HealthCheckResult> CheckRemoteHealthAsync(
+            IAdapterCallContext context,
+            CancellationToken cancellationToken
+        ) {
+            if (!RemoteDescriptor.HasFeature<IHealthCheck>()) {
+                return HealthCheckResult.Healthy(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    Resources.HealthCheck_RemoteAdapterHealthNotSupported
+                );
+            }
+
+            try {
+                var client = GetClient();
+
+                var result = await client.Adapters
+                    .CheckAdapterHealthAsync(RemoteDescriptor.Id, context?.ToRequestMetadata(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                return new HealthCheckResult(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    result.Status,
+                    result.Description,
+                    result.Error,
+                    result.Data,
+                    result.InnerResults
+                );
+            }
+            catch (Exception e) {
+                return HealthCheckResult.Unhealthy(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    error: e.Message
+                );
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
+            if (!IsRunning) {
+                return results;
+            }
+
+            results.Add(
+                HealthCheckResult.Composite(
+                    Resources.HealthCheck_DisplayName_Connection,
+                    new[] {
+                        await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                    },
+                    Resources.HealthChecks_RemoteHeathDescription
+                )
+            );
+
+            return results;
         }
 
     }

@@ -196,6 +196,13 @@
   <data name="HealthChecks_Data_UtcLastEmit" xml:space="preserve">
     <value>Last Emit Time</value>
   </data>
+  <data name="HealthChecks_DisplayName_FeatureHealth" xml:space="preserve">
+    <value>Feature Health: {0}</value>
+    <comment>{0} - feature name</comment>
+  </data>
+  <data name="HealthChecks_DisplayName_OverallAdapterHealth" xml:space="preserve">
+    <value>Adapter Health</value>
+  </data>
   <data name="Log_AdapterStartupError" xml:space="preserve">
     <value>An error occurred while starting adapter {AdapterId}.</value>
   </data>

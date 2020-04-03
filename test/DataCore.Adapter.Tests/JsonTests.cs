@@ -489,6 +489,7 @@ namespace DataCore.Adapter.Tests {
         public void HealthCheckResult_ShouldRoundTrip() {
             var options = GetOptions();
             var expected = new HealthCheckResult(
+                "DisplayName",
                 HealthStatus.Healthy,
                 "Description",
                 "Error",
@@ -498,6 +499,7 @@ namespace DataCore.Adapter.Tests {
                 },
                 new [] {
                     new HealthCheckResult(
+                        "InnerDisplayName",
                         HealthStatus.Healthy,
                         "InnerDescription",
                         "InnerError",

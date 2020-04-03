@@ -120,9 +120,25 @@
   <data name="Error_AdapterIdIsRequired" xml:space="preserve">
     <value>Adapter ID is required.</value>
   </data>
-  <data name="HealthChecks_ChannelStateDescription" xml:space="preserve">
+  <data name="HealthCheck_ChannelStateDescription" xml:space="preserve">
+    <value>gRPC channel state is {0}. See inner results for remote adapter health.</value>
+    <comment>{0} - channel state</comment>
+  </data>
+  <data name="HealthCheck_ChannelStateDescriptionNoInnerResults" xml:space="preserve">
     <value>gRPC channel state is {0}.</value>
     <comment>{0} - channel state</comment>
+  </data>
+  <data name="HealthCheck_DisplayName_Connection" xml:space="preserve">
+    <value>gRPC Connection</value>
+  </data>
+  <data name="HealthCheck_DisplayName_RemoteAdapter" xml:space="preserve">
+    <value>Remote Adapter Health</value>
+  </data>
+  <data name="HealthCheck_GrpcNetClientDescription" xml:space="preserve">
+    <value>See inner results for remote adapter health.</value>
+  </data>
+  <data name="HealthCheck_RemoteAdapterHealthNotSupported" xml:space="preserve">
+    <value>The remote adapter does not implement health checks.</value>
   </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>

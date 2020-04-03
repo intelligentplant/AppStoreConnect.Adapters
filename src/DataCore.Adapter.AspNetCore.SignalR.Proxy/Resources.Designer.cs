@@ -79,11 +79,56 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to SignalR Connection.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_Connection {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_Connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Adapter Health.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_RemoteAdapter {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_RemoteAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SignalR hub connection status is {0}..
+        /// </summary>
+        internal static string HealthCheck_ExtensionHubConnectionStatusDescription {
+            get {
+                return ResourceManager.GetString("HealthCheck_ExtensionHubConnectionStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SignalR hub connection status is {0}. See inner results for remote adapter health..
         /// </summary>
         internal static string HealthCheck_HubConnectionStatusDescription {
             get {
                 return ResourceManager.GetString("HealthCheck_HubConnectionStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SignalR hub connection status is {0}..
+        /// </summary>
+        internal static string HealthCheck_HubConnectionStatusDescriptionNoInnerResults {
+            get {
+                return ResourceManager.GetString("HealthCheck_HubConnectionStatusDescriptionNoInnerResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The remote adapter does not implement health checks..
+        /// </summary>
+        internal static string HealthCheck_RemoteAdapterHealthNotSupported {
+            get {
+                return ResourceManager.GetString("HealthCheck_RemoteAdapterHealthNotSupported", resourceCulture);
             }
         }
         
@@ -93,6 +138,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         internal static string HealthCheck_UnknownConnectionState {
             get {
                 return ResourceManager.GetString("HealthCheck_UnknownConnectionState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SignalR Connection ({0}).
+        /// </summary>
+        internal static string HeathCheck_DisplayName_ExtensionConnection {
+            get {
+                return ResourceManager.GetString("HeathCheck_DisplayName_ExtensionConnection", resourceCulture);
             }
         }
         

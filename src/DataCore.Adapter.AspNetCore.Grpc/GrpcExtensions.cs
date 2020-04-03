@@ -734,10 +734,11 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Diagnostics.HealthCheckResult ToAdapterHealthCheckResult(this Grpc.HealthCheckResult healthCheckResult) {
             if (healthCheckResult == null) {
-                return Diagnostics.HealthCheckResult.Unhealthy();
+                return Diagnostics.HealthCheckResult.Unhealthy(nameof(Diagnostics.HealthCheckResult));
             }
 
             return new Diagnostics.HealthCheckResult(
+                healthCheckResult.DisplayName,
                 healthCheckResult.Status.ToAdapterHealthStatus(),
                 healthCheckResult.Description,
                 healthCheckResult.Error,
@@ -758,6 +759,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.HealthCheckResult ToGrpcHealthCheckResult(this Diagnostics.HealthCheckResult healthCheckResult) {
             var result = new Grpc.HealthCheckResult() {
+                DisplayName = healthCheckResult.DisplayName ?? string.Empty,
                 Status = healthCheckResult.Status.ToGrpcHealthStatus(),
                 Description = healthCheckResult.Description ?? string.Empty,
                 Error = healthCheckResult.Error ?? string.Empty

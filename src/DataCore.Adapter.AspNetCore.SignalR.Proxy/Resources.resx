@@ -123,12 +123,33 @@
   <data name="Error_ConnectionFactoryIsRequired" xml:space="preserve">
     <value>Connection factory is required.</value>
   </data>
-  <data name="HealthCheck_HubConnectionStatusDescription" xml:space="preserve">
+  <data name="HealthCheck_DisplayName_Connection" xml:space="preserve">
+    <value>SignalR Connection</value>
+  </data>
+  <data name="HealthCheck_DisplayName_RemoteAdapter" xml:space="preserve">
+    <value>Remote Adapter Health</value>
+  </data>
+  <data name="HealthCheck_ExtensionHubConnectionStatusDescription" xml:space="preserve">
     <value>SignalR hub connection status is {0}.</value>
     <comment>{0} - connection status</comment>
   </data>
+  <data name="HealthCheck_HubConnectionStatusDescription" xml:space="preserve">
+    <value>SignalR hub connection status is {0}. See inner results for remote adapter health.</value>
+    <comment>{0} - connection status</comment>
+  </data>
+  <data name="HealthCheck_HubConnectionStatusDescriptionNoInnerResults" xml:space="preserve">
+    <value>SignalR hub connection status is {0}.</value>
+    <comment>{0} - connection status</comment>
+  </data>
+  <data name="HealthCheck_RemoteAdapterHealthNotSupported" xml:space="preserve">
+    <value>The remote adapter does not implement health checks.</value>
+  </data>
   <data name="HealthCheck_UnknownConnectionState" xml:space="preserve">
     <value>Unknown</value>
+  </data>
+  <data name="HeathCheck_DisplayName_ExtensionConnection" xml:space="preserve">
+    <value>SignalR Connection ({0})</value>
+    <comment>{0} - extension name</comment>
   </data>
   <data name="Log_EventsSubscriptionError" xml:space="preserve">
     <value>Error while running events subscription.</value>

@@ -286,6 +286,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature Health: {0}.
+        /// </summary>
+        internal static string HealthChecks_DisplayName_FeatureHealth {
+            get {
+                return ResourceManager.GetString("HealthChecks_DisplayName_FeatureHealth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adapter Health.
+        /// </summary>
+        internal static string HealthChecks_DisplayName_OverallAdapterHealth {
+            get {
+                return ResourceManager.GetString("HealthChecks_DisplayName_OverallAdapterHealth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while starting adapter {AdapterId}..
         /// </summary>
         internal static string Log_AdapterStartupError {

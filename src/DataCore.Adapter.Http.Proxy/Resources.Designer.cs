@@ -70,6 +70,42 @@ namespace DataCore.Adapter.Http.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to HTTP Connection.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_Connection {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_Connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Adapter Health.
+        /// </summary>
+        internal static string HealthCheck_DisplayName_RemoteAdapter {
+            get {
+                return ResourceManager.GetString("HealthCheck_DisplayName_RemoteAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The remote adapter does not implement health checks..
+        /// </summary>
+        internal static string HealthCheck_RemoteAdapterHealthNotSupported {
+            get {
+                return ResourceManager.GetString("HealthCheck_RemoteAdapterHealthNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to See inner results for remote adapter health..
+        /// </summary>
+        internal static string HealthChecks_RemoteHeathDescription {
+            get {
+                return ResourceManager.GetString("HealthChecks_RemoteHeathDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {FeatureName}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {

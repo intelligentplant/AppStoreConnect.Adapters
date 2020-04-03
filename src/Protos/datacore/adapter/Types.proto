@@ -102,6 +102,7 @@ message HealthCheckResult {
     string error = 3;
     map<string,string> data = 4;
     repeated HealthCheckResult innerResults = 5;
+    string display_name = 6;
 }
 
 

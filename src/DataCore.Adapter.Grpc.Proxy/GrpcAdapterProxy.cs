@@ -293,6 +293,62 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
+        /// <summary>
+        /// Checks the health of the remote adapter.
+        /// </summary>
+        /// <param name="context">
+        ///   The context for the caller.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the health check result.
+        /// </returns>
+        private async Task<Diagnostics.HealthCheckResult> CheckRemoteHealthAsync(
+            IAdapterCallContext context, 
+            CancellationToken cancellationToken
+        ) {
+            if (!RemoteDescriptor.HasFeature<Diagnostics.IHealthCheck>()) {
+                return Diagnostics.HealthCheckResult.Healthy(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    Resources.HealthCheck_RemoteAdapterHealthNotSupported
+                );
+            }
+
+            try {
+                var adapterClient = CreateClient<AdaptersService.AdaptersServiceClient>();
+                var callOptions = new GrpcCore.CallOptions(
+                    cancellationToken: cancellationToken,
+                    credentials: GetCallCredentials(context)
+                );
+                var remoteResponse = adapterClient.CheckAdapterHealthAsync(
+                    new CheckAdapterHealthRequest() {
+                        AdapterId = RemoteDescriptor.Id
+                    },
+                    callOptions
+                );
+
+                var result = (await remoteResponse.ResponseAsync.ConfigureAwait(false)).Result.ToAdapterHealthCheckResult();
+
+                return new Diagnostics.HealthCheckResult(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    result.Status,
+                    result.Description,
+                    result.Error,
+                    result.Data,
+                    result.InnerResults
+                );
+            }
+            catch (Exception e) {
+                return Diagnostics.HealthCheckResult.Unhealthy(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    error: e.Message
+                );
+            }
+        }
+
+
         /// <inheritdoc/>
         protected override async Task<IEnumerable<Diagnostics.HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<Diagnostics.HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
@@ -302,22 +358,45 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             if (_channel is GrpcCore.Channel coreChannel) {
                 var state = coreChannel.State;
-                var description = string.Format(context?.CultureInfo, Resources.HealthChecks_ChannelStateDescription, state.ToString());
 
                 switch (state) {
                     case GrpcCore.ChannelState.Ready:
-                        results.Add(Diagnostics.HealthCheckResult.Healthy(description));
+                        results.Add(
+                            Diagnostics.HealthCheckResult.Composite(
+                                Resources.HealthCheck_DisplayName_Connection,
+                                new [] {
+                                    await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                                },
+                                string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescription, state.ToString())
+                            )    
+                        );
                         break;
                     case GrpcCore.ChannelState.Shutdown:
-                        results.Add(Diagnostics.HealthCheckResult.Degraded(description));
+                        results.Add(Diagnostics.HealthCheckResult.Unhealthy(
+                            Resources.HealthCheck_DisplayName_Connection,
+                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
+                        ));
                         break;
                     default:
-                        results.Add(Diagnostics.HealthCheckResult.Unhealthy(description));
+                        results.Add(Diagnostics.HealthCheckResult.Degraded(
+                            Resources.HealthCheck_DisplayName_Connection,
+                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
+                        ));
                         break;
                 }
             }
-
-            // Grpc.Net channel doesn't expose a way of getting the channel state.
+            else {
+                // Grpc.Net channel doesn't expose a way of getting the channel state.
+                results.Add(
+                    Diagnostics.HealthCheckResult.Composite(
+                        Resources.HealthCheck_DisplayName_Connection,
+                        new[] {
+                            await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                        },
+                        Resources.HealthCheck_GrpcNetClientDescription
+                    )
+                );
+            }
 
             return results;
         }

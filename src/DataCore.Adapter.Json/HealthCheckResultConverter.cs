@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
+            string displayName = default;
             HealthStatus status = default;
             string description = default;
             string error = default;
@@ -32,7 +33,10 @@ namespace DataCore.Adapter.Json {
                     ThrowInvalidJsonError();
                 }
 
-                if (string.Equals(propertyName, nameof(HealthCheckResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                if (string.Equals(propertyName, nameof(HealthCheckResult.DisplayName), StringComparison.OrdinalIgnoreCase)) {
+                    displayName = JsonSerializer.Deserialize<string>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(HealthCheckResult.Status), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<HealthStatus>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
@@ -52,7 +56,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new HealthCheckResult(status, description, error, data, innerResults);
+            return new HealthCheckResult(displayName, status, description, error, data, innerResults);
         }
 
         /// <inheritdoc/>

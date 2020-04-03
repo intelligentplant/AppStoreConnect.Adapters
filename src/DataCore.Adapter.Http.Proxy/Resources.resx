@@ -120,6 +120,18 @@
   <data name="Error_AdapterIdIsRequired" xml:space="preserve">
     <value>Adapter ID is required.</value>
   </data>
+  <data name="HealthChecks_RemoteHeathDescription" xml:space="preserve">
+    <value>See inner results for remote adapter health.</value>
+  </data>
+  <data name="HealthCheck_DisplayName_Connection" xml:space="preserve">
+    <value>HTTP Connection</value>
+  </data>
+  <data name="HealthCheck_DisplayName_RemoteAdapter" xml:space="preserve">
+    <value>Remote Adapter Health</value>
+  </data>
+  <data name="HealthCheck_RemoteAdapterHealthNotSupported" xml:space="preserve">
+    <value>The remote adapter does not implement health checks.</value>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {FeatureName}</value>
     <comment>{0} - feature name</comment>
