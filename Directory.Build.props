@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages\$(Configuration)</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <Choose>
