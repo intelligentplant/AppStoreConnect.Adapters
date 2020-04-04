@@ -32,4 +32,8 @@
     </Otherwise>
   </Choose>
 
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+
 </Project>
