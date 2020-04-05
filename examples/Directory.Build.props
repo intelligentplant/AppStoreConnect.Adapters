@@ -12,4 +12,8 @@
     <IncludeDevelopmentPackages>false</IncludeDevelopmentPackages>
   </PropertyGroup>
 
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+
 </Project>
