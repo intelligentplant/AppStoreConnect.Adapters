@@ -19,6 +19,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The MVC builder.
         /// </returns>
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
+            if (builder == null) {
+                return builder;
+            }
+
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
 #if NETCOREAPP3_1
             builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.AddDataCoreAdapterConverters());

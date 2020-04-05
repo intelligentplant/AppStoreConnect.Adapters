@@ -63,10 +63,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -137,10 +137,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -164,9 +164,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Performs a tag search on an adapter.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -185,13 +182,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="page">
         ///   The results page to return.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> FindTags(CancellationToken cancellationToken, string adapterId, string name = null, string description = null, string units = null, int pageSize = 10, int page = 1) {
+        public async Task<IActionResult> FindTags(string adapterId, string name = null, string description = null, string units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
                 Description = description,
@@ -224,10 +224,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401

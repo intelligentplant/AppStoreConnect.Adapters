@@ -42,10 +42,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         internal static async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             var resolvedFeature = await adapterAccessor.GetAdapterAndFeature<TFeature>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                throw new RpcException(new Status(StatusCode.NotFound, string.Format(Resources.Error_CannotResolveAdapterId, adapterId)));
+                throw new RpcException(new Status(StatusCode.NotFound, string.Format(callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
+                throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(callContext?.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 throw new RpcException(new Status(StatusCode.PermissionDenied, Resources.Error_NotAuthorized));

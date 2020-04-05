@@ -82,7 +82,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
             return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
@@ -108,10 +108,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401

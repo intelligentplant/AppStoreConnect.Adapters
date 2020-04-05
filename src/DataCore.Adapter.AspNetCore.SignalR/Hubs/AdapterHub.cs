@@ -137,7 +137,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         private async Task<IAdapter> ResolveAdapter(string adapterId, CancellationToken cancellationToken) {
             var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
-                throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+                throw new ArgumentException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
             }
 
             return adapter;
@@ -172,11 +172,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         private async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<TFeature>(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                throw new ArgumentException(string.Format(Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+                throw new ArgumentException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
             }
 
             if (!resolvedFeature.IsFeatureResolved) {
-                throw new InvalidOperationException(string.Format(Resources.Error_UnsupportedInterface, nameof(TFeature)));
+                throw new InvalidOperationException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(TFeature)));
             }
 
             if (!resolvedFeature.IsFeatureAuthorized) {

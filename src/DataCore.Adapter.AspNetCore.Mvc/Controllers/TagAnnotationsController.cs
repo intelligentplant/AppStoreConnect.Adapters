@@ -67,10 +67,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -86,7 +86,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxAnnotationsPerQuery) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
                     break;
                 }
 
@@ -121,10 +121,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -165,10 +165,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -212,10 +212,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -257,10 +257,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> DeleteAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
