@@ -6,15 +6,40 @@ using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
+
+    /// <summary>
+    /// Implements <see cref="EventsService.EventsServiceBase"/>.
+    /// </summary>
     public class EventsServiceImpl : EventsService.EventsServiceBase {
 
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the caller.
+        /// </summary>
         private readonly IAdapterCallContext _adapterCallContext;
 
+        /// <summary>
+        /// The service for resolving adapter references.
+        /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
+        /// <summary>
+        /// The service for registering background task operations.
+        /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
 
 
+        /// <summary>
+        /// Creates a new <see cref="EventsServiceImpl"/> object.
+        /// </summary>
+        /// <param name="adapterCallContext">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The service for resolving adapter references.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The service for registering background task operations.
+        /// </param>
         public EventsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
@@ -22,6 +47,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task CreateEventPushChannel(CreateEventPushChannelRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -52,6 +78,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -80,6 +107,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task GetEventMessagesUsingCursorPosition(GetEventMessagesUsingCursorPositionRequest request, IServerStreamWriter<EventMessageWithCursorPosition> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -106,6 +134,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
             var cancellationToken = context.CancellationToken;
 

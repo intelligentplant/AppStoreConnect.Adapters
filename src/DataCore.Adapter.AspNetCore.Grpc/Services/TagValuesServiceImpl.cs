@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
@@ -9,15 +8,40 @@ using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
+
+    /// <summary>
+    /// Implements <see cref="TagValuesService.TagValuesServiceBase"/>.
+    /// </summary>
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
 
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the caller.
+        /// </summary>
         private readonly IAdapterCallContext _adapterCallContext;
 
+        /// <summary>
+        /// The service for resolving adapter references.
+        /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
+        /// <summary>
+        /// The service for registering background task operations.
+        /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
 
 
+        /// <summary>
+        /// Creates a new <see cref="TagValuesServiceImpl"/> object.
+        /// </summary>
+        /// <param name="adapterCallContext">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The service for resolving adapter references.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The service for registering background task operations.
+        /// </param>
         public TagValuesServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
@@ -25,6 +49,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task CreateSnapshotPushChannel(
             IAsyncStreamReader<CreateSnapshotPushChannelRequest> requestStream, 
             IServerStreamWriter<TagValueQueryResult> responseStream, 
@@ -102,6 +127,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadSnapshotTagValues(ReadSnapshotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -125,6 +151,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadRawTagValues(ReadRawTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -152,6 +179,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadPlotTagValues(ReadPlotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -178,6 +206,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadTagValuesAtTimes(ReadTagValuesAtTimesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -202,6 +231,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task GetSupportedDataFunctions(GetSupportedDataFunctionsRequest request, IServerStreamWriter<DataFunctionDescriptor> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -219,6 +249,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadProcessedTagValues(ReadProcessedTagValuesRequest request, IServerStreamWriter<ProcessedTagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -246,6 +277,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task WriteSnapshotTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var cancellationToken = context.CancellationToken;
 
@@ -297,6 +329,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var cancellationToken = context.CancellationToken;
 

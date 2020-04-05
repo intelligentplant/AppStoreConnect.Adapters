@@ -3,19 +3,39 @@ using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
+
+    /// <summary>
+    /// Implements <see cref="AdaptersService.AdaptersServiceBase"/>.
+    /// </summary>
     public class AdaptersServiceImpl : AdaptersService.AdaptersServiceBase {
 
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the caller.
+        /// </summary>
         private readonly IAdapterCallContext _adapterCallContext;
 
+        /// <summary>
+        /// The service for resolving adapter references.
+        /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
 
+        /// <summary>
+        /// Creates a new <see cref="AdaptersServiceImpl"/> object.
+        /// </summary>
+        /// <param name="adapterCallContext">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The service for resolving adapter references.
+        /// </param>
         public AdaptersServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
         }
 
 
+        /// <inheritdoc/>
         public override async Task<GetAdaptersResponse> GetAdapters(GetAdaptersRequest request, ServerCallContext context) {
             var adapters = await _adapterAccessor.GetAdapters(_adapterCallContext, context.CancellationToken).ConfigureAwait(false);
 
@@ -26,6 +46,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<GetAdapterResponse> GetAdapter(GetAdapterRequest request, ServerCallContext context) {
             var adapter = await _adapterAccessor.GetAdapter(_adapterCallContext, request.AdapterId, context.CancellationToken).ConfigureAwait(false);
 
@@ -35,6 +56,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<CheckAdapterHealthResponse> CheckAdapterHealth(CheckAdapterHealthRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;

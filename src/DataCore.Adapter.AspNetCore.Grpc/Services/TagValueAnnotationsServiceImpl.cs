@@ -5,19 +5,39 @@ using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
+
+    /// <summary>
+    /// Implements <see cref="TagValueAnnotationsService.TagValueAnnotationsServiceBase"/>.
+    /// </summary>
     public class TagValueAnnotationsServiceImpl : TagValueAnnotationsService.TagValueAnnotationsServiceBase {
 
+        /// <summary>
+        /// The <see cref="IAdapterCallContext"/> for the caller.
+        /// </summary>
         private readonly IAdapterCallContext _adapterCallContext;
 
+        /// <summary>
+        /// The service for resolving adapter references.
+        /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
 
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotationsServiceImpl"/> object.
+        /// </summary>
+        /// <param name="adapterCallContext">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The service for resolving adapter references.
+        /// </param>
         public TagValueAnnotationsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
             _adapterCallContext = adapterCallContext;
             _adapterAccessor = adapterAccessor;
         }
 
 
+        /// <inheritdoc/>
         public override async Task ReadAnnotations(ReadAnnotationsRequest request, IServerStreamWriter<TagValueAnnotationQueryResult> responseStream, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -42,6 +62,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<TagValueAnnotation> ReadAnnotation(ReadAnnotationRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -58,6 +79,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<WriteTagValueAnnotationResult> CreateAnnotation(CreateAnnotationRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -74,6 +96,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<WriteTagValueAnnotationResult> UpdateAnnotation(UpdateAnnotationRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -91,6 +114,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<WriteTagValueAnnotationResult> DeleteAnnotation(DeleteAnnotationRequest request, ServerCallContext context) {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
