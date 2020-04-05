@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -138,7 +139,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(feature));
             }
             if (!featureType.IsInstanceOfType(feature)) {
-                throw new ArgumentException(string.Format(Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
             }
             if (!_features.TryAdd(featureType, feature)) {
                 if (throwOnAlreadyAdded) {
@@ -177,7 +178,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureType));
             }
             if (!featureType.IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(featureType));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(featureType));
             }
 
             AddInternal(featureType, feature, true);
@@ -209,7 +210,7 @@ namespace DataCore.Adapter {
         /// </exception>
         public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (!typeof(TFeature).IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
             }
             AddInternal(typeof(TFeature), feature, true);
         }

@@ -71,6 +71,14 @@ namespace DataCore.Adapter {
             if (!string.IsNullOrWhiteSpace(request.Description)) {
                 adapters = adapters.Where(x => x.Descriptor.Description.Like(request.Description));
             }
+            if (request.Features != null) {
+                foreach (var item in request.Features) {
+                    if (string.IsNullOrWhiteSpace(item)) {
+                        continue;
+                    }
+                    adapters = adapters.Where(x => x.HasFeature(item));
+                }
+            }
 
             adapters = adapters
                 .OrderBy(x => x.Descriptor.Name)

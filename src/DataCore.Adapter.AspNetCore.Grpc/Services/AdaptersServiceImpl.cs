@@ -43,6 +43,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     Id = request.Id,
                     Name = request.Name,
                     Description = request.Description,
+                    Features = request.Features.ToArray(),
                     PageSize = request.PageSize,
                     Page = request.Page
                 },

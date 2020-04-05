@@ -89,6 +89,55 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Tests if the adapter contains the specified feature in its <see cref="IAdapter.Features"/> 
+        /// collection.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool HasFeature<TFeature>(this IAdapter adapter) where TFeature : IAdapterFeature {
+            if (adapter?.Features?.Keys == null) {
+                return false;
+            }
+
+            return adapter.Features.Keys.Contains(typeof(TFeature));
+        }
+
+
+        /// <summary>
+        /// Tests if the adapter contains the specified feature in its <see cref="IAdapter.Features"/> 
+        /// collection.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureName">
+        ///   The feature name.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool HasFeature(this IAdapter adapter, string featureName) {
+            if (adapter == null || string.IsNullOrWhiteSpace(featureName)) {
+                return false;
+            }
+
+            return adapter.Features.Keys.Any(x => x.IsStandardAdapterFeature()
+                ? string.Equals(x.Name, featureName, StringComparison.OrdinalIgnoreCase)
+                : string.Equals(x.FullName, featureName, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+
+        /// <summary>
         /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
         /// list.
         /// </summary>
@@ -128,7 +177,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasFeature(this AdapterDescriptorExtended descriptor, string featureName) {
-            if (descriptor == null) {
+            if (descriptor == null || string.IsNullOrWhiteSpace(featureName)) {
                 return false;
             }
 
