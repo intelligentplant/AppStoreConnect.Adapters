@@ -7,15 +7,21 @@ import "Types.proto";
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service AdaptersService {
-    rpc GetAdapters(GetAdaptersRequest) returns (GetAdaptersResponse);
+    rpc FindAdapters(FindAdaptersRequest) returns (FindAdaptersResponse);
     rpc GetAdapter(GetAdapterRequest) returns (GetAdapterResponse);
     rpc CheckAdapterHealth(CheckAdapterHealthRequest) returns (CheckAdapterHealthResponse);
 }
 
 
 // Gets information about the registered adapters
-message GetAdaptersRequest { }
-message GetAdaptersResponse {
+message FindAdaptersRequest { 
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    int32 page_size = 4;
+    int32 page = 5;
+}
+message FindAdaptersResponse {
     repeated AdapterDescriptor adapters = 1;
 }
 

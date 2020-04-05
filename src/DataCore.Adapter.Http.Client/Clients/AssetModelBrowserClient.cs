@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<AssetModelNode>> BrowseNodesAsync(
             string adapterId, 
             BrowseAssetModelNodesRequest request, 
-            RequestMetadata metadata,
+            RequestMetadata metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

@@ -78,13 +78,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Gets information about the available adapters.
+        /// Finds adapters matching the specified search filter.
         /// </summary>
+        /// <param name="request">
+        ///   The adapter search query.
+        /// </param>
         /// <returns>
-        ///   The adapters visible to the caller.
+        ///   The matching adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> GetAdapters() {
-            var adapters = await AdapterAccessor.GetAdapters(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
+        public async Task<IEnumerable<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request) {
+            var adapters = await AdapterAccessor.FindAdapters(AdapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
             return adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
         }
 

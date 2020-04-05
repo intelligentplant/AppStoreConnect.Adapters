@@ -44,8 +44,23 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Gets information about all registered adapters that are visible to the caller.
+        /// Finds adapters matching the specified search filters.
         /// </summary>
+        /// <param name="id">
+        ///   The adapter ID filter.
+        /// </param>
+        /// <param name="name">
+        ///   The adapter name filter.
+        /// </param>
+        /// <param name="description">
+        ///   The adapter description filter.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size for the query.
+        /// </param>
+        /// <param name="page">
+        ///   The page number for the query.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -56,9 +71,38 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public async Task<IActionResult> GetAllAdapters(CancellationToken cancellationToken) {
-            var adapters = await _adapterAccessor.GetAdapters(_callContext, cancellationToken).ConfigureAwait(false);
-            var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).OrderBy(x => x.Name).ToArray();
+        public Task<IActionResult> FindAdapters(string id = null, string name = null, string description = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+            var request = new FindAdaptersRequest() { 
+                Id = id,
+                Name = name,
+                Description = description,
+                PageSize = pageSize,
+                Page = page
+            };
+
+            return FindAdapters(request, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Finds adapters matching the specified search filter.
+        /// </summary>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="AdapterDescriptor"/> 
+        ///   objects.
+        /// </returns>
+        [HttpPost]
+        [Route("")]
+        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
+        public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
+            var adapters = await _adapterAccessor.FindAdapters(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
             return Ok(result); // 200
         }
 

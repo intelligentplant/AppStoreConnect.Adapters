@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,8 +41,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
-        /// Gets information about the available adapters in the remote host.
+        /// Finds matching adapters in the remote host.
         /// </summary>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
         /// <param name="metadata">
         ///   The metadata to associate with the outgoing request.
         /// </param>
@@ -51,11 +55,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <returns>
         ///   A task that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> GetAdaptersAsync(
+        public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
+            FindAdaptersRequest request,
             RequestMetadata metadata = null, 
             CancellationToken cancellationToken = default
         ) {
-            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddRequestMetadata(metadata);
+            _client.ValidateObject(request);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, UrlPrefix) {
+                Content = new ObjectContent<FindAdaptersRequest>(request, new JsonMediaTypeFormatter())
+            }.AddRequestMetadata(metadata);
 
             try {
                 using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

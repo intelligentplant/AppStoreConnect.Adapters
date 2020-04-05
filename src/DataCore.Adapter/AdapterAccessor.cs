@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 
@@ -45,7 +46,15 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<IAdapter>> GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async Task<IEnumerable<IAdapter>> FindAdapters(
+            IAdapterCallContext context, 
+            FindAdaptersRequest request, 
+            CancellationToken cancellationToken
+        ) {
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -53,7 +62,22 @@ namespace DataCore.Adapter {
                 return Array.Empty<IAdapter>();
             }
 
-            var result = new List<IAdapter>(adapters.Count());
+            if (!string.IsNullOrWhiteSpace(request.Id)) {
+                adapters = adapters.Where(x => x.Descriptor.Id.Like(request.Id));
+            }
+            if (!string.IsNullOrWhiteSpace(request.Name)) {
+                adapters = adapters.Where(x => x.Descriptor.Name.Like(request.Name));
+            }
+            if (!string.IsNullOrWhiteSpace(request.Description)) {
+                adapters = adapters.Where(x => x.Descriptor.Description.Like(request.Description));
+            }
+
+            adapters = adapters
+                .OrderBy(x => x.Descriptor.Name)
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize);
+
+            var result = new List<IAdapter>();
 
             foreach (var adapter in adapters) {
                 var authResult = await _authorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 
@@ -10,10 +11,13 @@ namespace DataCore.Adapter {
     public interface IAdapterAccessor {
 
         /// <summary>
-        /// Gets the available adapters.
+        /// Gets the available adapters matching the specified filter.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   The search filter.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -21,7 +25,11 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapters available to the caller.
         /// </returns>
-        Task<IEnumerable<IAdapter>> GetAdapters(IAdapterCallContext context, CancellationToken cancellationToken);
+        Task<IEnumerable<IAdapter>> FindAdapters(
+            IAdapterCallContext context, 
+            FindAdaptersRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Gets the specified adapter.

@@ -36,10 +36,20 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
-        public override async Task<GetAdaptersResponse> GetAdapters(GetAdaptersRequest request, ServerCallContext context) {
-            var adapters = await _adapterAccessor.GetAdapters(_adapterCallContext, context.CancellationToken).ConfigureAwait(false);
+        public override async Task<FindAdaptersResponse> FindAdapters(FindAdaptersRequest request, ServerCallContext context) {
+            var adapters = await _adapterAccessor.FindAdapters(
+                _adapterCallContext, 
+                new Common.FindAdaptersRequest() {
+                    Id = request.Id,
+                    Name = request.Name,
+                    Description = request.Description,
+                    PageSize = request.PageSize,
+                    Page = request.Page
+                },
+                context.CancellationToken
+            ).ConfigureAwait(false);
 
-            var result = new GetAdaptersResponse();
+            var result = new FindAdaptersResponse();
             result.Adapters.AddRange(adapters.Select(x => x.Descriptor.ToGrpcAdapterDescriptor()));
 
             return result;

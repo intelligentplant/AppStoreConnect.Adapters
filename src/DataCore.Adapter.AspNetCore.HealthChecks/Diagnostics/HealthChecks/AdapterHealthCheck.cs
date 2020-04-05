@@ -35,7 +35,7 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
 
         /// <inheritdoc/>
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) {
-            var adapters = await _adapterAccessor.GetAdapters(null, cancellationToken).ConfigureAwait(false);
+            var adapters = await _adapterAccessor.GetAllAdapters(null, cancellationToken).ConfigureAwait(false);
 
             var healthChecks = adapters.Select(x => new {
                 Adapter = x,

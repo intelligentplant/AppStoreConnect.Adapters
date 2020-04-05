@@ -34,18 +34,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
 
         /// <summary>
-        /// Gets information about the available adapters in the remote host.
+        /// Finds matching adapters in the remote host.
         /// </summary>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> GetAdaptersAsync(CancellationToken cancellationToken = default) {
+        public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
+            FindAdaptersRequest request,
+            CancellationToken cancellationToken = default
+        ) {
+            _client.ValidateObject(request);
+
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<AdapterDescriptor>>(
-                "GetAdapters", 
+                "FindAdapters", 
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
         }
