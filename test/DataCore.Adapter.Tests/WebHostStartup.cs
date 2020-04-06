@@ -95,7 +95,9 @@ namespace DataCore.Adapter.Tests {
                 );
             });
 
-            services.AddGrpc();
+            services.AddGrpc(options => {
+                options.EnableDetailedErrors = true;
+            });
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
@@ -104,7 +106,10 @@ namespace DataCore.Adapter.Tests {
                 })
                 .AddDataCoreAdapterMvc();
 
-            services.AddSignalR()
+            services.AddSignalR(
+                options => {
+                    options.EnableDetailedErrors = true;
+                })
                 .AddDataCoreAdapterSignalR()
                 .AddMessagePackProtocol();
         }
