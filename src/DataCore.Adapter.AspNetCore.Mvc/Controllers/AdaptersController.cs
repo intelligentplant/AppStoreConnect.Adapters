@@ -55,6 +55,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="description">
         ///   The adapter description filter.
         /// </param>
+        /// <param name="feature">
+        ///   The adapter feature filter. Unlike the ID, name and description filters, the feature 
+        ///   filter must exactly match the standard or extension feature name.
+        /// </param>
         /// <param name="pageSize">
         ///   The page size for the query.
         /// </param>
@@ -71,11 +75,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public Task<IActionResult> FindAdapters(string id = null, string name = null, string description = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+        public Task<IActionResult> FindAdapters(string id = null, string name = null, string description = null, [FromQuery] string[] feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             var request = new FindAdaptersRequest() { 
                 Id = id,
                 Name = name,
                 Description = description,
+                Features = feature ?? Array.Empty<string>(),
                 PageSize = pageSize,
                 Page = page
             };

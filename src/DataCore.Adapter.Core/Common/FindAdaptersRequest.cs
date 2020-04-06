@@ -8,18 +8,30 @@ namespace DataCore.Adapter.Common {
     public class FindAdaptersRequest : PageableAdapterRequest {
 
         /// <summary>
-        /// The adapter ID filter.
+        /// The adapter ID filter. Partial matches can be specified.
         /// </summary>
+        /// <remarks>
+        ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
+        ///   multi-character wildcards respectively.
+        /// </remarks>
         public string Id { get; set; }
 
         /// <summary>
         /// The adapter name filter.
         /// </summary>
+        /// <remarks>
+        ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
+        ///   multi-character wildcards respectively.
+        /// </remarks>
         public string Name { get; set; }
 
         /// <summary>
         /// The adapter description filter.
         /// </summary>
+        /// <remarks>
+        ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
+        ///   multi-character wildcards respectively.
+        /// </remarks>
         public string Description { get; set; }
 
         /// <summary>
