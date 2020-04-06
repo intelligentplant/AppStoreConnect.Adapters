@@ -9,11 +9,8 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <SignOutput>false</SignOutput>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <IncludeDevelopmentPackages>false</IncludeDevelopmentPackages>
   </PropertyGroup>
-
-  <ItemGroup>
-    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
-  </ItemGroup>
 
 </Project>

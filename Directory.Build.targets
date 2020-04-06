@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <!-- SourceLink settings -->
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(IncludeDevelopmentPackages)' == 'true' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>

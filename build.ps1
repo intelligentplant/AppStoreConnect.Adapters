@@ -111,7 +111,6 @@ $MSBuildArguments += "/p:""Version=$($PackageVersion)"""
 
 if ($CI) {
     $MSBuildArguments += "/p:ContinuousIntegrationBuild=true"
-    $MSBuildArguments += "/p:Deterministic=true"
 }
 
 $local:exit_code = $null
