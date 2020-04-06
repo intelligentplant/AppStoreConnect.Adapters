@@ -12,7 +12,12 @@ namespace DataCore.Adapter.Tests {
                 RemoteId = remoteAdapterId,
                 ConnectionFactory = key => {
                     var builder = new HubConnectionBuilder()
-                        .WithUrl(WebHostStartup.DefaultUrl + SignalRConfigurationExtensions.HubRoute)
+                        .WithUrl(WebHostStartup.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
+                            options.HttpMessageHandlerFactory = handler => {
+                                WebHostStartup.AllowUntrustedCertificates(handler);
+                                return handler;
+                            };
+                        })
                         .WithAutomaticReconnect();
                     return AddProtocol(builder).Build();
                 }

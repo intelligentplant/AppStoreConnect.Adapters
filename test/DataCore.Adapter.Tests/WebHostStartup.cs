@@ -30,9 +30,22 @@ namespace DataCore.Adapter.Tests {
             Configuration = configuration;
         }
 
+
+        internal static void AllowUntrustedCertificates(HttpMessageHandler handler) {
+            // For unit test purposes, allow all SSL certificates.
+            if (handler is SocketsHttpHandler socketsHandler) {
+                socketsHandler.SslOptions.RemoteCertificateValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+            }
+            else if (handler is HttpClientHandler clientHandler) {
+                clientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+            }
+        }
+
         
         public void ConfigureServices(IServiceCollection services) {
-            services.AddHttpClient(HttpClientName).ConfigureHttpClient(client => {
+            services.AddHttpClient(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
+                AllowUntrustedCertificates(builder.PrimaryHandler);
+            }).ConfigureHttpClient(client => {
                 client.BaseAddress = new System.Uri(DefaultUrl + "/");
             });
             services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName);
