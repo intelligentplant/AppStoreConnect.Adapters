@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.2.2.0 (NJsonSchema v10.1.4.0 (Newtonsoft.Json v12.0.0.0))",
+  "x-generator": "NSwag v13.3.0.0 (NJsonSchema v10.1.11.0 (Newtonsoft.Json v12.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
@@ -8,7 +8,7 @@
   },
   "servers": [
     {
-      "url": "https://localhost:58189"
+      "url": "https://localhost:48189"
     }
   ],
   "paths": {
@@ -17,8 +17,112 @@
         "tags": [
           "Adapters"
         ],
-        "summary": "Gets information about all registered adapters that are visible to the caller.",
-        "operationId": "Adapters_GetAllAdapters",
+        "summary": "Finds adapters matching the specified search filters.",
+        "operationId": "Adapters_FindAdaptersAll",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The adapter ID filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The adapter name filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "The adapter description filter.\n            ",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "feature",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The adapter feature filter. Unlike the ID, name and description filters, the feature \nfilter must exactly match the standard or extension feature name.\n            ",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size for the query.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 5
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page number for the query.\n            ",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of AdapterDescriptor \nobjects.\n            ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdapterDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Adapters"
+        ],
+        "summary": "Finds adapters matching the specified search filter.",
+        "operationId": "Adapters_FindAdapters",
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.\n            ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindAdaptersRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": "Successful responses contain a collection of AdapterDescriptor \nobjects.\n            ",
@@ -1103,8 +1207,9 @@
           {
             "name": "tag",
             "in": "query",
+            "style": "form",
+            "explode": true,
             "description": "The IDs of the tags to retrieve.\n            ",
-            "collectionFormat": "multi",
             "schema": {
               "type": "array",
               "nullable": true,
@@ -1553,6 +1658,90 @@
           }
         }
       },
+      "FindAdaptersRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to retrieve a filtered list of adapters.",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The adapter ID filter. Partial matches can be specified.",
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "description": "The adapter name filter.",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "description": "The adapter description filter.",
+                "nullable": true
+              },
+              "features": {
+                "type": "array",
+                "description": "The adapter feature filters.",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PageableAdapterRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "Base class for adapter requests that support paging.",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "properties": {
+              "pageSize": {
+                "type": "integer",
+                "description": "The page size for the query.",
+                "format": "int32",
+                "default": 10,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              },
+              "page": {
+                "type": "integer",
+                "description": "The page number for the query.",
+                "format": "int32",
+                "default": 1,
+                "maximum": 2147483647.0,
+                "minimum": 1.0
+              }
+            }
+          }
+        ]
+      },
+      "AdapterRequest": {
+        "type": "object",
+        "description": "Base class that adapter request objects can inherit from.",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "properties": {
+            "type": "object",
+            "description": "Additional request properties. These can be used to provide bespoke query parameters \nsupported by the adapter.",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "AdapterDescriptorExtended": {
         "allOf": [
           {
@@ -1685,6 +1874,11 @@
         "description": "Represents the result of an adapter health check.",
         "additionalProperties": false,
         "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the health check result.",
+            "nullable": true
+          },
           "status": {
             "description": "The status of the health check result.",
             "oneOf": [
@@ -1891,53 +2085,6 @@
             }
           }
         ]
-      },
-      "PageableAdapterRequest": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/AdapterRequest"
-          },
-          {
-            "type": "object",
-            "description": "Base class for adapter requests that support paging.",
-            "x-abstract": true,
-            "additionalProperties": false,
-            "properties": {
-              "pageSize": {
-                "type": "integer",
-                "description": "The page size for the query.",
-                "format": "int32",
-                "default": 10,
-                "maximum": 2147483647.0,
-                "minimum": 1.0
-              },
-              "page": {
-                "type": "integer",
-                "description": "The page number for the query.",
-                "format": "int32",
-                "default": 1,
-                "maximum": 2147483647.0,
-                "minimum": 1.0
-              }
-            }
-          }
-        ]
-      },
-      "AdapterRequest": {
-        "type": "object",
-        "description": "Base class that adapter request objects can inherit from.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "properties": {
-            "type": "object",
-            "description": "Additional request properties. These can be used to provide bespoke query parameters \nsupported by the adapter.",
-            "nullable": true,
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        }
       },
       "GetAssetModelNodesRequest": {
         "allOf": [
