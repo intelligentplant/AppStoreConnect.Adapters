@@ -34,5 +34,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  
+  <!-- Extension point to allow Continuous Integration systems to inject their own configuration. -->
+  <Import Project="CI.targets" Condition="Exists('CI.targets')" />
 
 </Project>

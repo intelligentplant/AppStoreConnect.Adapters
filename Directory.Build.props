@@ -32,4 +32,7 @@
     </Otherwise>
   </Choose>
 
+  <!-- Extension point to allow Continuous Integration systems to inject their own configuration. -->
+  <Import Project="CI.props" Condition="Exists('CI.props')" />
+
 </Project>
