@@ -217,7 +217,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        /// <remarks>
         private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
@@ -263,7 +262,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The calculated tag value.
         /// </returns>
-        /// <remarks>
         private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
