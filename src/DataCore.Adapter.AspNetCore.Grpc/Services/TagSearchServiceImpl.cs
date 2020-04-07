@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 
@@ -11,11 +12,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     public class TagSearchServiceImpl : TagSearchService.TagSearchServiceBase {
 
         /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the caller.
-        /// </summary>
-        private readonly IAdapterCallContext _adapterCallContext;
-
-        /// <summary>
         /// The service for resolving adapter references.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -24,23 +20,20 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <summary>
         /// Creates a new <see cref="TagSearchServiceImpl"/> object.
         /// </summary>
-        /// <param name="adapterCallContext">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   The service for resolving adapter references.
         /// </param>
-        public TagSearchServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor) {
-            _adapterCallContext = adapterCallContext;
+        public TagSearchServiceImpl(IAdapterAccessor adapterAccessor) {
             _adapterAccessor = adapterAccessor;
         }
 
 
         /// <inheritdoc/>
         public override async Task GetTagProperties(GetTagPropertiesRequest request, IServerStreamWriter<AdapterProperty> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.GetTagPropertiesRequest() {
                 PageSize = request.PageSize,
@@ -48,7 +41,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.GetTagProperties(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var prop) || prop == null) {
@@ -62,9 +55,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task FindTags(FindTagsRequest request, IServerStreamWriter<TagDefinition> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.FindTagsRequest() {
                 Name = request.Name,
@@ -77,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.FindTags(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {
@@ -91,16 +85,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task GetTags(GetTagsRequest request, IServerStreamWriter<TagDefinition> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.GetTagsRequest() {
                 Tags = request.Tags.ToArray()
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.GetTags(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {

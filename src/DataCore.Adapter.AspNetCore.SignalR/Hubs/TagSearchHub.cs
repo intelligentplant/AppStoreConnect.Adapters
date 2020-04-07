@@ -26,9 +26,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching tags.
         /// </returns>
         public async Task<ChannelReader<TagDefinition>> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.FindTags(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.FindTags(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -48,9 +49,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching tags.
         /// </returns>
         public async Task<ChannelReader<TagDefinition>> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetTags(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.GetTags(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -70,9 +72,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching tags.
         /// </returns>
         public async Task<ChannelReader<AdapterProperty>> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetTagProperties(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken);
         }
 
     }

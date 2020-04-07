@@ -17,11 +17,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class TagValuesController: ControllerBase {
 
         /// <summary>
-        /// The Data Core context for the caller.
-        /// </summary>
-        private readonly IAdapterCallContext _callContext;
-
-        /// <summary>
         /// The service for accessing the running adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -45,17 +40,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="TagValuesController"/> object.
         /// </summary>
-        /// <param name="callContext">
-        ///   The Data Core context for the caller.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   The service for accessing running adapters.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   Service for registering background tasks.
         /// </param>
-        public TagValuesController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
-            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
+        public TagValuesController(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
         }
@@ -80,19 +71,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadSnapshotTagValues(_callContext, request, cancellationToken);
+            var reader = feature.ReadSnapshotTagValues(callContext, request, cancellationToken);
 
             var result = new List<TagValueQueryResult>(request.Tags.Length);
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -101,7 +93,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -131,19 +123,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/raw")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadRawValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadRawTagValues(_callContext, request, cancellationToken);
+            var reader = feature.ReadRawTagValues(callContext, request, cancellationToken);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -152,7 +145,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -186,12 +179,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/plot")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -199,7 +193,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadPlotTagValues(_callContext, request, cancellationToken);
+            var reader = feature.ReadPlotTagValues(callContext, request, cancellationToken);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -208,7 +202,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -238,19 +232,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/values-at-times")]
         [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadTagValuesAtTimes(_callContext, request, cancellationToken);
+            var reader = feature.ReadTagValuesAtTimes(callContext, request, cancellationToken);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -259,7 +254,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -296,12 +291,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/processed")]
         [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -309,7 +305,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadProcessedTagValues(_callContext, request, cancellationToken);
+            var reader = feature.ReadProcessedTagValues(callContext, request, cancellationToken);
 
             var result = new List<ProcessedTagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -318,7 +314,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
                     break;
                 }
 
@@ -352,19 +348,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.GetSupportedDataFunctions(_callContext, cancellationToken).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
+            var result = await feature.GetSupportedDataFunctions(callContext, cancellationToken).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -395,12 +392,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/write/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteSnapshotTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteSnapshotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -426,13 +424,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     ch.TryWrite(value);
 
                     if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
                         break;
                     }
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteSnapshotTagValues(_callContext, writeChannel, cancellationToken);
+            var resultChannel = feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken);
 
             var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 
@@ -472,12 +470,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/write/history")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequest values, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteHistoricalTagValues))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteHistoricalTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -503,13 +502,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     ch.TryWrite(value);
 
                     if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
                         break;
                     }
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteHistoricalTagValues(_callContext, writeChannel, cancellationToken);
+            var resultChannel = feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken);
 
             var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 

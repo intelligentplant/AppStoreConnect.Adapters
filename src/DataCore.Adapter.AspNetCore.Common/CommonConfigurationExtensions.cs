@@ -33,9 +33,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             services.AddBackgroundTaskService(options.BackgroundTaskServiceOptions);
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IAdapterCallContext, AdapterCallContext>();
-
             services.Add(new ServiceDescriptor(typeof(IAdapterAccessor), options.AdapterAccessorType, ServiceLifetime.Transient));
 
             services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new AdapterAuthorizationService(options.UseAuthorization, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));

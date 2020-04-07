@@ -25,9 +25,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching annotation.
         /// </returns>
         public async Task<TagValueAnnotationExtended> ReadAnnotation(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.ReadAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -47,9 +48,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel that will return the matching annotations.
         /// </returns>
         public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadAnnotations(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadAnnotations(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -66,10 +68,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The result of the operation.
         /// </returns>
         public async Task<WriteTagValueAnnotationResult> CreateAnnotation(string adapterId, CreateAnnotationRequest request) {
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
             var cancellationToken = Context.ConnectionAborted;
-            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.CreateAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.CreateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -86,10 +89,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The result of the operation.
         /// </returns>
         public async Task<WriteTagValueAnnotationResult> UpdateAnnotation(string adapterId, UpdateAnnotationRequest request) {
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
             var cancellationToken = Context.ConnectionAborted;
-            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.UpdateAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.UpdateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -106,10 +110,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The result of the operation.
         /// </returns>
         public async Task<WriteTagValueAnnotationResult> DeleteAnnotation(string adapterId, DeleteAnnotationRequest request) {
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
             var cancellationToken = Context.ConnectionAborted;
-            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.DeleteAnnotation(AdapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.DeleteAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
     }

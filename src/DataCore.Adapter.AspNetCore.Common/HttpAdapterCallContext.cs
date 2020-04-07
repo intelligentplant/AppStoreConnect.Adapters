@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Localization;
 namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
-    /// <see cref="IAdapterCallContext"/> implementation for ASP.NET Core.
+    /// <see cref="IAdapterCallContext"/> implementation that uses an <see cref="HttpContext"/> to 
+    /// provide context settings.
     /// </summary>
-    public class AdapterCallContext : IAdapterCallContext {
+    public class HttpAdapterCallContext : IAdapterCallContext {
 
         /// <summary>
-        /// The <see cref="HttpContext"/> associated with the <see cref="AdapterCallContext"/>.
+        /// The <see cref="HttpContext"/> associated with the <see cref="HttpAdapterCallContext"/>.
         /// </summary>
         private readonly HttpContext _httpContext;
 
@@ -24,7 +25,7 @@ namespace DataCore.Adapter.AspNetCore {
 
         /// <inheritdoc/>
         public string ConnectionId {
-            get { return _httpContext.Connection.Id; }
+            get { return _httpContext.Connection?.Id; }
         }
 
         /// <inheritdoc/>
@@ -44,13 +45,16 @@ namespace DataCore.Adapter.AspNetCore {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterCallContext"/> object.
+        /// Creates a new <see cref="HttpAdapterCallContext"/> object.
         /// </summary>
-        /// <param name="httpContextAccessor">
-        ///   The <see cref="IHttpContextAccessor"/> service.
+        /// <param name="httpContext">
+        ///   The <see cref="HttpContext"/> to use.
         /// </param>
-        public AdapterCallContext(IHttpContextAccessor httpContextAccessor) {
-            _httpContext = httpContextAccessor?.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        /// <exception cref="ArgumentNullException">
+        /// 
+        /// </exception>
+        public HttpAdapterCallContext(HttpContext httpContext) {
+            _httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
         }
 
     }

@@ -32,10 +32,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
-            var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(AdapterCallContext, subscriptionType).ConfigureAwait(false);
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, subscriptionType).ConfigureAwait(false);
 
             var result = Channel.CreateUnbounded<EventMessage>();
 
@@ -90,9 +91,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching event messages.
         /// </returns>
         public async Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadEventMessages(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadEventMessages(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -112,9 +114,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching event messages.
         /// </returns>
         public async Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadEventMessages(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadEventMessages(adapterCallContext, request, cancellationToken);
         }
 
         #endregion
@@ -137,8 +140,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the write results.
         /// </returns>
         public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterId, cancellationToken).ConfigureAwait(false);
-            return adapter.Feature.WriteEventMessages(AdapterCallContext, channel, cancellationToken);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteEventMessages(adapterCallContext, channel, cancellationToken);
         }
 
         #endregion

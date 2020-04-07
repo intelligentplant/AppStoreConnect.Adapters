@@ -18,11 +18,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class AdaptersController : ControllerBase {
 
         /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </summary>
-        private readonly IAdapterCallContext _callContext;
-
-        /// <summary>
         /// For accessing the available adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -31,14 +26,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="AdaptersController"/> object.
         /// </summary>
-        /// <param name="callContext">
-        ///   The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public AdaptersController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
-            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
+        public AdaptersController(IAdapterAccessor adapterAccessor) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -106,7 +97,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
-            var adapters = await _adapterAccessor.FindAdapters(_callContext, request, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var adapters = await _adapterAccessor.FindAdapters(callContext, request, cancellationToken).ConfigureAwait(false);
             var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
             return Ok(result); // 200
         }
@@ -129,9 +121,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await _adapterAccessor.GetAdapter(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
             return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
@@ -155,19 +148,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/health-status")]
         [ProducesResponseType(typeof(HealthCheckResult), 200)]
         public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            return Ok(await feature.CheckHealthAsync(_callContext, cancellationToken).ConfigureAwait(false)); // 200
+            return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
         }
 
     }

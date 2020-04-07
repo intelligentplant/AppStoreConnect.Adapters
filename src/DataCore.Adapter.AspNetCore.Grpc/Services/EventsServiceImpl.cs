@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Events;
 using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
@@ -11,11 +12,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// Implements <see cref="EventsService.EventsServiceBase"/>.
     /// </summary>
     public class EventsServiceImpl : EventsService.EventsServiceBase {
-
-        /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the caller.
-        /// </summary>
-        private readonly IAdapterCallContext _adapterCallContext;
 
         /// <summary>
         /// The service for resolving adapter references.
@@ -31,17 +27,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <summary>
         /// Creates a new <see cref="EventsServiceImpl"/> object.
         /// </summary>
-        /// <param name="adapterCallContext">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   The service for resolving adapter references.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The service for registering background task operations.
         /// </param>
-        public EventsServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
-            _adapterCallContext = adapterCallContext;
+        public EventsServiceImpl(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor;
             _backgroundTaskService = backgroundTaskService;
         }
@@ -49,11 +41,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task CreateEventPushChannel(CreateEventPushChannelRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
 
                 // Send a "subscription ready" event so that the caller knows that the stream is 
                 // now up-and-running at this end.
@@ -80,9 +73,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Events.ReadEventMessagesForTimeRangeRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
@@ -95,7 +89,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadEventMessages(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var msg) || msg == null) {
@@ -109,9 +103,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task GetEventMessagesUsingCursorPosition(GetEventMessagesUsingCursorPositionRequest request, IServerStreamWriter<EventMessageWithCursorPosition> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Events.ReadEventMessagesUsingCursorRequest() {
                 CursorPosition = request.CursorPosition,
@@ -122,7 +117,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadEventMessages(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var msg) || msg == null) {
@@ -136,6 +131,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
@@ -150,7 +146,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
                         // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+                        var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
                         writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new System.Threading.Channels.UnboundedChannelOptions() {
@@ -160,7 +156,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         });
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteEventMessages(_adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = adapter.Feature.WriteEventMessages(adapterCallContext, writeChannel.Reader, cancellationToken);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);

@@ -16,11 +16,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class AssetModelBrowserController : ControllerBase {
 
         /// <summary>
-        /// The Data Core context for the caller.
-        /// </summary>
-        private readonly IAdapterCallContext _callContext;
-
-        /// <summary>
         /// The service for accessing the running adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -34,14 +29,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="AssetModelBrowserController"/> object.
         /// </summary>
-        /// <param name="callContext">
-        ///   The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public AssetModelBrowserController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
-            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
+        public AssetModelBrowserController(IAdapterAccessor adapterAccessor) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -76,19 +67,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string start = null, int depth = -1, int page = 1, int pageSize = 10) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.BrowseAssetModelNodes(_callContext, new BrowseAssetModelNodesRequest() {
+            var resultChannel = feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
                 ParentId = string.IsNullOrWhiteSpace(start)
                     ? null
                     : start,
@@ -105,7 +97,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     result.Add(item);
 
                     if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
                         break;
                     }
                 }
@@ -135,19 +127,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodesPost(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.BrowseAssetModelNodes(_callContext, request, cancellationToken);
+            var resultChannel = feature.BrowseAssetModelNodes(callContext, request, cancellationToken);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -158,7 +151,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     result.Add(item);
 
                     if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
                         break;
                     }
                 }
@@ -187,19 +180,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> GetNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.GetAssetModelNodes(_callContext, request, cancellationToken);
+            var resultChannel = feature.GetAssetModelNodes(callContext, request, cancellationToken);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -210,7 +204,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     result.Add(item);
 
                     if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
                         break;
                     }
                 }
@@ -240,19 +234,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> FindNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelSearch>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelSearch>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelSearch))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.FindAssetModelNodes(_callContext, request, cancellationToken);
+            var resultChannel = feature.FindAssetModelNodes(callContext, request, cancellationToken);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -263,7 +258,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     result.Add(item);
 
                     if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
                         break;
                     }
                 }

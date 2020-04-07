@@ -37,10 +37,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(AdapterCallContext).ConfigureAwait(false);
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
 
             var result = Channel.CreateUnbounded<TagValueQueryResult>();
 
@@ -113,9 +114,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the query results.
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadSnapshotTagValues(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -135,9 +137,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the query results.
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadRawTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadRawTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadRawTagValues(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadRawTagValues(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -157,9 +160,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the query results.
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadPlotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadPlotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadPlotTagValues(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadPlotTagValues(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -179,9 +183,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the query results.
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadTagValuesAtTimes(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -199,8 +204,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The supported data functions for processed data queries.
         /// </returns>
         public async Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            return adapter.Feature.GetSupportedDataFunctions(AdapterCallContext, cancellationToken);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            return adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken);
         }
 
 
@@ -220,9 +226,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the query results.
         /// </returns>
         public async Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadProcessedTagValues(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.ReadProcessedTagValues(adapterCallContext, request, cancellationToken);
         }
 
         #endregion
@@ -245,8 +252,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the write results.
         /// </returns>
         public async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
-            return adapter.Feature.WriteSnapshotTagValues(AdapterCallContext, channel, cancellationToken);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteSnapshotTagValues(adapterCallContext, channel, cancellationToken);
         }
 
 
@@ -266,8 +274,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that will return the write results.
         /// </returns>
         public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterId, cancellationToken).ConfigureAwait(false);
-            return adapter.Feature.WriteHistoricalTagValues(AdapterCallContext, channel, cancellationToken);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, cancellationToken);
         }
 
         #endregion

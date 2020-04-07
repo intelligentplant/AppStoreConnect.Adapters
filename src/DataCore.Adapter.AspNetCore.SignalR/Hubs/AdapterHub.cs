@@ -23,11 +23,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         protected HostInfo HostInfo { get; }
 
         /// <summary>
-        /// The adapter call context describing the calling user.
-        /// </summary>
-        protected IAdapterCallContext AdapterCallContext { get; }
-
-        /// <summary>
         /// For accessing runtime adapters.
         /// </summary>
         protected IAdapterAccessor AdapterAccessor { get; }
@@ -44,9 +39,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="hostInfo">
         ///   The host information.
         /// </param>
-        /// <param name="adapterCallContext">
-        ///   The adapter call context describing the calling user.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   For accessing runtime adapters.
         /// </param>
@@ -55,12 +47,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </param>
         public AdapterHub(
             HostInfo hostInfo, 
-            IAdapterCallContext adapterCallContext, 
             IAdapterAccessor adapterAccessor,
             IBackgroundTaskService taskScheduler
         ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
-            AdapterCallContext = adapterCallContext ?? throw new ArgumentNullException(nameof(adapterCallContext));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
         }
@@ -87,7 +77,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching adapters.
         /// </returns>
         public async Task<IEnumerable<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request) {
-            var adapters = await AdapterAccessor.FindAdapters(AdapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapters = await AdapterAccessor.FindAdapters(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
             return adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
         }
 
@@ -102,7 +93,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   Information about the requested adapter.
         /// </returns>
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
-            var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await AdapterAccessor.GetAdapter(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             return adapter.CreateExtendedAdapterDescriptor();
         }
 
@@ -117,33 +109,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   Information about the requested adapter.
         /// </returns>
         public async Task<HealthCheckResult> CheckAdapterHealth(string adapterId) {
-            var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            return await adapter.Feature.CheckHealthAsync(AdapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Resolves the specified adapter, and throws an exception if the adapter cannot be resolved.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The adapter.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> could not be resolved.
-        /// </exception>
-        private async Task<IAdapter> ResolveAdapter(string adapterId, CancellationToken cancellationToken) {
-            var adapter = await AdapterAccessor.GetAdapter(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
-                throw new ArgumentException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
-            }
-
-            return adapter;
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            return await adapter.Feature.CheckHealthAsync(adapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -154,6 +122,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
+        /// <param name="adapterCallContext">
+        ///   The adapter call context.
+        /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
@@ -172,14 +143,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
         /// </exception>
-        private async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
-            var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<TFeature>(AdapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+        private async Task<ResolvedAdapterFeature<TFeature>> ResolveAdapterAndFeature<TFeature>(IAdapterCallContext adapterCallContext, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+            var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<TFeature>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                throw new ArgumentException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
             }
 
             if (!resolvedFeature.IsFeatureResolved) {
-                throw new InvalidOperationException(string.Format(AdapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(TFeature)));
+                throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(TFeature)));
             }
 
             if (!resolvedFeature.IsFeatureAuthorized) {

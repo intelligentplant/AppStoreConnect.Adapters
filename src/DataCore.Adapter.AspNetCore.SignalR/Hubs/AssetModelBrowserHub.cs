@@ -25,8 +25,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterId, cancellationToken).ConfigureAwait(false);
-            return adapter.Feature.BrowseAssetModelNodes(AdapterCallContext, request, cancellationToken);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            return adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -46,9 +47,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetAssetModelNodes(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken);
         }
 
 
@@ -68,9 +70,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterId, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.FindAssetModelNodes(AdapterCallContext, request, cancellationToken);
+            return adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken);
         }
 
     }

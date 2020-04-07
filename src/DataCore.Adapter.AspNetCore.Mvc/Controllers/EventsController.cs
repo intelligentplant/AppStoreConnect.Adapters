@@ -17,11 +17,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class EventsController : ControllerBase {
 
         /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </summary>
-        private readonly IAdapterCallContext _callContext;
-
-        /// <summary>
         /// For accessing the available adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -45,17 +40,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="EventsController"/> object.
         /// </summary>
-        /// <param name="callContext">
-        ///   The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   Service for registering background tasks.
         /// </param>
-        public EventsController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
-            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
+        public EventsController(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
         }
@@ -80,19 +71,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/by-time-range")]
         [ProducesResponseType(typeof(IEnumerable<EventMessage>), 200)]
         public async Task<IActionResult> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesForTimeRange>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesForTimeRange>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesForTimeRange))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesForTimeRange))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadEventMessages(_callContext, request, cancellationToken);
+            var reader = feature.ReadEventMessages(callContext, request, cancellationToken);
             var result = new List<EventMessage>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -101,7 +93,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxEventMessagesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                     break;
                 }
 
@@ -132,19 +124,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/by-cursor")]
         [ProducesResponseType(typeof(IEnumerable<EventMessageWithCursorPosition>), 200)]
         public async Task<IActionResult> ReadEventMessagesByCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesUsingCursor>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesUsingCursor>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesUsingCursor))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesUsingCursor))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadEventMessages(_callContext, request, cancellationToken);
+            var reader = feature.ReadEventMessages(callContext, request, cancellationToken);
             var result = new List<EventMessageWithCursorPosition>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -153,7 +146,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxEventMessagesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                     break;
                 }
 
@@ -190,12 +183,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/write")]
         [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
         public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteEventMessages))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteEventMessages))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
@@ -222,13 +216,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     ch.TryWrite(evt);
 
                     if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
                         break;
                     }
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteEventMessages(_callContext, writeChannel, cancellationToken);
+            var resultChannel = feature.WriteEventMessages(callContext, writeChannel, cancellationToken);
             var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
 
             while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

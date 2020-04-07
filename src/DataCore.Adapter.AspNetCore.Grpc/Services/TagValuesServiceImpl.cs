@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
@@ -13,11 +14,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// Implements <see cref="TagValuesService.TagValuesServiceBase"/>.
     /// </summary>
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
-
-        /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the caller.
-        /// </summary>
-        private readonly IAdapterCallContext _adapterCallContext;
 
         /// <summary>
         /// The service for resolving adapter references.
@@ -33,17 +29,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <summary>
         /// Creates a new <see cref="TagValuesServiceImpl"/> object.
         /// </summary>
-        /// <param name="adapterCallContext">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   The service for resolving adapter references.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The service for registering background task operations.
         /// </param>
-        public TagValuesServiceImpl(IAdapterCallContext adapterCallContext, IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
-            _adapterCallContext = adapterCallContext;
+        public TagValuesServiceImpl(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor;
             _backgroundTaskService = backgroundTaskService;
         }
@@ -55,6 +47,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             IServerStreamWriter<TagValueQueryResult> responseStream, 
             ServerCallContext context
         ) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
             // Wait for first subscription change. We can't actually create our subscription until 
@@ -66,7 +59,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
 
             var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
-                _adapterCallContext,
+                adapterCallContext,
                 _adapterAccessor,
                 requestStream.Current?.AdapterId,
                 cancellationToken
@@ -74,7 +67,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             // Create subscription on adapter.
 
-            using (var subscription = await adapter.Feature.Subscribe(_adapterCallContext).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false)) {
                 if (cancellationToken.IsCancellationRequested) {
                     return;
                 }
@@ -129,9 +122,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task ReadSnapshotTagValues(ReadSnapshotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.ReadSnapshotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
@@ -139,7 +133,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadSnapshotTagValues(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadSnapshotTagValues(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -153,9 +147,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task ReadRawTagValues(ReadRawTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadRawTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadRawTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.ReadRawTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
@@ -167,7 +162,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadRawTagValues(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadRawTagValues(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -181,9 +176,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task ReadPlotTagValues(ReadPlotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadPlotTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadPlotTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.ReadPlotTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
@@ -194,7 +190,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadPlotTagValues(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadPlotTagValues(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -208,9 +204,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task ReadTagValuesAtTimes(ReadTagValuesAtTimesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadTagValuesAtTimes>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.ReadTagValuesAtTimesRequest() {
                 Tags = request.Tags.ToArray(),
@@ -219,7 +216,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadTagValuesAtTimes(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -233,11 +230,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task GetSupportedDataFunctions(GetSupportedDataFunctionsRequest request, IServerStreamWriter<DataFunctionDescriptor> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.GetSupportedDataFunctions(_adapterCallContext, cancellationToken);
+            var reader = adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -251,9 +249,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task ReadProcessedTagValues(ReadProcessedTagValuesRequest request, IServerStreamWriter<ProcessedTagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(_adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new RealTimeData.ReadProcessedTagValuesRequest() {
                 Tags = request.Tags.ToArray(),
@@ -265,7 +264,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadProcessedTagValues(_adapterCallContext, adapterRequest, cancellationToken);
+            var reader = adapter.Feature.ReadProcessedTagValues(adapterCallContext, adapterRequest, cancellationToken);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -279,6 +278,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task WriteSnapshotTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
@@ -293,13 +293,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
                         // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+                        var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
                         writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteSnapshotTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = adapter.Feature.WriteSnapshotTagValues(adapterCallContext, writeChannel.Reader, cancellationToken);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);
@@ -331,6 +331,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
             // For writing values to the target adapters.
@@ -345,13 +346,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
                         // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(_adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+                        var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
                         writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteHistoricalTagValues(_adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = adapter.Feature.WriteHistoricalTagValues(adapterCallContext, writeChannel.Reader, cancellationToken);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);

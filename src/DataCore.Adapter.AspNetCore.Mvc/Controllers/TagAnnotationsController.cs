@@ -16,11 +16,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class TagAnnotationsController: ControllerBase {
 
         /// <summary>
-        /// The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </summary>
-        private readonly IAdapterCallContext _callContext;
-
-        /// <summary>
         /// For accessing the available adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -34,14 +29,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <summary>
         /// Creates a new <see cref="TagAnnotationsController"/> object.
         /// </summary>
-        /// <param name="callContext">
-        ///   The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </param>
         /// <param name="adapterAccessor">
         ///   Service for accessing the available adapters.
         /// </param>
-        public TagAnnotationsController(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor) {
-            _callContext = callContext ?? throw new ArgumentNullException(nameof(callContext));
+        public TagAnnotationsController(IAdapterAccessor adapterAccessor) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
         }
 
@@ -65,19 +56,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagValueAnnotationQueryResult>), 200)]
         public async Task<IActionResult> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadAnnotations(_callContext, request, cancellationToken);
+            var reader = feature.ReadAnnotations(callContext, request, cancellationToken);
 
             var result = new List<TagValueAnnotationQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -86,7 +78,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (result.Count > MaxAnnotationsPerQuery) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(_callContext?.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
+                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
                     break;
                 }
 
@@ -119,19 +111,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(TagValueAnnotationExtended), 200)]
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.ReadAnnotation(_callContext, new ReadAnnotationRequest() {
+            var result = await feature.ReadAnnotation(callContext, new ReadAnnotationRequest() {
                 Tag = tagId,
                 AnnotationId = annotationId
             }, cancellationToken).ConfigureAwait(false);
@@ -163,19 +156,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/{tagId}/create")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.CreateAnnotation(_callContext, new CreateAnnotationRequest() {
+            var result = await feature.CreateAnnotation(callContext, new CreateAnnotationRequest() {
                 Tag = tagId,
                 Annotation = annotation
             }, cancellationToken).ConfigureAwait(false);
@@ -210,19 +204,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.UpdateAnnotation(_callContext, new UpdateAnnotationRequest() {
+            var result = await feature.UpdateAnnotation(callContext, new UpdateAnnotationRequest() {
                 Tag = tagId,
                 AnnotationId = annotationId,
                 Annotation = annotation
@@ -255,19 +250,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         public async Task<IActionResult> DeleteAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(_callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(_callContext?.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Unauthorized(); // 401
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.DeleteAnnotation(_callContext, new DeleteAnnotationRequest() {
+            var result = await feature.DeleteAnnotation(callContext, new DeleteAnnotationRequest() {
                 Tag = tagId,
                 AnnotationId = annotationId
             }, cancellationToken).ConfigureAwait(false);
