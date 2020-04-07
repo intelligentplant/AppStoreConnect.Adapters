@@ -43,6 +43,11 @@ namespace DataCore.Adapter.Tests {
 
         
         public void ConfigureServices(IServiceCollection services) {
+            services.AddLogging(options => {
+                options.AddConsole();
+                options.AddDebug();
+            });
+
             services.AddHttpClient(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
                 AllowUntrustedCertificates(builder.PrimaryHandler);
             }).ConfigureHttpClient(client => {
