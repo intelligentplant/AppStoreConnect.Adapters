@@ -64,6 +64,9 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services
                 .AddSignalR()
                 .AddDataCoreAdapterSignalR()
+                .AddJsonProtocol(options => {
+                    options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                })
                 .AddMessagePackProtocol();
 
             services
@@ -92,7 +95,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
             app.UseSwaggerUi3();
 
             app.UseRequestLocalization();
-
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
