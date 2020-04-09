@@ -43,7 +43,14 @@ services.AddDataCoreAdapterServices(options => {
 
 # Registering gRPC Services
 
-gRPC services must be added to the application's endpoints in the `Startup.cs` file's `Configure` method:
+```csharp
+services.AddGrpc();
+```
+
+
+# Registering Endpoints
+
+gRPC endpoints must be added to the application's endpoints in the `Startup.cs` file's `Configure` method:
 
 ```csharp
 app.UseRouting();
