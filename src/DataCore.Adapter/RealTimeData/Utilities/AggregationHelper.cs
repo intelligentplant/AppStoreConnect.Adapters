@@ -1187,6 +1187,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(sampleTime)
                 .WithValue(Resources.TagValue_ProcessedValue_Error)
+                .WithStatus(TagValueStatus.Bad)
                 .WithError(error)
                 .WithBucketProperties(bucket)
                 .Build();
