@@ -443,7 +443,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 if (!await resultsChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                     break;
                 }
-                resultsChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, value));
+                resultsChannel.TryWrite(TagValueQueryResult.Create(
+                    tag.Id, 
+                    tag.Name, 
+                    TagValueBuilder
+                        .CreateFromExisting(value)
+                        .WithBucketProperties(bucket)
+                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                        .Build()
+                ));
             }
         }
 
