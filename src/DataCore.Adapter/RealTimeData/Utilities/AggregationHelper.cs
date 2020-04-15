@@ -34,6 +34,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Fields ]
 
         /// <summary>
+        /// Property name to use with <see cref="CreateXPoweredByProperty"/>.
+        /// </summary>
+        private const string XPoweredByPropertyName = "X-Powered-By";
+
+        /// <summary>
+        /// Property value to use with <see cref="CreateXPoweredByProperty"/>.
+        /// </summary>
+        private static Lazy<string> s_xPoweredByPropertyValue = new Lazy<string>(() => {
+            // Value will be in the format "DataCore.Adapter v1.2.3.4"
+            var asm = typeof(AggregationHelper).Assembly;
+            var fileVersion = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyFileVersionAttribute>(asm);
+            return string.IsNullOrEmpty(fileVersion?.Version)
+                ? string.Concat(asm.GetName().Name, " v", asm.GetName().Version)
+                : string.Concat(asm.GetName().Name, " v", fileVersion.Version);
+        }, LazyThreadSafetyMode.PublicationOnly);
+
+        /// <summary>
         /// Maps from aggregate ID to the <see cref="AggregateCalculator"/> implementation for 
         /// default aggregation types.
         /// </summary>
@@ -95,7 +112,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (bucket.RawSamples.Count > 0) {
                 var val = bucket.RawSamples.First();
                 if (val.UtcSampleTime == bucket.UtcBucketStart) {
-                    result.Add(val);
+                    result.Add(TagValueBuilder
+                        .CreateFromExisting(val)
+                        .WithProperties(CreateXPoweredByProperty())
+                        .Build()
+                    );
                     interpRequired = false;
                 }
             }
@@ -161,7 +182,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     if (bucket.RawSamples.Count > 0) {
                         var val = bucket.RawSamples.Last();
                         if (val.UtcSampleTime == bucket.UtcQueryEnd) {
-                            result.Add(val);
+                            result.Add(TagValueBuilder
+                                .CreateFromExisting(val)
+                                .WithProperties(CreateXPoweredByProperty())
+                                .Build()
+                            );
                             interpRequired = false;
                         }
                     }
@@ -242,6 +267,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithStatus(status)
                     .WithUnits(tag.Units)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -286,6 +312,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 TagValueBuilder.CreateFromExisting(minValue)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -330,6 +357,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 TagValueBuilder.CreateFromExisting(maxValue)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -367,6 +395,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithValue(0d)
                         .WithStatus(status)
                         .WithBucketProperties(bucket)
+                        .WithProperties(CreateXPoweredByProperty())
                         .Build()
                 };
             }
@@ -377,6 +406,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithValue(goodQualitySamples.Length)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -430,6 +460,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithStatus(status)
                     .WithUnits(tag.Units)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -478,6 +509,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithStatus(status)
                     .WithUnits(tag.Units)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -508,6 +540,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithUnits("%")
                         .WithStatus(TagValueStatus.Uncertain)
                         .WithBucketProperties(bucket)
+                        .WithProperties(CreateXPoweredByProperty())
                         .Build()
                 };
             }
@@ -522,6 +555,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -552,6 +586,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithUnits("%")
                         .WithStatus(TagValueStatus.Uncertain)
                         .WithBucketProperties(bucket)
+                        .WithProperties(CreateXPoweredByProperty())
                         .Build()
                 };
             }
@@ -566,6 +601,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
                     .Build()
             };
         }
@@ -1169,6 +1205,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
+        /// Creates a property that can be assigned to calculated values to indicate that they 
+        /// were calculated using the aggregation helper.
+        /// </summary>
+        /// <returns>
+        ///   A new <see cref="AdapterProperty"/> object.
+        /// </returns>
+        internal static AdapterProperty CreateXPoweredByProperty() {
+            return AdapterProperty.Create(XPoweredByPropertyName, s_xPoweredByPropertyValue.Value);
+        }
+
+
+        /// <summary>
         /// Creates a tag value for a bucket that contains an error message.
         /// </summary>
         /// <param name="bucket">
@@ -1190,6 +1238,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .WithStatus(TagValueStatus.Bad)
                 .WithError(error)
                 .WithBucketProperties(bucket)
+                .WithProperties(CreateXPoweredByProperty())
                 .Build();
         }
 

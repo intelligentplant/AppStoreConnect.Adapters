@@ -84,6 +84,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     : TagValueBuilder.CreateFromExisting(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(valueBefore.Status == TagValueStatus.Good ? TagValueStatus.Good : TagValueStatus.Uncertain)
+                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
             }
 
@@ -101,6 +102,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .WithStatus(nextStatusValue)
                 .WithUnits(valueBefore.Units)
                 .WithNotes($"Interpolated using samples @ {valueBefore.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z and {valueAfter.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z.")
+                .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                 .Build();
         }
 
@@ -145,10 +147,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // we can't interpolate between two values.
 
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
-                    return TagValueBuilder.CreateFromExisting(valueBefore).WithUtcSampleTime(utcSampleTime).Build();
+                    return TagValueBuilder
+                        .CreateFromExisting(valueBefore)
+                        .WithUtcSampleTime(utcSampleTime)
+                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                        .Build();
                 }
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
-                    return TagValueBuilder.CreateFromExisting(valueAfter).WithUtcSampleTime(utcSampleTime).Build();
+                    return TagValueBuilder
+                        .CreateFromExisting(valueAfter)
+                        .WithUtcSampleTime(utcSampleTime)
+                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                        .Build();
                 }
                 return null;
             }
