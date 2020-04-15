@@ -34,9 +34,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Fields ]
 
         /// <summary>
-        /// Property name to use with <see cref="CreateXPoweredByProperty"/>.
+        /// Values calculated using <see cref="AggregationHelper"/> will contain a property with 
+        /// this name.
         /// </summary>
-        private const string XPoweredByPropertyName = "X-Powered-By";
+        public const string XPoweredByPropertyName = "X-Powered-By";
 
         /// <summary>
         /// Property value to use with <see cref="CreateXPoweredByProperty"/>.

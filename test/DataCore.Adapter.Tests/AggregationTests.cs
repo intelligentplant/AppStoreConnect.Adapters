@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -12,6 +13,356 @@ namespace DataCore.Adapter.Tests {
 
     [TestClass]
     public class AggregationTests : TestsBase {
+
+        public static double CalculateExpectedAvgValue(IEnumerable<TagValueExtended> values) {
+            return values.Where(x => x.Status == TagValueStatus.Good).Average(x => x.GetValueOrDefault<double>());
+        }
+
+
+        public static double CalculateExpectedMinValue(IEnumerable<TagValueExtended> values) {
+            return values.Where(x => x.Status == TagValueStatus.Good).Min(x => x.GetValueOrDefault<double>());
+        }
+
+
+        public static DateTime? CalculateExpectedMinTimestamp(IEnumerable<TagValueExtended> values) {
+            return values.Where(x => x.Status == TagValueStatus.Good).OrderBy(x => x.GetValueOrDefault<double>()).FirstOrDefault()?.UtcSampleTime;
+        }
+
+
+        public static double CalculateExpectedMaxValue(IEnumerable<TagValueExtended> values) {
+            return values.Where(x => x.Status == TagValueStatus.Good).Max(x => x.GetValueOrDefault<double>());
+        }
+
+
+        public static DateTime? CalculateExpectedMaxTimestamp(IEnumerable<TagValueExtended> values) {
+            return values.Where(x => x.Status == TagValueStatus.Good).OrderByDescending(x => x.GetValueOrDefault<double>()).FirstOrDefault()?.UtcSampleTime;
+        }
+
+
+        public static double CalculateExpectedCountValue(IEnumerable<TagValueExtended> values) {
+            return values.Count();
+        }
+
+
+        public static double CalculateExpectedRangeValue(IEnumerable<TagValueExtended> values) {
+            return Math.Abs(CalculateExpectedMaxValue(values) - CalculateExpectedMinValue(values));
+        }
+
+
+        public static double CalculateExpectedDeltaValue(IEnumerable<TagValueExtended> values) {
+            return Math.Abs(values.Where(x => x.Status == TagValueStatus.Good).First().GetValueOrDefault<double>() - values.Where(x => x.Status == TagValueStatus.Good).Last().GetValueOrDefault<double>());
+        }
+
+
+        public static double CalculateExpectedPercentGoodValue(IEnumerable<TagValueExtended> values) {
+            return ((double) values.Count(x => x.Status == TagValueStatus.Good)) / values.Count() * 100;
+        }
+
+
+        public static double CalculateExpectedPercentBadValue(IEnumerable<TagValueExtended> values) {
+            return ((double) values.Count(x => x.Status == TagValueStatus.Bad)) / values.Count() * 100;
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdCount, nameof(CalculateExpectedCountValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, nameof(CalculateExpectedRangeValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        public async Task DefaultDataFunctionShouldCalculateValue(
+            string functionId, 
+            string expectedValueCalculator,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] { 
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag, 
+                new[] { functionId }, 
+                start, 
+                end, 
+                interval, 
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, nameof(CalculateExpectedRangeValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
+        public async Task DefaultDataFunctionShouldFilterNonGoodInputValuesAndReturnUncertainStatus(
+            string functionId,
+            string expectedValueCalculator,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { functionId },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, null)]
+        public async Task DefaultDataFunctionShouldReturnErrorValueWhenNoGoodInputValuesAreProvided(
+            string functionId,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { functionId },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(val.Value.Error));
+            Assert.AreEqual(double.NaN, val.Value.GetValueOrDefault(double.NaN));
+            Assert.AreEqual(TagValueStatus.Bad, val.Value.Status);
+            Assert.AreEqual(start, val.Value.UtcSampleTime);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        public async Task DefaultDataFunctionShouldStillReturnGoodStatusWhenSomeNonGoodInputValuesAreProvided(
+            string functionId,
+            string expectedValueCalculator,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { functionId },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        public async Task DefaultDataFunctionShouldStillCalculateWhenNoGoodInputValuesAreProvided(
+            string functionId,
+            string expectedValueCalculator,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { functionId },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
 
         [TestMethod]
         public void CustomDataFunctionShouldBeRegistered() {
