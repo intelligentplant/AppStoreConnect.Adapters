@@ -25,15 +25,15 @@
   <!-- gRPC Packages -->
   <PropertyGroup>
     <GoogleProtobufVersion>3.11.4</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.27.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.27.0</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.27.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.27.0</GrpcToolsVersion>
+    <GrpcAspNetCoreServerVersion>2.28.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.28.1</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.28.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.28.1</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
-    <BenchmarkDotNetVersion>0.12.0</BenchmarkDotNetVersion>
+    <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
     <MicrosoftCodeAnalysisFxCopAnalyzersVersion>2.9.8</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>16.5.0</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
@@ -43,12 +43,12 @@
   
   <!-- Other Packages -->
   <PropertyGroup>
-    <CsvHelperVersion>15.0.3</CsvHelperVersion>
+    <CsvHelperVersion>15.0.4</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
     <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.3.0</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.5.0</NuGetVersioningVersion>
+    <NuGetVersioningVersion>5.5.1</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>
