@@ -217,8 +217,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
+        /// <remarks>
+        ///   The status of the value will also be set to <see cref="TagValueStatus.Bad"/>.
+        /// </remarks>
         public TagValueBuilder WithError(string error) {
             _error = error;
+            _status = TagValueStatus.Bad;
             return this;
         }
 
