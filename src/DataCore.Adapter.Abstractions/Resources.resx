@@ -165,35 +165,38 @@
   <data name="DataFunction_PercentGood_Name" xml:space="preserve">
     <value>Percent Good</value>
   </data>
-  <data name="DataFunction_Property_Timestamp" xml:space="preserve">
-    <value>Timestamp</value>
+  <data name="DataFunction_Property_StatusCalculation" xml:space="preserve">
+    <value>Status Calculation</value>
   </data>
-  <data name="DataFunction_Property_Timestamp_Description" xml:space="preserve">
+  <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
+    <value>The method used to calculate the quality status for the function.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGood" xml:space="preserve">
+    <value>Quality status is always "Good".</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
+    <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueWorstCase" xml:space="preserve">
+    <value>Worst-case status of the samples used in the calculation.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation" xml:space="preserve">
+    <value>Timestamp Calculation</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_Description" xml:space="preserve">
     <value>The method used to calculate the timestamp for the function.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMaximum" xml:space="preserve">
+    <value>Timestamp of maximum value</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMinimum" xml:space="preserve">
+    <value>Timestamp of minimum value</value>
   </data>
   <data name="DataFunction_Range_Description" xml:space="preserve">
     <value>The difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
   </data>
   <data name="DataFunction_Range_Name" xml:space="preserve">
     <value>Range</value>
-  </data>
-  <data name="DataFunction_Timestamp_EarliestValue" xml:space="preserve">
-    <value>Timestamp of Earliest Value</value>
-  </data>
-  <data name="DataFunction_Timestamp_EndOfInterval" xml:space="preserve">
-    <value>End of Interval</value>
-  </data>
-  <data name="DataFunction_Timestamp_LatestValue" xml:space="preserve">
-    <value>Timestamp of Latest Value</value>
-  </data>
-  <data name="DataFunction_Timestamp_MaximumValue" xml:space="preserve">
-    <value>Timestamp of Maximum Value</value>
-  </data>
-  <data name="DataFunction_Timestamp_MinimumValue" xml:space="preserve">
-    <value>Timestamp of Minimum Value</value>
-  </data>
-  <data name="DataFunction_Timestamp_StartOfInterval" xml:space="preserve">
-    <value>Start of Interval</value>
   </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>

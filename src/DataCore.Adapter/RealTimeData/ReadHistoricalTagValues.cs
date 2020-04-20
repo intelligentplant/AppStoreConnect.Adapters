@@ -335,7 +335,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }, true, _backgroundTaskService, ct);
 
-                    var resultValuesReader = InterpolationHelper.GetValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, _backgroundTaskService, ct);
+                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;

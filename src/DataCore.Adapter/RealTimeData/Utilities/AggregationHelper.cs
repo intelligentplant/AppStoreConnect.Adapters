@@ -100,131 +100,29 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The calculated tag value.
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket bucket) {
-            var result = new List<TagValueExtended>();
+            // We calculate at the bucket start time. Our complete input data set consists of the 
+            // start boundary values followed by the raw samples in the bucket.
+            var combinedInputValues = bucket
+                .StartBoundary
+                .GetBoundarySamples()
+                .Concat(bucket.RawSamples)
+                .ToArray();
 
-            TagValueExtended sample0 = null;
-            TagValueExtended sample1 = null;
+            var result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                tag,
+                bucket.UtcBucketStart,
+                combinedInputValues
+            );
 
-            // First, check if our bucket contains samples, and the first sample exactly matches 
-            // the requested start time.
-
-            var interpRequired = true;
-
-            if (bucket.RawSamples.Count > 0) {
-                var val = bucket.RawSamples.First();
-                if (val.UtcSampleTime == bucket.UtcBucketStart) {
-                    result.Add(TagValueBuilder
-                        .CreateFromExisting(val)
-                        .WithProperties(CreateXPoweredByProperty())
-                        .Build()
-                    );
-                    interpRequired = false;
-                }
-            }
-
-            if (interpRequired) {
-                if (bucket.RawSamples.Count == 0) {
-                    // No samples in the current bucket. We can still extrapolate a value if we have 
-                    // at least two samples in the PreBucketSamples collection.
-
-                    if (bucket.PreBucketSamples.Count == 2) {
-                        sample0 = bucket.PreBucketSamples[0];
-                        sample1 = bucket.PreBucketSamples[1];
-                    }
-                    else if (bucket.PreBucketSamples.Count > 2) {
-                        var preBucketSamples = bucket.PreBucketSamples.Reverse().Take(2).ToArray();
-                        // Samples were reversed; more-recent sample will be at index 0.
-                        sample0 = preBucketSamples[1];
-                        sample1 = preBucketSamples[0];
-                    }
-                }
-                else {
-                    // We have samples in the current bucket.
-
-                    sample1 = bucket.RawSamples[0];
-
-                    if (bucket.PreBucketSamples.Count > 0) {
-                        // We have at least one usable sample from the pre-bucket samples collection 
-                        // that we can use as the earlier sample in our interpolation.
-
-                        sample0 = bucket.PreBucketSamples.Last();
-                    }
-                    else if (bucket.RawSamples.Count > 1) {
-                        // If we have more than one sample in the current bucket, we will extrapolate 
-                        // backwards from the first two samples to the bucket start time.
-
-                        sample0 = sample1;
-                        sample1 = bucket.RawSamples[1];
-                    }
-
-                }
-
-                var val = InterpolationHelper.GetValueAtTime(
-                    tag,
+            if (result == null) {
+                result = CreateErrorTagValue(
+                    bucket,
                     bucket.UtcBucketStart,
-                    sample0,
-                    sample1,
-                    InterpolationCalculationType.Interpolate
+                    Resources.TagValue_ProcessedValue_NoData
                 );
-
-                if (val != null) {
-                    result.Add(val);
-                }
             }
 
-            if (bucket.UtcBucketStart < bucket.UtcQueryEnd && bucket.UtcBucketEnd >= bucket.UtcQueryEnd) {
-                // This is the final bucket in the query and the bucket started before the query 
-                // end time; we need to emit a second value at the query end time.
-
-                // First, check if the last sample in the bucket is exactly at the query end time.
-
-                interpRequired = true;
-                if (bucket.RawSamples.Count > 0) {
-                    if (bucket.RawSamples.Count > 0) {
-                        var val = bucket.RawSamples.Last();
-                        if (val.UtcSampleTime == bucket.UtcQueryEnd) {
-                            result.Add(TagValueBuilder
-                                .CreateFromExisting(val)
-                                .WithProperties(CreateXPoweredByProperty())
-                                .Build()
-                            );
-                            interpRequired = false;
-                        }
-                    }
-                }
-
-                if (interpRequired) {
-                    // Due to the way LINQ lazy-evaluates this chain, we'll never actually call the Concat 
-                    // method if we get two values from the raw samples.
-                    var lastSamples = bucket
-                        .RawSamples
-                        .Reverse()
-                        .Concat(bucket.PreBucketSamples.Reverse())
-                        .Take(2)
-                        .ToArray();
-
-                    if (lastSamples.Length == 2) {
-
-                        // Indices reversed because we reversed the samples above.
-                        sample0 = lastSamples[1];
-                        sample1 = lastSamples[0];
-
-                        var val = InterpolationHelper.GetValueAtTime(
-                            tag,
-                            bucket.UtcQueryEnd,
-                            sample0,
-                            sample1,
-                            InterpolationCalculationType.Interpolate
-                        );
-
-                        if (val != null) {
-                            result.Add(val);
-                        }
-                    }
-                }
-            }
-
-            return result.ToArray();
+            yield return result;
         }
 
         #endregion
@@ -251,7 +149,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] { 
-                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoData)
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
                 };
             }
 
@@ -297,7 +195,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] {
-                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoData)
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
                 };
             }
 
@@ -342,7 +240,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] {
-                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoData)
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
                 };
             }
 
@@ -441,7 +339,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] {
-                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoData)
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
                 };
             }
 
@@ -491,7 +389,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] {
-                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoData)
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
                 };
             }
 
@@ -533,7 +431,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The calculated tag value.
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket bucket) {
-            if (bucket.RawSamples.Count == 0) {
+            if (bucket.RawSampleCount == 0) {
                 return new[] {
                     TagValueBuilder.Create()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
@@ -546,13 +444,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 };
             }
 
-            var sampleCount = bucket.RawSamples.Count;
             var percentGoodCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
 
             return new[] {
                 TagValueBuilder.Create()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
-                    .WithValue((double) percentGoodCount / sampleCount * 100)
+                    .WithValue((double) percentGoodCount / bucket.RawSampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
@@ -579,7 +476,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The calculated tag value.
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket bucket) {
-            if (bucket.RawSamples.Count == 0) {
+            if (bucket.RawSampleCount == 0) {
                 return new[] {
                     TagValueBuilder.Create()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
@@ -592,13 +489,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 };
             }
 
-            var sampleCount = bucket.RawSamples.Count;
             var percentBadCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
 
             return new[] {
                 TagValueBuilder.Create()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
-                    .WithValue((double) percentBadCount / sampleCount * 100)
+                    .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
@@ -1040,7 +936,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             CancellationToken cancellationToken
         ) {
             var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(sampleInterval), utcStartTime, utcEndTime);
-
+            
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {
                     break;
@@ -1051,7 +947,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 if (val.Value.UtcSampleTime < bucket.UtcBucketStart) {
-                    AddPreBucketSample(bucket, val.Value);
+                    bucket.UpdateStartBoundaryValue(val.Value);
                     continue;
                 }
 
@@ -1059,25 +955,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     // The sample we have just received is later than the end time for the current 
                     // bucket.
 
-                    // Determine the pre-bucket samples that we need to copy to the new bucket e.g. 
-                    // to help with interpolation.
-                    var preBucketSamples = GetPreBucketSamples(bucket);
-
                     do {
                         // Emit values from the current bucket and create a new bucket.
                         await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+                        var previousBucket = bucket;
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
-                        // Now, copy over the pre-bucket samples to the new bucket.
-                        foreach (var item in preBucketSamples) {
-                            AddPreBucketSample(bucket, item);
+                        // Add the end boundary value(s) from the previous bucket as the start 
+                        // boundary value(s) on the new one.
+                        if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                        }
+                        else {
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
                         }
                     } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd);
                 }
 
                 // Add the sample to the bucket.
                 if (val.Value.UtcSampleTime <= utcEndTime) {
-                    bucket.RawSamples.Add(val.Value);
+                    bucket.AddRawSample(val.Value);
                 }
             }
 
@@ -1091,10 +989,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // according to our sample interval, and allow our aggregator the chance to calculate 
                 // values for the remaining buckets.
 
-                // Determine the pre-bucket samples that we need to copy e.g. to help with interpolation.
-                var preBucketSamples = GetPreBucketSamples(bucket);
-
                 while (bucket.UtcBucketEnd < utcEndTime) {
+                    var previousBucket = bucket;
                     bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
                     if (bucket.UtcBucketEnd > utcEndTime) {
                         // New bucket would end after the query end time, so we don't need to 
@@ -1102,55 +998,19 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         break;
                     }
 
-                    foreach (var item in preBucketSamples) {
-                        bucket.PreBucketSamples.Add(item);
+                    // Add the end boundary value(s) from the previous bucket as the start 
+                    // boundary value(s) on the new one.
+                    if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
+                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                    }
+                    else {
+                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
                     }
 
                     await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
                 }
             }
-        }
-
-
-        /// <summary>
-        /// Adds a pre-bucket sample to a bucket. If two or more pre-bucket samples have already 
-        /// been added, the earliest sample will be removed.
-        /// </summary>
-        /// <param name="bucket">
-        ///   The bucket.
-        /// </param>
-        /// <param name="value">
-        ///   The sample.
-        /// </param>
-        private static void AddPreBucketSample(TagValueBucket bucket, TagValueExtended value) {
-            if (bucket.PreBucketSamples.Count >= 2) {
-                bucket.PreBucketSamples.RemoveAt(0);
-            }
-            bucket.PreBucketSamples.Add(value);
-        }
-
-
-        /// <summary>
-        /// Gets a set of up to two pre-bucket samples to include in the bucket after the specified 
-        /// one. These can be used when e.g. interpolating a value before the first sample in the 
-        /// next bucket.
-        /// </summary>
-        /// <param name="bucket">
-        ///   The current bucket. The returned values should be assigned to <see cref="TagValueBucket.PreBucketSamples"/> 
-        ///   collection in the next bucket.
-        /// </param>
-        /// <returns>
-        ///   A collection of <see cref="TagValueExtended"/> objects.
-        /// </returns>
-        private static IEnumerable<TagValueExtended> GetPreBucketSamples(TagValueBucket bucket) {
-            if (bucket.RawSamples.Count == 2) {
-                return bucket.RawSamples.ToArray();
-            }
-            if (bucket.RawSamples.Count > 2) {
-                return bucket.RawSamples.Reverse().Take(2).Reverse().ToArray();
-            }
-
-            return bucket.PreBucketSamples.Concat(bucket.RawSamples).Reverse().Take(2).Reverse().ToArray();
         }
 
 
@@ -1196,7 +1056,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     continue;
                 }
 
-                foreach (var val in vals.Where(v => v.UtcSampleTime >= utcNotBefore && v.UtcSampleTime <= utcNotAfter)) {
+                foreach (var val in vals.Where(v => v != null).Where(v => v.UtcSampleTime >= utcNotBefore && v.UtcSampleTime <= utcNotAfter)) {
                     if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key));
                     }

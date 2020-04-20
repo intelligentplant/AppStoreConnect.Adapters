@@ -14,53 +14,100 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class AggregationTests : TestsBase {
 
-        public static double CalculateExpectedAvgValue(IEnumerable<TagValueExtended> values) {
-            return values.Where(x => x.Status == TagValueStatus.Good).Average(x => x.GetValueOrDefault<double>());
+        public static double CalculateExpectedAvgValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Average(x => x.GetValueOrDefault<double>());
         }
 
 
-        public static double CalculateExpectedMinValue(IEnumerable<TagValueExtended> values) {
-            return values.Where(x => x.Status == TagValueStatus.Good).Min(x => x.GetValueOrDefault<double>());
+        public static double CalculateExpectedMinValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Min(x => x.GetValueOrDefault<double>());
         }
 
 
-        public static DateTime? CalculateExpectedMinTimestamp(IEnumerable<TagValueExtended> values) {
-            return values.Where(x => x.Status == TagValueStatus.Good).OrderBy(x => x.GetValueOrDefault<double>()).FirstOrDefault()?.UtcSampleTime;
+        public static DateTime? CalculateExpectedMinTimestamp(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .OrderBy(x => x.GetValueOrDefault<double>())
+                .FirstOrDefault()?.UtcSampleTime;
         }
 
 
-        public static double CalculateExpectedMaxValue(IEnumerable<TagValueExtended> values) {
-            return values.Where(x => x.Status == TagValueStatus.Good).Max(x => x.GetValueOrDefault<double>());
+        public static double CalculateExpectedMaxValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Max(x => x.GetValueOrDefault<double>());
         }
 
 
-        public static DateTime? CalculateExpectedMaxTimestamp(IEnumerable<TagValueExtended> values) {
-            return values.Where(x => x.Status == TagValueStatus.Good).OrderByDescending(x => x.GetValueOrDefault<double>()).FirstOrDefault()?.UtcSampleTime;
+        public static DateTime? CalculateExpectedMaxTimestamp(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .OrderByDescending(x => x.GetValueOrDefault<double>())
+                .FirstOrDefault()?.UtcSampleTime;
         }
 
 
-        public static double CalculateExpectedCountValue(IEnumerable<TagValueExtended> values) {
-            return values.Count();
+        public static double CalculateExpectedCountValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Count();
         }
 
 
-        public static double CalculateExpectedRangeValue(IEnumerable<TagValueExtended> values) {
-            return Math.Abs(CalculateExpectedMaxValue(values) - CalculateExpectedMinValue(values));
+        public static double CalculateExpectedRangeValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return Math.Abs(CalculateExpectedMaxValue(values, bucketStart, bucketEnd) - CalculateExpectedMinValue(values, bucketStart, bucketEnd));
         }
 
 
-        public static double CalculateExpectedDeltaValue(IEnumerable<TagValueExtended> values) {
-            return Math.Abs(values.Where(x => x.Status == TagValueStatus.Good).First().GetValueOrDefault<double>() - values.Where(x => x.Status == TagValueStatus.Good).Last().GetValueOrDefault<double>());
+        public static double CalculateExpectedDeltaValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            return Math.Abs(
+                values
+                    .Where(x => x.UtcSampleTime >= bucketStart)
+                    .Where(x => x.UtcSampleTime < bucketEnd)
+                    .Where(x => x.Status == TagValueStatus.Good)
+                    .First()
+                    .GetValueOrDefault<double>() 
+                    
+                - 
+                
+                values
+                    .Where(x => x.UtcSampleTime >= bucketStart)
+                    .Where(x => x.UtcSampleTime < bucketEnd)
+                    .Where(x => x.Status == TagValueStatus.Good)
+                    .Last()
+                    .GetValueOrDefault<double>()
+            );
         }
 
 
-        public static double CalculateExpectedPercentGoodValue(IEnumerable<TagValueExtended> values) {
-            return ((double) values.Count(x => x.Status == TagValueStatus.Good)) / values.Count() * 100;
+        public static double CalculateExpectedPercentGoodValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var bucketValues = values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd);
+            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Good)) / bucketValues.Count() * 100;
         }
 
 
-        public static double CalculateExpectedPercentBadValue(IEnumerable<TagValueExtended> values) {
-            return ((double) values.Count(x => x.Status == TagValueStatus.Bad)) / values.Count() * 100;
+        public static double CalculateExpectedPercentBadValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var bucketValues = values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd);
+            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Bad)) / bucketValues.Count() * 100;
         }
 
 
@@ -92,7 +139,8 @@ namespace DataCore.Adapter.Tests {
             var start = end.AddSeconds(-60);
             var interval = TimeSpan.FromSeconds(60);
 
-            var rawValues = new[] { 
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
@@ -114,11 +162,11 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(tag.Id, val.TagId);
             Assert.AreEqual(tag.Name, val.TagName);
 
-            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end });
 
             var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
                 ? start
-                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
@@ -154,6 +202,7 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
@@ -175,11 +224,11 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(tag.Id, val.TagId);
             Assert.AreEqual(tag.Name, val.TagName);
 
-            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end });
 
             var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
                 ? start
-                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
@@ -214,6 +263,7 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
@@ -237,7 +287,7 @@ namespace DataCore.Adapter.Tests {
 
             var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
                 ? start
-                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(val.Value.Error));
             Assert.AreEqual(double.NaN, val.Value.GetValueOrDefault(double.NaN));
@@ -271,6 +321,7 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
@@ -292,11 +343,11 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(tag.Id, val.TagId);
             Assert.AreEqual(tag.Name, val.TagName);
 
-            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end });
 
             var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
                 ? start
-                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
@@ -329,6 +380,7 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
                 TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
@@ -350,11 +402,11 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(tag.Id, val.TagId);
             Assert.AreEqual(tag.Name, val.TagName);
 
-            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues });
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end });
 
             var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
                 ? start
-                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues })) ?? start;
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
@@ -368,7 +420,14 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionShouldBeRegistered() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName, 
+                "Test", 
+                "A custom function", 
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -382,7 +441,14 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionRegistrationShouldFailOnSecondAttempt() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -390,7 +456,14 @@ namespace DataCore.Adapter.Tests {
             Assert.IsTrue(registered);
             Assert.IsTrue(aggregationHelper.GetSupportedDataFunctions().Any(x => x.Id.Equals(descriptor.Id)));
 
-            var descriptor2 = new DataFunctionDescriptor(TestContext.TestName, "Test2", "A custom function", null);
+            var descriptor2 = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test2",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
             var registered2 = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -403,7 +476,14 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void CustomDataFunctionShouldBeUnregistered() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
@@ -421,7 +501,14 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void CustomDataFunctionDeregistrationShouldFailOnSecondAttempt() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
@@ -443,7 +530,14 @@ namespace DataCore.Adapter.Tests {
         public void CustomDataFunctionRegistrationShouldFailWhenDefaultFunctionIdIsUsed() {
             var aggregationHelper = new AggregationHelper();
 
-            var descriptor = new DataFunctionDescriptor(DefaultDataFunctions.Average.Id, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                DefaultDataFunctions.Average.Id,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 return Array.Empty<TagValueExtended>();
             });
@@ -456,10 +550,17 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task CustomDataFunctionShouldCalculateValues() {
             var aggregationHelper = new AggregationHelper();
-            var descriptor = new DataFunctionDescriptor(TestContext.TestName, "Test", "A custom function", null);
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
 
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
-                var val = bucket.RawSamples.Count == 0
+                var val = !bucket.RawSamples.Any()
                     ? 0
                     : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
 

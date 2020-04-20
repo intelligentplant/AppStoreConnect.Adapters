@@ -340,6 +340,8 @@ namespace DataCore.Adapter.Tests {
                 "Id",
                 "Name",
                 "Description",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
                 new[] { 
                     AdapterProperty.Create("prop1", "value1", "description1")
                 }
@@ -351,6 +353,8 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Name, actual.Name);
             Assert.AreEqual(expected.Description, actual.Description);
+            Assert.AreEqual(expected.SampleTime, actual.SampleTime);
+            Assert.AreEqual(expected.Status, actual.Status);
             foreach (var prop in expected.Properties) {
                 var actualProp = actual.Properties.FirstOrDefault(p => p.Name.Equals(prop.Name));
                 Assert.IsNotNull(actualProp);

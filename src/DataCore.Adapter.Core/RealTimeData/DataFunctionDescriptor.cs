@@ -29,6 +29,16 @@ namespace DataCore.Adapter.RealTimeData {
         public string Description { get; }
 
         /// <summary>
+        /// The method used to compute the sample time for a calculated value.
+        /// </summary>
+        public DataFunctionSampleTimeType SampleTime { get; }
+
+        /// <summary>
+        /// The method used to compute the quality status for a calculated value.
+        /// </summary>
+        public DataFunctionStatusType Status { get; }
+
+        /// <summary>
         /// Bespoke properties associated with the data function.
         /// </summary>
         public IEnumerable<AdapterProperty> Properties { get; }
@@ -46,16 +56,28 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="description">
         ///   The function description.
         /// </param>
+        /// <param name="sampleTime">
+        ///   The sample time calculation method for the function. When <see cref="DataFunctionStatusType.Custom"/>
+        ///   is specified, a property in the <paramref name="properties"/> collection should 
+        ///   describe how the sample time is calculated.
+        /// </param>
+        /// <param name="status">
+        ///   The quality status calculation method for the function. When <see cref="DataFunctionStatusType.Custom"/>
+        ///   is specified, a property in the <paramref name="properties"/> collection should 
+        ///   describe how the quality status is calculated.
+        /// </param>
         /// <param name="properties">
         ///   Additional properties associated with the function.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public DataFunctionDescriptor(string id, string name, string description, IEnumerable<AdapterProperty> properties) {
+        public DataFunctionDescriptor(string id, string name, string description, DataFunctionSampleTimeType sampleTime, DataFunctionStatusType status, IEnumerable<AdapterProperty> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
             Description = description;
+            SampleTime = sampleTime;
+            Status = status;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
 
@@ -72,14 +94,31 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="description">
         ///   The function description.
         /// </param>
+        /// <param name="sampleTime">
+        ///   The sample time calculation method for the function. When <see cref="DataFunctionStatusType.Custom"/>
+        ///   is specified, a property in the <paramref name="properties"/> collection should 
+        ///   describe how the sample time is calculated.
+        /// </param>
+        /// <param name="status">
+        ///   The quality status calculation method for the function. When <see cref="DataFunctionStatusType.Custom"/>
+        ///   is specified, a property in the <paramref name="properties"/> collection should 
+        ///   describe how the quality status is calculated.
+        /// </param>
         /// <param name="properties">
         ///   Additional properties associated with the function.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public static DataFunctionDescriptor Create(string id, string name = null, string description = null, IEnumerable<AdapterProperty> properties = null) {
-            return new DataFunctionDescriptor(id, name ?? id, description, properties);
+        public static DataFunctionDescriptor Create(
+            string id, 
+            string name = null, 
+            string description = null, 
+            DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
+            DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
+            IEnumerable<AdapterProperty> properties = null
+        ) {
+            return new DataFunctionDescriptor(id, name ?? id, description, sampleTime, status, properties);
         }
 
     }

@@ -28,17 +28,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </summary>
         public DateTime UtcQueryEnd { get; }
 
+        private List<TagValueExtended> _rawSamples = new List<TagValueExtended>();
+
         /// <summary>
         /// The raw data samples for the bucket.
         /// </summary>
-        public IList<TagValueExtended> RawSamples { get; } = new List<TagValueExtended>();
+        public IEnumerable<TagValueExtended> RawSamples { get { return _rawSamples; } }
 
         /// <summary>
-        /// The last raw samples that were received prior to start of this bucket. Up to two 
-        /// samples are provided. This is to allow aggregates that calculate using values on 
-        /// either side of the bucket boundary (such as interpolation).
+        /// The number of raw samples in the bucket.
         /// </summary>
-        public IList<TagValueExtended> PreBucketSamples { get; } = new List<TagValueExtended>();
+        public int RawSampleCount { get { return _rawSamples.Count; } }
+
+        /// <summary>
+        /// Holds information about values immediately before the start boundary of the bucket.
+        /// </summary>
+        public BoundaryInfo StartBoundary { get; } = new BoundaryInfo();
+
+        /// <summary>
+        /// Holds information about values immediately before the end boundary of the bucket.
+        /// </summary>
+        public BoundaryInfo EndBoundary { get; } = new BoundaryInfo();
 
 
         /// <summary>
@@ -61,6 +71,41 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             UtcBucketEnd = utcBucketEnd;
             UtcQueryStart = utcQueryStart;
             UtcQueryEnd = utcQueryEnd;
+        }
+
+
+        /// <summary>
+        /// Adds a raw sample to the bucket and updates the end boundary value for the bucket if 
+        /// required.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        internal void AddRawSample(TagValueExtended value) {
+            if (value == null) {
+                return;
+            }
+
+            _rawSamples.Add(value);
+            EndBoundary.UpdateValue(value);
+        }
+
+
+        /// <summary>
+        /// Updates the start boundary value for the bucket. Note that updating the start boundary 
+        /// will also update the end boundary, if an end boundary value has not yet been set. 
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        internal void UpdateStartBoundaryValue(TagValueExtended value) {
+            if (value == null) {
+                return;
+            }
+
+            StartBoundary.UpdateValue(value);
+            // We may also have to update the end boundary value.
+            EndBoundary.UpdateValue(value);
         }
 
 

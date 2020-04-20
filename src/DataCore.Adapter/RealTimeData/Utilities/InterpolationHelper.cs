@@ -63,10 +63,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="valueAfter">
         ///   The closest raw sample after <paramref name="utcSampleTime"/>.
         /// </param>
+        /// <param name="statusOverride">
+        ///   When specified, allows the status of the calculated sample to be overridden. By 
+        ///   default, the status is the worst-case status of the two samples involved in the 
+        ///   calculation. If a value is specified for this parameter that is better-quality 
+        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
+        ///   status is calculated, and this parameter specified uncertain status, the original 
+        ///   bad status is used.
+        /// </param>
         /// <returns>
         ///   The interpolated sample.
         /// </returns>
-        private static TagValueExtended InterpolateSample(DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter) {
+        private static TagValueExtended InterpolateSample(
+            DateTime utcSampleTime, 
+            TagValueExtended valueBefore, 
+            TagValueExtended valueAfter,
+            TagValueStatus? statusOverride
+        ) {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
 
@@ -95,6 +108,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var nextStatusValue = valueBefore.Status == TagValueStatus.Good && valueAfter.Status == TagValueStatus.Good
                 ? TagValueStatus.Good
                 : TagValueStatus.Uncertain;
+
+            if (statusOverride != null && statusOverride.Value < nextStatusValue) {
+                nextStatusValue = statusOverride.Value;
+            }
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
@@ -127,6 +144,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   <see cref="InterpolationCalculationType.UsePreviousValue"/> for non-numeric or state-based 
         ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
         /// </param>
+        /// <param name="statusOverride">
+        ///   When specified, allows the status of the calculated sample to be overridden. By 
+        ///   default, the status is the worst-case status of the two samples involved in the 
+        ///   calculation. If a value is specified for this parameter that is better-quality 
+        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
+        ///   status is calculated, and this parameter specified uncertain status, the original 
+        ///   bad status is used.
+        /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
         ///   calculated.
@@ -134,7 +159,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueExtended GetValueAtTime(TagSummary tag, DateTime utcSampleTime, TagValueExtended valueBefore, TagValueExtended valueAfter, InterpolationCalculationType interpolationType) {
+        private static TagValueExtended GetValueAtTime(
+            TagSummary tag, 
+            DateTime utcSampleTime, 
+            TagValueExtended valueBefore, 
+            TagValueExtended valueAfter, 
+            InterpolationCalculationType interpolationType,
+            TagValueStatus? statusOverride = null
+        ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -147,19 +179,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // we can't interpolate between two values.
 
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
+                    var status = valueBefore.Status;
+                    if (statusOverride.HasValue && statusOverride.Value < status) {
+                        status = statusOverride.Value;
+                    }
+
                     return TagValueBuilder
                         .CreateFromExisting(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
+                        .WithStatus(status)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
+                    var status = valueAfter.Status;
+                    if (statusOverride.HasValue && statusOverride.Value < status) {
+                        status = statusOverride.Value;
+                    }
+
                     return TagValueBuilder
                         .CreateFromExisting(valueAfter)
                         .WithUtcSampleTime(utcSampleTime)
+                        .WithStatus(status)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }
+
                 return null;
             }
 
@@ -183,7 +228,289 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 valueAfter = tmp;
             }
 
-            return InterpolateSample(utcSampleTime, valueBefore, valueAfter);
+            return InterpolateSample(utcSampleTime, valueBefore, valueAfter, statusOverride);
+        }
+
+
+        /// <summary>
+        /// Calculates a tag value at the specified time stamp.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcSampleTime">
+        ///   The UTC sample time for the calculated sample.
+        /// </param>
+        /// <param name="valueBefore">
+        ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
+        /// </param>
+        /// <param name="statusOverride">
+        ///   When specified, allows the status of the calculated sample to be overridden. By 
+        ///   default, the status is the worst-case status of the two samples involved in the 
+        ///   calculation. If a value is specified for this parameter that is better-quality 
+        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
+        ///   status is calculated, and this parameter specified uncertain status, the original 
+        ///   bad status is used.
+        /// </param>
+        /// <returns>
+        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
+        ///   calculated.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueExtended GetPreviousValueAtSampleTime(
+            TagSummary tag,
+            DateTime utcSampleTime,
+            TagValueExtended valueBefore,
+            TagValueStatus? statusOverride = null
+        ) {
+            return GetValueAtTime(
+                tag,
+                utcSampleTime,
+                valueBefore,
+                null,
+                InterpolationCalculationType.UsePreviousValue,
+                statusOverride
+            );
+        }
+
+
+        /// <summary>
+        /// Calculates a tag value at the specified time stamp.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcSampleTime">
+        ///   The UTC sample time for the calculated sample.
+        /// </param>
+        /// <param name="valueBefore">
+        ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
+        /// </param>
+        /// <param name="valueAfter">
+        ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
+        /// </param>
+        /// <param name="statusOverride">
+        ///   When specified, allows the status of the calculated sample to be overridden. By 
+        ///   default, the status is the worst-case status of the two samples involved in the 
+        ///   calculation. If a value is specified for this parameter that is better-quality 
+        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
+        ///   status is calculated, and this parameter specified uncertain status, the original 
+        ///   bad status is used.
+        /// </param>
+        /// <returns>
+        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
+        ///   calculated.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueExtended GetInterpolatedValueAtSampleTime(
+            TagSummary tag,
+            DateTime utcSampleTime,
+            TagValueExtended valueBefore,
+            TagValueExtended valueAfter,
+            TagValueStatus? statusOverride = null
+        ) {
+            return GetValueAtTime(
+                tag, 
+                utcSampleTime, 
+                valueBefore, 
+                valueAfter, 
+                InterpolationCalculationType.Interpolate, 
+                statusOverride
+            );
+        }
+
+
+        /// <summary>
+        /// Calculates a tag value at the specified time stamp.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcSampleTime">
+        ///   The UTC sample time for the calculated sample.
+        /// </param>
+        /// <param name="values">
+        ///   The raw samples that the samples for interpolation will be selected from.
+        /// </param>
+        /// <returns>
+        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
+        ///   calculated.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueExtended GetInterpolatedValueAtSampleTime(
+            TagSummary tag,
+            DateTime utcSampleTime,
+            IEnumerable<TagValueExtended> values
+        ) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+            if (values == null || !values.Any()) {
+                return null;
+            }
+
+            // Option 1: if we have a value exactly at the sample time, use that value.
+
+            var exactValue = values.FirstOrDefault(x => x != null && x.UtcSampleTime == utcSampleTime);
+            if (exactValue != null) {
+                return TagValueBuilder
+                    .CreateFromExisting(exactValue)
+                    .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                    .Build();
+            }
+
+            // Option 2: if we have boundary values around the sample time, use those values.
+
+            var boundaryStartClosest = values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime);
+            var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.Status == TagValueStatus.Good
+                ? boundaryStartClosest
+                : values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime && x.Status == TagValueStatus.Good) ?? boundaryStartClosest;
+
+            var boundaryEndClosest = values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime);
+            var boundaryEndBest = boundaryEndClosest == null || boundaryEndClosest.Status == TagValueStatus.Good
+                ? boundaryEndClosest
+                : values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime && x.Status == TagValueStatus.Good) ?? boundaryEndClosest;
+
+            if (boundaryStartBest != null && boundaryEndBest != null) {
+                // We have a boundary value before and after the sample time.
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryStartBest,
+                    boundaryEndBest,
+                    InterpolationCalculationType.Interpolate,
+                    boundaryStartBest != boundaryStartClosest || boundaryEndBest != boundaryEndClosest
+                        ? TagValueStatus.Uncertain
+                        : (TagValueStatus?) null
+                );
+            }
+
+            // Option 3: if we have two good-quality values before the sample time, extrapolate 
+            // using those values.
+
+            var boundaryValues = values
+                .Where(x => x != null)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => x.UtcSampleTime < utcSampleTime)
+                .Reverse() // Take values closest to the sample time
+                .Take(2)
+                .Reverse() // Switch values back into ascending time order
+                .ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    InterpolationCalculationType.Interpolate,
+                    // Use uncertain status because we are extrapolating instead of interpolating.
+                    TagValueStatus.Uncertain
+                );
+            }
+
+            // Option 4: if we have two good-quality values after the sample time, extrapolated 
+            // using those values.
+
+            boundaryValues = values
+                .Where(x => x != null)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => x.UtcSampleTime > utcSampleTime)
+                .Take(2)
+                .ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    InterpolationCalculationType.Interpolate,
+                    // Use uncertain status because we are extrapolating instead of interpolating.
+                    TagValueStatus.Uncertain
+                );
+            }
+
+            // Option 5: if we have any values on either side of the sample time, interpolate 
+            // using those values.
+
+            boundaryValues = new[] {
+                values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime),
+                values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime)
+            }.Where(x => x != null).ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    InterpolationCalculationType.Interpolate,
+                    // Use uncertain status because we are extrapolating instead of interpolating. 
+                    // This isn't technically required because the calculated status is guaranteed 
+                    // to be at least uncertain since we are not using two good quality values, 
+                    // but we will do so anyway for correctness.
+                    TagValueStatus.Uncertain
+                );
+            }
+
+            // Option 6: if we have two values before the sample time, extrapolate using those 
+            // values.
+
+            boundaryValues = values
+                .Where(x => x != null)
+                .Where(x => x.UtcSampleTime < utcSampleTime)
+                .Reverse() // Take values closest to the sample time
+                .Take(2)
+                .Reverse() // Switch values back into ascending time order
+                .ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    InterpolationCalculationType.Interpolate,
+                    // Use uncertain status because we are extrapolating instead of interpolating. 
+                    // This isn't technically required because the calculated status is guaranteed 
+                    // to be at least uncertain since we are not using two good quality values, 
+                    // but we will do so anyway for correctness.
+                    TagValueStatus.Uncertain
+                );
+            }
+
+            // Option 7: if we have two values after the sample time, extrapolate using those 
+            // values.
+
+            boundaryValues = values
+                .Where(x => x != null)
+                .Where(x => x.UtcSampleTime > utcSampleTime)
+                .Take(2)
+                .ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return GetValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    InterpolationCalculationType.Interpolate,
+                    // Use uncertain status because we are extrapolating instead of interpolating. 
+                    // This isn't technically required because the calculated status is guaranteed 
+                    // to be at least uncertain since we are not using two good quality values, 
+                    // but we will do so anyway for correctness.
+                    TagValueStatus.Uncertain
+                );
+            }
+
+            return null;
         }
 
 
@@ -208,7 +535,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetValuesAtSampleTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPreviousValuesAtSampleTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -223,13 +550,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetInterpolatedValues(tag, utcSampleTimes.OrderBy(x => x), InterpolationCalculationType.UsePreviousValue, rawData, ch, ct), true, scheduler, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, ch, ct), true, scheduler, cancellationToken);
 
             return result;
         }
 
 
-        private static async Task GetInterpolatedValues(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, InterpolationCalculationType interpolationCalculationType, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async Task GetPreviousValuesAtTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             var sampleTimesEnumerator = utcSampleTimes.GetEnumerator();
             try {
                 if (!sampleTimesEnumerator.MoveNext()) {
@@ -254,7 +581,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     if (value0 != null) {
                         while (value1.UtcSampleTime > nextSampleTime && sampleTimesRemaining) {
-                            var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, interpolationCalculationType);
+                            var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
                             if (sampleTimesEnumerator.MoveNext()) {
                                 nextSampleTime = sampleTimesEnumerator.Current;
                             }
@@ -277,7 +604,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     value0 != null &&
                     value1 != null) {
 
-                    var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, interpolationCalculationType);
+                    var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
                     if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
                     }

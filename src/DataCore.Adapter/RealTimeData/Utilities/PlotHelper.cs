@@ -351,7 +351,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
-                    if (bucket.RawSamples.Count > 0) {
+                    if (bucket.RawSampleCount > 0) {
                         await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
                         lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
@@ -359,10 +359,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketStart.Add(bucketSize), utcStartTime, utcEndTime);
                 }
 
-                bucket.RawSamples.Add(val.Value);
+                bucket.AddRawSample(val.Value);
             }
 
-            if (bucket.RawSamples.Count > 0) {
+            if (bucket.RawSampleCount > 0) {
                 await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
             }
         }

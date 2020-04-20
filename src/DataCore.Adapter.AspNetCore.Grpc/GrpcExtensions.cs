@@ -1493,6 +1493,106 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Converts the value to its adapter equivalent.
+        /// </summary>
+        /// <param name="sampleTime">
+        ///   The gRPC data function sample time type.
+        /// </param>
+        /// <returns>
+        ///   The adapter data function sample time type.
+        /// </returns>
+        public static RealTimeData.DataFunctionSampleTimeType ToAdapterDataFunctionSampleTimeType(this Grpc.DataFunctionSampleTime sampleTime) {
+            switch (sampleTime) {
+                case Grpc.DataFunctionSampleTime.StartTime:
+                    return RealTimeData.DataFunctionSampleTimeType.StartTime;
+                case Grpc.DataFunctionSampleTime.EndTime:
+                    return RealTimeData.DataFunctionSampleTimeType.EndTime;
+                case Grpc.DataFunctionSampleTime.Raw:
+                    return RealTimeData.DataFunctionSampleTimeType.Raw;
+                case Grpc.DataFunctionSampleTime.Custom:
+                    return RealTimeData.DataFunctionSampleTimeType.Custom;
+                case Grpc.DataFunctionSampleTime.Unspecified:
+                default:
+                    return RealTimeData.DataFunctionSampleTimeType.Unspecified;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the value to its gRPC equivalent.
+        /// </summary>
+        /// <param name="sampleTime">
+        ///   The adapter data function sample time type.
+        /// </param>
+        /// <returns>
+        ///   The gRPC data function sample time type.
+        /// </returns>
+        public static Grpc.DataFunctionSampleTime ToGrpcDataFunctionSampleTimeType(this RealTimeData.DataFunctionSampleTimeType sampleTime) {
+            switch (sampleTime) {
+                case RealTimeData.DataFunctionSampleTimeType.StartTime:
+                    return Grpc.DataFunctionSampleTime.StartTime;
+                case RealTimeData.DataFunctionSampleTimeType.EndTime:
+                    return Grpc.DataFunctionSampleTime.EndTime;
+                case RealTimeData.DataFunctionSampleTimeType.Raw:
+                    return Grpc.DataFunctionSampleTime.Raw;
+                case RealTimeData.DataFunctionSampleTimeType.Custom:
+                    return Grpc.DataFunctionSampleTime.Custom;
+                case RealTimeData.DataFunctionSampleTimeType.Unspecified:
+                default:
+                    return Grpc.DataFunctionSampleTime.Unspecified;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the value to its adapter equivalent.
+        /// </summary>
+        /// <param name="status">
+        ///   The gRPC data function status type.
+        /// </param>
+        /// <returns>
+        ///   The adapter data function status type.
+        /// </returns>
+        public static RealTimeData.DataFunctionStatusType ToAdapterDataFunctionStatusType(this Grpc.DataFunctionStatus status) {
+            switch (status) {
+                case Grpc.DataFunctionStatus.PercentTime:
+                    return RealTimeData.DataFunctionStatusType.PercentTime;
+                case Grpc.DataFunctionStatus.PercentValues:
+                    return RealTimeData.DataFunctionStatusType.PercentValues;
+                case Grpc.DataFunctionStatus.Custom:
+                    return RealTimeData.DataFunctionStatusType.Custom;
+                case Grpc.DataFunctionStatus.Unspecified:
+                default:
+                    return RealTimeData.DataFunctionStatusType.Unspecified;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the value to its gRPC equivalent.
+        /// </summary>
+        /// <param name="status">
+        ///   The adapter data function status type.
+        /// </param>
+        /// <returns>
+        ///   The gRPC data function status type.
+        /// </returns>
+        public static Grpc.DataFunctionStatus ToGrpcDataFunctionStatusType(this RealTimeData.DataFunctionStatusType status) {
+            switch (status) {
+                case RealTimeData.DataFunctionStatusType.PercentTime:
+                    return Grpc.DataFunctionStatus.PercentTime;
+                case RealTimeData.DataFunctionStatusType.PercentValues:
+                    return Grpc.DataFunctionStatus.PercentValues;
+                case RealTimeData.DataFunctionStatusType.Custom:
+                    return Grpc.DataFunctionStatus.Custom;
+                case RealTimeData.DataFunctionStatusType.Unspecified:
+                default:
+                    return Grpc.DataFunctionStatus.Unspecified;
+            }
+        }
+
+
+        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="descriptor">
@@ -1510,6 +1610,8 @@ namespace DataCore.Adapter {
                 descriptor.Id,
                 descriptor.Name,
                 descriptor.Description,
+                descriptor.SampleTimeType.ToAdapterDataFunctionSampleTimeType(),
+                descriptor.StatusType.ToAdapterDataFunctionStatusType(),
                 descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
@@ -1532,7 +1634,9 @@ namespace DataCore.Adapter {
             var result = new Grpc.DataFunctionDescriptor() {
                 Id = descriptor.Id ?? string.Empty,
                 Name = descriptor.Name ?? string.Empty,
-                Description = descriptor.Description ?? string.Empty
+                Description = descriptor.Description ?? string.Empty,
+                SampleTimeType = descriptor.SampleTime.ToGrpcDataFunctionSampleTimeType(),
+                StatusType = descriptor.Status.ToGrpcDataFunctionStatusType()
             };
 
             if (descriptor.Properties != null && descriptor.Properties.Any()) {

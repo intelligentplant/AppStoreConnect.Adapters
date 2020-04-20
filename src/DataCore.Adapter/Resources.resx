@@ -267,7 +267,10 @@
     <value>ERROR</value>
   </data>
   <data name="TagValue_ProcessedValue_NoData" xml:space="preserve">
-    <value>No good-quality data available in bucket.</value>
+    <value>No data available in the bucket.</value>
+  </data>
+  <data name="TagValue_ProcessedValue_NoGoodData" xml:space="preserve">
+    <value>No good-quality data available in the bucket.</value>
   </data>
   <data name="TagValue_Properties_BucketEnd" xml:space="preserve">
     <value>Bucket End</value>

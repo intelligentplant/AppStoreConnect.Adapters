@@ -316,11 +316,30 @@ message ProcessedTagValueQueryResult {
 }
 
 
+enum DataFunctionSampleTime {
+    DATA_FUNCTION_SAMPLE_TIME_UNSPECIFIED = 0;
+    DATA_FUNCTION_SAMPLE_TIME_START_TIME = 1;
+    DATA_FUNCTION_SAMPLE_TIME_END_TIME = 2;
+    DATA_FUNCTION_SAMPLE_TIME_RAW = 3;
+    DATA_FUNCTION_SAMPLE_TIME_CUSTOM = 4;
+}
+
+
+enum DataFunctionStatus {
+    DATA_FUNCTION_STATUS_UNSPECIFIED = 0;
+    DATA_FUNCTION_STATUS_PERCENT_VALUES = 1;
+    DATA_FUNCTION_STATUS_PERCENT_TIME = 2;
+    DATA_FUNCTION_STATUS_CUSTOM = 3;
+}
+
+
 message DataFunctionDescriptor {
     string id = 1;
     string name = 2;
     string description = 3;
     repeated AdapterProperty properties = 4; 
+    DataFunctionSampleTime sample_time_type = 5;
+    DataFunctionStatus status_type = 6;
 }
 
 

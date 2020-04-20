@@ -493,11 +493,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No good-quality data available in bucket..
+        ///   Looks up a localized string similar to No data available in the bucket..
         /// </summary>
         internal static string TagValue_ProcessedValue_NoData {
             get {
                 return ResourceManager.GetString("TagValue_ProcessedValue_NoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No good-quality data available in the bucket..
+        /// </summary>
+        internal static string TagValue_ProcessedValue_NoGoodData {
+            get {
+                return ResourceManager.GetString("TagValue_ProcessedValue_NoGoodData", resourceCulture);
             }
         }
         
