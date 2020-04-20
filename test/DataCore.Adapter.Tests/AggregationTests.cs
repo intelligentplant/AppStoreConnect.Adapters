@@ -417,6 +417,469 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public void InterpolatedValueShouldBeCalculatedCorrectly() {
+            var now = DateTime.UtcNow;
+
+            (DateTime, double) point0 = (now.AddDays(-1), 0);
+            (DateTime, double) point1 = (now.AddDays(1), 100);
+
+            var expectedValue = 50;
+            var actualValue = InterpolationHelper.InterpolateValue(
+                now.Ticks, 
+                point0.Item1.Ticks, 
+                point1.Item1.Ticks, 
+                point0.Item2, 
+                point1.Item2
+            );
+
+            Assert.AreEqual(expectedValue, actualValue);
+        }
+
+
+        [TestMethod]
+        public void ForwardsExtrapolatedValueShouldBeCalculatedCorrectly() {
+            var now = DateTime.UtcNow;
+
+            (DateTime, double) point0 = (now.AddDays(-1), 0);
+            (DateTime, double) point1 = (now.AddDays(1), 100);
+
+            var expectedValue = 150;
+            var actualValue = InterpolationHelper.InterpolateValue(
+                now.AddDays(2).Ticks,
+                point0.Item1.Ticks,
+                point1.Item1.Ticks,
+                point0.Item2,
+                point1.Item2
+            );
+
+            Assert.AreEqual(expectedValue, actualValue);
+        }
+
+
+        [TestMethod]
+        public void BackwardsExtrapolatedValueShouldBeCalculatedCorrectly() {
+            var now = DateTime.UtcNow;
+
+            (DateTime, double) point0 = (now.AddDays(-1), 0);
+            (DateTime, double) point1 = (now.AddDays(1), 100);
+
+            var expectedValue = -50;
+            var actualValue = InterpolationHelper.InterpolateValue(
+                now.AddDays(-2).Ticks,
+                point0.Item1.Ticks,
+                point1.Item1.Ticks,
+                point0.Item2,
+                point1.Item2
+            );
+
+            Assert.AreEqual(expectedValue, actualValue);
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateGoodQualityFirstValue() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateUncertainQualityFinalValue() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.Last();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = end;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenLowerBoundaryRegionHasUncertainStatus() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            // The boundary region comprises the region between the last good-quality value before 
+            // the boundary time. It has uncertain status if a non-good value lies after the last 
+            // good value.
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenLowerBoundaryValueHasUncertainStatus() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenUpperBoundaryRegionHasUncertainStatus() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            // The boundary region comprises the region between the first good-quality value after 
+            // the boundary time. It has uncertain status if a non-good value lies before the first 
+            // good value.
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenUpperBoundaryValueHasUncertainStatus() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenExtrapolatingBackwards() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-51)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            // Value should have uncertain status because it has been extrapolated.
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldCalculateNonGoodQualityValueWhenExtrapolatingForwards() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            // Value should have uncertain status because it has been extrapolated.
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+        }
+
+
+        [TestMethod]
         public void CustomDataFunctionShouldBeRegistered() {
             var aggregationHelper = new AggregationHelper();
 

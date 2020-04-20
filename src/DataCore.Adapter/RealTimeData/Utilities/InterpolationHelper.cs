@@ -18,36 +18,39 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Interpolates a value between two numeric points.
         /// </summary>
         /// <param name="x">
-        ///   The sample time to calculate the value at.
+        ///   The X-axis position to calculate the value at.
         /// </param>
         /// <param name="x0">
-        ///   The first sample time to use in the interpolation.
+        ///   The first X-axis position to use in the interpolation.
         /// </param>
         /// <param name="x1">
-        ///   The second sample time to use in the interpolation.
+        ///   The second X-axis position to use in the interpolation.
         /// </param>
         /// <param name="y0">
-        ///   The first numeric value to use in the interpolation.
+        ///   The first Y-axis value to use in the interpolation.
         /// </param>
         /// <param name="y1">
-        ///   The second numeric value to use in the interpolation.
+        ///   The second Y-axis value to use in the interpolation.
         /// </param>
         /// <returns>
         ///   The interpolated value.
         /// </returns>
-        public static double InterpolateValue(DateTime x, DateTime x0, DateTime x1, double y0, double y1) {
-            if (double.IsNaN(y0) ||
+        public static double InterpolateValue(double x, double x0, double x1, double y0, double y1) {
+            if (double.IsNaN(x) ||
+                double.IsNaN(x0) ||
+                double.IsNaN(x1) ||
+                double.IsNaN(y0) ||
                 double.IsNaN(y1) ||
+                double.IsInfinity(x) ||
+                double.IsInfinity(x0) ||
+                double.IsInfinity(x1) ||
                 double.IsInfinity(y0) ||
-                double.IsInfinity(y1)) {
-
+                double.IsInfinity(y1)
+            ) {
                 return double.NaN;
             }
-            
-            var x0Ticks = x0.Ticks;
-            var x1Ticks = x1.Ticks;
 
-            return y0 + (x.Ticks - x0Ticks) * ((y1 - y0) / (x1Ticks - x0Ticks));
+            return y0 + (x - x0) * ((y1 - y0) / (x1 - x0));
         }
 
 
@@ -63,13 +66,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="valueAfter">
         ///   The closest raw sample after <paramref name="utcSampleTime"/>.
         /// </param>
-        /// <param name="statusOverride">
-        ///   When specified, allows the status of the calculated sample to be overridden. By 
-        ///   default, the status is the worst-case status of the two samples involved in the 
-        ///   calculation. If a value is specified for this parameter that is better-quality 
-        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
-        ///   status is calculated, and this parameter specified uncertain status, the original 
-        ///   bad status is used.
+        /// <param name="forceUncertainStatus">
+        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
+        ///   have <see cref="TagValueStatus.Good"/> status.
         /// </param>
         /// <returns>
         ///   The interpolated sample.
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcSampleTime, 
             TagValueExtended valueBefore, 
             TagValueExtended valueAfter,
-            TagValueStatus? statusOverride
+            bool forceUncertainStatus
         ) {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
@@ -96,7 +96,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     ? null 
                     : TagValueBuilder.CreateFromExisting(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(valueBefore.Status == TagValueStatus.Good ? TagValueStatus.Good : TagValueStatus.Uncertain)
+                        .WithStatus(
+                            valueBefore.Status == TagValueStatus.Good && !forceUncertainStatus 
+                                ? TagValueStatus.Good 
+                                : TagValueStatus.Uncertain
+                        )
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
             }
@@ -104,14 +108,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var x0 = valueBefore.UtcSampleTime;
             var x1 = valueAfter.UtcSampleTime;
 
-            var nextNumericValue = InterpolateValue(utcSampleTime, x0, x1, y0, y1);
-            var nextStatusValue = valueBefore.Status == TagValueStatus.Good && valueAfter.Status == TagValueStatus.Good
+            var nextNumericValue = InterpolateValue(utcSampleTime.Ticks, x0.Ticks, x1.Ticks, y0, y1);
+            var nextStatusValue = valueBefore.Status == TagValueStatus.Good && valueAfter.Status == TagValueStatus.Good && !forceUncertainStatus
                 ? TagValueStatus.Good
                 : TagValueStatus.Uncertain;
-
-            if (statusOverride != null && statusOverride.Value < nextStatusValue) {
-                nextStatusValue = statusOverride.Value;
-            }
 
             return TagValueBuilder.Create()
                 .WithUtcSampleTime(utcSampleTime)
@@ -144,13 +144,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   <see cref="InterpolationCalculationType.UsePreviousValue"/> for non-numeric or state-based 
         ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
         /// </param>
-        /// <param name="statusOverride">
-        ///   When specified, allows the status of the calculated sample to be overridden. By 
-        ///   default, the status is the worst-case status of the two samples involved in the 
-        ///   calculation. If a value is specified for this parameter that is better-quality 
-        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
-        ///   status is calculated, and this parameter specified uncertain status, the original 
-        ///   bad status is used.
+        /// <param name="forceUncertainStatus">
+        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
+        ///   have <see cref="TagValueStatus.Good"/> status.
         /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
@@ -165,7 +162,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             TagValueExtended valueBefore, 
             TagValueExtended valueAfter, 
             InterpolationCalculationType interpolationType,
-            TagValueStatus? statusOverride = null
+            bool forceUncertainStatus = false
         ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
@@ -179,10 +176,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // we can't interpolate between two values.
 
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
-                    var status = valueBefore.Status;
-                    if (statusOverride.HasValue && statusOverride.Value < status) {
-                        status = statusOverride.Value;
-                    }
+                    var status = forceUncertainStatus 
+                        ? TagValueStatus.Uncertain 
+                        : valueBefore.Status;
 
                     return TagValueBuilder
                         .CreateFromExisting(valueBefore)
@@ -192,10 +188,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .Build();
                 }
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
-                    var status = valueAfter.Status;
-                    if (statusOverride.HasValue && statusOverride.Value < status) {
-                        status = statusOverride.Value;
-                    }
+                    var status = forceUncertainStatus
+                        ? TagValueStatus.Uncertain
+                        : valueAfter.Status;
 
                     return TagValueBuilder
                         .CreateFromExisting(valueAfter)
@@ -228,7 +223,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 valueAfter = tmp;
             }
 
-            return InterpolateSample(utcSampleTime, valueBefore, valueAfter, statusOverride);
+            return InterpolateSample(utcSampleTime, valueBefore, valueAfter, forceUncertainStatus);
         }
 
 
@@ -244,13 +239,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="valueBefore">
         ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
         /// </param>
-        /// <param name="statusOverride">
-        ///   When specified, allows the status of the calculated sample to be overridden. By 
-        ///   default, the status is the worst-case status of the two samples involved in the 
-        ///   calculation. If a value is specified for this parameter that is better-quality 
-        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
-        ///   status is calculated, and this parameter specified uncertain status, the original 
-        ///   bad status is used.
+        /// <param name="forceUncertainStatus">
+        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   status, even if <paramref name="valueBefore"/> has <see cref="TagValueStatus.Good"/> 
+        ///   status.
         /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
@@ -263,7 +255,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             TagSummary tag,
             DateTime utcSampleTime,
             TagValueExtended valueBefore,
-            TagValueStatus? statusOverride = null
+            bool forceUncertainStatus = false
         ) {
             return GetValueAtTime(
                 tag,
@@ -271,7 +263,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 valueBefore,
                 null,
                 InterpolationCalculationType.UsePreviousValue,
-                statusOverride
+                forceUncertainStatus
             );
         }
 
@@ -291,13 +283,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="valueAfter">
         ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
         /// </param>
-        /// <param name="statusOverride">
-        ///   When specified, allows the status of the calculated sample to be overridden. By 
-        ///   default, the status is the worst-case status of the two samples involved in the 
-        ///   calculation. If a value is specified for this parameter that is better-quality 
-        ///   than the calculated status, this parameter will be ignored. For example, if a bad 
-        ///   status is calculated, and this parameter specified uncertain status, the original 
-        ///   bad status is used.
+        /// <param name="forceUncertainStatus">
+        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
+        ///   have <see cref="TagValueStatus.Good"/> status.
         /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
@@ -311,7 +300,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcSampleTime,
             TagValueExtended valueBefore,
             TagValueExtended valueAfter,
-            TagValueStatus? statusOverride = null
+            bool forceUncertainStatus = false
         ) {
             return GetValueAtTime(
                 tag, 
@@ -319,7 +308,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 valueBefore, 
                 valueAfter, 
                 InterpolationCalculationType.Interpolate, 
-                statusOverride
+                forceUncertainStatus
             );
         }
 
@@ -386,8 +375,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     boundaryEndBest,
                     InterpolationCalculationType.Interpolate,
                     boundaryStartBest != boundaryStartClosest || boundaryEndBest != boundaryEndClosest
-                        ? TagValueStatus.Uncertain
-                        : (TagValueStatus?) null
+                        ? true
+                        : false
                 );
             }
 
@@ -411,7 +400,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     boundaryValues[1],
                     InterpolationCalculationType.Interpolate,
                     // Use uncertain status because we are extrapolating instead of interpolating.
-                    TagValueStatus.Uncertain
+                    true
                 );
             }
 
@@ -433,7 +422,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     boundaryValues[1],
                     InterpolationCalculationType.Interpolate,
                     // Use uncertain status because we are extrapolating instead of interpolating.
-                    TagValueStatus.Uncertain
+                    true
                 );
             }
 
@@ -454,9 +443,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     InterpolationCalculationType.Interpolate,
                     // Use uncertain status because we are extrapolating instead of interpolating. 
                     // This isn't technically required because the calculated status is guaranteed 
-                    // to be at least uncertain since we are not using two good quality values, 
+                    // to be uncertain since we are not using two good quality values, 
                     // but we will do so anyway for correctness.
-                    TagValueStatus.Uncertain
+                    true
                 );
             }
 
@@ -480,9 +469,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     InterpolationCalculationType.Interpolate,
                     // Use uncertain status because we are extrapolating instead of interpolating. 
                     // This isn't technically required because the calculated status is guaranteed 
-                    // to be at least uncertain since we are not using two good quality values, 
+                    // to be uncertain since we are not using two good quality values, 
                     // but we will do so anyway for correctness.
-                    TagValueStatus.Uncertain
+                    true
                 );
             }
 
@@ -504,9 +493,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     InterpolationCalculationType.Interpolate,
                     // Use uncertain status because we are extrapolating instead of interpolating. 
                     // This isn't technically required because the calculated status is guaranteed 
-                    // to be at least uncertain since we are not using two good quality values, 
+                    // to be uncertain since we are not using two good quality values, 
                     // but we will do so anyway for correctness.
-                    TagValueStatus.Uncertain
+                    true
                 );
             }
 
@@ -556,6 +545,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         }
 
 
+        /// <summary>
+        /// Gets tag values at the specified sample times.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="utcSampleTimes">
+        ///   The sample times.
+        /// </param>
+        /// <param name="rawData">
+        ///   A channel that will provide the raw data for the calculations.
+        /// </param>
+        /// <param name="resultChannel">
+        ///   The channel to write the results to.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will perform the calculations.
+        /// </returns>
         private static async Task GetPreviousValuesAtTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             var sampleTimesEnumerator = utcSampleTimes.GetEnumerator();
             try {

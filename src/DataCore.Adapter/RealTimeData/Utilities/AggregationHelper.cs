@@ -123,6 +123,24 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             yield return result;
+
+            if (bucket.UtcBucketEnd >= bucket.UtcQueryEnd) {
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcQueryEnd,
+                    combinedInputValues
+                );
+
+                if (result == null) {
+                    result = CreateErrorTagValue(
+                        bucket,
+                        bucket.UtcQueryEnd,
+                        Resources.TagValue_ProcessedValue_NoData
+                    );
+                }
+
+                yield return result;
+            }
         }
 
         #endregion
