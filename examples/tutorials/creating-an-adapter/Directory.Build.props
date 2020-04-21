@@ -1,5 +1,5 @@
 ﻿<Project>
   <PropertyGroup>
-    <AdapterPackageVersion>0.12.1-alpha</AdapterPackageVersion>
+    <AdapterPackageVersion>0.13.2-alpha</AdapterPackageVersion>
   </PropertyGroup>
 </Project>

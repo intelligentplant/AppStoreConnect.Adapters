@@ -75,7 +75,7 @@ namespace MyAdapter {
                     await subscription.AddTagToSubscription(tag.Id);
 
                     Console.WriteLine("  Snapshot Value:");
-                    subscription.Values.RunBackgroundOperation(async (ch, ct) => {
+                    subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
                         await foreach (var value in ch.ReadAllAsync(ct)) {
                             Console.WriteLine($"    - {value.Value}");
                         }
