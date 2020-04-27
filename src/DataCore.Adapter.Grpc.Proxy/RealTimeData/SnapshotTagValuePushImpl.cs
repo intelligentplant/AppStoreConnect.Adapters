@@ -1,7 +1,10 @@
-﻿using System.Threading;
+﻿using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
@@ -24,7 +27,21 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         /// </summary>
         private class Subscription : SnapshotTagValueSubscriptionBase {
 
+            /// <summary>
+            /// The feature.
+            /// </summary>
             private readonly SnapshotTagValuePushImpl _push;
+
+            /// <summary>
+            /// The client for the gRPC service.
+            /// </summary>
+            private readonly TagValuesService.TagValuesServiceClient _client;
+
+            /// <summary>
+            /// Holds the lifetime cancellation token for each subscribed tag.
+            /// </summary>
+            private readonly ConcurrentDictionary<string, CancellationTokenSource> _tagSubscriptionLifetimes = new ConcurrentDictionary<string, CancellationTokenSource>();
+
 
             /// <summary>
             /// Creates a new <see cref="Subscription"/>.
@@ -40,49 +57,36 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 SnapshotTagValuePushImpl push
             ) : base(context, push.AdapterId) {
                 _push = push;
+                _client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
             }
 
 
-            /// <inheritdoc/>
-            protected override async Task RunSubscription(ChannelReader<SnapshotTagValueSubscriptionChange> channel, CancellationToken cancellationToken) {
-                var client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
-                var duplexCall = client.CreateSnapshotPushChannel(_push.GetCallOptions(Context, cancellationToken));
+            /// <summary>
+            /// Creates an processes a subscription to the specified tag ID.
+            /// </summary>
+            /// <param name="tagId">
+            ///   The tag ID.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A long-running task that will run the subscription until the cancellation token 
+            ///   fires.
+            /// </returns>
+            private async Task RunTagSubscription(string tagId, CancellationToken cancellationToken) {
+                var grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() { 
+                    AdapterId = _push.AdapterId,
+                    Tag = tagId
+                }, _push.GetCallOptions(Context, cancellationToken));
 
-                // Run another background task to read subscription changes and pass them to the 
-                // remote service.
-                channel.RunBackgroundOperation(async (ch, ct) => {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var change) || change == null) {
-                            continue;
-                        }
-
-                        try {
-                            await duplexCall.RequestStream.WriteAsync(
-                                new CreateSnapshotPushChannelRequest() {
-                                    AdapterId = _push.AdapterId,
-                                    Tag = change.Request.Tag ?? string.Empty,
-                                    Action = change.Request.Action == Common.SubscriptionUpdateAction.Subscribe
-                                        ? SubscriptionUpdateAction.Subscribe
-                                        : SubscriptionUpdateAction.Unsubscribe
-                                }
-                            ).ConfigureAwait(false);
-                            change.SetResult(true);
-                        }
-                        catch {
-                            change.SetResult(false);
-                            throw;
-                        }
-                    }
-                }, _push.TaskScheduler, cancellationToken);
-
-                // Read value changes.
-                while (await duplexCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (duplexCall.ResponseStream.Current == null) {
+                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (grpcChannel.ResponseStream.Current == null) {
                         continue;
                     }
 
                     await ValueReceived(
-                        duplexCall.ResponseStream.Current.ToAdapterTagValueQueryResult(), 
+                        grpcChannel.ResponseStream.Current.ToAdapterTagValueQueryResult(),
                         cancellationToken
                     ).ConfigureAwait(false);
                 }
@@ -97,13 +101,49 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             /// <inheritdoc/>
             protected override Task OnTagAdded(Adapter.RealTimeData.TagIdentifier tag) {
+                if (CancellationToken.IsCancellationRequested) {
+                    return Task.CompletedTask;
+                }
+
+                var added = false;
+                var ctSource = _tagSubscriptionLifetimes.GetOrAdd(tag.Id, k => {
+                    added = true;
+                    return new CancellationTokenSource();
+                });
+
+                if (added) {
+                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, ct), ctSource.Token, CancellationToken);
+                }
+
                 return Task.CompletedTask;
             }
 
 
             /// <inheritdoc/>
             protected override Task OnTagRemoved(Adapter.RealTimeData.TagIdentifier tag) {
+                if (CancellationToken.IsCancellationRequested) {
+                    return Task.CompletedTask;
+                }
+
+                if (_tagSubscriptionLifetimes.TryRemove(tag.Id, out var ctSource)) {
+                    ctSource.Cancel();
+                    ctSource.Dispose();
+                }
+
                 return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                base.OnCancelled();
+
+                foreach (var item in _tagSubscriptionLifetimes.Values.ToArray()) {
+                    item.Cancel();
+                    item.Dispose();
+                }
+
+                _tagSubscriptionLifetimes.Clear();
             }
 
         }

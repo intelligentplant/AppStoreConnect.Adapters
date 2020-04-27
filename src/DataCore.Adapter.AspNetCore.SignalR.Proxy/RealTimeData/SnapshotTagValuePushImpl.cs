@@ -1,9 +1,9 @@
-﻿using System;
+﻿using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter;
 using DataCore.Adapter.RealTimeData;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var result = new Subscription(context, AdapterId, this);
+            var result = new Subscription(context, this);
             await result.Start().ConfigureAwait(false);
 
             return result;
@@ -37,14 +37,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         private class Subscription : SnapshotTagValueSubscriptionBase {
 
             /// <summary>
-            /// The adapter ID.
-            /// </summary>
-            private readonly string _adapterId;
-
-            /// <summary>
             /// The feature.
             /// </summary>
             private readonly SnapshotTagValuePushImpl _push;
+
+            /// <summary>
+            /// Holds the lifetime cancellation token for each subscribed tag.
+            /// </summary>
+            private readonly ConcurrentDictionary<string, CancellationTokenSource> _tagSubscriptionLifetimes = new ConcurrentDictionary<string, CancellationTokenSource>();
 
 
             /// <summary>
@@ -53,52 +53,37 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <param name="context">
             ///   The adapter call context for the subscription owner.
             /// </param>
-            /// <param name="adapterId">
-            ///   The adapter ID.
-            /// </param>
             /// <param name="push">
             ///   The push feature.
             /// </param>
             internal Subscription(
-                IAdapterCallContext context, 
-                string adapterId,
+                IAdapterCallContext context,
                 SnapshotTagValuePushImpl push
-            ) : base (context, adapterId) {
-                _adapterId = adapterId;
+            ) : base (context, push.AdapterId) {
                 _push = push;
             }
 
 
-            /// <inheritdoc/>
-            protected override async Task RunSubscription(ChannelReader<SnapshotTagValueSubscriptionChange> channel, CancellationToken cancellationToken) {
-                var subChangesChannel = Channel.CreateUnbounded<UpdateSnapshotTagValueSubscriptionRequest>();
-                
+            
+            /// <summary>
+            /// Creates an processes a subscription to the specified tag ID.
+            /// </summary>
+            /// <param name="tagId">
+            ///   The tag ID.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A long-running task that will run the subscription until the cancellation token 
+            ///   fires.
+            /// </returns>
+            private async Task RunTagSubscription(string tagId, CancellationToken cancellationToken) {
                 var hubChannel = await _push.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
-                    _adapterId,
-                    subChangesChannel,
+                    _push.AdapterId,
+                    tagId,
                     cancellationToken
                 ).ConfigureAwait(false);
-
-                channel.RunBackgroundOperation(async (ch, ct) => { 
-                    try {
-                        while (!ct.IsCancellationRequested) {
-                            var change = await ch.ReadAsync(ct).ConfigureAwait(false);
-                            try {
-                                await subChangesChannel.Writer.WriteAsync(change.Request, ct).ConfigureAwait(false);
-                                change.SetResult(true);
-                            }
-                            catch {
-                                change.SetResult(false);
-                                throw;
-                            }
-                        }
-                    }
-                    catch (ChannelClosedException) { }
-                    catch (OperationCanceledException) { }
-                }, _push.TaskScheduler, cancellationToken);
-
-                // Wait for and discard the initial "subscription created" placeholder.
-                await hubChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 await hubChannel.ForEachAsync(async val => {
                     if (val == null) {
@@ -117,13 +102,49 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             /// <inheritdoc/>
             protected override Task OnTagAdded(TagIdentifier tag) {
+                if (CancellationToken.IsCancellationRequested) {
+                    return Task.CompletedTask;
+                }
+
+                var added = false;
+                var ctSource = _tagSubscriptionLifetimes.GetOrAdd(tag.Id, k => {
+                    added = true;
+                    return new CancellationTokenSource();
+                });
+
+                if (added) {
+                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, ct), ctSource.Token, CancellationToken);
+                }
+
                 return Task.CompletedTask;
             }
 
 
             /// <inheritdoc/>
             protected override Task OnTagRemoved(TagIdentifier tag) {
+                if (CancellationToken.IsCancellationRequested) {
+                    return Task.CompletedTask;
+                }
+
+                if (_tagSubscriptionLifetimes.TryRemove(tag.Id, out var ctSource)) {
+                    ctSource.Cancel();
+                    ctSource.Dispose();
+                }
+
                 return Task.CompletedTask;
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                base.OnCancelled();
+
+                foreach (var item in _tagSubscriptionLifetimes.Values.ToArray()) {
+                    item.Cancel();
+                    item.Dispose();
+                }
+
+                _tagSubscriptionLifetimes.Clear();
             }
 
         }

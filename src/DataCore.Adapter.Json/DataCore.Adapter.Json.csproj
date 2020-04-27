@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.Json</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Json</PackageId>
     <Description>System.Text.Json extensions for App Store Connect adapters.</Description>
