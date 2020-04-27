@@ -14,7 +14,7 @@ Produce NuGet packages.
 .PARAMETER Sign
 Sign assemblies and NuGet packages (requires additional configuration not provided by this script).
 .PARAMETER CI
-Sets the MSBuild "ContinuousIntegrationBuild" and "Deterministic" properties to "true".
+Sets the MSBuild "ContinuousIntegrationBuild" property to "true".
 .PARAMETER Verbosity
 MSBuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]
 .PARAMETER MSBuildArguments
