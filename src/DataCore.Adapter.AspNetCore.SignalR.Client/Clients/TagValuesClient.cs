@@ -41,8 +41,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="subscriptionChanges">
-        ///   A channel that will publish tags to add to or remove from the subscription.
+        /// <param name="tagIdOrName">
+        ///   The tag ID or name to subscribe to.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation. If this token fires, or the connection is
@@ -57,21 +57,21 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// </exception>
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
             string adapterId, 
-            ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> subscriptionChanges, 
+            string tagIdOrName, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (subscriptionChanges == null) {
-                throw new ArgumentNullException(nameof(subscriptionChanges));
+            if (string.IsNullOrWhiteSpace(tagIdOrName)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(tagIdOrName));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
                 adapterId,
-                subscriptionChanges,
+                tagIdOrName,
                 cancellationToken
             ).ConfigureAwait(false);
         }

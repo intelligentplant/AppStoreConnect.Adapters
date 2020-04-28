@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using DataCore.Adapter.AspNetCore.RealTimeData;
 using DataCore.Adapter.RealTimeData;
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
@@ -17,13 +18,37 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Snapshot Subscription Management ]
 
         /// <summary>
-        /// Creates a new snapshot push subscription on an adapter.
+        /// Holds all active snapshot subscriptions. First index is by connection ID; second index 
+        /// is by adapter ID.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>> s_snapshotSubscriptions = new ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>>();
+
+
+        /// <summary>
+        /// Invoked when a client disconnects.
+        /// </summary>
+        partial void OnTagValuesHubDisconnection() {
+            if (s_snapshotSubscriptions.TryRemove(Context.ConnectionId, out var s)) {
+                foreach (var item in s.Values) {
+                    try {
+                        item.Result.Dispose();
+                    }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a snapshot tag value subscription.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="subscriptionChanges">
-        ///   A channel that subscription changes will be published to.
+        /// <param name="tagIdOrName">
+        ///   The tag ID or name to subscribe to.
         /// </param>
         /// <param name="cancellationToken">
         ///   A cancellation token that will fire when the subscription is no longer required.
@@ -33,63 +58,40 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
             string adapterId, 
-            ChannelReader<UpdateSnapshotTagValueSubscriptionRequest> subscriptionChanges, 
+            string tagIdOrName, 
             CancellationToken cancellationToken
         ) {
+            if (string.IsNullOrWhiteSpace(tagIdOrName)) {
+                throw new ArgumentException(string.Empty, nameof(tagIdOrName));
+            }
+
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
+            var subscriptionsForConnection = s_snapshotSubscriptions.GetOrAdd(Context.ConnectionId, k => new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>());
+            var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
+                var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
+                return new SnapshotSubscriptionWrapper(sub, TaskScheduler);
+            }, cancellationToken)).ConfigureAwait(false);
 
-            var result = Channel.CreateUnbounded<TagValueQueryResult>();
+            var result = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() { 
+                SingleReader = true,
+                SingleWriter = true
+            });
 
-            // Send a "subscription ready" event so that the caller knows that the stream is 
-            // now up-and-running at this end.
-            var onReady = new TagValueQueryResult(
-                string.Empty,
-                string.Empty,
-                TagValueBuilder
-                    .Create()
-                    .WithValue(subscription.Id)
-                    .Build()
-            );
-            await result.Writer.WriteAsync(onReady);
+            var tagSubscription = await subscription.AddSubscription(tagIdOrName).ConfigureAwait(false);
 
-            // Run background operation to forward values emitted from the subscription.
-            subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
-                while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    if (!ch.TryRead(out var item) || item == null) {
-                        continue;
-                    }
-
-                    await result.Writer.WriteAsync(item, ct).ConfigureAwait(false);
-                }
-            }, TaskScheduler, cancellationToken);
-
-            // Run background operation to push incoming changes to the subscription.
-            subscriptionChanges.RunBackgroundOperation(async (ch, ct) => { 
+            TaskScheduler.QueueBackgroundWorkItem(async ct => { 
                 try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var item) || item == null) {
-                            continue;
-                        }
-
-                        if (item.Action == Common.SubscriptionUpdateAction.Subscribe) {
-                            await subscription.AddTagToSubscription(item.Tag).ConfigureAwait(false);
-                        }
-                        else {
-                            await subscription.RemoveTagFromSubscription(item.Tag).ConfigureAwait(false);
-                        }
-                    }
+                    await tagSubscription.Reader.Forward(result, ct).ConfigureAwait(false);
                 }
                 finally {
-                    subscription.Dispose();
+                    tagSubscription.Dispose();
                 }
-            }, TaskScheduler, cancellationToken); 
-            
-            // Return the output channel for the subscription.
+            }, cancellationToken);
+
             return result;
         }
 

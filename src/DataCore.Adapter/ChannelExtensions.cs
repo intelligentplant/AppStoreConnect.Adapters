@@ -437,9 +437,10 @@ namespace DataCore.Adapter {
             // channels completed.
 
             try {
-                while (!cancellationToken.IsCancellationRequested) {
-                    var item = await source.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    await destination.WriteAsync(item, cancellationToken).ConfigureAwait(false);
+                while (await source.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (source.TryRead(out var item)) {
+                        await destination.WriteAsync(item, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
             catch (OperationCanceledException) { }
@@ -869,12 +870,19 @@ namespace DataCore.Adapter {
                 ? new List<T>(maxItems) 
                 : new List<T>(500);
 
+            var shouldBreak = false;
+
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (channel.TryRead(out var item)) {
+                while (channel.TryRead(out var item)) {
                     result.Add(item);
+
+                    if (maxItems > 0 && result.Count >= maxItems) {
+                        shouldBreak = true;
+                        break;
+                    }
                 }
 
-                if (maxItems > 0 && result.Count >= maxItems) {
+                if (shouldBreak) {
                     break;
                 }
             }
@@ -907,11 +915,9 @@ namespace DataCore.Adapter {
             }
             
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!channel.TryRead(out var item)) {
-                    continue;
+                while (channel.TryRead(out var item)) {
+                    await callback.Invoke(item).WithCancellation(cancellationToken).ConfigureAwait(false);
                 }
-
-                await callback.Invoke(item).WithCancellation(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -960,13 +966,16 @@ namespace DataCore.Adapter {
             scheduler.QueueBackgroundChannelOperation(async (ch, ct) => {
                 try {
                     while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var item)) {
-                            continue;
+                        while (ch.TryRead(out var item)) {
+                            await result.Writer.WriteAsync(callback(item), ct).ConfigureAwait(false);
                         }
-
-                        await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
-                        result.Writer.TryWrite(callback(item));
                     }
+                }
+                catch (OperationCanceledException) {
+                    result.Writer.TryComplete();
+                }
+                catch (ChannelClosedException) {
+                    result.Writer.TryComplete();
                 }
                 catch (Exception e) {
                     result.Writer.TryComplete(e);
@@ -1037,7 +1046,9 @@ namespace DataCore.Adapter {
             }
 
             foreach (var item in items) {
-                channel.TryWrite(item);
+                if (!channel.TryWrite(item)) {
+                    break;
+                }
             }
         }
 
@@ -1072,11 +1083,9 @@ namespace DataCore.Adapter {
             }
 
             foreach (var item in items) {
-                if (!await channel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!await channel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false) || !channel.TryWrite(item)) {
                     break;
                 }
-
-                channel.TryWrite(item);
             }
         }
 

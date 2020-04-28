@@ -182,5 +182,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             Validator.ValidateObject(instance, new ValidationContext(instance), true);
         }
 
+
+        /// <inheritdoc/>
+        public override Task OnDisconnectedAsync(Exception exception) {
+            OnTagValuesHubDisconnection();
+            return base.OnDisconnectedAsync(exception);
+        }
+
+
+        /// <summary>
+        /// Invoked when a client disconnects.
+        /// </summary>
+        partial void OnTagValuesHubDisconnection();
+
     }
 }

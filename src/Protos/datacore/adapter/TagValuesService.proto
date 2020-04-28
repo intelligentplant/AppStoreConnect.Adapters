@@ -12,7 +12,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagValuesService {
     // Snapshot polling/push
     rpc ReadSnapshotTagValues (ReadSnapshotTagValuesRequest) returns (stream TagValueQueryResult);
-    rpc CreateSnapshotPushChannel (stream CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
+    rpc CreateSnapshotPushChannel (CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
 
     
     // Historical data polling
@@ -40,7 +40,6 @@ message ReadSnapshotTagValuesRequest {
 message CreateSnapshotPushChannelRequest {
     string adapter_id = 1;
     string tag = 2;
-    SubscriptionUpdateAction action = 3;
 }
 
 

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.AspNetCore.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 using Grpc.Core;
 using IntelligentPlant.BackgroundTasks;
@@ -14,6 +16,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// Implements <see cref="TagValuesService.TagValuesServiceBase"/>.
     /// </summary>
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
+
+        /// <summary>
+        /// Holds all active snapshot subscriptions. First index is by connection ID; second index 
+        /// is by adapter ID.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>> s_snapshotSubscriptions = new ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>>();
 
         /// <summary>
         /// The service for resolving adapter references.
@@ -43,78 +51,62 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
         /// <inheritdoc/>
         public override async Task CreateSnapshotPushChannel(
-            IAsyncStreamReader<CreateSnapshotPushChannelRequest> requestStream, 
+            CreateSnapshotPushChannelRequest request, 
             IServerStreamWriter<TagValueQueryResult> responseStream, 
             ServerCallContext context
         ) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
-
-            // Wait for first subscription change. We can't actually create our subscription until 
-            // the first change comes in, because we have no way of knowing which adapter to 
-            // actually subscribe to before then.
-
-            if (!await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                return;
-            }
+            var adapterId = request.AdapterId;
 
             var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
                 adapterCallContext,
                 _adapterAccessor,
-                requestStream.Current?.AdapterId,
+                adapterId,
                 cancellationToken
             ).ConfigureAwait(false);
 
-            // Create subscription on adapter.
+            var connectionId = adapterCallContext.ConnectionId;
 
-            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false)) {
-                if (cancellationToken.IsCancellationRequested) {
+            // Create the subscription.
+            var subscriptionsForConnection = s_snapshotSubscriptions.GetOrAdd(connectionId, k => new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>());
+            var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
+                var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
+
+                // Register a callback to dispose of the wrapper when the connection is closed.
+
+                var connectionClosedToken = context
+                    .GetHttpContext()
+                    .Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionLifetimeFeature>()
+                    .ConnectionClosed;
+
+                var wrapper = new SnapshotSubscriptionWrapper(sub, _backgroundTaskService);
+                IDisposable callbackRegistration = null;
+
+                callbackRegistration = connectionClosedToken.Register(() => {
+                    // Remove and clear all subscriptions for this connection from the master list 
+                    // if another callback hasn't done this already.
+                    if (s_snapshotSubscriptions.TryRemove(connectionId, out var allSubs)) {
+                        allSubs.Clear();
+                    }
+
+                    // Dispose the wrapper.
+                    wrapper.Dispose();
+                    callbackRegistration?.Dispose();
+                });
+
+                return wrapper;
+            }, cancellationToken)).ConfigureAwait(false);
+
+            using (var tagSubscription = await subscription.AddSubscription(request.Tag).ConfigureAwait(false)) {
+                if (tagSubscription == null) {
                     return;
                 }
 
-                if (requestStream.Current.Action == SubscriptionUpdateAction.Subscribe) {
-                    // Push initial tag subscription change to subscription.
-                    await subscription.AddTagToSubscription(requestStream.Current.Tag).ConfigureAwait(false);
-                }
-
-                // Run background operation to push results back to caller.
-
-                subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
-                    while (!ct.IsCancellationRequested) {
-                        try {
-                            var val = await ch.ReadAsync(ct).ConfigureAwait(false);
-                            if (val == null) {
-                                continue;
-                            }
-
-                            await responseStream.WriteAsync(
-                                val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
-                            ).ConfigureAwait(false);
-                        }
-                        catch (ChannelClosedException) {
-                            break;
-                        }
-                        catch (OperationCanceledException) {
-                            break;
-                        }
-                    }
-                }, _backgroundTaskService, cancellationToken);
-
-                // Now keep pushing new subscription changes to the subscription.
-
-                while (!cancellationToken.IsCancellationRequested) {
-                    try {
-                        await requestStream.MoveNext(cancellationToken).ConfigureAwait(false);
-                        if (requestStream.Current.Action == SubscriptionUpdateAction.Subscribe) {
-                            await subscription.AddTagToSubscription(requestStream.Current.Tag).ConfigureAwait(false);
-                        }
-                        else {
-                            await subscription.RemoveTagFromSubscription(requestStream.Current.Tag).ConfigureAwait(false);
-                        }
-                    }
-                    catch (OperationCanceledException) {
-                        // Do nothing
-                    }
+                await foreach (var value in tagSubscription.Reader.ReadAllAsync(cancellationToken)) {
+                    await responseStream.WriteAsync(
+                        value.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
+                    ).ConfigureAwait(false);
                 }
             }
         }
