@@ -71,31 +71,33 @@ namespace DataCore.Adapter.RealTimeData {
             CancellationToken cancellationToken
         ) {
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!channel.TryRead(out var change) || change == null) {
-                    continue;
-                }
-
-                var tagInfo = await ResolveTag(Context, change.Request.Tag, cancellationToken).ConfigureAwait(false);
-                if (tagInfo == null) {
-                    // Not a valid tag.
-                    continue;
-                }
-
-                try {
-                    switch (change.Request.Action) {
-                        case Common.SubscriptionUpdateAction.Subscribe:
-                            await AddTagToSubscription(tagInfo).ConfigureAwait(false);
-                            break;
-                        case Common.SubscriptionUpdateAction.Unsubscribe:
-                            await RemoveTagFromSubscription(tagInfo).ConfigureAwait(false);
-                            break;
+                while (channel.TryRead(out var change)) {
+                    if (change == null) {
+                        break;
                     }
 
-                    change.SetResult(true);
-                }
-                catch {
-                    change.SetResult(false);
-                    throw;
+                    var tagInfo = await ResolveTag(Context, change.Request.Tag, cancellationToken).ConfigureAwait(false);
+                    if (tagInfo == null) {
+                        // Not a valid tag.
+                        continue;
+                    }
+
+                    try {
+                        switch (change.Request.Action) {
+                            case Common.SubscriptionUpdateAction.Subscribe:
+                                await AddTagToSubscription(tagInfo).ConfigureAwait(false);
+                                break;
+                            case Common.SubscriptionUpdateAction.Unsubscribe:
+                                await RemoveTagFromSubscription(tagInfo).ConfigureAwait(false);
+                                break;
+                        }
+
+                        change.SetResult(true);
+                    }
+                    catch {
+                        change.SetResult(false);
+                        throw;
+                    }
                 }
             }
         }
