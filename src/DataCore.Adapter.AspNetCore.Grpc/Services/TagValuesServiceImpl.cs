@@ -18,9 +18,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
 
         /// <summary>
-        /// Holds all active snapshot subscriptions.
+        /// Holds all active snapshot subscriptions. First index is by connection ID; second index 
+        /// is by adapter ID.
         /// </summary>
-        private static readonly ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>> s_snapshotSubscriptions = new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>> s_snapshotSubscriptions = new ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>>();
 
         /// <summary>
         /// The service for resolving adapter references.
@@ -56,18 +57,20 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
+            var adapterId = request.AdapterId;
 
             var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
                 adapterCallContext,
                 _adapterAccessor,
-                request.AdapterId,
+                adapterId,
                 cancellationToken
             ).ConfigureAwait(false);
 
             var connectionId = adapterCallContext.ConnectionId;
 
             // Create the subscription.
-            var subscription = await s_snapshotSubscriptions.GetOrAdd(connectionId, k => Task.Run(async () => {
+            var subscriptionsForConnection = s_snapshotSubscriptions.GetOrAdd(connectionId, k => new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>());
+            var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
                 var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
 
                 // Register a callback to dispose of the wrapper when the connection is closed.
@@ -81,10 +84,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 IDisposable callbackRegistration = null;
 
                 callbackRegistration = connectionClosedToken.Register(() => {
-                    if (s_snapshotSubscriptions.TryRemove(connectionId, out var _)) {
-                        wrapper.Dispose();
-                        callbackRegistration?.Dispose();
+                    // Remove and clear all subscriptions for this connection from the master list 
+                    // if another callback hasn't done this already.
+                    if (s_snapshotSubscriptions.TryRemove(connectionId, out var allSubs)) {
+                        allSubs.Clear();
                     }
+
+                    // Dispose the wrapper.
+                    wrapper.Dispose();
+                    callbackRegistration?.Dispose();
                 });
 
                 return wrapper;

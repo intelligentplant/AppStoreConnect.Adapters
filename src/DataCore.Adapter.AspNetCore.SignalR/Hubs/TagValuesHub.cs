@@ -18,9 +18,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Snapshot Subscription Management ]
 
         /// <summary>
-        /// Holds all active snapshot subscriptions.
+        /// Holds all active snapshot subscriptions. First index is by connection ID; second index 
+        /// is by adapter ID.
         /// </summary>
-        private static readonly ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>> s_snapshotSubscriptions = new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>> s_snapshotSubscriptions = new ConcurrentDictionary<string, ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>>();
 
 
         /// <summary>
@@ -28,7 +29,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         partial void OnTagValuesHubDisconnection() {
             if (s_snapshotSubscriptions.TryRemove(Context.ConnectionId, out var s)) {
-                s.Result.Dispose();
+                foreach (var item in s.Values) {
+                    try {
+                        item.Result.Dispose();
+                    }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
+                }
             }
         }
 
@@ -62,7 +70,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await s_snapshotSubscriptions.GetOrAdd(Context.ConnectionId, k => Task.Run(async () => {
+            var subscriptionsForConnection = s_snapshotSubscriptions.GetOrAdd(Context.ConnectionId, k => new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>());
+            var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
                 var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
                 return new SnapshotSubscriptionWrapper(sub, TaskScheduler);
             }, cancellationToken)).ConfigureAwait(false);
