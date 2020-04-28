@@ -28,7 +28,10 @@ namespace DataCore.Adapter.AspNetCore.RealTimeData {
         /// <summary>
         /// The channel that will emit tag values.
         /// </summary>
-        private readonly Channel<TagValueQueryResult> _channel = Channel.CreateUnbounded<TagValueQueryResult>();
+        private readonly Channel<TagValueQueryResult> _channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() { 
+            SingleReader = true,
+            SingleWriter = true
+        });
 
         /// <summary>
         /// The channel that will emit tag values.

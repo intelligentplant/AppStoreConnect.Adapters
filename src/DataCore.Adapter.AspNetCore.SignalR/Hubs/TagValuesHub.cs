@@ -67,7 +67,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 return new SnapshotSubscriptionWrapper(sub, TaskScheduler);
             }, cancellationToken)).ConfigureAwait(false);
 
-            var result = Channel.CreateUnbounded<TagValueQueryResult>();
+            var result = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() { 
+                SingleReader = true,
+                SingleWriter = true
+            });
 
             var tagSubscription = await subscription.AddSubscription(tagIdOrName).ConfigureAwait(false);
 

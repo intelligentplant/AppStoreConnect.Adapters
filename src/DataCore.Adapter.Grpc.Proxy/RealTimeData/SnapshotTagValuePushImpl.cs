@@ -1,10 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 using IntelligentPlant.BackgroundTasks;
+
+using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
@@ -67,6 +69,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// <param name="tagId">
             ///   The tag ID.
             /// </param>
+            /// <param name="tcs">
+            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
+            ///   tag subscription has been created.
+            /// </param>
             /// <param name="cancellationToken">
             ///   The cancellation token for the operation.
             /// </param>
@@ -74,11 +80,26 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             ///   A long-running task that will run the subscription until the cancellation token 
             ///   fires.
             /// </returns>
-            private async Task RunTagSubscription(string tagId, CancellationToken cancellationToken) {
-                var grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() { 
-                    AdapterId = _push.AdapterId,
-                    Tag = tagId
-                }, _push.GetCallOptions(Context, cancellationToken));
+            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
+                GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
+
+                try {
+                    grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
+                        AdapterId = _push.AdapterId,
+                        Tag = tagId
+                    }, _push.GetCallOptions(Context, cancellationToken));
+                }
+                catch (OperationCanceledException) {
+                    tcs.TrySetCanceled(cancellationToken);
+                    throw;
+                }
+                catch (Exception e) {
+                    tcs.TrySetException(e);
+                    throw;
+                }
+                finally {
+                    tcs.TrySetResult(true);
+                }
 
                 while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcChannel.ResponseStream.Current == null) {
@@ -112,7 +133,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 });
 
                 if (added) {
-                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, ct), ctSource.Token, CancellationToken);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, tcs, ct), ctSource.Token, CancellationToken);
+                    return tcs.Task;
                 }
 
                 return Task.CompletedTask;

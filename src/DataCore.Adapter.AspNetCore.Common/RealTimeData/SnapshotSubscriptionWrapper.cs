@@ -113,10 +113,6 @@ namespace DataCore.Adapter.AspNetCore.RealTimeData {
                 return null;
             }
 
-            if (!await _subscription.AddTagToSubscription(tagId).ConfigureAwait(false)) {
-                return null;
-            }
-
             var subscription = new SnapshotTagSubscription(tagId, RemoveSubscription);
 
             _subscribersLock.EnterWriteLock();
@@ -129,6 +125,11 @@ namespace DataCore.Adapter.AspNetCore.RealTimeData {
             }
             finally {
                 _subscribersLock.ExitWriteLock();
+            }
+
+            if (!await _subscription.AddTagToSubscription(tagId).ConfigureAwait(false)) {
+                subscription.Dispose();
+                return null;
             }
 
             return subscription;
