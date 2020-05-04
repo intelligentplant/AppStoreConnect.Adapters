@@ -34,8 +34,8 @@
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>2.9.8</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.5.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.0.0</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>16.6.1</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
     <MSTestTestAdapterVersion>2.1.1</MSTestTestAdapterVersion>
     <MSTestTestFrameworkVersion>2.1.1</MSTestTestFrameworkVersion>
@@ -43,12 +43,12 @@
   
   <!-- Other Packages -->
   <PropertyGroup>
-    <CsvHelperVersion>15.0.4</CsvHelperVersion>
+    <CsvHelperVersion>15.0.5</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
     <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.3.0</NSwagAspNetCoreVersion>
+    <NSwagAspNetCoreVersion>13.4.2</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.5.1</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>
