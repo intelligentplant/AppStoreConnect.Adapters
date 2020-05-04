@@ -165,7 +165,7 @@ namespace DataCore.Adapter.RealTimeData {
         );
 
         /// <summary>
-        /// Difference between the minimum and maximum value over a time period.
+        /// Absolute difference between the minimum and maximum value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Range { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdRange,
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.RealTimeData {
         );
 
         /// <summary>
-        /// Difference between the earliest and latest value over a time period.
+        /// Signed difference between the earliest and latest value over a time period.
         /// </summary>
         public static DataFunctionDescriptor Delta { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdDelta,
