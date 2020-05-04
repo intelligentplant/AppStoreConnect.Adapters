@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Tests {
 
 
         public static double CalculateExpectedDeltaValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
-            return Math.Abs(
+            return
                 values
                     .Where(x => x.UtcSampleTime >= bucketStart)
                     .Where(x => x.UtcSampleTime < bucketEnd)
@@ -90,8 +90,7 @@ namespace DataCore.Adapter.Tests {
                     .Where(x => x.UtcSampleTime < bucketEnd)
                     .Where(x => x.Status == TagValueStatus.Good)
                     .Last()
-                    .GetValueOrDefault<double>()
-            );
+                    .GetValueOrDefault<double>();
         }
 
 
