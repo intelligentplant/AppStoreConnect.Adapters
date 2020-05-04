@@ -60,6 +60,11 @@ namespace DataCore.Adapter.RealTimeData {
             /// </summary>
             public const string FunctionIdPercentBad = "PERCENTBAD";
 
+            /// <summary>
+            /// Standard deviation function ID.
+            /// </summary>
+            public const string FunctionIdStandardDeviation = "STDDEV";
+
         }
 
         
@@ -238,6 +243,25 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Standard deviation of good-quality samples in a time period.
+        /// </summary>
+        public static DataFunctionDescriptor StandardDeviation { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdStandardDeviation,
+            Resources.DataFunction_StandardDeviation_Name,
+            Resources.DataFunction_StandardDeviation_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Custom,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_StatusCalculation,
+                    Resources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    Resources.DataFunction_Property_StatusCalculation_Description
+                )
+            }
+        );
+
+
+        /// <summary>
         /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
@@ -249,7 +273,8 @@ namespace DataCore.Adapter.RealTimeData {
             Range,
             Delta,
             PercentGood,
-            PercentBad
+            PercentBad,
+            StandardDeviation
         };
 
 
