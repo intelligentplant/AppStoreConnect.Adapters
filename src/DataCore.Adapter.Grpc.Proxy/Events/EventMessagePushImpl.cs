@@ -1,18 +1,26 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
-using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
+
+    /// <summary>
+    /// <see cref="IEventMessagePush"/> implementation.
+    /// </summary>
     internal class EventMessagePushImpl : ProxyAdapterFeature, IEventMessagePush {
 
+        /// <summary>
+        /// Creates a new <see cref="EventMessagePushImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public EventMessagePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
         /// <inheritdoc/>
         public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
-            var result = new EventMessageSubscription(
+            var result = new Subscription(
                 this, 
                 context, 
                 subscriptionType
@@ -22,67 +30,74 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
         }
 
 
-        private class EventMessageSubscription : Adapter.Events.EventMessageSubscriptionBase {
+        /// <summary>
+        /// <see cref="EventMessageSubscriptionBase"/> implementation that receives data via a 
+        /// gRPC channel.
+        /// </summary>
+        private class Subscription : EventMessageSubscriptionBase {
 
+            /// <summary>
+            /// The creating feature.
+            /// </summary>
             private readonly EventMessagePushImpl _feature;
 
+            /// <summary>
+            /// Indicates if the subscription is active or passive.
+            /// </summary>
             private readonly bool _activeSubscription;
 
-            private GrpcCore.AsyncServerStreamingCall<EventMessage> _streamingCall;
+            /// <summary>
+            /// The client for the gRPC service.
+            /// </summary>
+            private readonly EventsService.EventsServiceClient _client;
 
 
-            public EventMessageSubscription(
+            /// <summary>
+            /// Creates a new <see cref="Subscription"/>.
+            /// </summary>
+            /// <param name="context">
+            ///   The adapter call context for the subscription owner.
+            /// </param>
+            /// <param name="feature">
+            ///   The push feature.
+            /// </param>
+            /// <param name="subscriptionType">
+            ///   The subscription type.
+            /// </param>
+            public Subscription(
                 EventMessagePushImpl feature, 
                 IAdapterCallContext context,
                 EventMessageSubscriptionType subscriptionType
             ) : base(context, feature.AdapterId, subscriptionType) {
                 _feature = feature;
                 _activeSubscription = SubscriptionType == EventMessageSubscriptionType.Active;
-            }
-
-
-            /// <inheritdoc/>
-            protected override async Task Init(CancellationToken cancellationToken) {
-                var client = _feature.CreateClient<EventsService.EventsServiceClient>();
-                _streamingCall = client.CreateEventPushChannel(
-                    new CreateEventPushChannelRequest() {
-                        AdapterId = _feature.AdapterId,
-                        SubscriptionType = _activeSubscription
-                            ? EventSubscriptionType.Active
-                            : EventSubscriptionType.Passive
-                    },
-                    _feature.GetCallOptions(Context, cancellationToken)
-                );
-
-                // Wait for and discard the initial "subscription created" placeholder message.
-                await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false);
+                _client = _feature.CreateClient<EventsService.EventsServiceClient>();
             }
 
 
             /// <inheritdoc/>
             protected override async Task RunSubscription(CancellationToken cancellationToken) {
-                if (_streamingCall == null) {
-                    return;
-                }
+                using (var grpcChannel = _client.CreateEventPushChannel(
+                   new CreateEventPushChannelRequest() {
+                       AdapterId = _feature.AdapterId,
+                       SubscriptionType = _activeSubscription
+                           ? EventSubscriptionType.Active
+                           : EventSubscriptionType.Passive
+                   },
+                   _feature.GetCallOptions(Context, cancellationToken)
+                )) {
+                    // Read event messages.
+                    while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                        if (grpcChannel.ResponseStream.Current == null) {
+                            continue;
+                        }
 
-                // Read value changes.
-                while (await _streamingCall.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (_streamingCall.ResponseStream.Current == null) {
-                        continue;
+                        await ValueReceived(
+                            grpcChannel.ResponseStream.Current.ToAdapterEventMessage(),
+                            cancellationToken
+                        ).ConfigureAwait(false);
                     }
-
-                    await ValueReceived(
-                        _streamingCall.ResponseStream.Current.ToAdapterEventMessage(),
-                        cancellationToken
-                    ).ConfigureAwait(false);
                 }
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                base.OnCancelled();
-                _streamingCall?.Dispose();
             }
 
         }

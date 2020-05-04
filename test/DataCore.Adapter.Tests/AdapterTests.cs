@@ -368,6 +368,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
+                    await Task.Delay(1000, default);
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
@@ -392,6 +393,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(subscription);
                     Assert.IsTrue(subscription.IsStarted);
 
+                    await Task.Delay(1000, default);
                     await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {

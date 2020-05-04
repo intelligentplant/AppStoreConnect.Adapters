@@ -24,15 +24,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <summary>
-        /// <see cref="SnapshotTagValueSubscriptionBase"/> implementation that sends/receives data via 
-        /// a SignalR channel.
+        /// <see cref="SnapshotTagValueSubscriptionBase"/> implementation that receives data via a
+        /// gRPC channel.
         /// </summary>
         private class Subscription : SnapshotTagValueSubscriptionBase {
 
             /// <summary>
-            /// The feature.
+            /// The creating feature.
             /// </summary>
-            private readonly SnapshotTagValuePushImpl _push;
+            private readonly SnapshotTagValuePushImpl _feature;
 
             /// <summary>
             /// The client for the gRPC service.
@@ -51,15 +51,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// <param name="context">
             ///   The adapter call context for the subscription owner.
             /// </param>
-            /// <param name="push">
+            /// <param name="feature">
             ///   The push feature.
             /// </param>
             internal Subscription(
                 IAdapterCallContext context,
-                SnapshotTagValuePushImpl push
-            ) : base(context, push.AdapterId) {
-                _push = push;
-                _client = _push.CreateClient<TagValuesService.TagValuesServiceClient>();
+                SnapshotTagValuePushImpl feature
+            ) : base(context, feature.AdapterId) {
+                _feature = feature;
+                _client = _feature.CreateClient<TagValuesService.TagValuesServiceClient>();
             }
 
 
@@ -85,9 +85,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                 try {
                     grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
-                        AdapterId = _push.AdapterId,
+                        AdapterId = _feature.AdapterId,
                         Tag = tagId
-                    }, _push.GetCallOptions(Context, cancellationToken));
+                    }, _feature.GetCallOptions(Context, cancellationToken));
                 }
                 catch (OperationCanceledException) {
                     tcs.TrySetCanceled(cancellationToken);
@@ -134,7 +134,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                 if (added) {
                     var tcs = new TaskCompletionSource<bool>();
-                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, tcs, ct), ctSource.Token, CancellationToken);
+                    _feature.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, tcs, ct), ctSource.Token, CancellationToken);
                     return tcs.Task;
                 }
 
