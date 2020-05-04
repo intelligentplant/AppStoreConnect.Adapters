@@ -97,7 +97,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The difference between the earliest good-quality value and latest good-quality value in each sample interval..
+        ///   Looks up a localized string similar to The signed difference between the earliest good-quality value and latest good-quality value in each sample interval..
         /// </summary>
         internal static string DataFunction_Delta_Description {
             get {
@@ -286,7 +286,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The difference between the minimum good-quality value and maximum good-quality value in each sample interval..
+        ///   Looks up a localized string similar to The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval..
         /// </summary>
         internal static string DataFunction_Range_Description {
             get {

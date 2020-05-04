@@ -387,7 +387,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Delta ]
 
         /// <summary>
-        /// Calculates the absolute difference between the earliest and latest values in the 
+        /// Calculates the signed difference between the earliest and latest values in the 
         /// specified raw samples.
         /// </summary>
         /// <param name="tag">
@@ -417,7 +417,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var firstValue = goodQualitySamples.First();
             var lastValue = goodQualitySamples.Last();
-            var numericValue = Math.Abs(firstValue.Value.GetValueOrDefault(double.NaN) - lastValue.Value.GetValueOrDefault(double.NaN));
+            var numericValue = firstValue.Value.GetValueOrDefault(double.NaN) - lastValue.Value.GetValueOrDefault(double.NaN);
 
             return new[] {
                 TagValueBuilder.Create()

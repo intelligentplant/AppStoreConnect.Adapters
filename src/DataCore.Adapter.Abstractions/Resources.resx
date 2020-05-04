@@ -130,7 +130,7 @@
     <value>Count</value>
   </data>
   <data name="DataFunction_Delta_Description" xml:space="preserve">
-    <value>The difference between the earliest good-quality value and latest good-quality value in each sample interval.</value>
+    <value>The signed difference between the earliest good-quality value and latest good-quality value in each sample interval.</value>
   </data>
   <data name="DataFunction_Delta_Name" xml:space="preserve">
     <value>Delta</value>
@@ -193,7 +193,7 @@
     <value>Timestamp of minimum value</value>
   </data>
   <data name="DataFunction_Range_Description" xml:space="preserve">
-    <value>The difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
+    <value>The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
   </data>
   <data name="DataFunction_Range_Name" xml:space="preserve">
     <value>Range</value>
