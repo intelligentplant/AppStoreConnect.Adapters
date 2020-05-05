@@ -269,6 +269,9 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdRange)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation)]
         public Task ReadProcessedTagValuesRequestShouldReturnResults(string dataFunction) {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<IReadProcessedTagValues>();
