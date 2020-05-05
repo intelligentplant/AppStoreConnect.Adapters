@@ -35,7 +35,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services.AddDataCoreAdapterServices(options => {
                 options.HostInfo = Common.HostInfo.Create(
                     "Example .NET Core Host",
-                    "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
+                    "An example App Store Connect Adapters host running on ASP.NET Core",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     Common.AdapterProperty.Create(
