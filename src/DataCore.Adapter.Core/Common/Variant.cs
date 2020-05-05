@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace DataCore.Adapter.Common {
+
+#pragma warning disable CA2225 // Operator overloads have named alternates
 
     /// <summary>
     /// Describes a variant value.
@@ -379,6 +380,7 @@ namespace DataCore.Adapter.Common {
         }
 
 
+
         /// <inheritdoc/>
         public static implicit operator Variant(bool val) => FromValue(val);
 
@@ -477,4 +479,7 @@ namespace DataCore.Adapter.Common {
         public static explicit operator TimeSpan(Variant val) => (TimeSpan) val.Value;
 
     }
+
+#pragma warning restore CA2225 // Operator overloads have named alternates
+
 }
