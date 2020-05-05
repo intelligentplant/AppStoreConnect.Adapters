@@ -72,7 +72,14 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public DataFunctionDescriptor(string id, string name, string description, DataFunctionSampleTimeType sampleTime, DataFunctionStatusType status, IEnumerable<AdapterProperty> properties) {
+        public DataFunctionDescriptor(
+            string id, 
+            string name, 
+            string description, 
+            DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
+            DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
+            IEnumerable<AdapterProperty> properties = null
+        ) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
             Description = description;
@@ -80,24 +87,6 @@ namespace DataCore.Adapter.RealTimeData {
             Status = status;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
-
-
-        /// <summary>
-        /// Creates a new <see cref="DataFunctionDescriptor"/> object that does not specify how 
-        /// the sample time or quality status for a value is calculated.
-        /// </summary>
-        /// <param name="id">
-        ///   The function ID.
-        /// </param>
-        /// <param name="name">
-        ///   The function name.
-        /// </param>
-        /// <param name="description">
-        ///   The function description.
-        /// </param>
-        [Obsolete("Use the DataFunctionDescriptor(string, string, string, DataFunctionSampleTimeType, DataFunctionStatusType, IEnumerable<AdapterProperty>) constructor or the DataFunctionDescriptor.Create method.", false)]
-        public DataFunctionDescriptor(string id, string name, string description)
-            : this(id, name, description, DataFunctionSampleTimeType.Unspecified, DataFunctionStatusType.Unspecified, null) { }
 
 
         /// <summary>
