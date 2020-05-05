@@ -6,7 +6,7 @@ using DataCore.Adapter.RealTimeData;
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
     /// <summary>
-    /// <see cref="ReadTagValueAnnotationsImpl"/> implementation.
+    /// <see cref="IReadTagValueAnnotations"/> implementation.
     /// </summary>
     internal class ReadTagValueAnnotationsImpl : ProxyAdapterFeature, IReadTagValueAnnotations {
 
