@@ -83,6 +83,24 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Creates a new <see cref="DataFunctionDescriptor"/> object that does not specify how 
+        /// the sample time or quality status for a value is calculated.
+        /// </summary>
+        /// <param name="id">
+        ///   The function ID.
+        /// </param>
+        /// <param name="name">
+        ///   The function name.
+        /// </param>
+        /// <param name="description">
+        ///   The function description.
+        /// </param>
+        [Obsolete("Use the DataFunctionDescriptor(string, string, string, DataFunctionSampleTimeType, DataFunctionStatusType, IEnumerable<AdapterProperty>) constructor or the DataFunctionDescriptor.Create method.", false)]
+        public DataFunctionDescriptor(string id, string name, string description)
+            : this(id, name, description, DataFunctionSampleTimeType.Unspecified, DataFunctionStatusType.Unspecified, null) { }
+
+
+        /// <summary>
         /// Creates a new <see cref="DataFunctionDescriptor"/> object.
         /// </summary>
         /// <param name="id">
