@@ -34,12 +34,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Fields ]
 
         /// <summary>
-        /// Values calculated using <see cref="AggregationHelper"/> will contain a property with 
-        /// this name.
-        /// </summary>
-        public const string XPoweredByPropertyName = "X-Powered-By";
-
-        /// <summary>
         /// Property value to use with <see cref="CreateXPoweredByProperty"/>.
         /// </summary>
         private static Lazy<string> s_xPoweredByPropertyValue = new Lazy<string>(() => {
@@ -602,7 +596,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, goodQualitySamples.First().GetValueOrDefault(double.NaN))
+                            AdapterProperty.Create(CommonTagPropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN))
                          )
                         .Build()
                 };
@@ -618,7 +612,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, avg)
+                        AdapterProperty.Create(CommonTagPropertyNames.Average, avg)
                     )
                     .Build()
             };
@@ -665,8 +659,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
-                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevVariance, 0d)
+                            AdapterProperty.Create(CommonTagPropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
+                            AdapterProperty.Create(CommonTagPropertyNames.Variance, 0d)
                         )
                         .Build()
                 };
@@ -687,11 +681,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, avg),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevVariance, variance),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevLowerBound, lowerBound),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevUpperBound, upperBound),
-                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevSigma, sigma)
+                        AdapterProperty.Create(CommonTagPropertyNames.Average, avg),
+                        AdapterProperty.Create(CommonTagPropertyNames.Variance, variance),
+                        AdapterProperty.Create(CommonTagPropertyNames.LowerBound, lowerBound),
+                        AdapterProperty.Create(CommonTagPropertyNames.UpperBound, upperBound),
+                        AdapterProperty.Create(CommonTagPropertyNames.Sigma, sigma)
                     )
                     .Build()
             };
@@ -1267,7 +1261,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         internal static AdapterProperty CreateXPoweredByProperty() {
-            return AdapterProperty.Create(XPoweredByPropertyName, s_xPoweredByPropertyValue.Value);
+            return AdapterProperty.Create(CommonTagPropertyNames.XPoweredBy, s_xPoweredByPropertyValue.Value);
         }
 
 

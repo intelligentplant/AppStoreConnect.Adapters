@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.RealTimeData.Utilities;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -290,8 +291,8 @@ namespace DataCore.Adapter.RealTimeData {
         internal TagValueBuilder WithBucketProperties(Utilities.TagValueBucket bucket) {
             if (bucket != null) {
                 return WithProperties(
-                    AdapterProperty.Create(Resources.TagValue_Properties_BucketStart, bucket.UtcBucketStart),
-                    AdapterProperty.Create(Resources.TagValue_Properties_BucketEnd, bucket.UtcBucketEnd)
+                    AdapterProperty.Create(CommonTagPropertyNames.BucketStart, bucket.UtcBucketStart),
+                    AdapterProperty.Create(CommonTagPropertyNames.BucketEnd, bucket.UtcBucketEnd)
                 );
             }
 
