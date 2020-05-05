@@ -203,7 +203,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -267,7 +267,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -329,7 +329,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(TagValueStatus.Bad, val.Value.Status);
             Assert.AreEqual(start, val.Value.UtcSampleTime);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -388,7 +388,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -447,7 +447,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -556,7 +556,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -605,7 +605,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -659,7 +659,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -708,7 +708,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -762,7 +762,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -811,7 +811,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -861,7 +861,7 @@ namespace DataCore.Adapter.Tests {
             // Value should have uncertain status because it has been extrapolated.
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
@@ -910,7 +910,7 @@ namespace DataCore.Adapter.Tests {
             // Value should have uncertain status because it has been extrapolated.
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(AggregationHelper.XPoweredByPropertyName)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
 
 
