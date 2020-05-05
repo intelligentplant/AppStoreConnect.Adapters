@@ -224,7 +224,7 @@ namespace DataCore.Adapter {
                     value = bytes?.FirstOrDefault();
                     break;
                 case Grpc.VariantType.Datetime:
-                    value = DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var dt)
+                    value = DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt)
                         ? dt
                         : default;
                     break;
@@ -311,7 +311,7 @@ namespace DataCore.Adapter {
                     bytes = new[] { variant.GetValueOrDefault<byte>() };
                     break;
                 case Common.VariantType.DateTime:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-mm-ddTHH:mm:ss.fffffffZ"));
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"));
                     break;
                 case Common.VariantType.Double:
                     bytes = BitConverter.GetBytes(variant.GetValueOrDefault<double>());
