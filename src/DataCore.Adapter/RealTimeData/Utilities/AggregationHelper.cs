@@ -65,7 +65,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             { DefaultDataFunctions.PercentGood.Id, CalculatePercentGood },
             { DefaultDataFunctions.Range.Id, CalculateRange },
             { DefaultDataFunctions.Delta.Id, CalculateDelta },
-            {DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation }
+            { DefaultDataFunctions.Variance.Id, CalculateVariance },
+            { DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation }
         };
 
         /// <summary>
@@ -149,6 +150,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Average ]
 
         /// <summary>
+        /// Calculates the average for the specified samples.
+        /// </summary>
+        /// <param name="values">
+        ///   The samples.
+        /// </param>
+        /// <returns>
+        ///   The average values.
+        /// </returns>
+        private static double CalculateAverage(IEnumerable<TagValue> values) {
+            return values.Average(x => x.Value.GetValueOrDefault(double.NaN));
+        }
+
+
+        /// <summary>
         /// Calculates the average value of the specified raw samples.
         /// </summary>
         /// <param name="tag">
@@ -176,7 +191,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 ? TagValueStatus.Uncertain
                 : TagValueStatus.Good;
 
-            var numericValue = goodQualitySamples.Average(x => x.Value.GetValueOrDefault(double.NaN));
+            var numericValue = CalculateAverage(goodQualitySamples);
 
             return new[] {
                 TagValueBuilder.Create()
@@ -524,6 +539,93 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
         #endregion
 
+        #region [ Variance ]
+
+        /// <summary>
+        /// Calculates the variance for the specified values.
+        /// </summary>
+        /// <param name="values">
+        ///   The values.
+        /// </param>
+        /// <param name="average">
+        ///   The average value calculated from the <paramref name="values"/>.
+        /// </param>
+        /// <returns>
+        ///   The variance.
+        /// </returns>
+        private static double CalculateVariance(IEnumerable<TagValue> values, out double average) {
+            var avg = CalculateAverage(values);
+            var variance =
+                values.Sum(x => Math.Pow(x.GetValueOrDefault(double.NaN) - avg, 2))
+                /
+                (values.Count() - 1);
+
+            average = avg;
+            return variance;
+        }
+
+
+        /// <summary>
+        /// Calculates the variance for the good-quality samples in the bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="bucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculateVariance(TagSummary tag, TagValueBucket bucket) {
+            var goodQualitySamples = bucket
+                .RawSamples
+                .Where(x => x.Status == TagValueStatus.Good)
+                .ToArray();
+
+            var status = bucket.RawSamples.Any(x => x.Status != TagValueStatus.Good)
+                ? TagValueStatus.Uncertain
+                : TagValueStatus.Good;
+
+            if (goodQualitySamples.Length == 0) {
+                return new[] {
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
+                };
+            }
+
+            if (goodQualitySamples.Length == 1) {
+                return new[] {
+                    TagValueBuilder.Create()
+                        .WithUtcSampleTime(bucket.UtcBucketStart)
+                        .WithValue(0d)
+                        .WithStatus(status)
+                        .WithBucketProperties(bucket)
+                        .WithProperties(
+                            CreateXPoweredByProperty(),
+                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, goodQualitySamples.First().GetValueOrDefault(double.NaN))
+                         )
+                        .Build()
+                };
+            }
+
+            var variance = CalculateVariance(goodQualitySamples, out var avg);
+
+            return new[] {
+                TagValueBuilder.Create()
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
+                    .WithValue(variance)
+                    .WithStatus(status)
+                    .WithBucketProperties(bucket)
+                    .WithProperties(
+                        CreateXPoweredByProperty(),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, avg)
+                    )
+                    .Build()
+            };
+        }
+
+        #endregion
+
         #region [ StdDev ]
 
         /// <summary>
@@ -561,17 +663,21 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithValue(0d)
                         .WithStatus(status)
                         .WithBucketProperties(bucket)
-                        .WithProperties(CreateXPoweredByProperty())
+                        .WithProperties(
+                            CreateXPoweredByProperty(),
+                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
+                            AdapterProperty.Create(Resources.TagValue_Properties_StdDevVariance, 0d)
+                        )
                         .Build()
                 };
             }
 
-            var avg = goodQualitySamples.Average(x => x.GetValueOrDefault<double>());
-            var stdDev = Math.Sqrt(
-                goodQualitySamples.Sum(x => Math.Pow(x.GetValueOrDefault<double>() - avg, 2)) 
-                / 
-                (goodQualitySamples.Length - 1)
-            );
+            var variance = CalculateVariance(goodQualitySamples, out var avg);
+            var stdDev = Math.Sqrt(variance);
+
+            const double sigma = 3;
+            var lowerBound = avg - (sigma * stdDev);
+            var upperBound = avg + (sigma * stdDev);
 
             return new[] {
                 TagValueBuilder.Create()
@@ -579,7 +685,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithValue(stdDev)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
-                    .WithProperties(CreateXPoweredByProperty())
+                    .WithProperties(
+                        CreateXPoweredByProperty(),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevAverage, avg),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevVariance, variance),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevLowerBound, lowerBound),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevUpperBound, upperBound),
+                        AdapterProperty.Create(Resources.TagValue_Properties_StdDevSigma, sigma)
+                    )
                     .Build()
             };
         }

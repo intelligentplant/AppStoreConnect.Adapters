@@ -322,6 +322,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The variance of all good-quality values in each sample interval.
+        /// </summary>
+        internal static string DataFunction_Variance_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Variance_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variance.
+        /// </summary>
+        internal static string DataFunction_Variance_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Variance_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
         /// </summary>
         internal static string Error_MissingAdapterFeature {

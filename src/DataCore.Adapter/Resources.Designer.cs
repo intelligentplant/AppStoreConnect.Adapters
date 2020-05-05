@@ -527,5 +527,50 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("TagValue_Properties_BucketStart", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average.
+        /// </summary>
+        internal static string TagValue_Properties_StdDevAverage {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_StdDevAverage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower Bound.
+        /// </summary>
+        internal static string TagValue_Properties_StdDevLowerBound {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_StdDevLowerBound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sigma.
+        /// </summary>
+        internal static string TagValue_Properties_StdDevSigma {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_StdDevSigma", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upper Bound.
+        /// </summary>
+        internal static string TagValue_Properties_StdDevUpperBound {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_StdDevUpperBound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variance.
+        /// </summary>
+        internal static string TagValue_Properties_StdDevVariance {
+            get {
+                return ResourceManager.GetString("TagValue_Properties_StdDevVariance", resourceCulture);
+            }
+        }
     }
 }

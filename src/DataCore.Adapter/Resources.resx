@@ -278,4 +278,19 @@
   <data name="TagValue_Properties_BucketStart" xml:space="preserve">
     <value>Bucket Start</value>
   </data>
+  <data name="TagValue_Properties_StdDevAverage" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="TagValue_Properties_StdDevLowerBound" xml:space="preserve">
+    <value>Lower Bound</value>
+  </data>
+  <data name="TagValue_Properties_StdDevSigma" xml:space="preserve">
+    <value>Sigma</value>
+  </data>
+  <data name="TagValue_Properties_StdDevUpperBound" xml:space="preserve">
+    <value>Upper Bound</value>
+  </data>
+  <data name="TagValue_Properties_StdDevVariance" xml:space="preserve">
+    <value>Variance</value>
+  </data>
 </root>

@@ -204,6 +204,12 @@
   <data name="DataFunction_StandardDeviation_Name" xml:space="preserve">
     <value>Standard Deviation</value>
   </data>
+  <data name="DataFunction_Variance_Description" xml:space="preserve">
+    <value>The variance of all good-quality values in each sample interval</value>
+  </data>
+  <data name="DataFunction_Variance_Name" xml:space="preserve">
+    <value>Variance</value>
+  </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>
