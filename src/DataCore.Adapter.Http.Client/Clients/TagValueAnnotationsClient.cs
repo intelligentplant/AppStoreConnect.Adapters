@@ -271,11 +271,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="metadata">
         ///   The metadata to associate with the outgoing request.
-        /// </param>
-        /// <param name="correlationId">
-        ///   The correlation ID for the outgoing request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
