@@ -3,11 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
+
+    /// <summary>
+    /// <see cref="IReadEventMessagesUsingCursor"/> implementation.
+    /// </summary>
     internal class ReadEventMessagesUsingCursorImpl : ProxyAdapterFeature, IReadEventMessagesUsingCursor {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadEventMessagesUsingCursorImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public ReadEventMessagesUsingCursorImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.Events.EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessageWithCursorPosition>(-1);
 

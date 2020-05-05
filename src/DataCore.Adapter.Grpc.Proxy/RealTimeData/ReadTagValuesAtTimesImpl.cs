@@ -4,11 +4,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="IReadTagValuesAtTimes"/> implementation.
+    /// </summary>
     internal class ReadTagValuesAtTimesImpl : ProxyAdapterFeature, IReadTagValuesAtTimes {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadTagValuesAtTimesImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public ReadTagValuesAtTimesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.RealTimeData.TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, Adapter.RealTimeData.ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(-1);
 
@@ -36,5 +47,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             return result;
         }
+
     }
+
 }

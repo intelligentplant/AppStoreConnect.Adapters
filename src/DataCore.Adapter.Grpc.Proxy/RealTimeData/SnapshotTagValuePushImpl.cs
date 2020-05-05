@@ -9,8 +9,18 @@ using IntelligentPlant.BackgroundTasks;
 using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="ISnapshotTagValuePush"/> implementation.
+    /// </summary>
     internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
 
+        /// <summary>
+        /// Creates a new <see cref="SnapshotTagValuePushImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public SnapshotTagValuePushImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 

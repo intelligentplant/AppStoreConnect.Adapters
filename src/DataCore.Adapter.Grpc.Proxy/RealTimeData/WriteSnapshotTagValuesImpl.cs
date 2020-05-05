@@ -3,10 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="IWriteSnapshotTagValues"/> implementation.
+    /// </summary>
     internal class WriteSnapshotTagValuesImpl : ProxyAdapterFeature, IWriteSnapshotTagValues {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteSnapshotTagValuesImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public WriteSnapshotTagValuesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
+
+        /// <inheritdoc />
         public ChannelReader<Adapter.RealTimeData.WriteTagValueResult> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
@@ -42,5 +54,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             return result;
         }
+
     }
+
 }

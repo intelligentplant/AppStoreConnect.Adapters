@@ -3,11 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="ITagSearch"/> (and <see cref="ITagInfo"/>) implementation.
+    /// </summary>
     internal class TagSearchImpl : ProxyAdapterFeature, ITagSearch {
 
+        /// <summary>
+        /// Creates a new <see cref="TagSearchImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public TagSearchImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc />
         public ChannelReader<Adapter.RealTimeData.TagDefinition> FindTags(IAdapterCallContext context, Adapter.RealTimeData.FindTagsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
@@ -46,6 +57,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
+        /// <inheritdoc />
         public ChannelReader<Adapter.RealTimeData.TagDefinition> GetTags(IAdapterCallContext context, Adapter.RealTimeData.GetTagsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
@@ -74,6 +86,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
+        /// <inheritdoc />
         public ChannelReader<Common.AdapterProperty> GetTagProperties(IAdapterCallContext context, Adapter.RealTimeData.GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateChannel<Common.AdapterProperty>(-1);
 

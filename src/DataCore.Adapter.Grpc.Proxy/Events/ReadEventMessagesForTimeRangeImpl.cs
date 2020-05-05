@@ -3,11 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
+
+    /// <summary>
+    /// <see cref="IReadEventMessagesForTimeRange"/> implementation.
+    /// </summary>
     internal class ReadEventMessagesForTimeRangeImpl : ProxyAdapterFeature, IReadEventMessagesForTimeRange {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadEventMessagesForTimeRangeImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public ReadEventMessagesForTimeRangeImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.Events.EventMessage> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(-1);
 

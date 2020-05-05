@@ -3,11 +3,22 @@ using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="IWriteHistoricalTagValues"/> implementation.
+    /// </summary>
     internal class WriteTagValueAnnotationsImpl : ProxyAdapterFeature, IWriteTagValueAnnotations {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteSnapshotTagValuesImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public WriteTagValueAnnotationsImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, Adapter.RealTimeData.CreateAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new CreateAnnotationRequest() {
@@ -22,6 +33,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
+        /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, Adapter.RealTimeData.UpdateAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new UpdateAnnotationRequest() {
@@ -37,6 +49,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
+        /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, Adapter.RealTimeData.DeleteAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new DeleteAnnotationRequest() {
@@ -49,5 +62,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             return result.ToAdapterWriteTagValueAnnotationResult();
         }
+
     }
+
 }

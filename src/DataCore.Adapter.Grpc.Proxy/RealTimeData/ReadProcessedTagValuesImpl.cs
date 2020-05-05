@@ -1,16 +1,24 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="IReadProcessedTagValues"/> implementation.
+    /// </summary>
     internal class ReadProcessedTagValuesImpl : ProxyAdapterFeature, IReadProcessedTagValues {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadProcessedTagValuesImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public ReadProcessedTagValuesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.RealTimeData.DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateChannel<Adapter.RealTimeData.DataFunctionDescriptor>(-1);
 
@@ -38,6 +46,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.RealTimeData.ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.ProcessedTagValueQueryResult>(-1);
 

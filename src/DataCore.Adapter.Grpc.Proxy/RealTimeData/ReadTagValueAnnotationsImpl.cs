@@ -4,11 +4,22 @@ using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
+
+    /// <summary>
+    /// <see cref="ReadTagValueAnnotationsImpl"/> implementation.
+    /// </summary>
     internal class ReadTagValueAnnotationsImpl : ProxyAdapterFeature, IReadTagValueAnnotations {
 
+        /// <summary>
+        /// Creates a new <see cref="ReadTagValueAnnotationsImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public ReadTagValueAnnotationsImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.RealTimeData.TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
@@ -38,7 +49,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             return result;
         }
 
-        public async Task<Adapter.RealTimeData.TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
+
+        /// <inheritdoc/>
+        public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new ReadAnnotationRequest() {
                 AdapterId = AdapterId,
@@ -51,5 +64,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             return result.ToAdapterTagValueAnnotation();
         }
+
     }
+
 }

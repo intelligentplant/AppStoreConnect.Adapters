@@ -3,11 +3,22 @@ using System.Threading.Channels;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
+
+    /// <summary>
+    /// <see cref="IWriteEventMessages"/> implementation.
+    /// </summary>
     internal class WriteEventMessagesImpl : ProxyAdapterFeature, IWriteEventMessages {
 
+        /// <summary>
+        /// Creates a new <see cref="WriteEventMessagesImpl"/> instance.
+        /// </summary>
+        /// <param name="proxy">
+        ///   The proxy that owns the instance.
+        /// </param>
         public WriteEventMessagesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
+        /// <inheritdoc/>
         public ChannelReader<Adapter.Events.WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<Adapter.Events.WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
 

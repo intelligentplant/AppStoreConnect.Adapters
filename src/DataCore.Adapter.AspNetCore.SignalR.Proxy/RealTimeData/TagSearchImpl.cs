@@ -6,7 +6,7 @@ using DataCore.Adapter.RealTimeData;
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
     /// <summary>
-    /// Implements <see cref="ITagSearch"/>.
+    /// Implements <see cref="ITagSearch"/> (and <see cref="ITagInfo"/>).
     /// </summary>
     internal class TagSearchImpl : ProxyAdapterFeature, ITagSearch {
 
