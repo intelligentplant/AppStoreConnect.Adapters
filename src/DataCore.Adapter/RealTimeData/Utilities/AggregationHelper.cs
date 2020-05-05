@@ -64,7 +64,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             { DefaultDataFunctions.PercentBad.Id, CalculatePercentBad },
             { DefaultDataFunctions.PercentGood.Id, CalculatePercentGood },
             { DefaultDataFunctions.Range.Id, CalculateRange },
-            { DefaultDataFunctions.Delta.Id, CalculateDelta }
+            { DefaultDataFunctions.Delta.Id, CalculateDelta },
+            {DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation }
         };
 
         /// <summary>
@@ -515,6 +516,68 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
+                    .WithBucketProperties(bucket)
+                    .WithProperties(CreateXPoweredByProperty())
+                    .Build()
+            };
+        }
+
+        #endregion
+
+        #region [ StdDev ]
+
+        /// <summary>
+        /// Calculates the standard deviation for the good-quality samples in the bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="bucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculateStandardDeviation(TagSummary tag, TagValueBucket bucket) {
+            var goodQualitySamples = bucket
+                .RawSamples
+                .Where(x => x.Status == TagValueStatus.Good)
+                .ToArray();
+
+            var status = bucket.RawSamples.Any(x => x.Status != TagValueStatus.Good)
+                ? TagValueStatus.Uncertain
+                : TagValueStatus.Good;
+
+            if (goodQualitySamples.Length == 0) {
+                return new[] {
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
+                };
+            }
+            
+            if (goodQualitySamples.Length == 1) {
+                return new[] {
+                    TagValueBuilder.Create()
+                        .WithUtcSampleTime(bucket.UtcBucketStart)
+                        .WithValue(0d)
+                        .WithStatus(status)
+                        .WithBucketProperties(bucket)
+                        .WithProperties(CreateXPoweredByProperty())
+                        .Build()
+                };
+            }
+
+            var avg = goodQualitySamples.Average(x => x.GetValueOrDefault<double>());
+            var stdDev = Math.Sqrt(
+                goodQualitySamples.Sum(x => Math.Pow(x.GetValueOrDefault<double>() - avg, 2)) 
+                / 
+                (goodQualitySamples.Length - 1)
+            );
+
+            return new[] {
+                TagValueBuilder.Create()
+                    .WithUtcSampleTime(bucket.UtcBucketStart)
+                    .WithValue(stdDev)
+                    .WithStatus(status)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build()

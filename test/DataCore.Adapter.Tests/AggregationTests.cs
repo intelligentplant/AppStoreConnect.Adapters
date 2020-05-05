@@ -110,6 +110,23 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        public static double CalculateExpectedStandardDeviationValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var bucketValues = values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good);
+
+            if (bucketValues.Count() < 2) {
+                return 0;
+            }
+
+            var avg = CalculateExpectedAvgValue(bucketValues, bucketStart, bucketEnd);
+            return Math.Sqrt(
+                bucketValues.Sum(x => Math.Pow(x.GetValueOrDefault<double>() - avg, 2)) / (bucketValues.Count() - 1)    
+            );
+        }
+
+
         [DataTestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
@@ -119,6 +136,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
         public async Task DefaultDataFunctionShouldCalculateValue(
             string functionId, 
             string expectedValueCalculator,
@@ -181,6 +199,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, nameof(CalculateExpectedRangeValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
         public async Task DefaultDataFunctionShouldFilterNonGoodInputValuesAndReturnUncertainStatus(
             string functionId,
             string expectedValueCalculator,
@@ -243,6 +262,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, null)]
         public async Task DefaultDataFunctionShouldReturnErrorValueWhenNoGoodInputValuesAreProvided(
             string functionId,
             string expectedTimestampCalculator
