@@ -1,4 +1,5 @@
-﻿using DataCore.Adapter.Example;
+﻿using System;
+using DataCore.Adapter.Example;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +41,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     Common.AdapterProperty.Create(
                         "Project URL", 
-                        "https://github.com/intelligentplant/app-store-connect-adapters",
+                        new Uri("https://github.com/intelligentplant/app-store-connect-adapters"),
                         "GitHub repository URL for the project"
                     )
                 );

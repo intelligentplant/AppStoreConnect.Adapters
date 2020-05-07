@@ -78,6 +78,8 @@ namespace DataCore.Adapter.Json {
                     return Variant.FromValue(valueElement.GetUInt32());
                 case VariantType.UInt64:
                     return Variant.FromValue(valueElement.GetUInt64());
+                case VariantType.Url:
+                    return Variant.FromValue(new Uri(valueElement.GetString(), UriKind.Absolute));
                 case VariantType.Unknown:
                 default:
                     return Variant.FromValue(valueElement);
@@ -141,6 +143,9 @@ namespace DataCore.Adapter.Json {
                     break;
                 case VariantType.UInt64:
                     WriteValue<ulong>(writer, value, options);
+                    break;
+                case VariantType.Url:
+                    WriteValue<Uri>(writer, value, options);
                     break;
                 case VariantType.Unknown:
                 default:

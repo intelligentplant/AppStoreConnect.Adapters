@@ -47,6 +47,7 @@ namespace DataCore.Adapter.Common {
             VariantType.Double,
             VariantType.DateTime,
             VariantType.TimeSpan,
+            VariantType.Url,
             // String comes last as it is our final fallback.
             VariantType.String
         };
@@ -224,6 +225,12 @@ namespace DataCore.Adapter.Common {
                             variant = v;
                             return true;
                         }
+                    }
+                    break;
+                case VariantType.Url:
+                    if (Uri.TryCreate(s, UriKind.Absolute, out var url)) {
+                        variant = FromValue(url);
+                        return true;
                     }
                     break;
             }
@@ -463,6 +470,13 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public static explicit operator string(Variant val) => (string) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(Uri val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator Uri(Variant val) => (Uri) val.Value;
 
 
         /// <inheritdoc/>

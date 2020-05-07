@@ -90,7 +90,12 @@
         /// <summary>
         /// Time span.
         /// </summary>
-        TimeSpan
+        TimeSpan,
+
+        /// <summary>
+        /// URL
+        /// </summary>
+        Url
 
     }
 

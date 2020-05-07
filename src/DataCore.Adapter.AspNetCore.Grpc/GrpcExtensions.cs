@@ -142,6 +142,8 @@ namespace DataCore.Adapter {
                     return Common.VariantType.UInt32;
                 case Grpc.VariantType.Uint64:
                     return Common.VariantType.UInt64;
+                case Grpc.VariantType.Url:
+                    return Common.VariantType.Url;
                 case Grpc.VariantType.Unknown:
                 default:
                     return Common.VariantType.Unknown;
@@ -192,6 +194,8 @@ namespace DataCore.Adapter {
                     return Grpc.VariantType.Uint32;
                 case Common.VariantType.UInt64:
                     return Grpc.VariantType.Uint64;
+                case Common.VariantType.Url:
+                    return Grpc.VariantType.Url;
                 case Common.VariantType.Unknown:
                 default:
                     return Grpc.VariantType.Unknown;
@@ -270,6 +274,11 @@ namespace DataCore.Adapter {
                     break;
                 case Grpc.VariantType.Uint64:
                     value = BitConverter.ToUInt64(bytes, 0);
+                    break;
+                case Grpc.VariantType.Url:
+                    value = Uri.TryCreate(System.Text.Encoding.UTF8.GetString(bytes), UriKind.Absolute, out var url)
+                        ? url
+                        : default;
                     break;
                 case Grpc.VariantType.Unknown:
                 default:
@@ -355,6 +364,9 @@ namespace DataCore.Adapter {
                     break;
                 case Common.VariantType.UInt64:
                     bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ulong>());
+                    break;
+                case Common.VariantType.Url:
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<Uri>()?.ToString() ?? string.Empty);
                     break;
                 case Common.VariantType.Unknown:
                 default:

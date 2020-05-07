@@ -27,7 +27,8 @@ namespace DataCore.Adapter.Common {
             { typeof(TimeSpan), VariantType.TimeSpan },
             { typeof(ushort), VariantType.UInt16 },
             { typeof(uint), VariantType.UInt32 },
-            { typeof(ulong), VariantType.UInt64 }
+            { typeof(ulong), VariantType.UInt64 },
+            { typeof(Uri), VariantType.Url }
         };
 
 

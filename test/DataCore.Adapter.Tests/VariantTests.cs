@@ -36,6 +36,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(VariantType.Unknown, "true", true)]
         [DataRow(VariantType.Unknown, "1", 1)]
         [DataRow(VariantType.Unknown, "1.2345", 1.2345)]
+        [DataRow(VariantType.Url, "https://appstore.intelligentplant.com", null)]
         public void ParseToVariantShouldSucceed(VariantType type, string value, object expectedValue) {
             Assert.IsTrue(Variant.TryParse(value, type, out var variant));
 
@@ -67,6 +68,11 @@ namespace DataCore.Adapter.Tests {
 
         private TimeSpan GetExpectedTimeSpanValue(string value) {
             return TimeSpan.Parse(value);
+        }
+
+
+        private Uri GetExpectedUriValue(string value) {
+            return new Uri(value, UriKind.Absolute);
         }
 
     }
