@@ -23,7 +23,11 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The event messages that occurred during the time range.
         /// </returns>
-        ChannelReader<EventMessage> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken);
+        ChannelReader<EventMessage> ReadEventMessages(
+            IAdapterCallContext context, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

@@ -23,7 +23,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A task that will return the result of the operation.
         /// </returns>
-        Task<WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, CreateAnnotationRequest request, CancellationToken cancellationToken);
+        Task<WriteTagValueAnnotationResult> CreateAnnotation(
+            IAdapterCallContext context, 
+            CreateAnnotationRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Updates an existing annotation.
@@ -40,7 +44,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A task that will return the result of the operation.
         /// </returns>
-        Task<WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, UpdateAnnotationRequest request, CancellationToken cancellationToken);
+        Task<WriteTagValueAnnotationResult> UpdateAnnotation(
+            IAdapterCallContext context, 
+            UpdateAnnotationRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Deletes an annotation.
@@ -57,7 +65,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A task that will return the result of the operation.
         /// </returns>
-        Task<WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, DeleteAnnotationRequest request, CancellationToken cancellationToken);
+        Task<WriteTagValueAnnotationResult> DeleteAnnotation(
+            IAdapterCallContext context, 
+            DeleteAnnotationRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 

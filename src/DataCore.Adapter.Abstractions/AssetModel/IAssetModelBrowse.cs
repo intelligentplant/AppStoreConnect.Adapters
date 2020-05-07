@@ -23,7 +23,11 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The matching asset model nodes.
         /// </returns>
-        ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken);
+        ChannelReader<AssetModelNode> BrowseAssetModelNodes(
+            IAdapterCallContext context, 
+            BrowseAssetModelNodesRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Gets specific nodes from the adapter's asset model.
@@ -40,7 +44,11 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The matching asset model nodes.
         /// </returns>
-        ChannelReader<AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken);
+        ChannelReader<AssetModelNode> GetAssetModelNodes(
+            IAdapterCallContext context, 
+            GetAssetModelNodesRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

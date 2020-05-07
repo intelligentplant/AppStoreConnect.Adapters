@@ -24,7 +24,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel containing the annotations for the requested tags.
         /// </returns>
-        ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(
+            IAdapterCallContext context, 
+            ReadAnnotationsRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Gets an annotation from the adapter by ID.
@@ -41,7 +45,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The requested annotation.
         /// </returns>
-        Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken);
+        Task<TagValueAnnotationExtended> ReadAnnotation(
+            IAdapterCallContext context, 
+            ReadAnnotationRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

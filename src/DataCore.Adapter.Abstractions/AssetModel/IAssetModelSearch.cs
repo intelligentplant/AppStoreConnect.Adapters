@@ -23,7 +23,11 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The matching asset model nodes.
         /// </returns>
-        ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken);
+        ChannelReader<AssetModelNode> FindAssetModelNodes(
+            IAdapterCallContext context, 
+            FindAssetModelNodesRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

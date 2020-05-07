@@ -25,7 +25,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   will interpolate a tag value using the closest raw samples to a requested time stamp, 
         ///   or if it will repeat the previous raw value before the time stamp.
         /// </returns>
-        ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(
+            IAdapterCallContext context, 
+            ReadTagValuesAtTimesRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

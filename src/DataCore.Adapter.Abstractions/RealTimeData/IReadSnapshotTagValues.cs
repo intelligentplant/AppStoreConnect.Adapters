@@ -23,7 +23,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel that will complete once the request has completed.
         /// </returns>
-        ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

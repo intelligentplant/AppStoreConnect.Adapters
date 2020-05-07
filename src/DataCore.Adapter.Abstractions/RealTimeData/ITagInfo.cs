@@ -25,7 +25,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The available tag properties.
         /// </returns>
-        ChannelReader<AdapterProperty> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken);
+        ChannelReader<AdapterProperty> GetTagProperties(
+            IAdapterCallContext context, 
+            GetTagPropertiesRequest request, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Gets tags by ID or name.
@@ -42,7 +46,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagDefinition> GetTags(
+            IAdapterCallContext context, 
+            GetTagsRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

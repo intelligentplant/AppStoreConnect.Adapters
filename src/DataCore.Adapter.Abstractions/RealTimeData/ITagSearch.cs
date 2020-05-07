@@ -23,7 +23,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel that the search results can be read from.
         /// </returns>
-        ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagDefinition> FindTags(
+            IAdapterCallContext context, 
+            FindTagsRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

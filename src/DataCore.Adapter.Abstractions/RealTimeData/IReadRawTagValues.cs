@@ -29,7 +29,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   range as possible. The adapter can apply its own maximum sample count to the queries it 
         ///   receives.
         /// </remarks>
-        ChannelReader<TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken);
+        ChannelReader<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context, 
+            ReadRawTagValuesRequest request, 
+            CancellationToken cancellationToken
+        );
 
     }
 }

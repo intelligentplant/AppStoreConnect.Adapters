@@ -25,7 +25,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
         ///   the input <paramref name="channel"/>.
         /// </returns>
-        ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken);
+        ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(
+            IAdapterCallContext context, 
+            ChannelReader<WriteTagValueItem> channel, 
+            CancellationToken cancellationToken
+        );
 
     }
 }
