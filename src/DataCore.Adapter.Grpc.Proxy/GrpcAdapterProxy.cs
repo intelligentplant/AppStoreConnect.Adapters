@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly GetGrpcCallCredentials _getCallCredentials;
 
         /// <summary>
-        /// gRPC channel (when using Grpc.Core for HTTP/2 support).
+        /// gRPC channel.
         /// </summary>
         private readonly GrpcCore.ChannelBase _channel;
 
@@ -136,8 +136,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _getCallCredentials = Options?.GetCallCredentials;
         }
 
-#endif
-
+#else
 
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcCore.Channel"/>.
@@ -182,6 +181,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _getCallCredentials = Options?.GetCallCredentials;
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
         }
+
+#endif
 
 
         /// <summary>
@@ -266,14 +267,22 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
+#if NETSTANDARD2_1
+        /// <inheritdoc/>
+        protected override Task StopAsync(CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+#else
         /// <inheritdoc/>
         protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_channel is GrpcCore.Channel channel) {
                 await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
             }
         }
+#endif
 
 
+#if NETSTANDARD2_0
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
@@ -290,6 +299,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 await channel.ShutdownAsync().ConfigureAwait(false);
             }
         }
+#endif
 
 
         /// <summary>
@@ -355,50 +365,50 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 return results;
             }
 
-            if (_channel is GrpcCore.Channel coreChannel) {
-                var state = coreChannel.State;
-
-                switch (state) {
-                    case GrpcCore.ChannelState.Ready:
-                    case GrpcCore.ChannelState.Idle:
-                        results.Add(
-                            Diagnostics.HealthCheckResult.Composite(
-                                Resources.HealthCheck_DisplayName_Connection,
-                                new [] {
-                                    await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
-                                },
-                                // Use coreChannel.State instead of state, since, if the connection
-                                // was idle in the switch statement, it will now be ready.
-                                string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescription, coreChannel.State.ToString())
-                            )    
-                        );
-                        break;
-                    case GrpcCore.ChannelState.Shutdown:
-                        results.Add(Diagnostics.HealthCheckResult.Unhealthy(
-                            Resources.HealthCheck_DisplayName_Connection,
-                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                        ));
-                        break;
-                    default:
-                        results.Add(Diagnostics.HealthCheckResult.Degraded(
-                            Resources.HealthCheck_DisplayName_Connection,
-                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                        ));
-                        break;
-                }
-            }
-            else {
-                // Grpc.Net channel doesn't expose a way of getting the channel state.
-                results.Add(
-                    Diagnostics.HealthCheckResult.Composite(
-                        Resources.HealthCheck_DisplayName_Connection,
-                        new[] {
+#if NETSTANDARD2_1
+            // Grpc.Net channel doesn't expose a way of getting the channel state.
+            results.Add(
+                Diagnostics.HealthCheckResult.Composite(
+                    Resources.HealthCheck_DisplayName_Connection,
+                    new[] {
                             await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
-                        },
-                        Resources.HealthCheck_GrpcNetClientDescription
-                    )
-                );
+                    },
+                    Resources.HealthCheck_GrpcNetClientDescription
+                )
+            );
+#else
+            var coreChannel = _channel as GrpcCore.Channel;
+            var state = coreChannel.State;
+
+            switch (state) {
+                case GrpcCore.ChannelState.Ready:
+                case GrpcCore.ChannelState.Idle:
+                    results.Add(
+                        Diagnostics.HealthCheckResult.Composite(
+                            Resources.HealthCheck_DisplayName_Connection,
+                            new [] {
+                                await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                            },
+                            // Use coreChannel.State instead of state, since, if the connection
+                            // was idle in the switch statement, it will now be ready.
+                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescription, coreChannel.State.ToString())
+                        )    
+                    );
+                    break;
+                case GrpcCore.ChannelState.Shutdown:
+                    results.Add(Diagnostics.HealthCheckResult.Unhealthy(
+                        Resources.HealthCheck_DisplayName_Connection,
+                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
+                    ));
+                    break;
+                default:
+                    results.Add(Diagnostics.HealthCheckResult.Degraded(
+                        Resources.HealthCheck_DisplayName_Connection,
+                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
+                    ));
+                    break;
             }
+#endif
 
             return results;
         }
