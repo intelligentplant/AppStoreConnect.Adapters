@@ -9,7 +9,8 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The adapter options type.
     /// </typeparam>
-    public class AdapterOptionsMonitor<TAdapterOptions> : IAdapterOptionsMonitor<TAdapterOptions> where TAdapterOptions : AdapterOptions {
+    public class AdapterOptionsMonitor<TAdapterOptions> : IAdapterOptionsMonitor<TAdapterOptions> 
+        where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// The listeners to be notified when the <see cref="CurrentValue"/> changes.

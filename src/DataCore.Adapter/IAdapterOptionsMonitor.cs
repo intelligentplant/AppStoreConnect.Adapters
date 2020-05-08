@@ -8,7 +8,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The adapter options type.
     /// </typeparam>
-    public interface IAdapterOptionsMonitor<TAdapterOptions> where TAdapterOptions : AdapterOptions {
+    public interface IAdapterOptionsMonitor<TAdapterOptions> where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// The current adapter options.
