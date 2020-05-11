@@ -98,7 +98,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapters = await _adapterAccessor.FindAdapters(callContext, request, cancellationToken).ConfigureAwait(false);
+            var adapters = await _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken).ConfigureAwait(false);
             var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
             return Ok(result); // 200
         }
@@ -122,7 +122,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, true, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }

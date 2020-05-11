@@ -129,6 +129,9 @@
   <data name="Error_AdapterIsAlreadyStarted" xml:space="preserve">
     <value>An adapter cannot be started when it is already running.</value>
   </data>
+  <data name="Error_AdapterIsDisabled" xml:space="preserve">
+    <value>The adapter is disabled.</value>
+  </data>
   <data name="Error_AdapterIsNotCompatibleWithHelperClass" xml:space="preserve">
     <value>Adapter {0} is not compatible with {1}.</value>
     <comment>{0} - adapter ID

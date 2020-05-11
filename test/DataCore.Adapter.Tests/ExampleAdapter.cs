@@ -17,6 +17,8 @@ namespace DataCore.Adapter.Tests {
 
         public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
 
+        public bool IsEnabled { get; set; } = true;
+
         public bool IsRunning { get; } = true;
 
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;

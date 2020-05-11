@@ -52,6 +52,13 @@ namespace DataCore.Adapter {
         private readonly IDisposable _loggerScope;
 
         /// <summary>
+        /// Indicates if the adapter is enabled. When <see langword="false"/>, calls to 
+        /// <see cref="IAdapter.StartAsync(CancellationToken)"/> will throw an 
+        /// <see cref="InvalidOperationException"/>.
+        /// </summary>
+        protected virtual bool IsEnabled { get { return true; } }
+
+        /// <summary>
         /// Indicates if the adapter has been started.
         /// </summary>
         protected bool IsRunning { get; private set; }
@@ -59,7 +66,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Indicates if the adapter is starting.
         /// </summary>
-        private bool _isStarting;
+        protected bool IsStarting { get; private set; }
 
         /// <summary>
         /// Ensures that only one startup attempt can occur at a time.
@@ -113,6 +120,9 @@ namespace DataCore.Adapter {
                 return _features;
             }
         }
+
+        /// <inheritdoc/>
+        bool IAdapter.IsEnabled { get { return IsEnabled; } }
 
         /// <inheritdoc/>
         bool IAdapter.IsRunning { get { return IsRunning; } }
@@ -214,7 +224,7 @@ namespace DataCore.Adapter {
         ///   starting.
         /// </param>
         protected void CheckStarted(bool allowStarting = false) {
-            if (IsRunning || (allowStarting && _isStarting)) {
+            if (IsRunning || (allowStarting && IsStarting)) {
                 return;
             }
 
@@ -561,6 +571,10 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
+            if (!IsEnabled) {
+                throw new InvalidOperationException(Resources.Error_AdapterIsDisabled);
+            }
+
             CheckDisposed();
             await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try {
@@ -576,7 +590,7 @@ namespace DataCore.Adapter {
                 try {
                     Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
 
-                    _isStarting = true;
+                    IsStarting = true;
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                             await StartAsync(ctSource.Token).ConfigureAwait(false);
@@ -584,7 +598,7 @@ namespace DataCore.Adapter {
                         IsRunning = true;
                     }
                     finally {
-                        _isStarting = false;
+                        IsStarting = false;
                     }
                     Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
                 }

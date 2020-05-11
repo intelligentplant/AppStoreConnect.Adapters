@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter {
 
@@ -31,6 +32,18 @@ namespace DataCore.Adapter {
             Order = 1
         )]
         public string Description { get; set; }
+
+        /// <summary>
+        /// A flag indicating if the adapter is enabled or not.
+        /// </summary>
+        [Display(
+            ResourceType = typeof(AdapterOptionsResources),
+            Name = nameof(AdapterOptionsResources.AdapterOptions_IsEnabled_DisplayName),
+            Description = nameof(AdapterOptionsResources.AdapterOptions_IsEnabled_Description),
+            Order = 2
+        )]
+        [DefaultValue(true)]
+        public bool IsEnabled { get; set; } = true;
 
     }
 }

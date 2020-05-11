@@ -23,6 +23,11 @@ namespace DataCore.Adapter {
         /// </summary>
         protected TAdapterOptions Options { get; private set; }
 
+        /// <inheritdoc/>
+        protected override bool IsEnabled {
+            get { return Options.IsEnabled; }
+        }
+
 
         /// <summary>
         /// Creates a new <see cref="Adapter"/> object.
@@ -123,8 +128,9 @@ namespace DataCore.Adapter {
                     return;
                 }
 
+                var previous = Options;
                 Options = opts;
-                OnOptionsChangeInternal(opts);
+                OnOptionsChangeInternal(opts, previous);
             });
         }
 
@@ -152,27 +158,58 @@ namespace DataCore.Adapter {
         /// have changed. This method will only be called if an <see cref="IAdapterOptionsMonitor{TAdapterOptions}"/> 
         /// was provided when the adapter was created.
         /// </summary>
-        /// <param name="options">
+        /// <param name="newOptions">
         ///   The updated options.
         /// </param>
-        private void OnOptionsChangeInternal(TAdapterOptions options) {
-            if (options == null) {
-                return;
-            }
+        /// <param name="previousOptions">
+        ///   The previous options.
+        /// </param>
+        private void OnOptionsChangeInternal(TAdapterOptions newOptions, TAdapterOptions previousOptions) {
 
             // Check if we need to update the descriptor.
 
             var currentDescriptor = Descriptor;
 
-            if (!string.Equals(options.Name, currentDescriptor.Name, StringComparison.Ordinal) || 
-                !string.Equals(options.Description, currentDescriptor.Description, StringComparison.Ordinal)
+            if (!string.Equals(newOptions.Name, currentDescriptor.Name, StringComparison.Ordinal) || 
+                !string.Equals(newOptions.Description, currentDescriptor.Description, StringComparison.Ordinal)
             ) {
-                UpdateDescriptor(options.Name, options.Description);
+                UpdateDescriptor(newOptions.Name, newOptions.Description);
+            }
+
+            if (newOptions.IsEnabled != previousOptions.IsEnabled) {
+                if (!newOptions.IsEnabled && (IsStarting || IsRunning)) {
+                    // The adapter is already running and has now been disabled.
+
+                    var tcs = new TaskCompletionSource<bool>();
+
+                    TaskScheduler.QueueBackgroundWorkItem(async ct => { 
+                        try {
+                            await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException) {
+                            tcs.TrySetCanceled(ct);
+                        }
+#pragma warning disable CA1031 // Do not catch general exception types
+                        catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                            tcs.TrySetException(e);
+                        }
+                        finally {
+                            tcs.TrySetResult(true);
+                        }
+                    });
+
+                    tcs.Task.Wait();
+
+                    // No need to call the handler on the implementing class, since we've just 
+                    // stopped the adapter.
+                    return;
+                }
             }
 
             // Call the handler on the implementing class.
 
-            OnOptionsChange(options);
+            OnOptionsChange(newOptions);
         }
 
 

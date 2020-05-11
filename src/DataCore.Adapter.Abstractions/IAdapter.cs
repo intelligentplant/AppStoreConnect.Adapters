@@ -27,6 +27,11 @@ namespace DataCore.Adapter {
         IEnumerable<AdapterProperty> Properties { get; }
 
         /// <summary>
+        /// Gets a flag indicating if the adapter is enabled.
+        /// </summary>
+        bool IsEnabled { get; }
+
+        /// <summary>
         /// Gets a flag indicating if the adapter has been started.
         /// </summary>
         bool IsRunning { get; }

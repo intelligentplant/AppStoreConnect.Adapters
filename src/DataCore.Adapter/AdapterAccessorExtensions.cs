@@ -43,7 +43,7 @@ namespace DataCore.Adapter {
                 @continue = false;
                 ++page;
                 request.Page = page;
-                var adapters = await adapterAccessor.FindAdapters(context, request, cancellationToken).ConfigureAwait(false);
+                var adapters = await adapterAccessor.FindAdapters(context, request, false, cancellationToken).ConfigureAwait(false);
                 if (adapters != null) {
                     var countBefore = result.Count;
                     result.AddRange(adapters);

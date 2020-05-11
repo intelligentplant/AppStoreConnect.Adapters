@@ -118,13 +118,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AdapterOptions_Description_Description" xml:space="preserve">
-    <value>The adapter description</value>
+    <value>The description for the adapter</value>
   </data>
   <data name="AdapterOptions_Description_DisplayName" xml:space="preserve">
     <value>Description</value>
   </data>
+  <data name="AdapterOptions_IsEnabled_Description" xml:space="preserve">
+    <value>Specifies if the adapter is enabled or disabled</value>
+  </data>
+  <data name="AdapterOptions_IsEnabled_DisplayName" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
   <data name="AdapterOptions_Name_Description" xml:space="preserve">
-    <value>The adapter display name</value>
+    <value>The display name for the adapter</value>
   </data>
   <data name="AdapterOptions_Name_DisplayName" xml:space="preserve">
     <value>Name</value>

@@ -97,6 +97,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The adapter is disabled..
+        /// </summary>
+        internal static string Error_AdapterIsDisabled {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapter {0} is not compatible with {1}..
         /// </summary>
         internal static string Error_AdapterIsNotCompatibleWithHelperClass {

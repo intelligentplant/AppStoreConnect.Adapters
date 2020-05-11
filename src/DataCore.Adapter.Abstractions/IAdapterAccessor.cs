@@ -19,6 +19,9 @@ namespace DataCore.Adapter {
         /// <param name="request">
         ///   The search filter.
         /// </param>
+        /// <param name="enabledOnly">
+        ///   When <see langword="true"/>, only enabled adapters will be returned.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -28,7 +31,8 @@ namespace DataCore.Adapter {
         Task<IEnumerable<IAdapter>> FindAdapters(
             IAdapterCallContext context, 
             FindAdaptersRequest request, 
-            CancellationToken cancellationToken
+            bool enabledOnly = true,
+            CancellationToken cancellationToken = default
         );
 
         /// <summary>
@@ -40,16 +44,25 @@ namespace DataCore.Adapter {
         /// <param name="adapterId">
         ///   The ID of the adapter.
         /// </param>
+        /// <param name="enabledOnly">
+        ///   When <see langword="true"/>, only enabled adapters will be returned.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The requested adapter.
         /// </returns>
-        Task<IAdapter> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken);
+        Task<IAdapter> GetAdapter(
+            IAdapterCallContext context, 
+            string adapterId,
+            bool enabledOnly = true,
+            CancellationToken cancellationToken = default
+        );
 
         /// <summary>
-        /// Resolves the specified adapter and feature, and verifies if the caller is authorized to access the feature.
+        /// Resolves the specified adapter and feature, and verifies if the caller is authorized 
+        /// to access the feature. The adapter must be enabled.
         /// </summary>
         /// <typeparam name="TFeature">
         ///   The adapter feature.
@@ -67,7 +80,11 @@ namespace DataCore.Adapter {
         ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
         ///   authorization result.
         /// </returns>
-        Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature;
+        Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(
+            IAdapterCallContext context, 
+            string adapterId, 
+            CancellationToken cancellationToken = default
+        ) where TFeature : IAdapterFeature;
 
     }
 

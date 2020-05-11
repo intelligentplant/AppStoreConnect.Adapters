@@ -61,7 +61,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter description.
+        ///   Looks up a localized string similar to The description for the adapter.
         /// </summary>
         public static string AdapterOptions_Description_Description {
             get {
@@ -79,7 +79,25 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter display name.
+        ///   Looks up a localized string similar to Specifies if the adapter is enabled or disabled.
+        /// </summary>
+        public static string AdapterOptions_IsEnabled_Description {
+            get {
+                return ResourceManager.GetString("AdapterOptions_IsEnabled_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enabled.
+        /// </summary>
+        public static string AdapterOptions_IsEnabled_DisplayName {
+            get {
+                return ResourceManager.GetString("AdapterOptions_IsEnabled_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The display name for the adapter.
         /// </summary>
         public static string AdapterOptions_Name_Description {
             get {

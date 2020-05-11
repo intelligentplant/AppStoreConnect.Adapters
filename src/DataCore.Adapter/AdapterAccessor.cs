@@ -49,7 +49,8 @@ namespace DataCore.Adapter {
         public async Task<IEnumerable<IAdapter>> FindAdapters(
             IAdapterCallContext context, 
             FindAdaptersRequest request, 
-            CancellationToken cancellationToken
+            bool enabledOnly = true,
+            CancellationToken cancellationToken = default
         ) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
@@ -57,6 +58,10 @@ namespace DataCore.Adapter {
 
             var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (enabledOnly) {
+                adapters = adapters?.Where(x => x.IsEnabled)?.ToArray();
+            }
 
             if (adapters == null || !adapters.Any()) {
                 return Array.Empty<IAdapter>();
@@ -99,7 +104,12 @@ namespace DataCore.Adapter {
         }
 
         /// <inheritdoc/>
-        public async Task<IAdapter> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+        public async Task<IAdapter> GetAdapter(
+            IAdapterCallContext context, 
+            string adapterId, 
+            bool enabledOnly = true,
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
@@ -108,7 +118,7 @@ namespace DataCore.Adapter {
             cancellationToken.ThrowIfCancellationRequested();
 
             var adapter = adapters?.FirstOrDefault(x => x.Descriptor.Id.Equals(adapterId, StringComparison.OrdinalIgnoreCase));
-            if (adapter == null) {
+            if (adapter == null || (enabledOnly && !adapter.IsEnabled)) {
                 return null;
             }
 
@@ -120,7 +130,7 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         public async Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
-            var adapter = await ((IAdapterAccessor) this).GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ((IAdapterAccessor) this).GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return new ResolvedAdapterFeature<TFeature>(null, default, false);
             }
