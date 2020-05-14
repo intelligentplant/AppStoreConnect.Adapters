@@ -54,7 +54,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     }
                     catch (OperationCanceledException) {
                         // Do nothing
-                    }catch (System.Threading.Channels.ChannelClosedException) { }
+                    }
+                    catch (System.Threading.Channels.ChannelClosedException) { 
+                        // Do nothing
+                    }
                 }
             }
         }

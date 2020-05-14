@@ -70,44 +70,53 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             // Create the subscription.
             var subscriptionsForConnection = s_snapshotSubscriptions.GetOrAdd(connectionId, k => new ConcurrentDictionary<string, Task<SnapshotSubscriptionWrapper>>());
-            var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
-                var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
 
-                // Register a callback to dispose of the wrapper when the connection is closed.
+            try {
+                var subscription = await subscriptionsForConnection.GetOrAdd(adapterId, k => Task.Run(async () => {
+                    var sub = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
 
-                var connectionClosedToken = context
-                    .GetHttpContext()
-                    .Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionLifetimeFeature>()
-                    .ConnectionClosed;
+                    // Register a callback to dispose of the wrapper when the connection is closed.
 
-                var wrapper = new SnapshotSubscriptionWrapper(sub, _backgroundTaskService);
-                IDisposable callbackRegistration = null;
+                    var connectionClosedToken = context
+                        .GetHttpContext()
+                        .Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionLifetimeFeature>()
+                        .ConnectionClosed;
 
-                callbackRegistration = connectionClosedToken.Register(() => {
-                    // Remove and clear all subscriptions for this connection from the master list 
-                    // if another callback hasn't done this already.
-                    if (s_snapshotSubscriptions.TryRemove(connectionId, out var allSubs)) {
-                        allSubs.Clear();
+                    var wrapper = new SnapshotSubscriptionWrapper(sub, _backgroundTaskService);
+                    IDisposable callbackRegistration = null;
+
+                    callbackRegistration = connectionClosedToken.Register(() => {
+                        // Remove and clear all subscriptions for this connection from the master list 
+                        // if another callback hasn't done this already.
+                        if (s_snapshotSubscriptions.TryRemove(connectionId, out var allSubs)) {
+                            allSubs.Clear();
+                        }
+
+                        // Dispose the wrapper.
+                        wrapper.Dispose();
+                        callbackRegistration?.Dispose();
+                    });
+
+                    return wrapper;
+                }, cancellationToken)).ConfigureAwait(false);
+
+                using (var tagSubscription = await subscription.AddSubscription(request.Tag).ConfigureAwait(false)) {
+                    if (tagSubscription == null) {
+                        return;
                     }
 
-                    // Dispose the wrapper.
-                    wrapper.Dispose();
-                    callbackRegistration?.Dispose();
-                });
-
-                return wrapper;
-            }, cancellationToken)).ConfigureAwait(false);
-
-            using (var tagSubscription = await subscription.AddSubscription(request.Tag).ConfigureAwait(false)) {
-                if (tagSubscription == null) {
-                    return;
+                    await foreach (var value in tagSubscription.Reader.ReadAllAsync(cancellationToken)) {
+                        await responseStream.WriteAsync(
+                            value.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
+                        ).ConfigureAwait(false);
+                    }
                 }
-
-                await foreach (var value in tagSubscription.Reader.ReadAllAsync(cancellationToken)) {
-                    await responseStream.WriteAsync(
-                        value.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)
-                    ).ConfigureAwait(false);
-                }
+            }
+            catch (OperationCanceledException) {
+                // Caller has cancelled the subscription.
+            }
+            catch (ChannelClosedException) {
+                // Channel has been closed due to the connection being terminated.
             }
         }
 
