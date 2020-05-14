@@ -276,7 +276,15 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <inheritdoc/>
         protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_channel is GrpcCore.Channel channel) {
-                await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
+                try {
+                    await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    Logger.LogError(e, Resources.Log_ChannelShutdownError);
+                }
             }
         }
 #endif

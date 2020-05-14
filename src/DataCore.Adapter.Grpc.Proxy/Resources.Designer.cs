@@ -124,6 +124,15 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while shutting down gRPC channel..
+        /// </summary>
+        internal static string Log_ChannelShutdownError {
+            get {
+                return ResourceManager.GetString("Log_ChannelShutdownError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {

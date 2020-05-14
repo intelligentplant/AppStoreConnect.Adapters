@@ -140,6 +140,9 @@
   <data name="HealthCheck_RemoteAdapterHealthNotSupported" xml:space="preserve">
     <value>The remote adapter does not implement health checks.</value>
   </data>
+  <data name="Log_ChannelShutdownError" xml:space="preserve">
+    <value>Error while shutting down gRPC channel.</value>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>
     <comment>{0} - feature name</comment>
