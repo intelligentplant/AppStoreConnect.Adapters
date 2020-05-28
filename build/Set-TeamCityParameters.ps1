@@ -39,16 +39,16 @@ if ([string]::IsNullOrWhiteSpace($BuildMetadata)) {
 }
 
 Write-Host "Setting assembly version: $($Version.AssemblyVersion)"
-Write-Host "##teamcity[setParameter name='AssemblyVersion' value='$($Version.AssemblyVersion)']"
+Write-Host "##teamcity[setParameter name='system.AssemblyVersion' value='$($Version.AssemblyVersion)']"
 
 Write-Host "Setting assembly file version: $($Version.FileVersion)"
-Write-Host "##teamcity[setParameter name='AssemblyFileVersion' value='$($Version.FileVersion)']"
+Write-Host "##teamcity[setParameter name='system.AssemblyFileVersion' value='$($Version.FileVersion)']"
 
 Write-Host "Setting package version: $($Version.PackageVersion)"
-Write-Host "##teamcity[setParameter name='PackageVersion' value='$($Version.PackageVersion)']"
+Write-Host "##teamcity[setParameter name='system.PackageVersion' value='$($Version.PackageVersion)']"
 
 Write-Host "Setting informational version: ${InformationalVersion}"
-Write-Host "##teamcity[setParameter name='InformationalVersion' value='${InformationalVersion}']"
+Write-Host "##teamcity[setParameter name='system.InformationalVersion' value='${InformationalVersion}']"
 
 Write-Host "Setting build number: ${BuildNumber}"
 Write-Host "##teamcity[buildNumber '${BuildNumber}']"
