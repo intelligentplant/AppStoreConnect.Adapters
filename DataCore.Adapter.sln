@@ -71,12 +71,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
 	ProjectSection(SolutionItems) = preProject
 		build\Dependencies.props = build\Dependencies.props
+		build\Get-Version.ps1 = build\Get-Version.ps1
 		build\increment-version.ps1 = build\increment-version.ps1
+		build\Set-TeamCityParameters.ps1 = build\Set-TeamCityParameters.ps1
 		build\tools.ps1 = build\tools.ps1
 		build\version.json = build\version.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Benchmarks", "test\DataCore.Adapter.Benchmarks\DataCore.Adapter.Benchmarks.csproj", "{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Benchmarks", "test\DataCore.Adapter.Benchmarks\DataCore.Adapter.Benchmarks.csproj", "{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
