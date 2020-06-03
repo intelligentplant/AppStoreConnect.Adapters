@@ -20,7 +20,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public ReadEventMessagesForTimeRangeImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public async Task<ChannelReader<EventMessage>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var client = GetClient();
             var hubChannel = await client.Events.ReadEventMessagesAsync(
                 AdapterId, 

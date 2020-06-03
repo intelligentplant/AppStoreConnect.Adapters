@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The event messages that occurred during the time range.
         /// </returns>
-        Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessages(
+        Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(
             IAdapterCallContext context, 
             ReadEventMessagesUsingCursorRequest request, 
             CancellationToken cancellationToken

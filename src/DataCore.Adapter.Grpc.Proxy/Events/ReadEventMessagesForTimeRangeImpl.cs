@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.EventMessage>> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Events.EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var client = CreateClient<EventsService.EventsServiceClient>();
             var grpcRequest = new GetEventMessagesForTimeRangeRequest() {
                 AdapterId = AdapterId,

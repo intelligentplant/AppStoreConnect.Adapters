@@ -201,7 +201,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessage>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -233,7 +233,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }

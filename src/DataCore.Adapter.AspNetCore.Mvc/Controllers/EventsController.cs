@@ -84,7 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.ReadEventMessages(callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = await feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false);
             var result = new List<EventMessage>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -137,7 +137,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.ReadEventMessages(callContext, request, cancellationToken).ConfigureAwait(false);
+            var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
             var result = new List<EventMessageWithCursorPosition>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

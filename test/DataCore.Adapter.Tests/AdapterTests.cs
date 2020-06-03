@@ -432,7 +432,7 @@ namespace DataCore.Adapter.Tests {
 
                 var queryDetails = GetReadEventMessagesQueryDetails();
 
-                var channel = await feature.ReadEventMessages(
+                var channel = await feature.ReadEventMessagesForTimeRange(
                     context,
                     new ReadEventMessagesForTimeRangeRequest() {
                         UtcStartTime = queryDetails.HistoryStartTime,
@@ -460,7 +460,7 @@ namespace DataCore.Adapter.Tests {
                 // first page, and that the timestamps of the event messages are correct in 
                 // relation to the first page and the read direction.
 
-                var channel2 = await feature.ReadEventMessages(
+                var channel2 = await feature.ReadEventMessagesForTimeRange(
                     context,
                     new ReadEventMessagesForTimeRangeRequest() {
                         UtcStartTime = queryDetails.HistoryStartTime,
@@ -501,7 +501,7 @@ namespace DataCore.Adapter.Tests {
 
                 var queryDetails = GetReadEventMessagesQueryDetails();
 
-                var channel = await feature.ReadEventMessages(
+                var channel = await feature.ReadEventMessagesUsingCursor(
                     context,
                     new ReadEventMessagesUsingCursorRequest() {
                         CursorPosition = null,
@@ -529,7 +529,7 @@ namespace DataCore.Adapter.Tests {
                 // first page, and that the timestamps of the event messages are correct in 
                 // relation to the first page and the read direction.
 
-                var channel2 = await feature.ReadEventMessages(
+                var channel2 = await feature.ReadEventMessagesUsingCursor(
                     context,
                     new ReadEventMessagesUsingCursorRequest() {
                         CursorPosition = nextCursor,

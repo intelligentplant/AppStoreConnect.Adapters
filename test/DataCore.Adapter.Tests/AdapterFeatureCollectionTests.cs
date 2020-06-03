@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Tests {
                 throw new NotImplementedException();
             }
 
-            Task<ChannelReader<EventMessage>> IReadEventMessagesForTimeRange.ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            Task<ChannelReader<EventMessage>> IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }
         }

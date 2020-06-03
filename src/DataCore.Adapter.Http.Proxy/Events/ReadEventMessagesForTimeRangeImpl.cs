@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
         public ReadEventMessagesForTimeRangeImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public Task<ChannelReader<EventMessage>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
