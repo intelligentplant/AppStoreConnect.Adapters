@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Http.Proxy.Events {
@@ -17,7 +19,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
         public ReadEventMessagesUsingCursorImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -30,7 +32,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

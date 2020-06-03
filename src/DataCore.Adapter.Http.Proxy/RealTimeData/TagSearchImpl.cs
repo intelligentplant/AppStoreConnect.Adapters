@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
@@ -19,7 +21,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
 
         /// <inheritdoc />
-        public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -32,12 +34,12 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
 
         /// <inheritdoc />
-        public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -50,12 +52,12 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
 
         /// <inheritdoc />
-        public ChannelReader<AdapterProperty> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateChannel<AdapterProperty>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -68,7 +70,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
     }

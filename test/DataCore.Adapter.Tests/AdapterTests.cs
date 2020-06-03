@@ -107,7 +107,8 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tags = await feature.FindTags(context, new FindTagsRequest(), default).ToEnumerable();
+                var channel = await feature.FindTags(context, new FindTagsRequest(), default);
+                var tags = await channel.ToEnumerable();
                 Assert.IsTrue(tags.Any());
             });
         }
@@ -123,9 +124,10 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var tagDetails = GetReadTagValuesQueryDetails();
-                var tags = await feature.GetTags(context, new GetTagsRequest() {
+                var channel = await feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { tagDetails.Id }
-                }, default).ToEnumerable();
+                }, default);
+                var tags = await channel.ToEnumerable();
 
                 Assert.AreEqual(1, tags.Count());
                 Assert.AreEqual(tagDetails.Id, tags.First().Id);
@@ -146,9 +148,10 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var tagDetails = GetReadTagValuesQueryDetails();
-                var values = await feature.ReadSnapshotTagValues(context, new ReadSnapshotTagValuesRequest() {
+                var channel = await feature.ReadSnapshotTagValues(context, new ReadSnapshotTagValuesRequest() {
                     Tags = new[] { tagDetails.Id }
-                }, default).ToEnumerable();
+                }, default);
+                var values = await channel.ToEnumerable();
 
                 Assert.AreEqual(1, values.Count());
 
@@ -204,9 +207,9 @@ namespace DataCore.Adapter.Tests {
 
                 var tagDetails = GetReadTagValuesQueryDetails();
 
-                var values = await feature.ReadRawTagValues(
+                var channel = await feature.ReadRawTagValues(
                     context,
-                    new ReadRawTagValuesRequest() { 
+                    new ReadRawTagValuesRequest() {
                         Tags = new[] { tagDetails.Id },
                         UtcStartTime = tagDetails.HistoryStartTime,
                         UtcEndTime = tagDetails.HistoryEndTime,
@@ -214,7 +217,8 @@ namespace DataCore.Adapter.Tests {
                         SampleCount = 0
                     },
                     default
-                ).ToEnumerable();
+                );
+                var values = await channel.ToEnumerable();
 
                 Assert.IsTrue(values.Any());
                 Assert.IsTrue(values.First().Value.UtcSampleTime >= tagDetails.HistoryStartTime);
@@ -238,7 +242,7 @@ namespace DataCore.Adapter.Tests {
 
                 var tagDetails = GetReadTagValuesQueryDetails();
 
-                var values = await feature.ReadPlotTagValues(
+                var channel = await feature.ReadPlotTagValues(
                     context,
                     new ReadPlotTagValuesRequest() {
                         Tags = new[] { tagDetails.Id },
@@ -247,7 +251,8 @@ namespace DataCore.Adapter.Tests {
                         Intervals = 10
                     },
                     default
-                ).ToEnumerable();
+                );
+                var values = await channel.ToEnumerable();
 
                 Assert.IsTrue(values.Any());
                 Assert.IsTrue(values.First().Value.UtcSampleTime >= tagDetails.HistoryStartTime);
@@ -280,7 +285,8 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var supportedDataFunctions = await feature.GetSupportedDataFunctions(context, default).ToEnumerable();
+                var channel = await feature.GetSupportedDataFunctions(context, default);
+                var supportedDataFunctions = await channel.ToEnumerable();
                 if (!supportedDataFunctions.Any(f => f.Id.Equals(dataFunction))) {
                     Assert.Inconclusive($"Data function {dataFunction} is not supported.");
                     return;
@@ -290,17 +296,18 @@ namespace DataCore.Adapter.Tests {
                 // Calculate sample interval for 10 buckets.
                 var sampleInterval = TimeSpan.FromSeconds((tagDetails.HistoryEndTime - tagDetails.HistoryStartTime).TotalSeconds / 10);
 
-                var values = await feature.ReadProcessedTagValues(
+                var channel2 = await feature.ReadProcessedTagValues(
                     context,
                     new ReadProcessedTagValuesRequest() {
                         Tags = new[] { tagDetails.Id },
                         UtcStartTime = tagDetails.HistoryStartTime,
                         UtcEndTime = tagDetails.HistoryEndTime,
-                        DataFunctions = new [] { dataFunction },
+                        DataFunctions = new[] { dataFunction },
                         SampleInterval = sampleInterval
                     },
                     default
-                ).ToEnumerable();
+                );
+                var values = await channel2.ToEnumerable();
 
                 Assert.IsTrue(values.Any());
                 Assert.IsTrue(values.First().Value.UtcSampleTime >= tagDetails.HistoryStartTime);
@@ -333,14 +340,15 @@ namespace DataCore.Adapter.Tests {
                     sampleTimes.Add(ts);
                 }
 
-                var values = await feature.ReadTagValuesAtTimes(
+                var channel = await feature.ReadTagValuesAtTimes(
                     context,
                     new ReadTagValuesAtTimesRequest() {
                         Tags = new[] { tagDetails.Id },
                         UtcSampleTimes = sampleTimes.ToArray()
                     },
                     default
-                ).ToEnumerable();
+                );
+                var values = await channel.ToEnumerable();
 
                 Assert.AreEqual(sampleTimes.Count, values.Count());
                 Assert.IsTrue(values.All(v => tagDetails.Id.Equals(v.TagId) || tagDetails.Id.Equals(v.TagName, StringComparison.OrdinalIgnoreCase)));
@@ -424,7 +432,7 @@ namespace DataCore.Adapter.Tests {
 
                 var queryDetails = GetReadEventMessagesQueryDetails();
 
-                var messages = await feature.ReadEventMessages(
+                var channel = await feature.ReadEventMessages(
                     context,
                     new ReadEventMessagesForTimeRangeRequest() {
                         UtcStartTime = queryDetails.HistoryStartTime,
@@ -434,7 +442,8 @@ namespace DataCore.Adapter.Tests {
                         Direction = direction
                     },
                     default
-                ).ToEnumerable();
+                );
+                var messages = await channel.ToEnumerable();
 
                 Assert.IsTrue(messages.Any());
                 Assert.IsTrue(messages.All(m => m.UtcEventTime >= queryDetails.HistoryStartTime && m.UtcEventTime <= queryDetails.HistoryEndTime));
@@ -451,7 +460,7 @@ namespace DataCore.Adapter.Tests {
                 // first page, and that the timestamps of the event messages are correct in 
                 // relation to the first page and the read direction.
 
-                var messages2 = await feature.ReadEventMessages(
+                var channel2 = await feature.ReadEventMessages(
                     context,
                     new ReadEventMessagesForTimeRangeRequest() {
                         UtcStartTime = queryDetails.HistoryStartTime,
@@ -461,7 +470,8 @@ namespace DataCore.Adapter.Tests {
                         Direction = direction
                     },
                     default
-                ).ToEnumerable();
+                );
+                var messages2 = await channel2.ToEnumerable();
 
                 if (messages2.Any()) {
                     if (direction == EventReadDirection.Forwards) {
@@ -491,7 +501,7 @@ namespace DataCore.Adapter.Tests {
 
                 var queryDetails = GetReadEventMessagesQueryDetails();
 
-                var messages = await feature.ReadEventMessages(
+                var channel = await feature.ReadEventMessages(
                     context,
                     new ReadEventMessagesUsingCursorRequest() {
                         CursorPosition = null,
@@ -499,7 +509,8 @@ namespace DataCore.Adapter.Tests {
                         Direction = direction
                     },
                     default
-                ).ToEnumerable();
+                );
+                var messages = await channel.ToEnumerable();
 
                 Assert.IsTrue(messages.Any());
 
@@ -518,7 +529,7 @@ namespace DataCore.Adapter.Tests {
                 // first page, and that the timestamps of the event messages are correct in 
                 // relation to the first page and the read direction.
 
-                var messages2 = await feature.ReadEventMessages(
+                var channel2 = await feature.ReadEventMessages(
                     context,
                     new ReadEventMessagesUsingCursorRequest() {
                         CursorPosition = nextCursor,
@@ -526,7 +537,8 @@ namespace DataCore.Adapter.Tests {
                         Direction = direction
                     },
                     default
-                ).ToEnumerable();
+                );
+                var messages2 = await channel2.ToEnumerable();
 
                 if (messages2.Any()) {
                     if (direction == EventReadDirection.Forwards) {

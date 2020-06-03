@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
@@ -19,21 +21,22 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.RealTimeData.TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<TagValuesService.TagValuesServiceClient>();
+            var grpcRequest = new ReadRawTagValuesRequest() {
+                AdapterId = AdapterId,
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
+                SampleCount = request.SampleCount,
+                BoundaryType = request.BoundaryType.ToGrpcRawDataBoundaryType()
+            };
+            grpcRequest.Tags.AddRange(request.Tags);
+
+            var grpcResponse = client.ReadRawTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-                var grpcRequest = new ReadRawTagValuesRequest() {
-                    AdapterId = AdapterId,
-                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                    UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
-                    SampleCount = request.SampleCount,
-                    BoundaryType = request.BoundaryType.ToGrpcRawDataBoundaryType()
-                };
-                grpcRequest.Tags.AddRange(request.Tags);
-
-                var grpcResponse = client.ReadRawTagValues(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -47,7 +50,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

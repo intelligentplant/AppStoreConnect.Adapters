@@ -20,26 +20,35 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public ReadProcessedTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.TagValues.GetSupportedDataFunctionsAsync(
+                AdapterId, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;
         }
 
         /// <inheritdoc />
-        public ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.TagValues.ReadProcessedTagValuesAsync(
+                AdapterId, 
+                request, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;

@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var msg) || msg == null) {
@@ -109,7 +109,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadEventMessages(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var msg) || msg == null) {
@@ -148,7 +148,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         });
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteEventMessages(adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);

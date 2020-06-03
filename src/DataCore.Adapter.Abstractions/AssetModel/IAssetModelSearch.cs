@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -23,7 +24,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The matching asset model nodes.
         /// </returns>
-        ChannelReader<AssetModelNode> FindAssetModelNodes(
+        Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(
             IAdapterCallContext context, 
             FindAssetModelNodesRequest request, 
             CancellationToken cancellationToken

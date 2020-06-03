@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -21,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel that will emit the available data functions.
         /// </returns>
-        ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(
+        Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(
             IAdapterCallContext context, 
             CancellationToken cancellationToken
         );
@@ -41,7 +42,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel that will emit the values for the requested tags.
         /// </returns>
-        ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(
+        Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(
             IAdapterCallContext context, 
             ReadProcessedTagValuesRequest request, 
             CancellationToken cancellationToken

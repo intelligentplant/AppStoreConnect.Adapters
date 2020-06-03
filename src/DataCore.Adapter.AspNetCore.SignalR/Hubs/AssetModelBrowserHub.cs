@@ -27,7 +27,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            return adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
     }

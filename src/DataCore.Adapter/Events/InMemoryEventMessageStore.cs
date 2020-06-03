@@ -163,7 +163,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
 
             channel.RunBackgroundOperation(async (ch, ct) => {
@@ -196,12 +196,12 @@ namespace DataCore.Adapter.Events {
                 }
             }, null, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<WriteEventMessageResult>>(result);
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<EventMessage> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessage>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -228,12 +228,12 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
 
-            return messages.Select(x => EventMessageBuilder.CreateFromExisting(x).Build()).PublishToChannel();
+            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x).Build()).PublishToChannel());
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -250,7 +250,7 @@ namespace DataCore.Adapter.Events {
                         : _eventMessages.Reverse();
                 }
                 else if (!CursorPosition.TryParse(request.CursorPosition, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
-                    return Array.Empty<EventMessageWithCursorPosition>().PublishToChannel();
+                    return Task.FromResult(Array.Empty<EventMessageWithCursorPosition>().PublishToChannel());
                 }
                 else {
                     selector = request.Direction == EventReadDirection.Forwards
@@ -266,7 +266,7 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
 
-            return messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key.ToString())).PublishToChannel();
+            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key.ToString())).PublishToChannel());
         }
 
 
@@ -286,6 +286,8 @@ namespace DataCore.Adapter.Events {
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+
             if (disposing) {
                 _eventMessagesLock.EnterWriteLock();
                 try {

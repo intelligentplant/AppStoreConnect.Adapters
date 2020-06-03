@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -25,7 +27,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The available tag properties.
         /// </returns>
-        ChannelReader<AdapterProperty> GetTagProperties(
+        Task<ChannelReader<AdapterProperty>> GetTagProperties(
             IAdapterCallContext context, 
             GetTagPropertiesRequest request, 
             CancellationToken cancellationToken
@@ -46,7 +48,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        ChannelReader<TagDefinition> GetTags(
+        Task<ChannelReader<TagDefinition>> GetTags(
             IAdapterCallContext context, 
             GetTagsRequest request, 
             CancellationToken cancellationToken

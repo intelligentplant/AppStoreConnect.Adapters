@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var node) || node == null) {

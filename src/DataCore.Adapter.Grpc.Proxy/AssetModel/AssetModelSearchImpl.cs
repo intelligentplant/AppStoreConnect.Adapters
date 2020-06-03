@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
@@ -19,20 +21,20 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.AssetModel.AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
+            var grpcRequest = new FindAssetModelNodesRequest() {
+                AdapterId = AdapterId,
+                Name = request.Name ?? string.Empty,
+                Description = request.Description ?? string.Empty,
+                PageSize = request.PageSize,
+                Page = request.Page
+            };
+            var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
-                var grpcRequest = new FindAssetModelNodesRequest() {
-                    AdapterId = AdapterId,
-                    Name = request.Name ?? string.Empty,
-                    Description = request.Description ?? string.Empty,
-                    PageSize = request.PageSize,
-                    Page = request.Page
-                };
-                var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, ct));
-
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -46,7 +48,7 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
     }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Events {
@@ -39,7 +41,7 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="events"/> is <see langword="null"/>.
         /// </exception>
-        public static ChannelReader<WriteEventMessageResult> WriteEventMessages(this IWriteEventMessages feature, IAdapterCallContext context, IEnumerable<WriteEventMessageItem> events, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(this IWriteEventMessages feature, IAdapterCallContext context, IEnumerable<WriteEventMessageItem> events, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -58,7 +60,7 @@ namespace DataCore.Adapter.Events {
                 }
             }, true, scheduler, cancellationToken);
 
-            return feature.WriteEventMessages(context, channel, cancellationToken);
+            return await feature.WriteEventMessages(context, channel, cancellationToken).ConfigureAwait(false);
         }
 
     }

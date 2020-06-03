@@ -84,7 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadSnapshotTagValues(callContext, request, cancellationToken);
+            var reader = await feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<TagValueQueryResult>(request.Tags.Length);
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -136,7 +136,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadRawTagValues(callContext, request, cancellationToken);
+            var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -193,7 +193,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadPlotTagValues(callContext, request, cancellationToken);
+            var reader = await feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -245,7 +245,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadTagValuesAtTimes(callContext, request, cancellationToken);
+            var reader = await feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<TagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -305,7 +305,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadProcessedTagValues(callContext, request, cancellationToken);
+            var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<ProcessedTagValueQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -361,7 +361,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.GetSupportedDataFunctions(callContext, cancellationToken).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
+            var result = await (await feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
             return Ok(result); // 200
         }
 
@@ -430,7 +430,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken);
+            var resultChannel = await feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
 
             var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 
@@ -508,7 +508,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken);
+            var resultChannel = await feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
 
             var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 

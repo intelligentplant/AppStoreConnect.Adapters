@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.ReadAnnotations(callContext, request, cancellationToken);
+            var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<TagValueAnnotationQueryResult>();
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

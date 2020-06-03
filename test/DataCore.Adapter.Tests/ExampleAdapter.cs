@@ -47,8 +47,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            return request.Tags.Select(t => new TagValueQueryResult(
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            var result = request.Tags.Select(t => new TagValueQueryResult(
                 t,
                 t,
                 TagValueBuilder.Create()
@@ -56,6 +56,8 @@ namespace DataCore.Adapter.Tests {
                     .WithValue(0)
                     .Build()
             )).PublishToChannel();
+
+            return Task.FromResult(result);
         }
 
 

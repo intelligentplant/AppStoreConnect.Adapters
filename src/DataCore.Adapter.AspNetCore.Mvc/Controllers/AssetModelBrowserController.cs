@@ -80,13 +80,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
+            var resultChannel = await feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
                 ParentId = string.IsNullOrWhiteSpace(start)
                     ? null
                     : start,
                 PageSize = pageSize,
                 Page = page
-            }, cancellationToken);
+            }, cancellationToken).ConfigureAwait(false);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.BrowseAssetModelNodes(callContext, request, cancellationToken);
+            var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -193,7 +193,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.GetAssetModelNodes(callContext, request, cancellationToken);
+            var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
@@ -247,7 +247,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = feature.FindAssetModelNodes(callContext, request, cancellationToken);
+            var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
             var result = new List<AssetModelNode>(MaxNodesPerQuery);
 

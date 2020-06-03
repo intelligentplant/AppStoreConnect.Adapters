@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
@@ -19,21 +21,21 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.Events.EventMessage> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Events.EventMessage>> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<EventsService.EventsServiceClient>();
+            var grpcRequest = new GetEventMessagesForTimeRangeRequest() {
+                AdapterId = AdapterId,
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
+                Direction = request.Direction.ToGrpcEventReadDirection(),
+                PageSize = request.PageSize,
+                Page = request.Page
+            };
+            var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<EventsService.EventsServiceClient>();
-                var grpcRequest = new GetEventMessagesForTimeRangeRequest() {
-                    AdapterId = AdapterId,
-                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                    UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
-                    Direction = request.Direction.ToGrpcEventReadDirection(),
-                    PageSize = request.PageSize,
-                    Page = request.Page
-                };
-                var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, ct));
-
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -47,7 +49,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

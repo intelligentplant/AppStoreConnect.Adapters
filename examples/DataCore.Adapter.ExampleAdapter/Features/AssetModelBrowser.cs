@@ -31,9 +31,9 @@ namespace DataCore.Adapter.Example.Features {
                 var nodeDefinitions = Newtonsoft.Json.JsonConvert.DeserializeObject<AssetModelNodeDefinition[]>(json);
 
                 var tagIdsOrNames = nodeDefinitions.SelectMany(x => x.Measurements.Select(m => m.Tag)).ToArray();
-                var tagsChannel = tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
+                var tagsChannel = await tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
                     Tags = tagIdsOrNames
-                }, cancellationToken);
+                }, cancellationToken).ConfigureAwait(false);
 
                 var tags = await tagsChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.Example.Features {
         }
 
 
-        public ChannelReader<AssetModelNode> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var channel = ChannelExtensions.CreateAssetModelNodeChannel();
 
             channel.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Example.Features {
 
             }, true, _backgroundTaskService, cancellationToken);
 
-            return channel;
+            return Task.FromResult(channel.Reader);
         }
 
 
@@ -98,7 +98,7 @@ namespace DataCore.Adapter.Example.Features {
         }
 
 
-        public ChannelReader<AssetModelNode> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var channel = ChannelExtensions.CreateAssetModelNodeChannel();
 
             channel.Writer.RunBackgroundOperation((ch, ct) => {
@@ -111,11 +111,11 @@ namespace DataCore.Adapter.Example.Features {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return channel;
+            return Task.FromResult(channel.Reader);
         }
 
 
-        public ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var channel = ChannelExtensions.CreateAssetModelNodeChannel();
 
             channel.Writer.RunBackgroundOperation((ch, ct) => {
@@ -134,7 +134,7 @@ namespace DataCore.Adapter.Example.Features {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return channel;
+            return Task.FromResult(channel.Reader);
         }
     }
 }

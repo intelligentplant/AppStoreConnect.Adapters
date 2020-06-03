@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
@@ -18,13 +20,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public WriteEventMessagesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.Events.WriteEventMessagesAsync(
+                AdapterId, 
+                channel, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.Events.WriteEventMessagesAsync(AdapterId, channel, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;

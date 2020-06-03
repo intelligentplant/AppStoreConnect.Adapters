@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var prop) || prop == null) {
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var tag) || tag == null) {

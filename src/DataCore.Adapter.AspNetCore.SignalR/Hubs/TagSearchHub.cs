@@ -29,7 +29,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.FindTags(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.FindTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetTags(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.GetTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
     }

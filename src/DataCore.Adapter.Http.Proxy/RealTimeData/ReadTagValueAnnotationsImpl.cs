@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         public ReadTagValueAnnotationsImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
         /// <inheritdoc/>

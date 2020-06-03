@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {

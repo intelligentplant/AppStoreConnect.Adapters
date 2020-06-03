@@ -20,19 +20,20 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.RealTimeData.TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.RealTimeData.TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
+            var grpcRequest = new ReadAnnotationsRequest() {
+                AdapterId = AdapterId,
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime)
+            };
+            grpcRequest.Tags.AddRange(request.Tags);
+
+            var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
-                var grpcRequest = new ReadAnnotationsRequest() {
-                    AdapterId = AdapterId,
-                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                    UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime)
-                };
-                grpcRequest.Tags.AddRange(request.Tags);
-
-                var grpcResponse = client.ReadAnnotations(grpcRequest, cancellationToken: ct);
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -46,7 +47,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
 

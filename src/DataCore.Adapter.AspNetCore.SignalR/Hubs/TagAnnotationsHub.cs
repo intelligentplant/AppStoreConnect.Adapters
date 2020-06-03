@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return adapter.Feature.ReadAnnotations(adapterCallContext, request, cancellationToken);
+            return await adapter.Feature.ReadAnnotations(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 

@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData.Utilities;
 using IntelligentPlant.BackgroundTasks;
 
@@ -150,13 +152,13 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct);
+                }, ct).ConfigureAwait(false);
 
                 var bucketSize = PlotHelper.CalculateBucketSize(request.UtcStartTime, request.UtcEndTime, request.Intervals);
 
@@ -165,13 +167,13 @@ namespace DataCore.Adapter.RealTimeData {
                         continue;
                     }
 
-                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
                         UtcStartTime = request.UtcStartTime.Subtract(bucketSize),
                         UtcEndTime = request.UtcEndTime,
                         SampleCount = 0,
                         BoundaryType = RawDataBoundaryType.Outside
-                    }, ct);
+                    }, ct).ConfigureAwait(false);
 
                     var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
@@ -187,7 +189,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
 
 
@@ -249,32 +251,32 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public ChannelReader<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return _aggregationHelper.GetSupportedDataFunctions().PublishToChannel();
+        public Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            return Task.FromResult(_aggregationHelper.GetSupportedDataFunctions().PublishToChannel());
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<ProcessedTagValueQueryResult> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct);
+                }, ct).ConfigureAwait(false);
 
                 while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                     if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
                         continue;
                     }
 
-                    var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
                         UtcStartTime = request.UtcStartTime,
                         UtcEndTime = request.UtcEndTime,
                         SampleCount = 0,
                         BoundaryType = RawDataBoundaryType.Outside
-                    }, ct);
+                    }, ct).ConfigureAwait(false);
 
                     var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
@@ -289,18 +291,18 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<ProcessedTagValueQueryResult>>(result); ;
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagValueQueryResult> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct);
+                }, ct).ConfigureAwait(false);
 
                 while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                     if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
@@ -318,13 +320,13 @@ namespace DataCore.Adapter.RealTimeData {
 
                     rawValuesChannel.Writer.RunBackgroundOperation(async (ch2, ct2) => {
                         foreach (var sampleTime in request.UtcSampleTimes) {
-                            var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                            var valueReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                                 Tags = new[] { tag.Id },
                                 UtcStartTime = sampleTime.AddSeconds(-1),
                                 UtcEndTime = sampleTime.AddSeconds(1),
                                 SampleCount = 0,
                                 BoundaryType = RawDataBoundaryType.Outside
-                            }, ct2);
+                            }, ct2).ConfigureAwait(false);
 
                             while (await valueReader.WaitToReadAsync(ct2).ConfigureAwait(false)) {
                                 if (!valueReader.TryRead(out var val) || val == null) {
@@ -348,7 +350,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
 
     }

@@ -279,9 +279,9 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            var channel = _readSnapshotFeature.ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
+            var channel = await _readSnapshotFeature.ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
                 Tags = tags
-            }, cancellationToken);
+            }, cancellationToken).ConfigureAwait(false);
 
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.TryRead(out var val) && val != null) {
                 await ValueReceived(val, cancellationToken).ConfigureAwait(false);

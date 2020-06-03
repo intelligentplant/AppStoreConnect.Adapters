@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Events {
 
@@ -25,7 +26,7 @@ namespace DataCore.Adapter.Events {
         ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
         ///   the input <paramref name="channel"/>.
         /// </returns>
-        ChannelReader<WriteEventMessageResult> WriteEventMessages(
+        Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(
             IAdapterCallContext context, 
             ChannelReader<WriteEventMessageItem> channel, 
             CancellationToken cancellationToken

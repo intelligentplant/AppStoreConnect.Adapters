@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
@@ -18,13 +20,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public ReadPlotTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.TagValues.ReadPlotTagValuesAsync(
+                AdapterId, 
+                request, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.TagValues.ReadPlotTagValuesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;
