@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
@@ -19,13 +21,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
 
         /// <inheritdoc />
-        public ChannelReader<AssetModelNode> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(
+                AdapterId, 
+                request, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;

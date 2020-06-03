@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
@@ -19,19 +21,19 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.Events.EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, Adapter.Events.ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Events.EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, Adapter.Events.ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<EventsService.EventsServiceClient>();
+            var grpcRequest = new GetEventMessagesUsingCursorPositionRequest() {
+                AdapterId = AdapterId,
+                CursorPosition = request.CursorPosition ?? string.Empty,
+                Direction = request.Direction.ToGrpcEventReadDirection(),
+                PageSize = request.PageSize
+            };
+            var grpcResponse = client.GetEventMessagesUsingCursorPosition(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessageWithCursorPosition>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<EventsService.EventsServiceClient>();
-                var grpcRequest = new GetEventMessagesUsingCursorPositionRequest() {
-                    AdapterId = AdapterId,
-                    CursorPosition = request.CursorPosition ?? string.Empty,
-                    Direction = request.Direction.ToGrpcEventReadDirection(),
-                    PageSize = request.PageSize
-                };
-                var grpcResponse = client.GetEventMessagesUsingCursorPosition(grpcRequest, GetCallOptions(context, ct));
-
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -45,7 +47,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

@@ -677,9 +677,9 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return async (context, tag, cancellationToken) => {
-                var ch = feature.GetTags(context, new GetTagsRequest() { 
+                var ch = await feature.GetTags(context, new GetTagsRequest() { 
                     Tags = new [] { tag }
-                }, cancellationToken);
+                }, cancellationToken).ConfigureAwait(false);
 
                 try {
                     return await ch.ReadAsync(cancellationToken).ConfigureAwait(false);

@@ -84,7 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadEventMessages(callContext, request, cancellationToken);
+            var reader = await feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false);
             var result = new List<EventMessage>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -137,7 +137,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.ReadEventMessages(callContext, request, cancellationToken);
+            var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
             var result = new List<EventMessageWithCursorPosition>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -222,7 +222,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = feature.WriteEventMessages(callContext, writeChannel, cancellationToken);
+            var resultChannel = await feature.WriteEventMessages(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
             var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
 
             while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

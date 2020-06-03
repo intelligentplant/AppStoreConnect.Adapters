@@ -54,7 +54,7 @@ namespace MyAdapter {
         }
 
 
-        public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
             CancellationToken cancellationToken
@@ -84,7 +84,7 @@ namespace MyAdapter {
                 }
             }, result.Writer, true, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
     }

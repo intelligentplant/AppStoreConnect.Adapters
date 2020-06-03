@@ -65,7 +65,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.GetTagProperties(callContext, request, cancellationToken);
+            var reader = await feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false);
             var tags = new List<AdapterProperty>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = feature.FindTags(callContext, request, cancellationToken);
+            var reader = await feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false);
             var tags = new List<TagDefinition>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -228,7 +228,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = feature.GetTags(callContext, request, cancellationToken);
+            var reader = await feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false);
             var tags = new List<TagDefinition>();
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

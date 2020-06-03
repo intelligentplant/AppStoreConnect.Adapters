@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
@@ -18,13 +20,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
         public ReadEventMessagesUsingCursorImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<EventMessageWithCursorPosition> ReadEventMessages(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.Events.ReadEventMessagesAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.Events.ReadEventMessagesAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;

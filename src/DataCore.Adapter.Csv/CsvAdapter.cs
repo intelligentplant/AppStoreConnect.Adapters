@@ -447,7 +447,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagDefinition> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
@@ -459,12 +459,12 @@ namespace DataCore.Adapter.Csv {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagDefinition>>(result);
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagDefinition> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
@@ -479,16 +479,16 @@ namespace DataCore.Adapter.Csv {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagDefinition>>(result);
         }
 
 
         /// <inheritdoc/>
-        public ChannelReader<AdapterProperty> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
 
-            return Array.Empty<AdapterProperty>().PublishToChannel();
+            return Task.FromResult(Array.Empty<AdapterProperty>().PublishToChannel());
         }
 
 
@@ -514,7 +514,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted();
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
@@ -523,7 +523,7 @@ namespace DataCore.Adapter.Csv {
                 await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
 
 
@@ -684,7 +684,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public ChannelReader<TagValueQueryResult> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted();
 
@@ -694,7 +694,7 @@ namespace DataCore.Adapter.Csv {
                 await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
 
 

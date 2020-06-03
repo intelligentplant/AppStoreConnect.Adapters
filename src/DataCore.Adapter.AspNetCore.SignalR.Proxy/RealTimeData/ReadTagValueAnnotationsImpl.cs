@@ -17,13 +17,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public ReadTagValueAnnotationsImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+            var client = GetClient();
+            var hubChannel = await client.TagValueAnnotations.ReadAnnotationsAsync(
+                AdapterId, 
+                request, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
             var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var hubChannel = await client.TagValueAnnotations.ReadAnnotationsAsync(AdapterId, request, ct).ConfigureAwait(false);
-                await hubChannel.Forward(ch, cancellationToken).ConfigureAwait(false);
+                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
             }, true, TaskScheduler, cancellationToken);
 
             return result;
@@ -32,7 +37,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var client = GetClient();
-            return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
+            return await client.TagValueAnnotations.ReadAnnotationAsync(
+                AdapterId, 
+                request, 
+                cancellationToken
+            ).ConfigureAwait(false);
         }
     }
 }

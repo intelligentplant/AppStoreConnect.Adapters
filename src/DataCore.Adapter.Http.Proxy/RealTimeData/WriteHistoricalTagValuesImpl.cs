@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +21,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         public WriteHistoricalTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+        public Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -43,7 +45,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

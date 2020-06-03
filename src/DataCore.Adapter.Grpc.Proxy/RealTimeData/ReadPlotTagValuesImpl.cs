@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
@@ -19,20 +21,21 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public ChannelReader<Adapter.RealTimeData.TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            var client = CreateClient<TagValuesService.TagValuesServiceClient>();
+            var grpcRequest = new ReadPlotTagValuesRequest() {
+                AdapterId = AdapterId,
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
+                Intervals = request.Intervals
+            };
+            grpcRequest.Tags.AddRange(request.Tags);
+
+            var grpcResponse = client.ReadPlotTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
+
             var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-                var grpcRequest = new ReadPlotTagValuesRequest() {
-                    AdapterId = AdapterId,
-                    UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                    UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
-                    Intervals = request.Intervals
-                };
-                grpcRequest.Tags.AddRange(request.Tags);
-
-                var grpcResponse = client.ReadPlotTagValues(grpcRequest, GetCallOptions(context, ct));
                 try {
                     while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                         if (grpcResponse.ResponseStream.Current == null) {
@@ -46,7 +49,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

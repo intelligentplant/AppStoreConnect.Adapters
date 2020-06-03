@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -23,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel containing the values for the requested tags.
         /// </returns>
-        ChannelReader<TagValueQueryResult> ReadPlotTagValues(
+        Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(
             IAdapterCallContext context, 
             ReadPlotTagValuesRequest request, 
             CancellationToken cancellationToken

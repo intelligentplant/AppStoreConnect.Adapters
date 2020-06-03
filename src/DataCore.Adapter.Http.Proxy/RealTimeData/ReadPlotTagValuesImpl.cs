@@ -1,6 +1,8 @@
 ﻿
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Proxy.RealTimeData {
@@ -18,7 +20,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         public ReadPlotTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public ChannelReader<TagValueQueryResult> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -31,7 +33,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
     }

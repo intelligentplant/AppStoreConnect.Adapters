@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -25,7 +26,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
         ///   the input <paramref name="channel"/>.
         /// </returns>
-        ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(
+        Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(
             IAdapterCallContext context, 
             ChannelReader<WriteTagValueItem> channel, 
             CancellationToken cancellationToken

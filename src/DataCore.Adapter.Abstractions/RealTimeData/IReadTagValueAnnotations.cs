@@ -24,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel containing the annotations for the requested tags.
         /// </returns>
-        ChannelReader<TagValueAnnotationQueryResult> ReadAnnotations(
+        Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(
             IAdapterCallContext context, 
             ReadAnnotationsRequest request, 
             CancellationToken cancellationToken

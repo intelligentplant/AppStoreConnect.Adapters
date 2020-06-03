@@ -48,7 +48,7 @@ namespace MyAdapter {
                 var tagSearchFeature = adapter.GetFeature<ITagSearch>();
                 var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
 
-                var tags = tagSearchFeature.FindTags(
+                var tags = await tagSearchFeature.FindTags(
                     context,
                     new FindTagsRequest() { 
                         Name = "*"
@@ -67,7 +67,7 @@ namespace MyAdapter {
                         Console.WriteLine($"    - {prop.Name} = {prop.Value}");
                     }
 
-                    var snapshotValues = readSnapshotFeature.ReadSnapshotTagValues(
+                    var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
                         context,
                         new ReadSnapshotTagValuesRequest() { 
                             Tags = new[] { tag.Id }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -38,7 +40,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static ChannelReader<WriteTagValueResult> WriteSnapshotTagValues(this IWriteSnapshotTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(this IWriteSnapshotTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -57,7 +59,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, scheduler, cancellationToken);
 
-            return feature.WriteSnapshotTagValues(context, channel, cancellationToken);
+            return await feature.WriteSnapshotTagValues(context, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -89,7 +91,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static ChannelReader<WriteTagValueResult> WriteHistoricalTagValues(this IWriteHistoricalTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(this IWriteHistoricalTagValues feature, IAdapterCallContext context, IEnumerable<WriteTagValueItem> values, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -108,7 +110,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, scheduler, cancellationToken);
 
-            return feature.WriteHistoricalTagValues(context, channel, cancellationToken);
+            return await feature.WriteHistoricalTagValues(context, channel, cancellationToken).ConfigureAwait(false);
         }
 
     }

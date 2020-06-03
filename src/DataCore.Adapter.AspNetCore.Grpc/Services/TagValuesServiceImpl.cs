@@ -134,7 +134,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadSnapshotTagValues(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadSnapshotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -163,7 +163,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadRawTagValues(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadRawTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -191,7 +191,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadPlotTagValues(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadPlotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -217,7 +217,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -236,7 +236,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var reader = adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken);
+            var reader = await adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -265,7 +265,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = adapter.Feature.ReadProcessedTagValues(adapterCallContext, adapterRequest, cancellationToken);
+            var reader = await adapter.Feature.ReadProcessedTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var val) || val == null) {
@@ -300,7 +300,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteSnapshotTagValues(adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);
@@ -353,7 +353,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
                         writeChannels[adapterId] = writeChannel;
 
-                        var resultsChannel = adapter.Feature.WriteHistoricalTagValues(adapterCallContext, writeChannel.Reader, cancellationToken);
+                        var resultsChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
                         resultsChannel.RunBackgroundOperation(async (ch, ct) => {
                             while (!ct.IsCancellationRequested) {
                                 var val = await ch.ReadAsync(ct).ConfigureAwait(false);

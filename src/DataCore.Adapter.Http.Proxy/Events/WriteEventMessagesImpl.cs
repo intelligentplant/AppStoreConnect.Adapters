@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +22,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
 
         /// <inheritdoc />
-        public ChannelReader<WriteEventMessageResult> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -44,7 +46,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
                 }
             }, true, TaskScheduler, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
     }
 }

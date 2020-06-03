@@ -32,7 +32,7 @@ private static double SinusoidWave(DateTime sampleTime, TimeSpan offset, double 
 }
 
 
-public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
+public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
     IAdapterCallContext context, 
     ReadSnapshotTagValuesRequest request, 
     CancellationToken cancellationToken
@@ -62,7 +62,7 @@ public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
         }
     }, result.Writer, true, cancellationToken);
 
-    return result;
+    return Task.FromResult(result.Reader);
 }
 ```
 
@@ -139,7 +139,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
 
         var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
-        var snapshotValues = readSnapshotFeature.ReadSnapshotTagValues(
+        var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
             context,
             new ReadSnapshotTagValuesRequest() { 
                 Tags = new[] { 

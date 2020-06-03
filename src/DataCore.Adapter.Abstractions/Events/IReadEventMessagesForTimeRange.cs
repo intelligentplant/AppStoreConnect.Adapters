@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Events {
 
@@ -23,7 +24,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The event messages that occurred during the time range.
         /// </returns>
-        ChannelReader<EventMessage> ReadEventMessages(
+        Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(
             IAdapterCallContext context, 
             ReadEventMessagesForTimeRangeRequest request, 
             CancellationToken cancellationToken

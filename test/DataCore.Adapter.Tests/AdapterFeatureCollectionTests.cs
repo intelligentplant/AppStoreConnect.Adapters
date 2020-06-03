@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -37,11 +39,11 @@ namespace DataCore.Adapter.Tests {
 
         private class FeatureProvider : IReadSnapshotTagValues, IReadEventMessagesForTimeRange {
 
-            ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }
 
-            ChannelReader<EventMessage> IReadEventMessagesForTimeRange.ReadEventMessages(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            Task<ChannelReader<EventMessage>> IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }
         }

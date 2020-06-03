@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -29,7 +30,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   range as possible. The adapter can apply its own maximum sample count to the queries it 
         ///   receives.
         /// </remarks>
-        ChannelReader<TagValueQueryResult> ReadRawTagValues(
+        Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(
             IAdapterCallContext context, 
             ReadRawTagValuesRequest request, 
             CancellationToken cancellationToken

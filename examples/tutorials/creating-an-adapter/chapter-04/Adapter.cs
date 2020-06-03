@@ -166,18 +166,22 @@ namespace MyAdapter {
         }
 
 
-        public ChannelReader<AdapterProperty> GetTagProperties(
-            IAdapterCallContext context, 
-            GetTagPropertiesRequest request, 
+        public Task<ChannelReader<AdapterProperty>> GetTagProperties(
+            IAdapterCallContext context,
+            GetTagPropertiesRequest request,
             CancellationToken cancellationToken
         ) {
-            return new[] {
-                CreateWaveTypeProperty(null)
+            ValidateRequest(request);
+
+            var result = new[] {
+                CreateWaveTypeProperty(null),
             }.OrderBy(x => x.Name).SelectPage(request).PublishToChannel();
+
+            return Task.FromResult(result);
         }
 
 
-        public ChannelReader<TagDefinition> GetTags(
+        public Task<ChannelReader<TagDefinition>> GetTags(
             IAdapterCallContext context,
             GetTagsRequest request,
             CancellationToken cancellationToken
@@ -200,11 +204,11 @@ namespace MyAdapter {
                 }
             }, result.Writer, true, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
 
-        public ChannelReader<TagDefinition> FindTags(
+        public Task<ChannelReader<TagDefinition>> FindTags(
             IAdapterCallContext context,
             FindTagsRequest request,
             CancellationToken cancellationToken
@@ -221,11 +225,11 @@ namespace MyAdapter {
                 }
             }, result.Writer, true, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
 
-        public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
             IAdapterCallContext context,
             ReadSnapshotTagValuesRequest request,
             CancellationToken cancellationToken
@@ -251,7 +255,7 @@ namespace MyAdapter {
                 }
             }, result.Writer, true, cancellationToken);
 
-            return result;
+            return Task.FromResult(result.Reader);
         }
 
     }
