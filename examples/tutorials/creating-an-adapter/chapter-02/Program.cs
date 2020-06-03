@@ -46,7 +46,7 @@ namespace MyAdapter {
                 }
 
                 var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
-                var snapshotValues = readSnapshotFeature.ReadSnapshotTagValues(
+                var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
                     context,
                     new ReadSnapshotTagValuesRequest() { 
                         Tags = new[] { 

@@ -71,7 +71,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
 
         using (var subscription = await snapshotPushFeature.Subscribe(context))
         using (cancellationToken.Register(() => subscription.Cancel())) {
-            var tags = tagSearchFeature.FindTags(
+            var tags = await tagSearchFeature.FindTags(
                 context,
                 new FindTagsRequest() {
                     Name = "Sin*",

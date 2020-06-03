@@ -53,7 +53,7 @@ namespace MyAdapter {
                 Console.WriteLine();
                 Console.WriteLine("  Supported Aggregations:");
                 var funcs = new List<DataFunctionDescriptor>();
-                await foreach (var func in readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken).ReadAllAsync()) {
+                await foreach (var func in (await readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken)).ReadAllAsync()) {
                     funcs.Add(func);
                     Console.WriteLine($"    - {func.Id}");
                     Console.WriteLine($"      - Name: {func.Name}");
@@ -64,7 +64,7 @@ namespace MyAdapter {
                     }
                 }
 
-                var tags = tagSearchFeature.FindTags(
+                var tags = await tagSearchFeature.FindTags(
                     context,
                     new FindTagsRequest() {
                         Name = "Sin*",
@@ -93,7 +93,7 @@ namespace MyAdapter {
 
                 Console.WriteLine();
                 Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
-                var rawValues = readRawFeature.ReadRawTagValues(
+                var rawValues = await readRawFeature.ReadRawTagValues(
                     context,
                     new ReadRawTagValuesRequest() {
                         Tags = new[] { tag.Id },
@@ -111,7 +111,7 @@ namespace MyAdapter {
                     Console.WriteLine();
                     Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
 
-                    var processedValues = readProcessedFeature.ReadProcessedTagValues(
+                    var processedValues = await readProcessedFeature.ReadProcessedTagValues(
                         context,
                         new ReadProcessedTagValuesRequest() {
                             Tags = new[] { tag.Id },

@@ -89,7 +89,7 @@ The `TagDefinition` can hold a variety of information about a tag in addition to
 Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another feature, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
 
 ```csharp
-public ChannelReader<TagDefinition> GetTags(
+public Task<ChannelReader<TagDefinition>> GetTags(
     IAdapterCallContext context, 
     GetTagsRequest request, 
     CancellationToken cancellationToken
@@ -112,7 +112,7 @@ public ChannelReader<TagDefinition> GetTags(
         }
     }, result.Writer, true, cancellationToken);
     
-    return result;
+    return Task.FromResult(result.Reader);
 }
 ```
 
@@ -121,16 +121,18 @@ Note that, again, we use the `TaskScheduler.QueueBackgroundChannelOperation` ext
 Next, we implement the `GetTagProperties` and `FindTags` methods. The `GetTagProperties` method is used to provide callers with details of the properties that can be defined on our adapter's tag definitions:
 
 ```csharp
-public ChannelReader<AdapterProperty> GetTagProperties(
+public Task<ChannelReader<AdapterProperty>> GetTagProperties(
     IAdapterCallContext context, 
     GetTagPropertiesRequest request, 
     CancellationToken cancellationToken
 ) {
     ValidateRequest(request);
 
-    return new[] {
+    var result = new[] {
         CreateWaveTypeProperty(null),
     }.OrderBy(x => x.Name).SelectPage(request).PublishToChannel();
+
+    return Task.FromResult(result);
 }
 ```
 
@@ -141,7 +143,7 @@ The `GetTagPropertiesRequest` class implements the [IPageableAdapterRequest](/sr
 Next, we implement the `FindTags` method:
 
 ```csharp
-public ChannelReader<TagDefinition> FindTags(
+public Task<ChannelReader<TagDefinition>> FindTags(
     IAdapterCallContext context, 
     FindTagsRequest request, 
     CancellationToken cancellationToken
@@ -158,7 +160,7 @@ public ChannelReader<TagDefinition> FindTags(
         }
     }, result.Writer, true, cancellationToken);
 
-    return result;
+    return Task.FromResult(result.Reader);
 }
 ```
 
@@ -231,7 +233,7 @@ Note that `CalculateValueForTag` also allows us to specify a _quality status_ fo
 Finally, we can update our `ReadSnapshotTagValues` method so that it will only return values for known tags:
 
 ```csharp
-public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
+public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
     IAdapterCallContext context, 
     ReadSnapshotTagValuesRequest request, 
     CancellationToken cancellationToken
@@ -257,7 +259,7 @@ public ChannelReader<TagValueQueryResult> ReadSnapshotTagValues(
         }
     }, result.Writer, true, cancellationToken);
 
-    return result;
+    return Task.FromResult(result.Reader);
 }
 ```
 
@@ -290,7 +292,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
         var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
 
-        var tags = tagSearchFeature.FindTags(
+        var tags = await tagSearchFeature.FindTags(
             context,
             new FindTagsRequest() { 
                 Name = "*"
@@ -309,7 +311,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
                 Console.WriteLine($"    - {prop.Name} = {prop.Value}");
             }
 
-            var snapshotValues = readSnapshotFeature.ReadSnapshotTagValues(
+            var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
                 context,
                 new ReadSnapshotTagValuesRequest() { 
                     Tags = new[] { tag.Id }
