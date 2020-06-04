@@ -56,7 +56,7 @@ The [DataCore.Adapter](/src/DataCore.Adapter) project contains a number of helpe
 Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. The [DataCore.Adapter](/src/DataCore.Adapter) project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` and classes, to easily create, read from, or write to channels in background tasks:
 
 ```csharp
-ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
     var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
 
     channel.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -72,7 +72,7 @@ ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
         }
     }, true, cancellationToken);
 
-    return channel.Reader;
+    return Task.FromResult(channel.Reader);
 }
 
 private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
