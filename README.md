@@ -66,27 +66,26 @@ Package versions are defined in a [common build properties file](/build/Dependen
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
 ```csharp
-// Register the adapter
-services.AddSingleton<IAdapter, MyAdapter>();
+// Register the adapter and required services.
 
-// Configure adapter services
-services.AddDataCoreAdapterServices(options => {
-    // Host information metadata.
-    options.HostInfo = HostInfo.Create(
+services
+    .AddDataCoreAdapterServices()
+    .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
         VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
-    );
+    ))
+    .AddAdapter<MyAdapter>();
+    //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 
-    // To add authorization options for adapter API operations, extend 
-    // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
-    // to register your handler.
-    //options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
-	
+// To add authentication and authorization for adapter API operations, extend 
+// the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
+// above to register your handler.
+
 // Add the adapter API controllers to the MVC registration.
+
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
     .AddJsonOptions(options => {
@@ -129,10 +128,10 @@ The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAu
 To simplify the implementation of authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
 
 ```csharp
-services.AddDataCoreAdapterServices(options => {
+services
+    .AddDataCoreAdapterServices()
     // - snip -
-    options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
+    .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
 
 Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.

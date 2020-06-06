@@ -19,39 +19,35 @@ namespace DataCore.Adapter.AspNetCoreExample {
         public void ConfigureServices(IServiceCollection services) {
             services.AddLocalization();
 
-            // Register our adapters as singletons.
-
-            services.AddSingleton<IAdapter, ExampleAdapter>();
-
-            services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
-                return ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
-                    Name = "Sensor CSV",
-                    Description = "CSV adapter with dummy sensor data",
-                    IsDataLoopingAllowed = true,
-                    CsvFile = "DummySensorData.csv"
-                });
-            });
-
             // Add adapter services
-            services.AddDataCoreAdapterServices(options => {
-                options.HostInfo = Common.HostInfo.Create(
+
+            services
+                .AddDataCoreAdapterServices()
+                .AddHostInfo(Common.HostInfo.Create(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     Common.AdapterProperty.Create(
-                        "Project URL", 
+                        "Project URL",
                         new Uri("https://github.com/intelligentplant/app-store-connect-adapters"),
                         "GitHub repository URL for the project"
                     )
-                );
+                ))
+                .AddAdapter<ExampleAdapter>()
+                .AddAdapter(sp => {
+                    return ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
+                        Name = "Sensor CSV",
+                        Description = "CSV adapter with dummy sensor data",
+                        IsDataLoopingAllowed = true,
+                        CsvFile = "DummySensorData.csv"
+                    });
+                });
+                //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 
-                // To add authentication and authorization options for adapter API operations, extend 
-                // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
-                // to register your handler.
-
-                //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
-            });
+            // To add authentication and authorization for adapter API operations, extend 
+            // the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
+            // above to register your handler.
 
             services.AddGrpc();
 
