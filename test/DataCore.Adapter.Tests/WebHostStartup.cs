@@ -69,36 +69,31 @@ namespace DataCore.Adapter.Tests {
                 return ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Events.InMemoryEventMessageStore>>());
             });
 
-            // Register our adapter as a singleton.
-
-            services.AddSingleton<IAdapter, Csv.CsvAdapter>(sp => {
-                var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                    sp, 
-                    AdapterId,
-                    new Csv.CsvAdapterOptions() {
-                        Name = "Sensor CSV",
-                        Description = "CSV adapter with dummy sensor data",
-                        IsDataLoopingAllowed = true,
-                        GetCsvStream = () => GetType().Assembly.GetManifestResourceStream(GetType(), "DummySensorData.csv")
-                    }
-                );
-
-                // Add in-memory event message management
-                adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
-
-                return adapter;
-            });
-
-            // Add adapter services
-            services.AddDataCoreAdapterServices(options => {
-                options.HostInfo = Common.HostInfo.Create(
+            services.AddDataCoreAdapterServices()
+                .AddHostInfo(Common.HostInfo.Create(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
-                );
-            });
+                ))
+                .AddAdapter(sp => {
+                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
+                        sp,
+                        AdapterId,
+                        new Csv.CsvAdapterOptions() {
+                            Name = "Sensor CSV",
+                            Description = "CSV adapter with dummy sensor data",
+                            IsDataLoopingAllowed = true,
+                            GetCsvStream = () => GetType().Assembly.GetManifestResourceStream(GetType(), "DummySensorData.csv")
+                        }
+                    );
+
+                    // Add in-memory event message management
+                    adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
+
+                    return adapter;
+                });
 
             services.AddGrpc(options => {
                 options.EnableDetailedErrors = true;
