@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Linq;
+
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common;
 
 using IntelligentPlant.BackgroundTasks;
+
+using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection {
 
@@ -269,12 +273,17 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
-        public static IAdapterConfigurationBuilder AddAutomaticInitialization(this IAdapterConfigurationBuilder builder) {
+        public static IAdapterConfigurationBuilder AddAutomaticInitialization(
+            this IAdapterConfigurationBuilder builder
+        ) {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.AddHostedService<AdapterInitializer>();
+            var registration = builder.Services.FirstOrDefault(x => x.ServiceType == typeof(IHostedService) && x.ImplementationType == typeof(AdapterInitializer));
+            if (registration == null) {
+                builder.Services.AddHostedService<AdapterInitializer>();
+            }
             return builder;
         }
 
