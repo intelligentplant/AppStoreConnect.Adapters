@@ -359,6 +359,41 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 
         /// <summary>
+        /// Registers additional services.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="configure">
+        ///   A delegate that will register additional services.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddServices(
+            this IAdapterConfigurationBuilder builder,
+            Action<IServiceCollection> configure
+        ) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (configure == null) {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            configure?.Invoke(builder.Services);
+
+            return builder;
+        }
+
+
+        /// <summary>
         /// Registers default adapter services.
         /// </summary>
         /// <param name="builder">
