@@ -66,6 +66,6 @@ services
         VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
     ))
-    .AddAdapter<MyAdapter>();
+    .AddAdapter<MyAdapter>()
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
