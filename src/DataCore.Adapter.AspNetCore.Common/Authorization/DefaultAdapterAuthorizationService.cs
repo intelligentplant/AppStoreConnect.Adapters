@@ -6,12 +6,20 @@ using Microsoft.AspNetCore.Authorization;
 namespace DataCore.Adapter.AspNetCore.Authorization {
 
     /// <summary>
-    /// Provides authorization functionality for adapter API calls. To customise the authorization 
-    /// rules, create a subclass of the <see cref="FeatureAuthorizationHandler"/> and register it 
-    /// using <see cref="AdapterServicesOptionsBuilder.UseFeatureAuthorizationHandler{THandler}"/>
-    /// during application startup.
+    /// Provides authorization functionality for adapter API calls.
     /// </summary>
-    internal class AdapterAuthorizationService : IAdapterAuthorizationService {
+    /// <remarks>
+    ///   <para>
+    ///     Authorisation rules are applied using the ASP.NET Core <see cref="IAuthorizationService"/>.
+    ///   </para>
+    ///   <para>
+    ///     To customise the authorisation rules, extend <see cref="FeatureAuthorizationHandler"/> 
+    ///     and register it at application startup using the 
+    ///     <see cref="Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddAdapterFeatureAuthorization{T}"/> 
+    ///     extension method.
+    ///   </para>
+    /// </remarks>
+    internal class DefaultAdapterAuthorizationService : IAdapterAuthorizationService {
 
         /// <summary>
         /// The ASP.NET Core authorization service.
@@ -27,7 +35,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterAuthorizationService"/> object.
+        /// Creates a new <see cref="DefaultAdapterAuthorizationService"/> object.
         /// </summary>
         /// <param name="useAuthorization">
         ///   Indicates if authorizatio will be applied to adapter API calls.
@@ -38,7 +46,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="authorizationService"/> is <see langword="null"/>.
         /// </exception>
-        internal AdapterAuthorizationService(bool useAuthorization, IAuthorizationService authorizationService) {
+        internal DefaultAdapterAuthorizationService(bool useAuthorization, IAuthorizationService authorizationService) {
             UseAuthorization = useAuthorization;
             if (useAuthorization) {
                 _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));

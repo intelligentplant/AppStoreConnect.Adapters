@@ -250,7 +250,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             this IAdapterConfigurationBuilder builder,
             Type implementationType
         ) {
-            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new AdapterAuthorizationService(true, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(true, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             builder.Services.AddSingleton(typeof(AspNetCore.Authorization.IAuthorizationHandler), implementationType);
             return builder;
         }
@@ -406,7 +406,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.AddSingleton(HostInfo.Unspecified);
             builder.AddAdapterAccessor<AspNetCoreAdapterAccessor>();
             builder.AddBackgroundTaskService();
-            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new AdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             builder.AddAutomaticInitialization();
             return builder;
         }
