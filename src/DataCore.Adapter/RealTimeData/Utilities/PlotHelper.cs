@@ -356,7 +356,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
 
-                    bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketStart.Add(bucketSize), utcStartTime, utcEndTime);
+                    do {
+                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketStart.Add(bucketSize), utcStartTime, utcEndTime);
+                    } while (bucket.UtcBucketEnd < val.Value.UtcSampleTime);
                 }
 
                 bucket.AddRawSample(val.Value);
