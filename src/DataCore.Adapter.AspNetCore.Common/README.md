@@ -14,7 +14,7 @@ An [IAdapterAccessor](/src/DataCore.Adapter.Abstractions/IAdapterAccessor.cs) se
 
 You can supply your own implementation by inheriting from the [AdapterAccessor](./DataCore.Adapter/AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
 
-To register your adapter accessor, call `options.UseAdapterAccessor<TAdapterAccessor>()` when [registering adapter services](#registering-adapter-services). Note that the adapter accessor is always registered as a *transient* service.
+To register your adapter accessor, call the `AddAdapterAccessor<TAdapterAccessor>()` extension method when [registering adapter services](#registering-adapter-services). Note that the adapter accessor is always registered as a *singleton* service.
 
 
 # Writing an Authorization Handler
@@ -49,7 +49,7 @@ public class MyFeatureAuthorizationHandler : FeatureAuthorizationHandler {
 }
 ```
 
-To register your authorization handler, call `options.UseFeatureAuthorizationHandler<THandler>()` when [registering adapter services](#registering-adapter-services). Note that the handler is always registered as a *singleton* service.
+To register your authorization handler, call `AddAdapterFeatureAuthorization<THandler>()` extension method when [registering adapter services](#registering-adapter-services). Note that the handler is always registered as a *singleton* service.
 
 
 # Registering Adapter Services
@@ -57,18 +57,15 @@ To register your authorization handler, call `options.UseFeatureAuthorizationHan
 Adapter services must be added to the application in the `Startup.cs` file's `ConfigureServices` method. For example:
 
 ```csharp
-// Configure adapter services
-services.AddDataCoreAdapterServices(options => {
-    // Host information metadata.
-    options.HostInfo = HostInfo.Create(
+services
+    .AddDataCoreAdapterServices()
+    .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
-        VendorInfo.Create("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
-    );
-
-    // Register our feature authorization handler.
-    options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
+    ))
+    .AddAdapter<MyAdapter>()
+    .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```

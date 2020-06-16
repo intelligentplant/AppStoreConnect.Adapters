@@ -7,6 +7,7 @@ namespace DataCore.Adapter.AspNetCore {
     /// <summary>
     /// Options builder for registering adapter services.
     /// </summary>
+    [Obsolete("This class is deprecated and will be removed in a future release.", false)]
     public class AdapterServicesOptionsBuilder {
 
         /// <summary>

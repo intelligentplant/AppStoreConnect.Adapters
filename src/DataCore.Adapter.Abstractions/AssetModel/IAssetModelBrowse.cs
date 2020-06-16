@@ -16,7 +16,8 @@ namespace DataCore.Adapter.AssetModel {
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
         /// <param name="request">
-        ///   The asset model query.
+        ///   The asset model query. If a <see cref="BrowseAssetModelNodesRequest.ParentId"/> 
+        ///   value is specified, this node should not be returned in the result.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.

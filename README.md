@@ -62,31 +62,30 @@ Package versions are defined in a [common build properties file](/build/Dependen
 1. Create a new ASP.NET Core 3.1 project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
 3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that you can inherit from.
-4. If you want to apply custom authorization policies to the adapter or individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore/Authorization/FeatureAuthorizationHandler.cs) class.
+4. If you want to apply authorization policies to the adapter or to individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class. More details are available [here](/src/DataCore.Adapter.AspNetCore.Common/README.md).
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
 ```csharp
-// Register the adapter
-services.AddSingleton<IAdapter, MyAdapter>();
+// Register the adapter and required services.
 
-// Configure adapter services
-services.AddDataCoreAdapterServices(options => {
-    // Host information metadata.
-    options.HostInfo = HostInfo.Create(
+services
+    .AddDataCoreAdapterServices()
+    .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
         VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
-    );
+    ))
+    .AddAdapter<MyAdapter>();
+    //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 
-    // To add authorization options for adapter API operations, extend 
-    // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
-    // to register your handler.
-    //options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
-	
+// To add authentication and authorization for adapter API operations, extend 
+// the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
+// above to register your handler.
+
 // Add the adapter API controllers to the MVC registration.
+
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
     .AddJsonOptions(options => {
@@ -124,15 +123,13 @@ App Store Connect can authenticate with adapter hosts via bearer token, client c
 
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given Industrial App Store user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
-The [IAdapterAuthorizationService](/src/DataCore.Adapter.Abstractions/IAdapterAuthorizationService.cs) service is used to authorize access to individual adapters and adapter features; this authorization is automatically applied by the [ASP.NET Core](/src/DataCore.Adapter.AspNetCore.Common) host on incoming calls to API or SignalR endpoints.
-
-To simplify the implementation of authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
+To implementat authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
 
 ```csharp
-services.AddDataCoreAdapterServices(options => {
+services
+    .AddDataCoreAdapterServices()
     // - snip -
-    options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
+    .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
 
 Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.

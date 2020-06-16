@@ -8,37 +8,25 @@ This project contains SignalR hubs for querying adapters in an ASP.NET Core appl
 Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR).
 
 
-# Registering Adapters
-
-In most cases, adapters should be registered as singleton services with the ASP.NET Core service collection:
-
-```csharp
-services.AddSingleton<IAdapter, MyAdapter>();
-```
-
-If your application can dynamically add or remove adapters at runtime, you must handle the adapter lifetimes yourself.
-
-
-# Registering Adapter Services
+# Registering Adapters and Adapter Services
 
 Adapter services must be added to the application in the `Startup.cs` file's `ConfigureServices` method. For example:
 
 ```csharp
-// Configure adapter services
-services.AddDataCoreAdapterServices(options => {
-    // Host information metadata.
-    options.HostInfo = HostInfo.Create(
+services
+    .AddDataCoreAdapterServices()
+    .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
-        VendorInfo.Create("Intelligent Plant", new Uri("https://appstore.intelligentplant.com")),
+        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
         AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
-    );
-
-    // Register our feature authorization handler.
-    options.UseFeatureAuthorizationHandler<MyFeatureAuthorizationHandler>();
-});
+    ))
+    .AddAdapter<MyAdapter>()
+    .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
+
+In most cases, adapters can be registered using the `AddAdapter` extension method on the `IAdapterConfigurationBuilder` class, which registers them as singleton services. If your application can dynamically add or remove adapters at runtime, you must handle the adapter lifetimes yourself.
 
 
 # Registering SignalR Services

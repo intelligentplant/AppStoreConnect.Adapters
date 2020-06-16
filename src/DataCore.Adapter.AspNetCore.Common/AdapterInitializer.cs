@@ -41,9 +41,11 @@ namespace DataCore.Adapter.AspNetCore {
         /// <returns>
         ///   A task that will start the registered adapters.
         /// </returns>
-        public async Task StartAsync(CancellationToken cancellationToken) {
-            var adapters = await _adapterAccessor.GetAllAdapters(null, cancellationToken).ConfigureAwait(false);
-            await Task.WhenAll(adapters.Where(x => x.IsEnabled).Select(x => x.StartAsync(cancellationToken))).WithCancellation(cancellationToken).ConfigureAwait(false);
+        public Task StartAsync(CancellationToken cancellationToken) {
+            return Task.Run(async () => {
+                var adapters = await _adapterAccessor.GetAllAdapters(null, cancellationToken).ConfigureAwait(false);
+                await Task.WhenAll(adapters.Where(x => x.IsEnabled).Select(x => x.StartAsync(cancellationToken))).WithCancellation(cancellationToken).ConfigureAwait(false);
+            });
         }
 
 
