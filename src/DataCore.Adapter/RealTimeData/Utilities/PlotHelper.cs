@@ -357,7 +357,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     }
 
                     do {
-                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketStart.Add(bucketSize), utcStartTime, utcEndTime);
+                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(bucketSize), utcStartTime, utcEndTime);
                     } while (bucket.UtcBucketEnd < val.Value.UtcSampleTime);
                 }
 
