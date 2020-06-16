@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Json {
             string name = null;
             string description = null;
             string parent = null;
-            string[] children = null;
+            bool hasChildren = false;
             AssetModelNodeMeasurement[] measurements = null;
             AdapterProperty[] properties = null;
 
@@ -47,8 +47,8 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Parent), StringComparison.OrdinalIgnoreCase)) {
                     parent = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(AssetModelNode.Children), StringComparison.OrdinalIgnoreCase)) {
-                    children = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                else if (string.Equals(propertyName, nameof(AssetModelNode.HasChildren), StringComparison.OrdinalIgnoreCase)) {
+                    hasChildren = JsonSerializer.Deserialize<bool>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Measurements), StringComparison.OrdinalIgnoreCase)) {
                     measurements = JsonSerializer.Deserialize<AssetModelNodeMeasurement[]>(ref reader, options);
@@ -61,7 +61,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return AssetModelNode.Create(id, name, description, parent, children, measurements, properties);
+            return AssetModelNode.Create(id, name, description, parent, hasChildren, measurements, properties);
         }
 
 
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(AssetModelNode.Name), value.Name, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Description), value.Description, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Parent), value.Parent, options);
-            WritePropertyValue(writer, nameof(AssetModelNode.Children), value.Children, options);
+            WritePropertyValue(writer, nameof(AssetModelNode.HasChildren), value.HasChildren, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Measurements), value.Measurements, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Properties), value.Properties, options);
             writer.WriteEndObject();

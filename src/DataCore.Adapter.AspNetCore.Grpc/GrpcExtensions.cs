@@ -41,7 +41,7 @@ namespace DataCore.Adapter {
                 string.IsNullOrWhiteSpace(node.Parent)
                     ? null
                     : node.Parent,
-                node.Children,
+                node.HasChildren,
                 node.Measurements.Select(x => AssetModel.AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units, x.Tag.DataType.ToAdapterVariantType()))).ToArray(),
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -62,12 +62,10 @@ namespace DataCore.Adapter {
                 Id = node.Id ?? string.Empty,
                 Name = node.Name ?? string.Empty,
                 Description = node.Description ?? string.Empty,
-                Parent = node.Parent ?? string.Empty
+                Parent = node.Parent ?? string.Empty,
+                HasChildren = node.HasChildren
             };
 
-            if (node.Children != null && node.Children.Any()) {
-                result.Children.AddRange(node.Children);
-            }
             if (node.Measurements != null && node.Measurements.Any()) {
                 foreach (var item in node.Measurements) {
                     result.Measurements.Add(new Grpc.AssetModelNodeMeasurement() {

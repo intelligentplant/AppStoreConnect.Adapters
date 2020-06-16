@@ -35,9 +35,9 @@ namespace DataCore.Adapter.AssetModel {
         public string Parent { get; }
 
         /// <summary>
-        /// The IDs of the child nodes of this node.
+        /// Indicates if this node has any child nodes.
         /// </summary>
-        public IEnumerable<string> Children { get; }
+        public bool HasChildren { get; }
 
         /// <summary>
         /// The measurements associated with the node.
@@ -65,8 +65,8 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="parent">
         ///   The parent ID of the node. Specify <see langword="null"/> for top-level nodes.
         /// </param>
-        /// <param name="children">
-        ///   The IDs of the node's children.
+        /// <param name="hasChildren">
+        ///   Specifies if this node has any children.
         /// </param>
         /// <param name="measurements">
         ///   The measurements associated with the node.
@@ -80,12 +80,12 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNode(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IEnumerable<AdapterProperty> properties) {
+        public AssetModelNode(string id, string name, string description, string parent, bool hasChildren, IEnumerable<AssetModelNodeMeasurement> measurements, IEnumerable<AdapterProperty> properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description;
             Parent = parent;
-            Children = children?.ToArray() ?? Array.Empty<string>();
+            HasChildren = hasChildren;
             Measurements = measurements?.ToArray() ?? Array.Empty<AssetModelNodeMeasurement>();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
@@ -106,8 +106,8 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="parent">
         ///   The parent ID of the node. Specify <see langword="null"/> for top-level nodes.
         /// </param>
-        /// <param name="children">
-        ///   The IDs of the node's children.
+        /// <param name="hasChildren">
+        ///   Specifies if the node has any children.
         /// </param>
         /// <param name="measurements">
         ///   The measurements associated with the node.
@@ -121,8 +121,8 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AssetModelNode Create(string id, string name, string description, string parent, IEnumerable<string> children, IEnumerable<AssetModelNodeMeasurement> measurements, IEnumerable<AdapterProperty> properties) {
-            return new AssetModelNode(id, name, description, parent, children, measurements, properties);
+        public static AssetModelNode Create(string id, string name, string description, string parent, bool hasChildren, IEnumerable<AssetModelNodeMeasurement> measurements, IEnumerable<AdapterProperty> properties) {
+            return new AssetModelNode(id, name, description, parent, hasChildren, measurements, properties);
         }
 
     }

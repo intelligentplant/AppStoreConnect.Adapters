@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Example.Features {
                     x.Name,
                     x.Description,
                     x.Parent,
-                    x.Children,
+                    x.Children?.Any() ?? false,
                     x.Measurements.Select(m => {
                         var tag = tags.FirstOrDefault(t => string.Equals(t.Id, m.Tag, StringComparison.Ordinal) || string.Equals(t.Name, m.Tag, StringComparison.Ordinal));
                         if (tag == null) {

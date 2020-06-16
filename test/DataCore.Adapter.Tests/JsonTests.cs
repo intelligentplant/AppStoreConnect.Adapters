@@ -265,10 +265,7 @@ namespace DataCore.Adapter.Tests {
                 "Name",
                 "Description",
                 "Parent",
-                new [] {
-                    "Child1",
-                    "Child2"
-                },
+                true,
                 new [] {
                     new AssetModelNodeMeasurement("Measurement1", "AdapterId1", new TagSummary("Id1", "Name1", "Description1", "Units1", VariantType.Double)),
                     new AssetModelNodeMeasurement("Measurement2", "AdapterId2", new TagSummary("Id2", "Name2", "Description2", "Units2", VariantType.String))
@@ -287,13 +284,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Parent, actual.Parent);
 
-            Assert.AreEqual(expected.Children.Count(), actual.Children.Count());
-            for (var i = 0; i < expected.Children.Count(); i++) {
-                var expectedValue = expected.Children.ElementAt(i);
-                var actualValue = actual.Children.ElementAt(i);
-
-                Assert.AreEqual(expectedValue, actualValue);
-            }
+            Assert.AreEqual(expected.HasChildren, actual.HasChildren);
 
             Assert.AreEqual(expected.Measurements.Count(), actual.Measurements.Count());
             for (var i = 0; i < expected.Measurements.Count(); i++) {

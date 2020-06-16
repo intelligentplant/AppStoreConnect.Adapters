@@ -114,9 +114,9 @@ message AssetModelNode {
     string name = 2;
     string description = 3;
     string parent = 4;
-    repeated string children = 5;
     repeated AssetModelNodeMeasurement measurements = 6;
     repeated AdapterProperty properties = 7;
+    bool has_children = 8;
 }
 
 
