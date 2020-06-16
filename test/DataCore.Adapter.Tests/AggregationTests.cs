@@ -1129,6 +1129,109 @@ namespace DataCore.Adapter.Tests {
             }
         }
 
+
+        [TestMethod]
+        public void PlotHelperShouldCalculateBucketSize() {
+            var end = DateTime.UtcNow;
+            var start = end.AddDays(-1);
+
+            var bucketSize = PlotHelper.CalculateBucketSize(start, end, 3);
+            Assert.AreEqual(TimeSpan.FromHours(8), bucketSize);
+        }
+
+
+        [TestMethod]
+        public async Task PlotHelperShouldSelectCorrectValues() {
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(20);
+
+            var rawValues = new[] {
+                // Bucket 1: 0-20s
+                TagValueBuilder.Create().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
+                // Bucket 2: 20-40s
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(21)).WithValue(1.883).Build(), // earliest + min
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(27)).WithValue(77.765).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(39)).WithValue(77.766).Build(), // latest + max
+                // Bucket 3: 40-60s
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();
+
+            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData);
+            var plotValues = new List<TagValueQueryResult>();
+            await foreach (var val in plotChannel.ReadAllAsync()) {
+                plotValues.Add(val);
+            }
+
+            Assert.AreEqual(9, plotValues.Count);
+        }
+
+
+        [TestMethod]
+        public async Task PlotHelperShouldHandleEmptyTimeBuckets() {
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(20);
+
+            var rawValues = new[] {
+                // Bucket 1: 0-20s
+                TagValueBuilder.Create().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
+                // Bucket 2: 20-40s
+                // Bucket 3: 40-60s
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();
+
+            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData);
+            var plotValues = new List<TagValueQueryResult>();
+            await foreach (var val in plotChannel.ReadAllAsync()) {
+                plotValues.Add(val);
+            }
+
+            Assert.AreEqual(7, plotValues.Count);
+        }
+
     }
 
 }
