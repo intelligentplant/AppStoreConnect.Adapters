@@ -219,7 +219,7 @@ namespace DataCore.Adapter {
             }
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken)) {
-                if (await _valuesChannel.Writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                if (await _valuesChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false)) {
                     var result = _valuesChannel.Writer.TryWrite(value);
                     if (result) {
                         UtcLastEmit = DateTime.UtcNow;
