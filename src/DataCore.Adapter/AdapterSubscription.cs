@@ -237,13 +237,29 @@ namespace DataCore.Adapter {
         /// Cancels the subscription.
         /// </summary>
         public void Cancel() {
+            Cancel(null);
+        }
+
+
+        /// <summary>
+        /// Cancels the subscription.
+        /// </summary>
+        /// <param name="error">
+        ///   The error that caused the cancellation. Can be <see langword="null"/> if cancellation is not due to a fault.
+        /// </param>
+        protected void Cancel(Exception error) {
             if (_isDisposed) {
                 return;
             }
 
             if (_completed.TrySetResult(0)) {
-                _ready.TrySetCanceled();
-                _valuesChannel.Writer.TryComplete();
+                if (error == null) {
+                    _ready.TrySetCanceled();
+                }
+                else {
+                    _ready.TrySetException(error);
+                }
+                _valuesChannel.Writer.TryComplete(error);
                 _subscriptionCancelled.Cancel();
                 OnCancelled();
             }
