@@ -78,33 +78,32 @@ namespace DataCore.Adapter.RealTimeData {
 
                     TagIdentifier tagInfo;
 
-                    // Check if this request concerns a tag that we are already subscribed to.
-                    _subscribedTagsLock.EnterReadLock();
-                    try {
-                        if (!_subscribedTags.TryGetValue(change.Request.Tag, out tagInfo)) {
-                            tagInfo = _subscribedTags.Values.FirstOrDefault(x => string.Equals(x.Name, change.Request.Tag, StringComparison.OrdinalIgnoreCase));
-                        }
-                    }
-                    finally {
-                        _subscribedTagsLock.ExitReadLock();
-                    }
-
-                    if (tagInfo == null) {
-                        // This is not a known tag; try and resolve it.
-                        tagInfo = await ResolveTag(Context, change.Request.Tag, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    if (tagInfo == null) {
-                        // Not a valid tag.
-                        continue;
-                    }
-
                     try {
                         switch (change.Request.Action) {
                             case Common.SubscriptionUpdateAction.Subscribe:
+                                // Ask the subscription object to resolve this tag.
+                                tagInfo = await ResolveTag(Context, change.Request.Tag, cancellationToken).ConfigureAwait(false);
+                                if (tagInfo == null) {
+                                    change.SetResult(false);
+                                    continue;
+                                }
                                 await AddTagToSubscription(tagInfo).ConfigureAwait(false);
                                 break;
                             case Common.SubscriptionUpdateAction.Unsubscribe:
+                                // Ensure that this change concerns a tag that we are actually subscribed to.
+                                _subscribedTagsLock.EnterReadLock();
+                                try {
+                                    if (!_subscribedTags.TryGetValue(change.Request.Tag, out tagInfo)) {
+                                        tagInfo = _subscribedTags.Values.FirstOrDefault(x => string.Equals(x.Name, change.Request.Tag, StringComparison.OrdinalIgnoreCase));
+                                    }
+                                }
+                                finally {
+                                    _subscribedTagsLock.ExitReadLock();
+                                }
+                                if (tagInfo == null) {
+                                    change.SetResult(false);
+                                    continue;
+                                }
                                 await RemoveTagFromSubscription(tagInfo).ConfigureAwait(false);
                                 break;
                         }
