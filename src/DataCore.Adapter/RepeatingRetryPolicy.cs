@@ -32,6 +32,9 @@ namespace DataCore.Adapter {
         /// </param>
         public RepeatingRetryPolicy(params TimeSpan[] retryDelays) {
             _retryDelays = retryDelays.Cast<TimeSpan?>().ToArray();
+            if (_retryDelays.Length == 0) {
+                _retryDelays = DefaultRetryDelays;
+            }
         }
 
 
