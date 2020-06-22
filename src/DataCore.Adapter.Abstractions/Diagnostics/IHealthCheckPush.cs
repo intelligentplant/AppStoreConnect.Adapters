@@ -6,7 +6,7 @@ namespace DataCore.Adapter.Diagnostics {
     /// Extends <see cref="IHealthCheck"/> to allow subscribers to receive health status changes 
     /// via push notifications.
     /// </summary>
-    public interface IHealthCheckPush : IHealthCheck {
+    public interface IHealthCheckPush : IAdapterFeature, IHealthCheck {
 
         /// <summary>
         /// Subscribes to receive adapter health check updates.
