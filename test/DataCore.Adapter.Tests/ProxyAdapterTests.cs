@@ -82,14 +82,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override Task<bool> EmitHealthStatus(TProxy adapter) {
-            var adapterActual = ServiceProvider.GetRequiredService<IAdapter>();
-            var member = typeof(AdapterBase).GetMethod("OnHealthStatusChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            member.Invoke(adapterActual, null);
-            return Task.FromResult(true);
-        }
-
-
         protected abstract TProxy CreateProxy(string remoteAdapterId);
 
 
