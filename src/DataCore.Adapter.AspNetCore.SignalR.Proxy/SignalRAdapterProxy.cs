@@ -238,7 +238,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 }
             }
 
-            if (RemoteDescriptor.Features.Any(x => string.Equals(nameof(IHealthCheckPush), x, StringComparison.Ordinal))) {
+            if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
                 TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription, StopToken);
             }

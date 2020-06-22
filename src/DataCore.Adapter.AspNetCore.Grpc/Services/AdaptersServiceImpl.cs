@@ -85,7 +85,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IHealthCheckPush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             using (var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false)) {
                 while (!cancellationToken.IsCancellationRequested) {

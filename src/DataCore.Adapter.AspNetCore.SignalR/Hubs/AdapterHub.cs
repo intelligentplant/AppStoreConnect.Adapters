@@ -131,7 +131,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<HealthCheckResult>> CreateAdapterHealthChannel(string adapterId, CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await ResolveAdapterAndFeature<IHealthCheckPush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
             var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);

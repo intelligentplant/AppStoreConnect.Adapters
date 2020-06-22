@@ -195,6 +195,17 @@ namespace DataCore.Adapter.Http.Proxy {
                     }
                 }
             }
+
+            if (Options.HealthCheckPushInterval > TimeSpan.Zero && RemoteDescriptor.HasFeature<IHealthCheck>()) {
+                // Remote adapter supports health checks. Although the HTTP client does not support 
+                // push notifications, we can periodically signal that the status should be re-polled.
+                TaskScheduler.QueueBackgroundWorkItem(async ct => {
+                    do {
+                        await Task.Delay(Options.HealthCheckPushInterval, ct).ConfigureAwait(false);
+                        OnHealthStatusChanged();
+                    } while (!ct.IsCancellationRequested);
+                }, StopToken);
+            }
         }
 
 

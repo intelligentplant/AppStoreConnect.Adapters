@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace DataCore.Adapter.Http.Proxy {
     /// <summary>
@@ -14,6 +12,12 @@ namespace DataCore.Adapter.Http.Proxy {
         /// </summary>
         [Required]
         public string RemoteId { get; set; }
+
+        /// <summary>
+        /// The interval to use between re-polling the health status of the remote adapter. 
+        /// Ignored if the remote adapter does not support <see cref="Diagnostics.IHealthCheck"/>.
+        /// </summary>
+        public TimeSpan HealthCheckPushInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// The interval to use between re-polling snapshot values for subscribed tags. Ignored if 

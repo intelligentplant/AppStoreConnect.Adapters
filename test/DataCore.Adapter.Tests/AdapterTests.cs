@@ -98,9 +98,9 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task HealthCheckSubscriptionShouldReceiveUpdates() {
             return RunAdapterTest(async (adapter, context) => {
-                var feature = adapter.Features.Get<IHealthCheckPush>();
+                var feature = adapter.Features.Get<IHealthCheck>();
                 if (feature == null) {
-                    AssertFeatureNotImplemented<IHealthCheckPush>();
+                    AssertFeatureNotImplemented<IHealthCheck>();
                     return;
                 }
 
