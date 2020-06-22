@@ -25,6 +25,8 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType);
 
+        protected abstract Task<bool> EmitHealthStatus(TAdapter adapter);
+
 
         [TestInitialize]
         public void TestInitialize() {
@@ -92,6 +94,34 @@ namespace DataCore.Adapter.Tests {
                 // aggregate status of the inner results.
                 Assert.AreEqual(health.Status, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.Status)));
             }
+        }
+
+
+        [TestMethod]
+        public Task HealthCheckSubscriptionShouldReceiveUpdates() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IHealthCheckPush>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IHealthCheckPush>();
+                    return;
+                }
+
+                using (var subscription = await feature.Subscribe(context)) {
+                    Assert.IsNotNull(subscription);
+                    Assert.IsTrue(subscription.IsStarted);
+
+                    await Task.Delay(1000, default);
+                    var success = await EmitHealthStatus(adapter);
+                    if (!success) {
+                        Assert.Inconclusive("Test harness has indicated that a health status update will not be emitted.");
+                    }
+
+                    using (var ctSource = new CancellationTokenSource(1000)) {
+                        var health = await subscription.Reader.ReadAsync(ctSource.Token);
+                        VerifyHealthCheckResult(health);
+                    }
+                }
+            });
         }
 
         #endregion

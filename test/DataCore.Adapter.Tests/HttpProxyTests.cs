@@ -1,4 +1,6 @@
-﻿using DataCore.Adapter.Http.Proxy;
+﻿using System.Threading.Tasks;
+
+using DataCore.Adapter.Http.Proxy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,6 +13,11 @@ namespace DataCore.Adapter.Tests {
             return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(ServiceProvider, nameof(HttpProxyTests), new HttpAdapterProxyOptions() {
                 RemoteId = remoteAdapterId
             });
+        }
+
+
+        protected override Task<bool> EmitHealthStatus(HttpAdapterProxy adapter) {
+            return Task.FromResult(false);
         }
 
     }

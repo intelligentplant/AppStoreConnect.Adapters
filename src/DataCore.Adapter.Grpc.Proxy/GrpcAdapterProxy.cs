@@ -12,6 +12,8 @@ using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
+using DataCore.Adapter.Diagnostics;
+using System.Linq;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -258,6 +260,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     }
                 }
             }
+
+            if (getAdapterResponse.Adapter.Features.Any(x => string.Equals(nameof(IHealthCheckPush), x, StringComparison.Ordinal))) {
+                // Adapter supports health check subscriptions.
+                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription, StopToken);
+            }
         }
 
 
@@ -308,6 +315,59 @@ namespace DataCore.Adapter.Grpc.Proxy {
             }
         }
 #endif
+
+
+        /// <summary>
+        /// Gets the gRPC call options for the specified adapter call context and cancellation token.
+        /// </summary>
+        /// <param name="context">
+        ///   The adapter call context. If per-call credential options are configured on the proxy, 
+        ///   call credentials will be added to the call options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token to register with the call options.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="GrpcCore.CallOptions"/> object.
+        /// </returns>
+        internal GrpcCore.CallOptions GetCallOptions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var headers = new GrpcCore.Metadata();
+            if (!string.IsNullOrWhiteSpace(context?.CorrelationId)) {
+                // We have a correlation ID for the context; use it on the outgoing call as 
+                // well.
+                headers.Add("Request-Id", context.CorrelationId);
+            }
+
+            return new GrpcCore.CallOptions(
+                cancellationToken: cancellationToken,
+                credentials: GetCallCredentials(context),
+                headers: headers
+            );
+        }
+
+
+        /// <summary>
+        /// Long-running task that tells the adapter to recompute the overall health status of the 
+        /// adapter when the remote adapter health status changes.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will fire when the task should end.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
+        /// </returns>
+        private async Task RunRemoteHealthSubscription(CancellationToken cancellationToken) {
+            var client = CreateClient<AdaptersService.AdaptersServiceClient>();
+            var callOptions = GetCallOptions(null, cancellationToken);
+
+            var healthCheckStream = client.CreateAdapterHealthPushChannel(new CreateAdapterHealthPushChannelRequest() { 
+                AdapterId = _remoteAdapterId
+            }, callOptions);
+
+            while (await healthCheckStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                OnHealthStatusChanged();
+            }
+        }
 
 
         /// <summary>
@@ -379,7 +439,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 Diagnostics.HealthCheckResult.Composite(
                     Resources.HealthCheck_DisplayName_Connection,
                     new[] {
-                            await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                        await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
                     },
                     Resources.HealthCheck_GrpcNetClientDescription
                 )

@@ -307,14 +307,14 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Long-running task that sends tag values to subscribers whenever they are added to the 
-        /// <see cref="_masterChannel"/>.
+        /// Long-running task that sends event messages to subscribers whenever they are added to 
+        /// the <see cref="_masterChannel"/>.
         /// </summary>
         /// <param name="cancellationToken">
         ///   A cancellation token that can be used to stop processing of the queue.
         /// </param>
         /// <returns>
-        ///   A task that will complete when the cancellation token fires
+        ///   A task that will complete when the cancellation token fires.
         /// </returns>
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
             try {

@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Diagnostics;
+
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -74,6 +77,30 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             return new CheckAdapterHealthResponse() { 
                 Result = result.ToGrpcHealthCheckResult()
             };
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task CreateAdapterHealthPushChannel(CreateAdapterHealthPushChannelRequest request, IServerStreamWriter<HealthCheckResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IHealthCheckPush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false)) {
+                while (!cancellationToken.IsCancellationRequested) {
+                    try {
+                        var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                        await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) {
+                        // Do nothing
+                    }
+                    catch (System.Threading.Channels.ChannelClosedException) {
+                        // Do nothing
+                    }
+                }
+            }
         }
 
     }

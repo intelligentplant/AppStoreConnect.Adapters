@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
@@ -126,7 +127,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
             _client = new Lazy<AdapterSignalRClient>(() => {
-                return new AdapterSignalRClient(_connectionFactory.Invoke(null), true);
+                var conn = _connectionFactory.Invoke(null);
+                AddHubEventHandlers(conn);
+                return new AdapterSignalRClient(conn, true);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
@@ -166,9 +169,32 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             return _extensionConnections.GetOrAdd(key, k => new Lazy<Task<HubConnection>>(() => Task.Run(async () => {
                 var conn = _connectionFactory.Invoke(k);
+                AddHubEventHandlers(conn);
                 await conn.StartAsync(StopToken).ConfigureAwait(false);
                 return conn;
             }), LazyThreadSafetyMode.ExecutionAndPublication)).Value.WithCancellation(cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Adds event handlers to a hub connection.
+        /// </summary>
+        /// <param name="connection">
+        ///   The hub connection.
+        /// </param>
+        private void AddHubEventHandlers(HubConnection connection) {
+            connection.Closed += err => {
+                OnHealthStatusChanged();
+                return Task.CompletedTask;
+            };
+            connection.Reconnected += id => {
+                OnHealthStatusChanged();
+                return Task.CompletedTask;
+            };
+            connection.Reconnecting += err => {
+                OnHealthStatusChanged();
+                return Task.CompletedTask;
+            };
         }
 
 
@@ -211,6 +237,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     }
                 }
             }
+
+            if (RemoteDescriptor.Features.Any(x => string.Equals(nameof(IHealthCheckPush), x, StringComparison.Ordinal))) {
+                // Adapter supports health check subscriptions.
+                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription, StopToken);
+            }
         }
 
 
@@ -225,6 +256,31 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             if (_client.IsValueCreated) {
                 var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
                 await connection.StopAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Long-running task that tells the adapter to recompute the overall health status of the 
+        /// adapter when the remote adapter health status changes.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will fire when the task should end.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
+        /// </returns>
+        private async Task RunRemoteHealthSubscription(CancellationToken cancellationToken) {
+            var healthCheckStream = await _client.Value.Adapters.CreateAdapterHealthChannelAsync(
+                _remoteAdapterId, 
+                cancellationToken
+            ).ConfigureAwait(false);
+
+            while (await healthCheckStream.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!healthCheckStream.TryRead(out var _)) {
+                    continue;
+                }
+                OnHealthStatusChanged();
             }
         }
 

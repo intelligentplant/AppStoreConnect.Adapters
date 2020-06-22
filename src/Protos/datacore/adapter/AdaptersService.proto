@@ -10,6 +10,7 @@ service AdaptersService {
     rpc FindAdapters(FindAdaptersRequest) returns (FindAdaptersResponse);
     rpc GetAdapter(GetAdapterRequest) returns (GetAdapterResponse);
     rpc CheckAdapterHealth(CheckAdapterHealthRequest) returns (CheckAdapterHealthResponse);
+    rpc CreateAdapterHealthPushChannel(CreateAdapterHealthPushChannelRequest) returns (stream HealthCheckResult);
 }
 
 
@@ -38,6 +39,9 @@ message GetAdapterResponse {
 
 // Performs an adapter health check 
 message CheckAdapterHealthRequest { 
+    string adapter_id = 1;
+}
+message CreateAdapterHealthPushChannelRequest {
     string adapter_id = 1;
 }
 message CheckAdapterHealthResponse {

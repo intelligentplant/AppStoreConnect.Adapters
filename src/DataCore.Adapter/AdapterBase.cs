@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
@@ -17,7 +18,7 @@ namespace DataCore.Adapter {
     /// Base class for adapter implementations.
     /// </summary>
     /// <seealso cref="AdapterBase{TAdapterOptions}"/>
-    public abstract class AdapterBase : IAdapter, IHealthCheck {
+    public abstract class AdapterBase : IAdapter, IHealthCheckPush {
 
         #region [ Fields / Properties ]
 
@@ -102,6 +103,26 @@ namespace DataCore.Adapter {
         /// Adapter properties.
         /// </summary>
         private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
+
+        /// <summary>
+        /// The current halth check subscriptions.
+        /// </summary>
+        private readonly HashSet<HealthCheckSubscription> _healthCheckSubscriptions = new HashSet<HealthCheckSubscription>();
+
+        /// <summary>
+        /// For protecting access to <see cref="_healthCheckSubscriptions"/>.
+        /// </summary>
+        private readonly ReaderWriterLockSlim _healthCheckSubscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+
+        /// <summary>
+        /// Channel that is used to tell the adapter when it should recompute its health status.
+        /// </summary>
+        private readonly Channel<bool> _recomputeHealthChannel = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { 
+            AllowSynchronousContinuations = false,
+            SingleReader = true,
+            SingleWriter = false,
+            FullMode = BoundedChannelFullMode.DropWrite
+        });
 
         /// <inheritdoc/>
         public AdapterDescriptor Descriptor {
@@ -339,6 +360,96 @@ namespace DataCore.Adapter {
             }
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Notifies that a subscription was disposed.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The disposed subscription.
+        /// </param>
+        private void OnHealthCheckSubscriptionCancelled(HealthCheckSubscription subscription) {
+            if (_isDisposed) {
+                return;
+            }
+
+            _healthCheckSubscriptionsLock.EnterWriteLock();
+            try {
+                _healthCheckSubscriptions.Remove(subscription);
+            }
+            finally {
+                _healthCheckSubscriptionsLock.ExitWriteLock();
+            }
+        }
+
+
+        /// <summary>
+        /// Long-running task that monitors the <see cref="_recomputeHealthChannel"/>, 
+        /// recalculates the adapter health when messages are published to the channel, and then 
+        /// publishes he health status to subscribers.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   A cancellation token that can be used to stop processing of the queue.
+        /// </param>
+        /// <returns>
+        ///   A task that will complete when the cancellation token fires
+        /// </returns>
+        private async Task PublishToHealthCheckSubscribers(CancellationToken cancellationToken) {
+            while (await _recomputeHealthChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!_recomputeHealthChannel.Reader.TryRead(out var val) || !val) {
+                    continue;
+                }
+
+                HealthCheckSubscription[] subscribers;
+
+                _healthCheckSubscriptionsLock.EnterReadLock();
+                try {
+                    subscribers = _healthCheckSubscriptions.ToArray();
+                }
+                finally {
+                    _healthCheckSubscriptionsLock.ExitReadLock();
+                }
+
+                if (subscribers.Length == 0) {
+                    // No subscribers; no point recomputing health status.
+                    continue;
+                }
+
+                var healthStatus = await ((IHealthCheck) this).CheckHealthAsync(
+                    new DefaultAdapterCallContext(),
+                    cancellationToken
+                ).ConfigureAwait(false);
+
+                foreach (var subscriber in subscribers) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        break;
+                    }
+
+                    try {
+                        var success = await subscriber.ValueReceived(healthStatus, cancellationToken).ConfigureAwait(false);
+                        if (!success) {
+                            Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                        }
+                    }
+                    catch (OperationCanceledException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                        Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Informs the adapter that its overall health status needs to be recomputed (for example, 
+        /// due to a disconnection from an external system). Subscribers to health status updates 
+        /// will receive the updated health status.
+        /// </summary>
+        protected internal void OnHealthStatusChanged() {
+            _recomputeHealthChannel.Writer.TryWrite(true);
         }
 
         #endregion
@@ -594,12 +705,14 @@ namespace DataCore.Adapter {
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                             await StartAsync(ctSource.Token).ConfigureAwait(false);
+                            TaskScheduler.QueueBackgroundWorkItem(PublishToHealthCheckSubscribers, StopToken);
                         }
                         IsRunning = true;
                     }
                     finally {
                         IsStarting = false;
                     }
+
                     Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
                 }
                 catch (Exception e) {
@@ -676,6 +789,27 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
+        async Task<IHealthCheckSubscription> IHealthCheckPush.Subscribe(IAdapterCallContext context) {
+            var subscription = new HealthCheckSubscription(context, this);
+
+            bool added;
+            _healthCheckSubscriptionsLock.EnterWriteLock();
+            try {
+                added = _healthCheckSubscriptions.Add(subscription);
+            }
+            finally {
+                _healthCheckSubscriptionsLock.ExitWriteLock();
+            }
+
+            if (added) {
+                await subscription.Start().ConfigureAwait(false);
+            }
+
+            return subscription;
+        }
+
+
+        /// <inheritdoc/>
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -718,6 +852,18 @@ namespace DataCore.Adapter {
                 _properties.Clear();
                 _loggerScope.Dispose();
                 _startupLock.Dispose();
+                _recomputeHealthChannel.Writer.TryComplete();
+                _healthCheckSubscriptionsLock.EnterWriteLock();
+                try {
+                    foreach (var item in _healthCheckSubscriptions.ToArray()) {
+                        item.Dispose();
+                    }
+                }
+                finally {
+                    _healthCheckSubscriptionsLock.ExitWriteLock();
+                }
+                _healthCheckSubscriptionsLock.Dispose();
+                _healthCheckSubscriptions.Clear();
                 _isDisposed = true;
             }
         }
@@ -742,6 +888,46 @@ namespace DataCore.Adapter {
             Dispose(disposing);
             return default;
         }
+
+
+        #region [ Inner Types ]
+
+        /// <summary>
+        /// <see cref="IHealthCheckSubscription"/> implementation.
+        /// </summary>
+        private class HealthCheckSubscription : AdapterSubscription<HealthCheckResult>, IHealthCheckSubscription {
+
+            /// <summary>
+            /// The subscribed adapter.
+            /// </summary>
+            private readonly AdapterBase _adapter;
+
+
+            /// <summary>
+            /// Creates a new <see cref="HealthCheckSubscription"/> object.
+            /// </summary>
+            /// <param name="context">
+            ///   The <see cref="IAdapterCallContext"/> for the subscriber.
+            /// </param>
+            /// <param name="adapter">
+            ///   The adapter that the caller is subscribing to.
+            /// </param>
+            internal HealthCheckSubscription(
+                IAdapterCallContext context, 
+                AdapterBase adapter
+            ) : base(context, ((IAdapter) adapter).Descriptor.Id) {
+                _adapter = adapter;
+            }
+
+
+            /// <inheritdoc/>
+            protected override void OnCancelled() {
+                _adapter.OnHealthCheckSubscriptionCancelled(this);
+            }
+
+        }
+
+        #endregion
 
     }
 }

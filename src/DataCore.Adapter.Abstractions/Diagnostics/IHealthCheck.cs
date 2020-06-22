@@ -19,8 +19,8 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
-        ///   health check.
+        ///   A <see cref="Task{TResult}"/> that will return the <see cref="HealthCheckResult"/> 
+        ///   for the health check.
         /// </returns>
         Task<HealthCheckResult> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken);
 

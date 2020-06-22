@@ -28,7 +28,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel reader that the subscriber can observe to receive new tag values.
+        ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
         public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
