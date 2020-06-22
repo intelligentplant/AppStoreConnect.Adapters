@@ -15,11 +15,6 @@ namespace DataCore.Adapter.Tests {
             });
         }
 
-
-        protected override Task<bool> EmitHealthStatus(HttpAdapterProxy adapter) {
-            return Task.FromResult(false);
-        }
-
     }
 
 }

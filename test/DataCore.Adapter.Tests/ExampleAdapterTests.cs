@@ -41,11 +41,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override Task<bool> EmitHealthStatus(ExampleAdapter adapter) {
-            return Task.FromResult(false);
-        }
-
-
         [TestMethod]
         public Task UnsupportedFeatureShouldNotBeFound() {
             return RunAdapterTest((adapter, context) => {

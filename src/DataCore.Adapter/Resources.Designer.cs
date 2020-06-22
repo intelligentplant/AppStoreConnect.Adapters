@@ -160,6 +160,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature is unavailable..
+        /// </summary>
+        internal static string Error_FeatureUnavailable {
+            get {
+                return ResourceManager.GetString("Error_FeatureUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid base date: {0}.
         /// </summary>
         internal static string Error_InvalidBaseDate {

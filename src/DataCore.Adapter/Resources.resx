@@ -152,6 +152,9 @@
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>
   </data>
+  <data name="Error_FeatureUnavailable" xml:space="preserve">
+    <value>Feature is unavailable.</value>
+  </data>
   <data name="Error_InvalidBaseDate" xml:space="preserve">
     <value>Invalid base date: {0}</value>
     <comment>{0} - base date string</comment>

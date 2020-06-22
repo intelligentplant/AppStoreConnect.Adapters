@@ -110,9 +110,19 @@ namespace DataCore.Adapter {
         private readonly HashSet<HealthCheckSubscription> _healthCheckSubscriptions = new HashSet<HealthCheckSubscription>();
 
         /// <summary>
-        /// For protecting access to <see cref="_healthCheckSubscriptions"/>.
+        /// The most recent health check that was performed.
         /// </summary>
-        private readonly ReaderWriterLockSlim _healthCheckSubscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private HealthCheckResult? _latestHealthCheck;
+
+        /// <summary>
+        /// For protecting access to <see cref="_healthCheckSubscriptions"/> and <see cref="_latestHealthCheck"/>.
+        /// </summary>
+        private readonly ReaderWriterLockSlim _healthCheckSubscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
+        /// <summary>
+        /// Ensures that only one call the <see cref="CheckHealthInternalAsync"/> can occur at a time.
+        /// </summary>
+        private readonly SemaphoreSlim _healthCheckUpdateLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
         /// Channel that is used to tell the adapter when it should recompute its health status.
@@ -310,6 +320,70 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Performs health checks.
+        /// </summary>
+        /// <param name="context">
+        ///   The call context for the operation, to allow authorization to be applied to the 
+        ///   operation if required.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   health check.
+        /// </returns>
+        private async Task<HealthCheckResult> CheckHealthInternalAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            await _healthCheckUpdateLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try {
+                var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
+                if (results == null || !results.Any()) {
+                    return HealthCheckResult.Healthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Healthy);
+                }
+
+                var resultsArray = results.ToArray();
+
+                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
+                string description;
+
+                switch (compositeStatus) {
+                    case HealthStatus.Unhealthy:
+                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
+                        break;
+                    case HealthStatus.Degraded:
+                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
+                        break;
+                    default:
+                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
+                        break;
+                }
+
+                var overallResult = new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
+                _healthCheckSubscriptionsLock.EnterWriteLock();
+                try {
+                    _latestHealthCheck = overallResult;
+                }
+                finally {
+                    _healthCheckSubscriptionsLock.ExitWriteLock();
+                }
+
+                return overallResult;
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
+            }
+            finally {
+                _healthCheckUpdateLock.Release();
+            }
+        }
+
+
+        /// <summary>
         /// Checks the health of all adapter features that implement <see cref="IFeatureHealthCheck"/>.
         /// </summary>
         /// <param name="context">
@@ -320,7 +394,7 @@ namespace DataCore.Adapter {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task"/> that will return the <see cref="HealthCheckResult"/> for the 
+        ///   A <see cref="Task{TResult}"/> that will return the <see cref="HealthCheckResult"/> for the 
         ///   health check.
         /// </returns>
         protected async Task<IEnumerable<HealthCheckResult>> CheckFeatureHealthAsync(
@@ -411,15 +485,15 @@ namespace DataCore.Adapter {
                     _healthCheckSubscriptionsLock.ExitReadLock();
                 }
 
+                var update = await CheckHealthInternalAsync(
+                    new DefaultAdapterCallContext(),
+                    cancellationToken
+                ).ConfigureAwait(false);
+
                 if (subscribers.Length == 0) {
                     // No subscribers; no point recomputing health status.
                     continue;
                 }
-
-                var healthStatus = await ((IHealthCheck) this).CheckHealthAsync(
-                    new DefaultAdapterCallContext(),
-                    cancellationToken
-                ).ConfigureAwait(false);
 
                 foreach (var subscriber in subscribers) {
                     if (cancellationToken.IsCancellationRequested) {
@@ -427,7 +501,7 @@ namespace DataCore.Adapter {
                     }
 
                     try {
-                        var success = await subscriber.ValueReceived(healthStatus, cancellationToken).ConfigureAwait(false);
+                        var success = await subscriber.ValueReceived(update, cancellationToken).ConfigureAwait(false);
                         if (!success) {
                             Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
@@ -670,7 +744,7 @@ namespace DataCore.Adapter {
         /// </remarks>
         protected virtual async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             if (!IsRunning) {
-                var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_NotStarted);
+                var result = HealthCheckResult.Unhealthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_NotStarted);
                 return new[] { result };
             }
 
@@ -710,6 +784,9 @@ namespace DataCore.Adapter {
                         IsRunning = true;
                     }
                     finally {
+                        if (!cancellationToken.IsCancellationRequested) {
+                            _ = await CheckHealthInternalAsync(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
+                        }
                         IsStarting = false;
                     }
 
@@ -752,50 +829,43 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            try {
-                var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
-                if (results == null || !results.Any()) {
-                    return HealthCheckResult.Healthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Healthy);
-                }
-
-                var resultsArray = results.ToArray();
-
-                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
-                string description;
-
-                switch (compositeStatus) {
-                    case HealthStatus.Unhealthy:
-                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
-                        break;
-                    case HealthStatus.Degraded:
-                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
-                        break;
-                    default:
-                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
-                        break;
-                }
-
-                return new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
+            if (!this.HasFeature<IHealthCheck>()) {
+                // Implementer has removed the feature.
+                throw new InvalidOperationException(Resources.Error_FeatureUnavailable);
             }
-            catch (OperationCanceledException) {
-                throw;
+
+            var implementation = this.GetFeature<IHealthCheck>();
+            if (implementation != this) {
+                // Implementer has provided their own feature implementation.
+                return await implementation.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
-            }
+
+            return await CheckHealthInternalAsync(context, cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
         async Task<IHealthCheckSubscription> IHealthCheckPush.Subscribe(IAdapterCallContext context) {
+            if (!this.HasFeature<IHealthCheckPush>()) {
+                // Implementer has removed the feature.
+                throw new InvalidOperationException(Resources.Error_FeatureUnavailable);
+            }
+
+            var implementation = this.GetFeature<IHealthCheckPush>();
+            if (implementation != this) {
+                // Implementer has provided their own feature implementation.
+                return await implementation.Subscribe(context).ConfigureAwait(false);
+            }
+
             var subscription = new HealthCheckSubscription(context, this);
 
             bool added;
+            HealthCheckResult? latestResult;
+
             _healthCheckSubscriptionsLock.EnterWriteLock();
             try {
                 added = _healthCheckSubscriptions.Add(subscription);
+                latestResult = _latestHealthCheck;
             }
             finally {
                 _healthCheckSubscriptionsLock.ExitWriteLock();
@@ -803,6 +873,9 @@ namespace DataCore.Adapter {
 
             if (added) {
                 await subscription.Start().ConfigureAwait(false);
+                if (latestResult != null) {
+                    await subscription.ValueReceived(latestResult.Value).ConfigureAwait(false);
+                }
             }
 
             return subscription;
@@ -864,6 +937,7 @@ namespace DataCore.Adapter {
                 }
                 _healthCheckSubscriptionsLock.Dispose();
                 _healthCheckSubscriptions.Clear();
+                _healthCheckUpdateLock.Dispose();
                 _isDisposed = true;
             }
         }

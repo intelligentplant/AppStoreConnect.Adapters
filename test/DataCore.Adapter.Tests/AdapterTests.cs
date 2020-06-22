@@ -25,8 +25,6 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType);
 
-        protected abstract Task<bool> EmitHealthStatus(TAdapter adapter);
-
 
         [TestInitialize]
         public void TestInitialize() {
@@ -111,10 +109,6 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     await Task.Delay(1000, default);
-                    var success = await EmitHealthStatus(adapter);
-                    if (!success) {
-                        Assert.Inconclusive("Test harness has indicated that a health status update will not be emitted.");
-                    }
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
                         var health = await subscription.Reader.ReadAsync(ctSource.Token);
