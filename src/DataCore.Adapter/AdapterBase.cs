@@ -755,7 +755,7 @@ namespace DataCore.Adapter {
             try {
                 var results = await CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 if (results == null || !results.Any()) {
-                    return HealthCheckResult.Healthy(Resources.HealthChecks_CompositeResultDescription_Healthy);
+                    return HealthCheckResult.Healthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Healthy);
                 }
 
                 var resultsArray = results.ToArray();
@@ -783,7 +783,7 @@ namespace DataCore.Adapter {
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
-                return HealthCheckResult.Unhealthy(Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
+                return HealthCheckResult.Unhealthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
             }
         }
 
