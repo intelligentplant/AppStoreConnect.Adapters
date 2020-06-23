@@ -85,7 +85,7 @@ namespace DataCore.Adapter.Diagnostics {
             }
 
             await CheckHealthAsync(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-            _adapter.TaskScheduler.QueueBackgroundWorkItem(PublishToHealthCheckSubscribers, _adapter.StopToken);
+            _adapter.TaskScheduler.QueueBackgroundWorkItem(PublishToHealthCheckSubscribers);
         }
 
 

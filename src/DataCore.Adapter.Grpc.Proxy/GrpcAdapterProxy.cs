@@ -263,7 +263,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
-                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription, StopToken);
+                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
         }
 

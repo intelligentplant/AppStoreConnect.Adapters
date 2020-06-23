@@ -84,7 +84,9 @@ namespace DataCore.Adapter {
         public CancellationToken StopToken => _stopTokenSource.Token;
 
         /// <summary>
-        /// Allows the adapter to register work items to be run in the background.
+        /// Allows the adapter to register work items to be run in the background. The adapter's 
+        /// <see cref="StopToken"/> is always added to the list of <see cref="CancellationToken"/> 
+        /// instances that the background task observes.
         /// </summary>
         public IBackgroundTaskService TaskScheduler { get; }
 
@@ -201,7 +203,7 @@ namespace DataCore.Adapter {
             }
 
             _descriptor = new AdapterDescriptor(id, name, description);
-            TaskScheduler = scheduler ?? BackgroundTaskService.Default;
+            TaskScheduler = new BackgroundTaskServiceWrapper(this, scheduler ?? BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);
 
@@ -727,6 +729,54 @@ namespace DataCore.Adapter {
         protected virtual ValueTask DisposeAsync(bool disposing) {
             Dispose(disposing);
             return default;
+        }
+
+
+        /// <summary>
+        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> as an additional cancellation token.
+        /// </summary>
+        private class BackgroundTaskServiceWrapper : IBackgroundTaskService {
+
+            /// <summary>
+            /// The owning adapter.
+            /// </summary>
+            private readonly AdapterBase _adapter;
+
+            /// <summary>
+            /// The inner <see cref="IBackgroundTaskService"/> to use.
+            /// </summary>
+            private readonly IBackgroundTaskService _inner;
+
+
+            /// <summary>
+            /// Creates a new <see cref="BackgroundTaskServiceWrapper"/> object.
+            /// </summary>
+            /// <param name="adapter">
+            ///   The owning adapter.
+            /// </param>
+            /// <param name="inner">
+            ///   The inner <see cref="IBackgroundTaskService"/> to use.
+            /// </param>
+            internal BackgroundTaskServiceWrapper(AdapterBase adapter, IBackgroundTaskService inner) {
+                _adapter = adapter;
+                _inner = inner;
+            }
+
+
+            /// <inheritdoc/>
+            public void QueueBackgroundWorkItem(BackgroundWorkItem workItem) {
+                if (workItem == null) {
+                    throw new ArgumentNullException(nameof(workItem));
+                }
+
+                if (workItem.WorkItemAsync != null) {
+                    _inner.QueueBackgroundWorkItem(workItem.WorkItemAsync, workItem.Description, _adapter.StopToken);
+                }
+                else {
+                    _inner.QueueBackgroundWorkItem(workItem.WorkItem, workItem.Description, _adapter.StopToken);
+                }
+            }
+
         }
 
     }

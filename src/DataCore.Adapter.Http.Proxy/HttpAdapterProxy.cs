@@ -204,7 +204,7 @@ namespace DataCore.Adapter.Http.Proxy {
                         await Task.Delay(Options.HealthCheckPushInterval, ct).ConfigureAwait(false);
                         OnHealthStatusChanged();
                     } while (!ct.IsCancellationRequested);
-                }, StopToken);
+                });
             }
         }
 

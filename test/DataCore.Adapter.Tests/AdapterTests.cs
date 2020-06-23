@@ -577,6 +577,44 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
+        #region [ Miscellaneous Other Tests ]
+
+        [TestMethod]
+        public Task BackgroundTaskShouldCancelWhenAdapterIsStopped() {
+            return RunAdapterTest(async (adapter, context) => { 
+                if (!(adapter is AdapterBase adapterBase)) {
+                    Assert.Inconclusive("Test is only applicable to implementations of AdapterBase.");
+                    return;
+                }
+
+                var tcs = new TaskCompletionSource<bool>();
+
+                adapterBase.TaskScheduler.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async ct => {
+                    try {
+                        await Task.Delay(-1, ct);
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                    finally {
+                        tcs.TrySetResult(true);
+                    }
+                }));
+
+                await adapter.StopAsync(default);
+
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    await Task.WhenAny(Task.Delay(-1, ctSource.Token), tcs.Task);
+                    ctSource.Token.ThrowIfCancellationRequested();
+
+                    await tcs.Task;
+                }
+            });
+        }
+
+        #endregion
+
     }
 
 
