@@ -85,3 +85,5 @@ private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<stri
 All calls to adapter features include information about the caller (via the [IAdapterCallContext](./IAdapterCallContext.cs) interface).
 
 Alternatively, you can implement the [IAdapterAuthorizationService](./IAdapterAuthorizationService.cs) and use it in your host application to pre-authorize access to individual adapters and features.
+
+When hosting adapters in an ASP.NET Core application, you can use the ASP.NET Core authorization model to control access to adapters and features. This approach is described [here](/src/DataCore.Adapter.AspNetCore.Common).
