@@ -49,6 +49,50 @@ namespace DataCore.Adapter.RealTimeData {
             return result;
         }
 
+
+        /// <summary>
+        /// Adds a tag to the subscription. Equivalent to calling 
+        /// <see cref="IAdapterSubscriptionWithTopics{T}.SubscribeToTopic"/>.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag ID or name.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the operation was successful.
+        /// </returns>
+        public static ValueTask<bool> AddTagToSubscription(this ISnapshotTagValueSubscription subscription, string tag) {
+            if (subscription == null) {
+                throw new ArgumentNullException(nameof(subscription));
+            }
+            return subscription.SubscribeToTopic(tag);
+        }
+
+
+        /// <summary>
+        /// Removes a tag from the subscription. Equivalent to calling 
+        /// <see cref="IAdapterSubscriptionWithTopics{T}.UnsubscribeFromTopic(string)"/>.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag ID or name.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
+        ///   if the operation was successful.
+        /// </returns>
+        public static ValueTask<bool> RemoveTagFromSubscription(this ISnapshotTagValueSubscription subscription, string tag) {
+            if (subscription == null) {
+                throw new ArgumentNullException(nameof(subscription));
+            }
+            return subscription.UnsubscribeFromTopic(tag);
+        }
+
     }
 
 }

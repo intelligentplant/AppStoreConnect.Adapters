@@ -4,14 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// A subscription created by a call to <see cref="ISnapshotTagValuePush.Subscribe"/>.
     /// </summary>
-    public abstract class SnapshotTagValueSubscriptionBase : AdapterSubscription<TagValueQueryResult>, ISnapshotTagValueSubscription {
+    public abstract class SnapshotTagValueSubscriptionBase : AdapterSubscriptionWithTopics<TagValueQueryResult>, ISnapshotTagValueSubscription {
 
         /// <summary>
         /// Channel that will publish changes to tag subscriptions.
@@ -173,20 +172,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Adds a tag to the subscription.
         /// </summary>
-        /// <param name="tag">
+        /// <param name="topic">
         ///   The tag ID or name.
         /// </param>
         /// <returns>
         ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
         ///   if the operation was successful.
         /// </returns>
-        public async ValueTask<bool> AddTagToSubscription(string tag) {
-            if (CancellationToken.IsCancellationRequested || string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
+        protected override async ValueTask<bool> SubscribeToTopic(string topic) {
+            if (!await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
                 return false;
             }
 
             var request = new SnapshotTagValueSubscriptionChange(new UpdateSnapshotTagValueSubscriptionRequest() {
-                Tag = tag,
+                Tag = topic,
                 Action = Common.SubscriptionUpdateAction.Subscribe
             });
 
@@ -232,20 +231,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Removes a tag from the subscription.
         /// </summary>
-        /// <param name="tag">
+        /// <param name="topic">
         ///   The tag ID or name.
         /// </param>
         /// <returns>
         ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
         ///   if the operation was successful.
         /// </returns>
-        public async ValueTask<bool> RemoveTagFromSubscription(string tag) {
-            if (CancellationToken.IsCancellationRequested || string.IsNullOrWhiteSpace(tag) || !await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
+        protected override async ValueTask<bool> UnsubscribeFromTopic(string topic) {
+            if (!await _tagsChannel.Writer.WaitToWriteAsync(CancellationToken).ConfigureAwait(false)) {
                 return false;
             }
 
             var request = new SnapshotTagValueSubscriptionChange(new UpdateSnapshotTagValueSubscriptionRequest() {
-                Tag = tag,
+                Tag = topic,
                 Action = Common.SubscriptionUpdateAction.Unsubscribe
             });
 

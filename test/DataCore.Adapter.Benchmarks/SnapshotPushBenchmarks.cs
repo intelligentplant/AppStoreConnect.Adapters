@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
+
+using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Benchmarks {
 
