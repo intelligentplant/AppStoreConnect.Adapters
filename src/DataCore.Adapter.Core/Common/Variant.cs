@@ -338,9 +338,9 @@ namespace DataCore.Adapter.Common {
                 return s;
             }
 
-            return (Value is IFormattable formattable)
+            return (format != null && Value is IFormattable formattable)
                 ? formattable.ToString(format, formatProvider)
-                : ToString();
+                : Value.ToString();
         }
 
 
