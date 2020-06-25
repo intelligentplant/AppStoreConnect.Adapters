@@ -1,18 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Common {
 
     /// <summary>
-    /// Describes a request to add or remove a tag to/from a snapshot tag value subscription.
+    /// Describes a request to add or remove a topic to/from a subscription that supports topics.
     /// </summary>
-    public class UpdateSnapshotTagValueSubscriptionRequest {
+    public class UpdateSubscriptionTopicsRequest {
 
         /// <summary>
-        /// The tag ID or name to add or remove.
+        /// The topic or name to add or remove.
         /// </summary>
         [Required]
-        public string Tag { get; set; }
+        public string Topic { get; set; }
 
         /// <summary>
         /// The type of the subscription modification.

@@ -67,8 +67,8 @@ namespace DataCore.Adapter.Tests {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
                 var subscribedTags = new[] {
-                    new UpdateSnapshotTagValueSubscriptionRequest() {
-                        Tag = TestTag1.Id,
+                    new UpdateSubscriptionTopicsRequest() {
+                        Topic = TestTag1.Id,
                         Action = SubscriptionUpdateAction.Subscribe
                     }
                 }.PublishToChannel();

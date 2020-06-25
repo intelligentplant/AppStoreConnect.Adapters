@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Common {
 
     /// <summary>
-    /// Represents a subscription change request in <see cref="SnapshotTagValueSubscriptionBase"/>.
+    /// Represents a subscription change request in <see cref="AdapterSubscriptionWithTopics{TValue, TTopic}"/>.
     /// </summary>
-    public class SnapshotTagValueSubscriptionChange {
+    public class SubscriptionTopicChange {
 
         /// <summary>
         /// The change request.
         /// </summary>
-        public UpdateSnapshotTagValueSubscriptionRequest Request { get; }
+        public UpdateSubscriptionTopicsRequest Request { get; }
 
         /// <summary>
         /// A <see cref="TaskCompletionSource{TResult}"/> that will return a flag indicating if 
@@ -27,12 +27,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Creates a new <see cref="SnapshotTagValueSubscriptionChange"/>.
+        /// Creates a new <see cref="SubscriptionTopicChange"/>.
         /// </summary>
         /// <param name="request">
         ///   The subscription change request.
         /// </param>
-        internal SnapshotTagValueSubscriptionChange(UpdateSnapshotTagValueSubscriptionRequest request) {
+        internal SubscriptionTopicChange(UpdateSubscriptionTopicsRequest request) {
             Request = request ?? throw new ArgumentNullException(nameof(request));
         }
 

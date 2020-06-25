@@ -257,7 +257,7 @@ namespace DataCore.Adapter.RealTimeData {
             _subscriptionsLock.EnterWriteLock();
             try {
                 _subscriptions.Remove(subscription);
-                foreach (var tag in subscription.GetSubscribedTags()) {
+                foreach (var tag in subscription.GetSubscribedTopics()) {
                     if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
                         continue;
                     }
