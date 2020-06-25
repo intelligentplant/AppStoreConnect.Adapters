@@ -100,7 +100,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        protected EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
+        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
             _options = options ?? new EventMessagePushOptions();
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
