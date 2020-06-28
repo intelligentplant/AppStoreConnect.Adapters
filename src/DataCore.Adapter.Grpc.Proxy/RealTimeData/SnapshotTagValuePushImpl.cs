@@ -38,6 +38,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             try {
                 // Ensure that we delete all subscriptions for this connection.
                 var request = new DeleteSnapshotSubscriptionRequest() {
+                    SessionId = RemoteSessionId,
                     SubscriptionId = string.Empty
                 };
                 var response = CreateClient<TagValuesService.TagValuesServiceClient>().DeleteSnapshotSubscriptionAsync(request, GetCallOptions(null, default));
