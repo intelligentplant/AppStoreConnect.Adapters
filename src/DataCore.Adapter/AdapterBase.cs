@@ -98,7 +98,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The adapter features.
         /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
+        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection(true);
 
         /// <summary>
         /// The <see cref="HealthCheckManager"/> that provides the <see cref="IHealthCheck"/> feature.
@@ -685,6 +685,10 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Disposes of items common to both <see cref="Dispose(bool)"/> and 
+        /// <see cref="DisposeAsync(bool)"/>.
+        /// </summary>
         private void DisposeCommon() {
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
