@@ -35,5 +35,20 @@ namespace DataCore.Adapter {
         /// </returns>
         ValueTask<bool> UnsubscribeFromTopic(string topic);
 
+        /// <summary>
+        /// Tests if a value is associated with a given topic.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <param name="topic">
+        ///   The topic name.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the value matches the topic, or <see langword="false"/>
+        ///   otherwise.
+        /// </returns>
+        bool IsMatch(T value, string topic);
+
     }
 }

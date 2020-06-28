@@ -24,6 +24,7 @@ service EventsService {
 message CreateEventPushChannelRequest {
     string adapter_id = 1;
     EventSubscriptionType subscription_type = 2;
+    map<string,string> properties = 3;
 }
 
 

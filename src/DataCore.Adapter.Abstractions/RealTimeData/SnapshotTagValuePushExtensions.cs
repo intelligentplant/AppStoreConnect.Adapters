@@ -19,6 +19,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscriber.
         /// </param>
+        /// <param name="request">
+        ///   The subscription request settings.
+        /// </param>
         /// <param name="tags">
         ///   The tags to add to the subscription.
         /// </param>
@@ -28,13 +31,14 @@ namespace DataCore.Adapter.RealTimeData {
         public static async Task<ISnapshotTagValueSubscription> Subscribe(
             this ISnapshotTagValuePush feature, 
             IAdapterCallContext context, 
+            CreateSnapshotTagValueSubscriptionRequest request,
             IEnumerable<string> tags
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
             
-            var result = await feature.Subscribe(context).ConfigureAwait(false);
+            var result = await feature.Subscribe(context, request).ConfigureAwait(false);
 
             if (tags != null) {
                 foreach (var tag in tags) {

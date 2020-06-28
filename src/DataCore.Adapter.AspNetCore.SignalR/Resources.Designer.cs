@@ -106,6 +106,33 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified subscription does not exist..
+        /// </summary>
+        internal static string Error_SubscriptionDoesNotExist {
+            get {
+                return ResourceManager.GetString("Error_SubscriptionDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A subscription ID is required..
+        /// </summary>
+        internal static string Error_SubscriptionIdRequired {
+            get {
+                return ResourceManager.GetString("Error_SubscriptionIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A tag name or ID is required..
+        /// </summary>
+        internal static string Error_TagNameOrIdRequired {
+            get {
+                return ResourceManager.GetString("Error_TagNameOrIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unsupported interface: {0}.
         /// </summary>
         internal static string Error_UnsupportedInterface {

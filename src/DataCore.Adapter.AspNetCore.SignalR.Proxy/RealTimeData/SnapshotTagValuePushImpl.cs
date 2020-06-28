@@ -12,7 +12,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
     /// <summary>
     /// Implements <see cref="ISnapshotTagValuePush"/>.
     /// </summary>
-    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
+    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush, IAsyncDisposable {
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePushImpl"/> object.
@@ -24,11 +24,23 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var result = new Subscription(context, this);
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request) {
+            var result = new Subscription(context, request, this);
             await result.Start().ConfigureAwait(false);
 
             return result;
+        }
+
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            try {
+                // Ensure that all we delete all subscriptions for the connection.
+                await GetClient().TagValues.DeleteSnapshotTagValueSubscriptionAsync(string.Empty, default).ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
 
 
@@ -41,7 +53,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <summary>
             /// The feature.
             /// </summary>
-            private readonly SnapshotTagValuePushImpl _push;
+            private readonly SnapshotTagValuePushImpl _feature;
+
+            /// <summary>
+            /// The subscription request.
+            /// </summary>
+            private readonly CreateSnapshotTagValueSubscriptionRequest _request;
+
+            /// <summary>
+            /// The remote subscription ID.
+            /// </summary>
+            private string _subscriptionId;
 
             /// <summary>
             /// Holds the lifetime cancellation token for each subscribed tag.
@@ -55,18 +77,22 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             /// <param name="context">
             ///   The adapter call context for the subscription owner.
             /// </param>
-            /// <param name="push">
+            /// <param name="request">
+            ///   The subscription request settings.
+            /// </param>
+            /// <param name="feature">
             ///   The push feature.
             /// </param>
             internal Subscription(
                 IAdapterCallContext context,
-                SnapshotTagValuePushImpl push
-            ) : base (context, push.AdapterId) {
-                _push = push;
+                CreateSnapshotTagValueSubscriptionRequest request,
+                SnapshotTagValuePushImpl feature
+            ) : base (context, feature.AdapterId) {
+                _feature = feature;
+                _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
             }
 
 
-            
             /// <summary>
             /// Creates an processes a subscription to the specified tag ID.
             /// </summary>
@@ -88,8 +114,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 ChannelReader<TagValueQueryResult> hubChannel;
 
                 try {
-                    hubChannel = await _push.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
-                        _push.AdapterId,
+                    hubChannel = await _feature.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
+                        _subscriptionId,
                         tagId,
                         cancellationToken
                     ).ConfigureAwait(false);
@@ -116,6 +142,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
             /// <inheritdoc/>
+            protected override async Task Init(CancellationToken cancellationToken) {
+                await base.Init(cancellationToken).ConfigureAwait(false);
+
+                // Create the subscription.
+                _subscriptionId = await _feature.GetClient().TagValues.CreateSnapshotTagValueSubscriptionAsync(
+                    _feature.AdapterId, 
+                    _request, 
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+
+
+            /// <inheritdoc/>
             protected override ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
                 return new ValueTask<TagIdentifier>(new TagIdentifier(tag, tag));
             }
@@ -135,7 +174,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
                 if (added) {
                     var tcs = new TaskCompletionSource<bool>();
-                    _push.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, tcs, ct), ctSource.Token, CancellationToken);
+                    _feature.TaskScheduler.QueueBackgroundWorkItem(ct => RunTagSubscription(tag.Id, tcs, ct), ctSource.Token, CancellationToken);
                     return tcs.Task;
                 }
 
@@ -168,6 +207,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 }
 
                 _tagSubscriptionLifetimes.Clear();
+                if (!string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    // Notify server of cancellation.
+                    _feature.TaskScheduler.QueueBackgroundWorkItem(ct => _feature.GetClient().TagValues.DeleteSnapshotTagValueSubscriptionAsync(_subscriptionId, ct));
+                }
             }
 
         }

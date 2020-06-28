@@ -14,11 +14,17 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   A request describing the subscription settings.
+        /// </param>
         /// <returns>
         ///   A task that will create and start a subscription object that can be disposed once 
         ///   the subscription is no longer required.
         /// </returns>
-        Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context);
+        Task<ISnapshotTagValueSubscription> Subscribe(
+            IAdapterCallContext context,
+            CreateSnapshotTagValueSubscriptionRequest request
+        );
 
     }
 }

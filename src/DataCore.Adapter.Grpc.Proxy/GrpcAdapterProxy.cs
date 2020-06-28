@@ -13,7 +13,6 @@ using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
-using System.Linq;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -265,6 +264,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 // Adapter supports health check subscriptions.
                 TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
+
+            // Send periodic heartbeat message - this ensures that topic-based subscriptions 
+            // (where separate actions are required to create the subscription and the individual 
+            // topic subscription streams) are kept alive even if there aren't currently topics 
+            // being actively subscribed to.
+            TaskScheduler.QueueBackgroundWorkItem(RunRemoteHeartbeatLoop);
         }
 
 
@@ -479,6 +484,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
 #endif
 
             return results;
+        }
+
+
+        private async Task RunRemoteHeartbeatLoop(CancellationToken cancellationToken) {
+            var client = CreateClient<HeartbeatService.HeartbeatServiceClient>();
         }
 
 

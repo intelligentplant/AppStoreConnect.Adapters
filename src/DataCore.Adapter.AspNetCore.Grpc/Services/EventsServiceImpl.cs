@@ -46,7 +46,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext, request.SubscriptionType == EventSubscriptionType.Active ? EventMessageSubscriptionType.Active : EventMessageSubscriptionType.Passive).ConfigureAwait(false)) {
+            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageSubscriptionRequest() { 
+                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active 
+                    ? EventMessageSubscriptionType.Active 
+                    : EventMessageSubscriptionType.Passive
+            }).ConfigureAwait(false)) {
                 while (!cancellationToken.IsCancellationRequested) {
                     try {
                         var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);

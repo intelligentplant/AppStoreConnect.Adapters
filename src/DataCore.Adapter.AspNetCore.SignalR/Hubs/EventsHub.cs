@@ -21,8 +21,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
-        /// <param name="subscriptionType">
-        ///   Specifies if an active or passive subscription should be created.
+        /// <param name="request">
+        ///   Additional subscription properties.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -30,13 +30,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext, subscriptionType).ConfigureAwait(false);
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, request ?? new CreateEventMessageSubscriptionRequest()).ConfigureAwait(false);
 
             var result = Channel.CreateUnbounded<EventMessage>();
 

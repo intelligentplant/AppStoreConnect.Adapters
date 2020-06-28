@@ -396,8 +396,11 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var subscription = CreateSubscription(context);
+        public async Task<ISnapshotTagValueSubscription> Subscribe(
+            IAdapterCallContext context,
+            CreateSnapshotTagValueSubscriptionRequest request
+        ) {
+            var subscription = CreateSubscription(context, request);
 
             _subscriptionsLock.EnterWriteLock();
             try {
@@ -418,13 +421,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
         /// </param>
+        /// <param name="request">
+        ///   The request settings.
+        /// </param>
         /// <returns>
         ///   A new <see cref="Subscription"/> object.
         /// </returns>
         /// <remarks>
         ///   The subscription should not be started.
         /// </remarks>
-        protected virtual Subscription CreateSubscription(IAdapterCallContext context) {
+        protected virtual Subscription CreateSubscription(
+            IAdapterCallContext context, 
+            CreateSnapshotTagValueSubscriptionRequest request
+        ) {
+            // Default implementation of Subscription does not do anything with the request.
             return new Subscription(
                 context,
                 this
@@ -598,7 +608,10 @@ namespace DataCore.Adapter.RealTimeData {
             /// <exception cref="ArgumentNullException">
             ///   <paramref name="push"/> is <see langword="null"/>.
             /// </exception>
-            public Subscription(IAdapterCallContext context, SnapshotTagValuePush push) : base(context, push?._options?.AdapterId) {
+            public Subscription(
+                IAdapterCallContext context, 
+                SnapshotTagValuePush push
+            ) : base(context, push?._options?.AdapterId) {
                 _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 

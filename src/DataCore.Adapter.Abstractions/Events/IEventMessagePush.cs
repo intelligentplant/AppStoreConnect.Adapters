@@ -13,10 +13,8 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="subscriptionType">
-        ///   Specifies if the adapter should treat this as an active or passive subscription. 
-        ///   Some adapters will only emit event messages when they have at least one active 
-        ///   subscriber.
+        /// <param name="request">
+        ///   A request describing the subscription settings.
         /// </param>
         /// <returns>
         ///   A task that will create and start a subscription object that can be disposed once 
@@ -24,7 +22,7 @@ namespace DataCore.Adapter.Events {
         /// </returns>
         Task<IEventMessageSubscription> Subscribe(
             IAdapterCallContext context, 
-            EventMessageSubscriptionType subscriptionType
+            CreateEventMessageSubscriptionRequest request
         );
 
     }

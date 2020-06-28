@@ -61,6 +61,33 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A connection ID is required..
+        /// </summary>
+        internal static string Error_ConnectionIdRequired {
+            get {
+                return ResourceManager.GetString("Error_ConnectionIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A subscription ID is required..
+        /// </summary>
+        internal static string Error_SubscriptionIdRequired {
+            get {
+                return ResourceManager.GetString("Error_SubscriptionIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A subscription topic is required..
+        /// </summary>
+        internal static string Error_SubscriptionTopicIsRequired {
+            get {
+                return ResourceManager.GetString("Error_SubscriptionTopicIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error in background task {WorkItem}..
         /// </summary>
         internal static string Log_ErrorInBackgroundTask {

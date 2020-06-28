@@ -35,11 +35,81 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
 
         /// <summary>
+        /// Creates a snapshot tag value subscription.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID to subscribe to.
+        /// </param>
+        /// <param name="request">
+        ///   The subscription request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the ID of the subscription. This can 
+        ///   be used to subscribe to individual tags via the <see cref="CreateSnapshotTagValueChannelAsync"/> 
+        ///   method.
+        /// </returns>
+        public async Task<string> CreateSnapshotTagValueSubscriptionAsync(
+            string adapterId,
+            CreateSnapshotTagValueSubscriptionRequest request,
+            CancellationToken cancellationToken
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            return await connection.InvokeAsync<string>(
+                "CreateSnapshotTagValueSubscription",
+                adapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Deletes a snapshot tag value subscription.
+        /// </summary>
+        /// <param name="subscriptionId">
+        ///   The subscription ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return a flag indicating if the subscription 
+        ///   was deleted. Deleting a subscription will cancel all active tag value channels 
+        ///   associated with the subscription.
+        /// </returns>
+        public async Task<bool> DeleteSnapshotTagValueSubscriptionAsync(
+            string subscriptionId,
+            CancellationToken cancellationToken
+        ) {
+            if (string.IsNullOrWhiteSpace(subscriptionId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(subscriptionId));
+            }
+
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            return await connection.InvokeAsync<bool>(
+                "DeleteSnapshotTagValueSubscription",
+                subscriptionId,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
         /// Creates a subscription channel to receive snapshot values in real-time from the 
         /// specified adapter.
         /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
+        /// <param name="subscriptionId">
+        ///   The subscription ID to add the tag to.
         /// </param>
         /// <param name="tagIdOrName">
         ///   The tag ID or name to subscribe to.
@@ -53,15 +123,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   the caller.
         /// </returns>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        ///   <paramref name="subscriptionId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="tagIdOrName"/> is <see langword="null"/> or white space.
         /// </exception>
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
-            string adapterId, 
-            string tagIdOrName, 
+            string subscriptionId, 
+            string tagIdOrName,
             CancellationToken cancellationToken = default
         ) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            if (string.IsNullOrWhiteSpace(subscriptionId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(subscriptionId));
             }
             if (string.IsNullOrWhiteSpace(tagIdOrName)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(tagIdOrName));
@@ -70,7 +143,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
-                adapterId,
+                subscriptionId,
                 tagIdOrName,
                 cancellationToken
             ).ConfigureAwait(false);

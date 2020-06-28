@@ -20,11 +20,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
 
         /// <inheritdoc />
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
             var result = new Subscription(
                 this,
                 context,
-                subscriptionType
+                request
             );
 
             await result.Start().ConfigureAwait(false);
@@ -44,6 +44,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             private readonly EventMessagePushImpl _feature;
 
             /// <summary>
+            /// The subscription request.
+            /// </summary>
+            private readonly CreateEventMessageSubscriptionRequest _request;
+
+            /// <summary>
             /// The underlying hub connection.
             /// </summary>
             private readonly AdapterSignalRClient _client;
@@ -58,15 +63,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             /// <param name="context">
             ///   The adapter call context for the subscriber.
             /// </param>
-            /// <param name="subscriptionType">
-            ///   Flags if the subscription is active or passive.
+            /// <param name="request">
+            ///   Additional subscription request properties.
             /// </param>
             public Subscription( 
                 EventMessagePushImpl feature,
                 IAdapterCallContext context,
-                EventMessageSubscriptionType subscriptionType
-            ) : base(context, feature.AdapterId, subscriptionType) {
+                CreateEventMessageSubscriptionRequest request
+            ) : base(context, feature.AdapterId, request?.SubscriptionType ?? EventMessageSubscriptionType.Active) {
                 _feature = feature;
+                _request = request ?? new CreateEventMessageSubscriptionRequest();
                 _client = feature.GetClient();
             }
 
@@ -75,7 +81,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             protected override async Task RunSubscription(CancellationToken cancellationToken) {
                 var eventsChannel = await _client.Events.CreateEventMessageChannelAsync(
                     _feature.AdapterId,
-                    SubscriptionType,
+                    _request,
                     cancellationToken
                 ).ConfigureAwait(false);
 

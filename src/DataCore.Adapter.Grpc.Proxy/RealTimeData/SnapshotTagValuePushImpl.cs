@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     /// <summary>
     /// <see cref="ISnapshotTagValuePush"/> implementation.
     /// </summary>
-    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
+    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush, IAsyncDisposable {
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePushImpl"/> instance.
@@ -25,11 +25,27 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var result = new Subscription(context, this);
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request) {
+            var result = new Subscription(context, request, this);
             await result.Start().ConfigureAwait(false);
 
             return result;
+        }
+
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            try {
+                // Ensure that we delete all subscriptions for this connection.
+                var request = new DeleteSnapshotSubscriptionRequest() {
+                    SubscriptionId = string.Empty
+                };
+                var response = CreateClient<TagValuesService.TagValuesServiceClient>().DeleteSnapshotSubscriptionAsync(request, GetCallOptions(null, default));
+                await response.ResponseAsync.ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
 
 
@@ -43,6 +59,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// The creating feature.
             /// </summary>
             private readonly SnapshotTagValuePushImpl _feature;
+
+            /// <summary>
+            /// The subscription creation options.
+            /// </summary>
+            private readonly CreateSnapshotTagValueSubscriptionRequest _request;
+
+            /// <summary>
+            /// The remote subscription ID.
+            /// </summary>
+            private string _subscriptionId;
 
             /// <summary>
             /// The client for the gRPC service.
@@ -61,14 +87,19 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// <param name="context">
             ///   The adapter call context for the subscription owner.
             /// </param>
+            /// <param name="request">
+            ///   The subscription creation request.
+            /// </param>
             /// <param name="feature">
             ///   The push feature.
             /// </param>
             internal Subscription(
                 IAdapterCallContext context,
+                CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePushImpl feature
             ) : base(context, feature.AdapterId) {
                 _feature = feature;
+                _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
                 _client = _feature.CreateClient<TagValuesService.TagValuesServiceClient>();
             }
 
@@ -91,11 +122,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             ///   fires.
             /// </returns>
             private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
+                if (string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    tcs.TrySetResult(false);
+                    return;
+                }
+                
                 GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
 
                 try {
                     grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
-                        AdapterId = _feature.AdapterId,
+                        SubscriptionId = _subscriptionId,
                         Tag = tagId
                     }, _feature.GetCallOptions(Context, cancellationToken));
                 }
@@ -121,6 +157,30 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                         cancellationToken
                     ).ConfigureAwait(false);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            protected override async Task Init(CancellationToken cancellationToken) {
+                await base.Init(cancellationToken).ConfigureAwait(false);
+
+                // Create the subscription.
+                var request = new CreateSnapshotSubscriptionRequest() {
+                    AdapterId = _feature.AdapterId
+                };
+                if (_request.Properties != null) {
+                    foreach (var item in _request.Properties) {
+                        request.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    }
+                }
+
+                var response = _client.CreateSnapshotSubscriptionAsync(
+                    request,
+                    _feature.GetCallOptions(Context, cancellationToken)
+                );
+
+                var result = await response.ResponseAsync.ConfigureAwait(false);
+                _subscriptionId = result.SubscriptionId;
             }
 
 
@@ -177,6 +237,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
 
                 _tagSubscriptionLifetimes.Clear();
+                if (!string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    // Notify server of cancellation.
+                    _feature.TaskScheduler.QueueBackgroundWorkItem(async ct => {
+                        var response = _client.DeleteSnapshotSubscriptionAsync(new DeleteSnapshotSubscriptionRequest() { 
+                            SubscriptionId = _subscriptionId
+                        }, _feature.GetCallOptions(Context, ct));
+
+                        await response.ResponseAsync.ConfigureAwait(false);
+                    });
+                }
             }
 
         }

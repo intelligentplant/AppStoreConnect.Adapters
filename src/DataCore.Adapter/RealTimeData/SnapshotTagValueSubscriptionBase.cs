@@ -59,6 +59,20 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <inheritdoc/>
+        public override bool IsMatch(TagValueQueryResult value, string topic) {
+            if (base.IsMatch(value, topic)) {
+                return true;
+            }
+
+            if (value == null || string.IsNullOrWhiteSpace(topic)) {
+                return false;
+            }
+
+            return string.Equals(value?.TagName, topic, System.StringComparison.OrdinalIgnoreCase);
+        }
+
+
         /// <summary>
         /// Invoked when a tag name or ID must be resolved.
         /// </summary>

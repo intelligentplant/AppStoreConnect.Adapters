@@ -685,6 +685,16 @@ namespace DataCore.Adapter {
         }
 
 
+        private void DisposeCommon() {
+            _stopTokenSource?.Cancel();
+            _stopTokenSource?.Dispose();
+            _healthCheckManager.Dispose();
+            _properties.Clear();
+            _loggerScope.Dispose();
+            _startupLock.Dispose();
+        }
+
+
         /// <summary>
         /// Releases adapter resources.
         /// </summary>
@@ -698,14 +708,8 @@ namespace DataCore.Adapter {
             }
 
             if (disposing) {
-                _stopTokenSource?.Cancel();
-                _stopTokenSource?.Dispose();
-                _healthCheckManager.Dispose();
+                DisposeCommon();
                 _features.Dispose();
-                _properties.Clear();
-                _loggerScope.Dispose();
-                _startupLock.Dispose();
-                
                 _isDisposed = true;
             }
         }
@@ -722,13 +726,19 @@ namespace DataCore.Adapter {
         ///   A <see cref="ValueTask"/> that will perform the operation.
         /// </returns>
         /// <remarks>
-        ///   The default implementation of this method calls <see cref="Dispose(bool)"/>. Override 
-        ///   both this method and <see cref="Dispose(bool)"/> if your adapter requires a separate 
-        ///   asynchronous resource cleanup implementation.
+        ///   Override both this method and <see cref="Dispose(bool)"/> if your adapter requires 
+        ///   a separate asynchronous resource cleanup implementation.
         /// </remarks>
-        protected virtual ValueTask DisposeAsync(bool disposing) {
-            Dispose(disposing);
-            return default;
+        protected virtual async ValueTask DisposeAsync(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (disposing) {
+                DisposeCommon();
+                await _features.DisposeAsync().ConfigureAwait(false);
+                _isDisposed = true;
+            }
         }
 
 
