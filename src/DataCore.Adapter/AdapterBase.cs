@@ -81,7 +81,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        public CancellationToken StopToken => _stopTokenSource.Token;
+        public CancellationToken StopToken { get; }
 
         /// <summary>
         /// Allows the adapter to register work items to be run in the background. The adapter's 
@@ -202,6 +202,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, MaxDescriptionLength), nameof(description));
             }
 
+            StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
             TaskScheduler = new BackgroundTaskServiceWrapper(this, scheduler ?? BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
