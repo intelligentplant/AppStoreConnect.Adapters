@@ -40,9 +40,10 @@ message ReadSnapshotTagValuesRequest {
 
 // Snapshot tag value push
 message CreateSnapshotSubscriptionRequest {
-    string adapter_id = 1;
-    map<string, string> properties = 2;
-    google.protobuf.Duration publish_interval = 3;
+    string session_id = 1;
+    string adapter_id = 2;
+    map<string, string> properties = 3;
+    google.protobuf.Duration publish_interval = 4;
 }
 
 message CreateSnapshotSubscriptionResponse {
@@ -50,7 +51,8 @@ message CreateSnapshotSubscriptionResponse {
 }
 
 message DeleteSnapshotSubscriptionRequest {
-    string subscription_id = 1;
+    string session_id = 1;
+    string subscription_id = 2;
 }
 
 message DeleteSnapshotSubscriptionResponse {
@@ -58,8 +60,9 @@ message DeleteSnapshotSubscriptionResponse {
 }
 
 message CreateSnapshotPushChannelRequest {
-    string subscription_id = 1;
-    string tag = 2;
+    string session_id = 1;
+    string subscription_id = 2;
+    string tag = 3;
 }
 
 

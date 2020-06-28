@@ -246,6 +246,7 @@ namespace DataCore.Adapter.AspNetCore {
         /// </param>
         internal ConnectionSubscriptionList(string connectionId) {
             ConnectionId = connectionId;
+            UtcLastClientHeartbeat = DateTime.UtcNow;
         }
 
 

@@ -44,6 +44,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
         /// <summary>
+        /// Session ID to use with topic-based subscriptions.
+        /// </summary>
+        protected string RemoteSessionId {
+            get { return _proxy.RemoteSessionId; }
+        }
+
+        /// <summary>
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
         protected IBackgroundTaskService TaskScheduler {

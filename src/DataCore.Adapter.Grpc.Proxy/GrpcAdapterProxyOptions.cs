@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -12,6 +13,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </summary>
         [Required]
         public string RemoteId { get; set; }
+
+        /// <summary>
+        /// The interval at which to send a heartbeat message to the remote service.
+        /// </summary>
+        public TimeSpan HeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// A factory that can be used to set per-call credentials for gRPC calls.

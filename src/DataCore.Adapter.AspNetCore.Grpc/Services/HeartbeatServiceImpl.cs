@@ -21,6 +21,9 @@ namespace DataCore.Adapter.AspNetCore.Grpc.Services {
 
         /// <inheritdoc/>
         public override Task<Pong> Heartbeat(Ping request, ServerCallContext context) {
+            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
+                ? context.Peer
+                : string.Concat(context.Peer, "-", request.SessionId);
             HeartbeatReceived?.Invoke(context.Peer);
             return Task.FromResult(new Pong());
         }

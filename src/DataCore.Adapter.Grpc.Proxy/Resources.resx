@@ -143,6 +143,9 @@
   <data name="Log_ChannelShutdownError" xml:space="preserve">
     <value>Error while shutting down gRPC channel.</value>
   </data>
+  <data name="Log_ErrorDuringHeartbeatInvocation" xml:space="preserve">
+    <value>Error while calling the heartbeat endpoint.</value>
+  </data>
   <data name="Log_ExtensionFeatureRegistrationError" xml:space="preserve">
     <value>Error while registering an extension feature implementation: {0}</value>
     <comment>{0} - feature name</comment>

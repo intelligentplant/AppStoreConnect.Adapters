@@ -1,4 +1,6 @@
 ﻿using System;
+
+using DataCore.Adapter.AspNetCore.Grpc.Services;
 using DataCore.Adapter.Grpc.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -44,6 +46,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             MapService<AdaptersServiceImpl>(endpoints, builder);
             MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
             MapService<EventsServiceImpl>(endpoints, builder);
+            MapService<HeartbeatServiceImpl>(endpoints, builder);
             MapService<HostInfoServiceImpl>(endpoints, builder);
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);

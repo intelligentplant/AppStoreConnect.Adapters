@@ -11,5 +11,7 @@ service HeartbeatService {
     rpc Heartbeat(Ping) returns (Pong);
 }
 
-message Ping { }
+message Ping { 
+    string session_id = 1;
+}
 message Pong { }

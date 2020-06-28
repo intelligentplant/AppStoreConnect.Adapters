@@ -78,7 +78,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <param name="timeout">
         ///   The heartbeat timeout.
         /// </param>
-        internal void CleanUpStaleSubscriptions(TimeSpan timeout) {
+        internal static void CleanUpStaleSubscriptions(TimeSpan timeout) {
             foreach (var connectionId in s_snapshotSubscriptions.GetConnectionIds()) {
                 if (!s_snapshotSubscriptions.IsConnectionStale(connectionId, timeout)) {
                     continue;
@@ -112,9 +112,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 });
             }
 
-                var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
             var adapterId = request.AdapterId;
+            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
+                ? context.Peer
+                : string.Concat(context.Peer, "-", request.SessionId);
 
             var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
                 adapterCallContext,
@@ -134,7 +137,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
             return new CreateSnapshotSubscriptionResponse() { 
-                SubscriptionId = s_snapshotSubscriptions.AddSubscription(context.Peer, wrappedSubscription)
+                SubscriptionId = s_snapshotSubscriptions.AddSubscription(connectionId, wrappedSubscription)
             };
         }
 
@@ -143,15 +146,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override Task<DeleteSnapshotSubscriptionResponse> DeleteSnapshotSubscription(DeleteSnapshotSubscriptionRequest request, ServerCallContext context) {
             DeleteSnapshotSubscriptionResponse result;
 
+            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
+                ? context.Peer
+                : string.Concat(context.Peer, "-", request.SessionId);
+
             if (string.IsNullOrWhiteSpace(request.SubscriptionId)) {
-                s_snapshotSubscriptions.RemoveAllSubscriptions(context.Peer);
+                s_snapshotSubscriptions.RemoveAllSubscriptions(connectionId);
                 result = new DeleteSnapshotSubscriptionResponse() {
                     Success = true
                 };
             }
             else {
                 result = new DeleteSnapshotSubscriptionResponse() {
-                    Success = s_snapshotSubscriptions.RemoveSubscription(context.Peer, request.SubscriptionId)
+                    Success = s_snapshotSubscriptions.RemoveSubscription(connectionId, request.SubscriptionId)
                 };
             }
             return Task.FromResult(result);
@@ -164,9 +171,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             IServerStreamWriter<TagValueQueryResult> responseStream, 
             ServerCallContext context
         ) {
+            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
+                ? context.Peer
+                : string.Concat(context.Peer, "-", request.SessionId);
+
             var cancellationToken = context.CancellationToken;
 
-            if (!s_snapshotSubscriptions.TryGetSubscription(context.Peer, request.SubscriptionId, out var subscription)) {
+            if (!s_snapshotSubscriptions.TryGetSubscription(connectionId, request.SubscriptionId, out var subscription)) {
                 return;
             }
 

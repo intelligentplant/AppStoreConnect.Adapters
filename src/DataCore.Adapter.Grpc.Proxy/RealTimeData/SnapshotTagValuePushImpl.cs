@@ -106,68 +106,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }
 
 
-            /// <summary>
-            /// Creates an processes a subscription to the specified tag ID.
-            /// </summary>
-            /// <param name="tagId">
-            ///   The tag ID.
-            /// </param>
-            /// <param name="tcs">
-            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
-            ///   tag subscription has been created.
-            /// </param>
-            /// <param name="cancellationToken">
-            ///   The cancellation token for the operation.
-            /// </param>
-            /// <returns>
-            ///   A long-running task that will run the subscription until the cancellation token 
-            ///   fires.
-            /// </returns>
-            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
-                if (string.IsNullOrWhiteSpace(_subscriptionId)) {
-                    tcs.TrySetResult(false);
-                    return;
-                }
-                
-                GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
-
-                try {
-                    grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
-                        SubscriptionId = _subscriptionId,
-                        Tag = tagId
-                    }, _feature.GetCallOptions(Context, cancellationToken));
-                }
-                catch (OperationCanceledException) {
-                    tcs.TrySetCanceled(cancellationToken);
-                    throw;
-                }
-                catch (Exception e) {
-                    tcs.TrySetException(e);
-                    throw;
-                }
-                finally {
-                    tcs.TrySetResult(true);
-                }
-
-                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (grpcChannel.ResponseStream.Current == null) {
-                        continue;
-                    }
-
-                    await ValueReceived(
-                        grpcChannel.ResponseStream.Current.ToAdapterTagValueQueryResult(),
-                        cancellationToken
-                    ).ConfigureAwait(false);
-                }
-            }
-
-
             /// <inheritdoc/>
             protected override async Task Init(CancellationToken cancellationToken) {
                 await base.Init(cancellationToken).ConfigureAwait(false);
 
                 // Create the subscription.
                 var request = new CreateSnapshotSubscriptionRequest() {
+                    SessionId = _feature.RemoteSessionId,
                     AdapterId = _feature.AdapterId,
                     PublishInterval = _request.PublishInterval > TimeSpan.Zero
                         ? Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(_request.PublishInterval)
@@ -251,6 +196,63 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                         await response.ResponseAsync.ConfigureAwait(false);
                     });
+                }
+            }
+
+
+            /// <summary>
+            /// Creates an processes a subscription to the specified tag ID.
+            /// </summary>
+            /// <param name="tagId">
+            ///   The tag ID.
+            /// </param>
+            /// <param name="tcs">
+            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
+            ///   tag subscription has been created.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A long-running task that will run the subscription until the cancellation token 
+            ///   fires.
+            /// </returns>
+            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
+                if (string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    tcs.TrySetResult(false);
+                    return;
+                }
+
+                GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
+
+                try {
+                    grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
+                        SessionId = _feature.RemoteSessionId,
+                        SubscriptionId = _subscriptionId,
+                        Tag = tagId
+                    }, _feature.GetCallOptions(Context, cancellationToken));
+                }
+                catch (OperationCanceledException) {
+                    tcs.TrySetCanceled(cancellationToken);
+                    throw;
+                }
+                catch (Exception e) {
+                    tcs.TrySetException(e);
+                    throw;
+                }
+                finally {
+                    tcs.TrySetResult(true);
+                }
+
+                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (grpcChannel.ResponseStream.Current == null) {
+                        continue;
+                    }
+
+                    await ValueReceived(
+                        grpcChannel.ResponseStream.Current.ToAdapterTagValueQueryResult(),
+                        cancellationToken
+                    ).ConfigureAwait(false);
                 }
             }
 
