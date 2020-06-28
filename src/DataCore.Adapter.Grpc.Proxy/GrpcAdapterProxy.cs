@@ -504,7 +504,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private async Task RunRemoteHeartbeatLoop(CancellationToken cancellationToken) {
             var interval = Options.HeartbeatInterval;
             if (Options.HeartbeatInterval <= TimeSpan.FromSeconds(5)) {
-                interval = Options.HeartbeatInterval;
+                interval = TimeSpan.FromSeconds(5);
             }
 
             var client = CreateClient<HeartbeatService.HeartbeatServiceClient>();

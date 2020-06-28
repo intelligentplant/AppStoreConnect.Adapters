@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc.Services {
             var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
                 ? context.Peer
                 : string.Concat(context.Peer, "-", request.SessionId);
-            HeartbeatReceived?.Invoke(context.Peer);
+            HeartbeatReceived?.Invoke(connectionId);
             return Task.FromResult(new Pong());
         }
 
