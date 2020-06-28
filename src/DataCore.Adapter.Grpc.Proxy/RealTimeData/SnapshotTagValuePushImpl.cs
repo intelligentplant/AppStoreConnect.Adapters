@@ -97,7 +97,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 IAdapterCallContext context,
                 CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePushImpl feature
-            ) : base(context, feature.AdapterId, request?.PublishInterval ?? TimeSpan.Zero) {
+            ) : base(context, feature.AdapterId, TimeSpan.Zero) {
+                // We specify TimeSpan.Zero in the base constructor call because we will let the 
+                // remote system handle the publish interval.
                 _feature = feature;
                 _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
                 _client = _feature.CreateClient<TagValuesService.TagValuesServiceClient>();
