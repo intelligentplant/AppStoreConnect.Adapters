@@ -126,6 +126,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 #pragma warning disable CA2000 // Dispose objects before losing scope
             var wrappedSubscription = new TopicSubscriptionWrapper<RealTimeData.TagValueQueryResult>(
                 await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() { 
+                    PublishInterval = request.PublishInterval.ToTimeSpan(),
                     Properties = new Dictionary<string, string>(request.Properties)
                 }).ConfigureAwait(false),
                 _backgroundTaskService

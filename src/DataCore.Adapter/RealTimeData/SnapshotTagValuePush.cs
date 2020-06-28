@@ -434,9 +434,9 @@ namespace DataCore.Adapter.RealTimeData {
             IAdapterCallContext context, 
             CreateSnapshotTagValueSubscriptionRequest request
         ) {
-            // Default implementation of Subscription does not do anything with the request.
             return new Subscription(
                 context,
+                request,
                 this
             );
         }
@@ -602,6 +602,9 @@ namespace DataCore.Adapter.RealTimeData {
             /// <param name="context">
             ///   The <see cref="IAdapterCallContext"/> for the subscriber.
             /// </param>
+            /// <param name="request">
+            ///   The subscription request.
+            /// </param>
             /// <param name="push">
             ///   The owning <see cref="SnapshotTagValuePush"/> instance.
             /// </param>
@@ -609,9 +612,10 @@ namespace DataCore.Adapter.RealTimeData {
             ///   <paramref name="push"/> is <see langword="null"/>.
             /// </exception>
             public Subscription(
-                IAdapterCallContext context, 
+                IAdapterCallContext context,
+                CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePush push
-            ) : base(context, push?._options?.AdapterId) {
+            ) : base(context, push?._options?.AdapterId, request?.PublishInterval ?? TimeSpan.Zero) {
                 _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 

@@ -87,7 +87,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 IAdapterCallContext context,
                 CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePushImpl feature
-            ) : base (context, feature.AdapterId) {
+            ) : base (context, feature.AdapterId, request?.PublishInterval ?? TimeSpan.Zero) {
                 _feature = feature;
                 _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
             }

@@ -42,6 +42,7 @@ message ReadSnapshotTagValuesRequest {
 message CreateSnapshotSubscriptionRequest {
     string adapter_id = 1;
     map<string, string> properties = 2;
+    google.protobuf.Duration publish_interval = 3;
 }
 
 message CreateSnapshotSubscriptionResponse {

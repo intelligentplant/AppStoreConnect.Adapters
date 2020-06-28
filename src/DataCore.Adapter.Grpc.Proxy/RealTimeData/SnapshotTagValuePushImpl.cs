@@ -97,7 +97,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 IAdapterCallContext context,
                 CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePushImpl feature
-            ) : base(context, feature.AdapterId) {
+            ) : base(context, feature.AdapterId, request?.PublishInterval ?? TimeSpan.Zero) {
                 _feature = feature;
                 _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
                 _client = _feature.CreateClient<TagValuesService.TagValuesServiceClient>();
@@ -166,7 +166,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                 // Create the subscription.
                 var request = new CreateSnapshotSubscriptionRequest() {
-                    AdapterId = _feature.AdapterId
+                    AdapterId = _feature.AdapterId,
+                    PublishInterval = _request.PublishInterval > TimeSpan.Zero
+                        ? Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(_request.PublishInterval)
+                        : Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(TimeSpan.Zero)
                 };
                 if (_request.Properties != null) {
                     foreach (var item in _request.Properties) {
