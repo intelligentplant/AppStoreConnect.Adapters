@@ -109,8 +109,11 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
-            var subscription = CreateSubscription(context, subscriptionType);
+        public async Task<IEventMessageSubscription> Subscribe(
+            IAdapterCallContext context,
+            CreateEventMessageSubscriptionRequest request
+        ) {
+            var subscription = CreateSubscription(context, request);
 
             bool added;
             _subscriptionsLock.EnterWriteLock();
@@ -140,14 +143,17 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the subscriber.
         /// </param>
-        /// <param name="subscriptionType">
-        ///   The subscription type.
+        /// <param name="request">
+        ///   The request settings.
         /// </param>
         /// <returns>
         ///   The new subscription.
         /// </returns>
-        protected virtual Subscription CreateSubscription(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
-            return new Subscription(context, subscriptionType, this);
+        protected virtual Subscription CreateSubscription(
+            IAdapterCallContext context, 
+            CreateEventMessageSubscriptionRequest request
+        ) {
+            return new Subscription(context, request, this);
         }
 
 
@@ -381,17 +387,17 @@ namespace DataCore.Adapter.Events {
             /// <param name="context">
             ///   The adapter call context for the subscriber.
             /// </param>
-            /// <param name="subscriptionType">
-            ///   Indicates if the subscription is an active or passive event listener.
+            /// <param name="request">
+            ///   The request settings.
             /// </param>
             /// <param name="push">
             ///   The subscription manager that the subscription is attached to.
             /// </param>
             public Subscription(
                 IAdapterCallContext context,
-                EventMessageSubscriptionType subscriptionType,
+                CreateEventMessageSubscriptionRequest request,
                 EventMessagePush push
-            ) : base(context, push?._options?.AdapterId, subscriptionType) {
+            ) : base(context, push?._options?.AdapterId, request?.SubscriptionType ?? EventMessageSubscriptionType.Active) {
                 _push = push ?? throw new ArgumentNullException(nameof(push));
             }
 

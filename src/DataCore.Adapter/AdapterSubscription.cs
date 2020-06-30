@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter {
 
@@ -213,7 +212,29 @@ namespace DataCore.Adapter {
         ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> that 
         ///   indicates if the value was published to the subscription.
         /// </returns>
-        public async ValueTask<bool> ValueReceived(T value, CancellationToken cancellationToken = default) {
+        /// <remarks>
+        ///   Override this method if you need to customise the publishing behaviour of a 
+        ///   subscription.
+        /// </remarks>
+        public virtual ValueTask<bool> ValueReceived(T value, CancellationToken cancellationToken = default) {
+            return WriteToChannel(value, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Publishes a value to the <see cref="Reader"/> channel.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> that 
+        ///   indicates if the value was published to the subscription.
+        /// </returns>
+        protected async ValueTask<bool> WriteToChannel(T value, CancellationToken cancellationToken = default) {
             if (_isDisposing != 0 || _isDisposed || CancellationToken.IsCancellationRequested || value == null) {
                 return false;
             }

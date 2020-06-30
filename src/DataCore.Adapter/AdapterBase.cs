@@ -81,7 +81,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        public CancellationToken StopToken => _stopTokenSource.Token;
+        public CancellationToken StopToken { get; }
 
         /// <summary>
         /// Allows the adapter to register work items to be run in the background. The adapter's 
@@ -98,7 +98,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The adapter features.
         /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection();
+        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection(true);
 
         /// <summary>
         /// The <see cref="HealthCheckManager"/> that provides the <see cref="IHealthCheck"/> feature.
@@ -202,6 +202,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, MaxDescriptionLength), nameof(description));
             }
 
+            StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
             TaskScheduler = new BackgroundTaskServiceWrapper(this, scheduler ?? BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
@@ -686,6 +687,20 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Disposes of items common to both <see cref="Dispose(bool)"/> and 
+        /// <see cref="DisposeAsync(bool)"/>.
+        /// </summary>
+        private void DisposeCommon() {
+            _stopTokenSource?.Cancel();
+            _stopTokenSource?.Dispose();
+            _healthCheckManager.Dispose();
+            _properties.Clear();
+            _loggerScope.Dispose();
+            _startupLock.Dispose();
+        }
+
+
+        /// <summary>
         /// Releases adapter resources.
         /// </summary>
         /// <param name="disposing">
@@ -698,14 +713,8 @@ namespace DataCore.Adapter {
             }
 
             if (disposing) {
-                _stopTokenSource?.Cancel();
-                _stopTokenSource?.Dispose();
-                _healthCheckManager.Dispose();
+                DisposeCommon();
                 _features.Dispose();
-                _properties.Clear();
-                _loggerScope.Dispose();
-                _startupLock.Dispose();
-                
                 _isDisposed = true;
             }
         }
@@ -722,13 +731,19 @@ namespace DataCore.Adapter {
         ///   A <see cref="ValueTask"/> that will perform the operation.
         /// </returns>
         /// <remarks>
-        ///   The default implementation of this method calls <see cref="Dispose(bool)"/>. Override 
-        ///   both this method and <see cref="Dispose(bool)"/> if your adapter requires a separate 
-        ///   asynchronous resource cleanup implementation.
+        ///   Override both this method and <see cref="Dispose(bool)"/> if your adapter requires 
+        ///   a separate asynchronous resource cleanup implementation.
         /// </remarks>
-        protected virtual ValueTask DisposeAsync(bool disposing) {
-            Dispose(disposing);
-            return default;
+        protected virtual async ValueTask DisposeAsync(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (disposing) {
+                DisposeCommon();
+                await _features.DisposeAsync().ConfigureAwait(false);
+                _isDisposed = true;
+            }
         }
 
 

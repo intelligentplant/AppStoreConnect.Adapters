@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }.PublishToChannel();
 
-                using (var subscription = await feature.Subscribe(context)) {
+                using (var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest())) {
                     var subscribeSucceeded = await subscription.AddTagToSubscription(
                         TestTag1.Id
                     ).ConfigureAwait(false);

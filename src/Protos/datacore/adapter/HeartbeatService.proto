@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+import "Types.proto";
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service HeartbeatService {
+    rpc Heartbeat(Ping) returns (Pong);
+}
+
+message Ping { 
+    string session_id = 1;
+}
+message Pong { }

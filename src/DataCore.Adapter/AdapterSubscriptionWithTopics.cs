@@ -86,6 +86,18 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Gets the topic name for the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <returns>
+        ///   The topic name for the value.
+        /// </returns>
+        protected abstract string GetTopicNameForValue(TValue value);
+
+
+        /// <summary>
         /// Resolves a topic name to its <typeparamref name="TTopic"/> value.
         /// </summary>
         /// <param name="context">
@@ -123,18 +135,6 @@ namespace DataCore.Adapter {
         ///   A task that will perform additional operations associated with the event.
         /// </returns>
         protected abstract Task OnTopicRemoved(TTopic topic);
-
-
-        /// <summary>
-        /// Gets the topic name for the the specified value. 
-        /// </summary>
-        /// <param name="value">
-        ///   The value.
-        /// </param>
-        /// <returns>
-        ///   The topic name.
-        /// </returns>
-        protected abstract string GetTopicNameForValue(TValue value);
 
 
         /// <inheritdoc/>
@@ -285,6 +285,15 @@ namespace DataCore.Adapter {
             var topicName = GetTopicNameForValue(value);
             return IsSubscribedToTopicName(topicName);
         }
+
+
+        /// <inheritdoc/>
+        public virtual bool IsMatch(TValue value, string topic) {
+            if (value == null || string.IsNullOrWhiteSpace(topic)) {
+                return false;
+            }
+            return string.Equals(GetTopicNameForValue(value), topic, StringComparison.OrdinalIgnoreCase);
+        } 
 
 
         /// <summary>

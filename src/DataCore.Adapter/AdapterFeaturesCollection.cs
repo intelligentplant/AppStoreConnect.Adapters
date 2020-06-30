@@ -44,7 +44,7 @@ namespace DataCore.Adapter {
         /// Creates a new <see cref="AdapterFeaturesCollection"/> object.
         /// </summary>
         /// <param name="disposeFeatures">
-        ///   When <see langword="true"/>, feature implementations that als implement <see cref="IDisposable"/> 
+        ///   When <see langword="true"/>, feature implementations that also implement <see cref="IDisposable"/> 
         ///   or <see cref="IAsyncDisposable"/> will be disposed when the collection is disposed.
         /// </param>
         public AdapterFeaturesCollection(bool disposeFeatures = false) {

@@ -13,7 +13,6 @@ using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
-using System.Linq;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -33,6 +32,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// The ID of the remote adapter.
         /// </summary>
         private readonly string _remoteAdapterId;
+
+        /// <summary>
+        /// Session ID to use with topic-based subscriptions.
+        /// </summary>
+        internal string RemoteSessionId { get; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Information about the remote host.
@@ -265,6 +269,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 // Adapter supports health check subscriptions.
                 TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
+
+            // Send periodic heartbeat message - this ensures that topic-based subscriptions 
+            // (where separate actions are required to create the subscription and the individual 
+            // topic subscription streams) are kept alive even if there aren't currently topics 
+            // being actively subscribed to.
+            TaskScheduler.QueueBackgroundWorkItem(RunRemoteHeartbeatLoop);
         }
 
 
@@ -479,6 +489,39 @@ namespace DataCore.Adapter.Grpc.Proxy {
 #endif
 
             return results;
+        }
+
+
+        /// <summary>
+        /// Periodically sends a heartbeat message to the remote host.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   A cancellation token that will trigger when the task should exit.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will periodically send a heartbeat message.
+        /// </returns>
+        private async Task RunRemoteHeartbeatLoop(CancellationToken cancellationToken) {
+            var interval = Options.HeartbeatInterval;
+            if (Options.HeartbeatInterval <= TimeSpan.FromSeconds(5)) {
+                interval = TimeSpan.FromSeconds(5);
+            }
+
+            var client = CreateClient<HeartbeatService.HeartbeatServiceClient>();
+            while (!cancellationToken.IsCancellationRequested) {
+                try {
+                    await client.HeartbeatAsync(new Ping() { 
+                        SessionId = RemoteSessionId
+                    }, GetCallOptions(null, cancellationToken)).ResponseAsync.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ErrorDuringHeartbeatInvocation);
+                }
+                await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+            }
         }
 
 

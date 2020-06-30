@@ -133,6 +133,15 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while calling the heartbeat endpoint..
+        /// </summary>
+        internal static string Log_ErrorDuringHeartbeatInvocation {
+            get {
+                return ResourceManager.GetString("Log_ErrorDuringHeartbeatInvocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
         internal static string Log_ExtensionFeatureRegistrationError {

@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     /// <summary>
     /// <see cref="ISnapshotTagValuePush"/> implementation.
     /// </summary>
-    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush {
+    internal class SnapshotTagValuePushImpl : ProxyAdapterFeature, ISnapshotTagValuePush, IAsyncDisposable {
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePushImpl"/> instance.
@@ -25,11 +25,28 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context) {
-            var result = new Subscription(context, this);
+        public async Task<ISnapshotTagValueSubscription> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request) {
+            var result = new Subscription(context, request, this);
             await result.Start().ConfigureAwait(false);
 
             return result;
+        }
+
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() {
+            try {
+                // Ensure that we delete all subscriptions for this connection.
+                var request = new DeleteSnapshotSubscriptionRequest() {
+                    SessionId = RemoteSessionId,
+                    SubscriptionId = string.Empty
+                };
+                var response = CreateClient<TagValuesService.TagValuesServiceClient>().DeleteSnapshotSubscriptionAsync(request, GetCallOptions(null, default));
+                await response.ResponseAsync.ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
 
 
@@ -43,6 +60,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// The creating feature.
             /// </summary>
             private readonly SnapshotTagValuePushImpl _feature;
+
+            /// <summary>
+            /// The subscription creation options.
+            /// </summary>
+            private readonly CreateSnapshotTagValueSubscriptionRequest _request;
+
+            /// <summary>
+            /// The remote subscription ID.
+            /// </summary>
+            private string _subscriptionId;
 
             /// <summary>
             /// The client for the gRPC service.
@@ -61,66 +88,50 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             /// <param name="context">
             ///   The adapter call context for the subscription owner.
             /// </param>
+            /// <param name="request">
+            ///   The subscription creation request.
+            /// </param>
             /// <param name="feature">
             ///   The push feature.
             /// </param>
             internal Subscription(
                 IAdapterCallContext context,
+                CreateSnapshotTagValueSubscriptionRequest request,
                 SnapshotTagValuePushImpl feature
-            ) : base(context, feature.AdapterId) {
+            ) : base(context, feature.AdapterId, TimeSpan.Zero) {
+                // We specify TimeSpan.Zero in the base constructor call because we will let the 
+                // remote system handle the publish interval.
                 _feature = feature;
+                _request = request ?? new CreateSnapshotTagValueSubscriptionRequest();
                 _client = _feature.CreateClient<TagValuesService.TagValuesServiceClient>();
             }
 
 
-            /// <summary>
-            /// Creates an processes a subscription to the specified tag ID.
-            /// </summary>
-            /// <param name="tagId">
-            ///   The tag ID.
-            /// </param>
-            /// <param name="tcs">
-            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
-            ///   tag subscription has been created.
-            /// </param>
-            /// <param name="cancellationToken">
-            ///   The cancellation token for the operation.
-            /// </param>
-            /// <returns>
-            ///   A long-running task that will run the subscription until the cancellation token 
-            ///   fires.
-            /// </returns>
-            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
-                GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
+            /// <inheritdoc/>
+            protected override async Task Init(CancellationToken cancellationToken) {
+                await base.Init(cancellationToken).ConfigureAwait(false);
 
-                try {
-                    grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
-                        AdapterId = _feature.AdapterId,
-                        Tag = tagId
-                    }, _feature.GetCallOptions(Context, cancellationToken));
-                }
-                catch (OperationCanceledException) {
-                    tcs.TrySetCanceled(cancellationToken);
-                    throw;
-                }
-                catch (Exception e) {
-                    tcs.TrySetException(e);
-                    throw;
-                }
-                finally {
-                    tcs.TrySetResult(true);
-                }
-
-                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (grpcChannel.ResponseStream.Current == null) {
-                        continue;
+                // Create the subscription.
+                var request = new CreateSnapshotSubscriptionRequest() {
+                    SessionId = _feature.RemoteSessionId,
+                    AdapterId = _feature.AdapterId,
+                    PublishInterval = _request.PublishInterval > TimeSpan.Zero
+                        ? Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(_request.PublishInterval)
+                        : Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(TimeSpan.Zero)
+                };
+                if (_request.Properties != null) {
+                    foreach (var item in _request.Properties) {
+                        request.Properties.Add(item.Key, item.Value ?? string.Empty);
                     }
-
-                    await ValueReceived(
-                        grpcChannel.ResponseStream.Current.ToAdapterTagValueQueryResult(),
-                        cancellationToken
-                    ).ConfigureAwait(false);
                 }
+
+                var response = _client.CreateSnapshotSubscriptionAsync(
+                    request,
+                    _feature.GetCallOptions(Context, cancellationToken)
+                );
+
+                var result = await response.ResponseAsync.ConfigureAwait(false);
+                _subscriptionId = result.SubscriptionId;
             }
 
 
@@ -177,6 +188,73 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
 
                 _tagSubscriptionLifetimes.Clear();
+                if (!string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    // Notify server of cancellation.
+                    _feature.TaskScheduler.QueueBackgroundWorkItem(async ct => {
+                        var response = _client.DeleteSnapshotSubscriptionAsync(new DeleteSnapshotSubscriptionRequest() { 
+                            SubscriptionId = _subscriptionId
+                        }, _feature.GetCallOptions(Context, ct));
+
+                        await response.ResponseAsync.ConfigureAwait(false);
+                    });
+                }
+            }
+
+
+            /// <summary>
+            /// Creates an processes a subscription to the specified tag ID.
+            /// </summary>
+            /// <param name="tagId">
+            ///   The tag ID.
+            /// </param>
+            /// <param name="tcs">
+            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
+            ///   tag subscription has been created.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A long-running task that will run the subscription until the cancellation token 
+            ///   fires.
+            /// </returns>
+            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
+                if (string.IsNullOrWhiteSpace(_subscriptionId)) {
+                    tcs.TrySetResult(false);
+                    return;
+                }
+
+                GrpcCore.AsyncServerStreamingCall<TagValueQueryResult> grpcChannel;
+
+                try {
+                    grpcChannel = _client.CreateSnapshotPushChannel(new CreateSnapshotPushChannelRequest() {
+                        SessionId = _feature.RemoteSessionId,
+                        SubscriptionId = _subscriptionId,
+                        Tag = tagId
+                    }, _feature.GetCallOptions(Context, cancellationToken));
+                }
+                catch (OperationCanceledException) {
+                    tcs.TrySetCanceled(cancellationToken);
+                    throw;
+                }
+                catch (Exception e) {
+                    tcs.TrySetException(e);
+                    throw;
+                }
+                finally {
+                    tcs.TrySetResult(true);
+                }
+
+                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (grpcChannel.ResponseStream.Current == null) {
+                        continue;
+                    }
+
+                    await ValueReceived(
+                        grpcChannel.ResponseStream.Current.ToAdapterTagValueQueryResult(),
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                }
             }
 
         }

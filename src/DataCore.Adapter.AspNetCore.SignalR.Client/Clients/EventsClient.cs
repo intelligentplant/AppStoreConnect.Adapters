@@ -39,8 +39,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
-        /// <param name="subscriptionType">
-        ///   Specifies if an active or passive subscription should be created.
+        /// <param name="request">
+        ///   Additional subscription properties.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation. If this token fires, or the connection is
@@ -53,7 +53,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannelAsync(string adapterId, EventMessageSubscriptionType subscriptionType, CancellationToken cancellationToken = default) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannelAsync(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken = default) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             return await connection.StreamAsChannelAsync<EventMessage>(
                 "CreateEventMessageChannel",
                 adapterId,
-                subscriptionType,
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
         }

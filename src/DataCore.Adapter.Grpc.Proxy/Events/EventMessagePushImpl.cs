@@ -19,11 +19,11 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, EventMessageSubscriptionType subscriptionType) {
+        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
             var result = new Subscription(
                 this, 
                 context, 
-                subscriptionType
+                request
             );
             await result.Start().ConfigureAwait(false);
             return result;
@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             /// <summary>
             /// Indicates if the subscription is active or passive.
             /// </summary>
-            private readonly bool _activeSubscription;
+            private readonly CreateEventMessageSubscriptionRequest _request;
 
             /// <summary>
             /// The client for the gRPC service.
@@ -61,29 +61,37 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             /// <param name="feature">
             ///   The push feature.
             /// </param>
-            /// <param name="subscriptionType">
+            /// <param name="request">
             ///   The subscription type.
             /// </param>
             public Subscription(
                 EventMessagePushImpl feature, 
                 IAdapterCallContext context,
-                EventMessageSubscriptionType subscriptionType
-            ) : base(context, feature.AdapterId, subscriptionType) {
+                CreateEventMessageSubscriptionRequest request
+            ) : base(context, feature.AdapterId, request?.SubscriptionType ?? EventMessageSubscriptionType.Active) {
                 _feature = feature;
-                _activeSubscription = SubscriptionType == EventMessageSubscriptionType.Active;
+                _request = request ?? new CreateEventMessageSubscriptionRequest();
                 _client = _feature.CreateClient<EventsService.EventsServiceClient>();
             }
 
 
             /// <inheritdoc/>
             protected override async Task RunSubscription(CancellationToken cancellationToken) {
+                var request = new CreateEventPushChannelRequest() {
+                    AdapterId = _feature.AdapterId,
+                    SubscriptionType = _request.SubscriptionType == EventMessageSubscriptionType.Active
+                        ? EventSubscriptionType.Active
+                        : EventSubscriptionType.Passive
+                };
+
+                if (_request.Properties != null) {
+                    foreach (var item in _request.Properties) {
+                        request.Properties.Add(item.Key, item.Value ?? string.Empty);
+                    }
+                }
+
                 using (var grpcChannel = _client.CreateEventPushChannel(
-                   new CreateEventPushChannelRequest() {
-                       AdapterId = _feature.AdapterId,
-                       SubscriptionType = _activeSubscription
-                           ? EventSubscriptionType.Active
-                           : EventSubscriptionType.Passive
-                   },
+                   request,
                    _feature.GetCallOptions(Context, cancellationToken)
                 )) {
                     // Read event messages.

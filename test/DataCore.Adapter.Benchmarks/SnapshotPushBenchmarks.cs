@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Benchmarks {
             using (var push = new SnapshotPush(SampleCountPerTag))
             using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(30))) {
                 var cancellationToken = ctSource.Token;
-                var subscription = await push.Subscribe(null);
+                var subscription = await push.Subscribe(null, new CreateSnapshotTagValueSubscriptionRequest());
 
                 var tcs = new TaskCompletionSource<bool>();
 
