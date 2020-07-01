@@ -27,7 +27,12 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="true"/> if the property could be successfully converted to 
         ///   <typeparamref name="T"/>, or <see langword="false"/> otherwise.
         /// </returns>
-        public static bool TryGetProperty<T>(this AdapterRequest request, string key, out T value) where T : IConvertible {
+        /// <remarks>
+        ///   If <typeparamref name="T"/> implements <see cref="IConvertible"/>, <see cref="Convert.ChangeType(object, Type, IFormatProvider)"/> 
+        ///   will be used to perform the conversion. Support is also provided for <see cref="TimeSpan"/> 
+        ///   and <see cref="Uri"/>. Conversion will fail for any other type.
+        /// </remarks>
+        public static bool TryGetProperty<T>(this AdapterRequest request, string key, out T value) {
             return request.TryGetProperty(key, null, out value);
         }
 
@@ -56,22 +61,58 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="true"/> if the property could be successfully converted to 
         ///   <typeparamref name="T"/>, or <see langword="false"/> otherwise.
         /// </returns>
-        public static bool TryGetProperty<T>(this AdapterRequest request, string key, IFormatProvider formatProvider, out T value) where T : IConvertible {
-            if (request?.Properties == null || key == null || !request.Properties.TryGetValue(key, out var val) || val == null) {
+        /// <remarks>
+        ///   If <typeparamref name="T"/> implements <see cref="IConvertible"/>, <see cref="Convert.ChangeType(object, Type, IFormatProvider)"/> 
+        ///   will be used to perform the conversion. Support is also provided for <see cref="TimeSpan"/> 
+        ///   and <see cref="Uri"/>. Conversion will fail for any other type.
+        /// </remarks>
+        public static bool TryGetProperty<T>(this AdapterRequest request, string key, IFormatProvider formatProvider, out T value) {
+            if (request?.Properties == null || key == null || !request.Properties.TryGetValue(key, out var val)) {
                 value = default;
                 return false;
             }
 
-            try {
-                value = (T) Convert.ChangeType(val, typeof(T), formatProvider);
+            var t = typeof(T);
+            object result;
+
+            if (t == typeof(string)) {
+                result = val;
+                value = (T) result;
                 return true;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch {
-#pragma warning restore CA1031 // Do not catch general exception types
+
+            if (val == null) {
                 value = default;
                 return false;
             }
+
+            if (typeof(IConvertible).IsAssignableFrom(t)) {
+                try {
+                    value = (T) Convert.ChangeType(val, t, formatProvider);
+                    return true;
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    value = default;
+                    return false;
+                }
+            }
+
+            if (t == typeof(TimeSpan) && TimeSpan.TryParse(val, formatProvider, out var ts)) {
+                result = ts;
+                value = (T) result;
+                return true;
+            }
+
+            if (t == typeof(Uri) && Uri.TryCreate(val, UriKind.Absolute, out var uri)) {
+                result = uri;
+                value = (T) result;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
 
     }
