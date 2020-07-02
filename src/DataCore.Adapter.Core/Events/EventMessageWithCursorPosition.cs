@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Creates a new <see cref="EventMessage"/> object.
+        /// Creates a new <see cref="EventMessageWithCursorPosition"/> object.
         /// </summary>
         /// <param name="id">
         ///   The unique identifier for the event message. If <see langword="null"/>, an 
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Creates a new <see cref="EventMessage"/> object.
+        /// Creates a new <see cref="EventMessageWithCursorPosition"/> object.
         /// </summary>
         /// <param name="id">
         ///   The unique identifier for the event message.
