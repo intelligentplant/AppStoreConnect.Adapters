@@ -25,7 +25,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var grpcRequest = new ReadAnnotationsRequest() {
                 AdapterId = AdapterId,
                 UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime)
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
+                MaxAnnotationCount = request.AnnotationCount
             };
             grpcRequest.Tags.AddRange(request.Tags);
             if (request.Properties != null) {
