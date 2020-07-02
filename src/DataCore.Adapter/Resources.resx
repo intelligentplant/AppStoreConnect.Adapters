@@ -196,6 +196,9 @@
   <data name="HealthChecks_Data_TagCount" xml:space="preserve">
     <value>Tag Count</value>
   </data>
+  <data name="HealthChecks_Data_TopicCount" xml:space="preserve">
+    <value>Topic Count</value>
+  </data>
   <data name="HealthChecks_Data_UserName" xml:space="preserve">
     <value>User</value>
   </data>
@@ -241,6 +244,9 @@
   </data>
   <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
     <value>An error occurred while processing a subscription change: Tag = {tag}, Action = {action}</value>
+  </data>
+  <data name="Log_ErrorWhileProcessingSubscriptionTopicChange" xml:space="preserve">
+    <value>An error occurred while processing a subscription change: Topic = {topic}, Action = {action}</value>
   </data>
   <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
     <value>Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>

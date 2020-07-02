@@ -95,54 +95,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             }
 
 
-            /// <summary>
-            /// Creates an processes a subscription to the specified tag ID.
-            /// </summary>
-            /// <param name="tagId">
-            ///   The tag ID.
-            /// </param>
-            /// <param name="tcs">
-            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
-            ///   tag subscription has been created.
-            /// </param>
-            /// <param name="cancellationToken">
-            ///   The cancellation token for the operation.
-            /// </param>
-            /// <returns>
-            ///   A long-running task that will run the subscription until the cancellation token 
-            ///   fires.
-            /// </returns>
-            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
-                ChannelReader<TagValueQueryResult> hubChannel;
-
-                try {
-                    hubChannel = await _feature.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
-                        _subscriptionId,
-                        tagId,
-                        cancellationToken
-                    ).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) {
-                    tcs.TrySetCanceled(cancellationToken);
-                    throw;
-                } 
-                catch (Exception e) {
-                    tcs.TrySetException(e);
-                    throw;
-                }
-                finally {
-                    tcs.TrySetResult(true);
-                }
-
-                await hubChannel.ForEachAsync(async val => {
-                    if (val == null) {
-                        return;
-                    }
-                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
-                }, cancellationToken).ConfigureAwait(false);
-            }
-
-
             /// <inheritdoc/>
             protected override async Task Init(CancellationToken cancellationToken) {
                 await base.Init(cancellationToken).ConfigureAwait(false);
@@ -213,6 +165,54 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                     // Notify server of cancellation.
                     _feature.TaskScheduler.QueueBackgroundWorkItem(ct => _feature.GetClient().TagValues.DeleteSnapshotTagValueSubscriptionAsync(_subscriptionId, ct));
                 }
+            }
+
+
+            /// <summary>
+            /// Creates and processes a subscription to the specified tag ID.
+            /// </summary>
+            /// <param name="tagId">
+            ///   The tag ID.
+            /// </param>
+            /// <param name="tcs">
+            ///   A <see cref="TaskCompletionSource{TResult}"/> that will be completed once the 
+            ///   tag subscription has been created.
+            /// </param>
+            /// <param name="cancellationToken">
+            ///   The cancellation token for the operation.
+            /// </param>
+            /// <returns>
+            ///   A long-running task that will run the subscription until the cancellation token 
+            ///   fires.
+            /// </returns>
+            private async Task RunTagSubscription(string tagId, TaskCompletionSource<bool> tcs, CancellationToken cancellationToken) {
+                ChannelReader<TagValueQueryResult> hubChannel;
+
+                try {
+                    hubChannel = await _feature.GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
+                        _subscriptionId,
+                        tagId,
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    tcs.TrySetCanceled(cancellationToken);
+                    throw;
+                }
+                catch (Exception e) {
+                    tcs.TrySetException(e);
+                    throw;
+                }
+                finally {
+                    tcs.TrySetResult(true);
+                }
+
+                await hubChannel.ForEachAsync(async val => {
+                    if (val == null) {
+                        return;
+                    }
+                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
             }
 
         }

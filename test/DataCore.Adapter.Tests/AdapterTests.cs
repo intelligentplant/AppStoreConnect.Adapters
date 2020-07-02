@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails();
 
-        protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType);
+        protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType, string topic);
 
 
         [TestInitialize]
@@ -404,7 +404,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active);
+                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, null);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
                         var val = await subscription.Reader.ReadAsync(ctSource.Token);
@@ -429,11 +429,44 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(subscription.IsStarted);
 
                     await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive);
+                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive, null);
 
                     using (var ctSource = new CancellationTokenSource(1000)) {
                         var val = await subscription.Reader.ReadAsync(ctSource.Token);
                         Assert.IsNotNull(val);
+                    }
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IEventMessagePushWithTopics ]
+
+        [TestMethod]
+        public Task EventTopicSubscriptionShouldReceiveMessages() {
+            var topic = TestContext.TestName;
+
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IEventMessagePushWithTopics>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IEventMessagePushWithTopics>();
+                    return;
+                }
+
+                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active })) {
+                    Assert.IsNotNull(subscription);
+                    Assert.IsTrue(subscription.IsStarted);
+
+                    await subscription.SubscribeToTopic(topic);
+
+                    await Task.Delay(1000, default);
+                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, topic);
+
+                    using (var ctSource = new CancellationTokenSource(1000)) {
+                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
+                        Assert.IsNotNull(val);
+                        Assert.AreEqual(topic, val.Topic);
                     }
                 }
             });

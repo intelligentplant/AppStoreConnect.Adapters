@@ -30,6 +30,11 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 PageSize = request.PageSize,
                 Page = request.Page
             };
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
             var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, cancellationToken));
 
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);

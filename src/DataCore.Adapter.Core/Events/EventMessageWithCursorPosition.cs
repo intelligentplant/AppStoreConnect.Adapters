@@ -25,6 +25,9 @@ namespace DataCore.Adapter.Events {
         ///   The unique identifier for the event message. If <see langword="null"/>, an 
         ///   identifier will be generated.
         /// </param>
+        /// <param name="topic">
+        ///   The event message topic e.g. the MQTT channel that emitted the message.
+        /// </param>
         /// <param name="utcEventTime">
         ///   The UTC timestamp of the event.
         /// </param>
@@ -48,13 +51,14 @@ namespace DataCore.Adapter.Events {
         /// </exception>
         public EventMessageWithCursorPosition(
             string id, 
+            string topic,
             DateTime utcEventTime, 
             EventPriority priority, 
             string category, 
             string message, 
             IEnumerable<AdapterProperty> properties, 
             string cursorPosition
-        ) : base(id, utcEventTime, priority, category, message, properties) {
+        ) : base(id, topic, utcEventTime, priority, category, message, properties) {
             CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition));
         }
 
@@ -64,6 +68,9 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         /// <param name="id">
         ///   The unique identifier for the event message.
+        /// </param>
+        /// <param name="topic">
+        ///   The event message topic e.g. the MQTT channel that emitted the message.
         /// </param>
         /// <param name="utcEventTime">
         ///   The UTC timestamp of the event.
@@ -86,8 +93,8 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
-        public static EventMessageWithCursorPosition Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties, string cursorPosition) {
-            return new EventMessageWithCursorPosition(id, utcEventTime, priority, category, message, properties, cursorPosition);
+        public static EventMessageWithCursorPosition Create(string id, string topic, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties, string cursorPosition) {
+            return new EventMessageWithCursorPosition(id, topic, utcEventTime, priority, category, message, properties, cursorPosition);
         }
 
     }

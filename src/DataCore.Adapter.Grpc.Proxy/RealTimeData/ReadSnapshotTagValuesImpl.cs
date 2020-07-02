@@ -27,6 +27,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AdapterId = AdapterId
             };
             grpcRequest.Tags.AddRange(request.Tags);
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
 
             var grpcResponse = client.ReadSnapshotTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
 

@@ -26,6 +26,7 @@ Adapters can define any number of the following standard features:
     - [IHealthCheck](./Diagostics/IHealthCheck.cs)
 - Events:
     - [IEventMessagePush](./Events/IEventMessagePush.cs)
+    - [IEventMessagePushWithTopics](./Events/IEventMessagePushWithTopics.cs)
     - [IReadEventMessagesForTimeRange](./Events/IReadEventMessagesForTimeRange.cs)
     - [IReadEventMessagesUsingCursor](./Events/IReadEventMessagesUsingCursor.cs)
     - [IWriteEventMessages](./Events/IWriteEventMessages.cs)

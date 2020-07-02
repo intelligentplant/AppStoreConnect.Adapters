@@ -900,6 +900,7 @@ namespace DataCore.Adapter {
 
             return Events.EventMessage.Create(
                 message.Id,
+                message.Topic,
                 message.UtcEventTime.ToDateTime(),
                 message.Priority.ToAdapterEventPriority(),
                 message.Category,
@@ -926,6 +927,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.EventMessage() {
                 Category = message.Category ?? string.Empty,
                 Id = message.Id ?? string.Empty,
+                Topic = message.Topic ?? string.Empty,
                 Message = message.Message ?? string.Empty,
                 Priority = message.Priority.ToGrpcEventPriority(),
                 UtcEventTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(message.UtcEventTime)
@@ -960,6 +962,7 @@ namespace DataCore.Adapter {
 
             return Events.EventMessageWithCursorPosition.Create(
                 message.EventMessage.Id,
+                message.EventMessage.Topic,
                 message.EventMessage.UtcEventTime.ToDateTime(),
                 message.EventMessage.Priority.ToAdapterEventPriority(),
                 message.EventMessage.Category,
@@ -986,7 +989,7 @@ namespace DataCore.Adapter {
 
             var result = new Grpc.EventMessageWithCursorPosition() {
                 CursorPosition = message.CursorPosition,
-                EventMessage = ToGrpcEventMessage((Events.EventMessageBase) message)
+                EventMessage = ToGrpcEventMessage(message)
             };
 
             return result;
@@ -1011,6 +1014,7 @@ namespace DataCore.Adapter {
                 CorrelationId = writeRequest.CorrelationId,
                 EventMessage = Events.EventMessage.Create(
                     writeRequest.Message?.Id,
+                    writeRequest.Message?.Topic,
                     writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
                     writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.EventPriority.Unknown,
                     writeRequest.Message?.Category,

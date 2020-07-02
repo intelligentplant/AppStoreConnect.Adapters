@@ -286,6 +286,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Topic Count.
+        /// </summary>
+        internal static string HealthChecks_Data_TopicCount {
+            get {
+                return ResourceManager.GetString("HealthChecks_Data_TopicCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to User.
         /// </summary>
         internal static string HealthChecks_Data_UserName {
@@ -417,6 +426,15 @@ namespace DataCore.Adapter {
         internal static string Log_ErrorWhileProcessingSnapshotSubscriptionChange {
             get {
                 return ResourceManager.GetString("Log_ErrorWhileProcessingSnapshotSubscriptionChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Topic = {topic}, Action = {action}.
+        /// </summary>
+        internal static string Log_ErrorWhileProcessingSubscriptionTopicChange {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileProcessingSubscriptionTopicChange", resourceCulture);
             }
         }
         

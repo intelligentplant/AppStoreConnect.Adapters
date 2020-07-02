@@ -24,6 +24,7 @@ message FindTagsRequest {
     string units = 6;
     string label = 7;
     map<string, string> other = 8;
+    map<string, string> properties = 9;
 }
 
 
@@ -31,6 +32,7 @@ message FindTagsRequest {
 message GetTagsRequest {
     string adapter_id = 1;
     repeated string tags = 2;
+    map<string, string> properties = 3;
 }
 
 
@@ -39,4 +41,5 @@ message GetTagPropertiesRequest {
     string adapter_id = 1;
     int32 page_size = 2;
     int32 page = 3;
+    map<string, string> properties = 4;
 }

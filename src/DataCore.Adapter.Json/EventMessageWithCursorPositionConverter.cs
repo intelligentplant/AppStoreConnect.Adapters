@@ -18,6 +18,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string id = null;
+            string topic = null;
             DateTime utcEventTime = default;
             EventPriority priority = EventPriority.Unknown;
             string category = null;
@@ -37,6 +38,9 @@ namespace DataCore.Adapter.Json {
 
                 if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.Id), StringComparison.OrdinalIgnoreCase)) {
                     id = JsonSerializer.Deserialize<string>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.Topic), StringComparison.OrdinalIgnoreCase)) {
+                    topic = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(EventMessageWithCursorPosition.UtcEventTime), StringComparison.OrdinalIgnoreCase)) {
                     utcEventTime = JsonSerializer.Deserialize<DateTime>(ref reader, options);
@@ -61,7 +65,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return EventMessageWithCursorPosition.Create(id, utcEventTime, priority, category, message, properties, cursorPosition);
+            return EventMessageWithCursorPosition.Create(id, topic, utcEventTime, priority, category, message, properties, cursorPosition);
         }
 
 
@@ -74,6 +78,7 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(EventMessageWithCursorPosition.Id), value.Id, options);
+            WritePropertyValue(writer, nameof(EventMessageWithCursorPosition.Topic), value.Topic, options);
             WritePropertyValue(writer, nameof(EventMessageWithCursorPosition.UtcEventTime), value.UtcEventTime, options);
             WritePropertyValue(writer, nameof(EventMessageWithCursorPosition.Priority), value.Priority, options);
             WritePropertyValue(writer, nameof(EventMessageWithCursorPosition.Category), value.Category, options);

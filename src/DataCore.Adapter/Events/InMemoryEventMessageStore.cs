@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,37 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements an in-memory event message store that implements push, read, and write operations.
     /// </summary>
-    public class InMemoryEventMessageStore : EventMessagePush, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages {
+    public sealed class InMemoryEventMessageStore : IEventMessagePush, IEventMessagePushWithTopics, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages, IDisposable {
+
+        /// <summary>
+        /// Indicates if the object has been disposed;
+        /// </summary>
+        private bool _isDisposed;
+
+        /// <summary>
+        /// Fires when the object is disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// Fires when the object is disposed.
+        /// </summary>
+        private readonly CancellationToken _disposedToken;
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        private readonly ILogger Logger;
+
+        /// <summary>
+        /// <see cref="IEventMessagePush"/> handler.
+        /// </summary>
+        private readonly EventMessagePush _push;
+
+        /// <summary>
+        /// <see cref="IEventMessagePushWithTopics"/> handler.
+        /// </summary>
+        private readonly EventMessagePushWithTopics _pushWithTopics;
 
         /// <summary>
         /// The event messages, sorted by cursor position.
@@ -37,6 +68,12 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
+        /// Emits all messages that are published to the internal master channel.
+        /// </summary>
+        public event Action<EventMessage> Publish;
+
+
+        /// <summary>
         /// Creates a new <see cref="InMemoryEventMessageStore"/> object.
         /// </summary>
         /// <param name="options">
@@ -52,21 +89,28 @@ namespace DataCore.Adapter.Events {
             InMemoryEventMessageManagerOptions options, 
             IBackgroundTaskService scheduler, 
             ILogger logger
-        ) : base(options, scheduler, logger) {
+        ) {
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            _disposedToken = _disposedTokenSource.Token;
+            _push = new EventMessagePush(options, scheduler, Logger);
+            _pushWithTopics = new EventMessagePushWithTopics(new EventMessagePushWithTopicsOptions() { 
+                AdapterId = options.AdapterId
+            }, scheduler, Logger);
             _capacity = options?.Capacity ?? -1;
         }
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionAdded() {
-            // Do nothing
+        Task<IEventMessageSubscription> IEventMessagePush.Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
+            return ((IEventMessagePush) _push).Subscribe(context, request);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionRemoved() {
-            // Do nothing.
+        Task<IEventMessageSubscriptionWithTopics> IEventMessagePushWithTopics.Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
+            return ((IEventMessagePushWithTopics) _pushWithTopics).Subscribe(context, request);
         }
+
 
 
         /// <summary>
@@ -116,7 +160,10 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitWriteLock();
             }
 
-            await ValueReceived(message, cancellationToken).ConfigureAwait(false);
+            await _push.ValueReceived(message, cancellationToken).ConfigureAwait(false);
+            await _pushWithTopics.ValueReceived(message, cancellationToken).ConfigureAwait(false);
+
+            Publish?.Invoke(message);
 
             return cursorPosition;
         }
@@ -157,7 +204,7 @@ namespace DataCore.Adapter.Events {
                 if (message == null) {
                     continue;
                 }
-                await WriteEventMessage(message, DisposedToken).ConfigureAwait(false);
+                await WriteEventMessage(message, _disposedToken).ConfigureAwait(false);
             }
         }
 
@@ -215,6 +262,10 @@ namespace DataCore.Adapter.Events {
                     .Where(x => x.UtcEventTime >= request.UtcStartTime)
                     .Where(x => x.UtcEventTime <= request.UtcEndTime);
 
+                if (request.Topics != null && request.Topics.Any()) {
+                    selector = selector.Where(x => request.Topics.Contains(x.Topic, StringComparer.OrdinalIgnoreCase));
+                }
+
                 if (request.Direction == EventReadDirection.Backwards) {
                     selector = selector.OrderByDescending(x => x.UtcEventTime);
                 }
@@ -258,6 +309,10 @@ namespace DataCore.Adapter.Events {
                         : _eventMessages.Where(x => x.Key < cursorPosition).Reverse();
                 }
 
+                if (request.Topics != null && request.Topics.Any()) {
+                    selector = selector.Where(x => request.Topics.Contains(x.Value.Topic, StringComparer.OrdinalIgnoreCase));
+                }
+
                 messages = selector
                     .Take(request.PageSize)
                     .ToArray();
@@ -285,19 +340,27 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override void Dispose(bool disposing) {
-            base.Dispose(disposing);
-
-            if (disposing) {
-                _eventMessagesLock.EnterWriteLock();
-                try {
-                    _eventMessages.Clear();
-                }
-                finally {
-                    _eventMessagesLock.ExitWriteLock();
-                }
-                _eventMessagesLock.Dispose();
+        public void Dispose() {
+            if (_isDisposed) {
+                return;
             }
+
+            _isDisposed = true;
+
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+
+            _push.Dispose();
+            _pushWithTopics.Dispose();
+
+            _eventMessagesLock.EnterWriteLock();
+            try {
+                _eventMessages.Clear();
+            }
+            finally {
+                _eventMessagesLock.ExitWriteLock();
+            }
+            _eventMessagesLock.Dispose();
         }
 
 

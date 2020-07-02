@@ -16,6 +16,11 @@ namespace DataCore.Adapter.Events {
         private string _id = Guid.NewGuid().ToString();
 
         /// <summary>
+        /// The event message topic (e.g. the MQTT channel that emitted the message).
+        /// </summary>
+        private string _topic;
+
+        /// <summary>
         /// The UTC event timestamp.
         /// </summary>
         private DateTime _utcEventTime = DateTime.UtcNow;
@@ -56,6 +61,7 @@ namespace DataCore.Adapter.Events {
         /// </param>
         private EventMessageBuilder(EventMessage existing) {
             _id = existing.Id;
+            _topic = existing.Topic;
             _utcEventTime = existing.UtcEventTime;
             _priority = existing.Priority;
             _category = existing.Category;
@@ -107,7 +113,7 @@ namespace DataCore.Adapter.Events {
         ///   A new <see cref="EventMessage"/> object.
         /// </returns>
         public EventMessage Build() {
-            return EventMessage.Create(_id, _utcEventTime, _priority, _category, _message, _properties);
+            return EventMessage.Create(_id, _topic, _utcEventTime, _priority, _category, _message, _properties);
         }
 
 
@@ -127,6 +133,7 @@ namespace DataCore.Adapter.Events {
         public EventMessageWithCursorPosition Build(string cursorPosition) {
             return EventMessageWithCursorPosition.Create(
                 _id, 
+                _topic,
                 _utcEventTime, 
                 _priority, 
                 _category, 
@@ -152,6 +159,21 @@ namespace DataCore.Adapter.Events {
         /// </remarks>
         public EventMessageBuilder WithId(string id) {
             _id = id ?? Guid.NewGuid().ToString();
+            return this;
+        }
+
+
+        /// <summary>
+        /// Updates the topic (i.e. the source channel) for the event.
+        /// </summary>
+        /// <param name="topic">
+        ///   The topic name.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="EventMessageBuilder"/>.
+        /// </returns>
+        public EventMessageBuilder WithTopic(string topic) {
+            _topic = topic;
             return this;
         }
 

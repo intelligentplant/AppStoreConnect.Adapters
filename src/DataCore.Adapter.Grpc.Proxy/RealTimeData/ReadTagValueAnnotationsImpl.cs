@@ -28,6 +28,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime)
             };
             grpcRequest.Tags.AddRange(request.Tags);
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
 
             var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, cancellationToken));
 
