@@ -31,6 +31,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 PageSize = request.PageSize,
                 Page = request.Page
             };
+            if (request.Topics != null) {
+                foreach (var item in request.Topics) {
+                    grpcRequest.Topics.Add(item ?? string.Empty);
+                }
+            }
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
             var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, cancellationToken));
 
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(-1);

@@ -51,11 +51,12 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType) {
+        protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType, string topic) {
             var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
             
             var msg = EventMessageBuilder
                     .Create()
+                    .WithTopic(topic)
                     .WithUtcEventTime(DateTime.UtcNow)
                     .WithCategory(TestContext.FullyQualifiedTestClassName)
                     .WithMessage(TestContext.TestName)

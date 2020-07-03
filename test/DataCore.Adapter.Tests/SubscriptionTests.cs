@@ -99,7 +99,7 @@ namespace DataCore.Adapter.Tests {
 
             using (var feature = new EventMessagePush(options, null, null)) {
                 using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
-                    var msg = EventMessageBuilder.Create().WithMessage(TestContext.TestName).Build();
+                    var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
                     await feature.ValueReceived(msg);
 
                     using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
@@ -107,6 +107,89 @@ namespace DataCore.Adapter.Tests {
                         Assert.IsNotNull(emitted);
                         Assert.AreEqual(msg.Message, emitted.Message);
                     }
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionShouldEmitValues() {
+            var now = DateTime.UtcNow;
+            var topic = Guid.NewGuid().ToString();
+
+            var options = new EventMessagePushWithTopicsOptions() {
+                AdapterId = TestContext.TestName
+            };
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
+                    await subscription.SubscribeToTopic(topic);
+
+                    var msg = EventMessageBuilder
+                        .Create()
+                        .WithTopic(topic)
+                        .WithUtcEventTime(now)
+                        .WithMessage(TestContext.TestName)
+                        .Build();
+
+                    await feature.ValueReceived(msg);
+
+                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
+                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(msg.Message, emitted.Message);
+                    }
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionShouldNotReceiveMessagesFromOtherTopics() {
+            var now = DateTime.UtcNow;
+            var topic = Guid.NewGuid().ToString();
+
+            var options = new EventMessagePushWithTopicsOptions() {
+                AdapterId = TestContext.TestName
+            };
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
+                    await subscription.SubscribeToTopic(topic);
+
+                    var msg1 = EventMessageBuilder
+                        .Create()
+                        .WithTopic(topic)
+                        .WithUtcEventTime(now)
+                        .WithMessage(TestContext.TestName)
+                        .Build();
+
+                    var msg2 = EventMessageBuilder
+                        .Create()
+                        .WithTopic(null)
+                        .WithUtcEventTime(now)
+                        .WithMessage(TestContext.TestName)
+                        .Build();
+
+                    await feature.ValueReceived(msg1);
+                    await feature.ValueReceived(msg2);
+
+                    var messagesReceived = 0;
+
+                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
+                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(msg1.Message, emitted.Message);
+                        ++messagesReceived;
+
+                        await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => {
+                            emitted = await subscription.Reader.ReadAsync(ctSource.Token);
+                            // Exception should be thrown before we get to here!
+                            ++messagesReceived;
+                        });
+                    }
+  
+                    Assert.AreEqual(1, messagesReceived);
                 }
             }
         }

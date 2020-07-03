@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
@@ -39,7 +40,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterRequest = new RealTimeData.ReadAnnotationsRequest() {
                 UtcStartTime = request.UtcStartTime.ToDateTime(),
                 UtcEndTime = request.UtcEndTime.ToDateTime(),
-                Tags = request.Tags?.ToArray() ?? Array.Empty<string>()
+                Tags = request.Tags?.ToArray() ?? Array.Empty<string>(),
+                AnnotationCount = request.MaxAnnotationCount,
+                Properties = request.Properties
             };
             Util.ValidateObject(adapterRequest);
 
@@ -64,7 +67,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new RealTimeData.ReadAnnotationRequest() {
                 Tag = request.Tag,
-                AnnotationId = request.AnnotationId
+                AnnotationId = request.AnnotationId,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -82,7 +86,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new RealTimeData.CreateAnnotationRequest() {
                 Tag = request.Tag,
-                Annotation = request.Annotation.ToAdapterTagValueAnnotation()
+                Annotation = request.Annotation.ToAdapterTagValueAnnotation(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -101,7 +106,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterRequest = new RealTimeData.UpdateAnnotationRequest() {
                 Tag = request.Tag,
                 AnnotationId = request.AnnotationId,
-                Annotation = request.Annotation.ToAdapterTagValueAnnotation()
+                Annotation = request.Annotation.ToAdapterTagValueAnnotation(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -119,7 +125,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new RealTimeData.DeleteAnnotationRequest() {
                 Tag = request.Tag,
-                AnnotationId = request.AnnotationId
+                AnnotationId = request.AnnotationId,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 

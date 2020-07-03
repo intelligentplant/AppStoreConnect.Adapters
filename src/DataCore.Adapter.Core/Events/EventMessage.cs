@@ -17,6 +17,9 @@ namespace DataCore.Adapter.Events {
         ///   The unique identifier for the event message. If <see langword="null"/>, an 
         ///   identifier will be generated.
         /// </param>
+        /// <param name="topic">
+        ///   The event message topic e.g. the MQTT channel that emitted the message.
+        /// </param>
         /// <param name="utcEventTime">
         ///   The UTC timestamp of the event.
         /// </param>
@@ -34,12 +37,13 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessage(
             string id, 
+            string topic,
             DateTime utcEventTime, 
             EventPriority priority, 
             string category, 
             string message, 
             IEnumerable<AdapterProperty> properties
-        ) : base(id ?? Guid.NewGuid().ToString(), utcEventTime, priority, category, message, properties) { }
+        ) : base(id ?? Guid.NewGuid().ToString(), topic, utcEventTime, priority, category, message, properties) { }
 
 
         /// <summary>
@@ -48,6 +52,9 @@ namespace DataCore.Adapter.Events {
         /// <param name="id">
         ///   The unique identifier for the event message. If <see langword="null"/>, an 
         ///   identifier will be generated.
+        /// </param>
+        /// <param name="topic">
+        ///   The event message topic e.g. the MQTT channel that emitted the message.
         /// </param>
         /// <param name="utcEventTime">
         ///   The UTC timestamp of the event.
@@ -64,8 +71,8 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional event properties.
         /// </param>
-        public static EventMessage Create(string id, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
-            return new EventMessage(id, utcEventTime, priority, category, message, properties);
+        public static EventMessage Create(string id, string topic, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
+            return new EventMessage(id, topic, utcEventTime, priority, category, message, properties);
         }
     
     }

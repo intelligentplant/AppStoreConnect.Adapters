@@ -421,6 +421,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new EventMessage(
                 "Id",
+                TestContext.TestName,
                 DateTime.UtcNow,
                 EventPriority.Medium,
                 "Category",
@@ -435,6 +436,7 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<EventMessage>(json, options);
 
             Assert.AreEqual(expected.Id, actual.Id);
+            Assert.AreEqual(expected.Topic, actual.Topic);
             Assert.AreEqual(expected.UtcEventTime, actual.UtcEventTime);
             Assert.AreEqual(expected.Priority, actual.Priority);
             Assert.AreEqual(expected.Category, actual.Category);
@@ -456,6 +458,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new EventMessageWithCursorPosition(
                 "Id",
+                TestContext.TestName,
                 DateTime.UtcNow,
                 EventPriority.Medium,
                 "Category",
@@ -471,6 +474,7 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<EventMessageWithCursorPosition>(json, options);
 
             Assert.AreEqual(expected.Id, actual.Id);
+            Assert.AreEqual(expected.Topic, actual.Topic);
             Assert.AreEqual(expected.UtcEventTime, actual.UtcEventTime);
             Assert.AreEqual(expected.Priority, actual.Priority);
             Assert.AreEqual(expected.Category, actual.Category);

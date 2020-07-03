@@ -26,6 +26,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 Tag = request.Tag ?? string.Empty,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
+
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
+
             var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
@@ -42,6 +49,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AnnotationId = request.AnnotationId ?? string.Empty,
                 Annotation = request.Annotation.ToGrpcTagValueAnnotationBase()
             };
+
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
+
             var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
@@ -57,6 +71,13 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 Tag = request.Tag ?? string.Empty,
                 AnnotationId = request.AnnotationId ?? string.Empty
             };
+
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
+
             var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
             var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 

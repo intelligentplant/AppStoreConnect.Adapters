@@ -136,6 +136,7 @@ message EventMessage {
     string category = 4;
     string message = 5;
     repeated AdapterProperty properties = 6;
+    string topic = 7;
 }
 
 

@@ -232,6 +232,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <inheritdoc/>
         public override Task OnDisconnectedAsync(Exception exception) {
             OnTagValuesHubDisconnection();
+            OnEventsHubDisconnection();
             return base.OnDisconnectedAsync(exception);
         }
 
@@ -240,6 +241,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// Invoked when a client disconnects.
         /// </summary>
         partial void OnTagValuesHubDisconnection();
+
+
+        /// <summary>
+        /// Invoked when a client disconnects.
+        /// </summary>
+        partial void OnEventsHubDisconnection();
 
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using DataCore.Adapter.Common;
+﻿using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
@@ -8,6 +6,12 @@ namespace DataCore.Adapter.Events {
     /// Base class for adapter requests related to reading historical event messages.
     /// </summary>
     public abstract class ReadHistoricalEventMessagesRequest : AdapterRequest {
+
+        /// <summary>
+        /// The topics to read messages for. This property will be ignored if the adapter does not 
+        /// support a topic-based event model.
+        /// </summary>
+        public string[] Topics { get; set; }
 
         /// <summary>
         /// The event read direction. When <see cref="EventReadDirection.Backwards"/> is specified, 

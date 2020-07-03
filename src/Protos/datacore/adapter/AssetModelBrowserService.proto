@@ -19,12 +19,14 @@ message BrowseAssetModelNodesRequest {
     int32 page_size = 2;
     int32 page = 3;
     string parent_id = 4;
+    map<string, string> properties = 5;
 }
 
 
 message GetAssetModelNodesRequest {
     string adapter_id = 1;
     repeated string nodes = 2;
+    map<string, string> properties = 3;
 }
 
 
@@ -34,4 +36,5 @@ message FindAssetModelNodesRequest {
     int32 page = 3;
     string name = 4;
     string description = 5;
+    map<string, string> properties = 6;
 }

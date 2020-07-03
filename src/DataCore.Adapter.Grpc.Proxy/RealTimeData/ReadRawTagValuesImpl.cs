@@ -31,6 +31,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 BoundaryType = request.BoundaryType.ToGrpcRawDataBoundaryType()
             };
             grpcRequest.Tags.AddRange(request.Tags);
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
 
             var grpcResponse = client.ReadRawTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
 

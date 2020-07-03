@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
@@ -37,7 +38,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new Adapter.RealTimeData.GetTagPropertiesRequest() {
                 PageSize = request.PageSize,
-                Page = request.Page
+                Page = request.Page,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -67,7 +69,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Label = request.Label,
                 Other = request.Other,
                 PageSize = request.PageSize,
-                Page = request.Page
+                Page = request.Page,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -91,7 +94,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.RealTimeData.GetTagsRequest() {
-                Tags = request.Tags.ToArray()
+                Tags = request.Tags.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 

@@ -11,7 +11,10 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service EventsService {
     // Push 
     rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessage);
-    
+    rpc CreateEventTopicPushSubscription(CreateEventTopicPushSubscriptionRequest) returns (CreateEventTopicPushSubscriptionResponse);
+    rpc DeleteEventTopicPushSubscription(DeleteEventTopicPushSubscriptionRequest) returns (DeleteEventTopicPushSubscriptionResponse);
+    rpc CreateEventTopicPushChannel(CreateEventTopicPushChannelRequest) returns (stream EventMessage);
+
     // Polling
     rpc GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest) returns (stream EventMessage);
     rpc GetEventMessagesUsingCursorPosition(GetEventMessagesUsingCursorPositionRequest) returns (stream EventMessageWithCursorPosition);
@@ -28,6 +31,37 @@ message CreateEventPushChannelRequest {
 }
 
 
+message CreateEventTopicPushSubscriptionRequest {
+    string session_id = 1;
+    string adapter_id = 2;
+    EventSubscriptionType subscription_type = 3;
+    map<string,string> properties = 4;
+}
+
+
+message CreateEventTopicPushSubscriptionResponse {
+    string subscription_id = 1;
+}
+
+
+message DeleteEventTopicPushSubscriptionRequest {
+    string session_id = 1;
+    string subscription_id = 2;
+}
+
+
+message DeleteEventTopicPushSubscriptionResponse {
+    bool success = 1;
+}
+
+
+message CreateEventTopicPushChannelRequest {
+    string session_id = 1;
+    string subscription_id = 2;
+    string topic = 3;
+}
+
+
 message GetEventMessagesForTimeRangeRequest {
     string adapter_id = 1;
     EventReadDirection direction = 2;
@@ -36,6 +70,7 @@ message GetEventMessagesForTimeRangeRequest {
     map<string,string> properties = 6;
     int32 page_size = 7;
     int32 page = 8;
+    repeated string topics = 9;
 }
 
 
@@ -45,4 +80,5 @@ message GetEventMessagesUsingCursorPositionRequest {
     string cursor_position = 4;
     map<string,string> properties = 5;
     int32 page_size = 6;
+    repeated string topics = 7;
 }

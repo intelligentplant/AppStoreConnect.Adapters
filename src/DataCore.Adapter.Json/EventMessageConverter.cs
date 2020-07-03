@@ -18,6 +18,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string id = null;
+            string topic = null;
             DateTime utcEventTime = default;
             EventPriority priority = EventPriority.Unknown;
             string category = null;
@@ -36,6 +37,9 @@ namespace DataCore.Adapter.Json {
 
                 if (string.Equals(propertyName, nameof(EventMessage.Id), StringComparison.OrdinalIgnoreCase)) {
                     id = JsonSerializer.Deserialize<string>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(EventMessage.Topic), StringComparison.OrdinalIgnoreCase)) {
+                    topic = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.UtcEventTime), StringComparison.OrdinalIgnoreCase)) {
                     utcEventTime = JsonSerializer.Deserialize<DateTime>(ref reader, options);
@@ -57,7 +61,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return EventMessage.Create(id, utcEventTime, priority, category, message, properties);
+            return EventMessage.Create(id, topic, utcEventTime, priority, category, message, properties);
         }
 
 
@@ -70,6 +74,7 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(EventMessage.Id), value.Id, options);
+            WritePropertyValue(writer, nameof(EventMessage.Topic), value.Topic, options);
             WritePropertyValue(writer, nameof(EventMessage.UtcEventTime), value.UtcEventTime, options);
             WritePropertyValue(writer, nameof(EventMessage.Priority), value.Priority, options);
             WritePropertyValue(writer, nameof(EventMessage.Category), value.Category, options);

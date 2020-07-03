@@ -97,6 +97,15 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An event topic name is required..
+        /// </summary>
+        internal static string Error_EventTopicNameRequired {
+            get {
+                return ResourceManager.GetString("Error_EventTopicNameRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are not authorized to access this feature..
         /// </summary>
         internal static string Error_NotAuthorizedToAccessFeature {

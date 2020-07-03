@@ -28,10 +28,11 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override async Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType) {
+        protected override async Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType, string topic) {
             await adapter.WriteTestEventMessage(
                 EventMessageBuilder
                     .Create()
+                    .WithTopic(topic)
                     .WithUtcEventTime(DateTime.UtcNow)
                     .WithCategory(TestContext.FullyQualifiedTestClassName)
                     .WithMessage(TestContext.TestName)

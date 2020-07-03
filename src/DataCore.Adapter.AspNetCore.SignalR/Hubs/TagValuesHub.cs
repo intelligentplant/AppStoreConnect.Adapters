@@ -149,7 +149,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         /// <summary>
         /// Gets snapshot tag values via polling. Use <see cref="CreateSnapshotTagValueSubscription"/> 
-        /// and <see cref="CreateSnapshotTagValueSubscriptionChannel"/> to receive snapshot tag 
+        /// and <see cref="CreateSnapshotTagValueChannel"/> to receive snapshot tag 
         /// values via push messages.
         /// </summary>
         /// <param name="adapterId">

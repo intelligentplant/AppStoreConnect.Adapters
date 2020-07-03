@@ -37,6 +37,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     grpcRequest.Other[item.Key] = item.Value;
                 }
             }
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
 
             var grpcResponse = client.FindTags(grpcRequest, GetCallOptions(context, cancellationToken));
 

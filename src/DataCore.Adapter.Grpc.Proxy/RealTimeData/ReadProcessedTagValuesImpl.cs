@@ -60,6 +60,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             };
             grpcRequest.Tags.AddRange(request.Tags);
             grpcRequest.DataFunctions.AddRange(request.DataFunctions);
+            if (request.Properties != null) {
+                foreach (var prop in request.Properties) {
+                    grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                }
+            }
 
             var grpcResponse = client.ReadProcessedTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
 

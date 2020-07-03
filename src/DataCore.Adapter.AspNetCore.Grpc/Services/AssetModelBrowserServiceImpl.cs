@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.AssetModel;
@@ -40,7 +41,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     ? null 
                     : request.ParentId,
                 PageSize = request.PageSize,
-                Page = request.Page
+                Page = request.Page,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -64,7 +66,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.AssetModel.GetAssetModelNodesRequest() {
-                Nodes = request.Nodes.ToArray()
+                Nodes = request.Nodes.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 
@@ -91,7 +94,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Name = request.Name,
                 Description = request.Description,
                 PageSize = request.PageSize,
-                Page = request.Page
+                Page = request.Page,
+                Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);
 

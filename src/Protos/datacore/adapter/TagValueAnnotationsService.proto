@@ -22,25 +22,31 @@ message ReadAnnotationsRequest {
     repeated string tags = 2;
     google.protobuf.Timestamp utc_start_time = 3;
     google.protobuf.Timestamp utc_end_time = 4;
+    map<string, string> properties = 5;
+    int32 max_annotation_count = 6;
 }
 message ReadAnnotationRequest {
     string adapter_id = 1;
     string tag = 2;
     string annotation_id = 3;
+    map<string, string> properties = 4;
 }
 message CreateAnnotationRequest {
     string adapter_id = 1;
     string tag = 2;
     TagValueAnnotationBase annotation = 3;
+    map<string, string> properties = 4;
 }
 message UpdateAnnotationRequest {
     string adapter_id = 1;
     string tag = 2;
     string annotation_id = 3;
     TagValueAnnotationBase annotation = 4;
+    map<string, string> properties = 5;
 }
 message DeleteAnnotationRequest {
     string adapter_id = 1;
     string tag = 2;
     string annotation_id = 3;
+    map<string, string> properties = 4;
 }
