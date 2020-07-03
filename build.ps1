@@ -78,6 +78,7 @@ $MSBuildArguments += "-v:$Verbosity"
 $MSBuildTargets = @()
 if ($Clean) {
     $MSBuildTargets += 'Clean'
+    Clear-Artifacts
 }
 if (-Not $NoBuild) {
     $MSBuildTargets += 'Build'
