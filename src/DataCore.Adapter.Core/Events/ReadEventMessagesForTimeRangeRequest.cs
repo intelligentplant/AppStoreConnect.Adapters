@@ -12,6 +12,12 @@ namespace DataCore.Adapter.Events {
     public class ReadEventMessagesForTimeRangeRequest : ReadHistoricalEventMessagesRequest, IPageableAdapterRequest {
 
         /// <summary>
+        /// The topics to read messages for. This property will be ignored if the adapter does not 
+        /// support a topic-based event model.
+        /// </summary>
+        public string[] Topics { get; set; }
+
+        /// <summary>
         /// The UTC start time for the request.
         /// </summary>
         [Required]

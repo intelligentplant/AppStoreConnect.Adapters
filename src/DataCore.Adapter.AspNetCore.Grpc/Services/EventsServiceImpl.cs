@@ -330,7 +330,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Direction = request.Direction == EventReadDirection.Forwards
                     ? Events.EventReadDirection.Forwards
                     : Events.EventReadDirection.Backwards,
-                Topics = request.Topics.ToArray(),
+                Topic = request.Topic,
                 Properties = new Dictionary<string, string>(request.Properties)
             };
             Util.ValidateObject(adapterRequest);

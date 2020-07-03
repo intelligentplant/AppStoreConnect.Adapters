@@ -309,8 +309,8 @@ namespace DataCore.Adapter.Events {
                         : _eventMessages.Where(x => x.Key < cursorPosition).Reverse();
                 }
 
-                if (request.Topics != null && request.Topics.Any()) {
-                    selector = selector.Where(x => request.Topics.Contains(x.Value.Topic, StringComparer.OrdinalIgnoreCase));
+                if (!string.IsNullOrWhiteSpace(request.Topic)) {
+                    selector = selector.Where(x => string.Equals(x.Value.Topic, request.Topic, StringComparison.OrdinalIgnoreCase));
                 }
 
                 messages = selector

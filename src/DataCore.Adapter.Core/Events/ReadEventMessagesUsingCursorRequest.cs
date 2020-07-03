@@ -9,6 +9,12 @@ namespace DataCore.Adapter.Events {
     public class ReadEventMessagesUsingCursorRequest : ReadHistoricalEventMessagesRequest {
 
         /// <summary>
+        /// The topic to read messages for. This property will be ignored if the adapter does not 
+        /// support a topic-based event model.
+        /// </summary>
+        public string Topic { get; set; }
+
+        /// <summary>
         /// The cursor position to start the query at.
         /// </summary>
         public string CursorPosition { get; set; }

@@ -8,12 +8,6 @@ namespace DataCore.Adapter.Events {
     public abstract class ReadHistoricalEventMessagesRequest : AdapterRequest {
 
         /// <summary>
-        /// The topics to read messages for. This property will be ignored if the adapter does not 
-        /// support a topic-based event model.
-        /// </summary>
-        public string[] Topics { get; set; }
-
-        /// <summary>
         /// The event read direction. When <see cref="EventReadDirection.Backwards"/> is specified, 
         /// the resulting events will be returned in descending order of time.
         /// </summary>

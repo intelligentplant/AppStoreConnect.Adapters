@@ -27,13 +27,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 AdapterId = AdapterId,
                 CursorPosition = request.CursorPosition ?? string.Empty,
                 Direction = request.Direction.ToGrpcEventReadDirection(),
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                Topic = request.Topic ?? string.Empty
             };
-            if (request.Topics != null) {
-                foreach (var item in request.Topics) {
-                    grpcRequest.Topics.Add(item ?? string.Empty);
-                }
-            }
             if (request.Properties != null) {
                 foreach (var prop in request.Properties) {
                     grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);

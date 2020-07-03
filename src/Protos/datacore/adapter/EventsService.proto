@@ -80,5 +80,5 @@ message GetEventMessagesUsingCursorPositionRequest {
     string cursor_position = 4;
     map<string,string> properties = 5;
     int32 page_size = 6;
-    repeated string topics = 7;
+    string topic = 7;
 }
