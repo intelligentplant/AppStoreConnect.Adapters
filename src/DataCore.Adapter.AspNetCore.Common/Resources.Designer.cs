@@ -70,6 +70,15 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A name is required..
+        /// </summary>
+        internal static string Error_NameIsRequired {
+            get {
+                return ResourceManager.GetString("Error_NameIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A subscription ID is required..
         /// </summary>
         internal static string Error_SubscriptionIdRequired {
@@ -84,6 +93,42 @@ namespace DataCore.Adapter.AspNetCore {
         internal static string Error_SubscriptionTopicIsRequired {
             get {
                 return ResourceManager.GetString("Error_SubscriptionTopicIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the host is running inside a container.
+        /// </summary>
+        internal static string HostProperty_IsRunningInContainer_Description {
+            get {
+                return ResourceManager.GetString("HostProperty_IsRunningInContainer_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Container.
+        /// </summary>
+        internal static string HostProperty_IsRunningInContainer_Name {
+            get {
+                return ResourceManager.GetString("HostProperty_IsRunningInContainer_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The host operating system.
+        /// </summary>
+        internal static string HostProperty_OperatingSystem_Description {
+            get {
+                return ResourceManager.GetString("HostProperty_OperatingSystem_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operating System.
+        /// </summary>
+        internal static string HostProperty_OperatingSystem_Name {
+            get {
+                return ResourceManager.GetString("HostProperty_OperatingSystem_Name", resourceCulture);
             }
         }
         

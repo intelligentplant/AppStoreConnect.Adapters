@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using DataCore.Adapter;
@@ -67,6 +68,88 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             builder.Services.AddSingleton(hostInfo ?? HostInfo.Unspecified);
             return builder;
+        }
+
+
+        /// <summary>
+        /// Adds information about the hosting application to the <see cref="IAdapterConfigurationBuilder"/>.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="name">
+        ///   The name of the hosting application.
+        /// </param>
+        /// <param name="description">
+        ///   The description for the hosting application.
+        /// </param>
+        /// <param name="version">
+        ///   The version of the hosting application.
+        /// </param>
+        /// <param name="vendor">
+        ///   The vendor information for the hosting application.
+        /// </param>
+        /// <param name="includeOperatingSystemDetails">
+        ///   When <see langword="true"/>, a property will be added to the host information 
+        ///   specifying the operating system that the host is running on.
+        /// </param>
+        /// <param name="includeContainerDetails">
+        ///   When <see langword="true"/>, a property will be added to the host information 
+        ///   specifying if the host is running inside a container.
+        /// </param>
+        /// <param name="properties">
+        ///   Additional properties to include in the host information.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddHostInfo(
+            this IAdapterConfigurationBuilder builder,
+            string name,
+            string description = null,
+            string version = null,
+            VendorInfo vendor = null,
+            bool includeOperatingSystemDetails = true,
+            bool includeContainerDetails = true,
+            IEnumerable<AdapterProperty> properties = null
+        ) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (string.IsNullOrWhiteSpace(name)) {
+                throw new ArgumentException(Resources.Error_NameIsRequired, nameof(name));
+            }
+
+            var props = new List<AdapterProperty>();
+
+            if (includeOperatingSystemDetails) {
+                props.Add(AdapterProperty.Create(
+                    Resources.HostProperty_OperatingSystem_Name,
+                    System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+                    Resources.HostProperty_OperatingSystem_Description
+                ));
+            } 
+
+            if (includeContainerDetails) {
+                props.Add(AdapterProperty.Create(
+                    Resources.HostProperty_IsRunningInContainer_Name,
+                    Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), null),
+                    Resources.HostProperty_IsRunningInContainer_Description
+                ));
+            }
+
+            if (properties != null) {
+                props.AddRange(properties);
+            }
+            var hostInfo = HostInfo.Create(name, description, version, vendor, props);
+
+            return builder.AddHostInfo(hostInfo);
         }
 
 

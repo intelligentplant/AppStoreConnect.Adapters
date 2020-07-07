@@ -23,17 +23,21 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services
                 .AddDataCoreAdapterServices()
-                .AddHostInfo(Common.HostInfo.Create(
+                .AddHostInfo(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                    Common.AdapterProperty.Create(
-                        "Project URL",
-                        new Uri("https://github.com/intelligentplant/app-store-connect-adapters"),
-                        "GitHub repository URL for the project"
-                    )
-                ))
+                    true,
+                    true,
+                    new [] {
+                        Common.AdapterProperty.Create(
+                            "Project URL",
+                            new Uri("https://github.com/intelligentplant/app-store-connect-adapters"),
+                            "GitHub repository URL for the project"
+                        )
+                    }
+                )
                 .AddAdapter<ExampleAdapter>()
                 .AddAdapter(sp => {
                     return ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {

@@ -120,11 +120,26 @@
   <data name="Error_ConnectionIdRequired" xml:space="preserve">
     <value>A connection ID is required.</value>
   </data>
+  <data name="Error_NameIsRequired" xml:space="preserve">
+    <value>A name is required.</value>
+  </data>
   <data name="Error_SubscriptionIdRequired" xml:space="preserve">
     <value>A subscription ID is required.</value>
   </data>
   <data name="Error_SubscriptionTopicIsRequired" xml:space="preserve">
     <value>A subscription topic is required.</value>
+  </data>
+  <data name="HostProperty_IsRunningInContainer_Description" xml:space="preserve">
+    <value>Indicates if the host is running inside a container</value>
+  </data>
+  <data name="HostProperty_IsRunningInContainer_Name" xml:space="preserve">
+    <value>Container</value>
+  </data>
+  <data name="HostProperty_OperatingSystem_Description" xml:space="preserve">
+    <value>The host operating system</value>
+  </data>
+  <data name="HostProperty_OperatingSystem_Name" xml:space="preserve">
+    <value>Operating System</value>
   </data>
   <data name="Log_ErrorInBackgroundTask" xml:space="preserve">
     <value>Error in background task {WorkItem}.</value>
