@@ -190,7 +190,7 @@ namespace DataCore.Adapter.Http.Client {
         ) {
             return CreateHttpRequestMessage(
                 method, 
-                new Uri(url ?? throw new ArgumentNullException(nameof(url))), 
+                new Uri(url ?? throw new ArgumentNullException(nameof(url)), UriKind.RelativeOrAbsolute), 
                 metadata
             );
         }
@@ -271,7 +271,7 @@ namespace DataCore.Adapter.Http.Client {
         ) {
             return CreateHttpRequestMessage(
                 method,
-                new Uri(url ?? throw new ArgumentNullException(nameof(url))),
+                new Uri(url ?? throw new ArgumentNullException(nameof(url)), UriKind.RelativeOrAbsolute),
                 content,
                 metadata
             );
