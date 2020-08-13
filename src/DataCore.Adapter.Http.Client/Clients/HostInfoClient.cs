@@ -53,17 +53,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
             RequestMetadata metadata = null,
             CancellationToken cancellationToken = default
         ) {
-            var httpRequest = new HttpRequestMessage(HttpMethod.Get, UrlPrefix).AddRequestMetadata(metadata);
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                httpResponse.EnsureSuccessStatusCode();
 
-            try {
-                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                    httpResponse.EnsureSuccessStatusCode();
-
-                    return await httpResponse.Content.ReadAsAsync<HostInfo>(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally {
-                httpRequest.RemoveStateProperty().Dispose();
+                return await httpResponse.Content.ReadAsAsync<HostInfo>(cancellationToken).ConfigureAwait(false);
             }
         }
 

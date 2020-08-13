@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package datacore.adapter;
 
-import "Types.proto";
-
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 

@@ -504,7 +504,7 @@ namespace DataCore.Adapter.Csv {
         /// <returns>
         ///   The matching tag definition, or <see langword="null"/>.
         /// </returns>
-        private TagDefinition GetTagByIdOrName(string idOrName, CsvDataSet dataSet) {
+        private static TagDefinition GetTagByIdOrName(string idOrName, CsvDataSet dataSet) {
             if (dataSet.Tags.TryGetValue(idOrName, out var tag)) {
                 return tag;
             }
@@ -583,7 +583,7 @@ namespace DataCore.Adapter.Csv {
         /// <returns>
         ///   A task that will retrieve the snapshot tag values.
         /// </returns>
-        private async Task ReadSnapshotTagValues(CsvDataSet dataSet, ReadSnapshotTagValuesRequest request, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async Task ReadSnapshotTagValues(CsvDataSet dataSet, ReadSnapshotTagValuesRequest request, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
             var tags = request.Tags.Select(x => GetTagByIdOrName(x, dataSet)).Where(x => x != null).ToArray();
             var dataSetDuration = dataSet.DataSetDuration;
             var earliestSampleTimeUtc = dataSet.UtcEarliestSampleTime;
@@ -754,7 +754,7 @@ namespace DataCore.Adapter.Csv {
         /// <returns>
         ///   A task that will retrieve the raw values.
         /// </returns>
-        private async Task ReadRawTagValues(CsvDataSet dataSet, ReadRawTagValuesRequest request, ChannelWriter<TagValueQueryResult> writer, CancellationToken cancellationToken) {
+        private static async Task ReadRawTagValues(CsvDataSet dataSet, ReadRawTagValuesRequest request, ChannelWriter<TagValueQueryResult> writer, CancellationToken cancellationToken) {
             var utcStartTime = request.UtcStartTime;
             var utcEndTime = request.UtcEndTime;
             var boundaryType = request.BoundaryType;

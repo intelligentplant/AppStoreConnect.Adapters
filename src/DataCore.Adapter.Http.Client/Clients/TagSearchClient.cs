@@ -76,23 +76,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            _client.ValidateObject(request);
+            AdapterHttpClient.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/find";
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<FindTagsRequest>(request, new JsonMediaTypeFormatter())
-            }.AddRequestMetadata(metadata);
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                httpResponse.EnsureSuccessStatusCode();
 
-            try {
-                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                    httpResponse.EnsureSuccessStatusCode();
-
-                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally {
-                httpRequest.RemoveStateProperty().Dispose();
+                return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -133,23 +125,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            _client.ValidateObject(request);
+            AdapterHttpClient.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/get-by-id";
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<GetTagsRequest>(request, new JsonMediaTypeFormatter())
-            }.AddRequestMetadata(metadata);
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                httpResponse.EnsureSuccessStatusCode();
 
-            try {
-                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                    httpResponse.EnsureSuccessStatusCode();
-
-                    return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally {
-                httpRequest.RemoveStateProperty().Dispose();
+                return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -190,23 +174,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            _client.ValidateObject(request);
+            AdapterHttpClient.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/properties";
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, url) {
-                Content = new ObjectContent<GetTagPropertiesRequest>(request, new JsonMediaTypeFormatter())
-            }.AddRequestMetadata(metadata);
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                httpResponse.EnsureSuccessStatusCode();
 
-            try {
-                using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                    httpResponse.EnsureSuccessStatusCode();
-
-                    return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterProperty>>(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally {
-                httpRequest.RemoveStateProperty().Dispose();
+                return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterProperty>>(cancellationToken).ConfigureAwait(false);
             }
         }
 

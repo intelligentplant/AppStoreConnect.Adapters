@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Common {
             Version = NuGet.Versioning.SemanticVersion.TryParse(version, out var semVer)
             ? semVer.ToFullString()
             : System.Version.TryParse(version, out var v)
-                ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString()).ToFullString()
+                ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString(System.Globalization.CultureInfo.CurrentCulture)).ToFullString()
                 : new NuGet.Versioning.SemanticVersion(0, 0, 0).ToFullString();
             Vendor = vendor;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();

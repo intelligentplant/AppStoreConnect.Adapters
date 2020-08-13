@@ -10,25 +10,19 @@ namespace DataCore.Adapter.NetFxExample {
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services) {
-            // Register our adapter as a singleton.
-            services.AddSingleton<IAdapter, ExampleAdapter>();
 
-            // Add adapter services
-            services.AddDataCoreAdapterServices(options => {
-                options.HostInfo = Common.HostInfo.Create(
+            services
+                .AddDataCoreAdapterServices()
+                .AddAdapter<ExampleAdapter>()
+                .AddHostInfo(
                     "Example .NET Framework Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core 2.2 on .NET Framework",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                    Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+                    properties: new[] {
+                        Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+                    }
                 );
-
-                // To add authentication and authorization options for adapter API operations, extend 
-                // the FeatureAuthorizationHandler class and call options.UseFeatureAuthorizationHandler
-                // to register your handler.
-
-                //options.UseFeatureAuthorizationHandler<MyAdapterFeatureAuthHandler>();
-            });
 
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()

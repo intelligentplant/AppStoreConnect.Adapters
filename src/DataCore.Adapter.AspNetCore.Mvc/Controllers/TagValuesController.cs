@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
@@ -86,7 +87,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var reader = await feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>(request.Tags.Length);
+            var result = new List<TagValueQueryResult>(request.Tags.Count());
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;

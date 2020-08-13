@@ -49,7 +49,9 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
                         }
                         return await feature.CheckHealthAsync(null, cancellationToken).ConfigureAwait(false);
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                         return Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
                     }
                 }, cancellationToken)

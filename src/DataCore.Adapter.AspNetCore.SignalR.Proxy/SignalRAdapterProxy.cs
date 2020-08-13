@@ -324,7 +324,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     result.InnerResults
                 );
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                 return HealthCheckResult.Unhealthy(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
                     error: e.Message
@@ -403,7 +405,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             break;
                     }
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                     var description = string.Format(context?.CultureInfo, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Unhealthy(healthCheckName, description, e.Message));
                 }
@@ -423,9 +427,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask DisposeAsync(bool disposing) {
-            await base.DisposeAsync(disposing).ConfigureAwait(false);
-            if (disposing && _client.IsValueCreated) {
+        protected override async ValueTask DisposeAsyncCore() {
+            await base.DisposeAsyncCore().ConfigureAwait(false);
+            if (_client.IsValueCreated) {
                 await _client.Value.DisposeAsync().ConfigureAwait(false);
             }
         }

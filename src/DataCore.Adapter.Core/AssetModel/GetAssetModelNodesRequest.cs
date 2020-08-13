@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.AssetModel {
@@ -14,7 +15,7 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public string[] Nodes { get; set; }
+        public IEnumerable<string> Nodes { get; set; }
 
 
         /// <summary>

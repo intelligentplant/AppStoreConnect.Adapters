@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             FindAdaptersRequest request,
             CancellationToken cancellationToken = default
         ) {
-            _client.ValidateObject(request);
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<AdapterDescriptor>>(

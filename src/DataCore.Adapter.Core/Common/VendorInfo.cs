@@ -15,7 +15,9 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The vendor URL.
         /// </summary>
+#pragma warning disable CA1056 // Uri properties should not be strings
         public string Url { get; }
+#pragma warning restore CA1056 // Uri properties should not be strings
 
 
         /// <summary>
@@ -27,7 +29,9 @@ namespace DataCore.Adapter.Common {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
+#pragma warning disable CA1054 // Uri parameters should not be strings
         public VendorInfo(string name, string url) {
+#pragma warning restore CA1054 // Uri parameters should not be strings
             Name = name?.Trim();
             Url = url;
         }
@@ -42,7 +46,9 @@ namespace DataCore.Adapter.Common {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
+#pragma warning disable CA1054 // Uri parameters should not be strings
         public static VendorInfo Create(string name, string url) {
+#pragma warning restore CA1054 // Uri parameters should not be strings
             return new VendorInfo(name, url);
         }
 

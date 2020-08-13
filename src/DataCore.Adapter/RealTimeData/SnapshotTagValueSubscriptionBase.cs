@@ -111,6 +111,7 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <inheritdoc/>
         public override async ValueTask<bool> ValueReceived(TagValueQueryResult value, CancellationToken cancellationToken = default) {
             if (value == null) {
                 return false;
@@ -128,6 +129,19 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Publishes pending values at the specified interval until the provided cancellation token fires.
+        /// </summary>
+        /// <param name="interval">
+        ///   The publish interval.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token to observe.
+        /// </param>
+        /// <returns>
+        ///   A long-running <see cref="Task"/> that will stop when the <paramref name="cancellationToken"/> 
+        ///   is cancelled.
+        /// </returns>
         private async Task RunPublishLoop(TimeSpan interval, CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 try {
@@ -137,7 +151,9 @@ namespace DataCore.Adapter.RealTimeData {
                 catch (OperationCanceledException) {
                     break;
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception) { }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 

@@ -220,7 +220,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="ValidationException">
         ///   <paramref name="instance"/> is not valid.
         /// </exception>
-        private void ValidateObject(object instance) {
+        private static void ValidateObject(object instance) {
             if (instance == null) {
                 throw new ArgumentNullException(nameof(instance));
             }

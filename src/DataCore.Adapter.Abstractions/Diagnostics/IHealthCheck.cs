@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   operation if required.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/ that will create and start an <see cref="IHealthCheckSubscription"/> 
+        ///   A <see cref="Task{TResult}"/> that will create and start an <see cref="IHealthCheckSubscription"/> 
         ///   that can be disposed once the subscription is no longer required.
         /// </returns>
         Task<IHealthCheckSubscription> Subscribe(IAdapterCallContext context);

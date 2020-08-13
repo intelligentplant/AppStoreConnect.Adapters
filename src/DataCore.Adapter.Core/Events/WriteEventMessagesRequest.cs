@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace DataCore.Adapter.Events {
 
@@ -15,7 +13,7 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public WriteEventMessageItem[] Events { get; set; }
+        public IEnumerable<WriteEventMessageItem> Events { get; set; }
 
     }
 }

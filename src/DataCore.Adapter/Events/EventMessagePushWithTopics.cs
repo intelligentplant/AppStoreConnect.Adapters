@@ -451,6 +451,7 @@ namespace DataCore.Adapter.Events {
         }
 
 
+        /// <inheritdoc/>
         public async Task<IEventMessageSubscriptionWithTopics> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageSubscriptionRequest request
@@ -519,7 +520,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Releases resources held by the <see cref="SnapshotTagValuePush"/>.
+        /// Releases resources held by the <see cref="EventMessagePushWithTopics"/>.
         /// </summary>
         /// <param name="disposing">
         ///   <see langword="true"/> if the object is being disposed, or <see langword="false"/> 
@@ -557,7 +558,9 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Implements <see cref="EventMessageSubscriptionBase"/>.
         /// </summary>
+#pragma warning disable CA1034 // Nested types should not be visible
         public class Subscription : EventMessageSubscriptionWithTopicsBase {
+#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// The owning feature.
@@ -571,8 +574,8 @@ namespace DataCore.Adapter.Events {
             /// <param name="context">
             ///   The adapter call context for the subscriber.
             /// </param>
-            /// <param name="subscriptionType">
-            ///   Indicates if the subscription is an active or passive event listener.
+            /// <param name="request">
+            ///   The subscription request.
             /// </param>
             /// <param name="feature">
             ///   The subscription manager that the subscription is attached to.
@@ -584,7 +587,7 @@ namespace DataCore.Adapter.Events {
             ) : base(
                 context,
                 feature?._options?.AdapterId,
-                request.SubscriptionType
+                request?.SubscriptionType ?? throw new ArgumentNullException(nameof(request))
             ) {
                 _feature = feature ?? throw new ArgumentNullException(nameof(feature));
             }
@@ -602,6 +605,7 @@ namespace DataCore.Adapter.Events {
             }
 
 
+            /// <inheritdoc/>
             protected override void OnCancelled() {
                 base.OnCancelled();
                 _feature.OnSubscriptionCancelled(this);
@@ -615,7 +619,7 @@ namespace DataCore.Adapter.Events {
 
 
     /// <summary>
-    /// Options for <see cref="SnapshotTagValuePush"/>
+    /// Options for <see cref="EventMessagePush"/>.
     /// </summary>
     public class EventMessagePushWithTopicsOptions {
 

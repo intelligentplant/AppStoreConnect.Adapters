@@ -6,6 +6,7 @@
 // ##################################################################################################
 
 using System;
+using System.Globalization;
 using System.Linq;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Json;
@@ -58,6 +59,10 @@ namespace DataCore.Adapter {
         ///   The gRPC asset model node.
         /// </returns>
         public static Grpc.AssetModelNode ToGrpcAssetModelNode(this AssetModel.AssetModelNode node) {
+            if (node == null) {
+                return null;
+            }
+
             var result = new Grpc.AssetModelNode() {
                 Id = node.Id ?? string.Empty,
                 Name = node.Name ?? string.Empty,
@@ -318,7 +323,7 @@ namespace DataCore.Adapter {
                     bytes = new[] { variant.GetValueOrDefault<byte>() };
                     break;
                 case Common.VariantType.DateTime:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"));
+                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture));
                     break;
                 case Common.VariantType.Double:
                     bytes = BitConverter.GetBytes(variant.GetValueOrDefault<double>());
@@ -1150,6 +1155,10 @@ namespace DataCore.Adapter {
         ///   The gRPC tag definition.
         /// </returns>
         public static Grpc.TagDefinition ToGrpcTagDefinition(this RealTimeData.TagDefinition tag) {
+            if (tag == null) {
+                return null;
+            }
+
             var result = new Grpc.TagDefinition() {
                 DataType = tag.DataType.ToGrpcVariantType(),
                 Description = tag.Description ?? string.Empty,

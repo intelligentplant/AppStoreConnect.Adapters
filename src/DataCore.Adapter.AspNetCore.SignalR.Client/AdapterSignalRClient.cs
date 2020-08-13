@@ -188,7 +188,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// <exception cref="ValidationException">
         ///   <paramref name="instance"/> is not valid.
         /// </exception>
-        protected internal void ValidateObject(object instance) {
+        protected internal static void ValidateObject(object instance) {
             if (instance == null) {
                 throw new ArgumentNullException(nameof(instance));
             }
@@ -199,27 +199,59 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
         /// <inheritdoc/>
         public void Dispose() {
-            if (_isDisposed) {
-                return;
-            }
-
-            _isDisposed = true;
-            if (_disposeConnection) {
-                Task.Run(() => _hubConnection.DisposeAsync()).GetAwaiter().GetResult();
-            }
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
 
         /// <inheritdoc/>
         public async ValueTask DisposeAsync() {
+            await DisposeAsyncCore().ConfigureAwait(false);
+            Dispose(false);
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+        }
+
+
+        /// <summary>
+        /// Class finalizer.
+        /// </summary>
+        ~AdapterSignalRClient() {
+            Dispose(false);
+        }
+
+
+        /// <summary>
+        /// Asynchronously releases managed resources.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that represents the dispose operation.
+        /// </returns>
+        protected virtual async ValueTask DisposeAsyncCore() {
+            if (_disposeConnection) {
+                await _hubConnection.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Releases managed and unmanaged resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <see langword="true"/> if the object is being disposed synchronously, or <see langword="false"/> 
+        ///   if it is being disposed asynchronously, or finalized.
+        /// </param>
+        protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
 
-            _isDisposed = true;
-            if (_disposeConnection) {
-                await _hubConnection.DisposeAsync().ConfigureAwait(false);
+            if (disposing && _disposeConnection) {
+                Task.Run(() => _hubConnection.DisposeAsync()).GetAwaiter().GetResult();
             }
+
+            _isDisposed = true;
         }
 
     }

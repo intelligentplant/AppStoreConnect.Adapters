@@ -131,9 +131,6 @@ namespace DataCore.Adapter {
         /// Creates a new task that cancels if the original task has not completed before the 
         /// specified delay.
         /// </summary>
-        /// <typeparam name="T">
-        ///   The return type of the task.
-        /// </typeparam>
         /// <param name="task">
         ///   The task.
         /// </param>

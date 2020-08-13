@@ -1,0 +1,7 @@
+# Inherit from root file
+root = false
+
+[*.{cs,vb}]
+
+# CA1812: Avoid uninstantiated internal classes
+dotnet_diagnostic.CA1812.severity = silent

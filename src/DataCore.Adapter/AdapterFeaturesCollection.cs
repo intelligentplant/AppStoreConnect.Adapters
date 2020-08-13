@@ -31,7 +31,9 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
+#pragma warning disable CA1043 // Use Integral Or String Argument For Indexers
         public object this[Type key] {
+#pragma warning restore CA1043 // Use Integral Or String Argument For Indexers
             get {
                 return key == null || !_features.TryGetValue(key, out var value)
                     ? null
@@ -249,11 +251,12 @@ namespace DataCore.Adapter {
             _features.Clear();
 
             foreach (var item in features) {
+                // Prefer synchronous dispose over asynchronous.
                 if (item is IDisposable d) {
                     d.Dispose();
                 }
                 else if (item is IAsyncDisposable ad) {
-                    Task.Run(() => ad.DisposeAsync()).GetAwaiter().GetResult();
+                    Task.Run(async () => await ad.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
                 }
             }
         }
@@ -270,6 +273,7 @@ namespace DataCore.Adapter {
             _features.Clear();
 
             foreach (var item in features) {
+                // Prefer asynchronous dispose over synchronous.
                 if (item is IAsyncDisposable ad) {
                     await ad.DisposeAsync().ConfigureAwait(false);
                 }

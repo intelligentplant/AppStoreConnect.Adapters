@@ -150,7 +150,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   event messages back to the caller.
         /// </returns>
         /// <seealso cref="CreateEventMessageTopicSubscriptionAsync"/>
-        /// <seealso cref="CreatDeleteEventMessageTopicSubscriptionAsync"/>
+        /// <seealso cref="DeleteEventMessageTopicSubscriptionAsync"/>
         public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannelAsync(string subscriptionId, string topic, CancellationToken cancellationToken) {
             if (string.IsNullOrWhiteSpace(subscriptionId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(subscriptionId));
@@ -198,7 +198,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            _client.ValidateObject(request);
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<EventMessage>(
@@ -239,7 +239,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            _client.ValidateObject(request);
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<EventMessageWithCursorPosition>(

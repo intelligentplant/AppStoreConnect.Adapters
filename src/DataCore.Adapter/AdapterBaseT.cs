@@ -145,11 +145,9 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask DisposeAsync(bool disposing) {
-            await base.DisposeAsync(disposing).ConfigureAwait(false);
-            if (disposing) {
-                _optionsMonitorSubscription?.Dispose();
-            }
+        protected override async ValueTask DisposeAsyncCore() {
+            await base.DisposeAsyncCore().ConfigureAwait(false);
+            _optionsMonitorSubscription?.Dispose();
         }
 
 

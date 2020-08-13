@@ -650,7 +650,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
     /// <summary>
-    /// Options for <see cref="SnapshotTagValuePush"/>
+    /// Options for <see cref="SnapshotTagValuePush"/>.
     /// </summary>
     public class SnapshotTagValuePushOptions {
 

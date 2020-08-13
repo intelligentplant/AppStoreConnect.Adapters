@@ -140,6 +140,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
+            _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
         }
 
 #else
@@ -318,9 +319,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask DisposeAsync(bool disposing) {
-            await base.DisposeAsync(disposing).ConfigureAwait(false);
-            if (disposing && _channel is GrpcCore.Channel channel) {
+        protected override async ValueTask DisposeAsyncCore() {
+            await base.DisposeAsyncCore().ConfigureAwait(false);
+            if (_channel is GrpcCore.Channel channel) {
                 await channel.ShutdownAsync().ConfigureAwait(false);
             }
         }
@@ -427,7 +428,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     result.InnerResults
                 );
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                 return Diagnostics.HealthCheckResult.Unhealthy(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
                     error: e.Message
@@ -517,7 +520,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 catch (OperationCanceledException) {
                     break;
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(e, Resources.Log_ErrorDuringHeartbeatInvocation);
                 }
                 await Task.Delay(interval, cancellationToken).ConfigureAwait(false);

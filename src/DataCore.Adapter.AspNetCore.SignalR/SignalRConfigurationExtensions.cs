@@ -88,7 +88,13 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <returns>
         ///   The endpoint route builder.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="endpoints"/> is <see langword="null"/>.
+        /// </exception>
         public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder endpoints) {
+            if (endpoints == null) {
+                throw new ArgumentNullException(nameof(endpoints));
+            }
             endpoints.MapHub<AdapterHub>(HubRoute);
             return endpoints;
         }

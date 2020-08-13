@@ -105,12 +105,12 @@ namespace DataCore.Adapter {
         ///   <see langword="false"/>.
         /// </remarks>
         public static bool Like(this string s, Regex expression) {
-            if (s == null) {
-                return expression.Match(string.Empty).Success;
-            }
-
             if (expression == null) {
                 throw new ArgumentNullException(nameof(expression));
+            }
+
+            if (s == null) {
+                return expression.Match(string.Empty).Success;
             }
 
             return expression.Match(s).Success;
@@ -177,10 +177,15 @@ namespace DataCore.Adapter {
             // Put '\' first so that it doesn't affect the subsequent special cases when we process it.
             var specialCases = new[] { @"\", ".", "$", "^", "{", "[", "(", "|", ")", "+" };
 
+#if NETSTANDARD2_0
             pattern = specialCases.Aggregate(pattern, (current, t) => current.Replace(t, @"\" + t));
-
             pattern = pattern.Replace('?', '.');
             pattern = pattern.Replace("*", ".*?");
+#else
+            pattern = specialCases.Aggregate(pattern, (current, t) => current.Replace(t, @"\" + t, StringComparison.Ordinal));
+            pattern = pattern.Replace('?', '.');
+            pattern = pattern.Replace("*", ".*?", StringComparison.Ordinal);
+#endif
 
             return s.Like(new Regex(pattern, RegexOptions.IgnoreCase));
         }

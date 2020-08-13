@@ -392,7 +392,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                 foreach (var item in writeChannels) {
                     item.Value.Writer.TryComplete(e);
                 }
@@ -445,7 +447,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                 foreach (var item in writeChannels) {
                     item.Value.Writer.TryComplete(e);
                 }

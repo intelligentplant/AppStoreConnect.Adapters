@@ -15,9 +15,9 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
     ///   If the remote server is configured to require client certificates (rather than just 
     ///   allowing them), this credential type will not successfully authenticate, due to 
     ///   authentication taking place at the TLS level rather than the request level. If client
-    ///   certificates are required, they must be set directly on the gRPC <see cref="Channel"/> 
-    ///   or on the <see cref="System.Net.Http.HttpClient"/> (if you are using a managed gRPC 
-    ///   client in .NET Core 3.0+) that handles the underlying HTTP/2 connection.
+    ///   certificates are required, they must be set directly on the gRPC channel or on the 
+    ///   <see cref="System.Net.Http.HttpClient"/> (if you are using a managed gRPC client in 
+    ///   .NET Core 3.0+) that handles the underlying HTTP/2 connection.
     /// </para>
     /// 
     /// <para>

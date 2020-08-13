@@ -118,12 +118,163 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ValidationException">
         ///   <paramref name="instance"/> is not valid.
         /// </exception>
-        protected internal void ValidateObject(object instance) {
+        protected internal static void ValidateObject(object instance) {
             if (instance == null) {
                 throw new ArgumentNullException(nameof(instance));
             }
 
             Validator.ValidateObject(instance, new ValidationContext(instance), true);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
+        /// </summary>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        protected internal static HttpRequestMessage CreateHttpRequestMessage(
+            HttpMethod method, 
+            Uri url, 
+            RequestMetadata metadata
+        ) {
+#pragma warning disable CA2000 // Dispose objects before losing scope
+            return new HttpRequestMessage(
+                method ?? throw new ArgumentNullException(nameof(method)),
+                url ?? throw new ArgumentNullException(nameof(url))
+            ).AddRequestMetadata(metadata);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
+        /// </summary>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        protected internal static HttpRequestMessage CreateHttpRequestMessage(
+            HttpMethod method, 
+            string url, 
+            RequestMetadata metadata
+        ) {
+            return CreateHttpRequestMessage(
+                method, 
+                new Uri(url ?? throw new ArgumentNullException(nameof(url))), 
+                metadata
+            );
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified content and metadata attached.
+        /// </summary>
+        /// <typeparam name="TContent">
+        ///   The type of the <paramref name="content"/>.
+        /// </typeparam>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="content">
+        ///   The content for the request. The content will be serialized to JSON.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        protected internal static HttpRequestMessage CreateHttpRequestMessage<TContent>(
+            HttpMethod method, 
+            Uri url, 
+            TContent content, 
+            RequestMetadata metadata
+        ) {
+            var result = CreateHttpRequestMessage(method, url, metadata);
+            result.Content = new ObjectContent(typeof(TContent), content, new System.Net.Http.Formatting.JsonMediaTypeFormatter());
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified content and metadata attached.
+        /// </summary>
+        /// <typeparam name="TContent">
+        ///   The type of the <paramref name="content"/>.
+        /// </typeparam>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="content">
+        ///   The content for the request. The content will be serialized to JSON.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        protected internal static HttpRequestMessage CreateHttpRequestMessage<TContent>(
+            HttpMethod method, 
+            string url, 
+            TContent content, 
+            RequestMetadata metadata
+        ) {
+            return CreateHttpRequestMessage(
+                method,
+                new Uri(url ?? throw new ArgumentNullException(nameof(url))),
+                content,
+                metadata
+            );
         }
 
     }

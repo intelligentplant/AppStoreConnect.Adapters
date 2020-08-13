@@ -671,7 +671,8 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         public async ValueTask DisposeAsync() {
-            await DisposeAsync(true).ConfigureAwait(false);
+            await DisposeAsyncCore().ConfigureAwait(false);
+            Dispose(false);
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
             GC.SuppressFinalize(this);
 #pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
@@ -688,7 +689,7 @@ namespace DataCore.Adapter {
 
         /// <summary>
         /// Disposes of items common to both <see cref="Dispose(bool)"/> and 
-        /// <see cref="DisposeAsync(bool)"/>.
+        /// <see cref="DisposeAsyncCore"/>.
         /// </summary>
         private void DisposeCommon() {
             _stopTokenSource?.Cancel();
@@ -704,8 +705,8 @@ namespace DataCore.Adapter {
         /// Releases adapter resources.
         /// </summary>
         /// <param name="disposing">
-        ///   <see langword="true"/> if the adapter is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
+        ///   <see langword="true"/> if the adapter is being disposed synchronously, or <see langword="false"/> 
+        ///   if it is being disposed asynchronously, or finalized.
         /// </param>
         protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
@@ -715,35 +716,28 @@ namespace DataCore.Adapter {
             if (disposing) {
                 DisposeCommon();
                 _features.Dispose();
-                _isDisposed = true;
             }
+
+            _isDisposed = true;
         }
 
 
         /// <summary>
         /// Asynchronously releases adapter resources.
         /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the adapter is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
-        /// </param>
         /// <returns>
         ///   A <see cref="ValueTask"/> that will perform the operation.
         /// </returns>
         /// <remarks>
         ///   Override both this method and <see cref="Dispose(bool)"/> if your adapter requires 
-        ///   a separate asynchronous resource cleanup implementation.
+        ///   a separate asynchronous resource cleanup implementation. When calling <see cref="DisposeAsync"/>, 
+        ///   both <see cref="DisposeAsyncCore"/> and <see cref="Dispose(bool)"/> will be called. 
+        ///   The call to <see cref="Dispose(bool)"/> will be passed <see langword="false"/> when 
+        ///   the object is being disposed asynchronously.
         /// </remarks>
-        protected virtual async ValueTask DisposeAsync(bool disposing) {
-            if (_isDisposed) {
-                return;
-            }
-
-            if (disposing) {
-                DisposeCommon();
-                await _features.DisposeAsync().ConfigureAwait(false);
-                _isDisposed = true;
-            }
+        protected virtual async ValueTask DisposeAsyncCore() {
+            DisposeCommon();
+            await _features.DisposeAsync().ConfigureAwait(false);
         }
 
 

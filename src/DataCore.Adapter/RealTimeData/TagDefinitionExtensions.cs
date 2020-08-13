@@ -57,7 +57,7 @@ namespace DataCore.Adapter.RealTimeData {
                         return false;
                     }
 
-                    if (!Convert.ToString(prop.Value).Like(item.Value)) {
+                    if (!Convert.ToString(prop.Value, CultureInfo.InvariantCulture).Like(item.Value)) {
                         return false;
                     }
                 }

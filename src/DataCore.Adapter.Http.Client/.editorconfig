@@ -1,0 +1,7 @@
+# Inherit from root file
+root = false
+
+[*.{cs,vb}]
+
+# CA2234: Pass system uri objects instead of strings
+dotnet_diagnostic.CA2234.severity = silent

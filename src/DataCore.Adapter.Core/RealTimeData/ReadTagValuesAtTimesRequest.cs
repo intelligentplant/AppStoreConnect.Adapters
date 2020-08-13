@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -13,7 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public DateTime[] UtcSampleTimes { get; set; }
+        public IEnumerable<DateTime> UtcSampleTimes { get; set; }
 
     }
 }
