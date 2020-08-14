@@ -139,7 +139,15 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-            return obj?.Id?.ToUpperInvariant().GetHashCode() ?? default;
+#if NETSTANDARD2_0
+            return _compareIdOnly
+                ? HashGenerator.Combine(obj?.Id?.ToUpperInvariant())
+                : HashGenerator.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
+#else
+            return _compareIdOnly
+                ? HashCode.Combine(obj?.Id?.ToUpperInvariant())
+                : HashCode.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
+#endif
         }
     }
 }

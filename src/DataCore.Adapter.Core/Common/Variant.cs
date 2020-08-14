@@ -2,11 +2,10 @@
 
 namespace DataCore.Adapter.Common {
 
-#pragma warning disable CA2225 // Operator overloads have named alternates
-
     /// <summary>
     /// Describes a variant value.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Not required at this time")]
     public struct Variant : IEquatable<Variant>, IFormattable {
 
         /// <summary>
@@ -346,16 +345,11 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-            unchecked {
-                // Choose large primes to avoid hashing collisions
-                const int HashingBase = (int) 2166136261;
-                const int HashingMultiplier = 16777619;
-
-                var hash = HashingBase;
-                hash = (hash * HashingMultiplier) ^ Type.GetHashCode();
-                hash = (hash * HashingMultiplier) ^ (ReferenceEquals(Value, null) ? 0 : Value.GetHashCode());
-                return hash;
-            }
+#if NETSTANDARD2_0
+            return HashGenerator.Combine(Type, Value);
+#else
+            return HashCode.Combine(Type, Value);
+#endif
         }
 
 
@@ -385,7 +379,6 @@ namespace DataCore.Adapter.Common {
         public static bool operator !=(Variant left, Variant right) {
             return !left.Equals(right);
         }
-
 
 
         /// <inheritdoc/>
@@ -493,7 +486,5 @@ namespace DataCore.Adapter.Common {
         public static explicit operator TimeSpan(Variant val) => (TimeSpan) val.Value;
 
     }
-
-#pragma warning restore CA2225 // Operator overloads have named alternates
 
 }
