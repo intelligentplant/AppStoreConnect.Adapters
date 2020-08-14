@@ -60,6 +60,7 @@ namespace DataCore.Adapter {
         ) : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
 
 
+
         /// <summary>
         /// Creates a new <see cref="Adapter"/> object that can monitor for changes in 
         /// configuration. Note that changes in the adapter's ID will be ignored once the adapter 
@@ -85,6 +86,7 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Invalid options should not be propagated to the adapter")]
         protected AdapterBase(
             string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
@@ -121,9 +123,7 @@ namespace DataCore.Adapter {
                         true
                     );
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(e, Resources.Log_InvalidAdapterOptionsUpdate);
                     return;
                 }
@@ -151,6 +151,7 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Invoked when the adapter detects that its supplied <typeparamref name="TAdapterOptions"/> 
         /// have changed. This method will only be called if an <see cref="IAdapterOptionsMonitor{TAdapterOptions}"/> 
@@ -162,6 +163,7 @@ namespace DataCore.Adapter {
         /// <param name="previousOptions">
         ///   The previous options.
         /// </param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exception is passed to associated TaskCompletionSource")]
         private void OnOptionsChangeInternal(TAdapterOptions newOptions, TAdapterOptions previousOptions) {
 
             // Check if we need to update the descriptor.
@@ -187,9 +189,7 @@ namespace DataCore.Adapter {
                         catch (OperationCanceledException) {
                             tcs.TrySetCanceled(ct);
                         }
-#pragma warning disable CA1031 // Do not catch general exception types
                         catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                             tcs.TrySetException(e);
                         }
                         finally {

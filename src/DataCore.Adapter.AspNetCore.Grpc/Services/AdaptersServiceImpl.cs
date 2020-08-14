@@ -11,6 +11,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="AdaptersService.AdaptersServiceBase"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class AdaptersServiceImpl : AdaptersService.AdaptersServiceBase {
 
         /// <summary>
@@ -28,6 +29,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public AdaptersServiceImpl(IAdapterAccessor adapterAccessor) {
             _adapterAccessor = adapterAccessor;
         }
+
 
 
         /// <inheritdoc/>

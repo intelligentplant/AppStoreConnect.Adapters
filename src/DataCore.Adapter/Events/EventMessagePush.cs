@@ -322,6 +322,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A task that will complete when the cancellation token fires.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
             try {
                 while (await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -350,9 +351,7 @@ namespace DataCore.Adapter.Events {
                                 }
                             }
                             catch (OperationCanceledException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                                 Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                             }
                         }
@@ -371,9 +370,8 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// <see cref="IEventMessageSubscription"/> implementation.
         /// </summary>
-#pragma warning disable CA1034 // Nested types should not be visible
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
         public class Subscription : EventMessageSubscriptionBase {
-#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// The subscription manager that the subscription is attached to.

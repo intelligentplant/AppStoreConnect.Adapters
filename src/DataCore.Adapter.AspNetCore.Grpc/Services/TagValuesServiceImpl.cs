@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="TagValuesService.TagValuesServiceBase"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
 
         /// <summary>
@@ -89,7 +90,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
         public override async Task<CreateSnapshotSubscriptionResponse> CreateSnapshotSubscription(
             CreateSnapshotSubscriptionRequest request, 
             ServerCallContext context
@@ -126,7 +129,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 cancellationToken
             ).ConfigureAwait(false);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
             var wrappedSubscription = new TopicSubscriptionWrapper<RealTimeData.TagValueQueryResult>(
                 await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() { 
                     PublishInterval = request.PublishInterval.ToTimeSpan(),
@@ -134,7 +136,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }).ConfigureAwait(false),
                 _backgroundTaskService
             );
-#pragma warning restore CA2000 // Dispose objects before losing scope
 
             return new CreateSnapshotSubscriptionResponse() { 
                 SubscriptionId = s_snapshotSubscriptions.AddSubscription(connectionId, wrappedSubscription)
@@ -352,7 +353,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteSnapshotTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -392,9 +395,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 foreach (var item in writeChannels) {
                     item.Value.Writer.TryComplete(e);
                 }
@@ -408,6 +409,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -447,9 +449,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
                 }
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 foreach (var item in writeChannels) {
                     item.Value.Writer.TryComplete(e);
                 }

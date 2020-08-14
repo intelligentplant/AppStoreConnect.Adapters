@@ -31,9 +31,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Additional filters on bespoke tag properties.
         /// </summary>
-#pragma warning disable CA2227 // Collection properties should be read only
         public IDictionary<string, string> Other { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
 
     }
 }

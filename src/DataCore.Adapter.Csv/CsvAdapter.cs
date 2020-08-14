@@ -764,7 +764,7 @@ namespace DataCore.Adapter.Csv {
             var utcEarliestSampleTime = dataSet.UtcEarliestSampleTime;
             var utcLatestSampleTime = dataSet.UtcLatestSampleTime;
             var dataSetDuration = dataSet.DataSetDuration;
-            var utcSampleTimes = dataSet.UtcSampleTimes;
+            var utcSampleTimes = dataSet.UtcSampleTimes.ToArray();
 
             // If the requested time range is inside the loaded data time range, or we are not 
             // allowed to loop round the data set, it's easy - we just get the raw values inside 

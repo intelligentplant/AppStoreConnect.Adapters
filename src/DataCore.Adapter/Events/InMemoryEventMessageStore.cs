@@ -209,7 +209,9 @@ namespace DataCore.Adapter.Events {
         }
 
 
+
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
 
@@ -235,9 +237,7 @@ namespace DataCore.Adapter.Events {
                         ));
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {

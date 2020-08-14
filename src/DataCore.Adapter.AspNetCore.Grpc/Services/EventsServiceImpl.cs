@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="EventsService.EventsServiceBase"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class EventsServiceImpl : EventsService.EventsServiceBase {
 
         /// <summary>
@@ -135,6 +136,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+
         /// <summary>
         /// Creates a topic-based event subscription for an adapter using the adapter's 
         /// <see cref="IEventMessagePushWithTopics"/> feature. Note that this does not add any 
@@ -150,6 +152,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the response for the operation.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
         public override async Task<CreateEventTopicPushSubscriptionResponse> CreateEventTopicPushSubscription(
             CreateEventTopicPushSubscriptionRequest request, 
             ServerCallContext context
@@ -186,7 +189,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 cancellationToken
             ).ConfigureAwait(false);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
             var wrappedSubscription = new TopicSubscriptionWrapper<Events.EventMessage>(
                 await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageSubscriptionRequest() {
                     SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
@@ -196,7 +198,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }).ConfigureAwait(false),
                 _backgroundTaskService
             );
-#pragma warning restore CA2000 // Dispose objects before losing scope
 
             return new CreateEventTopicPushSubscriptionResponse() {
                 SubscriptionId = s_eventTopicSubscriptions.AddSubscription(connectionId, wrappedSubscription)
@@ -347,7 +348,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -367,7 +370,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
                         var adapterId = adapter.Adapter.Descriptor.Id;
 
-                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new System.Threading.Channels.UnboundedChannelOptions() {
+                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new UnboundedChannelOptions() {
                             AllowSynchronousContinuations = false,
                             SingleReader = true,
                             SingleWriter = true
@@ -391,9 +394,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     writeChannel.Writer.TryWrite(adapterRequest);
                 }
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 foreach (var item in writeChannels) {
                     item.Value.Writer.TryComplete(e);
                 }

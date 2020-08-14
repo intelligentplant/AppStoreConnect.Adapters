@@ -154,4 +154,7 @@
     <value>No implementation available for extension feature: {0}</value>
     <comment>{0} - feature name</comment>
   </data>
+  <data name="Log_SubscriptionDisposeError" xml:space="preserve">
+    <value>An error occurred while disposing subscriptions.</value>
+  </data>
 </root>

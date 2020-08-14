@@ -158,5 +158,14 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while disposing subscriptions..
+        /// </summary>
+        internal static string Log_SubscriptionDisposeError {
+            get {
+                return ResourceManager.GetString("Log_SubscriptionDisposeError", resourceCulture);
+            }
+        }
     }
 }

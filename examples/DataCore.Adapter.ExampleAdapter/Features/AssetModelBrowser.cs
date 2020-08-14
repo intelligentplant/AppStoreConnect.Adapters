@@ -63,7 +63,7 @@ namespace DataCore.Adapter.Example.Features {
         public Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var channel = ChannelExtensions.CreateAssetModelNodeChannel();
 
-            channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+            channel.Writer.RunBackgroundOperation((ch, ct) => {
                 var skipCount = (request.Page - 1) * request.PageSize;
                 var takeCount = request.PageSize;
 
@@ -73,6 +73,7 @@ namespace DataCore.Adapter.Example.Features {
 
                 BrowseAssetModelNodes(nodes, ch, ref skipCount, ref takeCount);
 
+                return Task.CompletedTask;
             }, true, _backgroundTaskService, cancellationToken);
 
             return Task.FromResult(channel.Reader);

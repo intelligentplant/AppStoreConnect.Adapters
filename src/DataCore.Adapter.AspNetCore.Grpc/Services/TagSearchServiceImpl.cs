@@ -10,6 +10,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="TagSearchService.TagSearchServiceBase"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class TagSearchServiceImpl : TagSearchService.TagSearchServiceBase {
 
         /// <summary>

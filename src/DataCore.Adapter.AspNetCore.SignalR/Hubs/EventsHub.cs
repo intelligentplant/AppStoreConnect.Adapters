@@ -44,17 +44,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the ID for the subscription.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
         public async Task<string> CreateEventMessageTopicSubscription(string adapterId, CreateEventMessageSubscriptionRequest request) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
             var wrappedSubscription = new TopicSubscriptionWrapper<EventMessage>(
                 await adapter.Feature.Subscribe(adapterCallContext, request).ConfigureAwait(false),
                 TaskScheduler
             );
-#pragma warning restore CA2000 // Dispose objects before losing scope
             return s_eventTopicSubscriptions.AddSubscription(Context.ConnectionId, wrappedSubscription);
         }
 
@@ -84,6 +83,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+
         /// <summary>
         /// Subscribes to receive event messages for the specified event topic.
         /// </summary>
@@ -101,6 +101,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A <see cref="Task{TResult}"/> that will return a channel that emits event messages 
         ///   for the topic.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to response channel")]
         public Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(
             string subscriptionId,
             string topicName,
@@ -131,9 +132,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                         catch (ChannelClosedException) { }
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     topicChannel.Writer.TryComplete(e);
                 }
                 finally {

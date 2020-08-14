@@ -10,9 +10,8 @@ namespace DataCore.Adapter.AspNetCore {
     /// Background service that starts registered adapters at startup time and stops them at shutdown 
     /// time.
     /// </summary>
-#pragma warning disable CA1812 // Avoid uninstantiated internal classes
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated via dependency injection")]
     internal class AdapterInitializer : IHostedService {
-#pragma warning restore CA1812 // Avoid uninstantiated internal classes
 
         /// <summary>
         /// For accessing the available adapters.

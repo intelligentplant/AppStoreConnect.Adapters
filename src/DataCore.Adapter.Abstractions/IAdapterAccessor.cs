@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -89,13 +90,14 @@ namespace DataCore.Adapter {
     }
 
 
+
     /// <summary>
     /// Describes the result of a request to resolve and authorize an adapter feature.
     /// </summary>
     /// <typeparam name="TFeature">
     ///   The adapter feature type.
     /// </typeparam>
-    public struct ResolvedAdapterFeature<TFeature> where TFeature : IAdapterFeature {
+    public struct ResolvedAdapterFeature<TFeature> : IEquatable<ResolvedAdapterFeature<TFeature>> where TFeature : IAdapterFeature {
 
         /// <summary>
         /// The resolved adapter.
@@ -156,6 +158,46 @@ namespace DataCore.Adapter {
             _adapter = adapter;
             _feature = feature;
             _isFeatureAuthorized = isFeatureAuthorized;
+        }
+
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+#if NETSTANDARD2_0
+            return HashGenerator.Combine(_adapter, _feature, _isFeatureAuthorized);
+#else
+            return HashCode.Combine(_adapter, _feature, _isFeatureAuthorized);
+#endif
+        }
+
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) {
+            if (!(obj is ResolvedAdapterFeature<TFeature> resolvedFeature)) {
+                return false;
+            }
+
+            return Equals(resolvedFeature);
+        }
+
+
+        /// <inheritdoc/>
+        public bool Equals(ResolvedAdapterFeature<TFeature> other) {
+            return Equals(_adapter, other._adapter) && 
+                Equals(_feature, other._feature) && 
+                _isFeatureAuthorized == other._isFeatureAuthorized;
+        }
+
+
+        /// <inheritdoc/>
+        public static bool operator ==(ResolvedAdapterFeature<TFeature> left, ResolvedAdapterFeature<TFeature> right) {
+            return left.Equals(right);
+        }
+
+
+        /// <inheritdoc/>
+        public static bool operator !=(ResolvedAdapterFeature<TFeature> left, ResolvedAdapterFeature<TFeature> right) {
+            return !(left == right);
         }
 
     }

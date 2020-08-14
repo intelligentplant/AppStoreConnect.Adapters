@@ -212,6 +212,7 @@ namespace DataCore.Adapter.AspNetCore {
         }
 
 
+
         /// <summary>
         /// Long-running task that will read items from the inner subscription's channel and 
         /// republish them to <see cref="TopicChannel{T}"/> instances created by this wrapper.
@@ -222,6 +223,7 @@ namespace DataCore.Adapter.AspNetCore {
         /// <returns>
         ///   A <see cref="Task"/> that will process values emitted by the inner subscription.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exception indicates that the wrapper can be disposed")]
         private async Task ProcessSubscriptionChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 try {
@@ -248,9 +250,7 @@ namespace DataCore.Adapter.AspNetCore {
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     Dispose();
                     return;
                 }

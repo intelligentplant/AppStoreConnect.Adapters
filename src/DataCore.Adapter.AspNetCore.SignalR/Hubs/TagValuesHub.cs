@@ -42,6 +42,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the ID for the subscription.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
         public async Task<string> CreateSnapshotTagValueSubscription(
             string adapterId,
             CreateSnapshotTagValueSubscriptionRequest request
@@ -50,12 +51,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
             var wrappedSubscription = new TopicSubscriptionWrapper<TagValueQueryResult>(
                 await adapter.Feature.Subscribe(adapterCallContext, request).ConfigureAwait(false),
                 TaskScheduler
             );
-#pragma warning restore CA2000 // Dispose objects before losing scope
+
             return s_snapshotSubscriptions.AddSubscription(Context.ConnectionId, wrappedSubscription);
         }
 
@@ -84,6 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+
         /// <summary>
         /// Subscribes to receive snapshot tag values for a tag.
         /// </summary>
@@ -100,6 +101,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A <see cref="Task{TResult}"/> that will return a channel that emits value changes 
         ///   for the tag.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to the response channel")]
         public Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
             string subscriptionId,
             string tagIdOrName,
@@ -130,9 +132,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                         catch (ChannelClosedException) { }
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     topicChannel.Writer.TryComplete(e);
                 }
                 finally {

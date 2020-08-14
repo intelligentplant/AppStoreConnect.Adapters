@@ -99,6 +99,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
 
+
         /// <summary>
         /// Long-running task that monitors the <see cref="_recomputeHealthChannel"/>, 
         /// recalculates the adapter health when messages are published to the channel, and then 
@@ -110,6 +111,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A task that will complete when the cancellation token fires
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Recovery from errors occurring while publisging messages to subscribers")]
         private async Task PublishToHealthCheckSubscribers(CancellationToken cancellationToken) {
             while (await _recomputeHealthChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!_recomputeHealthChannel.Reader.TryRead(out var val) || !val) {
@@ -148,9 +150,7 @@ namespace DataCore.Adapter.Diagnostics {
                         }
                     }
                     catch (OperationCanceledException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
@@ -159,6 +159,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         public async Task<HealthCheckResult> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
@@ -202,9 +203,7 @@ namespace DataCore.Adapter.Diagnostics {
             catch (OperationCanceledException) {
                 throw;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 return HealthCheckResult.Unhealthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Error, e.Message);
             }
             finally {

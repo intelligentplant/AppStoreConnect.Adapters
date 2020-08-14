@@ -10,6 +10,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="AssetModelBrowserService.AssetModelBrowserServiceBase"/>
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class AssetModelBrowserServiceImpl : AssetModelBrowserService.AssetModelBrowserServiceBase {
 
         /// <summary>

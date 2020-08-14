@@ -3,6 +3,5 @@ root = false
 
 [*.{cs,vb}]
 
-
 # CA1062: Validate arguments of public methods. Justification: public methods are only called by JSON serializer that will always pass a non-null value.
 dotnet_diagnostic.CA1062.severity = silent

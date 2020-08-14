@@ -156,6 +156,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(null, cancellationToken).ConfigureAwait(false);
@@ -188,9 +189,7 @@ namespace DataCore.Adapter.Http.Proxy {
                         }
                         AddFeatures(impl, addStandardFeatures: false);
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -233,6 +232,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<HealthCheckResult> CheckRemoteHealthAsync(
             IAdapterCallContext context,
             CancellationToken cancellationToken
@@ -260,9 +260,7 @@ namespace DataCore.Adapter.Http.Proxy {
                     result.InnerResults
                 );
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 return HealthCheckResult.Unhealthy(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
                     error: e.Message

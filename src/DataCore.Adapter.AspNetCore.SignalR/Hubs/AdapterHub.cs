@@ -21,6 +21,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <summary>
         /// The host information.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Method is for invocation by SignalR clients")]
         protected HostInfo HostInfo { get; }
 
         /// <summary>

@@ -1,10 +1,9 @@
 ﻿namespace DataCore.Adapter.Common {
 
-#pragma warning disable CA1720 // Identifier contains type name
-
     /// <summary>
     /// Describes the type of a variant value.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Enum members all refer to data types")]
     public enum VariantType {
 
         /// <summary>
@@ -98,7 +97,5 @@
         Url
 
     }
-
-#pragma warning restore CA1720 // Identifier contains type name
 
 }

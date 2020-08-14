@@ -15,6 +15,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [ApiController]
     [Area("data-core")]
     [Route("api/[area]/v1.0/tag-values")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Validation is performed by MVC framework")]
     public class TagValuesController: ControllerBase {
 
         /// <summary>
@@ -139,7 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>();
+            var result = new List<TagValueQueryResult>(request.Tags.Count());
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
@@ -196,7 +197,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var reader = await feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>();
+            var result = new List<TagValueQueryResult>(request.Tags.Count());
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
@@ -248,7 +249,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var reader = await feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>();
+            var result = new List<TagValueQueryResult>(request.Tags.Count());
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;
@@ -308,7 +309,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<ProcessedTagValueQueryResult>();
+            var result = new List<ProcessedTagValueQueryResult>(request.Tags.Count());
             while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!reader.TryRead(out var value) || value == null) {
                     continue;

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
     /// <summary>
@@ -32,15 +34,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         }
 
 
+
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Prevent propagation of errors while disposing")]
         public async ValueTask DisposeAsync() {
             try {
                 // Ensure that all we delete all subscriptions for the connection.
                 await GetClient().TagValues.DeleteSnapshotTagValueSubscriptionAsync(string.Empty, default).ConfigureAwait(false);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
+            catch (Exception e) {
+                Logger.LogError(e, Resources.Log_SubscriptionDisposeError);
+            }
         }
 
 

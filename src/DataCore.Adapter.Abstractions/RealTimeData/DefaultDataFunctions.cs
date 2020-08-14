@@ -11,9 +11,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Constants associated with <see cref="DefaultDataFunctions"/>.
         /// </summary>
-#pragma warning disable CA1034 // Nested types should not be visible
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Organisation of static class")]
         public static class Constants {
-#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// Interpolated data function ID.

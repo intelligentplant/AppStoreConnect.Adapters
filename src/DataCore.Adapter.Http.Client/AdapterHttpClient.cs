@@ -127,6 +127,7 @@ namespace DataCore.Adapter.Http.Client {
         }
 
 
+
         /// <summary>
         /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
         /// </summary>
@@ -148,17 +149,16 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Caller is responsible for disposing the object")]
         protected internal static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             Uri url, 
             RequestMetadata metadata
         ) {
-#pragma warning disable CA2000 // Dispose objects before losing scope
             return new HttpRequestMessage(
                 method ?? throw new ArgumentNullException(nameof(method)),
                 url ?? throw new ArgumentNullException(nameof(url))
             ).AddRequestMetadata(metadata);
-#pragma warning restore CA2000 // Dispose objects before losing scope
         }
 
 

@@ -3,8 +3,7 @@
     /// <summary>
     /// Interface that all standard adapter features must implement.
     /// </summary>
-#pragma warning disable CA1040 // Avoid empty interfaces
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1040:Avoid empty interfaces", Justification = "Need to identify adapter feature types")]
     public interface IAdapterFeature { }
-#pragma warning restore CA1040 // Avoid empty interfaces
 
 }

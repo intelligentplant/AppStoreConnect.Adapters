@@ -313,6 +313,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A long-running task.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 if (!await _tagSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -335,9 +336,7 @@ namespace DataCore.Adapter.RealTimeData {
                         change.Processed.TrySetResult(true);
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     if (change.Processed != null) {
                         change.Processed.TrySetException(e);
                     }
@@ -365,6 +364,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A long-running task.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task ProcessValueChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -385,9 +385,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                     catch (OperationCanceledException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
@@ -586,9 +584,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// Default <see cref="SnapshotTagValueSubscriptionBase"/> implementation used by 
         /// <see cref="SnapshotTagValuePush"/>.
         /// </summary>
-#pragma warning disable CA1034 // Nested types should not be visible
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
         public class Subscription : SnapshotTagValueSubscriptionBase {
-#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// The owning <see cref="SnapshotTagValuePush"/> instance.
@@ -678,6 +675,7 @@ namespace DataCore.Adapter.RealTimeData {
         public Action<TagIdentifier> OnTagSubscriptionRemoved { get; set; }
 
 
+
         /// <summary>
         /// Creates a delegate compatible with <see cref="TagResolver"/> using an 
         /// <see cref="ITagInfo"/> feature.
@@ -688,6 +686,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new delegate.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Prevent error propagation when a channel closes unexpectedly")]
         public static Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> CreateTagResolver(ITagInfo feature) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -701,9 +700,7 @@ namespace DataCore.Adapter.RealTimeData {
                 try {
                     return await ch.ReadAsync(cancellationToken).ConfigureAwait(false);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch {
-#pragma warning restore CA1031 // Do not catch general exception types
                     return null;
                 }
             };

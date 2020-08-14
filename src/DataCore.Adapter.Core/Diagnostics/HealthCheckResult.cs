@@ -8,9 +8,8 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Represents the result of an adapter health check.
     /// </summary>
-#pragma warning disable CA1815 // Override equals and operator equals on value types
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Use cases do not require equality checks")]
     public struct HealthCheckResult {
-#pragma warning restore CA1815 // Override equals and operator equals on value types
 
         /// <summary>
         /// The display name of the health check result.

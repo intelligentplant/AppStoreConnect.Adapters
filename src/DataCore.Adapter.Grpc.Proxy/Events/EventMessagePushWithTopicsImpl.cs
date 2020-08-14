@@ -10,6 +10,8 @@ using DataCore.Adapter.Events;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events {
@@ -41,6 +43,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
 
 
         /// <inheritdoc />
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Prevent propagation of errors while disposing")]
         public async ValueTask DisposeAsync() {
             try {
                 // Ensure that we delete all subscriptions for this connection.
@@ -51,9 +54,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                 var response = CreateClient<EventsService.EventsServiceClient>().DeleteEventTopicPushSubscriptionAsync(request, GetCallOptions(null, default));
                 await response.ResponseAsync.ConfigureAwait(false);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
+            catch (Exception e) {
+                Logger.LogError(e, Resources.Log_SubscriptionDisposeError);
+            }
         }
 
 

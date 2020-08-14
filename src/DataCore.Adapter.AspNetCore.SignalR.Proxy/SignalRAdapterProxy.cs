@@ -198,6 +198,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
 
+
         /// <summary>
         /// Initialises the proxy.
         /// </summary>
@@ -207,6 +208,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(cancellationToken).ConfigureAwait(false);
@@ -230,9 +232,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                         }
                         AddFeatures(impl, addStandardFeatures: false);
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -288,17 +288,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Checks the health of the remote adapter.
         /// </summary>
-        /// <param name="context">
-        ///   The context for the caller.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<HealthCheckResult> CheckRemoteHealthAsync(
-            IAdapterCallContext context,
             CancellationToken cancellationToken
         ) {
             if (!RemoteDescriptor.HasFeature<IHealthCheck>()) {
@@ -324,9 +321,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     result.InnerResults
                 );
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 return HealthCheckResult.Unhealthy(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
                     error: e.Message
@@ -335,7 +330,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
 
+
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
             if (!IsRunning) {
@@ -352,7 +349,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             HealthCheckResult.Composite(
                                 Resources.HealthCheck_DisplayName_Connection,
                                 new[] {
-                                    await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
+                                    await CheckRemoteHealthAsync(cancellationToken).ConfigureAwait(false)
                                 },
                                 string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString())
                             )
@@ -405,9 +402,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             break;
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     var description = string.Format(context?.CultureInfo, format, Resources.HealthCheck_UnknownConnectionState);
                     results.Add(HealthCheckResult.Unhealthy(healthCheckName, description, e.Message));
                 }

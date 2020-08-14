@@ -142,9 +142,11 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Starts the subscription.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to the output channel")]
         public Task Start() {
             if (_isDisposed || Interlocked.CompareExchange(ref _hasStartBeenCalled, 1, 0) != 0) {
                 // Already started.
@@ -161,9 +163,7 @@ namespace DataCore.Adapter {
                 catch (ChannelClosedException) {
                     _valuesChannel.Writer.TryComplete();
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     _valuesChannel.Writer.TryComplete(e);
                 }
                 finally {

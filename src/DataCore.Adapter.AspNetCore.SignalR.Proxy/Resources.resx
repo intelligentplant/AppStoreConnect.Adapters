@@ -165,4 +165,7 @@
   <data name="Log_SnapshotTagValueSubscriptionError" xml:space="preserve">
     <value>Error while running snapshot tag value subscription.</value>
   </data>
+  <data name="Log_SubscriptionDisposeError" xml:space="preserve">
+    <value>An error occurred while disposing subscriptions.</value>
+  </data>
 </root>

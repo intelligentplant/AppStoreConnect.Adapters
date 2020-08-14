@@ -30,10 +30,10 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <inheritdoc/>
-#pragma warning disable CA1043 // Use Integral Or String Argument For Indexers
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1043:Use Integral Or String Argument For Indexers", Justification = "Features are identified by type")]
         public object this[Type key] {
-#pragma warning restore CA1043 // Use Integral Or String Argument For Indexers
             get {
                 return key == null || !_features.TryGetValue(key, out var value)
                     ? null

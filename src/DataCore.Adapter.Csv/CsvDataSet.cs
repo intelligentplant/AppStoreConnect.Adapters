@@ -28,9 +28,7 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// The UTC sample times read from the CSV.
         /// </summary>
-#pragma warning disable CA1819 // Properties should not return arrays
-        public DateTime[] UtcSampleTimes { get; internal set; }
-#pragma warning restore CA1819 // Properties should not return arrays
+        public IEnumerable<DateTime> UtcSampleTimes { get; internal set; }
 
         /// <summary>
         /// The raw tag values read from the CSV, indexed by tag ID and then UTC sample time.

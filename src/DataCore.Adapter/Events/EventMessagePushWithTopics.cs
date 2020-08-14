@@ -274,6 +274,7 @@ namespace DataCore.Adapter.Events {
         }
 
 
+
         /// <summary>
         /// Starts a long-running that that will read and process subscription changes published 
         /// to <see cref="_topicSubscriptionChangesChannel"/>.
@@ -284,6 +285,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A long-running task.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTopicSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -306,9 +308,7 @@ namespace DataCore.Adapter.Events {
                         change.Processed.TrySetResult(true);
                     }
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     if (change.Processed != null) {
                         change.Processed.TrySetException(e);
                     }
@@ -326,6 +326,7 @@ namespace DataCore.Adapter.Events {
         }
 
 
+
         /// <summary>
         /// Starts a long-running task that will read values published to <see cref="_masterChannel"/> 
         /// and re-publish them to subscribers for the topic.
@@ -336,6 +337,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A long-running task.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task ProcessPublishToSubscribersChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -356,9 +358,7 @@ namespace DataCore.Adapter.Events {
                         }
                     }
                     catch (OperationCanceledException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
@@ -558,9 +558,9 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Implements <see cref="EventMessageSubscriptionBase"/>.
         /// </summary>
-#pragma warning disable CA1034 // Nested types should not be visible
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
         public class Subscription : EventMessageSubscriptionWithTopicsBase {
-#pragma warning restore CA1034 // Nested types should not be visible
 
             /// <summary>
             /// The owning feature.

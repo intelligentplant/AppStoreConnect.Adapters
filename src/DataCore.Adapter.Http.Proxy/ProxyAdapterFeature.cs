@@ -50,12 +50,12 @@ namespace DataCore.Adapter.Http.Proxy {
         }
 
 
+
         /// <summary>
         /// Static constructor.
         /// </summary>
-#pragma warning disable CA1810 // Initialize reference type static fields inline
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Initialisation is non-trivial")]
         static ProxyAdapterFeature() {
-#pragma warning restore CA1810 // Initialize reference type static fields inline
             _featureImplementations = new ConcurrentDictionary<Type, Type>();
 
             var featureTypes = TypeExtensions.GetStandardAdapterFeatureTypes();

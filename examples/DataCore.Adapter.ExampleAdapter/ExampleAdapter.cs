@@ -62,14 +62,14 @@ namespace DataCore.Adapter.Example {
                 try {
                     while (!StopToken.IsCancellationRequested) {
                         var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
-                        evtManager.WriteEventMessages(
+                        await evtManager.WriteEventMessages(
                             EventMessageBuilder
                                 .Create()
                                 .WithPriority(EventPriority.Low)
                                 .WithCategory("System Messages")
                                 .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
                                 .Build()
-                        );
+                        ).ConfigureAwait(false);
 
                         await Task.Delay(TimeSpan.FromSeconds(60), StopToken).ConfigureAwait(false);
                     }

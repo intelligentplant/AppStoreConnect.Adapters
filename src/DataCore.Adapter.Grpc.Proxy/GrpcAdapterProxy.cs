@@ -215,6 +215,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken) {
             var callOptions = new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
@@ -258,9 +259,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
                         AddFeatures(impl, addStandardFeatures: false);
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                     }
                 }
@@ -292,15 +291,14 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 #else
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "gRPC channel shutdown errors should not propagate")]
         protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_channel is GrpcCore.Channel channel) {
                 try {
                     await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(e, Resources.Log_ChannelShutdownError);
                 }
             }
@@ -393,6 +391,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<Diagnostics.HealthCheckResult> CheckRemoteHealthAsync(
             IAdapterCallContext context, 
             CancellationToken cancellationToken
@@ -428,9 +427,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     result.InnerResults
                 );
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                 return Diagnostics.HealthCheckResult.Unhealthy(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
                     error: e.Message
@@ -495,6 +492,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
+
         /// <summary>
         /// Periodically sends a heartbeat message to the remote host.
         /// </summary>
@@ -504,6 +502,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A <see cref="Task"/> that will periodically send a heartbeat message.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Heartbeat task needs to recover from unhandled exceptions")]
         private async Task RunRemoteHeartbeatLoop(CancellationToken cancellationToken) {
             var interval = Options.HeartbeatInterval;
             if (Options.HeartbeatInterval <= TimeSpan.FromSeconds(5)) {
@@ -520,9 +519,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 catch (OperationCanceledException) {
                     break;
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(e, Resources.Log_ErrorDuringHeartbeatInvocation);
                 }
                 await Task.Delay(interval, cancellationToken).ConfigureAwait(false);

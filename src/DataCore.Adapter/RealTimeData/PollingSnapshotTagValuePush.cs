@@ -221,6 +221,7 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+
         /// <summary>
         /// Runs the dedicated polling task.
         /// </summary>
@@ -230,6 +231,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A task that will run the polling loop.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Recovery from errors in long-running task")]
         private async Task RunSnapshotPollingLoop(CancellationToken cancellationToken) {
             try {
                 while (!cancellationToken.IsCancellationRequested) {
@@ -249,9 +251,7 @@ namespace DataCore.Adapter.RealTimeData {
                     catch (OperationCanceledException) {
                         // Cancellation token fired.
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                         Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
                     }
                 }

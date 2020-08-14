@@ -10,6 +10,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc.Services {
     /// <summary>
     /// Implements <see cref="HeartbeatService.HeartbeatServiceBase"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class HeartbeatServiceImpl : HeartbeatService.HeartbeatServiceBase {
 
         /// <summary>

@@ -129,6 +129,7 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+
         /// <summary>
         /// Publishes pending values at the specified interval until the provided cancellation token fires.
         /// </summary>
@@ -142,6 +143,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A long-running <see cref="Task"/> that will stop when the <paramref name="cancellationToken"/> 
         ///   is cancelled.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Recovery from unexpected errors during publish")]
         private async Task RunPublishLoop(TimeSpan interval, CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 try {
@@ -151,9 +153,7 @@ namespace DataCore.Adapter.RealTimeData {
                 catch (OperationCanceledException) {
                     break;
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception) { }
-#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
 

@@ -12,9 +12,7 @@ namespace DataCore.Adapter.Common {
         /// Additional request properties. These can be used to provide bespoke query parameters 
         /// supported by the adapter.
         /// </summary>
-#pragma warning disable CA2227 // Collection properties should be read only
         public IDictionary<string, string> Properties { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
 
 
         /// <summary>
