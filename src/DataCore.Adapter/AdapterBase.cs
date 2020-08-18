@@ -493,15 +493,18 @@ namespace DataCore.Adapter {
         /// <param name="value">
         ///   The property value.
         /// </param>
+        /// <param name="description">
+        ///   The property description.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="key"/> i <see langword="null"/>.
         /// </exception>
-        protected void AddProperty(string key, object value) {
+        protected void AddProperty(string key, object value, string description = null) {
             CheckDisposed();
             if (key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
-            _properties[key] = AdapterProperty.Create(key, value);
+            _properties[key] = AdapterProperty.Create(key, value, description);
         }
 
 
