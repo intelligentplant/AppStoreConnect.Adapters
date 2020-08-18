@@ -139,7 +139,11 @@ namespace DataCore.Adapter {
         public IEnumerable<AdapterProperty> Properties {
             get {
                 CheckDisposed();
-                return _properties.Values.Select(x => AdapterProperty.FromExisting(x)).ToArray();
+                return _properties
+                    .Values
+                    .Select(x => AdapterProperty.FromExisting(x))
+                    .OrderBy(x => x.Name)
+                    .ToArray();
             }
         }
 
