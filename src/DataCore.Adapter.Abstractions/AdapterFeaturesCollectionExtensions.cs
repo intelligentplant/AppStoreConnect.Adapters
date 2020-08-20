@@ -38,7 +38,8 @@ namespace DataCore.Adapter {
         /// </param>
         /// <param name="featureName">
         ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
-        ///   or <see cref="Type.FullName"/> of the feature type.
+        ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
+        ///   the <see cref="Type.FullName"/> of the feature type for extension features.
         /// </param>
         /// <returns>
         ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
@@ -48,7 +49,7 @@ namespace DataCore.Adapter {
                 return null;
             }
 
-            var key = features.Keys.FirstOrDefault(x => x.Name.Equals(featureName, StringComparison.Ordinal) || x.FullName.Equals(featureName, StringComparison.Ordinal));
+            var key = features.Keys.FirstOrDefault(x => (x.Name.Equals(featureName, StringComparison.Ordinal) && x.IsStandardAdapterFeature()) || x.FullName.Equals(featureName, StringComparison.Ordinal));
             return key == null
                 ? null
                 : features[key];
