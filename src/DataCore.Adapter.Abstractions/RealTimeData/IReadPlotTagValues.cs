@@ -7,6 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading visualization-friendly tag values from an adapter.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadPlotTagValues)]
     public interface IReadPlotTagValues : IAdapterFeature {
 
         /// <summary>

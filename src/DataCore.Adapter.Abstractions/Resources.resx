@@ -210,6 +210,9 @@
   <data name="DataFunction_Variance_Name" xml:space="preserve">
     <value>Variance</value>
   </data>
+  <data name="Error_InvalidFeatureUri" xml:space="preserve">
+    <value>The feature URI is invalid.</value>
+  </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>

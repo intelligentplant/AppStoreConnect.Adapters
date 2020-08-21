@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 namespace DataCore.Adapter {
 
@@ -26,7 +27,9 @@ namespace DataCore.Adapter {
             .GetTypes()
             .Where(x => x.IsInterface)
             .Where(x => s_adapterFeatureType.IsAssignableFrom(x))
-            .Where(x => x != s_adapterFeatureType && x != s_adapterExtensionFeatureType)
+            .Where(x => x != s_adapterFeatureType)
+            .Where(x => x != s_adapterExtensionFeatureType)
+            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute())
             .ToArray();
 
 
@@ -58,7 +61,7 @@ namespace DataCore.Adapter {
             }
 
             return type.IsInterface && 
-                (s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type)) || s_adapterExtensionFeatureType.IsAssignableFrom(type)) &&
+                (s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type)) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute())) &&
                 type != s_adapterFeatureType && 
                 type != s_adapterExtensionFeatureType;
         }
@@ -91,6 +94,86 @@ namespace DataCore.Adapter {
         /// </returns>
         public static bool IsExtensionAdapterFeature(this Type type) {
             return type.IsAdapterFeature() && s_adapterExtensionFeatureType.IsAssignableFrom(type);
+        }
+
+
+        /// <summary>
+        /// Tests if a type has been annotated with an <see cref="AdapterFeatureAttribute"/>.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type has been annotated with an <see cref="AdapterFeatureAttribute"/>, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        private static bool IsAnnotatedWithAttributeFeatureAttribute(this Type type) {
+            return type.GetCustomAttribute<AdapterFeatureAttribute>() != null;
+        }
+
+
+        /// <summary>
+        /// Gets the adapter feature URI for the type.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The adapter feature URI for the type, or <see langword="null"/> if the type is not 
+        ///   an adapter feature type.
+        /// </returns>
+        public static Uri GetAdapterFeatureUri(this Type type) {
+            return type.IsAdapterFeature() 
+                ? type.GetCustomAttribute<AdapterFeatureAttribute>()?.Uri
+                : null;
+        }
+
+
+        /// <summary>
+        /// Tests if the type is annotated with the specified adapter feature URI.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <param name="uri">
+        ///   The adapter feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is annotated with the feature URI, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool HasAdapterFeatureUri(this Type type, string uri) {
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
+        }
+
+
+        /// <summary>
+        /// Tests if the type is annotated with the specified adapter feature URI.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <param name="uri">
+        ///   The adapter feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is annotated with the feature URI, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool HasAdapterFeatureUri(this Type type, Uri uri) {
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
         }
 
     }

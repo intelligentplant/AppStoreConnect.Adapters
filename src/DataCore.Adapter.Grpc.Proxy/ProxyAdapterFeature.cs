@@ -97,7 +97,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             var featureInstances = new Dictionary<Type, object>();
 
             foreach (var item in remoteAdapterFeatures) {
-                var implementation = _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(item, StringComparison.OrdinalIgnoreCase));
+                var implementation = _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(item, StringComparison.OrdinalIgnoreCase) || x.Key.HasAdapterFeatureUri(item));
 
                 // .Key = adapter feature interface
                 // .Value = implementation type

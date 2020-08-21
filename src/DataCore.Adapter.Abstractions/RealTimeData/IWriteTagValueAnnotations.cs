@@ -6,6 +6,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for creating, updating, and deleting annotations on tag values.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.WriteAnnotations)]
     public interface IWriteTagValueAnnotations : IAdapterFeature {
 
         /// <summary>

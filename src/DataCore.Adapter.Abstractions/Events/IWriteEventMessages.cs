@@ -7,6 +7,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Feature that allows event messages to be written to an adapter.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.Events.WriteEventMessages)]
     public interface IWriteEventMessages : IAdapterFeature {
 
         /// <summary>

@@ -5,6 +5,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Feature for subscribing to receive event messages from an adapter via a push notification.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.Events.EventMessagePush)]
     public interface IEventMessagePush : IAdapterFeature {
 
         /// <summary>

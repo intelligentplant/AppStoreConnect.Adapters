@@ -14,6 +14,8 @@ All adapters implement the [IAdapter](./IAdapter.cs) interface. Each adapter imp
 
 Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
 
+Every feature defines a URI that uniquely identifies the feature. URIs for well-known features are defined [here](./WellKnownFeatures.cs).
+
 
 ## Standard Features
 
@@ -44,10 +46,20 @@ Adapters can define any number of the following standard features:
     - [IWriteSnapshotTagValues](./RealTimeData/IWriteSnapshotTagValues.cs)
     - [IWriteTagValueAnnotations](./RealTimeData/IWriteTagValueAnnotations.cs)
 
-
 ## Extension Features
 
-In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./IAdapterExtensionFeature.cs).
+In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./IAdapterExtensionFeature.cs) and must be annotated using the [AdapterFeatureAttribute](./AdapterFeatureAttribute.cs) attribute e.g.
+
+```csharp
+[AdapterFeature(
+    "northwind:app-store-connect:my-example", 
+    DisplayName = "My Example", 
+    Description = "An example extension feature"
+)]
+public interface IMyExampleExtensionFeature : IAdapterExtensionFeature {
+    // - snip -
+}
+```
 
 
 ## Helper Classes

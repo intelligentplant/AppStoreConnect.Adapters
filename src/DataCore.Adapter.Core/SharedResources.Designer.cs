@@ -151,7 +151,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}. Non-standard features must extend {1}..
+        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}. Non-standard features must extend {1}. All features must be annotated with {2}..
         /// </summary>
         public static string Error_NotAnAdapterFeature {
             get {

@@ -7,6 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading tag values at specific time stamps from an adapter.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes)]
     public interface IReadTagValuesAtTimes : IAdapterFeature {
 
         /// <summary>

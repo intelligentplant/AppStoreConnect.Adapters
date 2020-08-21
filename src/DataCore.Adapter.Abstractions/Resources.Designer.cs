@@ -340,6 +340,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The feature URI is invalid..
+        /// </summary>
+        internal static string Error_InvalidFeatureUri {
+            get {
+                return ResourceManager.GetString("Error_InvalidFeatureUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
         /// </summary>
         internal static string Error_MissingAdapterFeature {

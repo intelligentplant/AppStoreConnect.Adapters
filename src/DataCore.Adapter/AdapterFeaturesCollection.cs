@@ -180,7 +180,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureType));
             }
             if (!featureType.IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(featureType));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature), nameof(AdapterFeatureAttribute)), nameof(featureType));
             }
 
             AddInternal(featureType, feature, true);
@@ -212,7 +212,7 @@ namespace DataCore.Adapter {
         /// </exception>
         public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (!typeof(TFeature).IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature)), nameof(feature));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature), nameof(AdapterFeatureAttribute)), nameof(feature));
             }
             AddInternal(typeof(TFeature), feature, true);
         }

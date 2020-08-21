@@ -7,6 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for performing tag searches on an adapter.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.TagSearch)]
     public interface ITagSearch : IAdapterFeature, ITagInfo {
 
         /// <summary>

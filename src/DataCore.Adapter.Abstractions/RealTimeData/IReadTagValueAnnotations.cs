@@ -7,6 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading tag value annotations from an adapter.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadAnnotations)]
     public interface IReadTagValueAnnotations : IAdapterFeature {
 
         /// <summary>

@@ -148,9 +148,10 @@
     <value>You cannot specify a null node ID.</value>
   </data>
   <data name="Error_NotAnAdapterFeature" xml:space="preserve">
-    <value>Adapter features must be interfaces extending {0}. Non-standard features must extend {1}.</value>
+    <value>Adapter features must be interfaces extending {0}. Non-standard features must extend {1}. All features must be annotated with {2}.</value>
     <comment>{0} - IAdapterFeature name
-{1} - IAdapterExtensionFeature name</comment>
+{1} - IAdapterExtensionFeature name
+{2} - AnnotationFeatureAttribute name</comment>
   </data>
   <data name="Error_SampleIntervalMustBeGreaterThanZero" xml:space="preserve">
     <value>Sample interval must be greater than zero.</value>
