@@ -43,11 +43,75 @@ namespace DataCore.Adapter {
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        public static object GetFeature(this IAdapter adapter, string featureName) {
+        internal static object GetFeature(this IAdapter adapter, string featureName) {
             if (adapter?.Features == null) {
                 return default;
             }
             return adapter.Features.Get(featureName);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGetFeature<TFeature>(
+            this IAdapter adapter,
+            out TFeature feature
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                feature = default;
+                return false;
+            }
+            return adapter.Features.TryGet(out feature);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature implementation by name.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureName">
+        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
+        ///   the <see cref="Type.FullName"/> of the feature type for extension features.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <param name="featureType">
+        ///   The feature type that <paramref name="featureName"/> was resolved to.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        internal static bool TryGetFeature(
+            this IAdapter adapter,
+            string featureName,
+            out object feature,
+            out Type featureType
+        ) {
+            if (adapter?.Features == null) {
+                feature = default;
+                featureType = default;
+                return false;
+            }
+            return adapter.Features.TryGet(featureName, out feature, out featureType);
         }
 
 
@@ -103,11 +167,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasFeature<TFeature>(this IAdapter adapter) where TFeature : IAdapterFeature {
-            if (adapter?.Features?.Keys == null) {
-                return false;
-            }
-
-            return adapter.Features.Keys.Contains(typeof(TFeature));
+            return adapter?.Features?.Contains<TFeature>() ?? false;
         }
 
 
@@ -126,14 +186,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasFeature(this IAdapter adapter, string featureName) {
-            if (adapter == null || string.IsNullOrWhiteSpace(featureName)) {
-                return false;
-            }
-
-            return adapter.Features.Keys.Any(x => x.IsStandardAdapterFeature()
-                ? string.Equals(x.Name, featureName, StringComparison.OrdinalIgnoreCase)
-                : string.Equals(x.FullName, featureName, StringComparison.OrdinalIgnoreCase)
-            );
+            return adapter?.Features?.Contains(featureName) ?? false;
         }
 
 

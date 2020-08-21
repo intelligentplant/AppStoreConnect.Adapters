@@ -135,7 +135,7 @@ namespace DataCore.Adapter {
                 return new ResolvedAdapterFeature<TFeature>(null, default, false);
             }
 
-            var feature = adapter.Features.Get<TFeature>();
+            var feature = adapter.GetFeature<TFeature>();
             if (feature == null) {
                 return new ResolvedAdapterFeature<TFeature>(adapter, default, false);
             }
