@@ -155,6 +155,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeExtensionFeatureUri() {
             using (var adapter = new ExampleAdapter()) {
+                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
