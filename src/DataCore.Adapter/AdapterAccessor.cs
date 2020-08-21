@@ -13,10 +13,8 @@ namespace DataCore.Adapter {
     /// </summary>
     public abstract class AdapterAccessor : IAdapterAccessor {
 
-        /// <summary>
-        /// The adapter API authorization service to use.
-        /// </summary>
-        private readonly IAdapterAuthorizationService _authorizationService;
+        /// <inheritdoc/>
+        public IAdapterAuthorizationService AuthorizationService { get; }
 
 
         /// <summary>
@@ -29,7 +27,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="authorizationService"/> is <see langword="null"/>.
         /// </exception>
         protected AdapterAccessor(IAdapterAuthorizationService authorizationService) {
-            _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
+            AuthorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
         }
 
 
@@ -93,7 +91,7 @@ namespace DataCore.Adapter {
             var result = new List<IAdapter>();
 
             foreach (var adapter in adapters) {
-                var authResult = await _authorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
+                var authResult = await AuthorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 if (authResult) {
                     result.Add(adapter);
@@ -122,26 +120,10 @@ namespace DataCore.Adapter {
                 return null;
             }
 
-            var authResult = await _authorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
+            var authResult = await AuthorizationService.AuthorizeAdapter(adapter, context, cancellationToken).ConfigureAwait(false);
             return authResult
                 ? adapter
                 : null;
-        }
-
-        /// <inheritdoc/>
-        public async Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
-            var adapter = await ((IAdapterAccessor) this).GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
-                return new ResolvedAdapterFeature<TFeature>(null, default, false);
-            }
-
-            var feature = adapter.GetFeature<TFeature>();
-            if (feature == null) {
-                return new ResolvedAdapterFeature<TFeature>(adapter, default, false);
-            }
-
-            var isAuthorized = await _authorizationService.AuthorizeAdapterFeature<TFeature>(adapter, context, cancellationToken).ConfigureAwait(false);
-            return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
         }
 
     }
