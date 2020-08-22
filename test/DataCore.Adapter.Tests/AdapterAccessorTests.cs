@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -240,7 +241,7 @@ namespace DataCore.Adapter.Tests {
         private interface ITestExtension : IAdapterExtensionFeature { }
 
 
-        private class TestExtension : ITestExtension { }
+        private class TestExtension : AdapterExtensionFeature, ITestExtension { }
 
 
         private class AdapterAccessorImpl : AdapterAccessor {

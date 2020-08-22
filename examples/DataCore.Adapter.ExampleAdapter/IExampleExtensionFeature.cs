@@ -1,10 +1,13 @@
 ﻿using System;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter.Example {
 
     /// <summary>
     /// Example adapter extension feature.
     /// </summary>
+    [AdapterFeature("asc:extension:example")]
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
         /// <summary>
@@ -13,7 +16,16 @@ namespace DataCore.Adapter.Example {
         /// <returns>
         ///   The current time.
         /// </returns>
-        DateTime GetCurrentTime();
+        GetCurrentTimeResponse GetCurrentTime();
 
     }
+
+
+    [ExtensionType("asc:extension:example:get-current-time:response")]
+    public class GetCurrentTimeResponse {
+
+        public DateTime UtcTime { get; set; }
+
+    }
+
 }

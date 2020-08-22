@@ -5,6 +5,8 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter {
 
     /// <summary>

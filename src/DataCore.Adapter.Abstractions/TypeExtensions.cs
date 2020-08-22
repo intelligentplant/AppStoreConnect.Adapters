@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter {
 
     /// <summary>

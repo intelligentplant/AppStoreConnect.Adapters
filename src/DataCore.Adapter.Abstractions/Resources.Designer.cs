@@ -340,11 +340,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The feature URI is invalid..
+        ///   Looks up a localized string similar to Value encoder has content type {0}, but encoded value has content type {1}..
         /// </summary>
-        internal static string Error_InvalidFeatureUri {
+        internal static string Error_ContentTypeMismatch {
             get {
-                return ResourceManager.GetString("Error_InvalidFeatureUri", resourceCulture);
+                return ResourceManager.GetString("Error_ContentTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension type URI mismatch. Target type {0} has URI &quot;{1}&quot;, but encoded value has type URI &quot;{2}&quot;..
+        /// </summary>
+        internal static string Error_ExtensionTypeUriMismatch {
+            get {
+                return ResourceManager.GetString("Error_ExtensionTypeUriMismatch", resourceCulture);
             }
         }
         
@@ -354,6 +363,15 @@ namespace DataCore.Adapter {
         internal static string Error_MissingAdapterFeature {
             get {
                 return ResourceManager.GetString("Error_MissingAdapterFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type {0} is not an extension type. Extension types must be annotated with the {1} attribute..
+        /// </summary>
+        internal static string Error_TypeIsNotAnExtensionType {
+            get {
+                return ResourceManager.GetString("Error_TypeIsNotAnExtensionType", resourceCulture);
             }
         }
     }

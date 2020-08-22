@@ -32,12 +32,18 @@ namespace DataCore.Adapter {
         /// <param name="uri">
         ///   The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uri"/> is not a valid URI.
+        /// </exception>
         public AdapterFeatureAttribute(string uri) {
             if (uri == null) {
                 throw new ArgumentNullException(nameof(uri));
             }
             if (!Uri.TryCreate(uri, UriKind.Absolute, out var u)) {
-                throw new ArgumentException(Resources.Error_InvalidFeatureUri, nameof(uri));
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uri));
             }
             Uri = u;
         }

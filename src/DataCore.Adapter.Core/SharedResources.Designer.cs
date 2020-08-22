@@ -61,6 +61,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify a content type..
+        /// </summary>
+        public static string Error_ContentTypeIsRequired {
+            get {
+                return ResourceManager.GetString("Error_ContentTypeIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You cannot specify a null data function name..
         /// </summary>
         public static string Error_DataFunctionCannotBeNull {
@@ -120,6 +129,15 @@ namespace DataCore.Adapter {
         public static string Error_InvalidTimeStamp {
             get {
                 return ResourceManager.GetString("Error_InvalidTimeStamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must specify a valid URI..
+        /// </summary>
+        public static string Error_InvalidUri {
+            get {
+                return ResourceManager.GetString("Error_InvalidUri", resourceCulture);
             }
         }
         
