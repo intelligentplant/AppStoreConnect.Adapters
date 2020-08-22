@@ -241,7 +241,11 @@ namespace DataCore.Adapter.Tests {
         private interface ITestExtension : IAdapterExtensionFeature { }
 
 
-        private class TestExtension : AdapterExtensionFeature, ITestExtension { }
+        private class TestExtension : AdapterExtensionFeature, ITestExtension { 
+        
+            public TestExtension() : base(new Json.JsonValueEncoder()) { }
+
+        }
 
 
         private class AdapterAccessorImpl : AdapterAccessor {

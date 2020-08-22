@@ -8,7 +8,7 @@ using DataCore.Adapter.Extensions;
 namespace DataCore.Adapter.Json {
 
     /// <summary>
-    /// <see cref="IValueEncoder"/> that encodes to/from JSON.
+    /// <see cref="IValueEncoder"/> that encodes to/from JSON using <see cref="JsonSerializer"/>.
     /// </summary>
     public class JsonValueEncoder : ValueEncoder {
 

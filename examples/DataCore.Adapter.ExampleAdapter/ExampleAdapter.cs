@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Example {
 
         private class ExampleExtensionFeatureImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            private readonly IValueEncoder _extensionValueEncoder = new JsonValueEncoder();
+            public ExampleExtensionFeatureImpl() : base(new JsonValueEncoder()) { }
 
 
             public GetCurrentTimeResponse GetCurrentTime() {
@@ -96,7 +96,7 @@ namespace DataCore.Adapter.Example {
 
                 switch (methodName) {
                     case nameof(IExampleExtensionFeature.GetCurrentTime):
-                        result = _extensionValueEncoder.Encode(GetCurrentTime());
+                        result = EncodeValue(GetCurrentTime());
                         break;
                 }
 

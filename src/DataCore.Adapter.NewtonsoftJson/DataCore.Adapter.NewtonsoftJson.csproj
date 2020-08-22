@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <RootNamespace>DataCore.Adapter.NewtonsoftJson</RootNamespace>
+    <PackageId>$(PackagePrefix).Adapter.NewtonsoftJson</PackageId>
+    <Description>JSON.NET extensions for App Store Connect adapters.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

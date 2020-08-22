@@ -81,6 +81,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Benchmarks", "test\DataCore.Adapter.Benchmarks\DataCore.Adapter.Benchmarks.csproj", "{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.NewtonsoftJson", "src\DataCore.Adapter.NewtonsoftJson\DataCore.Adapter.NewtonsoftJson.csproj", "{294C375A-5251-4A57-9C1D-1E844121A78A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -175,6 +177,10 @@ Global
 		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{294C375A-5251-4A57-9C1D-1E844121A78A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{294C375A-5251-4A57-9C1D-1E844121A78A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{294C375A-5251-4A57-9C1D-1E844121A78A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{294C375A-5251-4A57-9C1D-1E844121A78A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -206,6 +212,7 @@ Global
 		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5} = {1BF8C809-6F14-4C52-B172-D43A96295884}
+		{294C375A-5251-4A57-9C1D-1E844121A78A} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

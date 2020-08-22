@@ -4,7 +4,31 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Extensions {
+
+    /// <summary>
+    /// <see cref="AdapterExtensionFeature"/> provides a base implementation of <see cref="IAdapterExtensionFeature"/>. 
+    /// Extend from this class when implementing an interface derived from <see cref="IAdapterExtensionFeature"/>.
+    /// </summary>
     public abstract class AdapterExtensionFeature : IAdapterExtensionFeature {
+
+        /// <summary>
+        /// The <see cref="IValueEncoder"/> to use when encoding and decoding <see cref="EncodedValue"/> 
+        /// instances.
+        /// </summary>
+        private readonly IValueEncoder _valueEncoder;
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterExtensionFeature"/> object.
+        /// </summary>
+        /// <param name="valueEncoder">
+        ///   The <see cref="IValueEncoder"/> to use when encoding and decoding 
+        ///   <see cref="EncodedValue"/> instances.
+        /// </param>
+        protected AdapterExtensionFeature(IValueEncoder valueEncoder) {
+            _valueEncoder = valueEncoder ?? throw new ArgumentNullException(nameof(valueEncoder));
+        }
+
 
         /// <inheritdoc/>
         async Task<EncodedValue> IAdapterExtensionFeature.Invoke(IAdapterCallContext context, string methodName, EncodedValue request, CancellationToken cancellationToken) {
@@ -13,9 +37,6 @@ namespace DataCore.Adapter.Extensions {
             }
             if (methodName == null) {
                 throw new ArgumentNullException(nameof(methodName));
-            }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
             }
 
             if (!await Authorize(context, methodName, cancellationToken).ConfigureAwait(false)) {
@@ -33,9 +54,6 @@ namespace DataCore.Adapter.Extensions {
             }
             if (methodName == null) {
                 throw new ArgumentNullException(nameof(methodName));
-            }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
             }
 
             if (!await Authorize(context, methodName, cancellationToken).ConfigureAwait(false)) {
@@ -83,6 +101,40 @@ namespace DataCore.Adapter.Extensions {
             }
 
             return await InvokeBidirectionalStream(context, methodName, channel, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Encodes a value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type. The type must be annotated with <see cref="ExtensionTypeAttribute"/>.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to encode.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="EncodedValue"/> object.
+        /// </returns>
+        protected EncodedValue EncodeValue<T>(T value) {
+            return _valueEncoder.Encode(value);
+        }
+
+
+        /// <summary>
+        /// Decodes a value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type to decode to. The type must be annotated with <see cref="ExtensionTypeAttribute"/>.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to decode.
+        /// </param>
+        /// <returns>
+        ///   An instance of <typeparamref name="T"/>.
+        /// </returns>
+        protected T DecodeValue<T>(EncodedValue value) {
+            return _valueEncoder.Decode<T>(value);
         }
 
 

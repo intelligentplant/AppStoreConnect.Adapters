@@ -8,12 +8,14 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="$(MicrosoftAspNetCoreMvcVersion)" />
+    <ProjectReference Include="..\DataCore.Adapter.NewtonsoftJson\DataCore.Adapter.NewtonsoftJson.csproj" />
   </ItemGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>
