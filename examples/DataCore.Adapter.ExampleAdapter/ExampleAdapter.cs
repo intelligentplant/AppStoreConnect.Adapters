@@ -79,33 +79,14 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        private class ExampleExtensionFeatureImpl : AdapterExtensionFeature, IExampleExtensionFeature {
+        private class ExampleExtensionFeatureImpl : IExampleExtensionFeature {
 
-            public ExampleExtensionFeatureImpl() : base(new JsonValueEncoder()) { }
-
-
-            public GetCurrentTimeResponse GetCurrentTime() {
+            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
                 return new GetCurrentTimeResponse() {
-                    UtcTime = DateTime.UtcNow
+                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
                 };
             }
 
-
-            protected override Task<EncodedValue> Invoke(IAdapterCallContext context, string methodName, EncodedValue request, CancellationToken cancellationToken) {
-                EncodedValue result = null;
-
-                switch (methodName) {
-                    case nameof(IExampleExtensionFeature.GetCurrentTime):
-                        result = EncodeValue(GetCurrentTime());
-                        break;
-                }
-
-                if (result != null) {
-                    return Task.FromResult(result);
-                }
-
-                return base.Invoke(context, methodName, request, cancellationToken);
-            }
         }
 
     }

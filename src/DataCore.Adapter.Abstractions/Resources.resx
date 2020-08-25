@@ -210,24 +210,8 @@
   <data name="DataFunction_Variance_Name" xml:space="preserve">
     <value>Variance</value>
   </data>
-  <data name="Error_ContentTypeMismatch" xml:space="preserve">
-    <value>Value encoder has content type {0}, but encoded value has content type {1}.</value>
-    <comment>{0} - encoder content type
-{1} - encoded value content type</comment>
-  </data>
-  <data name="Error_ExtensionTypeUriMismatch" xml:space="preserve">
-    <value>Extension type URI mismatch. Target type {0} has URI "{1}", but encoded value has type URI "{2}".</value>
-    <comment>{0} - target type name
-{1} - target type URI
-{2} - encoded value type URI</comment>
-  </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>
-  </data>
-  <data name="Error_TypeIsNotAnExtensionType" xml:space="preserve">
-    <value>Type {0} is not an extension type. Extension types must be annotated with the {1} attribute.</value>
-    <comment>{0} - type name
-{1} - ExtensionTypeAttribute name</comment>
   </data>
 </root>

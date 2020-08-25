@@ -7,24 +7,19 @@ namespace DataCore.Adapter.Example {
     /// <summary>
     /// Example adapter extension feature.
     /// </summary>
-    [AdapterFeature("asc:extension:example")]
+    [AdapterFeature("asc:extension/example")]
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
         /// <summary>
         /// Gets the current time.
         /// </summary>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <returns>
-        ///   The current time.
+        ///   The response.
         /// </returns>
-        GetCurrentTimeResponse GetCurrentTime();
-
-    }
-
-
-    [ExtensionType("asc:extension:example:get-current-time:response")]
-    public class GetCurrentTimeResponse {
-
-        public DateTime UtcTime { get; set; }
+        GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request);
 
     }
 

@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Example;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
@@ -238,13 +239,20 @@ namespace DataCore.Adapter.Tests {
         private const string ExtensionFeatureUri = "unit-test:test-extension";
 
         [AdapterFeature(ExtensionFeatureUri)]
-        private interface ITestExtension : IAdapterExtensionFeature { }
+        private interface ITestExtension : IAdapterExtensionFeature {
+
+            GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request);
+
+        }
 
 
-        private class TestExtension : AdapterExtensionFeature, ITestExtension { 
-        
-            public TestExtension() : base(new Json.JsonValueEncoder()) { }
+        private class TestExtension : ITestExtension { 
 
+            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
+                return new GetCurrentTimeResponse() {
+                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
+                };
+            }
         }
 
 

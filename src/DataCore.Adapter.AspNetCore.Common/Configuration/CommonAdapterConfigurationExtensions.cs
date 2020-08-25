@@ -493,17 +493,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.AddBackgroundTaskService();
             builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             builder.AddAutomaticInitialization();
-#if NETSTANDARD2_0
-            builder.Services.TryAddSingleton<Newtonsoft.Json.JsonSerializerSettings>();
-            builder.Services.AddTransient<IValueEncoder, DataCore.Adapter.NewtonsoftJson.NewtonsoftJsonValueEncoder>();
-#else
-            builder.Services.TryAddSingleton(sp => {
-                var options = new System.Text.Json.JsonSerializerOptions();
-                DataCore.Adapter.Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.Converters);
-                return options;
-            });
-            builder.Services.AddTransient<IValueEncoder, DataCore.Adapter.Json.JsonValueEncoder>();
-#endif
             return builder;
         }
 

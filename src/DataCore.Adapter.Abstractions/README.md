@@ -52,7 +52,7 @@ In addition to standard features that inherit from [IAdapterFeature](./IAdapterF
 
 ```csharp
 [AdapterFeature(
-    "northwind:app-store-connect:my-example", 
+    "asc:extensions/com.myco/my-example", 
     DisplayName = "My Example", 
     Description = "An example extension feature"
 )]
@@ -60,8 +60,6 @@ public interface IMyExampleExtensionFeature : IAdapterExtensionFeature {
     // - snip -
 }
 ```
-
-`IAdapterExtensionFeature` defines various general-purpose methods to allow callers to invoke methods on the feature without actually having a strongly-typed definition for the feature. When implementing an extension feature, the [AdapterExtensionFeature](./Extensions/AdapterExtensionFeature.cs) base class can be used to provide default implementations of all of the methods defined in `IAdapterExtensionFeature`, allowing the implementer to opt into or customise behaviours as required.
 
 
 ## Helper Classes

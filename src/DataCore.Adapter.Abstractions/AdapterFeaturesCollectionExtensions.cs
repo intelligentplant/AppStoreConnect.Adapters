@@ -108,7 +108,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            var checkUri = Uri.TryCreate(featureUriOrName, UriKind.Absolute, out var uri);
+            var checkUri = AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(featureUriOrName, out var uri);
 
             var key = features.Keys.FirstOrDefault(x => {
                 if (checkUri) {

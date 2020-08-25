@@ -1,0 +1,15 @@
+﻿syntax = "proto3";
+
+package datacore.adapter.example;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "DataCore.Adapter.Example";
+
+
+message GetCurrentTimeRequest { }
+
+
+message GetCurrentTimeResponse { 
+    google.protobuf.Timestamp utc_time = 1;
+}

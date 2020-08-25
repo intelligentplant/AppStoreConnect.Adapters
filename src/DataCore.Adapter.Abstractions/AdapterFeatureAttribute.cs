@@ -29,23 +29,57 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="AdapterFeatureAttribute"/>.
         /// </summary>
-        /// <param name="uri">
-        ///   The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
+        /// <param name="uriString">
+        ///   The absolute feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>. 
+        ///   Note that the URI assigned to the <see cref="Uri"/> property will always have a trailing 
+        ///   forwards slash (/) appended if required.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="uri"/> is <see langword="null"/>.
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="uri"/> is not a valid URI.
+        ///   <paramref name="uriString"/> is not a valid URI.
         /// </exception>
-        public AdapterFeatureAttribute(string uri) {
-            if (uri == null) {
-                throw new ArgumentNullException(nameof(uri));
+        public AdapterFeatureAttribute(string uriString) {
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
             }
-            if (!Uri.TryCreate(uri, UriKind.Absolute, out var u)) {
-                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uri));
+
+            if (!TryCreateFeatureUriWithTrailingSlash(uriString, out var uri)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
-            Uri = u;
+            Uri = uri;
+        }
+
+
+        /// <summary>
+        /// Creates an absolute <see cref="Uri"/> from the specified URI string, ensuring that the 
+        /// <see cref="Uri"/> is created with a trailing forwards slash.
+        /// </summary>
+        /// <param name="uriString">
+        ///   The URI string.
+        /// </param>
+        /// <param name="uri">
+        ///   The created <see cref="Uri"/>.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if a URI could be created, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool TryCreateFeatureUriWithTrailingSlash(string uriString, out Uri uri) {
+            if (uriString == null) {
+                uri = null;
+                return false;
+            }
+
+#if NETSTANDARD2_0
+            if (!uriString.EndsWith("/", StringComparison.Ordinal)) {
+#else
+            if (!uriString.EndsWith('/')) {
+#endif
+                uriString += '/';
+            }
+
+            return Uri.TryCreate(uriString, UriKind.Absolute, out uri);
         }
 
     }
