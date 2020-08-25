@@ -88,8 +88,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             // features.
             var featureInstances = new Dictionary<Type, object>();
 
-            foreach (var item in remoteAdapterFeatures) {
-                var implementation = _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(item, StringComparison.OrdinalIgnoreCase) || x.Key.HasAdapterFeatureUri(item));
+            foreach (var featureUriOrName in remoteAdapterFeatures) {
+                var implementation = AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(featureUriOrName, out var uri)
+                    ? _featureImplementations.FirstOrDefault(x => x.Key.HasAdapterFeatureUri(uri))
+                    : _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(featureUriOrName, StringComparison.OrdinalIgnoreCase));
 
                 // .Key = adapter feature interface
                 // .Value = implementation type

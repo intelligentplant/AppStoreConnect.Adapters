@@ -140,21 +140,18 @@ namespace DataCore.Adapter {
         /// <param name="type">
         ///   The type.
         /// </param>
-        /// <param name="uri">
+        /// <param name="uriString">
         ///   The adapter feature URI.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the type is annotated with the feature URI, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="uri"/> is <see langword="null"/>.
-        /// </exception>
-        public static bool HasAdapterFeatureUri(this Type type, string uri) {
-            if (uri == null) {
-                throw new ArgumentNullException(nameof(uri));
+        public static bool HasAdapterFeatureUri(this Type type, string uriString) {
+            if (!AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(uriString, out var uri)) {
+                return false;
             }
-            return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
+            return type.HasAdapterFeatureUri(uri);
         }
 
 
