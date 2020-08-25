@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Extensions;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -442,7 +444,8 @@ namespace DataCore.Adapter {
         /// </param>
         /// <param name="addExtensionFeatures">
         ///   Specifies if extension adapter feature implementations should be added to the 
-        ///   collection. Extension features must derive from <see cref="IAdapterExtensionFeature"/>.
+        ///   collection. Extension features must derive from <see cref="IAdapterExtensionFeature"/> 
+        ///   and must match the criteria specified in <see cref="TypeExtensions.IsExtensionAdapterFeature"/>.
         /// </param>
         /// <remarks>
         ///   All interfaces implemented by the <paramref name="provider"/> that extend 
