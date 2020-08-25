@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
@@ -11,6 +13,9 @@ namespace DataCore.Adapter.Tests {
         private static bool s_historicalTestEventsInitialized;
 
         private static DateTime s_historicalTestEventsStartTime;
+
+
+        protected virtual IEnumerable<string> UnsupportedStandardFeatures => Array.Empty<string>();
 
 
         protected sealed override TProxy CreateAdapter() {
@@ -92,6 +97,21 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest((proxy, context) => {
                 Assert.IsNotNull(proxy.RemoteHostInfo);
                 Assert.IsNotNull(proxy.RemoteDescriptor);
+
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task ProxyShouldHaveLocalImplementationForAllStandardRemoteFeatures() {
+            return RunAdapterTest((proxy, context) => {
+                foreach (var featureUriOrName in proxy.RemoteDescriptor.Features) {
+                    if (UnsupportedStandardFeatures.Contains(featureUriOrName, StringComparer.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    Assert.IsTrue(proxy.HasFeature(featureUriOrName), $"Expected to find local implementation for remote feature: {featureUriOrName}");
+                }
 
                 return Task.CompletedTask;
             });

@@ -6,9 +6,11 @@ using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection {

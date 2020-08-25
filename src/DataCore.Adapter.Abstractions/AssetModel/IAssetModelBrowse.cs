@@ -7,6 +7,7 @@ namespace DataCore.Adapter.AssetModel {
     /// <summary>
     /// Feature for browsing an adapter's asset model hierarchy.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.AssetModel.AssetModelBrowse)]
     public interface IAssetModelBrowse : IAdapterFeature {
 
         /// <summary>

@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestTestAdapterVersion)" />
@@ -25,6 +26,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\examples\DataCore.Adapter.ExampleAdapter\protos\**\*.proto" GrpcServices="None" />
+    <Content Include="@(Protobuf)" LinkBase="protos" />
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Feature for querying historical event messages using a time range.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.Events.ReadEventMessagesForTimeRange)]
     public interface IReadEventMessagesForTimeRange : IAdapterFeature {
 
         /// <summary>

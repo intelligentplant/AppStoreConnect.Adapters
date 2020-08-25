@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
@@ -7,6 +9,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Extensions for <see cref="IAdapter"/> and <see cref="AdapterDescriptorExtended"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "String parameter might not always be a URI")]
     public static class AdapterExtensions {
 
         /// <summary>
@@ -31,23 +34,23 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Gets the specified adapter feature.
+        /// Gets the specified adapter feature using the feature URI or name.
         /// </summary>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name.
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name.
         /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        internal static object GetFeature(this IAdapter adapter, string featureName) {
+        internal static object GetFeature(this IAdapter adapter, string featureUriOrName) {
             if (adapter?.Features == null) {
                 return default;
             }
-            return adapter.Features.Get(featureName);
+            return adapter.Features.Get(featureUriOrName);
         }
 
 
@@ -80,21 +83,22 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Tries to get the specified adapter feature implementation by name.
+        /// Tries to get the specified adapter feature implementation by URI or name.
         /// </summary>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
-        ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
-        ///   the <see cref="Type.FullName"/> of the feature type for extension features.
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the 
+        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
+        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
+        ///   for extension features.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
         /// </param>
         /// <param name="featureType">
-        ///   The feature type that <paramref name="featureName"/> was resolved to.
+        ///   The feature type that <paramref name="featureUriOrName"/> was resolved to.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
@@ -102,7 +106,7 @@ namespace DataCore.Adapter {
         /// </returns>
         internal static bool TryGetFeature(
             this IAdapter adapter,
-            string featureName,
+            string featureUriOrName,
             out object feature,
             out Type featureType
         ) {
@@ -111,7 +115,7 @@ namespace DataCore.Adapter {
                 featureType = default;
                 return false;
             }
-            return adapter.Features.TryGet(featureName, out feature, out featureType);
+            return adapter.Features.TryGet(featureUriOrName, out feature, out featureType);
         }
 
 
@@ -145,8 +149,8 @@ namespace DataCore.Adapter {
                 adapter.Descriptor.Id,
                 adapter.Descriptor.Name,
                 adapter.Descriptor.Description,
-                standardFeatures.OrderBy(x => x.Name).Select(x => x.Name).ToArray(),
-                extensionFeatures.OrderBy(x => x.FullName).Select(x => x.FullName).ToArray(),
+                standardFeatures.Select(x => x.GetAdapterFeatureUri()).Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
+                extensionFeatures.Select(x => x.GetAdapterFeatureUri()).Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
                 adapter.Properties
             );
         }
@@ -178,15 +182,18 @@ namespace DataCore.Adapter {
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name.
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the 
+        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
+        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
+        ///   for extension features.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool HasFeature(this IAdapter adapter, string featureName) {
-            return adapter?.Features?.Contains(featureName) ?? false;
+        public static bool HasFeature(this IAdapter adapter, string featureUriOrName) {
+            return adapter?.Features?.Contains(featureUriOrName) ?? false;
         }
 
 
@@ -222,19 +229,22 @@ namespace DataCore.Adapter {
         /// <param name="descriptor">
         ///   The descriptor.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name.
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the 
+        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
+        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
+        ///   for extension features.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool HasFeature(this AdapterDescriptorExtended descriptor, string featureName) {
-            if (descriptor == null || string.IsNullOrWhiteSpace(featureName)) {
+        public static bool HasFeature(this AdapterDescriptorExtended descriptor, string featureUriOrName) {
+            if (descriptor == null || string.IsNullOrWhiteSpace(featureUriOrName)) {
                 return false;
             }
 
-            return descriptor.Features.Any(f => string.Equals(f, featureName, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, featureName, StringComparison.Ordinal));
+            return descriptor.Features.Any(f => string.Equals(f, featureUriOrName, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, featureUriOrName, StringComparison.Ordinal));
         }
 
     }

@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Example;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,6 +104,23 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public async Task AdapterAccessor_ShouldResolveAndAuthorizeStandardFeatureUri() {
+            using (var adapter = new ExampleAdapter()) {
+                var authService = new AuthorizationService(true);
+                var accessor = new AdapterAccessorImpl(adapter, authService);
+
+                var context = ExampleCallContext.ForPrincipal(null);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, WellKnownFeatures.RealTimeData.ReadSnapshotTagValues);
+
+                Assert.IsTrue(resolved.IsAdapterResolved);
+                Assert.IsTrue(resolved.IsFeatureResolved);
+                Assert.IsTrue(resolved.IsFeatureAuthorized);
+                Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
+            }
+        }
+
+
+        [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeUnqualifiedStandardFeatureName() {
             using (var adapter = new ExampleAdapter()) {
                 var authService = new AuthorizationService(true);
@@ -131,6 +150,24 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(resolved.IsFeatureResolved);
                 Assert.IsTrue(resolved.IsFeatureAuthorized);
                 Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task AdapterAccessor_ShouldResolveAndAuthorizeExtensionFeatureUri() {
+            using (var adapter = new ExampleAdapter()) {
+                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
+                var authService = new AuthorizationService(true);
+                var accessor = new AdapterAccessorImpl(adapter, authService);
+
+                var context = ExampleCallContext.ForPrincipal(null);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, ExtensionFeatureUri);
+
+                Assert.IsTrue(resolved.IsAdapterResolved);
+                Assert.IsTrue(resolved.IsFeatureResolved);
+                Assert.IsTrue(resolved.IsFeatureAuthorized);
+                Assert.IsTrue(resolved.Feature is ITestExtension);
             }
         }
 
@@ -199,11 +236,24 @@ namespace DataCore.Adapter.Tests {
             }
         }
 
+        private const string ExtensionFeatureUri = "unit-test:test-extension";
 
-        private interface ITestExtension : IAdapterExtensionFeature { }
+        [AdapterFeature(ExtensionFeatureUri)]
+        private interface ITestExtension : IAdapterExtensionFeature {
+
+            GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request);
+
+        }
 
 
-        private class TestExtension : ITestExtension { }
+        private class TestExtension : ITestExtension { 
+
+            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
+                return new GetCurrentTimeResponse() {
+                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
+                };
+            }
+        }
 
 
         private class AdapterAccessorImpl : AdapterAccessor {

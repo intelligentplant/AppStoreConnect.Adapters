@@ -61,6 +61,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify a content type..
+        /// </summary>
+        public static string Error_ContentTypeIsRequired {
+            get {
+                return ResourceManager.GetString("Error_ContentTypeIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You cannot specify a null data function name..
         /// </summary>
         public static string Error_DataFunctionCannotBeNull {
@@ -124,6 +133,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify a valid URI..
+        /// </summary>
+        public static string Error_InvalidUri {
+            get {
+                return ResourceManager.GetString("Error_InvalidUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a name..
         /// </summary>
         public static string Error_NameIsRequired {
@@ -151,7 +169,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}. Non-standard features must extend {1}..
+        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}. Non-standard features must extend {1}. All features must be annotated with {2}..
         /// </summary>
         public static string Error_NotAnAdapterFeature {
             get {

@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Events {
     /// Feature for querying historical event messages using a cursor to represent the starting time 
     /// of the query.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.Events.ReadEventMessagesUsingCursor)]
     public interface IReadEventMessagesUsingCursor : IAdapterFeature {
 
         /// <summary>

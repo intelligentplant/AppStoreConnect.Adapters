@@ -4,8 +4,8 @@ namespace DataCore.Adapter.Http.Proxy {
     /// <summary>
     /// Delegate for creating extension feature implementations on behalf of a proxy.
     /// </summary>
-    /// <param name="featureName">
-    ///   The extension feature name.
+    /// <param name="featureUriOrName">
+    ///   The extension feature URI or name.
     /// </param>
     /// <param name="proxy">
     ///   The proxy.
@@ -18,5 +18,5 @@ namespace DataCore.Adapter.Http.Proxy {
     ///   If the implementation implements <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>, 
     ///   it will be disposed when the proxy is disposed.
     /// </remarks>
-    public delegate object ExtensionFeatureFactory(string featureName, HttpAdapterProxy proxy);
+    public delegate object ExtensionFeatureFactory(string featureUriOrName, HttpAdapterProxy proxy);
 }

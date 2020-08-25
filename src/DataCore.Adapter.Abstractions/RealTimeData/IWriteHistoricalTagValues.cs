@@ -7,6 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for writing historical values to an adapter's data archive.
     /// </summary>
+    [AdapterFeature(WellKnownFeatures.RealTimeData.WriteHistoricalTagValues)]
     public interface IWriteHistoricalTagValues : IAdapterFeature {
 
         /// <summary>

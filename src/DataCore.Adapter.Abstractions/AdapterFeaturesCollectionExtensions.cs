@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 namespace DataCore.Adapter {
 
     /// <summary>
     /// Extensions for <see cref="IAdapterFeaturesCollection"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "String parameter might not always be a URI")]
     public static class AdapterFeaturesCollectionExtensions {
 
         /// <summary>
@@ -56,21 +58,21 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Gets a feature implementation by name instead of type.
+        /// Gets a feature implementation by URI or name instead of type.
         /// </summary>
         /// <param name="features">
         ///   The features collection.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the <see cref="MemberInfo.Name"/> 
         ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
         ///   the <see cref="Type.FullName"/> of the feature type for extension features.
         /// </param>
         /// <returns>
         ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
         /// </returns>
-        internal static object Get(this IAdapterFeaturesCollection features, string featureName) {
-            if (features.TryGet(featureName, out var feature, out var _)) {
+        internal static object Get(this IAdapterFeaturesCollection features, string featureUriOrName) {
+            if (features.TryGet(featureUriOrName, out var feature, out var _)) {
                 return feature;
             }
 
@@ -79,13 +81,13 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Tries to get the specified feature implementation by name.
+        /// Tries to get the specified feature implementation by URI or name.
         /// </summary>
         /// <param name="features">
         ///   The features collection.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        /// <param name="featureUriOrName">
+        ///   The feature name. This must match either the URI for the feature, the <see cref="MemberInfo.Name"/> 
         ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
         ///   the <see cref="Type.FullName"/> of the feature type for extension features.
         /// </param>
@@ -93,20 +95,30 @@ namespace DataCore.Adapter {
         ///   The implemented feature.
         /// </param>
         /// <param name="featureType">
-        ///   The feature type that <paramref name="featureName"/> was resolved to.
+        ///   The feature type that <paramref name="featureUriOrName"/> was resolved to.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        internal static bool TryGet(this IAdapterFeaturesCollection features, string featureName, out object feature, out Type featureType) {
-            if (features == null || string.IsNullOrWhiteSpace(featureName)) {
+        internal static bool TryGet(this IAdapterFeaturesCollection features, string featureUriOrName, out object feature, out Type featureType) {
+            if (features == null || string.IsNullOrWhiteSpace(featureUriOrName)) {
                 feature = null;
                 featureType = null;
                 return false;
             }
 
-            var key = features.Keys.FirstOrDefault(x => (x.Name.Equals(featureName, StringComparison.Ordinal) && x.IsStandardAdapterFeature()) || x.FullName.Equals(featureName, StringComparison.Ordinal));
+            var checkUri = AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(featureUriOrName, out var uri);
+
+            var key = features.Keys.FirstOrDefault(x => {
+                if (checkUri) {
+                    // Resolve via feature URI.
+                    var featureUri = x.GetAdapterFeatureUri();
+                    return featureUri != null && featureUri.Equals(uri);
+                }
+                // Resolve via feature name.
+                return (x.Name.Equals(featureUriOrName, StringComparison.Ordinal) && x.IsStandardAdapterFeature()) || x.FullName.Equals(featureUriOrName, StringComparison.Ordinal);
+            });
             feature = features[key];
             if (feature == null) {
                 featureType = null;
@@ -136,14 +148,15 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Checks if the specified adapter feature is defined in the features collection.
         /// </summary>
         /// <param name="features">
         ///   The features collection.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the <see cref="MemberInfo.Name"/> 
         ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
         ///   the <see cref="Type.FullName"/> of the feature type for extension features.
         /// </param>
@@ -151,8 +164,8 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature is defined in the collection, or 
         ///   <see langword="false"/> otherwise.
         /// </returns>
-        public static bool Contains(this IAdapterFeaturesCollection features, string featureName) {
-            return features.TryGet(featureName, out var _, out var _);
+        public static bool Contains(this IAdapterFeaturesCollection features, string featureUriOrName) {
+            return features.TryGet(featureUriOrName, out var _, out var _);
         }
 
     }

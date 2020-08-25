@@ -6,11 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" PrivateAssets="all" />
+    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
     
   <ItemGroup>
     <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,5 +25,11 @@
     <None Remove="tag-data.csv" />
     <EmbeddedResource Include="tag-data.csv" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include=".\protos\**\*.proto" GrpcServices="None" />
+    <Content Include="@(Protobuf)" />
+  </ItemGroup>
+
 
 </Project>

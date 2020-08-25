@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Json;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +16,7 @@ namespace DataCore.Adapter.Example {
     /// Example adapter that has data source capabilities (tag search, tag value queries, etc). The 
     /// adapter contains a set of sensor-like data for 3 tags that it will loop over.
     /// </summary>
-    public class ExampleAdapter : Csv.CsvAdapter, IExampleExtensionFeature  {
+    public class ExampleAdapter : Csv.CsvAdapter  {
 
         private const string CsvFile = "tag-data.csv";
 
@@ -44,11 +48,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
-        }
-
-
-        DateTime IExampleExtensionFeature.GetCurrentTime() {
-            return DateTime.UtcNow;
+            AddFeature<IExampleExtensionFeature, ExampleExtensionFeatureImpl>(new ExampleExtensionFeatureImpl());
         }
 
 
@@ -76,6 +76,17 @@ namespace DataCore.Adapter.Example {
                 }
                 catch { }
             });
+        }
+
+
+        private class ExampleExtensionFeatureImpl : IExampleExtensionFeature {
+
+            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
+                return new GetCurrentTimeResponse() {
+                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
+                };
+            }
+
         }
 
     }

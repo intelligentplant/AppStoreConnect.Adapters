@@ -1,7 +1,7 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Hubs;
 
-#if NETCOREAPP3_1
+#if NETSTANDARD2_0 == false
 using DataCore.Adapter.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -31,16 +31,39 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The SignalR server builder.
         /// </returns>
         public static ISignalRServerBuilder AddDataCoreAdapterSignalR(this ISignalRServerBuilder builder) {
-#if NETCOREAPP3_1
+#if NETSTANDARD2_0
+            return builder;
+#else
             return builder.AddJsonProtocol(options => {
                 options.PayloadSerializerOptions.Converters.AddDataCoreAdapterConverters();
             });
-#else
-            return builder;
 #endif
         }
 
-#if NETCOREAPP3_1
+
+#if NETSTANDARD2_0
+
+        /// <summary>
+        /// Maps adapter hub endpoints.
+        /// </summary>
+        /// <param name="endpoints">
+        ///   The endpoint route builder.
+        /// </param>
+        /// <returns>
+        ///   The endpoint route builder.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="endpoints"/> is <see langword="null"/>.
+        /// </exception>
+        public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder endpoints) {
+            if (endpoints == null) {
+                throw new ArgumentNullException(nameof(endpoints));
+            }
+            endpoints.MapHub<AdapterHub>(HubRoute);
+            return endpoints;
+        }
+
+#else 
 
         /// <summary>
         /// Maps adapter hub endpoints.
@@ -74,28 +97,6 @@ namespace Microsoft.Extensions.DependencyInjection {
         public static IEndpointRouteBuilder MapDataCoreAdapterHubs(this IEndpointRouteBuilder endpoints, Action<Type, HubEndpointConventionBuilder> builder) {
             var hubEndpointBuilder = endpoints.MapHub<AdapterHub>(HubRoute);
             builder?.Invoke(typeof(AdapterHub), hubEndpointBuilder);
-            return endpoints;
-        }
-
-#else
-
-        /// <summary>
-        /// Maps adapter hub endpoints.
-        /// </summary>
-        /// <param name="endpoints">
-        ///   The endpoint route builder.
-        /// </param>
-        /// <returns>
-        ///   The endpoint route builder.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="endpoints"/> is <see langword="null"/>.
-        /// </exception>
-        public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder endpoints) {
-            if (endpoints == null) {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
-            endpoints.MapHub<AdapterHub>(HubRoute);
             return endpoints;
         }
 
