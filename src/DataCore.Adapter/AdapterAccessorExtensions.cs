@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -115,6 +116,7 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Resolves the specified adapter and feature, and verifies if the caller is authorized 
         /// to access the feature. The adapter must be enabled.
@@ -128,8 +130,8 @@ namespace DataCore.Adapter {
         /// <param name="adapterId">
         ///   The ID of the adapter.
         /// </param>
-        /// <param name="featureName">
-        ///   The feature name. This must match the <see cref="System.Reflection.MemberInfo.Name"/> 
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the <see cref="MemberInfo.Name"/> 
         ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
         ///   the <see cref="Type.FullName"/> of the feature type for extension features.
         /// </param>
@@ -140,7 +142,8 @@ namespace DataCore.Adapter {
         ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
         ///   authorization result.
         /// </returns>
-        public static async Task<ResolvedAdapterFeature<IAdapterFeature>> GetAdapterAndFeature(this IAdapterAccessor adapterAccessor, IAdapterCallContext context, string adapterId, string featureName, CancellationToken cancellationToken = default) {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Parameter is not guaranteed to be a URI")]
+        public static async Task<ResolvedAdapterFeature<IAdapterFeature>> GetAdapterAndFeature(this IAdapterAccessor adapterAccessor, IAdapterCallContext context, string adapterId, string featureUriOrName, CancellationToken cancellationToken = default) {
             if (adapterAccessor == null) {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
@@ -150,11 +153,60 @@ namespace DataCore.Adapter {
                 return new ResolvedAdapterFeature<IAdapterFeature>(null, default, false);
             }
 
-            if (!adapter.TryGetFeature(featureName, out var feature, out var featureType) || !(feature is IAdapterFeature af)) {
+            if (!adapter.TryGetFeature(featureUriOrName, out var feature, out var featureType) || !(feature is IAdapterFeature af)) {
                 return new ResolvedAdapterFeature<IAdapterFeature>(adapter, default, false);
             }
 
-            var authMethod = s_authorizeAdapterFeatureClosed.GetOrAdd(featureName, x => s_authorizeAdapterFeatureOpen.MakeGenericMethod(featureType));
+            var authMethod = s_authorizeAdapterFeatureClosed.GetOrAdd(featureUriOrName, x => s_authorizeAdapterFeatureOpen.MakeGenericMethod(featureType));
+
+            var isAuthorizedTask = (Task<bool>) authMethod.Invoke(adapterAccessor.AuthorizationService, new object[] { adapter, context, cancellationToken });
+            var isAuthorized = await isAuthorizedTask.ConfigureAwait(false);
+            return new ResolvedAdapterFeature<IAdapterFeature>(adapter, af, isAuthorized);
+        }
+
+
+        /// <summary>
+        /// Resolves the specified adapter and feature, and verifies if the caller is authorized 
+        /// to access the feature. The adapter must be enabled.
+        /// </summary>
+        /// <param name="adapterAccessor">
+        ///   The <see cref="IAdapterAccessor"/>.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
+        ///   authorization result.
+        /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Parameter is not guaranteed to be a URI")]
+        public static async Task<ResolvedAdapterFeature<IAdapterFeature>> GetAdapterAndFeature(this IAdapterAccessor adapterAccessor, IAdapterCallContext context, string adapterId, Uri featureUri, CancellationToken cancellationToken = default) {
+            if (adapterAccessor == null) {
+                throw new ArgumentNullException(nameof(adapterAccessor));
+            }
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
+            }
+
+            var adapter = await adapterAccessor.GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return new ResolvedAdapterFeature<IAdapterFeature>(null, default, false);
+            }
+
+            if (!adapter.TryGetFeature(featureUri, out var feature, out var featureType) || !(feature is IAdapterFeature af)) {
+                return new ResolvedAdapterFeature<IAdapterFeature>(adapter, default, false);
+            }
+
+            var authMethod = s_authorizeAdapterFeatureClosed.GetOrAdd(featureUri.ToString(), x => s_authorizeAdapterFeatureOpen.MakeGenericMethod(featureType));
 
             var isAuthorizedTask = (Task<bool>) authMethod.Invoke(adapterAccessor.AuthorizationService, new object[] { adapter, context, cancellationToken });
             var isAuthorized = await isAuthorizedTask.ConfigureAwait(false);

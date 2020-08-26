@@ -55,6 +55,27 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Gets the specified adapter feature using the feature URI.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        internal static object GetFeature(this IAdapter adapter, Uri featureUri) {
+            if (adapter?.Features == null) {
+                return default;
+            }
+            return adapter.Features.Get(featureUri);
+        }
+
+
+        /// <summary>
         /// Tries to get the specified adapter feature.
         /// </summary>
         /// <typeparam name="TFeature">
@@ -116,6 +137,40 @@ namespace DataCore.Adapter {
                 return false;
             }
             return adapter.Features.TryGet(featureUriOrName, out feature, out featureType);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature implementation by URI.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <param name="featureType">
+        ///   The feature type that <paramref name="featureUri"/> was resolved to.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        internal static bool TryGetFeature(
+            this IAdapter adapter,
+            Uri featureUri,
+            out object feature,
+            out Type featureType
+        ) {
+            if (adapter?.Features == null) {
+                feature = default;
+                featureType = default;
+                return false;
+            }
+            return adapter.Features.TryGet(featureUri, out feature, out featureType);
         }
 
 
