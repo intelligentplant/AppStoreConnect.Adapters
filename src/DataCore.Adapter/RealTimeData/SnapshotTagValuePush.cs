@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -165,7 +168,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         private async Task OnSubscriptionAdded(Subscription subscription) {
             if (_currentValueByTagId.TryGetValue(subscription.Topic.Id, out var value)) {
-                subscription.Channel.Writer.TryWrite(value);
+                subscription.Publish(value, true);
             }
 
             var isNewSubscription = false;
@@ -382,7 +385,7 @@ namespace DataCore.Adapter.RealTimeData {
                 throw;
             }
 
-            return subscription.Channel.Reader;
+            return subscription.Reader;
         }
 
 
@@ -448,7 +451,6 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Subscription[] subscriptions;
             int subscribedTagCount;
 
             _subscriptionsLock.EnterReadLock();
@@ -518,31 +520,85 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Holds information about a single tag subscription.
+        /// </summary>
         private class Subscription : IDisposable {
 
+            /// <summary>
+            /// Indicates if the subscription has been disposed.
+            /// </summary>
             private bool _isDisposed;
 
+            /// <summary>
+            /// The next value that will be published. Ignored if the <see cref="PublishInterval"/> 
+            /// is less than or equal to <see cref="TimeSpan.Zero"/>.
+            /// </summary>
             private TagValueQueryResult _nextPublishedValue;
 
+            /// <summary>
+            /// Subscription ID.
+            /// </summary>
             public int Id { get; }
 
+            /// <summary>
+            /// The context for the subscriber.
+            /// </summary>
             public IAdapterCallContext Context { get; }
 
-            public Channel<TagValueQueryResult> Channel { get; }
+            /// <summary>
+            /// Publish channel.
+            /// </summary>
+            private readonly Channel<TagValueQueryResult> _channel;
 
+            /// <summary>
+            /// The reader for the publish channel.
+            /// </summary>
+            public ChannelReader<TagValueQueryResult> Reader => _channel;
+
+            /// <summary>
+            /// The subscription topic.
+            /// </summary>
             public TagIdentifier Topic { get; }
 
+            /// <summary>
+            /// The publish interval. A value less than or equal to <see cref="TimeSpan.Zero"/> 
+            /// will publish values immediately.
+            /// </summary>
             public TimeSpan PublishInterval { get; }
 
+            /// <summary>
+            /// Cancellation token source that fires when the subscription is cancelled.
+            /// </summary>
             private readonly CancellationTokenSource _cancellationTokenSource;
-
+            
+            /// <summary>
+            /// Fires when the subscription is cancelled.
+            /// </summary>
             public CancellationToken CancellationToken { get; }
 
+            /// <summary>
+            /// An action to perform when the subscription is cancelled or disposed.
+            /// </summary>
             private readonly Action _cleanup;
 
+            /// <summary>
+            /// Registeration of <see cref="_cleanup"/> with <see cref="_cancellationTokenSource"/>.
+            /// </summary>
             private readonly IDisposable _ctRegistration;
 
 
+            /// <summary>
+            /// Creates a new <see cref="Subscription"/> object.
+            /// </summary>
+            /// <param name="id"></param>
+            /// <param name="context"></param>
+            /// <param name="scheduler"></param>
+            /// <param name="channel"></param>
+            /// <param name="tag"></param>
+            /// <param name="publishInterval"></param>
+            /// <param name="cancellationTokenSource"></param>
+            /// <param name="cleanup"></param>
             public Subscription(
                 int id, 
                 IAdapterCallContext context, 
@@ -555,7 +611,7 @@ namespace DataCore.Adapter.RealTimeData {
             ) {
                 Id = id;
                 Context = context;
-                Channel = channel;
+                _channel = channel;
                 Topic = tag;
                 PublishInterval = publishInterval;
                 _cancellationTokenSource = cancellationTokenSource;
@@ -563,6 +619,7 @@ namespace DataCore.Adapter.RealTimeData {
                 _cleanup = cleanup;
                 _ctRegistration = CancellationToken.Register(_cleanup);
 
+                // If we have a publish interval, run a background task to handle this.
                 if (PublishInterval > TimeSpan.Zero) {
                     scheduler.QueueBackgroundWorkItem(RunPublishLoop, CancellationToken);
                 }
@@ -574,9 +631,13 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
 
-            public bool Publish(TagValueQueryResult value) {
-                if (PublishInterval <= TimeSpan.Zero) {
-                    return Channel.Writer.TryWrite(value);
+            public bool Publish(TagValueQueryResult value, bool immediate = false) {
+                if (immediate || PublishInterval <= TimeSpan.Zero) {
+                    if (PublishInterval > TimeSpan.Zero) {
+                        // Cancel next publish if one is already pending.
+                        _nextPublishedValue = null;
+                    }
+                    return _channel.Writer.TryWrite(value);
                 }
 
                 _nextPublishedValue = value;
@@ -591,7 +652,7 @@ namespace DataCore.Adapter.RealTimeData {
                     if (val == null) {
                         continue;
                     }
-                    Channel.Writer.TryWrite(val);
+                    _channel.Writer.TryWrite(val);
                 }
             }
 
@@ -601,7 +662,7 @@ namespace DataCore.Adapter.RealTimeData {
                     return;
                 }
 
-                Channel.Writer.TryComplete();
+                _channel.Writer.TryComplete();
                 _ctRegistration.Dispose();
                 if (!CancellationToken.IsCancellationRequested) {
                     // Cancellation token source has not fired yet. Since we disposed of the 
