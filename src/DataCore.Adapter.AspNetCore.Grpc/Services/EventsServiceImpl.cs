@@ -114,24 +114,25 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageSubscriptionRequest() { 
-                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active 
-                    ? EventMessageSubscriptionType.Active 
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageSubscriptionRequest() {
+                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
+                    ? EventMessageSubscriptionType.Active
                     : EventMessageSubscriptionType.Passive,
                 Properties = new Dictionary<string, string>(request.Properties)
-            }).ConfigureAwait(false)) {
-                while (!cancellationToken.IsCancellationRequested) {
-                    try {
-                        var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }, cancellationToken).ConfigureAwait(false);
+
+            try {
+                while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (subscription.TryRead(out var msg) && msg != null) {
                         await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) {
-                        // Do nothing
-                    }
-                    catch (ChannelClosedException) { 
-                        // Do nothing
-                    }
                 }
+            }
+            catch (OperationCanceledException) {
+                // Do nothing
+            }
+            catch (ChannelClosedException) {
+                // Do nothing
             }
         }
 

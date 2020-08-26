@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Events;
@@ -20,15 +21,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
 
         /// <inheritdoc />
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
-            var result = new Subscription(
-                this,
-                context,
-                request
+        public Task<ChannelReader<EventMessage>> Subscribe(
+            IAdapterCallContext context, 
+            CreateEventMessageSubscriptionRequest request,
+            CancellationToken cancellationToken
+        ) {
+            return GetClient().Events.CreateEventMessageChannelAsync(
+                AdapterId,
+                request,
+                cancellationToken
             );
-
-            await result.Start().ConfigureAwait(false);
-            return result;
         }
 
 

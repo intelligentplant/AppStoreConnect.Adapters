@@ -166,30 +166,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext, request ?? new CreateEventMessageSubscriptionRequest()).ConfigureAwait(false);
-
-            var result = Channel.CreateUnbounded<EventMessage>();
-
-            // Run background operation to dispose of the subscription when the cancellation token 
-            // fires.
-            TaskScheduler.QueueBackgroundWorkItem(async ct => {
-                try {
-                    while (await subscription.Reader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!subscription.Reader.TryRead(out var item) || item == null) {
-                            continue;
-                        }
-
-                        await result.Writer.WriteAsync(item, ct).ConfigureAwait(false);
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
-                finally {
-                    subscription.Dispose();
-                }
-            }, null, cancellationToken);
-
-            return result;
+            return await adapter.Feature.Subscribe(adapterCallContext, request ?? new CreateEventMessageSubscriptionRequest(), cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

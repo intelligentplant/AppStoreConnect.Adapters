@@ -399,17 +399,15 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active })) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, default);
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, null);
+                await Task.Delay(1000, default);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, null);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
                 }
             });
         }
@@ -424,17 +422,15 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive })) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, default);
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive, null);
+                await Task.Delay(1000, default);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive, null);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
                 }
             });
         }

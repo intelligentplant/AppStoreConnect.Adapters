@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -52,12 +53,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
-
-        /// <summary>
-        /// For protecting access to <see cref="_subscriptions"/>.
-        /// </summary>
-        private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private readonly ConcurrentDictionary<string, Subscription> _subscriptions = new ConcurrentDictionary<string, Subscription>(StringComparer.Ordinal);
 
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
@@ -109,52 +105,31 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(
+        public async Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context,
-            CreateEventMessageSubscriptionRequest request
+            CreateEventMessageSubscriptionRequest request,
+            CancellationToken cancellationToken
         ) {
-            var subscription = CreateSubscription(context, request);
+            Subscription subscription;
 
-            bool added;
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                added = _subscriptions.Add(subscription);
-                if (added) {
-                    HasSubscriptions = _subscriptions.Count > 0;
-                    HasActiveSubscriptions = _subscriptions.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                }
-            }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
+            var subscriptionId = Guid.NewGuid().ToString();
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+            subscription = new Subscription(
+                subscriptionId,
+                ChannelExtensions.CreateEventMessageChannel<EventMessage>(BoundedChannelFullMode.DropOldest), 
+                request.SubscriptionType, 
+                cts,
+                () => OnSubscriptionCancelled(subscriptionId)
+            );
+            _subscriptions[subscriptionId] = subscription;
 
-            if (added) {
-                await subscription.Start().ConfigureAwait(false);
-                OnSubscriptionAdded();
-            }
+            HasSubscriptions = _subscriptions.Count > 0;
+            HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+            OnSubscriptionAdded();
 
-            return subscription;
+            return subscription.Channel.Reader;
         }
 
-
-        /// <summary>
-        /// Creates a new subscription.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the subscriber.
-        /// </param>
-        /// <param name="request">
-        ///   The request settings.
-        /// </param>
-        /// <returns>
-        ///   The new subscription.
-        /// </returns>
-        protected virtual Subscription CreateSubscription(
-            IAdapterCallContext context, 
-            CreateEventMessageSubscriptionRequest request
-        ) {
-            return new Subscription(context, request, this);
-        }
 
 
         /// <summary>
@@ -212,30 +187,20 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Notifies the <see cref="EventMessagePush"/> that a subscription was disposed.
+        /// Notifies the <see cref="EventMessagePush"/> that a subscription was cancelled.
         /// </summary>
-        /// <param name="subscription">
-        ///   The disposed subscription.
+        /// <param name="id">
+        ///   The cancelled subscription.
         /// </param>
-        private void OnSubscriptionCancelled(Subscription subscription) {
+        private void OnSubscriptionCancelled(string id) {
             if (_isDisposed) {
                 return;
             }
 
-            bool removed;
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                removed = _subscriptions.Remove(subscription);
-                if (removed) {
-                    HasSubscriptions = _subscriptions.Count > 0;
-                    HasActiveSubscriptions = _subscriptions.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                }
-            }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
-
-            if (removed) {
+            if (_subscriptions.TryRemove(id, out var subscription)) {
+                subscription.Dispose();
+                HasSubscriptions = _subscriptions.Count > 0;
+                HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
                 OnSubscriptionRemoved();
             }
         }
@@ -243,16 +208,7 @@ namespace DataCore.Adapter.Events {
 
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Subscription[] subscriptions;
-
-            _subscriptionsLock.EnterReadLock();
-            try {
-                subscriptions = _subscriptions.ToArray();
-            }
-            finally {
-                _subscriptionsLock.ExitReadLock();
-            }
-
+            var subscriptions = _subscriptions.Values.ToArray();
 
             var result = HealthCheckResult.Healthy(nameof(EventMessagePush), data: new Dictionary<string, string>() {
                 { Resources.HealthChecks_Data_ActiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo) },
@@ -296,19 +252,15 @@ namespace DataCore.Adapter.Events {
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
                 _masterChannel.Writer.TryComplete();
-                _subscriptionsLock.EnterWriteLock();
-                try {
-                    foreach (var item in _subscriptions.ToArray()) {
-                        item.Dispose();
-                    }
+
+                foreach (var item in _subscriptions.Values.ToArray()) {
+                    item.Dispose();
                 }
-                finally {
-                    _subscriptionsLock.ExitWriteLock();
-                }
-                _subscriptionsLock.Dispose();
+
                 _subscriptions.Clear();
-                _isDisposed = true;
             }
+
+            _isDisposed = true;
         }
 
 
@@ -331,29 +283,12 @@ namespace DataCore.Adapter.Events {
                             continue;
                         }
 
-                        Publish?.Invoke(message);
-
-                        EventMessageSubscriptionBase[] subscribers;
-
-                        _subscriptionsLock.EnterReadLock();
-                        try {
-                            subscribers = _subscriptions.ToArray();
-                        }
-                        finally {
-                            _subscriptionsLock.ExitReadLock();
-                        }
-
+                        var subscribers = _subscriptions.Values.ToArray();
                         foreach (var subscriber in subscribers) {
-                            try {
-                                var success = await subscriber.ValueReceived(message, cancellationToken).ConfigureAwait(false);
-                                if (!success) {
-                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
-                                }
+                            if (cancellationToken.IsCancellationRequested) {
+                                break;
                             }
-                            catch (OperationCanceledException) { }
-                            catch (Exception e) {
-                                Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
-                            }
+                            subscriber.Channel.Writer.TryWrite(message);
                         }
                     }
                 }
@@ -367,44 +302,34 @@ namespace DataCore.Adapter.Events {
         }
 
 
-        /// <summary>
-        /// <see cref="IEventMessageSubscription"/> implementation.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
-        public class Subscription : EventMessageSubscriptionBase {
+        private struct Subscription : IDisposable {
 
-            /// <summary>
-            /// The subscription manager that the subscription is attached to.
-            /// </summary>
-            private readonly EventMessagePush _push;
+            public string Id { get; }
+
+            public Channel<EventMessage> Channel { get; }
+
+            public EventMessageSubscriptionType SubscriptionType { get; }
+
+            public CancellationTokenSource CancellationTokenSource { get; }
+
+            private readonly IDisposable _ctRegistration;
 
 
-            /// <summary>
-            /// Creates a new <see cref="Subscription"/> object.
-            /// </summary>
-            /// <param name="context">
-            ///   The adapter call context for the subscriber.
-            /// </param>
-            /// <param name="request">
-            ///   The request settings.
-            /// </param>
-            /// <param name="push">
-            ///   The subscription manager that the subscription is attached to.
-            /// </param>
-            public Subscription(
-                IAdapterCallContext context,
-                CreateEventMessageSubscriptionRequest request,
-                EventMessagePush push
-            ) : base(context, push?._options?.AdapterId, request?.SubscriptionType ?? EventMessageSubscriptionType.Active) {
-                _push = push ?? throw new ArgumentNullException(nameof(push));
+            public Subscription(string id, Channel<EventMessage> channel, EventMessageSubscriptionType subscriptionType, CancellationTokenSource cancellationTokenSource, Action onDisposed) {
+                Id = id;
+                Channel = channel;
+                SubscriptionType = subscriptionType;
+                CancellationTokenSource = cancellationTokenSource;
+                _ctRegistration = CancellationTokenSource.Token.Register(onDisposed);
             }
 
 
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                _push.OnSubscriptionCancelled(this);
+            public void Dispose() {
+                Channel.Writer.TryComplete();
+                _ctRegistration.Dispose();
+                CancellationTokenSource?.Cancel();
+                CancellationTokenSource?.Dispose();
             }
-
         }
 
     }

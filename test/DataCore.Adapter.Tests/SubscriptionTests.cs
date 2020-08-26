@@ -98,15 +98,14 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
-                    var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
-                    await feature.ValueReceived(msg);
+                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest(), default);
+                var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
+                await feature.ValueReceived(msg);
 
-                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(msg.Message, emitted.Message);
-                    }
+                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
+                    var emitted = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(msg.Message, emitted.Message);
                 }
             }
         }
