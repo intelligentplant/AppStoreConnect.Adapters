@@ -10,7 +10,6 @@ using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
 
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection {
