@@ -198,20 +198,17 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest())) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var tagDetails = GetReadTagValuesQueryDetails();
 
-                    var tagDetails = GetReadTagValuesQueryDetails();
+                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
+                    Tag = tagDetails.Id
+                }, default);
+                Assert.IsNotNull(subscription);
 
-                    var subscribeSucceeded = await subscription.AddTagToSubscription(tagDetails.Id);
-                    Assert.IsTrue(subscribeSucceeded);
-
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                        Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
+                    Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
                 }
             });
         }

@@ -41,20 +41,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <summary>
-        /// Class initialiser.
-        /// </summary>
-        static EventsServiceImpl() {
-            AspNetCore.Grpc.Services.HeartbeatServiceImpl.HeartbeatReceived += peer => {
-                if (string.IsNullOrWhiteSpace(peer)) {
-                    return;
-                }
-
-                s_eventTopicSubscriptions.SetHeartbeat(peer, DateTime.UtcNow);
-            };
-        }
-
-
-        /// <summary>
         /// Creates a new <see cref="EventsServiceImpl"/> object.
         /// </summary>
         /// <param name="adapterAccessor">

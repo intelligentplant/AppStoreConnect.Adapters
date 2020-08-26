@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -18,13 +20,16 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="request">
         ///   A request describing the subscription settings.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
         /// <returns>
-        ///   A task that will create and start a subscription object that can be disposed once 
-        ///   the subscription is no longer required.
+        ///   A channel reader that will emit tag values as they occur.
         /// </returns>
-        Task<ISnapshotTagValueSubscription> Subscribe(
+        Task<ChannelReader<TagValueQueryResult>> Subscribe(
             IAdapterCallContext context,
-            CreateSnapshotTagValueSubscriptionRequest request
+            CreateSnapshotTagValueSubscriptionRequest request,
+            CancellationToken cancellationToken
         );
 
     }

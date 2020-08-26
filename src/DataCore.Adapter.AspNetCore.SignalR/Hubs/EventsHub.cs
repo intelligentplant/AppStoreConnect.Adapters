@@ -2,8 +2,8 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
-using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
@@ -56,32 +56,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             );
             return s_eventTopicSubscriptions.AddSubscription(Context.ConnectionId, wrappedSubscription);
         }
-
-
-        /// <summary>
-        /// Deletes a topic-based event subscription that wa created using <see cref="CreateEventMessageTopicSubscription"/>. 
-        /// This will cancel all active calls to <see cref="CreateEventMessageTopicChannel"/> 
-        /// for the subscription.
-        /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID. Specify <see langword="null"/> to delete all subscriptions for 
-        ///   the connection. Subscriptions are created via calls to <see cref="CreateEventMessageTopicSubscription"/>.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a flag indicating if the operation 
-        ///   was successful.
-        /// </returns>
-        public Task<bool> DeleteEventMessageTopicSubscription(
-            string subscriptionId
-        ) {
-            if (string.IsNullOrWhiteSpace(subscriptionId)) {
-                s_snapshotSubscriptions.RemoveAllSubscriptions(Context.ConnectionId);
-                return Task.FromResult(true);
-            }
-            var result = s_eventTopicSubscriptions.RemoveSubscription(Context.ConnectionId, subscriptionId);
-            return Task.FromResult(result);
-        }
-
 
 
         /// <summary>

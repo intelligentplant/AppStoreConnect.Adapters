@@ -51,9 +51,14 @@ namespace DataCore.Adapter.Events {
         private readonly EventMessagePushOptions _options;
 
         /// <summary>
+        /// The last subscription ID that was issued.
+        /// </summary>
+        private int _lastSubscriptionId;
+
+        /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly ConcurrentDictionary<string, Subscription> _subscriptions = new ConcurrentDictionary<string, Subscription>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<int, Subscription> _subscriptions = new ConcurrentDictionary<int, Subscription>();
 
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
@@ -105,18 +110,18 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public async Task<ChannelReader<EventMessage>> Subscribe(
+        public Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
             Subscription subscription;
 
-            var subscriptionId = Guid.NewGuid().ToString();
+            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
             var cts = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
             subscription = new Subscription(
                 subscriptionId,
-                ChannelExtensions.CreateEventMessageChannel<EventMessage>(BoundedChannelFullMode.DropOldest), 
+                ChannelExtensions.CreateEventMessageChannel<EventMessage>(BoundedChannelFullMode.DropOldest, 10), 
                 request.SubscriptionType, 
                 cts,
                 () => OnSubscriptionCancelled(subscriptionId)
@@ -127,7 +132,7 @@ namespace DataCore.Adapter.Events {
             HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
             OnSubscriptionAdded();
 
-            return subscription.Channel.Reader;
+            return Task.FromResult(subscription.Channel.Reader);
         }
 
 
@@ -190,9 +195,9 @@ namespace DataCore.Adapter.Events {
         /// Notifies the <see cref="EventMessagePush"/> that a subscription was cancelled.
         /// </summary>
         /// <param name="id">
-        ///   The cancelled subscription.
+        ///   The cancelled subscription ID.
         /// </param>
-        private void OnSubscriptionCancelled(string id) {
+        private void OnSubscriptionCancelled(int id) {
             if (_isDisposed) {
                 return;
             }
@@ -302,33 +307,44 @@ namespace DataCore.Adapter.Events {
         }
 
 
-        private struct Subscription : IDisposable {
+        private class Subscription : IDisposable {
 
-            public string Id { get; }
+            public int Id { get; }
 
             public Channel<EventMessage> Channel { get; }
 
             public EventMessageSubscriptionType SubscriptionType { get; }
 
-            public CancellationTokenSource CancellationTokenSource { get; }
+            private readonly CancellationTokenSource _cancellationTokenSource;
+
+            public CancellationToken CancellationToken { get; }
+
+            private readonly Action _cleanup;
 
             private readonly IDisposable _ctRegistration;
 
 
-            public Subscription(string id, Channel<EventMessage> channel, EventMessageSubscriptionType subscriptionType, CancellationTokenSource cancellationTokenSource, Action onDisposed) {
+            public Subscription(int id, Channel<EventMessage> channel, EventMessageSubscriptionType subscriptionType, CancellationTokenSource cancellationTokenSource, Action cleanup) {
                 Id = id;
                 Channel = channel;
                 SubscriptionType = subscriptionType;
-                CancellationTokenSource = cancellationTokenSource;
-                _ctRegistration = CancellationTokenSource.Token.Register(onDisposed);
+                _cancellationTokenSource = cancellationTokenSource;
+                CancellationToken = _cancellationTokenSource.Token;
+                _cleanup = cleanup;
+                _ctRegistration = CancellationToken.Register(cleanup);
             }
 
 
             public void Dispose() {
                 Channel.Writer.TryComplete();
                 _ctRegistration.Dispose();
-                CancellationTokenSource?.Cancel();
-                CancellationTokenSource?.Dispose();
+                if (!CancellationToken.IsCancellationRequested) {
+                    // Cancellation token source has not fired yet. Since we disposed of the 
+                    // registration for the cleanup callback above, we'll manually call it here, to 
+                    // ensure that cleanup occurs.
+                    _cleanup.Invoke();
+                }
+                _cancellationTokenSource.Dispose();
             }
         }
 

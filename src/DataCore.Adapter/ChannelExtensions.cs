@@ -21,7 +21,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Capacity of channels created using <see cref="CreateTagValueChannel{T}"/>.
         /// </summary>
-        public const int TagValueChannelCapacity = 5000;
+        public const int TagValueChannelCapacity = 100;
 
         /// <summary>
         /// Capacity of channels created using <see cref="CreateTagValueAnnotationChannel"/>.
@@ -137,6 +137,41 @@ namespace DataCore.Adapter {
             bool singleWriter = true
         ) {
             return CreateChannel<RealTimeData.TagIdentifier>(capacity, singleReader, singleWriter);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to tag value queries.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The result type.
+        /// </typeparam>
+        /// <param name="fullMode">
+        ///   The action to take when a write is attempted on a full channel.
+        /// </param>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<T> CreateTagValueChannel<T>(
+            BoundedChannelFullMode fullMode,
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) where T : RealTimeData.TagValueQueryResult {
+            return CreateChannel<T>(capacity, singleReader, singleWriter, fullMode);
         }
 
 

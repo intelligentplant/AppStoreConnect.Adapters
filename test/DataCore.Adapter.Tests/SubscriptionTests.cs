@@ -24,20 +24,20 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest())) {
-                    await subscription.AddTagToSubscription(TestContext.TestName);
+                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() {
+                    Tag = TestContext.TestName
+                }, default);
 
-                    var val = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                    await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
+                var val = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
 
-                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                        Assert.AreEqual(now, emitted.Value.UtcSampleTime);
-                        Assert.AreEqual(now.Ticks, emitted.Value.GetValueOrDefault<long>());
-                    }
+                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
+                    var emitted = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                    Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                    Assert.AreEqual(now, emitted.Value.UtcSampleTime);
+                    Assert.AreEqual(now.Ticks, emitted.Value.GetValueOrDefault<long>());
                 }
             }
         }
@@ -59,30 +59,31 @@ namespace DataCore.Adapter.Tests {
             var valueCount = 0;
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() { PublishInterval = TimeSpan.FromSeconds(1) })) {
-                    await subscription.AddTagToSubscription(TestContext.TestName);
+                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() { 
+                    PublishInterval = TimeSpan.FromSeconds(1),
+                    Tag = TestContext.TestName
+                }, default);
 
-                    _ = Task.Run(async () => {
-                        try {
-                            while (!cancellationToken.IsCancellationRequested) {
-                                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
-                                var val = TagValueBuilder.Create().WithValue(DateTime.UtcNow.Ticks).Build();
-                                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
-                            }
-                        }
-                        catch (OperationCanceledException) { }
-                    }, cancellationToken);
-
-                    cancellationTokenSource.CancelAfter(publishInterval);
+                _ = Task.Run(async () => {
                     try {
-                        while (await subscription.Reader.WaitToReadAsync(cancellationToken)) {
-                            if (subscription.Reader.TryRead(out var val)) {
-                                ++valueCount;
-                            }
+                        while (!cancellationToken.IsCancellationRequested) {
+                            await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                            var val = TagValueBuilder.Create().WithValue(DateTime.UtcNow.Ticks).Build();
+                            await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
                         }
                     }
                     catch (OperationCanceledException) { }
+                }, cancellationToken);
+
+                cancellationTokenSource.CancelAfter(publishInterval);
+                try {
+                    while (await subscription.WaitToReadAsync(cancellationToken)) {
+                        if (subscription.TryRead(out var val)) {
+                            ++valueCount;
+                        }
+                    }
                 }
+                catch (OperationCanceledException) { }
             }
 
             Assert.IsTrue(valueCount <= (publishInterval.TotalSeconds * 2), "Received value count should not be more than 2x publish interval.");

@@ -67,67 +67,58 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
-                var subscribedTags = new[] {
-                    new UpdateSubscriptionTopicsRequest() {
-                        Topic = TestTag1.Id,
-                        Action = SubscriptionUpdateAction.Subscribe
-                    }
-                }.PublishToChannel();
 
-                using (var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest())) {
-                    var subscribeSucceeded = await subscription.AddTagToSubscription(
-                        TestTag1.Id
-                    ).ConfigureAwait(false);
-                    Assert.IsTrue(subscribeSucceeded);
+                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
+                    Tag = TestTag1.Id
+                }, default);
 
-                    // Write a couple of values that we should then be able to read out again via 
-                    // the subscription's channel.
-                    var now = System.DateTime.UtcNow;
-                    await adapter.WriteSnapshotValue(
-                        TagValueQueryResult.Create(
-                            TestTag1.Id,
-                            TestTag1.Id,
-                            TagValueBuilder
-                                .Create()
-                                .WithUtcSampleTime(now.AddSeconds(-5))
-                                .WithValue(100)
-                                .Build()
-                        )
-                    );
-                    await adapter.WriteSnapshotValue(
-                        TagValueQueryResult.Create(
-                            TestTag1.Id,
-                            TestTag1.Id,
-                            TagValueBuilder
-                                .Create()
-                                .WithUtcSampleTime(now.AddSeconds(-1))
-                                .WithValue(99)
-                                .Build()
-                        )
-                    );
+                // Write a couple of values that we should then be able to read out again via 
+                // the subscription's channel.
+                var now = System.DateTime.UtcNow;
+                await adapter.WriteSnapshotValue(
+                    TagValueQueryResult.Create(
+                        TestTag1.Id,
+                        TestTag1.Id,
+                        TagValueBuilder
+                            .Create()
+                            .WithUtcSampleTime(now.AddSeconds(-5))
+                            .WithValue(100)
+                            .Build()
+                    )
+                );
+                await adapter.WriteSnapshotValue(
+                    TagValueQueryResult.Create(
+                        TestTag1.Id,
+                        TestTag1.Id,
+                        TagValueBuilder
+                            .Create()
+                            .WithUtcSampleTime(now.AddSeconds(-1))
+                            .WithValue(99)
+                            .Build()
+                    )
+                );
 
-                    // Read initial value.
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
-                        ctSource.Token.ThrowIfCancellationRequested();
-                        Assert.IsNotNull(value);
-                    }
+                // Read initial value.
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var value = await subscription.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                    ctSource.Token.ThrowIfCancellationRequested();
+                    Assert.IsNotNull(value);
+                }
 
-                    // Read first value written above.
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
-                        ctSource.Token.ThrowIfCancellationRequested();
-                        Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
-                        Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
-                    }
+                // Read first value written above.
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var value = await subscription.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                    ctSource.Token.ThrowIfCancellationRequested();
+                    Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
+                    Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
+                }
 
-                    // Read second value written above.
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var value = await subscription.Reader.ReadAsync(ctSource.Token).ConfigureAwait(false);
-                        ctSource.Token.ThrowIfCancellationRequested();
-                        Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
-                        Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());
-                    }
+                // Read second value written above.
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var value = await subscription.ReadAsync(ctSource.Token).ConfigureAwait(false);
+                    ctSource.Token.ThrowIfCancellationRequested();
+                    Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
+                    Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());
                 }
             });
         }

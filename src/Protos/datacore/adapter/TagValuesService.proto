@@ -12,11 +12,8 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagValuesService {
     // Snapshot polling/push
     rpc ReadSnapshotTagValues (ReadSnapshotTagValuesRequest) returns (stream TagValueQueryResult);
-    rpc CreateSnapshotSubscription (CreateSnapshotSubscriptionRequest) returns (CreateSnapshotSubscriptionResponse);
-    rpc DeleteSnapshotSubscription (DeleteSnapshotSubscriptionRequest) returns (DeleteSnapshotSubscriptionResponse);
     rpc CreateSnapshotPushChannel (CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
 
-    
     // Historical data polling
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadPlotTagValues (ReadPlotTagValuesRequest) returns (stream TagValueQueryResult);
@@ -39,30 +36,11 @@ message ReadSnapshotTagValuesRequest {
 
 
 // Snapshot tag value push
-message CreateSnapshotSubscriptionRequest {
-    string session_id = 1;
-    string adapter_id = 2;
-    map<string, string> properties = 3;
-    google.protobuf.Duration publish_interval = 4;
-}
-
-message CreateSnapshotSubscriptionResponse {
-    string subscription_id = 1;
-}
-
-message DeleteSnapshotSubscriptionRequest {
-    string session_id = 1;
-    string subscription_id = 2;
-}
-
-message DeleteSnapshotSubscriptionResponse {
-    bool success = 1;
-}
-
 message CreateSnapshotPushChannelRequest {
-    string session_id = 1;
-    string subscription_id = 2;
-    string tag = 3;
+    string adapter_id = 1;
+    map<string, string> properties = 2;
+    google.protobuf.Duration publish_interval = 3;
+    string tag = 4;
 }
 
 

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.AspNetCore.Grpc.Services;
 using DataCore.Adapter.RealTimeData;
 
 using Grpc.Core;
@@ -23,16 +21,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     public class TagValuesServiceImpl : TagValuesService.TagValuesServiceBase {
 
         /// <summary>
-        /// Holds all active subscriptions.
-        /// </summary>
-        private static readonly ConnectionSubscriptionManager<RealTimeData.TagValueQueryResult, TopicSubscriptionWrapper<RealTimeData.TagValueQueryResult>> s_snapshotSubscriptions = new ConnectionSubscriptionManager<RealTimeData.TagValueQueryResult, TopicSubscriptionWrapper<RealTimeData.TagValueQueryResult>>();
-
-        /// <summary>
-        /// Indicates if the background cleanup task is running.
-        /// </summary>
-        private static int s_cleanupTaskIsRunning;
-
-        /// <summary>
         /// The service for resolving adapter references.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -41,20 +29,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// The service for registering background task operations.
         /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
-
-
-        /// <summary>
-        /// Class initialiser.
-        /// </summary>
-        static TagValuesServiceImpl() {
-            HeartbeatServiceImpl.HeartbeatReceived += peer => { 
-                if (string.IsNullOrWhiteSpace(peer)) {
-                    return;
-                }
-
-                s_snapshotSubscriptions.SetHeartbeat(peer, DateTime.UtcNow);
-            };
-        }
 
 
         /// <summary>
@@ -72,127 +46,35 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-        /// <summary>
-        /// Periodically removes all subscriptions for any connections that have not sent a recent
-        /// heartbeat message.
-        /// </summary>
-        /// <param name="timeout">
-        ///   The heartbeat timeout.
-        /// </param>
-        internal static void CleanUpStaleSubscriptions(TimeSpan timeout) {
-            foreach (var connectionId in s_snapshotSubscriptions.GetConnectionIds()) {
-                if (!s_snapshotSubscriptions.IsConnectionStale(connectionId, timeout)) {
-                    continue;
-                }
-
-                s_snapshotSubscriptions.RemoveAllSubscriptions(connectionId);
-            }
-        }
-
-
-
-        /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
-        public override async Task<CreateSnapshotSubscriptionResponse> CreateSnapshotSubscription(
-            CreateSnapshotSubscriptionRequest request, 
-            ServerCallContext context
-        ) {
-            if (Interlocked.CompareExchange(ref s_cleanupTaskIsRunning, 1, 0) == 0) {
-                // Kick off background cleanup of stale subscriptions.
-                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                    try {
-                        var checkInterval = TimeSpan.FromSeconds(10);
-                        var staleTimeout = TimeSpan.FromSeconds(30);
-
-                        while (!ct.IsCancellationRequested) {
-                            await Task.Delay(checkInterval, ct).ConfigureAwait(false);
-                            CleanUpStaleSubscriptions(staleTimeout);
-                        }
-                    }
-                    finally {
-                        s_cleanupTaskIsRunning = 0;
-                    }
-                });
-            }
-
-            var adapterCallContext = new GrpcAdapterCallContext(context);
-            var cancellationToken = context.CancellationToken;
-            var adapterId = request.AdapterId;
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
-            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(
-                adapterCallContext,
-                _adapterAccessor,
-                adapterId,
-                cancellationToken
-            ).ConfigureAwait(false);
-
-            var wrappedSubscription = new TopicSubscriptionWrapper<RealTimeData.TagValueQueryResult>(
-                await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    PublishInterval = request.PublishInterval.ToTimeSpan(),
-                    Properties = new Dictionary<string, string>(request.Properties)
-                }).ConfigureAwait(false),
-                _backgroundTaskService
-            );
-
-            return new CreateSnapshotSubscriptionResponse() { 
-                SubscriptionId = s_snapshotSubscriptions.AddSubscription(connectionId, wrappedSubscription)
-            };
-        }
-
-
-        /// <inheritdoc/>
-        public override Task<DeleteSnapshotSubscriptionResponse> DeleteSnapshotSubscription(DeleteSnapshotSubscriptionRequest request, ServerCallContext context) {
-            DeleteSnapshotSubscriptionResponse result;
-
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
-            if (string.IsNullOrWhiteSpace(request.SubscriptionId)) {
-                s_snapshotSubscriptions.RemoveAllSubscriptions(connectionId);
-                result = new DeleteSnapshotSubscriptionResponse() {
-                    Success = true
-                };
-            }
-            else {
-                result = new DeleteSnapshotSubscriptionResponse() {
-                    Success = s_snapshotSubscriptions.RemoveSubscription(connectionId, request.SubscriptionId)
-                };
-            }
-            return Task.FromResult(result);
-        }
-
-
         /// <inheritdoc/>
         public override async Task CreateSnapshotPushChannel(
             CreateSnapshotPushChannelRequest request, 
             IServerStreamWriter<TagValueQueryResult> responseStream, 
             ServerCallContext context
         ) {
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            if (!s_snapshotSubscriptions.TryGetSubscription(connectionId, request.SubscriptionId, out var subscription)) {
-                return;
-            }
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() {
+                Tag = request.Tag,
+                PublishInterval = request.PublishInterval.ToTimeSpan(),
+                Properties = new Dictionary<string, string>(request.Properties)
+            }, cancellationToken).ConfigureAwait(false);
 
-            var channel = await subscription.CreateTopicChannel(request.Tag).ConfigureAwait(false);
             try {
-                await foreach (var val in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
-                    await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (subscription.TryRead(out var msg) && msg != null) {
+                        await responseStream.WriteAsync(msg.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                    }
                 }
             }
             catch (OperationCanceledException) {
-                // Caller has cancelled the subscription.
+                // Do nothing
             }
             catch (ChannelClosedException) {
-                // Channel has been closed due to the connection being terminated.
+                // Do nothing
             }
         }
 
