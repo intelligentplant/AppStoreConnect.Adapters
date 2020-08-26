@@ -1,5 +1,7 @@
 ﻿using System;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter {
 
     /// <summary>
@@ -24,23 +26,29 @@ namespace DataCore.Adapter {
         /// The feature. The value will be <see langword="null"/> if the adapter or feature could not 
         /// be resolved.
         /// </summary>
-        public TFeature Feature { get { return IsFeatureResolved ? _feature : default; } }
+        public TFeature Feature => IsFeatureResolved ? _feature : default;
 
         /// <summary>
         /// <see langword="true"/> if the adapter was resolved, or <see langword="false"/> otherwise.
         /// </summary>
-        public bool IsAdapterResolved { get { return Adapter != null; } }
+        public bool IsAdapterResolved => Adapter != null;
 
         /// <summary>
         /// <see langword="true"/> if the feature was resolved, or <see langword="false"/> otherwise.
         /// </summary>
-        public bool IsFeatureResolved { get { return _feature != null; } }
+        public bool IsFeatureResolved => _feature != null;
 
         /// <summary>
         /// <see langword="true"/> if access to the feature was authorized, or <see langword="false"/> 
         /// otherwise.
         /// </summary>
         public bool IsFeatureAuthorized { get; private set; }
+
+        /// <summary>
+        /// <see langword="true"/> if the feature is an extension feature, or <see langword="false"/>
+        /// if it is a standard feature.
+        /// </summary>
+        public bool IsExtensionFeature => _feature is IAdapterExtensionFeature;
 
 
         /// <summary>
