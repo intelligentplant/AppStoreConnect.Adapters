@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
@@ -26,28 +27,25 @@ namespace DataCore.Adapter.Tests {
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
                 var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() {
                     Tag = TestContext.TestName
-                }, default);
+                }, CancellationToken);
 
                 var val = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
 
-                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                    var emitted = await subscription.ReadAsync(ctSource.Token);
-                    Assert.IsNotNull(emitted);
-                    Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                    Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                    Assert.AreEqual(now, emitted.Value.UtcSampleTime);
-                    Assert.AreEqual(now.Ticks, emitted.Value.GetValueOrDefault<long>());
-                }
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                var emitted = await subscription.ReadAsync(CancellationToken);
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                Assert.AreEqual(now, emitted.Value.UtcSampleTime);
+                Assert.AreEqual(now.Ticks, emitted.Value.GetValueOrDefault<long>());
             }
         }
 
 
         [TestMethod]
         public async Task SnapshotSubscriptionShouldRespectPublishInterval() {
-            var cancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = cancellationTokenSource.Token;
-            
             var generationInterval = TimeSpan.FromMilliseconds(50);
             var publishInterval = TimeSpan.FromSeconds(1);
 
@@ -59,25 +57,29 @@ namespace DataCore.Adapter.Tests {
             var valueCount = 0;
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() { 
-                    PublishInterval = TimeSpan.FromSeconds(1),
-                    Tag = TestContext.TestName
-                }, default);
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                        new CreateSnapshotTagValueSubscriptionRequest() { 
+                        PublishInterval = TimeSpan.FromSeconds(1),
+                        Tag = TestContext.TestName
+                    }, 
+                    CancellationToken
+                );
 
                 _ = Task.Run(async () => {
                     try {
-                        while (!cancellationToken.IsCancellationRequested) {
-                            await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                        while (!CancellationToken.IsCancellationRequested) {
+                            await Task.Delay(50, CancellationToken).ConfigureAwait(false);
                             var val = TagValueBuilder.Create().WithValue(DateTime.UtcNow.Ticks).Build();
                             await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
                         }
                     }
                     catch (OperationCanceledException) { }
-                }, cancellationToken);
+                }, CancellationToken);
 
-                cancellationTokenSource.CancelAfter(publishInterval);
+                CancelAfter(publishInterval);
                 try {
-                    while (await subscription.WaitToReadAsync(cancellationToken)) {
+                    while (await subscription.WaitToReadAsync(CancellationToken)) {
                         if (subscription.TryRead(out var val)) {
                             ++valueCount;
                         }
@@ -99,15 +101,15 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest(), default);
+                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest(), CancellationToken);
                 var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
                 await feature.ValueReceived(msg);
 
-                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                    var emitted = await subscription.ReadAsync(ctSource.Token);
-                    Assert.IsNotNull(emitted);
-                    Assert.AreEqual(msg.Message, emitted.Message);
-                }
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                var emitted = await subscription.ReadAsync(CancellationToken);
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(msg.Message, emitted.Message);
             }
         }
 
@@ -122,24 +124,28 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
-                    await subscription.SubscribeToTopic(topic);
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topic = topic
+                    },
+                    CancellationToken
+                );
 
-                    var msg = EventMessageBuilder
-                        .Create()
-                        .WithTopic(topic)
-                        .WithUtcEventTime(now)
-                        .WithMessage(TestContext.TestName)
-                        .Build();
+                var msg = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now)
+                    .WithMessage(TestContext.TestName)
+                    .Build();
 
-                    await feature.ValueReceived(msg);
+                await feature.ValueReceived(msg, CancellationToken);
 
-                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(msg.Message, emitted.Message);
-                    }
-                }
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                var emitted = await subscription.ReadAsync(CancellationToken);
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(msg.Message, emitted.Message);
             }
         }
 
@@ -154,43 +160,49 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                using (var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest())) {
-                    await subscription.SubscribeToTopic(topic);
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topic = topic
+                    },
+                    CancellationToken
+                );
 
-                    var msg1 = EventMessageBuilder
-                        .Create()
-                        .WithTopic(topic)
-                        .WithUtcEventTime(now)
-                        .WithMessage(TestContext.TestName)
-                        .Build();
+                var msg1 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now)
+                    .WithMessage(TestContext.TestName)
+                    .Build();
 
-                    var msg2 = EventMessageBuilder
-                        .Create()
-                        .WithTopic(null)
-                        .WithUtcEventTime(now)
-                        .WithMessage(TestContext.TestName)
-                        .Build();
+                var msg2 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(null)
+                    .WithUtcEventTime(now)
+                    .WithMessage(TestContext.TestName)
+                    .Build();
 
-                    await feature.ValueReceived(msg1);
-                    await feature.ValueReceived(msg2);
+                await feature.ValueReceived(msg1);
+                await feature.ValueReceived(msg2);
 
-                    var messagesReceived = 0;
+                var messagesReceived = 0;
 
-                    using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(1))) {
-                        var emitted = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(msg1.Message, emitted.Message);
-                        ++messagesReceived;
+                CancelAfter(TimeSpan.FromSeconds(1));
 
-                        await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => {
-                            emitted = await subscription.Reader.ReadAsync(ctSource.Token);
-                            // Exception should be thrown before we get to here!
-                            ++messagesReceived;
-                        });
-                    }
-  
-                    Assert.AreEqual(1, messagesReceived);
+                var emitted = await subscription.ReadAsync(CancellationToken);
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(msg1.Message, emitted.Message);
+                ++messagesReceived;
+
+                try {
+                    emitted = await subscription.ReadAsync(CancellationToken);
+                    // Exception should be thrown before we get to here!
+                    ++messagesReceived;
                 }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+
+                Assert.AreEqual(1, messagesReceived);
             }
         }
 

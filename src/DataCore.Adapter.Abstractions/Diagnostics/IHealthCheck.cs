@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Diagnostics {
@@ -32,11 +33,13 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The call context for the operation, to allow authorization to be applied to the 
         ///   operation if required.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will create and start an <see cref="IHealthCheckSubscription"/> 
-        ///   that can be disposed once the subscription is no longer required.
+        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
         /// </returns>
-        Task<IHealthCheckSubscription> Subscribe(IAdapterCallContext context);
+        Task<ChannelReader<HealthCheckResult>> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken);
 
     }
 }

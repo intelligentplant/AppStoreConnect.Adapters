@@ -135,30 +135,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false);
-
-            var result = Channel.CreateUnbounded<HealthCheckResult>();
-
-            // Run background operation to dispose of the subscription when the cancellation token 
-            // fires.
-            TaskScheduler.QueueBackgroundWorkItem(async ct => {
-                try {
-                    while (await subscription.Reader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!subscription.Reader.TryRead(out var item)) {
-                            continue;
-                        }
-
-                        await result.Writer.WriteAsync(item, ct).ConfigureAwait(false);
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
-                finally {
-                    subscription.Dispose();
-                }
-            }, null, cancellationToken);
-
-            return result;
+            return await adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -232,22 +209,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         /// <inheritdoc/>
         public override Task OnDisconnectedAsync(Exception exception) {
-            OnTagValuesHubDisconnection();
-            OnEventsHubDisconnection();
             return base.OnDisconnectedAsync(exception);
         }
-
-
-        /// <summary>
-        /// Invoked when a client disconnects.
-        /// </summary>
-        partial void OnTagValuesHubDisconnection();
-
-
-        /// <summary>
-        /// Invoked when a client disconnects.
-        /// </summary>
-        partial void OnEventsHubDisconnection();
 
     }
 }

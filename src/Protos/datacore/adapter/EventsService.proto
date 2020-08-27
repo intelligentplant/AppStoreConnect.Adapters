@@ -11,8 +11,6 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service EventsService {
     // Push 
     rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessage);
-    rpc CreateEventTopicPushSubscription(CreateEventTopicPushSubscriptionRequest) returns (CreateEventTopicPushSubscriptionResponse);
-    rpc DeleteEventTopicPushSubscription(DeleteEventTopicPushSubscriptionRequest) returns (DeleteEventTopicPushSubscriptionResponse);
     rpc CreateEventTopicPushChannel(CreateEventTopicPushChannelRequest) returns (stream EventMessage);
 
     // Polling
@@ -31,34 +29,11 @@ message CreateEventPushChannelRequest {
 }
 
 
-message CreateEventTopicPushSubscriptionRequest {
-    string session_id = 1;
-    string adapter_id = 2;
-    EventSubscriptionType subscription_type = 3;
-    map<string,string> properties = 4;
-}
-
-
-message CreateEventTopicPushSubscriptionResponse {
-    string subscription_id = 1;
-}
-
-
-message DeleteEventTopicPushSubscriptionRequest {
-    string session_id = 1;
-    string subscription_id = 2;
-}
-
-
-message DeleteEventTopicPushSubscriptionResponse {
-    bool success = 1;
-}
-
-
 message CreateEventTopicPushChannelRequest {
-    string session_id = 1;
-    string subscription_id = 2;
+    string adapter_id = 1;
+    EventSubscriptionType subscription_type = 2;
     string topic = 3;
+    map<string,string> properties = 4;
 }
 
 

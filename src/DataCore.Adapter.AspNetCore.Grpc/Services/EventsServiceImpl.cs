@@ -20,16 +20,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     public class EventsServiceImpl : EventsService.EventsServiceBase {
 
         /// <summary>
-        /// Holds all active subscriptions.
-        /// </summary>
-        private static readonly ConnectionSubscriptionManager<Events.EventMessage, TopicSubscriptionWrapper<Events.EventMessage>> s_eventTopicSubscriptions = new ConnectionSubscriptionManager<Events.EventMessage, TopicSubscriptionWrapper<Events.EventMessage>>();
-
-        /// <summary>
-        /// Indicates if the background cleanup task is running.
-        /// </summary>
-        private static int s_cleanupTaskIsRunning;
-
-        /// <summary>
         /// The service for resolving adapter references.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -56,27 +46,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <summary>
-        /// Periodically removes all subscriptions for any connections that have not sent a recent
-        /// heartbeat message.
-        /// </summary>
-        /// <param name="timeout">
-        ///   The heartbeat timeout.
-        /// </param>
-        internal static void CleanUpStaleSubscriptions(TimeSpan timeout) {
-            foreach (var connectionId in s_eventTopicSubscriptions.GetConnectionIds()) {
-                if (!s_eventTopicSubscriptions.IsConnectionStale(connectionId, timeout)) {
-                    continue;
-                }
-
-                s_eventTopicSubscriptions.RemoveAllSubscriptions(connectionId);
-            }
-        }
-
-
-        /// <summary>
         /// Creates a general event message subscription to an adapter using the adapter's 
         /// <see cref="IEventMessagePush"/> feature. For topic-based event streams, see 
-        /// <see cref="CreateEventTopicPushSubscription"/>.
+        /// <see cref="CreateEventTopicPushChannel"/>.
         /// </summary>
         /// <param name="request">
         ///   The request.
@@ -91,8 +63,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ///   A <see cref="Task"/> that will publish emitted event messages to the 
         ///   <paramref name="responseStream"/>.
         /// </returns>
-        /// <seealso cref="CreateEventTopicPushSubscription"/>
-        /// <seealso cref="DeleteEventTopicPushSubscription"/>
         /// <seealso cref="CreateEventTopicPushChannel"/>
         public override async Task CreateEventPushChannel(CreateEventPushChannelRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
@@ -123,116 +93,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-
         /// <summary>
-        /// Creates a topic-based event subscription for an adapter using the adapter's 
-        /// <see cref="IEventMessagePushWithTopics"/> feature. Note that this does not add any 
-        /// event topics to the subscription; this must be done separately via calls to 
-        /// <see cref="CreateEventTopicPushChannel"/>.
-        /// </summary>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="context">
-        ///   The call context.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the response for the operation.
-        /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
-        public override async Task<CreateEventTopicPushSubscriptionResponse> CreateEventTopicPushSubscription(
-            CreateEventTopicPushSubscriptionRequest request, 
-            ServerCallContext context
-        ) {
-            if (Interlocked.CompareExchange(ref s_cleanupTaskIsRunning, 1, 0) == 0) {
-                // Kick off background cleanup of stale subscriptions.
-                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                    try {
-                        var checkInterval = TimeSpan.FromSeconds(10);
-                        var staleTimeout = TimeSpan.FromSeconds(30);
-
-                        while (!ct.IsCancellationRequested) {
-                            await Task.Delay(checkInterval, ct).ConfigureAwait(false);
-                            CleanUpStaleSubscriptions(staleTimeout);
-                        }
-                    }
-                    finally {
-                        s_cleanupTaskIsRunning = 0;
-                    }
-                });
-            }
-
-            var adapterCallContext = new GrpcAdapterCallContext(context);
-            var cancellationToken = context.CancellationToken;
-            var adapterId = request.AdapterId;
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
-            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePushWithTopics>(
-                adapterCallContext,
-                _adapterAccessor,
-                adapterId,
-                cancellationToken
-            ).ConfigureAwait(false);
-
-            var wrappedSubscription = new TopicSubscriptionWrapper<Events.EventMessage>(
-                await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageSubscriptionRequest() {
-                    SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
-                        ? EventMessageSubscriptionType.Active
-                        : EventMessageSubscriptionType.Passive,
-                    Properties = new Dictionary<string, string>(request.Properties)
-                }).ConfigureAwait(false),
-                _backgroundTaskService
-            );
-
-            return new CreateEventTopicPushSubscriptionResponse() {
-                SubscriptionId = s_eventTopicSubscriptions.AddSubscription(connectionId, wrappedSubscription)
-            };
-        }
-
-
-        /// <summary>
-        /// Deletes a topic-based event subscription that was created via a call to 
-        /// <see cref="CreateEventTopicPushSubscription"/>.
-        /// </summary>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="context">
-        ///   The call context.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the response for the operation.
-        /// </returns>
-        public override Task<DeleteEventTopicPushSubscriptionResponse> DeleteEventTopicPushSubscription(
-            DeleteEventTopicPushSubscriptionRequest request, 
-            ServerCallContext context
-        ) {
-            DeleteEventTopicPushSubscriptionResponse result;
-
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
-            if (string.IsNullOrWhiteSpace(request.SubscriptionId)) {
-                s_eventTopicSubscriptions.RemoveAllSubscriptions(connectionId);
-                result = new DeleteEventTopicPushSubscriptionResponse() {
-                    Success = true
-                };
-            }
-            else {
-                result = new DeleteEventTopicPushSubscriptionResponse() {
-                    Success = s_eventTopicSubscriptions.RemoveSubscription(connectionId, request.SubscriptionId)
-                };
-            }
-            return Task.FromResult(result);
-        }
-
-
-        /// <summary>
-        /// Adds a topic to a topic-based event subscription and streams emitted messages to the 
-        /// caller. Subscriptions are created via calls to <see cref="CreateEventTopicPushSubscription"/>.
+        /// Creates a topic-based event message subscription to an adapter using the adapter's 
+        /// <see cref="IEventMessagePushWithTopics"/> feature. For event streams that do not 
+        /// require topic subscriptions, see <see cref="CreateEventPushChannel"/>.
         /// </summary>
         /// <param name="request">
         ///   The request.
@@ -247,28 +111,33 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ///   A <see cref="Task"/> that will publish emitted event messages to the 
         ///   <paramref name="responseStream"/>.
         /// </returns>
+        /// <seealso cref="CreateEventPushChannel"/>
         public override async Task CreateEventTopicPushChannel(CreateEventTopicPushChannelRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
-            var connectionId = string.IsNullOrWhiteSpace(request.SessionId)
-                ? context.Peer
-                : string.Concat(context.Peer, "-", request.SessionId);
-
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            if (!s_eventTopicSubscriptions.TryGetSubscription(connectionId, request.SubscriptionId, out var subscription)) {
-                return;
-            }
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageTopicSubscriptionRequest() {
+                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
+                    ? EventMessageSubscriptionType.Active
+                    : EventMessageSubscriptionType.Passive,
+                Topic = request.Topic,
+                Properties = new Dictionary<string, string>(request.Properties)
+            }, cancellationToken).ConfigureAwait(false);
 
-            var channel = await subscription.CreateTopicChannel(request.Topic).ConfigureAwait(false);
             try {
-                await foreach (var val in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
-                    await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
+                while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (subscription.TryRead(out var msg) && msg != null) {
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
+                    }
                 }
             }
             catch (OperationCanceledException) {
-                // Caller has cancelled the subscription.
+                // Do nothing
             }
             catch (ChannelClosedException) {
-                // Channel has been closed due to the connection being terminated.
+                // Do nothing
             }
         }
 

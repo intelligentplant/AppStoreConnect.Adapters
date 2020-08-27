@@ -196,12 +196,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagAddedToSubscription(TagIdentifier tag) {
+        protected override void OnTagAdded(TagIdentifier tag) {
             lock (_subscribedTags) {
                 _subscribedTags.Add(tag);
             }
 
-            base.OnTagAddedToSubscription(tag);
+            base.OnTagAdded(tag);
 
             // Immediately get the current value.
             Scheduler.QueueBackgroundWorkItem(ct => RefreshValues(new[] { tag.Id }, ct), DisposedToken);
@@ -209,7 +209,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagRemovedFromSubscription(TagIdentifier tag) {
+        protected override void OnTagRemoved(TagIdentifier tag) {
             lock (_subscribedTags) {
                 var toBeRemoved = _subscribedTags.FindIndex(x => TagIdentifierComparer.Id.Equals(x, tag));
                 if (toBeRemoved >= 0) {
@@ -217,7 +217,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }
 
-            base.OnTagRemovedFromSubscription(tag);
+            base.OnTagRemoved(tag);
         }
 
 

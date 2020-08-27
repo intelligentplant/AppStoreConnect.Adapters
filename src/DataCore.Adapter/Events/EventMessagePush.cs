@@ -5,8 +5,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Diagnostics;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events {
@@ -58,7 +61,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly ConcurrentDictionary<int, Subscription> _subscriptions = new ConcurrentDictionary<int, Subscription>();
+        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>>();
 
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
@@ -115,16 +118,21 @@ namespace DataCore.Adapter.Events {
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
-            Subscription subscription;
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
-            subscription = new Subscription(
+            var subscription = new EventSubscriptionChannel<int, string, EventMessage>(
                 subscriptionId,
-                ChannelExtensions.CreateEventMessageChannel<EventMessage>(BoundedChannelFullMode.DropOldest, 10), 
+                context,
+                Scheduler,
+                null,
                 request.SubscriptionType, 
-                cts,
-                () => OnSubscriptionCancelled(subscriptionId)
+                TimeSpan.Zero,
+                new [] { DisposedToken, cancellationToken },
+                () => OnSubscriptionCancelledInternal(subscriptionId),
+                10
             );
             _subscriptions[subscriptionId] = subscription;
 
@@ -132,9 +140,8 @@ namespace DataCore.Adapter.Events {
             HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
             OnSubscriptionAdded();
 
-            return Task.FromResult(subscription.Channel.Reader);
+            return Task.FromResult(subscription.Reader);
         }
-
 
 
         /// <summary>
@@ -146,10 +153,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Invoked when a subscription is removed.
         /// </summary>
-        /// <returns>
-        ///   A task that will perform subscription-related activities.
-        /// </returns>
-        protected virtual void OnSubscriptionRemoved() { }
+        protected virtual void OnSubscriptionCancelled() { }
 
 
         /// <summary>
@@ -197,7 +201,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="id">
         ///   The cancelled subscription ID.
         /// </param>
-        private void OnSubscriptionCancelled(int id) {
+        private void OnSubscriptionCancelledInternal(int id) {
             if (_isDisposed) {
                 return;
             }
@@ -206,7 +210,7 @@ namespace DataCore.Adapter.Events {
                 subscription.Dispose();
                 HasSubscriptions = _subscriptions.Count > 0;
                 HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                OnSubscriptionRemoved();
+                OnSubscriptionCancelled();
             }
         }
 
@@ -293,7 +297,17 @@ namespace DataCore.Adapter.Events {
                             if (cancellationToken.IsCancellationRequested) {
                                 break;
                             }
-                            subscriber.Channel.Writer.TryWrite(message);
+
+                            try {
+                                var success = subscriber.Publish(message);
+                                if (!success) {
+                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                                }
+                            }
+                            catch (OperationCanceledException) { }
+                            catch (Exception e) {
+                                Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                            }
                         }
                     }
                 }
@@ -303,48 +317,6 @@ namespace DataCore.Adapter.Events {
             }
             catch (ChannelClosedException) {
                 // Channel was closed
-            }
-        }
-
-
-        private class Subscription : IDisposable {
-
-            public int Id { get; }
-
-            public Channel<EventMessage> Channel { get; }
-
-            public EventMessageSubscriptionType SubscriptionType { get; }
-
-            private readonly CancellationTokenSource _cancellationTokenSource;
-
-            public CancellationToken CancellationToken { get; }
-
-            private readonly Action _cleanup;
-
-            private readonly IDisposable _ctRegistration;
-
-
-            public Subscription(int id, Channel<EventMessage> channel, EventMessageSubscriptionType subscriptionType, CancellationTokenSource cancellationTokenSource, Action cleanup) {
-                Id = id;
-                Channel = channel;
-                SubscriptionType = subscriptionType;
-                _cancellationTokenSource = cancellationTokenSource;
-                CancellationToken = _cancellationTokenSource.Token;
-                _cleanup = cleanup;
-                _ctRegistration = CancellationToken.Register(cleanup);
-            }
-
-
-            public void Dispose() {
-                Channel.Writer.TryComplete();
-                _ctRegistration.Dispose();
-                if (!CancellationToken.IsCancellationRequested) {
-                    // Cancellation token source has not fired yet. Since we disposed of the 
-                    // registration for the cleanup callback above, we'll manually call it here, to 
-                    // ensure that cleanup occurs.
-                    _cleanup.Invoke();
-                }
-                _cancellationTokenSource.Dispose();
             }
         }
 
