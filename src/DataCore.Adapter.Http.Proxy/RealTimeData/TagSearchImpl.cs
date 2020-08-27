@@ -22,6 +22,8 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -40,6 +42,8 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagDefinitionChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -58,6 +62,8 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateChannel<AdapterProperty>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

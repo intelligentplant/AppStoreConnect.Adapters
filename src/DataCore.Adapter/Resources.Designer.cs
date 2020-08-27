@@ -106,7 +106,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter {0} is not compatible with {1}..
+        ///   Looks up a localized string similar to Adapter &apos;{0}&apos; is not compatible with &apos;{1}&apos;..
         /// </summary>
         internal static string Error_AdapterIsNotCompatibleWithHelperClass {
             get {
@@ -151,6 +151,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve tag &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_CannotResolveTag {
+            get {
+                return ResourceManager.GetString("Error_CannotResolveTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This feature has already been registered..
         /// </summary>
         internal static string Error_FeatureIsAlreadyRegistered {
@@ -178,11 +187,20 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Object does not implement feature {0}..
+        ///   Looks up a localized string similar to Object does not implement feature &apos;{0}&apos;..
         /// </summary>
         internal static string Error_NotAFeatureImplementation {
             get {
                 return ResourceManager.GetString("Error_NotAFeatureImplementation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Too many subscriptions..
+        /// </summary>
+        internal static string Error_TooManySubscriptions {
+            get {
+                return ResourceManager.GetString("Error_TooManySubscriptions", resourceCulture);
             }
         }
         
@@ -331,7 +349,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while starting adapter {AdapterId}..
+        ///   Looks up a localized string similar to An error occurred while starting adapter &apos;{AdapterId}&apos;..
         /// </summary>
         internal static string Log_AdapterStartupError {
             get {
@@ -340,7 +358,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while stopping adapter {AdapterId}..
+        ///   Looks up a localized string similar to An error occurred while stopping adapter &apos;{AdapterId}&apos;..
         /// </summary>
         internal static string Log_AdapterStopError {
             get {
@@ -349,7 +367,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stopping adapter {AdapterId} (disposing: true)..
+        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterId}&apos; (disposing: true)..
         /// </summary>
         internal static string Log_DisposingAdapter {
             get {
@@ -367,7 +385,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error in background task {WorkItem}.
+        ///   Looks up a localized string similar to Error in background task &apos;{WorkItem}&apos;..
         /// </summary>
         internal static string Log_ErrorInBackgroundTask {
             get {
@@ -421,7 +439,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Tag = {tag}, Action = {action}.
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Tag = &apos;{tag}&apos;, Action = &apos;{action}&apos;.
         /// </summary>
         internal static string Log_ErrorWhileProcessingSnapshotSubscriptionChange {
             get {
@@ -430,7 +448,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Topic = {topic}, Action = {action}.
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Topic = &apos;{topic}&apos;, Action = &apos;{action}&apos;.
         /// </summary>
         internal static string Log_ErrorWhileProcessingSubscriptionTopicChange {
             get {
@@ -439,7 +457,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}..
+        ///   Looks up a localized string similar to Evicted event message &apos;{id}&apos; with cursor position &apos;{cursorPosition}&apos; and timestamp &apos;{timestamp}&apos;..
         /// </summary>
         internal static string Log_InMemoryEventMessageManager_EvictedMessage {
             get {
@@ -448,7 +466,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Wrote event message {id} with cursor position {cursorPosition} and timestamp {timestamp}..
+        ///   Looks up a localized string similar to Wrote event message &apos;{id}&apos; with cursor position &apos;{cursorPosition}&apos; and timestamp &apos;{timestamp}&apos;..
         /// </summary>
         internal static string Log_InMemoryEventMessageManager_WroteMessage {
             get {
@@ -466,7 +484,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed with error..
+        ///   Looks up a localized string similar to Publish to subscriber with connection ID &apos;{connectionId}&apos; failed with error..
         /// </summary>
         internal static string Log_PublishToSubscriberThrewException {
             get {
@@ -475,7 +493,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publish to subscriber with connection ID {connectionId} failed..
+        ///   Looks up a localized string similar to Publish to subscriber with connection ID &apos;{connectionId}&apos; failed..
         /// </summary>
         internal static string Log_PublishToSubscriberWasUnsuccessful {
             get {
@@ -484,7 +502,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Started adapter {AdapterId}..
+        ///   Looks up a localized string similar to Started adapter &apos;{AdapterId}&apos;..
         /// </summary>
         internal static string Log_StartedAdapter {
             get {
@@ -493,7 +511,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Starting adapter {AdapterId}..
+        ///   Looks up a localized string similar to Starting adapter &apos;{AdapterId}&apos;..
         /// </summary>
         internal static string Log_StartingAdapter {
             get {
@@ -502,7 +520,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stopped adapter {AdapterId}..
+        ///   Looks up a localized string similar to Stopped adapter &apos;{AdapterId}&apos;..
         /// </summary>
         internal static string Log_StoppedAdapter {
             get {
@@ -511,7 +529,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Stopping adapter {AdapterId} (disposing: false)..
+        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterId}&apos; (disposing: false)..
         /// </summary>
         internal static string Log_StoppingAdapter {
             get {

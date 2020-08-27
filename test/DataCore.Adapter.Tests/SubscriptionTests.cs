@@ -25,9 +25,13 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateSnapshotTagValueSubscriptionRequest() {
-                    Tag = TestContext.TestName
-                }, CancellationToken);
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tag = TestContext.TestName
+                    }, 
+                    CancellationToken
+                );
 
                 var val = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
@@ -93,6 +97,36 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public async Task SnapshotSubscriptionShouldApplyConcurrencyLimit() {
+            var now = DateTime.UtcNow;
+
+            var options = new SnapshotTagValuePushOptions() {
+                AdapterId = TestContext.TestName,
+                MaxSubscriptionCount = 1,
+                TagResolver = (ctx, name, ct) => new ValueTask<TagIdentifier>(new TagIdentifier(name, name))
+            };
+
+            using (var feature = new SnapshotTagValuePush(options, null, null)) {
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tag = TestContext.TestName
+                    }, 
+                    CancellationToken
+                );
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tag = TestContext.TestName
+                    }, 
+                    CancellationToken
+                ));
+            }
+        }
+
+
+        [TestMethod]
         public async Task EventSubscriptionShouldEmitValues() {
             var now = DateTime.UtcNow;
 
@@ -101,7 +135,11 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(ExampleCallContext.ForPrincipal(null), new CreateEventMessageSubscriptionRequest(), CancellationToken);
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                    new CreateEventMessageSubscriptionRequest(), 
+                    CancellationToken
+                );
                 var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
                 await feature.ValueReceived(msg);
 
@@ -110,6 +148,31 @@ namespace DataCore.Adapter.Tests {
                 var emitted = await subscription.ReadAsync(CancellationToken);
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(msg.Message, emitted.Message);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventSubscriptionShouldApplyConcurrencyLimit() {
+            var now = DateTime.UtcNow;
+
+            var options = new EventMessagePushOptions() {
+                AdapterId = TestContext.TestName,
+                MaxSubscriptionCount = 1
+            };
+
+            using (var feature = new EventMessagePush(options, null, null)) {
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null), 
+                    new CreateEventMessageSubscriptionRequest(), 
+                    CancellationToken
+                );
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageSubscriptionRequest(),
+                    CancellationToken
+                ));
             }
         }
 
@@ -203,6 +266,36 @@ namespace DataCore.Adapter.Tests {
                 catch (ChannelClosedException) { }
 
                 Assert.AreEqual(1, messagesReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionShouldApplyConcurrencyLimit() {
+            var now = DateTime.UtcNow;
+            var topic = Guid.NewGuid().ToString();
+
+            var options = new EventMessagePushWithTopicsOptions() {
+                AdapterId = TestContext.TestName,
+                MaxSubscriptionCount = 1
+            };
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topic = topic
+                    },
+                    CancellationToken
+                );
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topic = topic
+                    },
+                    CancellationToken
+                ));
             }
         }
 

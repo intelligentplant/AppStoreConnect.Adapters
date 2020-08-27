@@ -22,6 +22,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public Task<ChannelReader<Adapter.RealTimeData.TagDefinition>> FindTags(IAdapterCallContext context, Adapter.RealTimeData.FindTagsRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new FindTagsRequest() {
                 AdapterId = AdapterId,
@@ -67,6 +69,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public Task<ChannelReader<Adapter.RealTimeData.TagDefinition>> GetTags(IAdapterCallContext context, Adapter.RealTimeData.GetTagsRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request); 
+            
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new GetTagsRequest() {
                 AdapterId = AdapterId
@@ -97,6 +101,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public Task<ChannelReader<Common.AdapterProperty>> GetTagProperties(IAdapterCallContext context, Adapter.RealTimeData.GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request); 
+            
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new GetTagPropertiesRequest() {
                 AdapterId = AdapterId,

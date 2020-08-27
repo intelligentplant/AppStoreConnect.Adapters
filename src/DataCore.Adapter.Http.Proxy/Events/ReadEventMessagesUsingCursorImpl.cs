@@ -20,6 +20,8 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
         /// <inheritdoc />
         public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

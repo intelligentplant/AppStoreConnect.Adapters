@@ -75,6 +75,11 @@ namespace DataCore.Adapter.RealTimeData {
         });
 
         /// <summary>
+        /// Maximum number of concurrent subscriptions.
+        /// </summary>
+        private readonly int _maxSubscriptionCount;
+
+        /// <summary>
         /// The last subscription ID that was issued.
         /// </summary>
         private int _lastSubscriptionId;
@@ -118,6 +123,7 @@ namespace DataCore.Adapter.RealTimeData {
             ILogger logger
         ) {
             _options = options ?? new SnapshotTagValuePushOptions();
+            _maxSubscriptionCount = _options.MaxSubscriptionCount;
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
@@ -371,11 +377,15 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
+            ValidationExtensions.ValidateObject(request);
+
+            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
+                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
+            }
+
             var tag = await ResolveTag(context, request.Tag, cancellationToken).ConfigureAwait(false);
             if (tag == null) {
-                var result = Channel.CreateUnbounded<TagValueQueryResult>();
-                result.Writer.TryComplete(new Exception($"Unable to resolve tag {request.Tag}."));
-                return result.Reader;
+                throw new ArgumentException(string.Format(context?.CultureInfo, Resources.Error_CannotResolveTag, request.Tag), nameof(request));
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
@@ -556,6 +566,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
         public string AdapterId { get; set; }
+
+        /// <summary>
+        /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
+        /// attempts to create additional subscriptions will throw exceptions. A value less than 
+        /// one indicates no limit.
+        /// </summary>
+        public int MaxSubscriptionCount { get; set; }
 
         /// <summary>
         /// A delegate that will receive tag names or IDs and will return the matching 

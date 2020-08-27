@@ -27,6 +27,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagValueQueryResult>> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request, CancellationToken cancellationToken) {
+            SignalRAdapterProxy.ValidateObject(request); 
+            
             return GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
                 AdapterId,
                 request,

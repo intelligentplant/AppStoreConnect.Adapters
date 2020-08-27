@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -21,6 +22,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             var client = GetClient();
             var hubChannel = await client.TagValues.WriteHistoricalTagValuesAsync(
                 AdapterId, 

@@ -26,6 +26,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
+            SignalRAdapterProxy.ValidateObject(request);
+
             return GetClient().Events.CreateEventMessageChannelAsync(
                 AdapterId,
                 request,

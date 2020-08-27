@@ -21,6 +21,8 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

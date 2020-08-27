@@ -21,6 +21,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            SignalRAdapterProxy.ValidateObject(request);
+
             var client = GetClient();
             var hubChannel = await client.AssetModel.BrowseAssetModelNodesAsync(
                 AdapterId, 
@@ -39,6 +41,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            SignalRAdapterProxy.ValidateObject(request);
+
             var client = GetClient();
             var hubChannel = await client.AssetModel.GetAssetModelNodesAsync(
                 AdapterId, 

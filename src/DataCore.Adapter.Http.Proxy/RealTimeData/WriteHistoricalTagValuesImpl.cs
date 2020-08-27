@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -22,6 +23,10 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

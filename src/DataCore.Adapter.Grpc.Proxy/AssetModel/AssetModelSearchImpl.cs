@@ -22,6 +22,8 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
             var grpcRequest = new FindAssetModelNodesRequest() {
                 AdapterId = AdapterId,

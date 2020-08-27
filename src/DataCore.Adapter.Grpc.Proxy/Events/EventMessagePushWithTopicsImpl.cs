@@ -26,6 +26,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
             CreateEventMessageTopicSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -257,6 +258,29 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
                 await connection.StopAsync(cancellationToken).ConfigureAwait(false);
             }
+        }
+
+
+        /// <summary>
+        /// Validates an object. This should be called on all adapter request objects prior to 
+        /// invoking a remote endpoint.
+        /// </summary>
+        /// <param name="o">
+        ///   The object.
+        /// </param>
+        /// <param name="canBeNull">
+        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
+        ///   <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
+        ///   <see langword="false"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="o"/> fails validation.
+        /// </exception>
+        public static void ValidateObject(object o, bool canBeNull = false) {
+            AdapterSignalRClient.ValidateObject(o, canBeNull);
         }
 
 

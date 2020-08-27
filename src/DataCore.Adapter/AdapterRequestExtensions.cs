@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace DataCore.Adapter {
-    
+
     /// <summary>
     /// General-purpose extension methods for adapter requests.
     /// </summary>

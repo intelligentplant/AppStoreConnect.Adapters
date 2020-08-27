@@ -54,6 +54,11 @@ namespace DataCore.Adapter.Events {
         private readonly EventMessagePushOptions _options;
 
         /// <summary>
+        /// Maximum number of concurrent subscriptions.
+        /// </summary>
+        private readonly int _maxSubscriptionCount;
+
+        /// <summary>
         /// The last subscription ID that was issued.
         /// </summary>
         private int _lastSubscriptionId;
@@ -106,6 +111,7 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
             _options = options ?? new EventMessagePushOptions();
+            _maxSubscriptionCount = _options.MaxSubscriptionCount;
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             Scheduler.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
@@ -120,6 +126,12 @@ namespace DataCore.Adapter.Events {
         ) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            ValidationExtensions.ValidateObject(request);
+
+            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
+                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
@@ -332,6 +344,13 @@ namespace DataCore.Adapter.Events {
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
         public string AdapterId { get; set; }
+
+        /// <summary>
+        /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
+        /// attempts to create additional subscriptions will throw exceptions. A value less than 
+        /// one indicates no limit.
+        /// </summary>
+        public int MaxSubscriptionCount { get; set; }
 
     }
 }

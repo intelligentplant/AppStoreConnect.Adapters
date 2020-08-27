@@ -153,6 +153,8 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            ValidationExtensions.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -258,6 +260,8 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+            ValidationExtensions.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -297,6 +301,8 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            ValidationExtensions.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

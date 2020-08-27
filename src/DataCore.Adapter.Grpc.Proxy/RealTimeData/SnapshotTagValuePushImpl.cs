@@ -33,6 +33,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             CreateSnapshotTagValueSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

@@ -13,6 +13,7 @@ using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -318,6 +319,29 @@ namespace DataCore.Adapter.Grpc.Proxy {
             }
         }
 #endif
+
+
+        /// <summary>
+        /// Validates an object. This should be called on all adapter request objects prior to 
+        /// invoking a remote endpoint.
+        /// </summary>
+        /// <param name="o">
+        ///   The object.
+        /// </param>
+        /// <param name="canBeNull">
+        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
+        ///   <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
+        ///   <see langword="false"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="o"/> fails validation.
+        /// </exception>
+        public static void ValidateObject(object o, bool canBeNull = false) {
+            ValidationExtensions.ValidateObject(o, canBeNull);
+        }
 
 
         /// <summary>

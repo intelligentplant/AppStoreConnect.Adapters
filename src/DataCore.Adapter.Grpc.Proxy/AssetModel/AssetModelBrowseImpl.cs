@@ -22,6 +22,8 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request);
+            
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
             var grpcRequest = new BrowseAssetModelNodesRequest() {
                 AdapterId = AdapterId,
@@ -58,6 +60,8 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
             var grpcRequest = new GetAssetModelNodesRequest() {
                 AdapterId = AdapterId

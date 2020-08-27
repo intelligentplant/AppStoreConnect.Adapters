@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -217,6 +218,29 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <inheritdoc/>
         protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Validates an object. This should be called on all adapter request objects prior to 
+        /// invoking a remote endpoint.
+        /// </summary>
+        /// <param name="o">
+        ///   The object.
+        /// </param>
+        /// <param name="canBeNull">
+        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
+        ///   <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
+        ///   <see langword="false"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="o"/> fails validation.
+        /// </exception>
+        public static void ValidateObject(object o, bool canBeNull = false) {
+            AdapterHttpClient.ValidateObject(o, canBeNull);
         }
 
 

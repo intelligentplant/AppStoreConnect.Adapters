@@ -21,6 +21,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            SignalRAdapterProxy.ValidateObject(request); 
+            
             var client = GetClient();
             var hubChannel = await client.TagValues.ReadTagValuesAtTimesAsync(
                 AdapterId, 

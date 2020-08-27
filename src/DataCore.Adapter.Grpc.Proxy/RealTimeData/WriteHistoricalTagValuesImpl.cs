@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -22,6 +23,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcStream = client.WriteHistoricalTagValues(GetCallOptions(context, cancellationToken));
 

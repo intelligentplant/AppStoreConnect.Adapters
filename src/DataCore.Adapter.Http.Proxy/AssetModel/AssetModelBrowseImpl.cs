@@ -20,6 +20,8 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
 
         /// <inheritdoc />
         public Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+            
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -37,6 +39,8 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
 
         /// <inheritdoc />
         public Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
