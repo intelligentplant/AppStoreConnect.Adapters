@@ -56,6 +56,10 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The polling interval to use. If the value specified is less than or equal to 
         ///   <see cref="TimeSpan.Zero"/>, <see cref="DefaultPollingInterval"/> will be used.
         /// </param>
+        /// <param name="maxConcurrentSubscriptions">
+        ///   The maximum number of concurrent subscriptions allowed. A value less than one 
+        ///   indicates no limit.
+        /// </param>
         /// <param name="scheduler">
         ///   The scheduler to use when running background tasks. If the value specified is 
         ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
@@ -74,11 +78,13 @@ namespace DataCore.Adapter.RealTimeData {
             ITagInfo tagInfoFeature, 
             IReadSnapshotTagValues readSnapshotFeature, 
             TimeSpan pollingInterval,
+            int maxConcurrentSubscriptions,
             IBackgroundTaskService scheduler,
             ILogger logger
         ) : base(
             new SnapshotTagValuePushOptions() { 
                 AdapterId = adapterId,
+                MaxSubscriptionCount = maxConcurrentSubscriptions,
                 TagResolver = SnapshotTagValuePushOptions.CreateTagResolver(tagInfoFeature)
             }, 
             scheduler,
@@ -103,6 +109,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="pollingInterval">
         ///   The polling interval to use when refreshing values for subscribed tags.
         /// </param>
+        /// <param name="maxConcurrentSubscriptions">
+        ///   The maximum number of concurrent subscriptions allowed. A value less than one 
+        ///   indicates no limit.
+        /// </param>
         /// <returns>
         ///   A new <see cref="PollingSnapshotTagValuePush"/> object.
         /// </returns>
@@ -115,9 +125,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </exception>
         public static PollingSnapshotTagValuePush ForAdapter(
             AdapterBase adapter,
-            TimeSpan pollingInterval
+            TimeSpan pollingInterval,
+            int maxConcurrentSubscriptions = 0
         ) {
-            return ForAdapter(adapter, pollingInterval, adapter?.TaskScheduler, adapter?.Logger);
+            return ForAdapter(adapter, pollingInterval, maxConcurrentSubscriptions, adapter?.TaskScheduler, adapter?.Logger);
         }
 
 
@@ -130,6 +141,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         /// <param name="pollingInterval">
         ///   The polling interval to use when refreshing values for subscribed tags.
+        /// </param>
+        /// <param name="maxConcurrentSubscriptions">
+        ///   The maximum number of concurrent subscriptions allowed. A value less than one 
+        ///   indicates no limit.
         /// </param>
         /// <param name="scheduler">
         ///   The scheduler to use when running background tasks. If the value specified is 
@@ -151,6 +166,7 @@ namespace DataCore.Adapter.RealTimeData {
         public static PollingSnapshotTagValuePush ForAdapter(
             IAdapter adapter,
             TimeSpan pollingInterval,
+            int maxConcurrentSubscriptions = 0,
             IBackgroundTaskService scheduler = null,
             ILogger logger = null
         ) {
@@ -166,6 +182,7 @@ namespace DataCore.Adapter.RealTimeData {
                 adapter.Features.Get<ITagInfo>(),
                 adapter.Features.Get<IReadSnapshotTagValues>(),
                 pollingInterval,
+                maxConcurrentSubscriptions,
                 scheduler,
                 logger
             );
@@ -196,12 +213,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagAddedToSubscription(TagIdentifier tag) {
+        protected override void OnTagAdded(TagIdentifier tag) {
             lock (_subscribedTags) {
                 _subscribedTags.Add(tag);
             }
 
-            base.OnTagAddedToSubscription(tag);
+            base.OnTagAdded(tag);
 
             // Immediately get the current value.
             Scheduler.QueueBackgroundWorkItem(ct => RefreshValues(new[] { tag.Id }, ct), DisposedToken);
@@ -209,7 +226,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagRemovedFromSubscription(TagIdentifier tag) {
+        protected override void OnTagRemoved(TagIdentifier tag) {
             lock (_subscribedTags) {
                 var toBeRemoved = _subscribedTags.FindIndex(x => TagIdentifierComparer.Id.Equals(x, tag));
                 if (toBeRemoved >= 0) {
@@ -217,7 +234,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }
 
-            base.OnTagRemovedFromSubscription(tag);
+            base.OnTagRemoved(tag);
         }
 
 

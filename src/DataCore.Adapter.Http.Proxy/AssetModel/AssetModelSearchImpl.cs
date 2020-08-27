@@ -21,6 +21,8 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
 
         /// <inheritdoc />
         public Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            HttpAdapterProxy.ValidateObject(request);
+
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

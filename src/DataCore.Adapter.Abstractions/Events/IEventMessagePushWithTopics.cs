@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Events {
 
@@ -20,13 +22,16 @@ namespace DataCore.Adapter.Events {
         ///   active subscription should be created. Some adapters will only emit event messages 
         ///   when they have at least one active subscriber.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
         /// <returns>
-        ///   A task that will create and start a subscription object that can be disposed once 
-        ///   the subscription is no longer required.
+        ///   A channel reader that will emit event messages as they occur.
         /// </returns>
-        Task<IEventMessageSubscriptionWithTopics> Subscribe(
+        Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context,
-            CreateEventMessageSubscriptionRequest request
+            CreateEventMessageTopicSubscriptionRequest request,
+            CancellationToken cancellationToken
         );
 
     }

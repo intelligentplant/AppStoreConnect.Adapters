@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -23,6 +24,10 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
         /// <inheritdoc />
         public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

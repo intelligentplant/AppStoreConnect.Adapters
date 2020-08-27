@@ -88,8 +88,8 @@ namespace DataCore.Adapter.Tests {
             public SnapshotSubscriptionManager() : base(null, null, null) { }
 
 
-            protected override void OnTagAddedToSubscription(TagIdentifier tag) {
-                base.OnTagAddedToSubscription(tag);
+            protected override void OnTagAdded(TagIdentifier tag) {
+                base.OnTagAdded(tag);
                 ValueReceived(new TagValueQueryResult(
                     tag.Id,
                     tag.Name,

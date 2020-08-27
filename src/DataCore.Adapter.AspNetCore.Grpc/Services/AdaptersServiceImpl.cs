@@ -89,18 +89,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var subscription = await adapter.Feature.Subscribe(adapterCallContext).ConfigureAwait(false)) {
-                while (!cancellationToken.IsCancellationRequested) {
-                    try {
-                        var msg = await subscription.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                        await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException) {
-                        // Do nothing
-                    }
-                    catch (System.Threading.Channels.ChannelClosedException) {
-                        // Do nothing
-                    }
+            var subscription = await adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false);
+            while (!cancellationToken.IsCancellationRequested) {
+                try {
+                    var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    // Do nothing
+                }
+                catch (System.Threading.Channels.ChannelClosedException) {
+                    // Do nothing
                 }
             }
         }

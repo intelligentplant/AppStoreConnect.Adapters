@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -32,14 +33,14 @@ namespace DataCore.Adapter.Diagnostics {
         private HealthCheckResult? _latestHealthCheck;
 
         /// <summary>
-        /// The active subscriptions.
+        /// The last subscription ID that was issued.
         /// </summary>
-        private readonly HashSet<HealthCheckSubscription> _subscriptions = new HashSet<HealthCheckSubscription>();
+        private int _lastSubscriptionId;
 
         /// <summary>
-        /// Lock for accessing <see cref="_latestHealthCheck"/> and <see cref="_subscriptions"/>.
+        /// The active subscriptions.
         /// </summary>
-        private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
+        private readonly ConcurrentDictionary<int, SubscriptionChannel<int, string, HealthCheckResult>> _subscriptions = new ConcurrentDictionary<int, SubscriptionChannel<int, string, HealthCheckResult>>();
 
         /// <summary>
         /// Lock to ensure that only a single call to <see cref="CheckHealthAsync"/> is ongoing.
@@ -98,8 +99,6 @@ namespace DataCore.Adapter.Diagnostics {
         }
 
 
-
-
         /// <summary>
         /// Long-running task that monitors the <see cref="_recomputeHealthChannel"/>, 
         /// recalculates the adapter health when messages are published to the channel, and then 
@@ -118,23 +117,16 @@ namespace DataCore.Adapter.Diagnostics {
                     continue;
                 }
 
-                HealthCheckSubscription[] subscribers;
-
-                _subscriptionsLock.EnterReadLock();
-                try {
-                    subscribers = _subscriptions.ToArray();
-                }
-                finally {
-                    _subscriptionsLock.ExitReadLock();
-                }
+                var subscribers = _subscriptions.Values.ToArray();
 
                 var update = await CheckHealthAsync(
                     new DefaultAdapterCallContext(),
                     cancellationToken
                 ).ConfigureAwait(false);
 
+                _latestHealthCheck = update;
+
                 if (subscribers.Length == 0) {
-                    // No subscribers; no point recomputing health status.
                     continue;
                 }
 
@@ -144,7 +136,7 @@ namespace DataCore.Adapter.Diagnostics {
                     }
 
                     try {
-                        var success = await subscriber.ValueReceived(update, cancellationToken).ConfigureAwait(false);
+                        var success = subscriber.Publish(update);
                         if (!success) {
                             _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
@@ -190,13 +182,7 @@ namespace DataCore.Adapter.Diagnostics {
                 }
 
                 var overallResult = new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
-                _subscriptionsLock.EnterWriteLock();
-                try {
-                    _latestHealthCheck = overallResult;
-                }
-                finally {
-                    _subscriptionsLock.ExitWriteLock();
-                }
+                _latestHealthCheck = overallResult;
 
                 return overallResult;
             }
@@ -213,54 +199,53 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public async Task<IHealthCheckSubscription> Subscribe(IAdapterCallContext context) {
+        public Task<ChannelReader<HealthCheckResult>> Subscribe(
+            IAdapterCallContext context, 
+            CancellationToken cancellationToken
+        ) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            var subscription = new HealthCheckSubscription(context, this);
+            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
+            var subscription = new SubscriptionChannel<int, string, HealthCheckResult>(
+                subscriptionId,
+                context,
+                _adapter.TaskScheduler,
+                null,
+                TimeSpan.Zero,
+                new[] { _adapter.StopToken, cancellationToken },
+                () => OnHealthCheckSubscriptionCancelled(subscriptionId),
+                10
+            );
 
-            bool added;
-            HealthCheckResult? latestResult;
-
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                added = _subscriptions.Add(subscription);
-                latestResult = _latestHealthCheck;
-            }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
-
-            if (added) {
-                await subscription.Start().ConfigureAwait(false);
-                if (latestResult != null) {
-                    await subscription.ValueReceived(latestResult.Value).ConfigureAwait(false);
-                }
+            var latestResult = _latestHealthCheck;
+            if (latestResult != null) {
+                subscription.Publish(latestResult.Value, true);
             }
 
-            return subscription;
+            _subscriptions[subscriptionId] = subscription;
+
+            return Task.FromResult(subscription.Reader);
         }
 
 
         /// <summary>
         /// Called when a subscription is cancelled.
         /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
+        /// <param name="subscriptionId">
+        ///   The subscription ID.
         /// </param>
-        private void OnHealthCheckSubscriptionCancelled(HealthCheckSubscription subscription) {
+        private void OnHealthCheckSubscriptionCancelled(int subscriptionId) {
             if (_isDisposed) {
                 return;
             }
 
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                _subscriptions.Remove(subscription);
+            if (!_subscriptions.TryRemove(subscriptionId, out var subscription)) {
+                return;
             }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
+
+            subscription.Dispose();
         }
 
 
@@ -270,46 +255,12 @@ namespace DataCore.Adapter.Diagnostics {
                 return;
             }
 
-            _subscriptionsLock.Dispose();
             _updateLock.Dispose();
+            foreach (var subscription in _subscriptions.Values.ToArray()) {
+                subscription.Dispose();
+            }
             _subscriptions.Clear();
             _isDisposed = true;
-        }
-
-
-        /// <summary>
-        /// <see cref="IHealthCheckSubscription"/> implementation.
-        /// </summary>
-        private class HealthCheckSubscription : AdapterSubscription<HealthCheckResult>, IHealthCheckSubscription {
-
-            /// <summary>
-            /// The subscribed adapter.
-            /// </summary>
-            private readonly HealthCheckManager _manager;
-
-
-            /// <summary>
-            /// Creates a new <see cref="HealthCheckSubscription"/> object.
-            /// </summary>
-            /// <param name="context">
-            ///   The <see cref="IAdapterCallContext"/> for the subscriber.
-            /// </param>
-            /// <param name="manager">
-            ///   The <see cref="HealthCheckManager"/> that the caller is subscribing to.
-            /// </param>
-            internal HealthCheckSubscription(
-                IAdapterCallContext context,
-                HealthCheckManager manager
-            ) : base(context, manager?._adapter.Descriptor.Id) {
-                _manager = manager;
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                _manager.OnHealthCheckSubscriptionCancelled(this);
-            }
-
         }
 
     }

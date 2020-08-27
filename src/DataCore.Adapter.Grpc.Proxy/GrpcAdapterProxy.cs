@@ -13,6 +13,7 @@ using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -269,12 +270,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 // Adapter supports health check subscriptions.
                 TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
-
-            // Send periodic heartbeat message - this ensures that topic-based subscriptions 
-            // (where separate actions are required to create the subscription and the individual 
-            // topic subscription streams) are kept alive even if there aren't currently topics 
-            // being actively subscribed to.
-            TaskScheduler.QueueBackgroundWorkItem(RunRemoteHeartbeatLoop);
         }
 
 
@@ -324,6 +319,29 @@ namespace DataCore.Adapter.Grpc.Proxy {
             }
         }
 #endif
+
+
+        /// <summary>
+        /// Validates an object. This should be called on all adapter request objects prior to 
+        /// invoking a remote endpoint.
+        /// </summary>
+        /// <param name="o">
+        ///   The object.
+        /// </param>
+        /// <param name="canBeNull">
+        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
+        ///   <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
+        ///   <see langword="false"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   <paramref name="o"/> fails validation.
+        /// </exception>
+        public static void ValidateObject(object o, bool canBeNull = false) {
+            ValidationExtensions.ValidateObject(o, canBeNull);
+        }
 
 
         /// <summary>
@@ -489,41 +507,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
 #endif
 
             return results;
-        }
-
-
-
-        /// <summary>
-        /// Periodically sends a heartbeat message to the remote host.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that will trigger when the task should exit.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task"/> that will periodically send a heartbeat message.
-        /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Heartbeat task needs to recover from unhandled exceptions")]
-        private async Task RunRemoteHeartbeatLoop(CancellationToken cancellationToken) {
-            var interval = Options.HeartbeatInterval;
-            if (Options.HeartbeatInterval <= TimeSpan.FromSeconds(5)) {
-                interval = TimeSpan.FromSeconds(5);
-            }
-
-            var client = CreateClient<HeartbeatService.HeartbeatServiceClient>();
-            while (!cancellationToken.IsCancellationRequested) {
-                try {
-                    await client.HeartbeatAsync(new Ping() { 
-                        SessionId = RemoteSessionId
-                    }, GetCallOptions(null, cancellationToken)).ResponseAsync.ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) {
-                    break;
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorDuringHeartbeatInvocation);
-                }
-                await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
-            }
         }
 
 

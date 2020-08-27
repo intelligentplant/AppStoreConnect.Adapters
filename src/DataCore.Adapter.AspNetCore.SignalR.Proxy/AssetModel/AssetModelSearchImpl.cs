@@ -22,6 +22,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            SignalRAdapterProxy.ValidateObject(request);
+
             var client = GetClient();
             var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(
                 AdapterId, 

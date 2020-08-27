@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -21,7 +22,11 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<Adapter.Events.WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Events.WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             var client = CreateClient<EventsService.EventsServiceClient>();
             var grpcStream = client.WriteEventMessages(GetCallOptions(context, cancellationToken));
 

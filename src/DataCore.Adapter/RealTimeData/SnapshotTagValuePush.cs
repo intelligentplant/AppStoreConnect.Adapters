@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -56,7 +59,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// Channel that is used to publish new snapshot values. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
-        private readonly Channel<(TagValueQueryResult Value, SnapshotTagValueSubscriptionBase[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(TagValueQueryResult, SnapshotTagValueSubscriptionBase[])>(new UnboundedChannelOptions() {
+        private readonly Channel<(TagValueQueryResult Value, TagValueSubscriptionChannel<int>[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(TagValueQueryResult, TagValueSubscriptionChannel<int>[])>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = false
@@ -65,16 +68,26 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Channel that is used to publish changes to subscribed tags.
         /// </summary>
-        private readonly Channel<(TagIdentifier Tag, bool Added, TaskCompletionSource<bool> Processed)> _tagSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
+        private readonly Channel<(TagIdentifier Tag, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
         });
 
         /// <summary>
-        /// All subscriptions.
+        /// Maximum number of concurrent subscriptions.
         /// </summary>
-        private readonly List<Subscription> _subscriptions = new List<Subscription>();
+        private readonly int _maxSubscriptionCount;
+
+        /// <summary>
+        /// The last subscription ID that was issued.
+        /// </summary>
+        private int _lastSubscriptionId;
+
+        /// <summary>
+        /// The current subscriptions.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, TagValueSubscriptionChannel<int>> _subscriptions = new ConcurrentDictionary<int, TagValueSubscriptionChannel<int>>();
 
         /// <summary>
         /// Maps from tag ID to the subscriber count for that tag.
@@ -82,7 +95,7 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly Dictionary<string, int> _subscriberCount = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// For protecting access to <see cref="_subscriptions"/> and <see cref="_subscriberCount"/>.
+        /// For protecting access to <see cref="_subscriberCount"/>.
         /// </summary>
         private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
@@ -105,11 +118,12 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The logger to use.
         /// </param>
         public SnapshotTagValuePush(
-            SnapshotTagValuePushOptions options, 
+            SnapshotTagValuePushOptions options,
             IBackgroundTaskService scheduler,
             ILogger logger
         ) {
             _options = options ?? new SnapshotTagValuePushOptions();
+            _maxSubscriptionCount = _options.MaxSubscriptionCount;
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
@@ -145,7 +159,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (string.IsNullOrWhiteSpace(tag)) {
                 return null;
             }
-            
+
             return _options.TagResolver == null
                 ? new TagIdentifier(tag, tag)
                 : await _options.TagResolver.Invoke(context, tag, cancellationToken).ConfigureAwait(false);
@@ -158,16 +172,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        /// <param name="tag">
-        ///   The tag.
-        /// </param>
-        private async Task AddTagToSubscription(Subscription subscription, TagIdentifier tag) {
-            if (subscription == null || tag == null) {
-                return;
-            }
-
-            if (_currentValueByTagId.TryGetValue(tag.Id, out var value)) {
-                await subscription.ValueReceived(value, DisposedToken).ConfigureAwait(false);
+        private async Task OnSubscriptionAddedInternal(SubscriptionChannel<int, TagIdentifier, TagValueQueryResult> subscription) {
+            foreach (var topic in subscription.Topics) {
+                if (_currentValueByTagId.TryGetValue(topic.Id, out var value)) {
+                    subscription.Publish(value, true);
+                }
             }
 
             var isNewSubscription = false;
@@ -175,63 +184,23 @@ namespace DataCore.Adapter.RealTimeData {
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
-                    subscriberCount = 0;
-                    isNewSubscription = true;
-                }
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.CancellationToken.IsCancellationRequested) {
+                        break;
+                    }
 
-                _subscriberCount[tag.Id] = ++subscriberCount;
-                if (isNewSubscription) {
-                    processed = new TaskCompletionSource<bool>();
-                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, true, processed));
-                }
-            }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
+                    ++subscription.SubscribedTopicCount;
 
-            if (processed == null) {
-                return;
-            }
+                    if (!_subscriberCount.TryGetValue(topic.Id, out var subscriberCount)) {
+                        subscriberCount = 0;
+                        isNewSubscription = true;
+                    }
 
-            // Wait for change to be processed.
-            await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Invoked when a tag is removed from a subscription.
-        /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
-        /// </param>
-        /// <param name="tag">
-        ///   The tag.
-        /// </param>
-        private async Task RemoveTagFromSubscription(Subscription subscription, TagIdentifier tag) {
-            if (subscription == null || tag == null) {
-                return;
-            }
-
-            TaskCompletionSource<bool> processed = null;
-
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
-                    // No subscribers
-                    return;
-                }
-
-                --subscriberCount;
-
-                if (subscriberCount == 0) {
-                    // No subscribers remaining.
-                    _subscriberCount.Remove(tag.Id);
-                    processed = new TaskCompletionSource<bool>();
-                    _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false, processed));
-                }
-                else {
-                    _subscriberCount[tag.Id] = subscriberCount;
+                    _subscriberCount[topic.Id] = ++subscriberCount;
+                    if (isNewSubscription) {
+                        processed = new TaskCompletionSource<bool>();
+                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
+                    }
                 }
             }
             finally {
@@ -242,39 +211,58 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            // Wait for change to be processed.
+            // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
+
+            OnSubscriptionAdded();
         }
 
 
         /// <summary>
         /// Invoked when a subscription has been cancelled.
         /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
+        /// <param name="subscriptionId">
+        ///   The subscription ID.
         /// </param>
-        private void OnSubscriptionCancelled(Subscription subscription) {
+        private void OnSubscriptionCancelledInternal(int subscriptionId) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (!_subscriptions.TryRemove(subscriptionId, out var subscription)) {
+                return;
+            }
+
             _subscriptionsLock.EnterWriteLock();
             try {
-                _subscriptions.Remove(subscription);
-                foreach (var tag in subscription.GetSubscribedTopics()) {
-                    if (!_subscriberCount.TryGetValue(tag.Id, out var subscriberCount)) {
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.SubscribedTopicCount <= 0) {
+                        // We've already unsubscribed from all of the topics we managed to 
+                        // subscribe to when the subscription was created.
+                        break;
+                    }
+
+                    --subscription.SubscribedTopicCount;
+
+                    if (!_subscriberCount.TryGetValue(topic.Id, out var subscriberCount)) {
                         continue;
                     }
 
                     --subscriberCount;
 
                     if (subscriberCount == 0) {
-                        _subscriberCount.Remove(tag.Id);
-                        _tagSubscriptionChangesChannel.Writer.TryWrite((tag, false, null));
+                        _subscriberCount.Remove(topic.Id);
+                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, null));
                     }
                     else {
-                        _subscriberCount[tag.Id] = subscriberCount;
+                        _subscriberCount[topic.Id] = subscriberCount;
                     }
                 }
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
+                subscription.Dispose();
+                OnSubscriptionCancelled();
             }
         }
 
@@ -285,7 +273,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        protected virtual void OnTagAddedToSubscription(TagIdentifier tag) {
+        protected virtual void OnTagAdded(TagIdentifier tag) {
             _options.OnTagSubscriptionAdded?.Invoke(tag);
         }
 
@@ -296,7 +284,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tag">
         ///   The tag.
         /// </param>
-        protected virtual void OnTagRemovedFromSubscription(TagIdentifier tag) {
+        protected virtual void OnTagRemoved(TagIdentifier tag) {
             _options.OnTagSubscriptionRemoved?.Invoke(tag);
             // Remove current value if we are caching it.
             _currentValueByTagId.TryRemove(tag.Id, out var _);
@@ -305,7 +293,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <summary>
         /// Starts a long-running that that will read and process subscription changes published 
-        /// to <see cref="_tagSubscriptionChangesChannel"/>.
+        /// to <see cref="_topicSubscriptionChangesChannel"/>.
         /// </summary>
         /// <param name="cancellationToken">
         ///   A cancellation token that will fire when the task should exit.
@@ -316,20 +304,20 @@ namespace DataCore.Adapter.RealTimeData {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
-                if (!await _tagSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                     break;
                 }
 
-                if (!_tagSubscriptionChangesChannel.Reader.TryRead(out var change) || change.Tag == null) {
+                if (!_topicSubscriptionChangesChannel.Reader.TryRead(out var change) || change.Tag == null) {
                     continue;
                 }
 
                 try {
                     if (change.Added) {
-                        OnTagAddedToSubscription(change.Tag);
+                        OnTagAdded(change.Tag);
                     }
                     else {
-                        OnTagRemovedFromSubscription(change.Tag);
+                        OnTagRemoved(change.Tag);
                     }
 
                     if (change.Processed != null) {
@@ -343,10 +331,10 @@ namespace DataCore.Adapter.RealTimeData {
 
                     Logger.LogError(
                         e,
-                        Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange, 
-                        change.Tag, 
-                        change.Added 
-                            ? SubscriptionUpdateAction.Subscribe 
+                        Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
+                        change.Tag,
+                        change.Added
+                            ? SubscriptionUpdateAction.Subscribe
                             : SubscriptionUpdateAction.Unsubscribe
                     );
                 }
@@ -378,10 +366,16 @@ namespace DataCore.Adapter.RealTimeData {
                 Publish?.Invoke(item.Value);
 
                 foreach (var subscriber in item.Subscribers) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        break;
+                    }
+
                     try {
-                        var success = await subscriber.ValueReceived(item.Value, cancellationToken).ConfigureAwait(false);
-                        if (!success) {
-                            Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                        using (var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, subscriber.CancellationToken)) {
+                            var success = subscriber.Publish(item.Value);
+                            if (!success) {
+                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                            }
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -394,50 +388,75 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public async Task<ISnapshotTagValueSubscription> Subscribe(
+        public async Task<ChannelReader<TagValueQueryResult>> Subscribe(
             IAdapterCallContext context,
-            CreateSnapshotTagValueSubscriptionRequest request
+            CreateSnapshotTagValueSubscriptionRequest request,
+            CancellationToken cancellationToken
         ) {
-            var subscription = CreateSubscription(context, request);
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
 
-            _subscriptionsLock.EnterWriteLock();
+            ValidationExtensions.ValidateObject(request);
+
+            var tags = new HashSet<TagIdentifier>(TagIdentifierComparer.Id);
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken)) {
+                var ct = ctSource.Token;
+                foreach (var tag in request.Tags) {
+                    ct.ThrowIfCancellationRequested();
+                    var tagId = await ResolveTag(context, tag, ct).ConfigureAwait(false);
+                    if (tagId == null) {
+                        continue;
+                    }
+                    tags.Add(tagId);
+                }
+            }
+
+            if (tags.Count == 0) {
+                // No valid tags specified.
+                throw new ArgumentException(Resources.Error_CannotResolveAnySubscriptionTopics, nameof(request));
+            }
+
+            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
+                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
+            }
+
+            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
+            var subscription = new TagValueSubscriptionChannel<int>(
+                subscriptionId,
+                context,
+                Scheduler,
+                tags,
+                request.PublishInterval,
+                new[] { DisposedToken, cancellationToken },
+                () => OnSubscriptionCancelledInternal(subscriptionId),
+                10
+            );
+            _subscriptions[subscriptionId] = subscription;
+
             try {
-                _subscriptions.Add(subscription);
+                await OnSubscriptionAddedInternal(subscription).ConfigureAwait(false);
             }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
+            catch {
+                OnSubscriptionCancelledInternal(subscriptionId);
+                throw;
             }
 
-            await subscription.Start().ConfigureAwait(false);
-            return subscription;
+            return subscription.Reader;
         }
 
 
         /// <summary>
-        /// Creates a new subscription.
+        /// Invoked when a subscription is created.
         /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
-        /// </param>
-        /// <param name="request">
-        ///   The request settings.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="Subscription"/> object.
-        /// </returns>
-        /// <remarks>
-        ///   The subscription should not be started.
-        /// </remarks>
-        protected virtual Subscription CreateSubscription(
-            IAdapterCallContext context, 
-            CreateSnapshotTagValueSubscriptionRequest request
-        ) {
-            return new Subscription(
-                context,
-                request,
-                this
-            );
-        }
+        protected virtual void OnSubscriptionAdded() { }
+
+
+        /// <summary>
+        /// Invoked when a subscription is cancelled.
+        /// </summary>
+        protected virtual void OnSubscriptionCancelled() { }
 
 
         /// <summary>
@@ -463,10 +482,10 @@ namespace DataCore.Adapter.RealTimeData {
 
             // Add the value
             var latestValue = _currentValueByTagId.AddOrUpdate(
-                value.TagId, 
-                value, 
-                (key, prev) => prev.Value.UtcSampleTime > value.Value.UtcSampleTime 
-                    ? prev 
+                value.TagId,
+                value,
+                (key, prev) => prev.Value.UtcSampleTime > value.Value.UtcSampleTime
+                    ? prev
                     : value
             );
 
@@ -475,17 +494,10 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            SnapshotTagValueSubscriptionBase[] subscribers;
+            var tagIdentifier = new TagIdentifier(value.TagId, value.TagName);
+            var subscribers = _subscriptions.Values.Where(x => x.Topics.Contains(tagIdentifier)).ToArray();
 
-            _subscriptionsLock.EnterReadLock();
-            try {
-                subscribers = _subscriptions.Where(x => x.IsSubscribed(value)).ToArray();
-            }
-            finally {
-                _subscriptionsLock.ExitReadLock();
-            }
-
-            if (!subscribers.Any()) {
+            if (subscribers.Length == 0) {
                 return false;
             }
 
@@ -509,21 +521,18 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Subscription[] subscriptions;
             int subscribedTagCount;
 
             _subscriptionsLock.EnterReadLock();
             try {
-                subscriptions = _subscriptions.ToArray();
                 subscribedTagCount = _subscriberCount.Count;
             }
             finally {
                 _subscriptionsLock.ExitReadLock();
             }
-            
 
             var result = HealthCheckResult.Healthy(nameof(SnapshotTagValuePush), data: new Dictionary<string, string>() {
-                { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) },
+                { Resources.HealthChecks_Data_SubscriberCount, _subscriptions.Count.ToString(context?.CultureInfo) },
                 { Resources.HealthChecks_Data_TagCount, subscribedTagCount.ToString(context?.CultureInfo) }
             });
 
@@ -561,86 +570,22 @@ namespace DataCore.Adapter.RealTimeData {
             if (disposing) {
                 _isDisposed = true;
                 _masterChannel.Writer.TryComplete();
-                _tagSubscriptionChangesChannel.Writer.TryComplete();
+                _topicSubscriptionChangesChannel.Writer.TryComplete();
                 _disposedTokenSource.Cancel();
                 _disposedTokenSource.Dispose();
+                foreach (var subscription in _subscriptions.Values.ToArray()) {
+                    subscription.Dispose();
+                }
+                _subscriptions.Clear();
                 _subscriptionsLock.EnterWriteLock();
                 try {
                     _subscriberCount.Clear();
-                    foreach (var subscription in _subscriptions.ToArray()) {
-                        subscription.Dispose();
-                    }
-                    _subscriptions.Clear();
                 }
                 finally {
                     _subscriptionsLock.ExitWriteLock();
                     _subscriptionsLock.Dispose();
                 }
             }
-        }
-
-
-        /// <summary>
-        /// Default <see cref="SnapshotTagValueSubscriptionBase"/> implementation used by 
-        /// <see cref="SnapshotTagValuePush"/>.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
-        public class Subscription : SnapshotTagValueSubscriptionBase {
-
-            /// <summary>
-            /// The owning <see cref="SnapshotTagValuePush"/> instance.
-            /// </summary>
-            private readonly SnapshotTagValuePush _push;
-
-
-            /// <summary>
-            /// Creates a new <see cref="Subscription"/> object.
-            /// </summary>
-            /// <param name="context">
-            ///   The <see cref="IAdapterCallContext"/> for the subscriber.
-            /// </param>
-            /// <param name="request">
-            ///   The subscription request.
-            /// </param>
-            /// <param name="push">
-            ///   The owning <see cref="SnapshotTagValuePush"/> instance.
-            /// </param>
-            /// <exception cref="ArgumentNullException">
-            ///   <paramref name="push"/> is <see langword="null"/>.
-            /// </exception>
-            public Subscription(
-                IAdapterCallContext context,
-                CreateSnapshotTagValueSubscriptionRequest request,
-                SnapshotTagValuePush push
-            ) : base(context, push?._options?.AdapterId, request?.PublishInterval ?? TimeSpan.Zero) {
-                _push = push ?? throw new ArgumentNullException(nameof(push));
-            }
-
-
-            /// <inheritdoc/>
-            protected override ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
-                return _push.ResolveTag(context, tag, cancellationToken);
-            }
-
-
-            /// <inheritdoc/>
-            protected override Task OnTagAdded(TagIdentifier tag) {
-                return _push.AddTagToSubscription(this, tag);
-            }
-
-
-            /// <inheritdoc/>
-            protected override Task OnTagRemoved(TagIdentifier tag) {
-                return _push.RemoveTagFromSubscription(this, tag);
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                base.OnCancelled();
-                _push.OnSubscriptionCancelled(this);
-            }
-
         }
 
     }
@@ -655,6 +600,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
         public string AdapterId { get; set; }
+
+        /// <summary>
+        /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
+        /// attempts to create additional subscriptions will throw exceptions. A value less than 
+        /// one indicates no limit.
+        /// </summary>
+        public int MaxSubscriptionCount { get; set; }
 
         /// <summary>
         /// A delegate that will receive tag names or IDs and will return the matching 

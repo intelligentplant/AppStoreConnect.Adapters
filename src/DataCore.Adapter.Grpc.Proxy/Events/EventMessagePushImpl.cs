@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
 
@@ -19,80 +20,34 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscription> Subscribe(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
-            var result = new Subscription(
-                this, 
-                context, 
-                request
-            );
-            await result.Start().ConfigureAwait(false);
-            return result;
-        }
+        public Task<ChannelReader<Adapter.Events.EventMessage>> Subscribe(
+            IAdapterCallContext context, 
+            CreateEventMessageSubscriptionRequest request,
+            CancellationToken cancellationToken
+        ) {
+            GrpcAdapterProxy.ValidateObject(request);
 
+            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
 
-        /// <summary>
-        /// <see cref="EventMessageSubscriptionBase"/> implementation that receives data via a 
-        /// gRPC channel.
-        /// </summary>
-        private class Subscription : EventMessageSubscriptionBase {
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var client = CreateClient<EventsService.EventsServiceClient>();
 
-            /// <summary>
-            /// The creating feature.
-            /// </summary>
-            private readonly EventMessagePushImpl _feature;
-
-            /// <summary>
-            /// Indicates if the subscription is active or passive.
-            /// </summary>
-            private readonly CreateEventMessageSubscriptionRequest _request;
-
-            /// <summary>
-            /// The client for the gRPC service.
-            /// </summary>
-            private readonly EventsService.EventsServiceClient _client;
-
-
-            /// <summary>
-            /// Creates a new <see cref="Subscription"/>.
-            /// </summary>
-            /// <param name="context">
-            ///   The adapter call context for the subscription owner.
-            /// </param>
-            /// <param name="feature">
-            ///   The push feature.
-            /// </param>
-            /// <param name="request">
-            ///   The subscription type.
-            /// </param>
-            public Subscription(
-                EventMessagePushImpl feature, 
-                IAdapterCallContext context,
-                CreateEventMessageSubscriptionRequest request
-            ) : base(context, feature.AdapterId, request?.SubscriptionType ?? EventMessageSubscriptionType.Active) {
-                _feature = feature;
-                _request = request ?? new CreateEventMessageSubscriptionRequest();
-                _client = _feature.CreateClient<EventsService.EventsServiceClient>();
-            }
-
-
-            /// <inheritdoc/>
-            protected override async Task RunSubscription(CancellationToken cancellationToken) {
-                var request = new CreateEventPushChannelRequest() {
-                    AdapterId = _feature.AdapterId,
-                    SubscriptionType = _request.SubscriptionType == EventMessageSubscriptionType.Active
+                var grpcRequest = new CreateEventPushChannelRequest() {
+                    AdapterId = AdapterId,
+                    SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
                         ? EventSubscriptionType.Active
                         : EventSubscriptionType.Passive
                 };
 
-                if (_request.Properties != null) {
-                    foreach (var item in _request.Properties) {
-                        request.Properties.Add(item.Key, item.Value ?? string.Empty);
+                if (request.Properties != null) {
+                    foreach (var item in request.Properties) {
+                        grpcRequest.Properties.Add(item.Key, item.Value ?? string.Empty);
                     }
                 }
 
-                using (var grpcChannel = _client.CreateEventPushChannel(
-                   request,
-                   _feature.GetCallOptions(Context, cancellationToken)
+                using (var grpcChannel = client.CreateEventPushChannel(
+                   grpcRequest,
+                   GetCallOptions(context, ct)
                 )) {
                     // Read event messages.
                     while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -100,14 +55,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                             continue;
                         }
 
-                        await ValueReceived(
-                            grpcChannel.ResponseStream.Current.ToAdapterEventMessage(),
-                            cancellationToken
-                        ).ConfigureAwait(false);
+                        await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
                     }
                 }
-            }
+            }, true, TaskScheduler, cancellationToken);
 
+            return Task.FromResult(result.Reader);
         }
+
     }
 }

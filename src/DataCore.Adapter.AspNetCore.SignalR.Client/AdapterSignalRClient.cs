@@ -176,24 +176,33 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
 
         /// <summary>
-        /// Validates the specified object. This method should be called on any adapter request objects 
-        /// prior to passing them to an adapter.
+        /// Validates an object. This should be called on all adapter request objects prior to 
+        /// invoking a remote endpoint.
         /// </summary>
-        /// <param name="instance">
-        ///   The object to validate.
+        /// <param name="o">
+        ///   The object.
+        /// </param>
+        /// <param name="canBeNull">
+        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
+        ///   <see langword="null"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="instance"/> is <see langword="null"/>.
+        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
+        ///   <see langword="false"/>.
         /// </exception>
         /// <exception cref="ValidationException">
-        ///   <paramref name="instance"/> is not valid.
+        ///   <paramref name="o"/> fails validation.
         /// </exception>
-        protected internal static void ValidateObject(object instance) {
-            if (instance == null) {
-                throw new ArgumentNullException(nameof(instance));
+        public static void ValidateObject(object o, bool canBeNull = false) {
+            if (canBeNull && o == null) {
+                return;
             }
 
-            Validator.ValidateObject(instance, new ValidationContext(instance), true);
+            if (o == null) {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            Validator.ValidateObject(o, new ValidationContext(o));
         }
 
 

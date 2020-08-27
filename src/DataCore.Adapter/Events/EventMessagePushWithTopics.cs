@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -58,7 +59,7 @@ namespace DataCore.Adapter.Events {
         /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
-        private readonly Channel<(EventMessage Value, EventMessageSubscriptionWithTopicsBase[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(EventMessage, EventMessageSubscriptionWithTopicsBase[])>(new UnboundedChannelOptions() {
+        private readonly Channel<(EventMessage Value, EventSubscriptionChannel<int>[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(EventMessage, EventSubscriptionChannel<int>[])>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = false
@@ -74,9 +75,19 @@ namespace DataCore.Adapter.Events {
         });
 
         /// <summary>
-        /// All subscriptions.
+        /// Maximum number of concurrent subscriptions.
         /// </summary>
-        private readonly HashSet<Subscription> _subscriptions = new HashSet<Subscription>();
+        private readonly int _maxSubscriptionCount;
+
+        /// <summary>
+        /// The last subscription ID that was issued.
+        /// </summary>
+        private int _lastSubscriptionId;
+
+        /// <summary>
+        /// The current subscriptions.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int>>();
 
         /// <summary>
         /// Maps from topic name to the subscriber count for that topic.
@@ -121,6 +132,7 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions options, IBackgroundTaskService scheduler, ILogger logger) {
             _options = options ?? new EventMessagePushWithTopicsOptions();
+            _maxSubscriptionCount = _options.MaxSubscriptionCount;
             Scheduler = scheduler ?? BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
@@ -135,76 +147,29 @@ namespace DataCore.Adapter.Events {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        /// <param name="topic">
-        ///   The topic.
-        /// </param>
-        private async Task OnTopicAddedToSubscription(Subscription subscription, string topic) {
-            if (subscription == null || string.IsNullOrWhiteSpace(topic)) {
-                return;
-            }
-
+        private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription) {
             var isNewSubscription = false;
             TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
-                    subscriberCount = 0;
-                    isNewSubscription = true;
-                }
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.CancellationToken.IsCancellationRequested) {
+                        break;
+                    }
 
-                _subscriberCount[topic] = ++subscriberCount;
-                if (isNewSubscription) {
-                    processed = new TaskCompletionSource<bool>();
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
-                }
-            }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
-            }
+                    ++subscription.SubscribedTopicCount;
 
-            if (processed == null) {
-                return;
-            }
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
+                        subscriberCount = 0;
+                        isNewSubscription = true;
+                    }
 
-            // Wait for change to be processed.
-            await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Invoked by a subscription object when a topic is removed from a subscription.
-        /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
-        /// </param>
-        /// <param name="topic">
-        ///   The topic.
-        /// </param>
-        private async Task OnTopicRemovedFromSubscription(Subscription subscription, string topic) {
-            if (subscription == null || string.IsNullOrWhiteSpace(topic)) {
-                return;
-            }
-
-            TaskCompletionSource<bool> processed = null;
-
-            _subscriptionsLock.EnterWriteLock();
-            try {
-                if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
-                    // No subscribers
-                    return;
-                }
-
-                --subscriberCount;
-
-                if (subscriberCount == 0) {
-                    // No subscribers remaining.
-                    _subscriberCount.Remove(topic);
-                    processed = new TaskCompletionSource<bool>();
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, processed));
-                }
-                else {
-                    _subscriberCount[topic] = subscriberCount;
+                    _subscriberCount[topic] = ++subscriberCount;
+                    if (isNewSubscription) {
+                        processed = new TaskCompletionSource<bool>();
+                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
+                    }
                 }
             }
             finally {
@@ -215,22 +180,39 @@ namespace DataCore.Adapter.Events {
                 return;
             }
 
-            // Wait for change to be processed.
+            // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
+
+            OnSubscriptionAdded();
         }
 
 
         /// <summary>
         /// Invoked when a subscription has been cancelled.
         /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
+        /// <param name="subscriptionId">
+        ///   The subscription ID.
         /// </param>
-        private void OnSubscriptionCancelled(Subscription subscription) {
+        private void OnSubscriptionCancelledInternal(int subscriptionId) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (!_subscriptions.TryRemove(subscriptionId, out var subscription)) {
+                return;
+            }
+
             _subscriptionsLock.EnterWriteLock();
             try {
-                _subscriptions.Remove(subscription);
-                foreach (var topic in subscription.GetSubscribedTopics()) {
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.SubscribedTopicCount <= 0) {
+                        // We've already unsubscribed from all of the topics we managed to 
+                        // subscribe to when the subscription was created.
+                        break;
+                    }
+
+                    --subscription.SubscribedTopicCount;
+
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         continue;
                     }
@@ -248,6 +230,10 @@ namespace DataCore.Adapter.Events {
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
+                subscription.Dispose();
+                HasSubscriptions = _subscriptions.Count > 0;
+                HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+                OnSubscriptionCancelled();
             }
         }
 
@@ -258,7 +244,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="topic">
         ///   The topic.
         /// </param>
-        protected virtual void OnTopicAddedToSubscription(string topic) {
+        protected virtual void OnTopicAdded(string topic) {
             _options.OnTopicSubscriptionAdded?.Invoke(topic);
         }
 
@@ -269,7 +255,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="topic">
         ///   The topic.
         /// </param>
-        protected virtual void OnTopicRemovedFromSubscription(string topic) {
+        protected virtual void OnTopicRemoved(string topic) {
             _options.OnTopicSubscriptionRemoved?.Invoke(topic);
         }
 
@@ -298,10 +284,10 @@ namespace DataCore.Adapter.Events {
 
                 try {
                     if (change.Added) {
-                        OnTopicAddedToSubscription(change.Topic);
+                        OnTopicAdded(change.Topic);
                     }
                     else {
-                        OnTopicRemovedFromSubscription(change.Topic);
+                        OnTopicRemoved(change.Topic);
                     }
 
                     if (change.Processed != null) {
@@ -352,7 +338,7 @@ namespace DataCore.Adapter.Events {
 
                 foreach (var subscriber in item.Subscribers) {
                     try {
-                        var success = await subscriber.ValueReceived(item.Value, cancellationToken).ConfigureAwait(false);
+                        var success = subscriber.Publish(item.Value);
                         if (!success) {
                             Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
@@ -367,35 +353,15 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Creates a new subscription.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the subscriber.
-        /// </param>
-        /// <param name="request">
-        ///   The subscription request settings.
-        /// </param>
-        /// <returns>
-        ///   The new subscription.
-        /// </returns>
-        protected virtual Subscription CreateSubscription(IAdapterCallContext context, CreateEventMessageSubscriptionRequest request) {
-            return new Subscription(context, request, this);
-        }
-
-
-        /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
         protected virtual void OnSubscriptionAdded() { }
 
 
         /// <summary>
-        /// Invoked when a subscription is removed.
+        /// Invoked when a subscription is cancelled.
         /// </summary>
-        /// <returns>
-        ///   A task that will perform subscription-related activities.
-        /// </returns>
-        protected virtual void OnSubscriptionRemoved() { }
+        protected virtual void OnSubscriptionCancelled() { }
 
 
         /// <summary>
@@ -419,17 +385,17 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            EventMessageSubscriptionWithTopicsBase[] subscribers;
+            EventSubscriptionChannel<int>[] subscribers;
 
             _subscriptionsLock.EnterReadLock();
             try {
-                subscribers = _subscriptions.Where(x => x.IsSubscribed(value)).ToArray();
+                subscribers = _subscriptions.Values.Where(x => x.Topics.Any(t => IsTopicMatch(t, value.Topic))).ToArray();
             }
             finally {
                 _subscriptionsLock.ExitReadLock();
             }
 
-            if (!subscribers.Any()) {
+            if (subscribers.Length == 0) {
                 return false;
             }
 
@@ -451,43 +417,87 @@ namespace DataCore.Adapter.Events {
         }
 
 
+        /// <summary>
+        /// Checks to see if the specified subscription topic and event message topic match.
+        /// </summary>
+        /// <param name="subscriptionTopic">
+        ///   The topic that was specified by the subscriber.
+        /// </param>
+        /// <param name="eventMessageTopic">
+        ///   The topic for the received event message.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the event message should be published to the subscriber, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   This method is used to determine if an event message will be pushed to a subscriber. 
+        ///   The default behaviour is to return <see langword="true"/> if <paramref name="subscriptionTopic"/> 
+        ///   and <paramref name="eventMessageTopic"/> topic are equal using a case-insensitive 
+        ///   match.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Override this method if your adapter allows e.g. the use of wildcards in 
+        ///   subscription topics.
+        /// </para>
+        /// 
+        /// </remarks>
+        protected virtual bool IsTopicMatch(string subscriptionTopic, string eventMessageTopic) {
+            return string.Equals(subscriptionTopic, eventMessageTopic, StringComparison.Ordinal);
+        }
+
+
         /// <inheritdoc/>
-        public async Task<IEventMessageSubscriptionWithTopics> Subscribe(
+        public async Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context,
-            CreateEventMessageSubscriptionRequest request
+            CreateEventMessageTopicSubscriptionRequest request,
+            CancellationToken cancellationToken
         ) {
-            var subscription = CreateSubscription(context, request ?? new CreateEventMessageSubscriptionRequest());
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
 
-            bool added;
-            _subscriptionsLock.EnterWriteLock();
+            ValidationExtensions.ValidateObject(request);
+
+            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
+                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
+            }
+
+            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
+            var subscription = new EventSubscriptionChannel<int>(
+                subscriptionId,
+                context,
+                Scheduler,
+                request.Topics,
+                request.SubscriptionType,
+                TimeSpan.Zero,
+                new[] { DisposedToken, cancellationToken },
+                () => OnSubscriptionCancelledInternal(subscriptionId),
+                10
+            );
+            _subscriptions[subscriptionId] = subscription;
+
             try {
-                added = _subscriptions.Add(subscription);
-                if (added) {
-                    HasSubscriptions = _subscriptions.Count > 0;
-                    HasActiveSubscriptions = _subscriptions.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                }
+                await OnSubscriptionAddedInternal(subscription).ConfigureAwait(false);
             }
-            finally {
-                _subscriptionsLock.ExitWriteLock();
+            catch {
+                OnSubscriptionCancelledInternal(subscriptionId);
+                throw;
             }
 
-            if (added) {
-                await subscription.Start().ConfigureAwait(false);
-                OnSubscriptionAdded();
-            }
-
-            return subscription;
+            return subscription.Reader;
         }
 
 
         /// <inheritdoc/>
         public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Subscription[] subscriptions;
             int subscribedTagCount;
 
             _subscriptionsLock.EnterReadLock();
             try {
-                subscriptions = _subscriptions.ToArray();
                 subscribedTagCount = _subscriberCount.Count;
             }
             finally {
@@ -496,7 +506,7 @@ namespace DataCore.Adapter.Events {
 
 
             var result = HealthCheckResult.Healthy(nameof(EventMessagePushWithTopics), data: new Dictionary<string, string>() {
-                { Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo) },
+                { Resources.HealthChecks_Data_SubscriberCount, _subscriptions.Count.ToString(context?.CultureInfo) },
                 { Resources.HealthChecks_Data_TopicCount, subscribedTagCount.ToString(context?.CultureInfo) }
             });
 
@@ -540,7 +550,7 @@ namespace DataCore.Adapter.Events {
                 _subscriptionsLock.EnterWriteLock();
                 try {
                     _subscriberCount.Clear();
-                    foreach (var subscription in _subscriptions.ToArray()) {
+                    foreach (var subscription in _subscriptions.Values.ToArray()) {
                         subscription.Dispose();
                     }
                     _subscriptions.Clear();
@@ -551,69 +561,6 @@ namespace DataCore.Adapter.Events {
                 }
             }
         }
-
-
-        #region [ Inner Types ]
-
-        /// <summary>
-        /// Implements <see cref="EventMessageSubscriptionBase"/>.
-        /// </summary>
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Access to private members required")]
-        public class Subscription : EventMessageSubscriptionWithTopicsBase {
-
-            /// <summary>
-            /// The owning feature.
-            /// </summary>
-            private readonly EventMessagePushWithTopics _feature;
-
-
-            /// <summary>
-            /// Creates a new <see cref="Subscription"/> object.
-            /// </summary>
-            /// <param name="context">
-            ///   The adapter call context for the subscriber.
-            /// </param>
-            /// <param name="request">
-            ///   The subscription request.
-            /// </param>
-            /// <param name="feature">
-            ///   The subscription manager that the subscription is attached to.
-            /// </param>
-            public Subscription(
-                IAdapterCallContext context,
-                CreateEventMessageSubscriptionRequest request,
-                EventMessagePushWithTopics feature
-            ) : base(
-                context,
-                feature?._options?.AdapterId,
-                request?.SubscriptionType ?? throw new ArgumentNullException(nameof(request))
-            ) {
-                _feature = feature ?? throw new ArgumentNullException(nameof(feature));
-            }
-
-
-            /// <inheritdoc/>
-            protected override Task OnTopicAdded(string topic) {
-                return _feature.OnTopicAddedToSubscription(this, topic);
-            }
-
-
-            /// <inheritdoc/>
-            protected override Task OnTopicRemoved(string topic) {
-                return _feature.OnTopicRemovedFromSubscription(this, topic);
-            }
-
-
-            /// <inheritdoc/>
-            protected override void OnCancelled() {
-                base.OnCancelled();
-                _feature.OnSubscriptionCancelled(this);
-            }
-
-        }
-
-        #endregion
 
     }
 
@@ -627,6 +574,13 @@ namespace DataCore.Adapter.Events {
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
         public string AdapterId { get; set; }
+
+        /// <summary>
+        /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
+        /// attempts to create additional subscriptions will throw exceptions. A value less than 
+        /// one indicates no limit.
+        /// </summary>
+        public int MaxSubscriptionCount { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a topic changes from zero 

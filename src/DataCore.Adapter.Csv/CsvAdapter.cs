@@ -450,6 +450,7 @@ namespace DataCore.Adapter.Csv {
         public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
+            ValidationExtensions.ValidateObject(request);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -467,6 +468,7 @@ namespace DataCore.Adapter.Csv {
         public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
+            ValidationExtensions.ValidateObject(request);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -487,6 +489,7 @@ namespace DataCore.Adapter.Csv {
         public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted(true);
+            ValidationExtensions.ValidateObject(request);
 
             return Task.FromResult(Array.Empty<AdapterProperty>().PublishToChannel());
         }
@@ -517,6 +520,8 @@ namespace DataCore.Adapter.Csv {
         public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted();
+            ValidationExtensions.ValidateObject(request);
+
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -687,6 +692,7 @@ namespace DataCore.Adapter.Csv {
         public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             CheckDisposed();
             CheckStarted();
+            ValidationExtensions.ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
 

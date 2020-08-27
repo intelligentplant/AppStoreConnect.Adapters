@@ -7,7 +7,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Defines basic information for identifying a real-time data tag.
     /// </summary>
-    public class TagIdentifier {
+    public class TagIdentifier : IEquatable<TagIdentifier> {
 
         /// <summary>
         /// The unique identifier for the tag.
@@ -60,6 +60,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// </exception>
         public static TagIdentifier Create(string id, string name) {
             return new TagIdentifier(id, name);
+        }
+
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+            return TagIdentifierComparer.IdAndName.GetHashCode(this);
+        }
+
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) {
+            return Equals(obj as TagIdentifier);
+        }
+
+
+        /// <inheritdoc/>
+        public bool Equals(TagIdentifier other) {
+            return TagIdentifierComparer.IdAndName.Equals(this, other);
         }
 
     }

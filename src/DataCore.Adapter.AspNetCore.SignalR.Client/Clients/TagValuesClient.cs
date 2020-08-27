@@ -47,11 +47,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the ID of the subscription. This can 
-        ///   be used to subscribe to individual tags via the <see cref="CreateSnapshotTagValueChannelAsync"/> 
-        ///   method.
+        ///   A channel reader that wil emit values for the subscription.
         /// </returns>
-        public async Task<string> CreateSnapshotTagValueSubscriptionAsync(
+        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
             string adapterId,
             CreateSnapshotTagValueSubscriptionRequest request,
             CancellationToken cancellationToken
@@ -64,87 +62,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<string>(
-                "CreateSnapshotTagValueSubscription",
-                adapterId,
-                request,
-                cancellationToken
-            ).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Deletes a snapshot tag value subscription.
-        /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a flag indicating if the subscription 
-        ///   was deleted. Deleting a subscription will cancel all active tag value channels 
-        ///   associated with the subscription.
-        /// </returns>
-        public async Task<bool> DeleteSnapshotTagValueSubscriptionAsync(
-            string subscriptionId,
-            CancellationToken cancellationToken
-        ) {
-            if (string.IsNullOrWhiteSpace(subscriptionId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(subscriptionId));
-            }
-
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<bool>(
-                "DeleteSnapshotTagValueSubscription",
-                subscriptionId,
-                cancellationToken
-            ).ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// Creates a subscription channel to receive snapshot values in real-time from the 
-        /// specified adapter.
-        /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID to add the tag to.
-        /// </param>
-        /// <param name="tagIdOrName">
-        ///   The tag ID or name to subscribe to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation. If this token fires, or the connection is
-        ///   lost, the channel will be closed.
-        /// </param>
-        /// <returns>
-        ///   A task that will return a channel that is used to stream the snapshot values back to 
-        ///   the caller.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="subscriptionId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="tagIdOrName"/> is <see langword="null"/> or white space.
-        /// </exception>
-        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
-            string subscriptionId, 
-            string tagIdOrName,
-            CancellationToken cancellationToken = default
-        ) {
-            if (string.IsNullOrWhiteSpace(subscriptionId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(subscriptionId));
-            }
-            if (string.IsNullOrWhiteSpace(tagIdOrName)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(tagIdOrName));
-            }
-
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
-                subscriptionId,
-                tagIdOrName,
+                adapterId,
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
         }

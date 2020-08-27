@@ -133,7 +133,7 @@
     <value>The adapter is disabled.</value>
   </data>
   <data name="Error_AdapterIsNotCompatibleWithHelperClass" xml:space="preserve">
-    <value>Adapter {0} is not compatible with {1}.</value>
+    <value>Adapter '{0}' is not compatible with '{1}'.</value>
     <comment>{0} - adapter ID
 {1} - helper class name</comment>
   </data>
@@ -149,6 +149,9 @@
   <data name="Error_BucketSizeMustBeGreaterThanZero" xml:space="preserve">
     <value>The bucket size for plot calculations must be greater than zero.</value>
   </data>
+  <data name="Error_CannotResolveAnySubscriptionTopics" xml:space="preserve">
+    <value>Unable to resolve any requested subscription topics.</value>
+  </data>
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>
   </data>
@@ -160,8 +163,11 @@
     <comment>{0} - base date string</comment>
   </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
-    <value>Object does not implement feature {0}.</value>
+    <value>Object does not implement feature '{0}'.</value>
     <comment>{0} - feature name</comment>
+  </data>
+  <data name="Error_TooManySubscriptions" xml:space="preserve">
+    <value>Too many subscriptions.</value>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Degraded" xml:space="preserve">
     <value>The adapter is running with degraded health status.</value>
@@ -213,19 +219,19 @@
     <value>Adapter Health</value>
   </data>
   <data name="Log_AdapterStartupError" xml:space="preserve">
-    <value>An error occurred while starting adapter {AdapterId}.</value>
+    <value>An error occurred while starting adapter '{AdapterId}'.</value>
   </data>
   <data name="Log_AdapterStopError" xml:space="preserve">
-    <value>An error occurred while stopping adapter {AdapterId}.</value>
+    <value>An error occurred while stopping adapter '{AdapterId}'.</value>
   </data>
   <data name="Log_DisposingAdapter" xml:space="preserve">
-    <value>Stopping adapter {AdapterId} (disposing: true).</value>
+    <value>Stopping adapter '{AdapterId}' (disposing: true).</value>
   </data>
   <data name="Log_ErrorDuringSnapshotPushRefresh" xml:space="preserve">
     <value>Error while refreshing subscribed snapshot tag values.</value>
   </data>
   <data name="Log_ErrorInBackgroundTask" xml:space="preserve">
-    <value>Error in background task {WorkItem}</value>
+    <value>Error in background task '{WorkItem}'.</value>
   </data>
   <data name="Log_ErrorInEventSubscriptionManagerPublishLoop" xml:space="preserve">
     <value>An error occurred in the event subscription manager publish loop.</value>
@@ -243,37 +249,37 @@
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
   <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change: Tag = {tag}, Action = {action}</value>
+    <value>An error occurred while processing a subscription change: Tag = '{tag}', Action = '{action}'</value>
   </data>
   <data name="Log_ErrorWhileProcessingSubscriptionTopicChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change: Topic = {topic}, Action = {action}</value>
+    <value>An error occurred while processing a subscription change: Topic = '{topic}', Action = '{action}'</value>
   </data>
   <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
-    <value>Evicted event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>
+    <value>Evicted event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
   </data>
   <data name="Log_InMemoryEventMessageManager_WroteMessage" xml:space="preserve">
-    <value>Wrote event message {id} with cursor position {cursorPosition} and timestamp {timestamp}.</value>
+    <value>Wrote event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
   </data>
   <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
     <value>Updated adapter options are not valid.</value>
   </data>
   <data name="Log_PublishToSubscriberThrewException" xml:space="preserve">
-    <value>Publish to subscriber with connection ID {connectionId} failed with error.</value>
+    <value>Publish to subscriber with connection ID '{connectionId}' failed with error.</value>
   </data>
   <data name="Log_PublishToSubscriberWasUnsuccessful" xml:space="preserve">
-    <value>Publish to subscriber with connection ID {connectionId} failed.</value>
+    <value>Publish to subscriber with connection ID '{connectionId}' failed.</value>
   </data>
   <data name="Log_StartedAdapter" xml:space="preserve">
-    <value>Started adapter {AdapterId}.</value>
+    <value>Started adapter '{AdapterId}'.</value>
   </data>
   <data name="Log_StartingAdapter" xml:space="preserve">
-    <value>Starting adapter {AdapterId}.</value>
+    <value>Starting adapter '{AdapterId}'.</value>
   </data>
   <data name="Log_StoppedAdapter" xml:space="preserve">
-    <value>Stopped adapter {AdapterId}.</value>
+    <value>Stopped adapter '{AdapterId}'.</value>
   </data>
   <data name="Log_StoppingAdapter" xml:space="preserve">
-    <value>Stopping adapter {AdapterId} (disposing: false).</value>
+    <value>Stopping adapter '{AdapterId}' (disposing: false).</value>
   </data>
   <data name="TagValue_ProcessedValue_Error" xml:space="preserve">
     <value>ERROR</value>

@@ -16,20 +16,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Snapshot Subscription Management ]
 
         /// <summary>
-        /// Holds subscriptions for all connections.
-        /// </summary>
-        private static readonly ConnectionSubscriptionManager<TagValueQueryResult, TopicSubscriptionWrapper<TagValueQueryResult>> s_snapshotSubscriptions = new ConnectionSubscriptionManager<TagValueQueryResult, TopicSubscriptionWrapper<TagValueQueryResult>>();
-
-
-        /// <summary>
-        /// Invoked when a client disconnects.
-        /// </summary>
-        partial void OnTagValuesHubDisconnection() {
-            s_snapshotSubscriptions.RemoveAllSubscriptions(Context.ConnectionId);
-        }
-
-
-        /// <summary>
         /// Creates a snapshot tag value subscription. Note that this does not add any tags to the 
         /// subscription; this must be done separately via calls to <see cref="CreateSnapshotTagValueChannel"/>.
         /// </summary>
@@ -39,108 +25,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="request">
         ///   The subscription request parameters.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the ID for the subscription.
+        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Subscription lifecycle is managed externally to this method")]
-        public async Task<string> CreateSnapshotTagValueSubscription(
+        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
             string adapterId,
-            CreateSnapshotTagValueSubscriptionRequest request
+            CreateSnapshotTagValueSubscriptionRequest request,
+            CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
-            var wrappedSubscription = new TopicSubscriptionWrapper<TagValueQueryResult>(
-                await adapter.Feature.Subscribe(adapterCallContext, request).ConfigureAwait(false),
-                TaskScheduler
-            );
-
-            return s_snapshotSubscriptions.AddSubscription(Context.ConnectionId, wrappedSubscription);
-        }
-
-
-        /// <summary>
-        /// Deletes a snapshot tag value subscription. This will cancel all active calls to 
-        /// <see cref="CreateSnapshotTagValueChannel"/> for the subscription.
-        /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID. Specify <see langword="null"/> to delete all subscriptions for 
-        ///   the connection.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a flag indicating if the operation 
-        ///   was successful.
-        /// </returns>
-        public Task<bool> DeleteSnapshotTagValueSubscription(
-            string subscriptionId    
-        ) {
-            if (string.IsNullOrWhiteSpace(subscriptionId)) {
-                s_snapshotSubscriptions.RemoveAllSubscriptions(Context.ConnectionId);
-                return Task.FromResult(true);
-            }
-            var result = s_snapshotSubscriptions.RemoveSubscription(Context.ConnectionId, subscriptionId);
-            return Task.FromResult(result);
-        }
-
-
-
-        /// <summary>
-        /// Subscribes to receive snapshot tag values for a tag.
-        /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID to add the tag to.
-        /// </param>
-        /// <param name="tagIdOrName">
-        ///   The tag ID or name to subscribe to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a channel that emits value changes 
-        ///   for the tag.
-        /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to the response channel")]
-        public Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
-            string subscriptionId,
-            string tagIdOrName,
-            CancellationToken cancellationToken
-        ) {
-            if (string.IsNullOrWhiteSpace(subscriptionId)) {
-                throw new ArgumentException(Resources.Error_SubscriptionIdRequired, nameof(subscriptionId));
-            }
-            if (string.IsNullOrWhiteSpace(tagIdOrName)) {
-                throw new ArgumentException(Resources.Error_TagNameOrIdRequired, nameof(tagIdOrName));
-            }
-
-            if (!s_snapshotSubscriptions.TryGetSubscription(Context.ConnectionId, subscriptionId, out var subscription)) {
-                throw new ArgumentException(Resources.Error_SubscriptionDoesNotExist, nameof(subscriptionId));
-            }
-
-            var result = Channel.CreateUnbounded<TagValueQueryResult>();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var topicChannel = await subscription.CreateTopicChannel(tagIdOrName).ConfigureAwait(false);
-                try {
-                    while (!ct.IsCancellationRequested) {
-                        try {
-                            var val = await topicChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
-                            await ch.WriteAsync(val, ct).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) { }
-                        catch (ChannelClosedException) { }
-                    }
-                }
-                catch (Exception e) {
-                    topicChannel.Writer.TryComplete(e);
-                }
-                finally {
-                    await topicChannel.DisposeAsync().ConfigureAwait(false);
-                }
-            }, true, TaskScheduler, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

@@ -79,6 +79,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicate subscription topics are not allowed..
+        /// </summary>
+        public static string Error_DuplicateSubscriptionTopicsAreNotAllowed {
+            get {
+                return ResourceManager.GetString("Error_DuplicateSubscriptionTopicsAreNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You cannot specify multiple write collections for the same tag..
         /// </summary>
         public static string Error_DuplicateTagWriteCollectionsAreNotAllowed {
@@ -201,6 +210,15 @@ namespace DataCore.Adapter {
         public static string Error_StartTimeCannotBeGreaterThanOrEqualToEndTime {
             get {
                 return ResourceManager.GetString("Error_StartTimeCannotBeGreaterThanOrEqualToEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Subscription topics cannot be null or white space..
+        /// </summary>
+        public static string Error_SubscriptionTopicsCannotBeNullOrWhiteSpace {
+            get {
+                return ResourceManager.GetString("Error_SubscriptionTopicsCannotBeNullOrWhiteSpace", resourceCulture);
             }
         }
         

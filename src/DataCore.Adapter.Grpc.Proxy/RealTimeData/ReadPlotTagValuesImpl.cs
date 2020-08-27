@@ -22,6 +22,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            GrpcAdapterProxy.ValidateObject(request);
+
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadPlotTagValuesRequest() {
                 AdapterId = AdapterId,

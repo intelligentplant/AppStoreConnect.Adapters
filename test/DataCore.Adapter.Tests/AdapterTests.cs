@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Tests {
         protected async Task RunAdapterTest(Func<TAdapter, IAdapterCallContext, Task> callback) {
             var adapter = CreateAdapter();
             try {
-                await adapter.StartAsync(default);
+                await adapter.StartAsync(CancellationToken);
                 var context = ExampleCallContext.ForPrincipal(null);
                 await callback(adapter, context);
             }
@@ -76,7 +76,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var health = await feature.CheckHealthAsync(context, default);
+                var health = await feature.CheckHealthAsync(context, CancellationToken);
                 VerifyHealthCheckResult(health);
             });
         }
@@ -104,16 +104,14 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context)) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(context, CancellationToken);
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
+                await Task.Delay(1000, CancellationToken);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var health = await subscription.Reader.ReadAsync(ctSource.Token);
-                        VerifyHealthCheckResult(health);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var health = await subscription.ReadAsync(ctSource.Token);
+                    VerifyHealthCheckResult(health);
                 }
             });
         }
@@ -131,7 +129,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.FindTags(context, new FindTagsRequest(), default);
+                var channel = await feature.FindTags(context, new FindTagsRequest(), CancellationToken);
                 var tags = await channel.ToEnumerable();
                 Assert.IsTrue(tags.Any());
             });
@@ -150,7 +148,7 @@ namespace DataCore.Adapter.Tests {
                 var tagDetails = GetReadTagValuesQueryDetails();
                 var channel = await feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { tagDetails.Id }
-                }, default);
+                }, CancellationToken);
                 var tags = await channel.ToEnumerable();
 
                 Assert.AreEqual(1, tags.Count());
@@ -174,7 +172,7 @@ namespace DataCore.Adapter.Tests {
                 var tagDetails = GetReadTagValuesQueryDetails();
                 var channel = await feature.ReadSnapshotTagValues(context, new ReadSnapshotTagValuesRequest() {
                     Tags = new[] { tagDetails.Id }
-                }, default);
+                }, CancellationToken);
                 var values = await channel.ToEnumerable();
 
                 Assert.AreEqual(1, values.Count());
@@ -198,20 +196,17 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest())) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var tagDetails = GetReadTagValuesQueryDetails();
 
-                    var tagDetails = GetReadTagValuesQueryDetails();
+                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
+                    Tags = new[] { tagDetails.Id }
+                }, CancellationToken);
+                Assert.IsNotNull(subscription);
 
-                    var subscribeSucceeded = await subscription.AddTagToSubscription(tagDetails.Id);
-                    Assert.IsTrue(subscribeSucceeded);
-
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                        Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
+                    Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
                 }
             });
         }
@@ -240,7 +235,7 @@ namespace DataCore.Adapter.Tests {
                         BoundaryType = RawDataBoundaryType.Inside,
                         SampleCount = 0
                     },
-                    default
+                    CancellationToken
                 );
                 var values = await channel.ToEnumerable();
 
@@ -274,7 +269,7 @@ namespace DataCore.Adapter.Tests {
                         UtcEndTime = tagDetails.HistoryEndTime,
                         Intervals = 10
                     },
-                    default
+                    CancellationToken
                 );
                 var values = await channel.ToEnumerable();
 
@@ -309,7 +304,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetSupportedDataFunctions(context, default);
+                var channel = await feature.GetSupportedDataFunctions(context, CancellationToken);
                 var supportedDataFunctions = await channel.ToEnumerable();
                 if (!supportedDataFunctions.Any(f => f.Id.Equals(dataFunction))) {
                     Assert.Inconclusive($"Data function {dataFunction} is not supported.");
@@ -329,7 +324,7 @@ namespace DataCore.Adapter.Tests {
                         DataFunctions = new[] { dataFunction },
                         SampleInterval = sampleInterval
                     },
-                    default
+                    CancellationToken
                 );
                 var values = await channel2.ToEnumerable();
 
@@ -370,7 +365,7 @@ namespace DataCore.Adapter.Tests {
                         Tags = new[] { tagDetails.Id },
                         UtcSampleTimes = sampleTimes.ToArray()
                     },
-                    default
+                    CancellationToken
                 );
                 var values = await channel.ToEnumerable();
 
@@ -399,17 +394,15 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active })) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, CancellationToken);
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, null);
+                await Task.Delay(1000, CancellationToken);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, null);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
                 }
             });
         }
@@ -424,17 +417,19 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive })) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(
+                    context, 
+                    new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, 
+                    CancellationToken
+                );
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive, null);
+                await Task.Delay(1000, CancellationToken);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Passive, null);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
                 }
             });
         }
@@ -454,21 +449,26 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                using (var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active })) {
-                    Assert.IsNotNull(subscription);
-                    Assert.IsTrue(subscription.IsStarted);
+                var subscription = await feature.Subscribe(
+                    context, 
+                    new CreateEventMessageTopicSubscriptionRequest() { 
+                        SubscriptionType = EventMessageSubscriptionType.Active,
+                        Topics = new[] { topic }
+                    }, 
+                    CancellationToken
+                );
 
-                    await subscription.SubscribeToTopic(topic);
+                Assert.IsNotNull(subscription);
 
-                    await Task.Delay(1000, default);
-                    await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, topic);
+                await Task.Delay(1000, CancellationToken);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, topic);
 
-                    using (var ctSource = new CancellationTokenSource(1000)) {
-                        var val = await subscription.Reader.ReadAsync(ctSource.Token);
-                        Assert.IsNotNull(val);
-                        Assert.AreEqual(topic, val.Topic);
-                    }
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
+                    Assert.AreEqual(topic, val.Topic);
                 }
+
             });
         }
 
@@ -498,7 +498,7 @@ namespace DataCore.Adapter.Tests {
                         Page = 1,
                         Direction = direction
                     },
-                    default
+                    CancellationToken
                 );
                 var messages = await channel.ToEnumerable();
 
@@ -526,7 +526,7 @@ namespace DataCore.Adapter.Tests {
                         Page = 2,
                         Direction = direction
                     },
-                    default
+                    CancellationToken
                 );
                 var messages2 = await channel2.ToEnumerable();
 
@@ -565,7 +565,7 @@ namespace DataCore.Adapter.Tests {
                         PageSize = 10,
                         Direction = direction
                     },
-                    default
+                    CancellationToken
                 );
                 var messages = await channel.ToEnumerable();
 
@@ -593,7 +593,7 @@ namespace DataCore.Adapter.Tests {
                         PageSize = 10,
                         Direction = direction
                     },
-                    default
+                    CancellationToken
                 );
                 var messages2 = await channel2.ToEnumerable();
 
@@ -635,7 +635,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }));
 
-                await adapter.StopAsync(default);
+                await adapter.StopAsync(CancellationToken);
 
                 using (var ctSource = new CancellationTokenSource(1000)) {
                     await Task.WhenAny(Task.Delay(-1, ctSource.Token), tcs.Task);

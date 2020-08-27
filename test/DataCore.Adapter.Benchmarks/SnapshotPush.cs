@@ -67,8 +67,8 @@ namespace DataCore.Adapter.Benchmarks {
         }
 
 
-        protected override void OnTagAddedToSubscription(TagIdentifier tag) {
-            base.OnTagAddedToSubscription(tag);
+        protected override void OnTagAdded(TagIdentifier tag) {
+            base.OnTagAdded(tag);
             _subscriptionsAdded.Writer.TryWrite(tag);
         }
 
