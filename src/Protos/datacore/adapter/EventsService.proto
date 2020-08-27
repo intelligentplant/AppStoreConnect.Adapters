@@ -32,7 +32,7 @@ message CreateEventPushChannelRequest {
 message CreateEventTopicPushChannelRequest {
     string adapter_id = 1;
     EventSubscriptionType subscription_type = 2;
-    string topic = 3;
+    repeated string topics = 3;
     map<string,string> properties = 4;
 }
 

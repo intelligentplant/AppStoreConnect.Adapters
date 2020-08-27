@@ -59,7 +59,7 @@ namespace DataCore.Adapter.Events {
         /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
-        private readonly Channel<(EventMessage Value, EventSubscriptionChannel<int, string, EventMessage>[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(EventMessage, EventSubscriptionChannel<int, string, EventMessage>[])>(new UnboundedChannelOptions() {
+        private readonly Channel<(EventMessage Value, EventSubscriptionChannel<int>[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(EventMessage, EventSubscriptionChannel<int>[])>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = false
@@ -87,7 +87,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>>();
+        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int>>();
 
         /// <summary>
         /// Maps from topic name to the subscriber count for that topic.
@@ -147,25 +147,29 @@ namespace DataCore.Adapter.Events {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int, string, EventMessage> subscription) {
-            if (string.IsNullOrWhiteSpace(subscription?.Topic)) {
-                return;
-            }
-
+        private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription) {
             var isNewSubscription = false;
             TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriberCount.TryGetValue(subscription.Topic, out var subscriberCount)) {
-                    subscriberCount = 0;
-                    isNewSubscription = true;
-                }
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.CancellationToken.IsCancellationRequested) {
+                        break;
+                    }
 
-                _subscriberCount[subscription.Topic] = ++subscriberCount;
-                if (isNewSubscription) {
-                    processed = new TaskCompletionSource<bool>();
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((subscription.Topic, true, processed));
+                    ++subscription.SubscribedTopicCount;
+
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
+                        subscriberCount = 0;
+                        isNewSubscription = true;
+                    }
+
+                    _subscriberCount[topic] = ++subscriberCount;
+                    if (isNewSubscription) {
+                        processed = new TaskCompletionSource<bool>();
+                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
+                    }
                 }
             }
             finally {
@@ -176,7 +180,7 @@ namespace DataCore.Adapter.Events {
                 return;
             }
 
-            // Wait for change to be processed.
+            // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
 
             OnSubscriptionAdded();
@@ -200,18 +204,28 @@ namespace DataCore.Adapter.Events {
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                if (!_subscriberCount.TryGetValue(subscription.Topic, out var subscriberCount)) {
-                    return;
-                }
+                foreach (var topic in subscription.Topics) {
+                    if (subscription.SubscribedTopicCount <= 0) {
+                        // We've already unsubscribed from all of the topics we managed to 
+                        // subscribe to when the subscription was created.
+                        break;
+                    }
 
-                --subscriberCount;
+                    --subscription.SubscribedTopicCount;
 
-                if (subscriberCount == 0) {
-                    _subscriberCount.Remove(subscription.Topic);
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((subscription.Topic, false, null));
-                }
-                else {
-                    _subscriberCount[subscription.Topic] = subscriberCount;
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
+                        continue;
+                    }
+
+                    --subscriberCount;
+
+                    if (subscriberCount == 0) {
+                        _subscriberCount.Remove(topic);
+                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, null));
+                    }
+                    else {
+                        _subscriberCount[topic] = subscriberCount;
+                    }
                 }
             }
             finally {
@@ -371,11 +385,11 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            EventSubscriptionChannel<int, string, EventMessage>[] subscribers;
+            EventSubscriptionChannel<int>[] subscribers;
 
             _subscriptionsLock.EnterReadLock();
             try {
-                subscribers = _subscriptions.Values.Where(x => IsTopicMatch(x.Topic, value.Topic)).ToArray();
+                subscribers = _subscriptions.Values.Where(x => x.Topics.Any(t => IsTopicMatch(t, value.Topic))).ToArray();
             }
             finally {
                 _subscriptionsLock.ExitReadLock();
@@ -453,11 +467,11 @@ namespace DataCore.Adapter.Events {
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
-            var subscription = new EventSubscriptionChannel<int, string, EventMessage>(
+            var subscription = new EventSubscriptionChannel<int>(
                 subscriptionId,
                 context,
                 Scheduler,
-                request.Topic,
+                request.Topics,
                 request.SubscriptionType,
                 TimeSpan.Zero,
                 new[] { DisposedToken, cancellationToken },

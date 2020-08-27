@@ -149,9 +149,8 @@
   <data name="Error_BucketSizeMustBeGreaterThanZero" xml:space="preserve">
     <value>The bucket size for plot calculations must be greater than zero.</value>
   </data>
-  <data name="Error_CannotResolveTag" xml:space="preserve">
-    <value>Unable to resolve tag '{0}'.</value>
-    <comment>{0} - tag name</comment>
+  <data name="Error_CannotResolveAnySubscriptionTopics" xml:space="preserve">
+    <value>Unable to resolve any requested subscription topics.</value>
   </data>
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>

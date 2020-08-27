@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() {
-                Tag = request.Tag,
+                Tags = request.Tags.ToArray(),
                 PublishInterval = request.PublishInterval.ToTimeSpan(),
                 Properties = new Dictionary<string, string>(request.Properties)
             }, cancellationToken).ConfigureAwait(false);

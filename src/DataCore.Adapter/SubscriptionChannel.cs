@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -55,9 +56,14 @@ namespace DataCore.Adapter {
         public ChannelReader<TValue> Reader => _outChannel;
 
         /// <summary>
-        /// The subscription topic.
+        /// The subscription topics.
         /// </summary>
-        public TTopic Topic { get; }
+        public IEnumerable<TTopic> Topics { get; }
+
+        /// <summary>
+        /// Indicates how many of the <see cref="Topics"/> are actually being observed.
+        /// </summary>
+        public int SubscribedTopicCount { get; internal set; }
 
         /// <summary>
         /// The publish interval. A value less than or equal to <see cref="TimeSpan.Zero"/> 
@@ -98,8 +104,8 @@ namespace DataCore.Adapter {
         /// <param name="scheduler">
         ///   The task scheduler, used to run publish operations in a background task if required.
         /// </param>
-        /// <param name="topic">
-        ///   The topic to subscribe to.
+        /// <param name="topics">
+        ///   The topics to subscribe to.
         /// </param>
         /// <param name="publishInterval">
         ///   The publish interval for the subscription. When greater than <see cref="TimeSpan.Zero"/>, 
@@ -123,7 +129,7 @@ namespace DataCore.Adapter {
             TIdentifier id,
             IAdapterCallContext context,
             IBackgroundTaskService scheduler,
-            TTopic topic,
+            IEnumerable<TTopic> topics,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
             Action cleanup,
@@ -151,7 +157,7 @@ namespace DataCore.Adapter {
                 SingleWriter = true,
             });
 
-            Topic = topic;
+            Topics = topics;
             PublishInterval = publishInterval;
 
             _cancellationTokenSource = cancellationTokens == null || cancellationTokens.Length == 0

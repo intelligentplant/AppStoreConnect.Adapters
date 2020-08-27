@@ -123,6 +123,9 @@
   <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null data function name.</value>
   </data>
+  <data name="Error_DuplicateSubscriptionTopicsAreNotAllowed" xml:space="preserve">
+    <value>Duplicate subscription topics are not allowed.</value>
+  </data>
   <data name="Error_DuplicateTagWriteCollectionsAreNotAllowed" xml:space="preserve">
     <value>You cannot specify multiple write collections for the same tag.</value>
   </data>
@@ -167,6 +170,9 @@
   </data>
   <data name="Error_StartTimeCannotBeGreaterThanOrEqualToEndTime" xml:space="preserve">
     <value>Start time cannot be greater than or equal to end time.</value>
+  </data>
+  <data name="Error_SubscriptionTopicsCannotBeNullOrWhiteSpace" xml:space="preserve">
+    <value>Subscription topics cannot be null or white space.</value>
   </data>
   <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
     <value>At least one tag search filter field must be specified.</value>

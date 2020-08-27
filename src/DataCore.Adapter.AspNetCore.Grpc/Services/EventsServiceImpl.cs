@@ -122,7 +122,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
                     ? EventMessageSubscriptionType.Active
                     : EventMessageSubscriptionType.Passive,
-                Topic = request.Topic,
+                Topics = request.Topics.ToArray(),
                 Properties = new Dictionary<string, string>(request.Properties)
             }, cancellationToken).ConfigureAwait(false);
 

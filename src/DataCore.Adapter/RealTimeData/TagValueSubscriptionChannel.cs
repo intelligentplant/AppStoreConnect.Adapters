@@ -5,24 +5,17 @@ using System.Threading.Channels;
 
 using IntelligentPlant.BackgroundTasks;
 
-namespace DataCore.Adapter.Events {
-
+namespace DataCore.Adapter.RealTimeData {
     /// <summary>
-    /// Defines a subscription channel for an event message subscription.
+    /// Defines a subscription channel for a tag value subscription.
     /// </summary>
     /// <typeparam name="TIdentifier">
     ///   The subscription ID type.
     /// </typeparam>
-    internal class EventSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, string, EventMessage> {
+    internal class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
 
         /// <summary>
-        /// The subscription type.
-        /// </summary>
-        public EventMessageSubscriptionType SubscriptionType { get; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="EventSubscriptionChannel{TIdentifier}"/> object.
+        /// Creates a new <see cref="TagValueSubscriptionChannel{TIdentifier}"/> object.
         /// </summary>
         /// <param name="id">
         ///   The subscription ID.
@@ -33,11 +26,8 @@ namespace DataCore.Adapter.Events {
         /// <param name="scheduler">
         ///   The task scheduler, used to run publish operations in a background task if required.
         /// </param>
-        /// <param name="topics">
-        ///   The topics to subscribe to.
-        /// </param>
-        /// <param name="subscriptionType">
-        ///   The subscription type to create.
+        /// <param name="tags">
+        ///   The tags to subscribe to.
         /// </param>
         /// <param name="publishInterval">
         ///   The publish interval for the subscription. When greater than <see cref="TimeSpan.Zero"/>, 
@@ -57,12 +47,11 @@ namespace DataCore.Adapter.Events {
         ///   <see cref="BoundedChannelFullMode.DropWrite"/> is used as the behaviour when 
         ///   writing to a full channel.
         /// </param>
-        public EventSubscriptionChannel(
+        public TagValueSubscriptionChannel(
             TIdentifier id,
             IAdapterCallContext context,
             IBackgroundTaskService scheduler,
-            IEnumerable<string> topics,
-            EventMessageSubscriptionType subscriptionType,
+            IEnumerable<TagIdentifier> tags,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
             Action cleanup,
@@ -71,14 +60,12 @@ namespace DataCore.Adapter.Events {
             id,
             context,
             scheduler,
-            topics,
+            tags,
             publishInterval,
             cancellationTokens,
             cleanup,
             channelCapacity
-        ) {
-            SubscriptionType = subscriptionType;
-        } 
+        ) { }
 
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace DataCore.Adapter.Events {
 
@@ -8,10 +10,28 @@ namespace DataCore.Adapter.Events {
     public class CreateEventMessageTopicSubscriptionRequest : CreateEventMessageSubscriptionRequest {
 
         /// <summary>
-        /// The topic name.
+        /// The topic names.
         /// </summary>
         [Required]
-        public string Topic { get; set; }
+        [MinLength(1)]
+        public IEnumerable<string> Topics { get; set; }
+
+
+        /// <inheritdoc/>
+        protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
+            foreach (var err in base.Validate(validationContext)) {
+                yield return err;
+            }
+
+            if (Topics != null) {
+                if (Topics.Any(string.IsNullOrWhiteSpace)) {
+                    yield return new ValidationResult(SharedResources.Error_SubscriptionTopicsCannotBeNullOrWhiteSpace, new[] { nameof(Topics) });
+                }
+                if (Topics.GroupBy(x => x).Any(x => x.Count() > 1)) {
+                    yield return new ValidationResult(SharedResources.Error_DuplicateSubscriptionTopicsAreNotAllowed, new[] { nameof(Topics) });
+                }
+            }
+        }
 
     }
 }

@@ -28,7 +28,7 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null), 
                     new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tag = TestContext.TestName
+                        Tags = new[] { TestContext.TestName }
                     }, 
                     CancellationToken
                 );
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Tests {
                     ExampleCallContext.ForPrincipal(null), 
                         new CreateSnapshotTagValueSubscriptionRequest() { 
                         PublishInterval = TimeSpan.FromSeconds(1),
-                        Tag = TestContext.TestName
+                        Tags = new[] { TestContext.TestName }
                     }, 
                     CancellationToken
                 );
@@ -110,7 +110,7 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null), 
                     new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tag = TestContext.TestName
+                        Tags = new[] { TestContext.TestName }
                     }, 
                     CancellationToken
                 );
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Tests {
                 await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null), 
                     new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tag = TestContext.TestName
+                        Tags = new[] { TestContext.TestName }
                     }, 
                     CancellationToken
                 ));
@@ -190,7 +190,7 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null),
                     new CreateEventMessageTopicSubscriptionRequest() {
-                        Topic = topic
+                        Topics = new[] { topic }
                     },
                     CancellationToken
                 );
@@ -226,7 +226,7 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null),
                     new CreateEventMessageTopicSubscriptionRequest() {
-                        Topic = topic
+                        Topics = new[] { topic }
                     },
                     CancellationToken
                 );
@@ -284,7 +284,7 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null),
                     new CreateEventMessageTopicSubscriptionRequest() {
-                        Topic = topic
+                        Topics = new[] { topic }
                     },
                     CancellationToken
                 );
@@ -292,7 +292,7 @@ namespace DataCore.Adapter.Tests {
                 await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null),
                     new CreateEventMessageTopicSubscriptionRequest() {
-                        Topic = topic
+                        Topics = new[] { topic }
                     },
                     CancellationToken
                 ));

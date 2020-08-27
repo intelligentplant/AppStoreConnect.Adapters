@@ -40,7 +40,7 @@ message CreateSnapshotPushChannelRequest {
     string adapter_id = 1;
     map<string, string> properties = 2;
     google.protobuf.Duration publish_interval = 3;
-    string tag = 4;
+    repeated string tags = 4;
 }
 
 

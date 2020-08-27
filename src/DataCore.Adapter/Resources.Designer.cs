@@ -151,11 +151,11 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to resolve tag &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Unable to resolve any requested subscription topics..
         /// </summary>
-        internal static string Error_CannotResolveTag {
+        internal static string Error_CannotResolveAnySubscriptionTopics {
             get {
-                return ResourceManager.GetString("Error_CannotResolveTag", resourceCulture);
+                return ResourceManager.GetString("Error_CannotResolveAnySubscriptionTopics", resourceCulture);
             }
         }
         

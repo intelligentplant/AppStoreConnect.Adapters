@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The current subscriptions.
         /// </summary>
-        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int, string, EventMessage>>();
+        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int>>();
 
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
@@ -135,7 +135,7 @@ namespace DataCore.Adapter.Events {
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
-            var subscription = new EventSubscriptionChannel<int, string, EventMessage>(
+            var subscription = new EventSubscriptionChannel<int>(
                 subscriptionId,
                 context,
                 Scheduler,

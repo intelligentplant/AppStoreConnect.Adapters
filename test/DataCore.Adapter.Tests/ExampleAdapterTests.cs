@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Tests {
 
 
                 var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    Tag = TestTag1.Id
+                    Tags = new[] { TestTag1.Id }
                 }, CancellationToken);
 
                 // Write a couple of values that we should then be able to read out again via 

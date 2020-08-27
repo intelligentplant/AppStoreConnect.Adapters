@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 using DataCore.Adapter.Common;
 
@@ -11,10 +13,11 @@ namespace DataCore.Adapter.RealTimeData {
     public class CreateSnapshotTagValueSubscriptionRequest : AdapterRequest {
 
         /// <summary>
-        /// The tag name or ID to subscribe to.
+        /// The tag names or IDs to subscribe to.
         /// </summary>
         [Required]
-        public string Tag { get; set; }
+        [MinLength(1)]
+        public IEnumerable<string> Tags { get; set; }
 
         /// <summary>
         /// Specifies how frequently new values should be emitted from the subscription. 
@@ -22,6 +25,23 @@ namespace DataCore.Adapter.RealTimeData {
         /// value will be emitted for the subscribed tag at each publish interval.
         /// </summary>
         public TimeSpan PublishInterval { get; set; }
+
+
+        /// <inheritdoc/>
+        protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
+            foreach (var err in base.Validate(validationContext)) {
+                yield return err;
+            }
+
+            if (Tags != null) {
+                if (Tags.Any(string.IsNullOrWhiteSpace)) {
+                    yield return new ValidationResult(SharedResources.Error_SubscriptionTopicsCannotBeNullOrWhiteSpace, new[] { nameof(Tags) });
+                }
+                if (Tags.GroupBy(x => x).Any(x => x.Count() > 1)) {
+                    yield return new ValidationResult(SharedResources.Error_DuplicateSubscriptionTopicsAreNotAllowed, new[] { nameof(Tags) });
+                }
+            }
+        }
 
     }
 

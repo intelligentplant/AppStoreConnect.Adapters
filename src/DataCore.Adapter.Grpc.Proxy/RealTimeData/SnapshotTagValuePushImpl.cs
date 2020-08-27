@@ -42,11 +42,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
                 var grpcRequest = new CreateSnapshotPushChannelRequest() {
                     AdapterId = AdapterId,
-                    Tag = request.Tag,
                     PublishInterval = request.PublishInterval > TimeSpan.Zero
                         ? Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(request.PublishInterval)
                         : Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(TimeSpan.Zero)
                 };
+
+                grpcRequest.Tags.Add(request.Tags);
 
                 if (request.Properties != null) {
                     foreach (var item in request.Properties) {

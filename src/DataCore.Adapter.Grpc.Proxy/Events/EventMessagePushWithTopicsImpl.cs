@@ -37,9 +37,10 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                     AdapterId = AdapterId,
                     SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
                         ? EventSubscriptionType.Active
-                        : EventSubscriptionType.Passive,
-                    Topic = request.Topic
+                        : EventSubscriptionType.Passive
                 };
+
+                grpcRequest.Topics.Add(request.Topics);
 
                 if (request.Properties != null) {
                     foreach (var item in request.Properties) {

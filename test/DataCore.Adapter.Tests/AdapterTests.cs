@@ -199,7 +199,7 @@ namespace DataCore.Adapter.Tests {
                 var tagDetails = GetReadTagValuesQueryDetails();
 
                 var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    Tag = tagDetails.Id
+                    Tags = new[] { tagDetails.Id }
                 }, CancellationToken);
                 Assert.IsNotNull(subscription);
 
@@ -453,7 +453,7 @@ namespace DataCore.Adapter.Tests {
                     context, 
                     new CreateEventMessageTopicSubscriptionRequest() { 
                         SubscriptionType = EventMessageSubscriptionType.Active,
-                        Topic = topic
+                        Topics = new[] { topic }
                     }, 
                     CancellationToken
                 );
