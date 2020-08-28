@@ -45,41 +45,10 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
 
-            if (!TryCreateFeatureUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriHelper.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
             Uri = uri;
-        }
-
-
-        /// <summary>
-        /// Creates an absolute <see cref="Uri"/> from the specified URI string, ensuring that the 
-        /// <see cref="Uri"/> is created with a trailing forwards slash.
-        /// </summary>
-        /// <param name="uriString">
-        ///   The URI string.
-        /// </param>
-        /// <param name="uri">
-        ///   The created <see cref="Uri"/>.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if a URI could be created, or <see langword="false"/> otherwise.
-        /// </returns>
-        public static bool TryCreateFeatureUriWithTrailingSlash(string uriString, out Uri uri) {
-            if (uriString == null) {
-                uri = null;
-                return false;
-            }
-
-#if NETSTANDARD2_0
-            if (!uriString.EndsWith("/", StringComparison.Ordinal)) {
-#else
-            if (!uriString.EndsWith('/')) {
-#endif
-                uriString += '/';
-            }
-
-            return Uri.TryCreate(uriString, UriKind.Absolute, out uri);
         }
 
     }

@@ -46,7 +46,7 @@ namespace DataCore.Adapter {
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        internal static object GetFeature(this IAdapter adapter, string featureUriOrName) {
+        public static object GetFeature(this IAdapter adapter, string featureUriOrName) {
             if (adapter?.Features == null) {
                 return default;
             }
@@ -67,7 +67,7 @@ namespace DataCore.Adapter {
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        internal static object GetFeature(this IAdapter adapter, Uri featureUri) {
+        public static object GetFeature(this IAdapter adapter, Uri featureUri) {
             if (adapter?.Features == null) {
                 return default;
             }
@@ -118,6 +118,38 @@ namespace DataCore.Adapter {
         /// <param name="feature">
         ///   The implemented feature.
         /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGetFeature(
+            this IAdapter adapter,
+            string featureUriOrName,
+            out object feature
+        ) {
+            if (adapter?.Features == null) {
+                feature = default;
+                return false;
+            }
+            return adapter.Features.TryGet(featureUriOrName, out feature);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature implementation by URI or name.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureUriOrName">
+        ///   The feature URI or name. This must match either the URI of the feature, the 
+        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
+        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
+        ///   for extension features.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
         /// <param name="featureType">
         ///   The feature type that <paramref name="featureUriOrName"/> was resolved to.
         /// </param>
@@ -137,6 +169,35 @@ namespace DataCore.Adapter {
                 return false;
             }
             return adapter.Features.TryGet(featureUriOrName, out feature, out featureType);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature implementation by URI.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGetFeature(
+            this IAdapter adapter,
+            Uri featureUri,
+            out object feature
+        ) {
+            if (adapter?.Features == null) {
+                feature = default;
+                return false;
+            }
+            return adapter.Features.TryGet(featureUri, out feature);
         }
 
 

@@ -196,6 +196,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify an extension feature interface type (i.e. an interface derived from {0} and annotated with {1})..
+        /// </summary>
+        internal static string Error_NotAnExtensionFeatureInterface {
+            get {
+                return ResourceManager.GetString("Error_NotAnExtensionFeatureInterface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Too many subscriptions..
         /// </summary>
         internal static string Error_TooManySubscriptions {

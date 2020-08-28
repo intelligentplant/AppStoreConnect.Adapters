@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Example {
         /// <returns>
         ///   The response.
         /// </returns>
-        GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request);
+        DateTime GetCurrentTime();
 
     }
 

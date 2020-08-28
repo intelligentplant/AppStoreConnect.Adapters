@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+import "google/protobuf/timestamp.proto";
+import "Types.proto";
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+service ExtensionFeaturesService {
+    rpc GetOperations(GetExtensionOperationsRequest) returns (GetExtensionOperationsResponse);
+    rpc InvokeExtension(InvokeExtensionRequest) returns (InvokeExtensionResponse);
+    rpc InvokeStreamingExtension(InvokeExtensionRequest) returns (stream InvokeExtensionResponse);
+    rpc InvokeDuplexStreamingExtension(stream InvokeExtensionRequest) returns (stream InvokeExtensionResponse);
+}
+
+
+message GetExtensionOperationsRequest {
+    string adapter_id = 1;
+    string feature_uri = 2;
+}
+
+
+message GetExtensionOperationsResponse {
+    repeated ExtensionFeatureOperationDescriptor operations = 1;
+}
+
+
+message InvokeExtensionRequest {
+    string adapter_id = 1;
+    string operation_id = 2;
+    string argument = 3;
+}
+
+
+message InvokeExtensionResponse {
+    string result = 1;
+}

@@ -54,6 +54,11 @@ namespace DataCore.Adapter.Http.Client {
         /// </summary>
         public TagValuesClient TagValues { get; }
 
+        /// <summary>
+        /// The client for invoking extension features on an adapter.
+        /// </summary>
+        public ExtensionFeaturesClient Extensions { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterHttpClient"/> object.
@@ -70,6 +75,7 @@ namespace DataCore.Adapter.Http.Client {
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
             Events = new EventsClient(this);
+            Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
             TagSearch = new TagSearchClient(this);
             TagValueAnnotations = new TagValueAnnotationsClient(this);

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Http.Client;
+using DataCore.Adapter.Proxy;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -90,7 +92,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
-        private readonly ExtensionFeatureFactory _extensionFeatureFactory;
+        private readonly ExtensionFeatureFactory<HttpAdapterProxy> _extensionFeatureFactory;
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -176,23 +178,24 @@ namespace DataCore.Adapter.Http.Proxy {
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
 
-            if (_extensionFeatureFactory != null) {
-                foreach (var extensionFeature in descriptor.Extensions) {
-                    if (string.IsNullOrWhiteSpace(extensionFeature)) {
-                        continue;
-                    }
-
-                    try {
-                        var impl = _extensionFeatureFactory.Invoke(extensionFeature, this);
-                        if (impl == null) {
+            foreach (var extensionFeature in descriptor.Extensions) {
+                try {
+                    var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
+                    if (impl == null) {
+                        if (!UriHelper.TryCreateUriWithTrailingSlash(extensionFeature, out var featureUri)) {
                             Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }
-                        AddFeatures(impl, addStandardFeatures: false);
+
+                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy(
+                            new Extensions.AdapterExtensionFeatureImpl(this),
+                            featureUri
+                        );
                     }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
-                    }
+                    AddFeatures(impl, addStandardFeatures: false);
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
 

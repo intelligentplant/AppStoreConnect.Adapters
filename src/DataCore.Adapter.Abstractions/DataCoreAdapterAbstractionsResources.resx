@@ -214,4 +214,7 @@
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>
   </data>
+  <data name="Error_RelativeUrisAreNotSupported" xml:space="preserve">
+    <value>This operation is not supported for a relative URI.</value>
+  </data>
 </root>

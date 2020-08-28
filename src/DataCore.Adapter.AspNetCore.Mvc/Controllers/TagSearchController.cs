@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -61,21 +62,27 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false);
-            var tags = new List<AdapterProperty>();
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var prop) || prop == null) {
-                    continue;
+            try {
+                var reader = await feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false);
+                var tags = new List<AdapterProperty>();
+
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var prop) || prop == null) {
+                        continue;
+                    }
+                    tags.Add(prop);
                 }
-                tags.Add(prop);
-            }
 
-            return Ok(tags); // 200
+                return Ok(tags); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -136,21 +143,27 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false);
-            var tags = new List<TagDefinition>();
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var tag) || tag == null) {
-                    continue;
+            try {
+                var reader = await feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false);
+                var tags = new List<TagDefinition>();
+
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var tag) || tag == null) {
+                        continue;
+                    }
+                    tags.Add(tag);
                 }
-                tags.Add(tag);
-            }
 
-            return Ok(tags); // 200
+                return Ok(tags); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -224,21 +237,26 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false);
-            var tags = new List<TagDefinition>();
+            try {
+                var reader = await feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false);
+                var tags = new List<TagDefinition>();
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var tag) || tag == null) {
-                    continue;
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var tag) || tag == null) {
+                        continue;
+                    }
+                    tags.Add(tag);
                 }
-                tags.Add(tag);
-            }
 
-            return Ok(tags); // 200
+                return Ok(tags); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 

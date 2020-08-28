@@ -71,7 +71,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
         /// </returns>
-        internal static object Get(this IAdapterFeaturesCollection features, string featureUriOrName) {
+        public static object Get(this IAdapterFeaturesCollection features, string featureUriOrName) {
             if (features.TryGet(featureUriOrName, out var feature, out var _)) {
                 return feature;
             }
@@ -92,12 +92,33 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The feature implementation, or <see langword="null"/> if no matching feature was found.
         /// </returns>
-        internal static object Get(this IAdapterFeaturesCollection features, Uri featureUri) {
+        public static object Get(this IAdapterFeaturesCollection features, Uri featureUri) {
             if (features.TryGet(featureUri, out var feature, out var _)) {
                 return feature;
             }
 
             return default;
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified feature implementation by URI or name.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGet(this IAdapterFeaturesCollection features, Uri uri, out object feature) {
+            return features.TryGet(uri, out feature, out var _);
         }
 
 
@@ -161,6 +182,29 @@ namespace DataCore.Adapter {
         /// <param name="feature">
         ///   The implemented feature.
         /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGet(this IAdapterFeaturesCollection features, string featureUriOrName, out object feature) {
+            return features.TryGet(featureUriOrName, out feature, out var _);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified feature implementation by URI or name.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="featureUriOrName">
+        ///   The feature name. This must match either the URI for the feature, the <see cref="MemberInfo.Name"/> 
+        ///   or <see cref="Type.FullName"/> of the feature type for standard adapter features, or 
+        ///   the <see cref="Type.FullName"/> of the feature type for extension features.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
         /// <param name="featureType">
         ///   The feature type that <paramref name="featureUriOrName"/> was resolved to.
         /// </param>
@@ -175,7 +219,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            if (AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(featureUriOrName, out var uri)) {
+            if (UriHelper.TryCreateUriWithTrailingSlash(featureUriOrName, out var uri)) {
                 return features.TryGet(uri, out feature, out featureType);
             }
 

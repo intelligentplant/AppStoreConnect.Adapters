@@ -364,3 +364,26 @@ message WriteTagValueResult {
     string notes = 5;
     repeated AdapterProperty properties = 6;
 }
+
+
+message ExtensionFeatureOperationDescriptor {
+    string operation_id = 1;
+    ExtensionFeatureOperationType operation_type = 2;
+    string name = 3;
+    string description = 4;
+    ExtensionFeatureOperationParameterDescriptor input = 5;
+    ExtensionFeatureOperationParameterDescriptor output = 6;
+}
+
+
+enum ExtensionFeatureOperationType {
+    EXTENSION_FEATURE_OPERATION_TYPE_INVOKE = 0;
+    EXTENSION_FEATURE_OPERATION_TYPE_STREAM = 1;
+    EXTENSION_FEATURE_OPERATION_TYPE_DUPLEX_STREAM = 2;
+}
+
+
+message ExtensionFeatureOperationParameterDescriptor {
+    string description = 1;
+    string example_value = 2;
+}

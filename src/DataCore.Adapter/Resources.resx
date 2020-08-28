@@ -166,6 +166,11 @@
     <value>Object does not implement feature '{0}'.</value>
     <comment>{0} - feature name</comment>
   </data>
+  <data name="Error_NotAnExtensionFeatureInterface" xml:space="preserve">
+    <value>You must specify an extension feature interface type (i.e. an interface derived from {0} and annotated with {1}).</value>
+    <comment>{0} - IAdapterExtensionFeature name
+{1} - AdapterFeatureAttribute name</comment>
+  </data>
   <data name="Error_TooManySubscriptions" xml:space="preserve">
     <value>Too many subscriptions.</value>
   </data>

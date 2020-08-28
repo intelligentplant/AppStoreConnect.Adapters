@@ -43,6 +43,7 @@
   
   <!-- Other Packages -->
   <PropertyGroup>
+    <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>15.0.5</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
     <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>

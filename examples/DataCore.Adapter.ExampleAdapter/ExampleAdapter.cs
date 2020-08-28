@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -79,12 +80,41 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        private class ExampleExtensionFeatureImpl : IExampleExtensionFeature {
+        private class ExampleExtensionFeatureImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
-                return new GetCurrentTimeResponse() {
-                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
-                };
+            private static readonly ExtensionFeatureOperationDescriptor s_getCurrentTime = new ExtensionFeatureOperationDescriptor() { 
+                OperationId = GetOperationUri<IExampleExtensionFeature>(nameof(GetCurrentTime)),
+                OperationType = ExtensionFeatureOperationType.Invoke,
+                Name = nameof(GetCurrentTime),
+                Description = "Gets the current UTC time",
+                Output = new ExtensionFeatureOperationParameterDescriptor() {
+                    Description = "ISO 8601 timestamp",
+                    ExampleValue = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")
+                }
+            };
+
+
+            private static readonly IEnumerable<ExtensionFeatureOperationDescriptor> s_operations = new[] {
+                s_getCurrentTime
+            };
+
+
+            public DateTime GetCurrentTime() {
+                return DateTime.UtcNow;
+            }
+
+
+            protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
+                return Task.FromResult(s_operations);
+            }
+
+
+            protected override Task<string> Invoke(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+                if (s_getCurrentTime.OperationId.Equals(operationId)) {
+                    return Task.FromResult(GetCurrentTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"));
+                }
+                
+                return base.Invoke(context, operationId, argument, cancellationToken);
             }
 
         }

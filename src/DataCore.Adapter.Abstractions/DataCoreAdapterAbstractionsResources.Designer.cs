@@ -347,5 +347,14 @@ namespace DataCore.Adapter {
                 return ResourceManager.GetString("Error_MissingAdapterFeature", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This operation is not supported for a relative URI..
+        /// </summary>
+        internal static string Error_RelativeUrisAreNotSupported {
+            get {
+                return ResourceManager.GetString("Error_RelativeUrisAreNotSupported", resourceCulture);
+            }
+        }
     }
 }

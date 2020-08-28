@@ -1116,6 +1116,94 @@ namespace DataCore.Adapter {
 
         #endregion
 
+        #region [ Extensions ]
+
+        public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
+            if (descriptor == null) {
+                return null;
+            }
+
+            return new Extensions.ExtensionFeatureOperationDescriptor() { 
+                OperationId = Uri.TryCreate(descriptor.OperationId, UriKind.Absolute, out var uri)
+                    ? uri
+                    : null,
+                OperationType = descriptor.OperationType.ToAdapterExtensionFeatureOperationType(),
+                Name = descriptor.Name,
+                Description = descriptor.Description,
+                Input = descriptor.Input.ToAdapterExtensionFeatureParameterDescriptor(),
+                Output = descriptor.Output.ToAdapterExtensionFeatureParameterDescriptor()
+            };
+        }
+
+
+        public static Grpc.ExtensionFeatureOperationDescriptor ToGrpcExtensionOperatorDescriptor(this Extensions.ExtensionFeatureOperationDescriptor descriptor) {
+            if (descriptor == null) {
+                return null;
+            }
+
+            return new Grpc.ExtensionFeatureOperationDescriptor() {
+                OperationId = descriptor.OperationId?.ToString() ?? string.Empty,
+                OperationType = descriptor.OperationType.ToGrpcExtensionFeatureOperationType(),
+                Name = descriptor.Name ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty,
+                Input = descriptor.Input.ToGrpcExtensionFeatureParameterDescriptor(),
+                Output = descriptor.Output.ToGrpcExtensionFeatureParameterDescriptor()
+            };
+        }
+
+
+        public static Extensions.ExtensionFeatureOperationParameterDescriptor ToAdapterExtensionFeatureParameterDescriptor(this Grpc.ExtensionFeatureOperationParameterDescriptor descriptor) {
+            if (descriptor == null) {
+                return new Extensions.ExtensionFeatureOperationParameterDescriptor();
+            }
+
+            return new Extensions.ExtensionFeatureOperationParameterDescriptor() {
+                Description = descriptor.Description,
+                ExampleValue = descriptor.ExampleValue
+            };
+        }
+
+
+        public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
+            if (descriptor == null) {
+                return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 
+                    Description = string.Empty,
+                    ExampleValue = string.Empty
+                };
+            }
+
+            return new Grpc.ExtensionFeatureOperationParameterDescriptor() {
+                Description = descriptor.Description ?? string.Empty,
+                ExampleValue = descriptor.ExampleValue ?? string.Empty
+            };
+        }
+
+
+        public static Extensions.ExtensionFeatureOperationType ToAdapterExtensionFeatureOperationType(this Grpc.ExtensionFeatureOperationType operationType) {
+            switch (operationType) {
+                case Grpc.ExtensionFeatureOperationType.Stream:
+                    return Extensions.ExtensionFeatureOperationType.Stream;
+                case Grpc.ExtensionFeatureOperationType.DuplexStream:
+                    return Extensions.ExtensionFeatureOperationType.DuplexStream;
+                default:
+                    return Extensions.ExtensionFeatureOperationType.Invoke;
+            }
+        }
+
+
+        public static Grpc.ExtensionFeatureOperationType ToGrpcExtensionFeatureOperationType(this Extensions.ExtensionFeatureOperationType operationType) {
+            switch (operationType) {
+                case Extensions.ExtensionFeatureOperationType.Stream:
+                    return Grpc.ExtensionFeatureOperationType.Stream;
+                case Extensions.ExtensionFeatureOperationType.DuplexStream:
+                    return Grpc.ExtensionFeatureOperationType.DuplexStream;
+                default:
+                    return Grpc.ExtensionFeatureOperationType.Invoke;
+            }
+        }
+
+        #endregion
+
         #region [ Real Time Data ]
 
         /// <summary>
