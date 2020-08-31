@@ -26,11 +26,6 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="featureUri">
-        ///   The feature URI that operations are being requested for. If the implementing type 
-        ///   implements multiple extension features, this can be used to identify which feature 
-        ///   definition is being queried
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -39,7 +34,6 @@ namespace DataCore.Adapter.Extensions {
         /// </returns>
         Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
             IAdapterCallContext context,
-            Uri featureUri,
             CancellationToken cancellationToken
         );
 
@@ -53,19 +47,19 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="operationId">
         ///   The URI for the operation.
         /// </param>
-        /// <param name="argument">
-        ///   The operation argument.
+        /// <param name="json">
+        ///   The JSON-serialized operation argument.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The result of the operation.
+        ///   The JSON-serialized result of the operation.
         /// </returns>
         Task<string> Invoke(
             IAdapterCallContext context, 
             Uri operationId, 
-            string argument, 
+            string json, 
             CancellationToken cancellationToken
         );
 
@@ -79,20 +73,20 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="operationId">
         ///   The URI for the operation.
         /// </param>
-        /// <param name="argument">
-        ///   The operation argument.
+        /// <param name="json">
+        ///   The JSON-serialized operation argument.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the results of the operation.
+        ///   will stream the JSON-serialized results of the operation.
         /// </returns>
         Task<ChannelReader<string>> Stream(
             IAdapterCallContext context, 
             Uri operationId, 
-            string argument, 
+            string json, 
             CancellationToken cancellationToken
         );
 
@@ -107,14 +101,14 @@ namespace DataCore.Adapter.Extensions {
         ///   The URI for the operation.
         /// </param>
         /// <param name="channel">
-        ///   A channel that will stream the inputs for the operation.
+        ///   A channel that will stream the JSON-serialized inputs for the operation.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the results of the operation.
+        ///   will stream the JSON-serialized results of the operation.
         /// </returns>
         Task<ChannelReader<string>> DuplexStream(
             IAdapterCallContext context, 

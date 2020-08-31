@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
-using DataCore.Adapter.Json;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Example {
@@ -49,7 +48,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
-            AddFeature<IExampleExtensionFeature, ExampleExtensionFeatureImpl>(new ExampleExtensionFeatureImpl());
+            AddFeature<IExampleExtensionFeature, ExampleExtensionImpl>(new ExampleExtensionImpl(this));
         }
 
 
@@ -80,41 +79,17 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        private class ExampleExtensionFeatureImpl : AdapterExtensionFeature, IExampleExtensionFeature {
+        private class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            private static readonly ExtensionFeatureOperationDescriptor s_getCurrentTime = new ExtensionFeatureOperationDescriptor() { 
-                OperationId = GetOperationUri<IExampleExtensionFeature>(nameof(GetCurrentTime)),
-                OperationType = ExtensionFeatureOperationType.Invoke,
-                Name = nameof(GetCurrentTime),
-                Description = "Gets the current UTC time",
-                Output = new ExtensionFeatureOperationParameterDescriptor() {
-                    Description = "ISO 8601 timestamp",
-                    ExampleValue = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")
-                }
-            };
-
-
-            private static readonly IEnumerable<ExtensionFeatureOperationDescriptor> s_operations = new[] {
-                s_getCurrentTime
-            };
-
-
-            public DateTime GetCurrentTime() {
-                return DateTime.UtcNow;
+            public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.TaskScheduler) {
+                Bind<PingMessage, PongMessage>(Ping);
             }
 
 
-            protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
-                return Task.FromResult(s_operations);
-            }
-
-
-            protected override Task<string> Invoke(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
-                if (s_getCurrentTime.OperationId.Equals(operationId)) {
-                    return Task.FromResult(GetCurrentTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"));
-                }
-                
-                return base.Invoke(context, operationId, argument, cancellationToken);
+            public PongMessage Ping(IAdapterCallContext context, PingMessage ping) {
+                return new PongMessage() { 
+                    CorrelationId = ping.CorrelationId
+                };
             }
 
         }

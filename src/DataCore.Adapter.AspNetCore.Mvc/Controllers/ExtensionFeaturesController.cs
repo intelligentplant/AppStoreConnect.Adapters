@@ -105,7 +105,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             try {
-                var ops = await resolvedFeature.Feature.GetOperations(callContext, id, cancellationToken).ConfigureAwait(false);
+                var ops = await resolvedFeature.Feature.GetOperations(callContext, cancellationToken).ConfigureAwait(false);
                 return Ok(ops?.Where(x => x != null).ToArray()); // 200
             }
             catch (ArgumentException e) {

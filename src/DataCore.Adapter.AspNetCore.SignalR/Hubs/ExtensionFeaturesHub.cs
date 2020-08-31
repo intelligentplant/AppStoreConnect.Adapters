@@ -47,7 +47,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             var ops = await resolved.Feature.GetOperations(
                 adapterCallContext,
-                featureUri,
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 

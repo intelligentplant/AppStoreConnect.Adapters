@@ -239,46 +239,20 @@ namespace DataCore.Adapter.Tests {
         [AdapterFeature(ExtensionFeatureUri)]
         private interface ITestExtension : IAdapterExtensionFeature {
 
-            DateTime GetCurrentTime();
+            DateTime GetCurrentTime(IAdapterCallContext context);
 
         }
 
 
         private class TestExtension : AdapterExtensionFeature, ITestExtension {
 
-            private static readonly ExtensionFeatureOperationDescriptor s_getCurrentTime = new ExtensionFeatureOperationDescriptor() {
-                OperationId = GetOperationUri<ITestExtension>(nameof(GetCurrentTime)),
-                OperationType = ExtensionFeatureOperationType.Invoke,
-                Name = nameof(GetCurrentTime),
-                Description = "Gets the current UTC time",
-                Output = new ExtensionFeatureOperationParameterDescriptor() {
-                    Description = "ISO 8601 timestamp",
-                    ExampleValue = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")
-                }
-            };
+            public TestExtension() : base(null) {
+                Bind(GetCurrentTime);
+            }
 
 
-            private static readonly IEnumerable<ExtensionFeatureOperationDescriptor> s_operations = new[] {
-                s_getCurrentTime
-            };
-
-
-            public DateTime GetCurrentTime() {
+            public DateTime GetCurrentTime(IAdapterCallContext context) {
                 return DateTime.UtcNow;
-            }
-
-
-            protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
-                return Task.FromResult(s_operations);
-            }
-
-
-            protected override Task<string> Invoke(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
-                if (s_getCurrentTime.OperationId.Equals(operationId)) {
-                    return Task.FromResult(GetCurrentTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"));
-                }
-
-                return base.Invoke(context, operationId, argument, cancellationToken);
             }
 
         }

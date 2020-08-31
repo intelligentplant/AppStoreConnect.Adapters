@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -114,6 +115,30 @@ namespace DataCore.Adapter {
         /// </returns>
         private static bool IsAnnotatedWithAttributeFeatureAttribute(this Type type) {
             return type.GetCustomAttribute<AdapterFeatureAttribute>() != null;
+        }
+
+
+        /// <summary>
+        /// Gets the adapter feature interface types implemented by the specified type.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature types.
+        /// </returns>
+        public static IEnumerable<Type> GetAdapterFeatureTypes(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type.IsAdapterFeature()) {
+                yield return type;
+            }
+
+            foreach (var featureType in type.GetInterfaces().Where(x => x.IsAdapterFeature())) {
+                yield return featureType;
+            }
         }
 
 

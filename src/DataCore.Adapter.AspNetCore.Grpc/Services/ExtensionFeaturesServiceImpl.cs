@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.GetOperations(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.GetOperations(adapterCallContext, cancellationToken).ConfigureAwait(false);
                 var response = new GetExtensionOperationsResponse();
                 if (result != null) {
                     foreach (var item in result) {

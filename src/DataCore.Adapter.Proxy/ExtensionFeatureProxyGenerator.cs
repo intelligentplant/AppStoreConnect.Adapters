@@ -88,41 +88,53 @@ namespace DataCore.Adapter.Proxy {
 
 
         /// <summary>
-        /// Creates a dynamic proxy feature implementation using a base implementation of 
-        /// <see cref="IAdapterExtensionFeature"/> to dispatch extension feature calls.
+        /// Creates a dynamic proxy feature implementation for the specified proxy adapter.
         /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The type of the base <see cref="IAdapterExtensionFeature"/> implementation to send 
-        ///   proxy feature invocations to.
+        /// <typeparam name="TProxy">
+        ///   The type of the proxy adapter.
         /// </typeparam>
-        /// <param name="baseImplementation">
-        ///   The base <see cref="IAdapterExtensionFeature"/> implementation to send 
-        ///   proxy feature invocations to.
+        /// <typeparam name="TImpl">
+        ///   The <see cref="ExtensionFeatureFactory{TProxy}"/> implementation to derive the proxy 
+        ///   feature from.
+        /// </typeparam>
+        /// <param name="proxy">
+        ///   The proxy adapter that the feature implementation is being generated for.
         /// </param>
         /// <param name="featureUri">
         ///   The extension feature URI to generate a proxy for.
         /// </param>
         /// <returns>
-        ///   A <typeparamref name="TFeature"/> instance that implements the dynamically generated 
-        ///   interface for the <paramref name="featureUri"/>.
+        ///   An <see cref="IAdapterExtensionFeature"/> instance that implements the dynamically 
+        ///   generated interface for the <paramref name="featureUri"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="proxy"/> is <see langword="null"/>.
+        /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="featureUri"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="featureUri"/> is not an absolute URI.
         /// </exception>
-        public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TFeature>(
-            TFeature baseImplementation, 
+        public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TProxy, TImpl>(
+            TProxy proxy,
             Uri featureUri
-        ) where TFeature : class, IAdapterExtensionFeature {
+        ) where TProxy : AdapterBase, IAdapterProxy where TImpl : ExtensionFeatureProxyBase<TProxy> {
+            if (proxy == null) {
+                throw new ArgumentNullException(nameof(proxy));
+            }
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
+            }
+
             featureUri = UriHelper.EnsurePathHasTrailingSlash(featureUri);
             var featureType = s_featureInterfaceLookup.GetOrAdd(featureUri, BuildExtensionFeatureType);
 
-            return (IAdapterExtensionFeature) s_proxyGenerator.CreateInterfaceProxyWithTarget(
-                typeof(IAdapterExtensionFeature), 
-                new[] { featureType }, 
-                baseImplementation
+            return (IAdapterExtensionFeature) s_proxyGenerator.CreateClassProxy(
+                typeof(TImpl),
+                new[] { featureType },
+                ProxyGenerationOptions.Default,
+                new object[] { proxy }
             );
         }
 
