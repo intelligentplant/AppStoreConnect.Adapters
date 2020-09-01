@@ -45,7 +45,7 @@ namespace DataCore.Adapter.Example {
             logger
         ) {
             // Register additional features!
-            _assetModelBrowser = new Features.AssetModelBrowser(TaskScheduler);
+            _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
             AddFeature<IExampleExtensionFeature, ExampleExtensionImpl>(new ExampleExtensionImpl(this));
@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Example {
 
         private class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.TaskScheduler) {
+            public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.BackgroundTaskService) {
                 Bind<PingMessage, PongMessage>(Ping);
             }
 

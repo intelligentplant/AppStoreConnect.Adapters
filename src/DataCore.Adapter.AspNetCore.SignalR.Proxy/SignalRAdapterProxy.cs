@@ -248,7 +248,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
-                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
+                BackgroundTaskService.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
         }
 

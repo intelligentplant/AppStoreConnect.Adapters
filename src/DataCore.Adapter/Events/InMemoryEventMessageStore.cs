@@ -79,23 +79,23 @@ namespace DataCore.Adapter.Events {
         /// <param name="options">
         ///   The store options.
         /// </param>
-        /// <param name="scheduler">
-        ///   The schedule to use when running background operations.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
         /// </param>
         /// <param name="logger">
         ///   The logger for the <see cref="InMemoryEventMessageStore"/>.
         /// </param>
         public InMemoryEventMessageStore(
             InMemoryEventMessageManagerOptions options, 
-            IBackgroundTaskService scheduler, 
+            IBackgroundTaskService backgroundTaskService, 
             ILogger logger
         ) {
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _disposedToken = _disposedTokenSource.Token;
-            _push = new EventMessagePush(options, scheduler, Logger);
+            _push = new EventMessagePush(options, backgroundTaskService, Logger);
             _pushWithTopics = new EventMessagePushWithTopics(new EventMessagePushWithTopicsOptions() { 
                 AdapterId = options.AdapterId
-            }, scheduler, Logger);
+            }, backgroundTaskService, Logger);
             _capacity = options?.Capacity ?? -1;
         }
 

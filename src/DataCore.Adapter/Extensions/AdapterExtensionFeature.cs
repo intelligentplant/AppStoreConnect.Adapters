@@ -28,9 +28,9 @@ namespace DataCore.Adapter.Extensions {
     public abstract class AdapterExtensionFeature : IAdapterExtensionFeature {
 
         /// <summary>
-        /// Used to run background tasks.
+        /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
         /// </summary>
-        private readonly IBackgroundTaskService _taskScheduler;
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
@@ -59,12 +59,12 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Creates a new <see cref="AdapterExtensionFeature"/> object.
         /// </summary>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        protected AdapterExtensionFeature(IBackgroundTaskService taskScheduler) {
-            _taskScheduler = taskScheduler ?? BackgroundTaskService.Default;
+        protected AdapterExtensionFeature(IBackgroundTaskService backgroundTaskService) {
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
         }
 
 
@@ -879,7 +879,7 @@ namespace DataCore.Adapter.Extensions {
                     finally {
                         result.Writer.TryComplete();
                     }
-                }, _taskScheduler, ct);
+                }, BackgroundTaskService, ct);
 
                 return result.Reader;
             };
@@ -962,7 +962,7 @@ namespace DataCore.Adapter.Extensions {
                     finally {
                         result.Writer.TryComplete();
                     }
-                }, _taskScheduler, ct);
+                }, BackgroundTaskService, ct);
 
                 return result.Reader;
             };
@@ -1053,7 +1053,7 @@ namespace DataCore.Adapter.Extensions {
                     finally {
                         inChannel.Writer.TryComplete();
                     }
-                }, _taskScheduler, ct);
+                }, BackgroundTaskService, ct);
 
                 outChannel.RunBackgroundOperation(async (ch, ct2) => {
                     try {
@@ -1070,7 +1070,7 @@ namespace DataCore.Adapter.Extensions {
                     finally {
                         result.Writer.TryComplete();
                     }
-                }, _taskScheduler, ct);
+                }, BackgroundTaskService, ct);
 
                 return result.Reader;
             };

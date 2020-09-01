@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
         protected IBackgroundTaskService TaskScheduler {
-            get { return _proxy.TaskScheduler; }
+            get { return _proxy.BackgroundTaskService; }
         }
 
 

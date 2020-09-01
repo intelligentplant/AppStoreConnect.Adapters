@@ -716,7 +716,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The channel that will provide the raw data for the aggregation calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -732,7 +732,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService scheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -774,7 +774,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return result;
             }
             
-            result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, scheduler, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, backgroundTaskService, cancellationToken);
             return result;
         }
 
@@ -800,7 +800,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The raw data for the aggregation calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -816,7 +816,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime,
             TimeSpan sampleInterval,
             IEnumerable<TagValueQueryResult> rawData,
-            IBackgroundTaskService scheduler = null,
+            IBackgroundTaskService backgroundTaskService = null,
             CancellationToken cancellationToken = default
         ) {
             if (rawData == null) {
@@ -841,7 +841,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 utcEndTime,
                 sampleInterval,
                 channel,
-                scheduler,
+                backgroundTaskService,
                 cancellationToken
             );
         }
@@ -868,7 +868,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The channel that will provide the raw data for the aggregation calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -884,7 +884,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService scheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tags == null) {
@@ -915,7 +915,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     utcEndTime,
                     sampleInterval,
                     rawData,
-                    scheduler,
+                    backgroundTaskService,
                     cancellationToken
                 );
             }
@@ -991,7 +991,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         item.Writer.TryComplete();
                     }
                 }
-            }, scheduler, cancellationToken);
+            }, backgroundTaskService, cancellationToken);
 
             // Execute stream for each tag in the query and write all values into the shared 
             // result channel.
@@ -1008,7 +1008,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         ct
                     ))
                 ).WithCancellation(ct).ConfigureAwait(false);
-            }, true, scheduler, cancellationToken);
+            }, true, backgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -1035,7 +1035,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The raw data for the aggregation calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -1051,7 +1051,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime,
             TimeSpan sampleInterval,
             IEnumerable<TagValueQueryResult> rawData,
-            IBackgroundTaskService scheduler = null,
+            IBackgroundTaskService backgroundTaskService = null,
             CancellationToken cancellationToken = default
         ) {
             if (rawData == null) {
@@ -1076,7 +1076,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 utcEndTime,
                 sampleInterval,
                 channel,
-                scheduler,
+                backgroundTaskService,
                 cancellationToken
             );
         }

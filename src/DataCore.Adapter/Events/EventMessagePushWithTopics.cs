@@ -31,9 +31,9 @@ namespace DataCore.Adapter.Events {
         private bool _isDisposed;
 
         /// <summary>
-        /// The scheduler to use when running background tasks.
+        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService Scheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The logger.
@@ -133,11 +133,11 @@ namespace DataCore.Adapter.Events {
         public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions options, IBackgroundTaskService scheduler, ILogger logger) {
             _options = options ?? new EventMessagePushWithTopicsOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = scheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
-            Scheduler.QueueBackgroundWorkItem(ProcessTopicSubscriptionChangesChannel, _disposedTokenSource.Token);
-            Scheduler.QueueBackgroundWorkItem(ProcessPublishToSubscribersChannel, _disposedTokenSource.Token);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTopicSubscriptionChangesChannel, _disposedTokenSource.Token);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessPublishToSubscribersChannel, _disposedTokenSource.Token);
         }
 
 
@@ -497,7 +497,7 @@ namespace DataCore.Adapter.Events {
             var subscription = new EventSubscriptionChannel<int>(
                 subscriptionId,
                 context,
-                Scheduler,
+                BackgroundTaskService,
                 request.Topics,
                 request.SubscriptionType,
                 TimeSpan.Zero,

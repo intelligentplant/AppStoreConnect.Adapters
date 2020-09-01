@@ -86,7 +86,7 @@ namespace DataCore.Adapter.Diagnostics {
             }
 
             await CheckHealthAsync(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-            _adapter.TaskScheduler.QueueBackgroundWorkItem(PublishToHealthCheckSubscribers);
+            _adapter.BackgroundTaskService.QueueBackgroundWorkItem(PublishToHealthCheckSubscribers);
         }
 
 
@@ -211,7 +211,7 @@ namespace DataCore.Adapter.Diagnostics {
             var subscription = new SubscriptionChannel<int, string, HealthCheckResult>(
                 subscriptionId,
                 context,
-                _adapter.TaskScheduler,
+                _adapter.BackgroundTaskService,
                 null,
                 TimeSpan.Zero,
                 new[] { _adapter.StopToken, cancellationToken },

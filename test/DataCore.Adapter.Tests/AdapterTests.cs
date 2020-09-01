@@ -622,7 +622,7 @@ namespace DataCore.Adapter.Tests {
 
                 var tcs = new TaskCompletionSource<bool>();
 
-                adapterBase.TaskScheduler.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async ct => {
+                adapterBase.BackgroundTaskService.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async ct => {
                     try {
                         await Task.Delay(-1, ct);
                     }

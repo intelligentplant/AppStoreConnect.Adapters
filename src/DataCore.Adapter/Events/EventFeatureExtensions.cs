@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="events">
         ///   The event messages to write.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="events"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(this IWriteEventMessages feature, IAdapterCallContext context, IEnumerable<WriteEventMessageItem> events, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(this IWriteEventMessages feature, IAdapterCallContext context, IEnumerable<WriteEventMessageItem> events, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Events {
 
                     ch.TryWrite(item);
                 }
-            }, true, scheduler, cancellationToken);
+            }, true, backgroundTaskService, cancellationToken);
 
             return await feature.WriteEventMessages(context, channel, cancellationToken).ConfigureAwait(false);
         }

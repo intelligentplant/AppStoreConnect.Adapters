@@ -37,7 +37,7 @@ namespace DataCore.Adapter.Proxy {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="proxy"/> is <see langword="null"/>.
         /// </exception>
-        protected ExtensionFeatureProxyBase(TProxy proxy) : base(proxy?.TaskScheduler) {
+        protected ExtensionFeatureProxyBase(TProxy proxy) : base(proxy?.BackgroundTaskService) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
             _featureUri = new Lazy<Uri>(() => {
                 return GetType()

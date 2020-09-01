@@ -74,7 +74,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 while (await response.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                     await result.Writer.WriteAsync(response.ResponseStream.Current.Result, ct).ConfigureAwait(false);
                 }
-            }, true, Proxy.TaskScheduler, cancellationToken);
+            }, true, Proxy.BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }
@@ -101,13 +101,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 finally {
                     await stream.RequestStream.CompleteAsync().ConfigureAwait(false);
                 }
-            }, Proxy.TaskScheduler, cancellationToken);
+            }, Proxy.BackgroundTaskService, cancellationToken);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 while (await stream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                     await result.Writer.WriteAsync(stream.ResponseStream.Current.Result, ct).ConfigureAwait(false);
                 }
-            }, true, Proxy.TaskScheduler, cancellationToken);
+            }, true, Proxy.BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }

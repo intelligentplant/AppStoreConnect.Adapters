@@ -95,7 +95,7 @@ namespace DataCore.Adapter {
         /// <see cref="StopToken"/> is always added to the list of <see cref="CancellationToken"/> 
         /// instances that the background task observes.
         /// </summary>
-        public IBackgroundTaskService TaskScheduler { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The adapter descriptor.
@@ -172,7 +172,7 @@ namespace DataCore.Adapter {
         /// <param name="description">
         ///   The adapter description.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
         ///   Specify <see langword="null"/> to use <see cref="BackgroundTaskService.Default"/>.
         /// </param>
@@ -193,7 +193,7 @@ namespace DataCore.Adapter {
             string id, 
             string name = null, 
             string description = null, 
-            IBackgroundTaskService scheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             ILogger logger = null
         ) {
             if (string.IsNullOrWhiteSpace(id)) {
@@ -215,7 +215,7 @@ namespace DataCore.Adapter {
 
             StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
-            TaskScheduler = new BackgroundTaskServiceWrapper(this, scheduler ?? BackgroundTaskService.Default);
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(this, backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);
 

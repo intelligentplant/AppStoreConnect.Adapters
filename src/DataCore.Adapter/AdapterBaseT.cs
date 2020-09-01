@@ -39,7 +39,7 @@ namespace DataCore.Adapter {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -55,9 +55,9 @@ namespace DataCore.Adapter {
         protected AdapterBase(
             string id, 
             TAdapterOptions options, 
-            IBackgroundTaskService taskScheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             ILogger logger = null
-        ) : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), taskScheduler, logger) { }
+        ) : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), backgroundTaskService, logger) { }
 
 
 
@@ -73,7 +73,7 @@ namespace DataCore.Adapter {
         /// <param name="optionsMonitor">
         ///   The monitor for the adapter's options type.
         /// </param>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -90,13 +90,13 @@ namespace DataCore.Adapter {
         protected AdapterBase(
             string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
-            IBackgroundTaskService taskScheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             ILogger logger = null
         ) : base(
             id, 
             optionsMonitor?.CurrentValue?.Name, 
             optionsMonitor?.CurrentValue?.Description,
-            taskScheduler,
+            backgroundTaskService,
             logger
         ) {
             if (optionsMonitor == null) {
@@ -182,7 +182,7 @@ namespace DataCore.Adapter {
 
                     var tcs = new TaskCompletionSource<bool>();
 
-                    TaskScheduler.QueueBackgroundWorkItem(async ct => { 
+                    BackgroundTaskService.QueueBackgroundWorkItem(async ct => { 
                         try {
                             await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
                         }

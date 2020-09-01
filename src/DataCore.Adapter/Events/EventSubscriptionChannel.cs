@@ -30,8 +30,8 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The context for the subscriber.
         /// </param>
-        /// <param name="scheduler">
-        ///   The task scheduler, used to run publish operations in a background task if required.
+        /// <param name="backgroundTaskService">
+        ///   The background task service, used to run publish operations in a background task if required.
         /// </param>
         /// <param name="topics">
         ///   The topics to subscribe to.
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.Events {
         public EventSubscriptionChannel(
             TIdentifier id,
             IAdapterCallContext context,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             IEnumerable<string> topics,
             EventMessageSubscriptionType subscriptionType,
             TimeSpan publishInterval,
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Events {
         ) : base(
             id,
             context,
-            scheduler,
+            backgroundTaskService,
             topics,
             publishInterval,
             cancellationTokens,

@@ -24,9 +24,9 @@ namespace DataCore.Adapter.Events {
     public class EventMessagePush : IEventMessagePush, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
-        /// The scheduler to use when running background tasks.
+        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService Scheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// Logging.
@@ -103,18 +103,18 @@ namespace DataCore.Adapter.Events {
         /// <param name="options">
         ///   The feature options.
         /// </param>
-        /// <param name="scheduler">
-        ///   The task scheduler to use when running background operations.
+        /// <param name="backgroundTaskService">
+        ///   The backgrounnd task service to use when running background operations.
         /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
+        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService backgroundTaskService, ILogger logger) {
             _options = options ?? new EventMessagePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            Scheduler.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
+            BackgroundTaskService.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
         }
 
 
@@ -138,7 +138,7 @@ namespace DataCore.Adapter.Events {
             var subscription = new EventSubscriptionChannel<int>(
                 subscriptionId,
                 context,
-                Scheduler,
+                BackgroundTaskService,
                 null,
                 request.SubscriptionType, 
                 TimeSpan.Zero,

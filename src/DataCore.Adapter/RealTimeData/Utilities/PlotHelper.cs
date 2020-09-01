@@ -60,7 +60,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data to use in the calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -96,7 +96,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(
+            TagSummary tag, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan bucketSize, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            IBackgroundTaskService backgroundTaskService = null, 
+            CancellationToken cancellationToken = default
+        ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -125,7 +133,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     ct
                 ),
                 true,
-                scheduler,
+                backgroundTaskService,
                 cancellationToken
             );
 
@@ -151,7 +159,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data to use in the calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -187,7 +195,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(IEnumerable<TagSummary> tags, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPlotValues(
+            IEnumerable<TagSummary> tags, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan bucketSize, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            IBackgroundTaskService backgroundTaskService = null, 
+            CancellationToken cancellationToken = default
+        ) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
@@ -215,7 +231,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     utcEndTime, 
                     bucketSize, 
                     rawData, 
-                    scheduler, 
+                    backgroundTaskService, 
                     cancellationToken
                 );
             }
@@ -267,7 +283,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         item.Writer.TryComplete();
                     }
                 }
-            }, scheduler, cancellationToken);
+            }, backgroundTaskService, cancellationToken);
 
             // Execute stream for each tag in the query and write all values into the shared 
             // result channel.
@@ -283,7 +299,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         ct
                     ))    
                 ).WithCancellation(ct).ConfigureAwait(false);
-            }, true, scheduler, cancellationToken);
+            }, true, backgroundTaskService, cancellationToken);
 
             return result;
         }

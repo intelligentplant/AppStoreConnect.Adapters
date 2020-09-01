@@ -26,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData {
         private bool _isDisposed;
 
         /// <summary>
-        /// The scheduler to use when running background tasks.
+        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService Scheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The logger.
@@ -111,24 +111,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="options">
         ///   The feature options.
         /// </param>
-        /// <param name="scheduler">
-        ///   The scheduler to use when running background tasks.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </param>
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
         public SnapshotTagValuePush(
             SnapshotTagValuePushOptions options,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             ILogger logger
         ) {
             _options = options ?? new SnapshotTagValuePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
-            Scheduler.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
-            Scheduler.QueueBackgroundWorkItem(ProcessValueChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessValueChangesChannel, DisposedToken);
         }
 
 
@@ -445,7 +445,7 @@ namespace DataCore.Adapter.RealTimeData {
             var subscription = new TagValueSubscriptionChannel<int>(
                 subscriptionId,
                 context,
-                Scheduler,
+                BackgroundTaskService,
                 tags,
                 request.PublishInterval,
                 new[] { DisposedToken, cancellationToken },
