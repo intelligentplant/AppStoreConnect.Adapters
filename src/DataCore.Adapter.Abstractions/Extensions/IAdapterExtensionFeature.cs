@@ -80,8 +80,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the JSON-serialized results of the operation.
+        ///   A channel that will stream the JSON-serialized results of the operation.
         /// </returns>
         Task<ChannelReader<string>> Stream(
             IAdapterCallContext context, 
@@ -107,8 +106,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the JSON-serialized results of the operation.
+        ///   A channel that will stream the JSON-serialized results of the operation.
         /// </returns>
         Task<ChannelReader<string>> DuplexStream(
             IAdapterCallContext context, 

@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Extensions {
     /// </summary>
     /// <remarks>
     ///   Extension features are expected to receive and send JSON-encoded values. Use the 
-    ///   <see cref="Deserialize"/> and <see cref="Serialize"/> methods to deserialize input values 
+    ///   <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> methods to deserialize input values 
     ///   from and serialize output values to JSON.
     /// </remarks>
     public abstract class AdapterExtensionFeature : IAdapterExtensionFeature {
@@ -174,7 +174,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Deserialize"/> and <see cref="Serialize"/> 
+        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
         ///   methods to deserialize input values and serialize output values from/to JSON.
         /// </para>
         /// 
@@ -222,7 +222,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Deserialize"/> and <see cref="Serialize"/> 
+        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
         ///   methods to deserialize input values and serialize output values from/to JSON.
         /// </para>
         /// 
@@ -271,7 +271,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Deserialize"/> and <see cref="Serialize"/> 
+        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
         ///   methods to deserialize input values and serialize output values from/to JSON.
         /// </para>
         /// 
@@ -510,16 +510,16 @@ namespace DataCore.Adapter.Extensions {
                         ? "<NOT USED>" 
                         : inputParameterDescription ?? "<UNKNOWN>",
                     ExampleValue = !hasInputParameter 
-                        ? Serialize(new object()) 
-                        : Serialize(inputParameterExample, true) ?? "<UNKNOWN>"
+                        ? SerializeObject(new object()) 
+                        : SerializeObject(inputParameterExample, true) ?? "<UNKNOWN>"
                 },
                 Output = new ExtensionFeatureOperationParameterDescriptor() {
                     Description = !hasReturnParameter
                         ? "<NOT USED>"
                         : returnParameterDescription ?? "<UNKNOWN>",
                     ExampleValue = !hasReturnParameter
-                        ? Serialize(new object())
-                        : Serialize(returnParameterExample, true) ?? "<UNKNOWN>"
+                        ? SerializeObject(new object())
+                        : SerializeObject(returnParameterExample, true) ?? "<UNKNOWN>"
                 },
             };
         }
@@ -588,9 +588,9 @@ namespace DataCore.Adapter.Extensions {
             );
 
             _boundInvokeMethods[operationId] = async (ctx, json, ct) => {
-                var inArg = Deserialize<TIn>(json);
+                var inArg = DeserializeObject<TIn>(json);
                 var result = await handler(ctx, inArg, ct).ConfigureAwait(false);
-                return Serialize(result);
+                return SerializeObject(result);
             };
 
             return true;
@@ -660,9 +660,9 @@ namespace DataCore.Adapter.Extensions {
             );
 
             _boundInvokeMethods[operationId] = (ctx, json, ct) => {
-                var inArg = Deserialize<TIn>(json);
+                var inArg = DeserializeObject<TIn>(json);
                 var result = handler(ctx, inArg);
-                return Task.FromResult(Serialize(result));
+                return Task.FromResult(SerializeObject(result));
             };
 
             return true;
@@ -726,7 +726,7 @@ namespace DataCore.Adapter.Extensions {
 
             _boundInvokeMethods[operationId] = async (ctx, json, ct) => {
                 var result = await handler(ctx, ct).ConfigureAwait(false);
-                return Serialize(result);
+                return SerializeObject(result);
             };
 
             return true;
@@ -790,7 +790,7 @@ namespace DataCore.Adapter.Extensions {
 
             _boundInvokeMethods[operationId] = (ctx, json, ct) => {
                 var result = handler(ctx);
-                return Task.FromResult(Serialize(result));
+                return Task.FromResult(SerializeObject(result));
             };
 
             return true;
@@ -860,7 +860,7 @@ namespace DataCore.Adapter.Extensions {
            );
 
             _boundStreamMethods[operationId] = async (ctx, json, ct) => {
-                var inArg = Deserialize<TIn>(json);
+                var inArg = DeserializeObject<TIn>(json);
                 var outChannel = await handler(ctx, inArg, ct).ConfigureAwait(false);
                 var result = Channel.CreateUnbounded<string>();
 
@@ -868,7 +868,7 @@ namespace DataCore.Adapter.Extensions {
                     try {
                         while (!ct2.IsCancellationRequested) {
                             var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(Serialize(val), ct2).ConfigureAwait(false);
+                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -951,7 +951,7 @@ namespace DataCore.Adapter.Extensions {
                     try {
                         while (!ct2.IsCancellationRequested) {
                             var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(Serialize(val), ct2).ConfigureAwait(false);
+                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -1042,7 +1042,7 @@ namespace DataCore.Adapter.Extensions {
                     try {
                         while (!ct2.IsCancellationRequested) {
                             var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await inChannel.Writer.WriteAsync(Deserialize<TIn>(val), ct2).ConfigureAwait(false);
+                            await inChannel.Writer.WriteAsync(DeserializeObject<TIn>(val), ct2).ConfigureAwait(false);
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -1059,7 +1059,7 @@ namespace DataCore.Adapter.Extensions {
                     try {
                         while (!ct2.IsCancellationRequested) {
                             var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(Serialize(val), ct2).ConfigureAwait(false);
+                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -1156,7 +1156,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="json"/> is <see langword="null"/>.
         /// </exception>
-        public static object Deserialize(Type type, string json) {
+        public static object DeserializeObject(Type type, string json) {
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
@@ -1183,12 +1183,45 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="json"/> is <see langword="null"/>.
         /// </exception>
-        public static T Deserialize<T>(string json) {
+        public static T DeserializeObject<T>(string json) {
             if (json == null) {
                 throw new ArgumentNullException(nameof(json));
             }
 
             return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+        }
+
+
+        /// <summary>
+        /// Deserializes a value from JSON to an anonymous type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="json">
+        ///   The JSON string.
+        /// </param>
+        /// <param name="definition">
+        ///   An instance of the anonymous type to deserialize the JSON to.
+        /// </param>
+        /// <returns>
+        ///   The deserialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="json"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="definition"/> is <see langword="null"/>.
+        /// </exception>
+        public static T DeserializeAnonymousType<T>(string json, T definition) {
+            if (json == null) {
+                throw new ArgumentNullException(nameof(json));
+            }
+            if (definition == null) {
+                throw new ArgumentNullException(nameof(definition));
+            }
+
+            return Newtonsoft.Json.JsonConvert.DeserializeAnonymousType(json, definition);
         }
 
 
@@ -1204,7 +1237,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The serialized value.
         /// </returns>
-        public static string Serialize(object value, bool indented = false) {
+        public static string SerializeObject(object value, bool indented = false) {
             return Newtonsoft.Json.JsonConvert.SerializeObject(
                 value, 
                 indented 

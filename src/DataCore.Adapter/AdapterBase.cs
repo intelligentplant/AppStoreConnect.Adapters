@@ -44,6 +44,11 @@ namespace DataCore.Adapter {
         private bool _isDisposed;
 
         /// <summary>
+        /// Indicates if the resources disposed by <see cref="DisposeCommon"/> have been disposed.
+        /// </summary>
+        private bool _isDisposedCommon;
+
+        /// <summary>
         /// Logging.
         /// </summary>
         protected internal ILogger Logger { get; }
@@ -702,12 +707,18 @@ namespace DataCore.Adapter {
         /// <see cref="DisposeAsyncCore"/>.
         /// </summary>
         private void DisposeCommon() {
+            if (_isDisposedCommon || _isDisposed) {
+                return;
+            }
+
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _healthCheckManager.Dispose();
             _properties.Clear();
             _loggerScope.Dispose();
             _startupLock.Dispose();
+
+            _isDisposedCommon = true;
         }
 
 
@@ -752,9 +763,10 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> as an additional cancellation token.
+        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> 
+        /// as an additional cancellation token.
         /// </summary>
-        private class BackgroundTaskServiceWrapper : IBackgroundTaskService {
+        private class BackgroundTaskServiceWrapper : IBackgroundTaskService, IDisposable {
 
             /// <summary>
             /// The owning adapter.
@@ -765,6 +777,12 @@ namespace DataCore.Adapter {
             /// The inner <see cref="IBackgroundTaskService"/> to use.
             /// </summary>
             private readonly IBackgroundTaskService _inner;
+
+            /// <inheritdoc/>
+            public bool IsRunning => _inner.IsRunning;
+
+            /// <inheritdoc/>
+            public int QueuedItemCount => _inner.QueuedItemCount;
 
 
             /// <summary>
@@ -784,16 +802,18 @@ namespace DataCore.Adapter {
 
             /// <inheritdoc/>
             public void QueueBackgroundWorkItem(BackgroundWorkItem workItem) {
-                if (workItem == null) {
-                    throw new ArgumentNullException(nameof(workItem));
-                }
-
                 if (workItem.WorkItemAsync != null) {
                     _inner.QueueBackgroundWorkItem(workItem.WorkItemAsync, workItem.Description, _adapter.StopToken);
                 }
                 else {
                     _inner.QueueBackgroundWorkItem(workItem.WorkItem, workItem.Description, _adapter.StopToken);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            public void Dispose() {
+                // No action required.
             }
 
         }

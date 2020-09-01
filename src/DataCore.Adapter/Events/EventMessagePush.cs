@@ -297,38 +297,45 @@ namespace DataCore.Adapter.Events {
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
-            try {
-                while (await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (_masterChannel.Reader.TryRead(out var message)) {
-                        if (message == null) {
-                            continue;
+            while (!cancellationToken.IsCancellationRequested) {
+                try {
+                    if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
+                    break;
+                }
+
+                while (_masterChannel.Reader.TryRead(out var message)) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        break;
+                    }
+
+                    if (message == null) {
+                        continue;
+                    }
+
+                    var subscribers = _subscriptions.Values.ToArray();
+                    foreach (var subscriber in subscribers) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
                         }
 
-                        var subscribers = _subscriptions.Values.ToArray();
-                        foreach (var subscriber in subscribers) {
-                            if (cancellationToken.IsCancellationRequested) {
-                                break;
+                        try {
+                            var success = subscriber.Publish(message);
+                            if (!success) {
+                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                             }
-
-                            try {
-                                var success = subscriber.Publish(message);
-                                if (!success) {
-                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
-                                }
-                            }
-                            catch (OperationCanceledException) { }
-                            catch (Exception e) {
-                                Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
-                            }
+                        }
+                        catch (Exception e) {
+                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException) {
-                // Cancellation token fired
-            }
-            catch (ChannelClosedException) {
-                // Channel was closed
             }
         }
 

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="$(IntelligentPlantBackgroundTasksAspNetCoreVersion)" />
+    <PackageReference Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="$(IntelligentPlantBackgroundTasksVersion)" />
   </ItemGroup>
   
   <ItemGroup>

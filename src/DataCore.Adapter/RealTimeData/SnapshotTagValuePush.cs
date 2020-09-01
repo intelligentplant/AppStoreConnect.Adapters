@@ -304,39 +304,48 @@ namespace DataCore.Adapter.RealTimeData {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
-                if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
                     break;
                 }
 
-                if (!_topicSubscriptionChangesChannel.Reader.TryRead(out var change) || change.Tag == null) {
-                    continue;
-                }
+                while (_topicSubscriptionChangesChannel.Reader.TryRead(out var change)) {
+                    if (change.Tag == null) {
+                        continue;
+                    }
+                    try {
+                        if (change.Added) {
+                            OnTagAdded(change.Tag);
+                        }
+                        else {
+                            OnTagRemoved(change.Tag);
+                        }
 
-                try {
-                    if (change.Added) {
-                        OnTagAdded(change.Tag);
+                        if (change.Processed != null) {
+                            change.Processed.TrySetResult(true);
+                        }
                     }
-                    else {
-                        OnTagRemoved(change.Tag);
-                    }
+                    catch (Exception e) {
+                        if (change.Processed != null) {
+                            change.Processed.TrySetException(e);
+                        }
 
-                    if (change.Processed != null) {
-                        change.Processed.TrySetResult(true);
+                        Logger.LogError(
+                            e,
+                            Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
+                            change.Tag,
+                            change.Added
+                                ? SubscriptionUpdateAction.Subscribe
+                                : SubscriptionUpdateAction.Unsubscribe
+                        );
                     }
-                }
-                catch (Exception e) {
-                    if (change.Processed != null) {
-                        change.Processed.TrySetException(e);
-                    }
-
-                    Logger.LogError(
-                        e,
-                        Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
-                        change.Tag,
-                        change.Added
-                            ? SubscriptionUpdateAction.Subscribe
-                            : SubscriptionUpdateAction.Unsubscribe
-                    );
                 }
             }
         }
@@ -355,32 +364,42 @@ namespace DataCore.Adapter.RealTimeData {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task ProcessValueChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
-                if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
                     break;
                 }
 
-                if (!_masterChannel.Reader.TryRead(out var item)) {
-                    continue;
-                }
-
-                Publish?.Invoke(item.Value);
-
-                foreach (var subscriber in item.Subscribers) {
+                while (_masterChannel.Reader.TryRead(out var item)) {
                     if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
 
-                    try {
-                        using (var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, subscriber.CancellationToken)) {
-                            var success = subscriber.Publish(item.Value);
-                            if (!success) {
-                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                    Publish?.Invoke(item.Value);
+
+                    foreach (var subscriber in item.Subscribers) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
+                        }
+
+                        try {
+                            using (var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, subscriber.CancellationToken)) {
+                                var success = subscriber.Publish(item.Value);
+                                if (!success) {
+                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                                }
                             }
                         }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        catch (OperationCanceledException) { }
+                        catch (Exception e) {
+                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        }
                     }
                 }
             }

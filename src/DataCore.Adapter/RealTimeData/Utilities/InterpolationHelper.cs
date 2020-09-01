@@ -534,7 +534,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             });

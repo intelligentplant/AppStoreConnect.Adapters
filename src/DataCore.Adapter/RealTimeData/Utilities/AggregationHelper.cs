@@ -747,7 +747,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             });
@@ -824,7 +824,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             });
@@ -950,7 +950,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = false
             });
@@ -958,7 +958,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var tagLookupById = tags.ToDictionary(x => x.Id);
 
             var tagRawDataChannels = tags.ToDictionary(x => x.Id, x => Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             }));
@@ -1059,7 +1059,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             });

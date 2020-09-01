@@ -5,51 +5,50 @@
   <!-- CoreFX Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>4.7.0</SystemComponentModelAnnotationsVersion>
-    <SystemTextJsonVersion>4.7.1</SystemTextJsonVersion>
-    <SystemThreadingChannelsVersion>4.7.0</SystemThreadingChannelsVersion>
+    <SystemTextJsonVersion>4.7.2</SystemTextJsonVersion>
+    <SystemThreadingChannelsVersion>4.7.1</SystemThreadingChannelsVersion>
   </PropertyGroup>
   
   <!-- ASP.NET Core/Microsoft Extension Packages -->
   <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>3.1.3</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>3.1.7</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.7</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
-    <MicrosoftBclAsyncInterfacesVersion>1.1.0</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.3</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.3</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftBclAsyncInterfacesVersion>1.1.1</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.7</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.7</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
   <PropertyGroup>
-    <GoogleProtobufVersion>3.11.4</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.28.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.28.1</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.28.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.28.1</GrpcToolsVersion>
+    <GoogleProtobufVersion>3.13.0</GoogleProtobufVersion>
+    <GrpcAspNetCoreServerVersion>2.31.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.31.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.31.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.31.0</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.0.0</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.6.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.3.0</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>16.7.1</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MSTestTestAdapterVersion>2.1.1</MSTestTestAdapterVersion>
-    <MSTestTestFrameworkVersion>2.1.1</MSTestTestFrameworkVersion>
+    <MSTestTestAdapterVersion>2.1.2</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion>2.1.2</MSTestTestFrameworkVersion>
   </PropertyGroup>
   
   <!-- Other Packages -->
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>15.0.5</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksAspNetCoreVersion>1.0.2</IntelligentPlantBackgroundTasksAspNetCoreVersion>
-    <IntelligentPlantBackgroundTasksVersion>1.0.2</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksVersion>2.0.1</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.4.2</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.5.1</NuGetVersioningVersion>
+    <NSwagAspNetCoreVersion>13.7.0</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>5.7.0</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>
