@@ -9,7 +9,7 @@ namespace DataCore.Adapter.Example {
     /// <summary>
     /// Example adapter extension feature.
     /// </summary>
-    [AdapterFeature("asc:extension/example/ping-pong")]
+    [AdapterExtensionFeature("example/ping-pong")]
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
         [Display(Name = "Ping", Description = "Performs a ping operation on the adapter.")]

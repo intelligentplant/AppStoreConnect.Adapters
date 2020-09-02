@@ -48,11 +48,11 @@ Adapters can define any number of the following standard features:
 
 ## Extension Features
 
-In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./Extensions/IAdapterExtensionFeature.cs) and must be annotated using the [AdapterFeatureAttribute](./AdapterFeatureAttribute.cs) attribute e.g.
+In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./Extensions/IAdapterExtensionFeature.cs) and must be annotated using the [AdapterExtensionFeatureAttribute](./Extensions/AdapterExtensionFeatureAttribute.cs) attribute, with a relative feature URI e.g.
 
 ```csharp
-[AdapterFeature(
-    "asc:extensions/com.myco/my-example", 
+[AdapterExtensionFeature(
+    "com.myco/my-example", 
     DisplayName = "My Example", 
     Description = "An example extension feature"
 )]
@@ -60,6 +60,10 @@ public interface IMyExampleExtensionFeature : IAdapterExtensionFeature {
     // - snip -
 }
 ```
+
+> *NOTE:* The absolute URI for an extension feature will be relative to `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` e.g. the relative URI `com.myco/my-example` will be transformed into `asc:features/extensions/com.myco/my-example/`.
+
+In order to simplify implementation of non-standard adapter features, the [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class in the [DataCore.Adapter](/src/DataCore.Adapter) project can be used as the basis of an extension feature implementation.
 
 
 ## Helper Classes

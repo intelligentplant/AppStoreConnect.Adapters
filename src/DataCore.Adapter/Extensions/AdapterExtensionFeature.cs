@@ -394,11 +394,34 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (!TryGetInterfaceMethodDeclaration(method, out var methodDeclaration)) {
+            MethodInfo methodDeclaration;
+            Type extensionFeatureType;
+
+            if (method.ReflectedType.IsExtensionAdapterFeature()) {
+                // The reflected type for the method is an extension feature, so we will look 
+                // directly on the method and its reflected type for metadata required to create 
+                // the extension feature operation descriptor.
+                methodDeclaration = method;
+                extensionFeatureType = method.ReflectedType;
+            }
+            else if (TryGetInterfaceMethodDeclaration(method, out methodDeclaration)) {
+                // We found the method declaration on an extension feature interface. We'll use 
+                // this interface definition and the associated method declaration to retrieve 
+                // metadata required to create the extension feature operation descriptor.
+                extensionFeatureType = methodDeclaration.ReflectedType;
+            }
+            else {
+                // We are unable to determine the extension feature that this method is associated 
+                // with, so we can't create a descriptor for it.
+                methodDeclaration = null;
+                extensionFeatureType = null;
+            }
+
+            if (methodDeclaration == null || extensionFeatureType == null) {
                 return false;
             }
 
-            operationId = GetOperationUri(methodDeclaration.ReflectedType, methodDeclaration.Name);
+            operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name);
 
             var displayNameAttr = methodDeclaration.GetCustomAttribute<DisplayNameAttribute>();
             var descriptionAttr = methodDeclaration.GetCustomAttribute<DescriptionAttribute>();

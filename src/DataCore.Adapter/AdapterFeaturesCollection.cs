@@ -103,7 +103,9 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            var implementedFeatures = featureProvider.GetType().GetInterfaces().Where(x => x.IsAdapterFeature());
+            var type = featureProvider.GetType();
+
+            var implementedFeatures = type.GetInterfaces().Where(x => x.IsAdapterFeature());
             foreach (var feature in implementedFeatures) {
                 if (!addStandardFeatures && feature.IsStandardAdapterFeature()) {
                     continue;
@@ -112,6 +114,10 @@ namespace DataCore.Adapter {
                     continue;
                 }
                 AddInternal(feature, featureProvider, false);
+            }
+
+            if (addExtensionFeatures && type.IsConcreteExtensionAdapterFeature()) {
+                AddInternal(type, featureProvider, false);
             }
         }
 
@@ -182,7 +188,15 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureType));
             }
             if (!featureType.IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature), nameof(AdapterFeatureAttribute)), nameof(featureType));
+                throw new ArgumentException(string.Format(
+                    CultureInfo.CurrentCulture, 
+                    Resources.Error_NotAnAdapterFeature,
+                    featureType.FullName,
+                    nameof(IAdapterFeature), 
+                    nameof(AdapterFeatureAttribute), 
+                    nameof(IAdapterExtensionFeature), 
+                    nameof(AdapterExtensionFeatureAttribute)
+                ), nameof(featureType));
             }
 
             AddInternal(featureType, feature, true);
@@ -214,9 +228,54 @@ namespace DataCore.Adapter {
         /// </exception>
         public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
             if (!typeof(TFeature).IsAdapterFeature()) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_NotAnAdapterFeature, nameof(IAdapterFeature), nameof(IAdapterExtensionFeature), nameof(AdapterFeatureAttribute)), nameof(feature));
+                throw new ArgumentException(string.Format(
+                    CultureInfo.CurrentCulture, 
+                    Resources.Error_NotAnAdapterFeature, 
+                    typeof(TFeature).FullName,
+                    nameof(IAdapterFeature), 
+                    nameof(AdapterFeatureAttribute), 
+                    nameof(IAdapterExtensionFeature), 
+                    nameof(AdapterExtensionFeatureAttribute)
+                ), nameof(feature));
             }
             AddInternal(typeof(TFeature), feature, true);
+        }
+
+
+        /// <summary>
+        /// Adds an extension adapter feature that does not use an interface declaration to define 
+        /// the feature URI.
+        /// </summary>
+        /// <typeparam name="TExtensionFeature">
+        ///   The feature implementation type. This must be a concrete class that implements 
+        ///   <see cref="IAdapterExtensionFeature"/>.
+        /// </typeparam>
+        /// <param name="feature">
+        ///   The feature implementation.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <typeparamref name="TExtensionFeature"/> is not a valie extension feature 
+        ///   implementation.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <typeparamref name="TExtensionFeature"/> has already been registered.
+        /// </exception>
+        public void Add<TExtensionFeature>(TExtensionFeature feature) where TExtensionFeature : class, IAdapterExtensionFeature {
+            if (!typeof(TExtensionFeature).IsConcreteExtensionAdapterFeature()) {
+                throw new ArgumentException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.Error_NotAnAdapterFeature,
+                    typeof(TExtensionFeature).FullName,
+                    nameof(IAdapterFeature),
+                    nameof(AdapterFeatureAttribute),
+                    nameof(IAdapterExtensionFeature),
+                    nameof(AdapterExtensionFeatureAttribute)
+                ), nameof(feature));
+            }
+            AddInternal(typeof(TExtensionFeature), feature, true);
         }
 
 

@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
-            AddFeature<IExampleExtensionFeature, ExampleExtensionImpl>(new ExampleExtensionImpl(this));
+            AddExtensionFeatures(new ExampleExtensionImpl(this));
         }
 
 

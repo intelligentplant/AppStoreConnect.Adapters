@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Proxy {
         /// <summary>
         /// <see cref="AdapterFeatureAttribute(string)"/> constructor reference.
         /// </summary>
-        private static readonly ConstructorInfo s_adapterFeatureAttributeConstructor;
+        private static readonly ConstructorInfo s_adapterExtensionFeatureAttributeConstructor;
 
         /// <summary>
         /// Namespace to use for dynamically generated feature interfaces.
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Proxy {
             var assemblyName = new AssemblyName(typeof(ExtensionFeatureProxyGenerator).Assembly.GetName().Name + ".DynamicExtensions");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             s_moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicExtensionsModule");
-            s_adapterFeatureAttributeConstructor = typeof(AdapterFeatureAttribute).GetConstructor(new[] { typeof(string) });
+            s_adapterExtensionFeatureAttributeConstructor = typeof(AdapterExtensionFeatureAttribute).GetConstructor(new[] { typeof(string) });
         }
 
 
@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Proxy {
             );
             typeBuilder.AddInterfaceImplementation(typeof(IAdapterExtensionFeature));
             typeBuilder.SetCustomAttribute(new CustomAttributeBuilder(
-                s_adapterFeatureAttributeConstructor,
+                s_adapterExtensionFeatureAttributeConstructor,
                 new object[] { featureUri.ToString() }
             ));
 

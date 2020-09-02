@@ -32,7 +32,7 @@ namespace DataCore.Adapter {
             .Where(x => s_adapterFeatureType.IsAssignableFrom(x))
             .Where(x => x != s_adapterFeatureType)
             .Where(x => x != s_adapterExtensionFeatureType)
-            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute())
+            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute<AdapterFeatureAttribute>())
             .ToArray();
 
 
@@ -63,11 +63,11 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return type.IsInterface && 
+            return 
                 // We don't check to see if the type is annotated with [AdapterFeature] when 
                 // comparing against standard features, because we use unit tests to ensure 
                 // that all standard features are correctly annotated.
-                (s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type)) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute())) &&
+                ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<AdapterExtensionFeatureAttribute>())) &&
                 type != s_adapterFeatureType && 
                 type != s_adapterExtensionFeatureType;
         }
@@ -104,6 +104,21 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Tests if the type is a concrete implementation of an extension adapter feature.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is a concrete extension adapter feature implementation, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsConcreteExtensionAdapterFeature(this Type type) {
+            return type.IsExtensionAdapterFeature() && type.IsClass && !type.IsAbstract &&!type.IsGenericTypeDefinition;
+        }
+
+
+        /// <summary>
         /// Tests if a type has been annotated with an <see cref="AdapterFeatureAttribute"/>.
         /// </summary>
         /// <param name="type">
@@ -113,8 +128,8 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the type has been annotated with an <see cref="AdapterFeatureAttribute"/>, 
         ///   or <see langword="false"/> otherwise.
         /// </returns>
-        private static bool IsAnnotatedWithAttributeFeatureAttribute(this Type type) {
-            return type.GetCustomAttribute<AdapterFeatureAttribute>() != null;
+        private static bool IsAnnotatedWithAttributeFeatureAttribute<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
+            return type.GetCustomAttribute<TAttr>() != null;
         }
 
 
@@ -201,6 +216,54 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uri));
             }
             return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
+        }
+
+
+        /// <summary>
+        /// Tests if a type has an <see cref="AdapterFeatureAttribute"/> that is a child path of 
+        /// the specified URI.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <param name="uriString">
+        ///   The URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type has an adapter feature URI that is a child path of 
+        ///   the specified URI, or <see langword="false"/> otherwise.
+        /// </returns>
+        private static bool HasAdapterFeatureUriWithPrefix(this Type type, string uriString) {
+            if (!UriHelper.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+                return false;
+            }
+
+            return type.HasAdapterFeatureUriWithPrefix(uri);
+        }
+
+
+        /// <summary>
+        /// Tests if a type has an <see cref="AdapterFeatureAttribute"/> that is a child path of 
+        /// the specified URI.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <param name="uri">
+        ///   The URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type has an adapter feature URI that is a child path of 
+        ///   the specified URI, or <see langword="false"/> otherwise.
+        /// </returns>
+        private static bool HasAdapterFeatureUriWithPrefix(this Type type, Uri uri) {
+            var attr = type.GetCustomAttribute<AdapterFeatureAttribute>();
+            if (attr == null || attr.Uri.Equals(uri)) {
+                return false;
+            }
+
+            var diff = uri.MakeRelativeUri(attr.Uri);
+            return !diff.IsAbsoluteUri && !diff.OriginalString.StartsWith("../", StringComparison.Ordinal);
         }
 
     }

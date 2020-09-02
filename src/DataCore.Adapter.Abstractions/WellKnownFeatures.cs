@@ -1,6 +1,7 @@
 ﻿using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter {
@@ -141,6 +142,19 @@ namespace DataCore.Adapter {
             /// URI for <see cref="IWriteSnapshotTagValues"/>.
             /// </summary>
             public const string WriteSnapshotTagValues = "asc:features/real-time-data/values/write/snapshot/";
+
+        }
+
+
+        /// <summary>
+        /// Defines URIs related to extension features.
+        /// </summary>
+        public static class Extensions {
+
+            /// <summary>
+            /// The root URI for all extension features (i.e. features extension <see cref="IAdapterExtensionFeature"/>).
+            /// </summary>
+            public const string ExtensionFeatureBasePath = "asc:features/extensions/";
 
         }
 

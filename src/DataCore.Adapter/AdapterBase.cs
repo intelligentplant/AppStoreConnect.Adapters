@@ -465,6 +465,55 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Adds all standard adapter features implemented by the specified feature provider. 
+        /// Standard feature types can be obtained by calling <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>
+        /// </summary>
+        /// <param name="provider">
+        ///   The object that will provide the adapter feature implementations.
+        /// </param>
+        public void AddStandardFeatures(object provider) {
+            AddFeatures(provider, true, false);
+        }
+
+
+        /// <summary>
+        /// Adds all extension adapter features implemented by the specified feature provider. See 
+        /// the remarks for details on how extension feature types are identified.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   Extension feature implementations supplied by the <paramref name="provider"/> are 
+        ///   identified in one of two ways:
+        /// </para>
+        /// 
+        /// <list type="number">
+        ///   <item>
+        ///     <description>
+        ///       If the <paramref name="provider"/> implements <see cref="IAdapterExtensionFeature"/> 
+        ///       and is directly annotated with <see cref="AdapterExtensionFeatureAttribute"/>, the 
+        ///       <paramref name="provider"/> will be directly registered using its own type as the 
+        ///       index in the adapter's features dictionary.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       If the <paramref name="provider"/> implements any interfaces that extend 
+        ///       <see cref="IAdapterExtensionFeature"/> that are annotated with 
+        ///       <see cref="AdapterExtensionFeatureAttribute"/>, the <paramref name="provider"/> 
+        ///       will be registered using each of the implemented extension feature interfaces.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public void AddExtensionFeatures(object provider) {
+            AddFeatures(provider, false, true);
+        }
+
+
+        /// <summary>
         /// Removes a registered feature.
         /// </summary>
         /// <typeparam name="TFeature">

@@ -196,6 +196,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid adapter feature type. Standard features must be interfaces that extend &apos;{1}&apos; and are annotated with &apos;{2}&apos;. Non-standard features must be interfaces or classes that extend &apos;{3}&apos; and are annotated with &apos;{4}&apos;..
+        /// </summary>
+        internal static string Error_NotAnAdapterFeature {
+            get {
+                return ResourceManager.GetString("Error_NotAnAdapterFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify an extension feature interface type (i.e. an interface derived from {0} and annotated with {1})..
         /// </summary>
         internal static string Error_NotAnExtensionFeatureInterface {

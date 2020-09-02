@@ -155,17 +155,21 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeExtensionFeatureUri() {
             using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
+                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, ExtensionFeatureUri);
+                var resolved = await accessor.GetAdapterAndFeature(
+                    context, 
+                    adapter.Descriptor.Id, 
+                    WellKnownFeatures.Extensions.ExtensionFeatureBasePath + ExtensionFeatureUri
+                );
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsTrue(resolved.IsFeatureResolved);
                 Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is ITestExtension);
+                Assert.IsTrue(resolved.Feature is TestExtension);
             }
         }
 
@@ -173,17 +177,17 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeQualifiedExtensionFeatureName() {
             using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
+                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(ITestExtension).FullName);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(TestExtension).FullName);
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsTrue(resolved.IsFeatureResolved);
                 Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is ITestExtension);
+                Assert.IsTrue(resolved.Feature is TestExtension);
             }
         }
 
@@ -191,12 +195,12 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task AdapterAccessor_ShouldNotResolveUnqualifiedExtensionFeatureName() {
             using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
+                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(ITestExtension).Name);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(TestExtension).Name);
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsFalse(resolved.IsFeatureResolved);
@@ -234,17 +238,11 @@ namespace DataCore.Adapter.Tests {
             }
         }
 
-        private const string ExtensionFeatureUri = "unit-test:test-extension";
-
-        [AdapterFeature(ExtensionFeatureUri)]
-        private interface ITestExtension : IAdapterExtensionFeature {
-
-            DateTime GetCurrentTime(IAdapterCallContext context);
-
-        }
+        private const string ExtensionFeatureUri = "unit-test/test-extension";
 
 
-        private class TestExtension : AdapterExtensionFeature, ITestExtension {
+        [AdapterExtensionFeature(ExtensionFeatureUri)]
+        private class TestExtension : AdapterExtensionFeature {
 
             public TestExtension() : base(null) {
                 Bind(GetCurrentTime);
