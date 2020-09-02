@@ -357,6 +357,9 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="method">
         ///   The method implementation.
         /// </param>
+        /// <param name="operationType">
+        ///   The operation type for the method.
+        /// </param>
         /// <param name="operationId">
         ///   The operation ID for the method.
         /// </param>
@@ -378,6 +381,7 @@ namespace DataCore.Adapter.Extensions {
         /// </returns>
         private static bool TryGetOperationDetailsFromMemberInfo(
             MethodInfo method, 
+            ExtensionFeatureOperationType operationType,
             out Uri operationId, 
             out string displayName,
             out string description,
@@ -421,7 +425,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name);
+            operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name, operationType);
 
             var displayNameAttr = methodDeclaration.GetCustomAttribute<DisplayNameAttribute>();
             var descriptionAttr = methodDeclaration.GetCustomAttribute<DescriptionAttribute>();
@@ -582,8 +586,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Invoke;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method, 
+                operationType,
                 out var operationId, 
                 out var name, 
                 out var description, 
@@ -598,7 +605,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-                ExtensionFeatureOperationType.Invoke,
+                operationType,
                 operationId,
                 name,
                 description,
@@ -654,8 +661,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Invoke;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -670,7 +680,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-                ExtensionFeatureOperationType.Invoke,
+                operationType,
                 operationId,
                 name,
                 description,
@@ -719,8 +729,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Invoke;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -735,7 +748,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-                ExtensionFeatureOperationType.Invoke,
+                operationType,
                 operationId,
                 name,
                 description,
@@ -783,8 +796,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Invoke;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -799,7 +815,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-                ExtensionFeatureOperationType.Invoke,
+                operationType,
                 operationId,
                 name,
                 description,
@@ -854,8 +870,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Stream;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -870,7 +889,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-               ExtensionFeatureOperationType.Stream,
+               operationType,
                operationId,
                name,
                description,
@@ -938,8 +957,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.Stream;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -954,7 +976,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-               ExtensionFeatureOperationType.Stream,
+               operationType,
                operationId,
                name,
                description,
@@ -1028,8 +1050,11 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
+            var operationType = ExtensionFeatureOperationType.DuplexStream;
+
             if (!TryGetOperationDetailsFromMemberInfo(
                 handler.Method,
+                operationType,
                 out var operationId,
                 out var name,
                 out var description,
@@ -1044,7 +1069,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             _boundDescriptors[operationId] = CreateDescriptor(
-               ExtensionFeatureOperationType.DuplexStream,
+               operationType,
                operationId,
                name,
                description,
@@ -1112,6 +1137,9 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="unqualifiedName">
         ///   The unqualified operation name.
         /// </param>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
         /// <returns>
         ///   The operation URI.
         /// </returns>
@@ -1122,8 +1150,8 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentException">
         ///   <paramref name="unqualifiedName"/> is <see langword="null"/> or white space.
         /// </exception>
-        protected static Uri GetOperationUri<TFeature>(string unqualifiedName) where TFeature : IAdapterExtensionFeature {
-            return GetOperationUri(typeof(TFeature), unqualifiedName);
+        protected static Uri GetOperationUri<TFeature>(string unqualifiedName, ExtensionFeatureOperationType operationType) where TFeature : IAdapterExtensionFeature {
+            return GetOperationUri(typeof(TFeature), unqualifiedName, operationType);
         }
 
 
@@ -1137,6 +1165,9 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="unqualifiedName">
         ///   The unqualified operation name.
         /// </param>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
         /// <returns>
         ///   The operation URI.
         /// </returns>
@@ -1147,7 +1178,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentException">
         ///   <paramref name="unqualifiedName"/> is <see langword="null"/> or white space.
         /// </exception>
-        protected static Uri GetOperationUri(Type featureType, string unqualifiedName) {
+        protected static Uri GetOperationUri(Type featureType, string unqualifiedName, ExtensionFeatureOperationType operationType) {
             if (!featureType.IsExtensionAdapterFeature()) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NotAnExtensionFeatureInterface, nameof(IAdapterExtensionFeature), nameof(AdapterFeatureAttribute)));
             }
@@ -1157,7 +1188,10 @@ namespace DataCore.Adapter.Extensions {
             }
 
             var featureUri = featureType.GetAdapterFeatureUri();
-            return UriHelper.EnsurePathHasTrailingSlash(new Uri(featureUri, unqualifiedName));
+            return UriHelper.EnsurePathHasTrailingSlash(new Uri(
+                featureUri, 
+                string.Concat(operationType.ToString(), "/", unqualifiedName)
+            ));
         }
 
 
