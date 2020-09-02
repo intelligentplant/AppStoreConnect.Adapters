@@ -67,5 +67,80 @@ namespace DataCore.Adapter {
             return true;
         }
 
+
+        /// <summary>
+        /// Tests if the URI is a child path of the specified <paramref name="parentUri"/>.
+        /// </summary>
+        /// <param name="uri">
+        ///   The URI.
+        /// </param>
+        /// <param name="parentUri">
+        ///   The parent URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the URI is a child of the <paramref name="parentUri"/>, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="parentUri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool IsChildPath(Uri uri, Uri parentUri) {
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            if (parentUri == null) {
+                throw new ArgumentNullException(nameof(parentUri));
+            }
+
+            if (!uri.IsAbsoluteUri || !parentUri.IsAbsoluteUri) {
+                return false;
+            }
+
+            var diff = EnsurePathHasTrailingSlash(parentUri).MakeRelativeUri(EnsurePathHasTrailingSlash(uri));
+            if (diff.IsAbsoluteUri || diff.OriginalString.StartsWith("../", StringComparison.Ordinal)) {
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// Tests if the URI is a child path of the specified <paramref name="parentUriString"/>.
+        /// </summary>
+        /// <param name="uri">
+        ///   The URI.
+        /// </param>
+        /// <param name="parentUriString">
+        ///   The parent URI string.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the URI is a child of the <paramref name="parentUriString"/>, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="parentUriString"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool IsChildPath(Uri uri, string parentUriString) {
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            if (parentUriString == null) {
+                throw new ArgumentNullException(nameof(parentUriString));
+            }
+
+            if (!Uri.TryCreate(parentUriString, UriKind.Absolute, out var parentUri)) {
+                return false;
+            }
+
+            return IsChildPath(uri, parentUri);
+        }
+
     }
 }

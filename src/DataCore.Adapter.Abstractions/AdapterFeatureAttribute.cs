@@ -106,8 +106,7 @@ namespace DataCore.Adapter {
                     : new Uri(baseUri, relativeUri)
             );
 
-            var diff = baseUri.MakeRelativeUri(absoluteUri);
-            if (diff.IsAbsoluteUri || diff.OriginalString.StartsWith("../", StringComparison.Ordinal)) {
+            if (!UriHelper.IsChildPath(absoluteUri, baseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
             }
 
