@@ -339,7 +339,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="anonymousTypeDefinition"/> is <see langword="null"/>.
         /// </exception>
-        public static Task<TOut> InvokeWithAnonymousType<TIn, TOut>(
+        public static Task<TOut> InvokeWithAnonymousResultType<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -434,7 +434,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="anonymousTypeDefinition"/> is <see langword="null"/>.
         /// </exception>
-        public static Task<TOut> InvokeWithAnonymousType<TOut>(
+        public static Task<TOut> InvokeWithAnonymousResultType<TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -544,7 +544,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="anonymousTypeDefinition"/> is <see langword="null"/>.
         /// </exception>
-        public static Task<ChannelReader<TOut>> StreamWithAnonymousType<TIn, TOut>(
+        public static Task<ChannelReader<TOut>> StreamWithAnonymousResultType<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -639,7 +639,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="anonymousTypeDefinition"/> is <see langword="null"/>.
         /// </exception>
-        public static Task<ChannelReader<TOut>> StreamWithAnonymousType<TOut>(
+        public static Task<ChannelReader<TOut>> StreamWithAnonymousResultType<TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -755,7 +755,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="anonymousTypeDefinition"/> is <see langword="null"/>.
         /// </exception>
-        public static Task<ChannelReader<TOut>> DuplexStreamWithAnonymousType<TIn, TOut>(
+        public static Task<ChannelReader<TOut>> DuplexStreamWithAnonymousResultType<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
