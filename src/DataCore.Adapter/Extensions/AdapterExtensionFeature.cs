@@ -29,6 +29,11 @@ namespace DataCore.Adapter.Extensions {
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
         /// <summary>
+        /// Base URI for extension features.
+        /// </summary>
+        internal static Uri ExtensionUriBase { get; } = new Uri(WellKnownFeatures.Extensions.ExtensionFeatureBasePath);
+
+        /// <summary>
         /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
         /// </summary>
         protected IBackgroundTaskService BackgroundTaskService { get; }
@@ -66,6 +71,14 @@ namespace DataCore.Adapter.Extensions {
         /// </param>
         protected AdapterExtensionFeature(IBackgroundTaskService backgroundTaskService) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+
+            foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
+                var opUri = GetOperationUri(featureUri, nameof(IAdapterExtensionFeature.GetOperations), ExtensionFeatureOperationType.Invoke);
+                _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
+                    var ops = await this.GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
+                    return SerializeObject(ops);
+                };
+            }
         }
 
 
@@ -106,7 +119,6 @@ namespace DataCore.Adapter.Extensions {
             }
             return DuplexStream(context, operationId, channel, cancellationToken);
         }
-
 
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
@@ -601,7 +613,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -676,7 +688,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -744,7 +756,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -811,7 +823,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -885,7 +897,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundStreamMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -972,7 +984,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundStreamMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -1065,7 +1077,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (_boundDescriptors.ContainsKey(operationId)) {
+            if (_boundDescriptors.ContainsKey(operationId) || _boundDuplexStreamMethods.ContainsKey(operationId)) {
                 return false;
             }
 
@@ -1189,8 +1201,28 @@ namespace DataCore.Adapter.Extensions {
             }
 
             var featureUri = featureType.GetAdapterFeatureUri();
+            return GetOperationUri(featureUri, unqualifiedName, operationType);
+        }
+
+
+        /// <summary>
+        /// Gets the operation URI for the specified unqualified extension operation name.
+        /// </summary>
+        /// <param name="featureUri">
+        ///   The extension feature URI.
+        /// </param>
+        /// <param name="unqualifiedName">
+        ///   The unqualified operation name.
+        /// </param>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
+        /// <returns>
+        ///   The operation URI.
+        /// </returns>
+        private static Uri GetOperationUri(Uri featureUri, string unqualifiedName, ExtensionFeatureOperationType operationType) {
             return UriHelper.EnsurePathHasTrailingSlash(new Uri(
-                featureUri, 
+                featureUri,
                 unqualifiedName.EndsWith("/", StringComparison.Ordinal)
                     ? string.Concat(unqualifiedName, operationType.ToString())
                     : string.Concat(unqualifiedName, "/", operationType.ToString())

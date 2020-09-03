@@ -37,6 +37,25 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Tests if the type is a non-abstract class that is not a generic type definition.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is a non-abstract class that is not a generic 
+        ///   type definition, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsConcreteClass(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            return type.IsClass && !type.IsAbstract && !type.IsGenericTypeDefinition;
+        }
+
+
+        /// <summary>
         /// Gets the <see cref="Type"/> objects that correspond to the standard adapter feature 
         /// types.
         /// </summary>
@@ -114,7 +133,7 @@ namespace DataCore.Adapter {
         ///   or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsConcreteExtensionAdapterFeature(this Type type) {
-            return type.IsExtensionAdapterFeature() && type.IsClass && !type.IsAbstract &&!type.IsGenericTypeDefinition;
+            return type.IsExtensionAdapterFeature() && type.IsConcreteClass();
         }
 
 
@@ -129,7 +148,37 @@ namespace DataCore.Adapter {
         ///   or <see langword="false"/> otherwise.
         /// </returns>
         private static bool IsAnnotatedWithAttributeFeatureAttribute<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
-            return type.GetCustomAttribute<TAttr>() != null;
+            return type.GetAttributeFeatureAttributes<TAttr>().Any();
+        }
+
+
+        /// <summary>
+        /// Gets all instances of <see cref="AdapterFeatureAttribute"/> (or a derived type) found 
+        /// directly on the type, or on any interfaces the type implements (if the type is a 
+        /// non-abstract, non-generic class).
+        /// </summary>
+        /// <typeparam name="TAttr">
+        ///   The attribute type.
+        /// </typeparam>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The matching attributes.
+        /// </returns>
+        private static IEnumerable<TAttr> GetAttributeFeatureAttributes<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
+            var attribute = type.GetCustomAttribute<TAttr>();
+            if (attribute != null) {
+                yield return attribute;
+            }
+
+            if (type.IsConcreteClass()) {
+                foreach (var ifType in type.GetInterfaces()) {
+                    foreach (var attr in ifType.GetAttributeFeatureAttributes<TAttr>()) {
+                        yield return attr;
+                    }
+                }
+            }
         }
 
 
@@ -167,10 +216,34 @@ namespace DataCore.Adapter {
         ///   The adapter feature URI for the type, or <see langword="null"/> if the type is not 
         ///   an adapter feature type.
         /// </returns>
+        /// <remarks>
+        ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
+        ///   features, only the first implemented feature URI will be returned.
+        /// </remarks>
         public static Uri GetAdapterFeatureUri(this Type type) {
-            return type.IsAdapterFeature() 
-                ? type.GetCustomAttribute<AdapterFeatureAttribute>()?.Uri
+            return type.IsAdapterFeature()
+                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.FirstOrDefault()?.Uri
                 : null;
+        }
+
+
+        /// <summary>
+        /// Gets the adapter feature URIs for the type.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The adapter feature URIs for the type.
+        /// </returns>
+        /// <remarks>
+        ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
+        ///   features, the URIs for all implemented features will be returned.
+        /// </remarks>
+        public static IEnumerable<Uri> GetAdapterFeatureUris(this Type type) {
+            return type.IsAdapterFeature()
+                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.Select(x => x.Uri)?.ToArray() ?? Array.Empty<Uri>()
+                : Array.Empty<Uri>();
         }
 
 

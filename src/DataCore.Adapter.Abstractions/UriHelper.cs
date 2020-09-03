@@ -99,12 +99,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            var diff = EnsurePathHasTrailingSlash(parentUri).MakeRelativeUri(EnsurePathHasTrailingSlash(uri));
-            if (diff.IsAbsoluteUri || diff.OriginalString.StartsWith("../", StringComparison.Ordinal)) {
-                return false;
-            }
-
-            return true;
+            return parentUri.IsBaseOf(uri);
         }
 
 

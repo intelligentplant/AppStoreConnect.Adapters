@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -248,6 +250,55 @@ namespace DataCore.Adapter.Extensions {
             }, cancellationToken);
 
             return outChannel.Reader;
+        }
+
+        #endregion
+
+        #region [ GetOperations Overloads ]
+
+        /// <summary>
+        /// Gets the operations that are supported by the extension feature that have an operation 
+        /// URI that is a child of the specified feature URI.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI to filter the results by. This can be useful if a class implements 
+        ///   multiple extension features.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The operation descriptors.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="featureUri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="featureUri"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </exception>
+        public static async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+            this IAdapterExtensionFeature feature,
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
+            }
+            if (!UriHelper.IsChildPath(featureUri, AdapterExtensionFeature.ExtensionUriBase)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(featureUri));
+            }
+            var ops = await feature.GetOperations(context, cancellationToken).ConfigureAwait(false);
+            return ops.Where(x => UriHelper.IsChildPath(x.OperationId, featureUri)).ToArray();
         }
 
         #endregion

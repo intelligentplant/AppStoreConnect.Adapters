@@ -104,12 +104,24 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public Task ProxyShouldHaveLocalImplementationForAllStandardRemoteFeatures() {
+        public Task ProxyShouldHaveLocalImplementationForAllRemoteStandardFeatures() {
             return RunAdapterTest((proxy, context) => {
                 foreach (var featureUriOrName in proxy.RemoteDescriptor.Features) {
                     if (UnsupportedStandardFeatures.Contains(featureUriOrName, StringComparer.OrdinalIgnoreCase)) {
                         continue;
                     }
+                    Assert.IsTrue(proxy.HasFeature(featureUriOrName), $"Expected to find local implementation for remote feature: {featureUriOrName}");
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task ProxyShouldHaveLocalImplementationForAllRemoteExtensionFeatures() {
+            return RunAdapterTest((proxy, context) => {
+                foreach (var featureUriOrName in proxy.RemoteDescriptor.Extensions) {
                     Assert.IsTrue(proxy.HasFeature(featureUriOrName), $"Expected to find local implementation for remote feature: {featureUriOrName}");
                 }
 

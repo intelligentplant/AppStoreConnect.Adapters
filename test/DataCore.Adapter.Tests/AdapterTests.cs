@@ -641,6 +641,43 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public Task PingPongExtensionShouldReturnAvailableOperationsViaInvoke() {
+            return RunAdapterTest(async (adapter, context) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
+                    Assert.Inconclusive("Invoke operation not available.");
+                }
+
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var expectedOperations = ExpectedExtensionFeatureOperationTypes();
+
+                operations = operations.Where(x => expectedOperations.Contains(x.OperationType)).ToArray();
+
+                var operationId = new Uri(string.Concat(
+                    PingPongExtension.FeatureUri,
+                    nameof(IAdapterExtensionFeature.GetOperations),
+                    "/",
+                    ExtensionFeatureOperationType.Invoke.ToString(),
+                    "/"
+                ));
+
+                var operationsFromInvoke = await feature.Invoke<IEnumerable<ExtensionFeatureOperationDescriptor>>(context, operationId, default);
+
+                Assert.IsNotNull(operationsFromInvoke);
+                foreach (var op in operations) {
+                    var invokeOp = operationsFromInvoke.FirstOrDefault(x => x.OperationId.Equals(op.OperationId));
+                    Assert.IsNotNull(invokeOp, $"Expected to find operation '{op.OperationId}'.");
+                }
+            });
+        }
+
+
+        [TestMethod]
         public Task PingPongInvokeMethodShouldReturnCorrectValue() {
             return RunAdapterTest(async (adapter, context) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
