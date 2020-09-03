@@ -26,6 +26,14 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType, string topic);
 
+        protected virtual IEnumerable<ExtensionFeatureOperationType> ExpectedExtensionFeatureOperationTypes() {
+            return new[] { 
+                ExtensionFeatureOperationType.Invoke,
+                ExtensionFeatureOperationType.Stream,
+                ExtensionFeatureOperationType.DuplexStream
+            };
+        }
+
 
         [TestInitialize]
         public void TestInitialize() {
@@ -614,8 +622,31 @@ namespace DataCore.Adapter.Tests {
         #region [ Ping-Pong Extension ]
 
         [TestMethod]
+        public Task PingPongExtensionShouldReturnAvailableOperations() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var expectedOperations = ExpectedExtensionFeatureOperationTypes();
+
+                foreach (var type in expectedOperations) {
+                    Assert.IsTrue(operations.Any(op => op.OperationType == type), $"Expected to find operation type {type}.");
+                }
+            });
+        }
+
+
+        [TestMethod]
         public Task PingPongInvokeMethodShouldReturnCorrectValue() {
             return RunAdapterTest(async (adapter, context) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
+                    Assert.Inconclusive("Invoke operation not available.");
+                }
+
                 var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
                 if (feature == null) {
                     AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
@@ -626,7 +657,7 @@ namespace DataCore.Adapter.Tests {
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke)?.OperationId;
                 if (operationId == null) {
-                    Assert.Inconclusive("Invoke operation not available.");
+                    Assert.Fail("Invoke operation should be available.");
                 }
 
                 var pingMessage = new PingMessage() { 
@@ -650,6 +681,10 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task PingPongStreamMethodShouldReturnCorrectValue() {
             return RunAdapterTest(async (adapter, context) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
+                    Assert.Inconclusive("Stream operation not available.");
+                }
+
                 var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
                 if (feature == null) {
                     AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
@@ -660,7 +695,7 @@ namespace DataCore.Adapter.Tests {
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Stream)?.OperationId;
                 if (operationId == null) {
-                    Assert.Inconclusive("Stream operation not available.");
+                    Assert.Fail("Stream operation should be available.");
                 }
 
                 var pingMessage = new PingMessage() {
@@ -692,6 +727,10 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task PingPongDuplexStreamMethodShouldReturnCorrectValue() {
             return RunAdapterTest(async (adapter, context) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
+                    Assert.Inconclusive("DuplexStream operation not available.");
+                }
+
                 var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
                 if (feature == null) {
                     AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
@@ -702,7 +741,7 @@ namespace DataCore.Adapter.Tests {
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.DuplexStream)?.OperationId;
                 if (operationId == null) {
-                    Assert.Inconclusive("DuplexStream operation not available.");
+                    Assert.Fail("DuplexStream operation should be available.");
                 }
 
                 var pingMessages = new List<PingMessage>();
