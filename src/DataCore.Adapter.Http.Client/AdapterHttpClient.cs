@@ -245,7 +245,9 @@ namespace DataCore.Adapter.Http.Client {
             RequestMetadata metadata
         ) {
             var result = CreateHttpRequestMessage(method, url, metadata);
-            result.Content = new ObjectContent(typeof(TContent), content, new System.Net.Http.Formatting.JsonMediaTypeFormatter());
+            result.Content = content is HttpContent httpContent
+                ? httpContent
+                : new ObjectContent(typeof(TContent), content, new System.Net.Http.Formatting.JsonMediaTypeFormatter());
 
             return result;
         }

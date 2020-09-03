@@ -219,7 +219,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             if (!resolvedFeature.IsFeatureResolved) {
-                throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(featureUri)));
+                throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri));
             }
 
             if (!resolvedFeature.IsFeatureAuthorized) {

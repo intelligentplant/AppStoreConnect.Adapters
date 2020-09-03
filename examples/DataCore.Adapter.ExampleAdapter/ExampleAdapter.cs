@@ -25,14 +25,14 @@ namespace DataCore.Adapter.Example {
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
         /// </summary>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="logger">
         ///   The adapter logger.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService taskScheduler, ILogger<ExampleAdapter> logger) : base(
+        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, ILogger<ExampleAdapter> logger) : base(
             "wind-power",
             new Csv.CsvAdapterOptions() {
                 Name = "Wind Power Energy Company",
@@ -41,13 +41,13 @@ namespace DataCore.Adapter.Example {
                 SnapshotPushUpdateInterval = 5000,
                 GetCsvStream = () => typeof(ExampleAdapter).Assembly.GetManifestResourceStream(typeof(ExampleAdapter), CsvFile)
             },
-            taskScheduler,
+            backgroundTaskService,
             logger
         ) {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
-            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, taskScheduler, Logger));
+            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageManagerOptions() { Capacity = 500 }, backgroundTaskService, Logger));
             AddExtensionFeatures(new ExampleExtensionImpl(this));
         }
 

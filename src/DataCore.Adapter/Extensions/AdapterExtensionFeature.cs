@@ -1196,6 +1196,50 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
+        /// Gets the extension feature URI from the specified operation URI.
+        /// </summary>
+        /// <param name="operationUri">
+        ///   The operation URI.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI
+        /// </param>
+        /// <param name="error">
+        ///   The reason for the failure, if the return value is <see langword="false"/>.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if a valid extension feature URI could be extracted, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="operationUri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool TryGetFeatureUriFromOperationUri(Uri operationUri, out Uri featureUri, out string error) {
+            if (operationUri == null) {
+                throw new ArgumentNullException(nameof(operationUri));
+            }
+
+            error = null;
+
+            if (!operationUri.IsAbsoluteUri) {
+                featureUri = null;
+                error = SharedResources.Error_AbsoluteUriRequired;
+                return false;
+            }
+
+            if (!UriHelper.IsChildPath(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+                featureUri = null;
+                error = Resources.Error_InvalidExtensionFeatureOperationUri;
+                return false;
+            }
+
+            // Operation URIs are in the format <feature_uri>/<operation_type>/<operation_name>
+            featureUri = new Uri(operationUri, "../../");
+            return true;
+        }
+
+
+        /// <summary>
         /// Deserializes a value from JSON.
         /// </summary>
         /// <param name="type">

@@ -162,6 +162,9 @@
     <value>Invalid base date: {0}</value>
     <comment>{0} - base date string</comment>
   </data>
+  <data name="Error_InvalidExtensionFeatureOperationUri" xml:space="preserve">
+    <value>The specified URI is not a valid extension feature operation URI.</value>
+  </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
     <value>Object does not implement feature '{0}'.</value>
     <comment>{0} - feature name</comment>

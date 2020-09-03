@@ -108,7 +108,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            var featureUri = new Uri(operationId, "../");
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+            }
 
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -148,7 +150,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            var featureUri = new Uri(operationId, "../");
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+            }
 
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
@@ -203,7 +207,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            var featureUri = new Uri(operationId, "../");
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+            }
 
             var adapterId = request.AdapterId;
             

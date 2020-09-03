@@ -93,7 +93,7 @@ namespace DataCore.Adapter {
             }
 
             if (!UriHelper.TryCreateUriWithTrailingSlash(baseUriString, out var baseUri)) {
-                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(baseUriString));
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(baseUriString));
             }
 
             if (!Uri.TryCreate(relativeUriString, UriKind.RelativeOrAbsolute, out var relativeUri)) {

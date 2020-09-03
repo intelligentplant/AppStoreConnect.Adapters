@@ -187,6 +187,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified URI is not a valid extension feature operation URI..
+        /// </summary>
+        internal static string Error_InvalidExtensionFeatureOperationUri {
+            get {
+                return ResourceManager.GetString("Error_InvalidExtensionFeatureOperationUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Object does not implement feature &apos;{0}&apos;..
         /// </summary>
         internal static string Error_NotAFeatureImplementation {

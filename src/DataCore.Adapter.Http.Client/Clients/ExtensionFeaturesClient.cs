@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
                 throw new ArgumentNullException(nameof(featureId));
             }
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?uri={Uri.EscapeDataString(featureId.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?id={Uri.EscapeDataString(featureId.ToString())}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -127,13 +127,14 @@ namespace DataCore.Adapter.Http.Client.Clients {
                 throw new ArgumentNullException(nameof(operationId));
             }
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke?uri={Uri.EscapeDataString(operationId.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke?id={Uri.EscapeDataString(operationId.ToString())}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, argument, metadata))
+            using (var formData = new FormUrlEncodedContent(new Dictionary<string, string>() { [nameof(argument)] = argument }))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, formData, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<string>(cancellationToken).ConfigureAwait(false);
+                return await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 

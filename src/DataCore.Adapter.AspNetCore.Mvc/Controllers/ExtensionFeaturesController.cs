@@ -106,7 +106,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             try {
                 var ops = await resolvedFeature.Feature.GetOperations(callContext, cancellationToken).ConfigureAwait(false);
-                return Ok(ops?.Where(x => x != null).ToArray()); // 200
+                // Note that we filter out any non-invocation operations here!
+                return Ok(ops?.Where(x => x != null && x.OperationType == ExtensionFeatureOperationType.Invoke).ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>()); // 200
             }
             catch (ArgumentException e) {
                 return BadRequest(e.Message); // 400
@@ -136,12 +137,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a string describing the result of the operation. 
         ///   Callers are responsible for correctly parsing or inferring meaning from this result.
         /// </returns>
-        [HttpGet]
         [HttpPost]
         [Route("{adapterId}/operations/invoke")]
         public async Task<IActionResult> InvokeExtension(
             string adapterId, 
             [FromQuery] Uri id, 
+            [FromForm]
             string argument = null, 
             CancellationToken cancellationToken = default
         ) {
@@ -151,8 +152,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             id = UriHelper.EnsurePathHasTrailingSlash(id);
-            var featureUri = new Uri(id, "../");
-            
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(id, out var featureUri, out var error)) {
+                return BadRequest(error); // 400
+            }
+
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
@@ -165,7 +168,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             try {
-                return Ok(await resolvedFeature.Feature.Invoke(callContext, id, argument, cancellationToken).ConfigureAwait(false)); // 200
+                var result = new ContentResult() {
+                    Content = await resolvedFeature.Feature.Invoke(callContext, id, argument, cancellationToken).ConfigureAwait(false),
+                    ContentType = "application/json",
+                    StatusCode = 200
+                };
+
+                return result; // 200
             }
             catch (ArgumentException e) {
                 return BadRequest(e.Message); // 400

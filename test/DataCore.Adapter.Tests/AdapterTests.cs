@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -604,6 +605,138 @@ namespace DataCore.Adapter.Tests {
                     else {
                         Assert.IsTrue(messages2.First().UtcEventTime <= messages.Last().UtcEventTime);
                     }
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ Ping-Pong Extension ]
+
+        [TestMethod]
+        public Task PingPongInvokeMethodShouldReturnCorrectValue() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke)?.OperationId;
+                if (operationId == null) {
+                    Assert.Inconclusive("Invoke operation not available.");
+                }
+
+                var pingMessage = new PingMessage() { 
+                    CorrelationId = Guid.NewGuid(),
+                    UtcClientTime = DateTime.UtcNow
+                };
+
+                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(
+                    context,
+                    operationId,
+                    pingMessage,
+                    default
+                );
+
+                Assert.IsNotNull(pongMessage);
+                Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+            });
+        }
+
+
+        [TestMethod]
+        public Task PingPongStreamMethodShouldReturnCorrectValue() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Stream)?.OperationId;
+                if (operationId == null) {
+                    Assert.Inconclusive("Stream operation not available.");
+                }
+
+                var pingMessage = new PingMessage() {
+                    CorrelationId = Guid.NewGuid(),
+                    UtcClientTime = DateTime.UtcNow
+                };
+
+                var reader = await feature.Stream<PingMessage, PongMessage>(
+                    context,
+                    operationId,
+                    pingMessage,
+                    default
+                );
+
+                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(5))) {
+                    var ct = ctSource.Token;
+                    var pongMessage = await reader.ReadAsync(ct);
+
+                    Assert.IsNotNull(pongMessage);
+                    Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+
+                    // Should be no more values in the stream
+                    Assert.IsFalse(await reader.WaitToReadAsync(ct));
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task PingPongDuplexStreamMethodShouldReturnCorrectValue() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.DuplexStream)?.OperationId;
+                if (operationId == null) {
+                    Assert.Inconclusive("DuplexStream operation not available.");
+                }
+
+                var pingMessages = new List<PingMessage>();
+                for (var i = 0; i < 5; i++) {
+                    pingMessages.Add(new PingMessage() {
+                        CorrelationId = Guid.NewGuid(),
+                        UtcClientTime = DateTime.UtcNow
+                    });
+                }
+
+                var reader = await feature.DuplexStream<PingMessage, PongMessage>(
+                    context,
+                    operationId,
+                    pingMessages.PublishToChannel(),
+                    default
+                );
+
+                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(5))) {
+                    var ct = ctSource.Token;
+
+                    var messagesRead = 0;
+                    await foreach(var pongMessage in reader.ReadAllAsync(ct).ConfigureAwait(false)) {
+                        ++messagesRead;
+                        if (messagesRead > pingMessages.Count) {
+                            Assert.Fail("Incorrect number of pong messages received.");
+                        }
+
+                        var pingMessage = pingMessages[messagesRead - 1];
+
+                        Assert.IsNotNull(pongMessage);
+                        Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                    }
+
+                    Assert.AreEqual(pingMessages.Count, messagesRead, "Incorrect number of pong messages received.");
                 }
             });
         }

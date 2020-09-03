@@ -80,8 +80,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
-            var featureUri = new Uri(operationId, "../");
-            
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new ArgumentException(error, nameof(operationId));
+            }
+
             var resolved = await ResolveAdapterAndExtensionFeature(
                 adapterCallContext, 
                 adapterId, 
@@ -128,7 +130,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
-            var featureUri = new Uri(operationId, "../");
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new ArgumentException(error, nameof(operationId));
+            }
 
             var resolved = await ResolveAdapterAndExtensionFeature(
                 adapterCallContext,
@@ -176,7 +180,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
 
             operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
-            var featureUri = new Uri(operationId, "../");
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new ArgumentException(error, nameof(operationId));
+            }
 
             var resolved = await ResolveAdapterAndExtensionFeature(
                 adapterCallContext,

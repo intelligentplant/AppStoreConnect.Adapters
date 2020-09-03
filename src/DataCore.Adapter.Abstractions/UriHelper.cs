@@ -95,7 +95,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(parentUri));
             }
 
-            if (!uri.IsAbsoluteUri || !parentUri.IsAbsoluteUri) {
+            if (!uri.IsAbsoluteUri || !parentUri.IsAbsoluteUri || uri.Equals(parentUri)) {
                 return false;
             }
 
