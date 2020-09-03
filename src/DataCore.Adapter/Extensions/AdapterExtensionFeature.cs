@@ -14,11 +14,11 @@ using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Extensions {
 
+#pragma warning disable CS0419 // Ambiguous reference in cref attribute
     /// <summary>
     /// Provides a base implementation of <see cref="IAdapterExtensionFeature"/>. Extend from this 
-    /// class when writing extension features and override the protected <see cref="Invoke"/>, 
-    /// <see cref="Stream"/> and <see cref="DuplexStream"/> methods to allow calls to be 
-    /// dynamically dispatched to your feature implementation.
+    /// class when writing extension features and use call the <see cref="Bind"/> overloads in your 
+    /// class constructor to register available operations.
     /// </summary>
     /// <remarks>
     ///   Extension features are expected to receive and send JSON-encoded values. Use the 
@@ -26,6 +26,7 @@ namespace DataCore.Adapter.Extensions {
     ///   from and serialize output values to JSON.
     /// </remarks>
     public abstract class AdapterExtensionFeature : IAdapterExtensionFeature {
+#pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
@@ -130,7 +131,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   The <see cref="GetOperationUri"/> method can be used to generate URIs for extension 
+        ///   The <see cref="GetOperationUri"/> method should be used to generate URIs for extension 
         ///   feature operations.
         /// </para>
         /// 
@@ -1190,7 +1191,9 @@ namespace DataCore.Adapter.Extensions {
             var featureUri = featureType.GetAdapterFeatureUri();
             return UriHelper.EnsurePathHasTrailingSlash(new Uri(
                 featureUri, 
-                string.Concat(operationType.ToString(), "/", unqualifiedName)
+                unqualifiedName.EndsWith("/", StringComparison.Ordinal)
+                    ? string.Concat(unqualifiedName, operationType.ToString())
+                    : string.Concat(unqualifiedName, "/", operationType.ToString())
             ));
         }
 
