@@ -17,7 +17,8 @@ namespace DataCore.Adapter.Extensions {
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
     /// <summary>
     /// Provides a base implementation of <see cref="IAdapterExtensionFeature"/>. Extend from this 
-    /// class when writing extension features and use call the <see cref="Bind"/> overloads in your 
+    /// class when writing extension features and use call the <see cref="BindInvoke"/>, 
+    /// <see cref="BindStream"/>, and <see cref="BindDuplexStream"/> overloads in your 
     /// class constructor to register available operations.
     /// </summary>
     /// <remarks>
@@ -25,7 +26,7 @@ namespace DataCore.Adapter.Extensions {
     ///   <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> methods to deserialize input values 
     ///   from and serialize output values to JSON.
     /// </remarks>
-    public abstract class AdapterExtensionFeature : IAdapterExtensionFeature {
+    public abstract partial class AdapterExtensionFeature : IAdapterExtensionFeature {
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
         /// <summary>
@@ -41,22 +42,23 @@ namespace DataCore.Adapter.Extensions {
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
-        /// Operation descriptors created from calls to one of the <see cref="Bind"/> overloads.
+        /// Operation descriptors created from calls to one of the <see cref="BindInvoke"/>, 
+        /// <see cref="BindStream"/>, and <see cref="BindDuplexStream"/> overloads.
         /// </summary>
         private readonly ConcurrentDictionary<Uri, ExtensionFeatureOperationDescriptor> _boundDescriptors = new ConcurrentDictionary<Uri, ExtensionFeatureOperationDescriptor>();
 
         /// <summary>
-        /// Handlers for invocation methods created by a call to one of the <see cref="Bind"/> overloads.
+        /// Handlers for invocation methods created by a call to one of the <see cref="BindInvoke"/> overloads.
         /// </summary>
         private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<string>>> _boundInvokeMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<string>>>();
 
         /// <summary>
-        /// Handlers for streaming methods created by a call to one of the <see cref="Bind"/> overloads.
+        /// Handlers for streaming methods created by a call to one of the <see cref="BindStream"/> overloads.
         /// </summary>
         private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<ChannelReader<string>>>> _boundStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<ChannelReader<string>>>>();
 
         /// <summary>
-        /// Handlers for duplex streaming methods created by a call to one of the <see cref="Bind"/> overloads.
+        /// Handlers for duplex streaming methods created by a call to one of the <see cref="BindDuplexStream"/> overloads.
         /// </summary>
         private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, ChannelReader<string>, CancellationToken, Task<ChannelReader<string>>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, ChannelReader<string>, CancellationToken, Task<ChannelReader<string>>>>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
@@ -138,8 +140,8 @@ namespace DataCore.Adapter.Extensions {
         ///  
         /// <para>
         ///   It is only necessary to override this method if your extension feature implementation 
-        ///   defines operations that cannot be registered via a call to one of the <see cref="Bind"/> 
-        ///   method overloads.
+        ///   defines operations that cannot be registered via a call to one of the <see cref="BindInvoke"/>, 
+        ///   <see cref="BindStream"/>, or <see cref="BindDuplexStream"/> method overloads.
         /// </para>
         /// 
         /// <para>
@@ -183,7 +185,7 @@ namespace DataCore.Adapter.Extensions {
         /// 
         /// <para>
         ///   The default behaviour of this method is to throw a <see cref="MissingMethodException"/> 
-        ///   for every invocation that has not been registered via a call to <see cref="Bind"/>.
+        ///   for every invocation that has not been registered via a call to <see cref="BindInvoke"/>.
         /// </para>
         /// 
         /// <para>
@@ -231,7 +233,7 @@ namespace DataCore.Adapter.Extensions {
         /// 
         /// <para>
         ///   The default behaviour of this method is to throw a <see cref="MissingMethodException"/> 
-        ///   for every streaming invocation that has not been registered via a call to <see cref="Bind"/>.
+        ///   for every streaming invocation that has not been registered via a call to <see cref="BindStream"/>.
         /// </para>
         /// 
         /// <para>
@@ -280,7 +282,7 @@ namespace DataCore.Adapter.Extensions {
         /// <para>
         ///   The default behaviour of this method is to throw a <see cref="MissingMethodException"/> 
         ///   for every duplex streaming operation that has not been registered via a call to 
-        ///   <see cref="Bind"/>.
+        ///   <see cref="BindDuplexStream"/>.
         /// </para>
         /// 
         /// <para>
@@ -562,581 +564,6 @@ namespace DataCore.Adapter.Extensions {
                         : SerializeObject(returnParameterExample, true) ?? "<UNKNOWN>"
                 },
             };
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Invoke"/>.
-        /// </summary>
-        /// <typeparam name="TIn">
-        ///   The input parameter type.
-        /// </typeparam>
-        /// <typeparam name="TOut">
-        ///   The return type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="inputParameterExample">
-        ///   An example value for the input parameter.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TIn, TOut>(
-            Func<IAdapterCallContext, TIn, CancellationToken, Task<TOut>> handler,
-            TIn inputParameterExample = default,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Invoke;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method, 
-                operationType,
-                out var operationId, 
-                out var name, 
-                out var description, 
-                out var inputParameterDescription, 
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-                operationType,
-                operationId,
-                name,
-                description,
-                true,
-                inputParameterDescription,
-                inputParameterExample,
-                true,
-                returnParameterDescription,
-                returnParameterExample
-            );
-
-            _boundInvokeMethods[operationId] = async (ctx, json, ct) => {
-                var inArg = DeserializeObject<TIn>(json);
-                var result = await handler(ctx, inArg, ct).ConfigureAwait(false);
-                return SerializeObject(result);
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Invoke"/>.
-        /// </summary>
-        /// <typeparam name="TIn">
-        ///   The input parameter type.
-        /// </typeparam>
-        /// <typeparam name="TOut">
-        ///   The return type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="inputParameterExample">
-        ///   An example value for the input parameter.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TIn, TOut>(
-            Func<IAdapterCallContext, TIn, TOut> handler,
-            TIn inputParameterExample = default,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Invoke;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-                operationType,
-                operationId,
-                name,
-                description,
-                true,
-                inputParameterDescription,
-                inputParameterExample,
-                true,
-                returnParameterDescription,
-                returnParameterExample
-            );
-
-            _boundInvokeMethods[operationId] = (ctx, json, ct) => {
-                var inArg = DeserializeObject<TIn>(json);
-                var result = handler(ctx, inArg);
-                return Task.FromResult(SerializeObject(result));
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Invoke"/>.
-        /// </summary>
-        /// <typeparam name="TOut">
-        ///   The return type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TOut>(
-            Func<IAdapterCallContext, CancellationToken, Task<TOut>> handler,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Invoke;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-                operationType,
-                operationId,
-                name,
-                description,
-                false,
-                null,
-                new object(),
-                true,
-                returnParameterDescription,
-                returnParameterExample
-            );
-
-            _boundInvokeMethods[operationId] = async (ctx, json, ct) => {
-                var result = await handler(ctx, ct).ConfigureAwait(false);
-                return SerializeObject(result);
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Invoke"/>.
-        /// </summary>
-        /// <typeparam name="TOut">
-        ///   The return type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TOut>(
-            Func<IAdapterCallContext, TOut> handler,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Invoke;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundInvokeMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-                operationType,
-                operationId,
-                name,
-                description,
-                false,
-                null,
-                (object) null,
-                true,
-                returnParameterDescription,
-                returnParameterExample
-            );
-
-            _boundInvokeMethods[operationId] = (ctx, json, ct) => {
-                var result = handler(ctx);
-                return Task.FromResult(SerializeObject(result));
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Stream"/>.
-        /// </summary>
-        /// <typeparam name="TIn">
-        ///   The input parameter type.
-        /// </typeparam>
-        /// <typeparam name="TOut">
-        ///   The output stream type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="inputParameterExample">
-        ///   An example value for the input parameter.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TIn, TOut>(
-            Func<IAdapterCallContext, TIn, CancellationToken, Task<ChannelReader<TOut>>> handler,
-            TIn inputParameterExample = default,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Stream;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundStreamMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-               operationType,
-               operationId,
-               name,
-               description,
-               true,
-               inputParameterDescription,
-               inputParameterExample,
-               true,
-               returnParameterDescription,
-               returnParameterExample
-           );
-
-            _boundStreamMethods[operationId] = async (ctx, json, ct) => {
-                var inArg = DeserializeObject<TIn>(json);
-                var outChannel = await handler(ctx, inArg, ct).ConfigureAwait(false);
-                var result = Channel.CreateUnbounded<string>();
-
-                outChannel.RunBackgroundOperation(async (ch, ct2) => { 
-                    try {
-                        while (!ct2.IsCancellationRequested) {
-                            var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
-                        }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
-                    catch (Exception e) {
-                        result.Writer.TryComplete(e);
-                    }
-                    finally {
-                        result.Writer.TryComplete();
-                    }
-                }, BackgroundTaskService, ct);
-
-                return result.Reader;
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.Stream"/>.
-        /// </summary>
-        /// <typeparam name="TOut">
-        ///   The output stream type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TOut>(
-            Func<IAdapterCallContext, CancellationToken, Task<ChannelReader<TOut>>> handler,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.Stream;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundStreamMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-               operationType,
-               operationId,
-               name,
-               description,
-               false,
-               null,
-               (object) null,
-               true,
-               returnParameterDescription,
-               returnParameterExample
-           );
-
-            _boundStreamMethods[operationId] = async (ctx, json, ct) => {
-                var outChannel = await handler(ctx, ct).ConfigureAwait(false);
-                var result = Channel.CreateUnbounded<string>();
-
-                outChannel.RunBackgroundOperation(async (ch, ct2) => {
-                    try {
-                        while (!ct2.IsCancellationRequested) {
-                            var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
-                        }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
-                    catch (Exception e) {
-                        result.Writer.TryComplete(e);
-                    }
-                    finally {
-                        result.Writer.TryComplete();
-                    }
-                }, BackgroundTaskService, ct);
-
-                return result.Reader;
-            };
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Binds an extension feature operation with a type of <see cref="ExtensionFeatureOperationType.DuplexStream"/>.
-        /// </summary>
-        /// <typeparam name="TIn">
-        ///   The input parameter type.
-        /// </typeparam>
-        /// <typeparam name="TOut">
-        ///   The output parameter type.
-        /// </typeparam>
-        /// <param name="handler">
-        ///   The handler for the operation.
-        /// </param>
-        /// <param name="inputParameterExample">
-        ///   An example value for the input parameter.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation was successfully bound, or <see langword="false"/>
-        ///   if an operation with the same URI has already been bound.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="handler"/> is <see langword="null"/>.
-        /// </exception>
-        protected bool Bind<TIn, TOut>(
-            Func<IAdapterCallContext, ChannelReader<TIn>, CancellationToken, Task<ChannelReader<TOut>>> handler,
-            TIn inputParameterExample = default,
-            TOut returnParameterExample = default
-        ) {
-            if (handler == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            var operationType = ExtensionFeatureOperationType.DuplexStream;
-
-            if (!TryGetOperationDetailsFromMemberInfo(
-                handler.Method,
-                operationType,
-                out var operationId,
-                out var name,
-                out var description,
-                out var inputParameterDescription,
-                out var returnParameterDescription
-            )) {
-                return false;
-            }
-
-            if (_boundDescriptors.ContainsKey(operationId) || _boundDuplexStreamMethods.ContainsKey(operationId)) {
-                return false;
-            }
-
-            _boundDescriptors[operationId] = CreateDescriptor(
-               operationType,
-               operationId,
-               name,
-               description,
-               true,
-               inputParameterDescription,
-               inputParameterExample,
-               true,
-               returnParameterDescription,
-               returnParameterExample
-           );
-
-            _boundDuplexStreamMethods[operationId] = async (ctx, channel, ct) => {
-                var inChannel = Channel.CreateUnbounded<TIn>();
-                var outChannel = await handler(ctx, inChannel, ct).ConfigureAwait(false);
-                var result = Channel.CreateUnbounded<string>();
-
-                channel.RunBackgroundOperation(async (ch, ct2) => {
-                    try {
-                        while (!ct2.IsCancellationRequested) {
-                            var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await inChannel.Writer.WriteAsync(DeserializeObject<TIn>(val), ct2).ConfigureAwait(false);
-                        }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
-                    catch (Exception e) {
-                        inChannel.Writer.TryComplete(e);
-                    }
-                    finally {
-                        inChannel.Writer.TryComplete();
-                    }
-                }, BackgroundTaskService, ct);
-
-                outChannel.RunBackgroundOperation(async (ch, ct2) => {
-                    try {
-                        while (!ct2.IsCancellationRequested) {
-                            var val = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                            await result.Writer.WriteAsync(SerializeObject(val), ct2).ConfigureAwait(false);
-                        }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
-                    catch (Exception e) {
-                        result.Writer.TryComplete(e);
-                    }
-                    finally {
-                        result.Writer.TryComplete();
-                    }
-                }, BackgroundTaskService, ct);
-
-                return result.Reader;
-            };
-
-            return true;
         }
 
 

@@ -19,9 +19,9 @@ namespace DataCore.Adapter.Tests {
 
 
         internal PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-            Bind<PingMessage, PongMessage>(Ping);
-            Bind<PingMessage, PongMessage>(PingStream);
-            Bind<PingMessage, PongMessage>(PingDuplexStream);
+            BindInvoke<PingMessage, PongMessage>(Ping);
+            BindStream<PingMessage, PongMessage>(Ping);
+            BindDuplexStream<PingMessage, PongMessage>(Ping);
         }
 
 
@@ -37,7 +37,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task<ChannelReader<PongMessage>> PingStream(
+        public Task<ChannelReader<PongMessage>> Ping(
             IAdapterCallContext context,
             PingMessage message,
             CancellationToken cancellationToken
@@ -59,7 +59,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task<ChannelReader<PongMessage>> PingDuplexStream(
+        public Task<ChannelReader<PongMessage>> Ping(
             IAdapterCallContext context,
             ChannelReader<PingMessage> channel,
             CancellationToken cancellationToken

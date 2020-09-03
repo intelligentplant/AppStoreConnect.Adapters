@@ -82,7 +82,7 @@ namespace DataCore.Adapter.Example {
         private class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
             public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.BackgroundTaskService) {
-                Bind<PingMessage, PongMessage>(Ping);
+                BindInvoke<PingMessage, PongMessage>(Ping);
             }
 
 

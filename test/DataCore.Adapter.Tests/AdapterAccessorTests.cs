@@ -245,7 +245,7 @@ namespace DataCore.Adapter.Tests {
         private class TestExtension : AdapterExtensionFeature {
 
             public TestExtension() : base(null) {
-                Bind(GetCurrentTime);
+                BindInvoke(GetCurrentTime);
             }
 
 
