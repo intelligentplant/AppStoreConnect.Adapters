@@ -7,7 +7,12 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Feature that allows event messages to be written to an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.Events.WriteEventMessages)]
+    [AdapterFeature(
+        WellKnownFeatures.Events.WriteEventMessages,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteEventMessages),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteEventMessages)
+    )]
     public interface IWriteEventMessages : IAdapterFeature {
 
         /// <summary>

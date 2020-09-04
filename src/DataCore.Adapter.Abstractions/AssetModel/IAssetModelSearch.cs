@@ -7,7 +7,12 @@ namespace DataCore.Adapter.AssetModel {
     /// <summary>
     /// Feature for searching an adapter's asset model hierarchy.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.AssetModel.AssetModelSearch)]
+    [AdapterFeature(
+        WellKnownFeatures.AssetModel.AssetModelSearch,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_AssetModelSearch),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_AssetModelSearch)
+    )]
     public interface IAssetModelSearch : IAdapterFeature {
 
         /// <summary>

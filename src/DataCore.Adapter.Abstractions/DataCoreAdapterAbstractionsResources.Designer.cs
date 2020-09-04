@@ -22,7 +22,7 @@ namespace DataCore.Adapter {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DataCoreAdapterAbstractionsResources {
+    public class DataCoreAdapterAbstractionsResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace DataCore.Adapter {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.DataCoreAdapterAbstractionsResources", typeof(DataCoreAdapterAbstractionsResources).Assembly);
@@ -51,7 +51,7 @@ namespace DataCore.Adapter {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Average value calculated over sample interval..
         /// </summary>
-        internal static string DataFunction_Avg_Description {
+        public static string DataFunction_Avg_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Avg_Description", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Average.
         /// </summary>
-        internal static string DataFunction_Avg_Name {
+        public static string DataFunction_Avg_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Avg_Name", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The number of good-quality raw samples that have been recorded for the tag at each sample interval..
         /// </summary>
-        internal static string DataFunction_Count_Description {
+        public static string DataFunction_Count_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Count_Description", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
-        internal static string DataFunction_Count_Name {
+        public static string DataFunction_Count_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Count_Name", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The signed difference between the earliest good-quality value and latest good-quality value in each sample interval..
         /// </summary>
-        internal static string DataFunction_Delta_Description {
+        public static string DataFunction_Delta_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Delta_Description", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Delta.
         /// </summary>
-        internal static string DataFunction_Delta_Name {
+        public static string DataFunction_Delta_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Delta_Name", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval..
         /// </summary>
-        internal static string DataFunction_Interp_Description {
+        public static string DataFunction_Interp_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Interp_Description", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Interpolated.
         /// </summary>
-        internal static string DataFunction_Interp_Name {
+        public static string DataFunction_Interp_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Interp_Name", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
         /// </summary>
-        internal static string DataFunction_Max_Description {
+        public static string DataFunction_Max_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Max_Description", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Maximum.
         /// </summary>
-        internal static string DataFunction_Max_Name {
+        public static string DataFunction_Max_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Max_Name", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at..
         /// </summary>
-        internal static string DataFunction_Min_Description {
+        public static string DataFunction_Min_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Minimum.
         /// </summary>
-        internal static string DataFunction_Min_Name {
+        public static string DataFunction_Min_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Min_Name", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status..
         /// </summary>
-        internal static string DataFunction_PercentBad_Description {
+        public static string DataFunction_PercentBad_Description {
             get {
                 return ResourceManager.GetString("DataFunction_PercentBad_Description", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Percent Bad.
         /// </summary>
-        internal static string DataFunction_PercentBad_Name {
+        public static string DataFunction_PercentBad_Name {
             get {
                 return ResourceManager.GetString("DataFunction_PercentBad_Name", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status..
         /// </summary>
-        internal static string DataFunction_PercentGood_Description {
+        public static string DataFunction_PercentGood_Description {
             get {
                 return ResourceManager.GetString("DataFunction_PercentGood_Description", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Percent Good.
         /// </summary>
-        internal static string DataFunction_PercentGood_Name {
+        public static string DataFunction_PercentGood_Name {
             get {
                 return ResourceManager.GetString("DataFunction_PercentGood_Name", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Status Calculation.
         /// </summary>
-        internal static string DataFunction_Property_StatusCalculation {
+        public static string DataFunction_Property_StatusCalculation {
             get {
                 return ResourceManager.GetString("DataFunction_Property_StatusCalculation", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The method used to calculate the quality status for the function..
         /// </summary>
-        internal static string DataFunction_Property_StatusCalculation_Description {
+        public static string DataFunction_Property_StatusCalculation_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Property_StatusCalculation_Description", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Quality status is always &quot;Good&quot;..
         /// </summary>
-        internal static string DataFunction_Property_StatusCalculation_ValueGood {
+        public static string DataFunction_Property_StatusCalculation_ValueGood {
             get {
                 return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGood", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality values were skipped, or &quot;Good&quot; otherwise..
         /// </summary>
-        internal static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped {
+        public static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped {
             get {
                 return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Worst-case status of the samples used in the calculation..
         /// </summary>
-        internal static string DataFunction_Property_StatusCalculation_ValueWorstCase {
+        public static string DataFunction_Property_StatusCalculation_ValueWorstCase {
             get {
                 return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueWorstCase", resourceCulture);
             }
@@ -252,7 +252,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Timestamp Calculation.
         /// </summary>
-        internal static string DataFunction_Property_TimestampCalculation {
+        public static string DataFunction_Property_TimestampCalculation {
             get {
                 return ResourceManager.GetString("DataFunction_Property_TimestampCalculation", resourceCulture);
             }
@@ -261,7 +261,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The method used to calculate the timestamp for the function..
         /// </summary>
-        internal static string DataFunction_Property_TimestampCalculation_Description {
+        public static string DataFunction_Property_TimestampCalculation_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_Description", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Timestamp of maximum value.
         /// </summary>
-        internal static string DataFunction_Property_TimestampCalculation_ValueMaximum {
+        public static string DataFunction_Property_TimestampCalculation_ValueMaximum {
             get {
                 return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_ValueMaximum", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Timestamp of minimum value.
         /// </summary>
-        internal static string DataFunction_Property_TimestampCalculation_ValueMinimum {
+        public static string DataFunction_Property_TimestampCalculation_ValueMinimum {
             get {
                 return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_ValueMinimum", resourceCulture);
             }
@@ -288,7 +288,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval..
         /// </summary>
-        internal static string DataFunction_Range_Description {
+        public static string DataFunction_Range_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Range_Description", resourceCulture);
             }
@@ -297,7 +297,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Range.
         /// </summary>
-        internal static string DataFunction_Range_Name {
+        public static string DataFunction_Range_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Range_Name", resourceCulture);
             }
@@ -306,7 +306,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The standard deviation of all good-quality values in each sample interval.
         /// </summary>
-        internal static string DataFunction_StandardDeviation_Description {
+        public static string DataFunction_StandardDeviation_Description {
             get {
                 return ResourceManager.GetString("DataFunction_StandardDeviation_Description", resourceCulture);
             }
@@ -315,7 +315,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Standard Deviation.
         /// </summary>
-        internal static string DataFunction_StandardDeviation_Name {
+        public static string DataFunction_StandardDeviation_Name {
             get {
                 return ResourceManager.GetString("DataFunction_StandardDeviation_Name", resourceCulture);
             }
@@ -324,7 +324,7 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to The variance of all good-quality values in each sample interval.
         /// </summary>
-        internal static string DataFunction_Variance_Description {
+        public static string DataFunction_Variance_Description {
             get {
                 return ResourceManager.GetString("DataFunction_Variance_Description", resourceCulture);
             }
@@ -333,16 +333,376 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to Variance.
         /// </summary>
-        internal static string DataFunction_Variance_Name {
+        public static string DataFunction_Variance_Name {
             get {
                 return ResourceManager.GetString("DataFunction_Variance_Name", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows browsing of the adapter&apos;s asset model hierarchy..
+        /// </summary>
+        public static string Description_AssetModelBrowse {
+            get {
+                return ResourceManager.GetString("Description_AssetModelBrowse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows the adapter&apos;s asset model hierarchy to be searched..
+        /// </summary>
+        public static string Description_AssetModelSearch {
+            get {
+                return ResourceManager.GetString("Description_AssetModelSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows subscribers to receive event messages from the adapter in real-time..
+        /// </summary>
+        public static string Description_EventMessagePush {
+            get {
+                return ResourceManager.GetString("Description_EventMessagePush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows subscribers to receive event messages from the adapter in real-time for specific topics..
+        /// </summary>
+        public static string Description_EventMessagePushWithTopics {
+            get {
+                return ResourceManager.GetString("Description_EventMessagePushWithTopics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows the adapter&apos;s health status to be polled or subscribed to..
+        /// </summary>
+        public static string Description_HealthCheck {
+            get {
+                return ResourceManager.GetString("Description_HealthCheck", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows the event message history on the adapter to be polled using a time range..
+        /// </summary>
+        public static string Description_ReadEventMessagesForTimeRange {
+            get {
+                return ResourceManager.GetString("Description_ReadEventMessagesForTimeRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows the event message history on the adapter to be polled using a cursor to define the starting point..
+        /// </summary>
+        public static string Description_ReadEventMessagesUsingCursor {
+            get {
+                return ResourceManager.GetString("Description_ReadEventMessagesUsingCursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for historical tag values using a visualisation-friendly aggregation..
+        /// </summary>
+        public static string Description_ReadPlotTagVaues {
+            get {
+                return ResourceManager.GetString("Description_ReadPlotTagVaues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for historical tag values using a supported aggregate function to compute the results..
+        /// </summary>
+        public static string Description_ReadProcessedTagValues {
+            get {
+                return ResourceManager.GetString("Description_ReadProcessedTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for raw, unprocessed historical tag values..
+        /// </summary>
+        public static string Description_ReadRawTagValues {
+            get {
+                return ResourceManager.GetString("Description_ReadRawTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for snapshot (instantaneous) tag values..
+        /// </summary>
+        public static string Description_ReadSnapshotTagValues {
+            get {
+                return ResourceManager.GetString("Description_ReadSnapshotTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for annotations on historical tag values..
+        /// </summary>
+        public static string Description_ReadTagValueAnnotations {
+            get {
+                return ResourceManager.GetString("Description_ReadTagValueAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be polled for tag values at specific timestamps in history..
+        /// </summary>
+        public static string Description_ReadTagValuesAtTimes {
+            get {
+                return ResourceManager.GetString("Description_ReadTagValuesAtTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows subscribers to receive snapshot tag value updates from the adapter in real-time..
+        /// </summary>
+        public static string Description_SnapshotTagValuePush {
+            get {
+                return ResourceManager.GetString("Description_SnapshotTagValuePush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows retrieval of the adapter&apos;s tag definitions using the tag&apos;s ID or name..
+        /// </summary>
+        public static string Description_TagInfo {
+            get {
+                return ResourceManager.GetString("Description_TagInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows the adapter&apos;s tag definitions to be searched..
+        /// </summary>
+        public static string Description_TagSearch {
+            get {
+                return ResourceManager.GetString("Description_TagSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter can be used as an event sink for messages generated by external sources..
+        /// </summary>
+        public static string Description_WriteEventMessages {
+            get {
+                return ResourceManager.GetString("Description_WriteEventMessages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter allows tag values from an external source to be written directly into its history archive..
+        /// </summary>
+        public static string Description_WriteHistoricalTagValues {
+            get {
+                return ResourceManager.GetString("Description_WriteHistoricalTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter allows the snapshot value of its tags to be updated from an external source..
+        /// </summary>
+        public static string Description_WriteSnapshotTagValues {
+            get {
+                return ResourceManager.GetString("Description_WriteSnapshotTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter allows tag value annotations to be created, updated, and deleted..
+        /// </summary>
+        public static string Description_WriteTagValueAnnotations {
+            get {
+                return ResourceManager.GetString("Description_WriteTagValueAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Asset Model Browsing.
+        /// </summary>
+        public static string DisplayName_AssetModelBrowse {
+            get {
+                return ResourceManager.GetString("DisplayName_AssetModelBrowse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Asset Model Search.
+        /// </summary>
+        public static string DisplayName_AssetModelSearch {
+            get {
+                return ResourceManager.GetString("DisplayName_AssetModelSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Event Message Push.
+        /// </summary>
+        public static string DisplayName_EventMessagePush {
+            get {
+                return ResourceManager.GetString("DisplayName_EventMessagePush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Topic-Based Event Message Push.
+        /// </summary>
+        public static string DisplayName_EventMessagePushWithTopics {
+            get {
+                return ResourceManager.GetString("DisplayName_EventMessagePushWithTopics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Health Check.
+        /// </summary>
+        public static string DisplayName_HealthCheck {
+            get {
+                return ResourceManager.GetString("DisplayName_HealthCheck", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time-Based Event Message History.
+        /// </summary>
+        public static string DisplayName_ReadEventMessagesForTimeRange {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadEventMessagesForTimeRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cursor-Based Event Message History.
+        /// </summary>
+        public static string DisplayName_ReadEventMessagesUsingCursor {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadEventMessagesUsingCursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Plot Tag Values.
+        /// </summary>
+        public static string DisplayName_ReadPlotTagVaues {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadPlotTagVaues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Processed Tag Values.
+        /// </summary>
+        public static string DisplayName_ReadProcessedTagValues {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadProcessedTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Raw Tag Values.
+        /// </summary>
+        public static string DisplayName_ReadRawTagValues {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadRawTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Snapshot Tag Values.
+        /// </summary>
+        public static string DisplayName_ReadSnapshotTagValues {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadSnapshotTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Annotations.
+        /// </summary>
+        public static string DisplayName_ReadTagValueAnnotations {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadTagValueAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read Tag Values At Times.
+        /// </summary>
+        public static string DisplayName_ReadTagValuesAtTimes {
+            get {
+                return ResourceManager.GetString("DisplayName_ReadTagValuesAtTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snapshot Tag Value Push.
+        /// </summary>
+        public static string DisplayName_SnapshotTagValuePush {
+            get {
+                return ResourceManager.GetString("DisplayName_SnapshotTagValuePush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag Information.
+        /// </summary>
+        public static string DisplayName_TagInfo {
+            get {
+                return ResourceManager.GetString("DisplayName_TagInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag Search.
+        /// </summary>
+        public static string DisplayName_TagSearch {
+            get {
+                return ResourceManager.GetString("DisplayName_TagSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write Event Messages.
+        /// </summary>
+        public static string DisplayName_WriteEventMessages {
+            get {
+                return ResourceManager.GetString("DisplayName_WriteEventMessages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write Historical Tag Values.
+        /// </summary>
+        public static string DisplayName_WriteHistoricalTagValues {
+            get {
+                return ResourceManager.GetString("DisplayName_WriteHistoricalTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write Snapshot Tag Values.
+        /// </summary>
+        public static string DisplayName_WriteSnapshotTagValues {
+            get {
+                return ResourceManager.GetString("DisplayName_WriteSnapshotTagValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write Annotations.
+        /// </summary>
+        public static string DisplayName_WriteTagValueAnnotations {
+            get {
+                return ResourceManager.GetString("DisplayName_WriteTagValueAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
         /// </summary>
-        internal static string Error_MissingAdapterFeature {
+        public static string Error_MissingAdapterFeature {
             get {
                 return ResourceManager.GetString("Error_MissingAdapterFeature", resourceCulture);
             }
@@ -351,9 +711,18 @@ namespace DataCore.Adapter {
         /// <summary>
         ///   Looks up a localized string similar to This operation is not supported for a relative URI..
         /// </summary>
-        internal static string Error_RelativeUrisAreNotSupported {
+        public static string Error_RelativeUrisAreNotSupported {
             get {
                 return ResourceManager.GetString("Error_RelativeUrisAreNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot retrieve property &apos;{0}&apos; because localization failed.  Type &apos;{1}&apos; is not public or does not contain a public static string property with the name &apos;{2}&apos;..
+        /// </summary>
+        public static string LocalizableString_LocalizationFailed {
+            get {
+                return ResourceManager.GetString("LocalizableString_LocalizationFailed", resourceCulture);
             }
         }
     }

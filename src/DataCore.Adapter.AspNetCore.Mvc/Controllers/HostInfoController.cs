@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using DataCore.Adapter.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +46,22 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(HostInfo), 200)]
         public IActionResult GetHostInfo() {
             return Ok(_hostInfo); // 200
+        }
+
+
+        /// <summary>
+        /// Gets descriptors for the standard adapter features.
+        /// </summary>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="FeatureDescriptor"/> object 
+        ///   describing the standard adapter features.
+        /// </returns>
+        [HttpGet]
+        [Route("adapter-features")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(IEnumerable<FeatureDescriptor>), 200)]
+        public IActionResult GetStandardFeatureDescriptors() {
+            return Ok(TypeExtensions.GetStandardAdapterFeatureTypes().Select(x => x.CreateFeatureDescriptor()).ToArray()); // 200
         }
 
     }

@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for performing tag searches on an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.TagSearch)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.TagSearch,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_TagSearch),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_TagSearch)
+    )]
     public interface ITagSearch : IAdapterFeature, ITagInfo {
 
         /// <summary>

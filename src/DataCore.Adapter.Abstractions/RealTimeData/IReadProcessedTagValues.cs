@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading processed (aggregated) tag values from an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadProcessedTagValues)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.ReadProcessedTagValues,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadProcessedTagValues),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadProcessedTagValues)
+    )]
     public interface IReadProcessedTagValues : IAdapterFeature {
 
         /// <summary>

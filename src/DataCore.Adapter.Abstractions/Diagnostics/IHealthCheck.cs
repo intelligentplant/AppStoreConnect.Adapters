@@ -7,7 +7,12 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Feature for requesting the health status of an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.Diagnostics.HealthCheck)]
+    [AdapterFeature(
+        WellKnownFeatures.Diagnostics.HealthCheck,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_HealthCheck),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_HealthCheck)
+    )]
     public interface IHealthCheck : IAdapterFeature {
 
         /// <summary>

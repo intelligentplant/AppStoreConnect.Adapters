@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for writing historical values to an adapter's data archive.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.WriteHistoricalTagValues)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.WriteHistoricalTagValues,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteHistoricalTagValues),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteHistoricalTagValues)
+    )]
     public interface IWriteHistoricalTagValues : IAdapterFeature {
 
         /// <summary>

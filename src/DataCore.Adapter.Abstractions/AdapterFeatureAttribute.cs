@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter {
 
@@ -11,9 +12,56 @@ namespace DataCore.Adapter {
     public class AdapterFeatureAttribute : Attribute {
 
         /// <summary>
+        /// The localised display name.
+        /// </summary>
+        private readonly LocalizableString _name = new LocalizableString(nameof(Name));
+
+        /// <summary>
+        /// The localised description.
+        /// </summary>
+        private readonly LocalizableString _description = new LocalizableString(nameof(Description));
+
+        /// <summary>
+        /// The resource type used to retrieved localised values for the display name and 
+        /// description.
+        /// </summary>
+        private Type _resourceType;
+
+        /// <summary>
         /// The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
         /// </summary>
         public Uri Uri { get; }
+
+        /// <summary>
+        /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
+        /// </summary>
+        public Type ResourceType {
+            get => _resourceType;
+            set {
+                if (_resourceType != value) {
+                    _resourceType = value;
+
+                    _name.ResourceType = value;
+                    _description.ResourceType = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The display name for the feature.
+        /// </summary>
+        public string Name { 
+            get => _name.Value;
+            set => _name.Value = value;
+        }
+
+        /// <summary>
+        /// The description for the feature.
+        /// </summary>
+        public string Description {
+            get => _description.Value;
+            set => _description.Value = value;
+        }
 
 
         /// <summary>
@@ -102,6 +150,30 @@ namespace DataCore.Adapter {
 
             Uri = absoluteUri;
         }
+
+
+        /// <summary>
+        /// Gets the display name for the adapter feature. This can be either a literal string 
+        /// specified by the <see cref="Name"/> property, or a localised string found when 
+        /// <see cref="ResourceType"/> is specified and <see cref="Name"/> represents a resource 
+        /// key within the resource type.
+        /// </summary>
+        /// <returns>
+        ///   The display name for the adapter feature.
+        /// </returns>
+        public string GetName() => _name.GetLocalizableValue();
+
+
+        /// <summary>
+        /// Gets the description for the adapter feature. This can be either a literal string 
+        /// specified by the <see cref="Description"/> property, or a localised string found when 
+        /// <see cref="ResourceType"/> is specified and <see cref="Description"/> represents a 
+        /// resource key within the resource type.
+        /// </summary>
+        /// <returns>
+        ///   The description for the adapter feature.
+        /// </returns>
+        public string GetDescription() => _description.GetLocalizableValue();
 
     }
 }

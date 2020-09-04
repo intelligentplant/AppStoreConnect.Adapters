@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <EmbeddedResource Update="DataCoreAdapterAbstractionsResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>DataCoreAdapterAbstractionsResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
     </EmbeddedResource>

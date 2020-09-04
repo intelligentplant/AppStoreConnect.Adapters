@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
@@ -356,21 +354,8 @@ namespace DataCore.Adapter {
         ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
         /// </returns>
         /// <remarks>
-        /// 
-        /// <para>
-        ///   If the <paramref name="type"/> (or the interface that it implements) is annotated 
-        ///   with a <see cref="DisplayAttribute"/> or a <see cref="DisplayNameAttribute"/>, this 
-        ///   will be used to set the <see cref="FeatureDescriptor.DisplayName"/>. If no display 
-        ///   name can be inferred, the <see cref="Type.FullName"/> property of the type will be 
-        ///   used.
-        /// </para>
-        /// 
-        /// <para>
-        ///   If the <paramref name="type"/> (or the interface that it implements) is annotated 
-        ///   with a <see cref="DisplayAttribute"/> or a <see cref="DescriptionAttribute"/>, this 
-        ///   will be used to set the <see cref="FeatureDescriptor.Description"/>.
-        /// </para>
-        /// 
+        /// If the <see cref="AdapterFeatureAttribute"/> does not define a display name, the 
+        /// display name will be set to the <see cref="Type.FullName"/> of the <paramref name="type"/>.
         /// </remarks>
         public static FeatureDescriptor CreateFeatureDescriptor(this Type type) {
             if (type == null) {
@@ -384,9 +369,8 @@ namespace DataCore.Adapter {
 
             var uri = attr.attr.Uri;
 
-            var displayAttr = attr.type.GetCustomAttribute<DisplayAttribute>();
-            var displayName = displayAttr?.Name ?? attr.type.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-            var description = displayAttr?.Description ?? attr.type.GetCustomAttribute<DescriptionAttribute>()?.Description;
+            var displayName = attr.attr.GetName();
+            var description = attr.attr.GetDescription();
 
             if (string.IsNullOrWhiteSpace(displayName)) {
                 displayName = type.FullName;

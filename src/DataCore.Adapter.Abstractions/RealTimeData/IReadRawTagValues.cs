@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading raw tag values from an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadRawTagValues)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.ReadRawTagValues,
+        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
+        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadRawTagValues),
+        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadRawTagValues)
+    )]
     public interface IReadRawTagValues : IAdapterFeature {
 
         /// <summary>
