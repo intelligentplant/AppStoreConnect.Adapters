@@ -9,6 +9,17 @@ using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Tests {
 
+    /// <summary>
+    /// Extension feature implementation used in unit tests.
+    /// </summary>
+    /// <remarks>
+    ///   Note that this class implements two extension features:
+    /// 
+    ///   * The class itself is an extension feature (since it inherits from <see cref="AdapterExtensionFeature"/> 
+    ///     and is annotated with <see cref="ExtensionFeatureAttribute"/>).
+    ///   * The class also implements the <see cref="IHelloWorld"/> extension defined in a separate interface.
+    /// 
+    /// </remarks>
     [ExtensionFeature(
         FeatureUri,
         Name = "Ping Pong",
