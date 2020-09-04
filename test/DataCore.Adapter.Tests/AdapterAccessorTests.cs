@@ -241,7 +241,7 @@ namespace DataCore.Adapter.Tests {
         private const string ExtensionFeatureUri = "unit-test/test-extension";
 
 
-        [AdapterExtensionFeature(ExtensionFeatureUri)]
+        [ExtensionFeature(ExtensionFeatureUri)]
         private class TestExtension : AdapterExtensionFeature {
 
             public TestExtension() : base(null) {

@@ -492,7 +492,7 @@ namespace DataCore.Adapter {
         ///   <item>
         ///     <description>
         ///       If the <paramref name="provider"/> implements <see cref="IAdapterExtensionFeature"/> 
-        ///       and is directly annotated with <see cref="AdapterExtensionFeatureAttribute"/>, the 
+        ///       and is directly annotated with <see cref="ExtensionFeatureAttribute"/>, the 
         ///       <paramref name="provider"/> will be directly registered using its own type as the 
         ///       index in the adapter's features dictionary.
         ///     </description>
@@ -501,7 +501,7 @@ namespace DataCore.Adapter {
         ///     <description>
         ///       If the <paramref name="provider"/> implements any interfaces that extend 
         ///       <see cref="IAdapterExtensionFeature"/> that are annotated with 
-        ///       <see cref="AdapterExtensionFeatureAttribute"/>, the <paramref name="provider"/> 
+        ///       <see cref="ExtensionFeatureAttribute"/>, the <paramref name="provider"/> 
         ///       will be registered using each of the implemented extension feature interfaces.
         ///     </description>
         ///   </item>

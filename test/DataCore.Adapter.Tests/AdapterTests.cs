@@ -631,7 +631,34 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var expected = typeof(PingPongExtension).CreateFeatureDescriptor();
-                var actual = await feature.GetDescriptor(context, null, default).ConfigureAwait(false);
+                var actual = await feature.GetDescriptor(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
+
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.Uri, actual.Uri);
+                Assert.AreEqual(expected.DisplayName, actual.DisplayName);
+                if (expected.Description == null) {
+                    // If the expected description is null, some adapters (e.g. gRPC proxy) will 
+                    // return string.Empty as null values are not allowed in gRPC messages.
+                    Assert.IsTrue(string.IsNullOrEmpty(actual.Description));
+                }
+                else {
+                    Assert.AreEqual(expected.Description, actual.Description);
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task HelloWorldExtensionShouldReturnDescriptor() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(HelloWorldConstants.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(HelloWorldConstants.FeatureUri);
+                    return;
+                }
+
+                var expected = typeof(IHelloWorld).CreateFeatureDescriptor();
+                var actual = await feature.GetDescriptor(context, HelloWorldConstants.FeatureUri, default).ConfigureAwait(false);
 
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.Uri, actual.Uri);
@@ -657,12 +684,38 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
                 var expectedOperations = ExpectedExtensionFeatureOperationTypes();
 
                 foreach (var type in expectedOperations) {
                     Assert.IsTrue(operations.Any(op => op.OperationType == type), $"Expected to find operation type {type}.");
                 }
+            });
+        }
+
+
+        [TestMethod]
+        public Task HelloWorldExtensionShouldReturnAvailableOperations() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(HelloWorldConstants.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(HelloWorldConstants.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, HelloWorldConstants.FeatureUri, default).ConfigureAwait(false);
+                Assert.AreEqual(1, operations.Count());
+
+                var op = operations.First();
+                Assert.AreEqual(ExtensionFeatureOperationType.Invoke, op.OperationType);
+                var expectedOpId = new Uri(string.Concat(
+                    HelloWorldConstants.FeatureUri, 
+                    nameof(IHelloWorld.Greet),
+                    "/",
+                    ExtensionFeatureOperationType.Invoke.ToString(),
+                    "/"
+                ));
+                Assert.AreEqual(expectedOpId, op.OperationId);
             });
         }
 
@@ -680,13 +733,43 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
                 var expectedOperations = ExpectedExtensionFeatureOperationTypes();
 
                 operations = operations.Where(x => expectedOperations.Contains(x.OperationType)).ToArray();
 
                 var operationId = new Uri(string.Concat(
                     PingPongExtension.FeatureUri,
+                    nameof(IAdapterExtensionFeature.GetOperations),
+                    "/",
+                    ExtensionFeatureOperationType.Invoke.ToString(),
+                    "/"
+                ));
+
+                var operationsFromInvoke = await feature.Invoke<IEnumerable<ExtensionFeatureOperationDescriptor>>(context, operationId, default);
+
+                Assert.IsNotNull(operationsFromInvoke);
+                foreach (var op in operations) {
+                    var invokeOp = operationsFromInvoke.FirstOrDefault(x => x.OperationId.Equals(op.OperationId));
+                    Assert.IsNotNull(invokeOp, $"Expected to find operation '{op.OperationId}'.");
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task HelloWorldExtensionShouldReturnAvailableOperationsViaInvoke() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(HelloWorldConstants.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(HelloWorldConstants.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, HelloWorldConstants.FeatureUri, default).ConfigureAwait(false);
+
+                var operationId = new Uri(string.Concat(
+                    HelloWorldConstants.FeatureUri,
                     nameof(IAdapterExtensionFeature.GetOperations),
                     "/",
                     ExtensionFeatureOperationType.Invoke.ToString(),
@@ -717,7 +800,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke)?.OperationId;
                 if (operationId == null) {
@@ -755,7 +838,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Stream)?.OperationId;
                 if (operationId == null) {
@@ -801,7 +884,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.DuplexStream)?.OperationId;
                 if (operationId == null) {

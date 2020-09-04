@@ -195,7 +195,7 @@ namespace DataCore.Adapter {
                     nameof(IAdapterFeature), 
                     nameof(AdapterFeatureAttribute), 
                     nameof(IAdapterExtensionFeature), 
-                    nameof(AdapterExtensionFeatureAttribute)
+                    nameof(ExtensionFeatureAttribute)
                 ), nameof(featureType));
             }
 
@@ -235,7 +235,7 @@ namespace DataCore.Adapter {
                     nameof(IAdapterFeature), 
                     nameof(AdapterFeatureAttribute), 
                     nameof(IAdapterExtensionFeature), 
-                    nameof(AdapterExtensionFeatureAttribute)
+                    nameof(ExtensionFeatureAttribute)
                 ), nameof(feature));
             }
             AddInternal(typeof(TFeature), feature, true);
@@ -272,7 +272,7 @@ namespace DataCore.Adapter {
                     nameof(IAdapterFeature),
                     nameof(AdapterFeatureAttribute),
                     nameof(IAdapterExtensionFeature),
-                    nameof(AdapterExtensionFeatureAttribute)
+                    nameof(ExtensionFeatureAttribute)
                 ), nameof(feature));
             }
             AddInternal(typeof(TExtensionFeature), feature, true);

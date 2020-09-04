@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Proxy {
             var assemblyName = new AssemblyName(typeof(ExtensionFeatureProxyGenerator).Assembly.GetName().Name + ".DynamicExtensions");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             s_moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicExtensionsModule");
-            s_adapterExtensionFeatureAttributeConstructor = typeof(AdapterExtensionFeatureAttribute).GetConstructor(new[] { typeof(string) });
+            s_adapterExtensionFeatureAttributeConstructor = typeof(ExtensionFeatureAttribute).GetConstructor(new[] { typeof(string) });
         }
 
 

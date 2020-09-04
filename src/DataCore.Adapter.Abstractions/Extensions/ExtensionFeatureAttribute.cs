@@ -3,15 +3,15 @@
 namespace DataCore.Adapter.Extensions {
 
     /// <summary>
-    /// <see cref="AdapterExtensionFeatureAttribute"/> is used to annotate extension adapter 
+    /// <see cref="ExtensionFeatureAttribute"/> is used to annotate extension adapter 
     /// features (i.e. interfaces inheriting from <see cref="IAdapterExtensionFeature"/>) to 
     /// provide additional metadata describing the feature.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class AdapterExtensionFeatureAttribute : AdapterFeatureAttribute {
+    public sealed class ExtensionFeatureAttribute : AdapterFeatureAttribute {
 
         /// <summary>
-        /// Creates a new <see cref="AdapterExtensionFeatureAttribute"/>.
+        /// Creates a new <see cref="ExtensionFeatureAttribute"/>.
         /// </summary>
         /// <param name="uriString">
         ///   The relative feature URI. The absolute feature URI will always be relative to 
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <paramref name="uriString"/> may be specified as an absolute URI if it is a child 
         ///   path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>
         /// </remarks>
-        public AdapterExtensionFeatureAttribute(string uriString) 
+        public ExtensionFeatureAttribute(string uriString) 
             : base(WellKnownFeatures.Extensions.ExtensionFeatureBasePath, uriString) { }
 
     }

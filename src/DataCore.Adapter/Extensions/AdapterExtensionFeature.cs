@@ -108,7 +108,13 @@ namespace DataCore.Adapter.Extensions {
             Uri featureUri,
             CancellationToken cancellationToken
         ) {
-            return GetDescriptor(context, featureUri, cancellationToken);
+            return GetDescriptor(
+                context, 
+                featureUri == null 
+                    ? null 
+                    : UriHelper.EnsurePathHasTrailingSlash(featureUri), 
+                cancellationToken
+            );
         }
 
 
@@ -118,7 +124,13 @@ namespace DataCore.Adapter.Extensions {
             Uri featureUri,
             CancellationToken cancellationToken
         ) {
-            return GetOperations(context, featureUri, cancellationToken);
+            return GetOperations(
+                context,
+                featureUri == null
+                    ? null
+                    : UriHelper.EnsurePathHasTrailingSlash(featureUri),
+                cancellationToken
+            );
         }
 
 
@@ -168,7 +180,7 @@ namespace DataCore.Adapter.Extensions {
         /// </returns>
         /// <remarks>
         ///   It is not normally required to override this method. Override only if the feature 
-        ///   descriptor is not generated using an <see cref="AdapterExtensionFeatureAttribute"/>.
+        ///   descriptor is not generated using an <see cref="ExtensionFeatureAttribute"/>.
         /// </remarks>
         protected virtual Task<FeatureDescriptor> GetDescriptor(
             IAdapterCallContext context,
@@ -492,18 +504,18 @@ namespace DataCore.Adapter.Extensions {
             MethodInfo methodDeclaration;
             Type extensionFeatureType;
 
-            if (method.ReflectedType.IsExtensionAdapterFeature()) {
+            if (TryGetInterfaceMethodDeclaration(method, out methodDeclaration)) {
+                // We found the method declaration on an extension feature interface. We'll use 
+                // this interface definition and the associated method declaration to retrieve 
+                // metadata required to create the extension feature operation descriptor.
+                extensionFeatureType = methodDeclaration.ReflectedType;
+            }
+            else if (method.ReflectedType.IsExtensionAdapterFeature()) {
                 // The reflected type for the method is an extension feature, so we will look 
                 // directly on the method and its reflected type for metadata required to create 
                 // the extension feature operation descriptor.
                 methodDeclaration = method;
                 extensionFeatureType = method.ReflectedType;
-            }
-            else if (TryGetInterfaceMethodDeclaration(method, out methodDeclaration)) {
-                // We found the method declaration on an extension feature interface. We'll use 
-                // this interface definition and the associated method declaration to retrieve 
-                // metadata required to create the extension feature operation descriptor.
-                extensionFeatureType = methodDeclaration.ReflectedType;
             }
             else {
                 // We are unable to determine the extension feature that this method is associated 
@@ -517,27 +529,16 @@ namespace DataCore.Adapter.Extensions {
             }
 
             operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name, operationType);
+            var attr = methodDeclaration.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
 
-            var displayNameAttr = methodDeclaration.GetCustomAttribute<DisplayNameAttribute>();
-            var descriptionAttr = methodDeclaration.GetCustomAttribute<DescriptionAttribute>();
-            var displayAttr = methodDeclaration.GetCustomAttribute<DisplayAttribute>();
-
-            displayName = string.IsNullOrWhiteSpace(displayAttr?.Name) 
-                ? displayNameAttr?.DisplayName
-                : displayAttr?.Name;
-            description = string.IsNullOrWhiteSpace(displayAttr?.Description)
-                ? descriptionAttr?.Description
-                : displayAttr?.Description;
+            displayName = attr?.GetName();
+            description = attr?.GetDescription();
+            inputParameterDescription = attr?.GetInputParameterDescription();
+            outputParameterDescription = attr?.GetOutputParameterDescription();
 
             if (string.IsNullOrWhiteSpace(displayName)) {
                 displayName = methodDeclaration.Name;
             }
-
-            var inParamAttr = methodDeclaration.GetCustomAttribute<InputParameterDescriptionAttribute>();
-            inputParameterDescription = inParamAttr?.Description;
-
-            var outParamAttr = methodDeclaration.GetCustomAttribute<OutputParameterDescriptionAttribute>();
-            outputParameterDescription = outParamAttr?.Description;
 
             return true;
         }

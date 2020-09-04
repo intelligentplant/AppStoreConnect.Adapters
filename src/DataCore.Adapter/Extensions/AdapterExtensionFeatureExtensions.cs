@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.Extensions {
 
     /// <summary>
@@ -250,6 +252,127 @@ namespace DataCore.Adapter.Extensions {
             }, cancellationToken);
 
             return outChannel.Reader;
+        }
+
+        #endregion
+
+        #region [ GetDescriptor / GetOperations Overloads ]
+
+        /// <summary>
+        /// Gets the descriptor for the extension feature.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI that the descriptor is being requested for. This is used as a hint 
+        ///   to the implementing type, in case the type implements multiple extension feature 
+        ///   contracts.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The extension feature descriptor.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not a valid absolute URI.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </exception>
+        public static Task<FeatureDescriptor> GetDescriptor(
+            this IAdapterExtensionFeature feature,
+            IAdapterCallContext context,
+            string uriString,
+            CancellationToken cancellationToken
+        ) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+
+            if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
+            }
+
+            uri = UriHelper.EnsurePathHasTrailingSlash(uri);
+
+            if (!UriHelper.IsChildPath(uri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
+            }
+
+            return feature.GetDescriptor(context, uri, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Gets the operations that are supported by the extension feature.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI that the operations are being requested for. This is used as a hint 
+        ///   to the implementing type, in case the type implements multiple extension feature 
+        ///   contracts.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The operation descriptors.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not a valid absolute URI.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </exception>
+        public static Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+            this IAdapterExtensionFeature feature,
+            IAdapterCallContext context,
+            string uriString,
+            CancellationToken cancellationToken
+        ) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+
+            if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
+            }
+
+            uri = UriHelper.EnsurePathHasTrailingSlash(uri);
+
+            if (!UriHelper.IsChildPath(uri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
+            }
+
+            return feature.GetOperations(context, uri, cancellationToken);
         }
 
         #endregion

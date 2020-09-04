@@ -9,12 +9,12 @@ using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Tests {
 
-    [AdapterExtensionFeature(
+    [ExtensionFeature(
         FeatureUri,
         Name = "Ping Pong",
         Description = "Responds to every ping message with a pong message"
     )]
-    public class PingPongExtension : AdapterExtensionFeature {
+    public class PingPongExtension : AdapterExtensionFeature, IHelloWorld {
 
         public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/ping-pong/";
 
@@ -26,6 +26,8 @@ namespace DataCore.Adapter.Tests {
             BindInvoke<PingMessage, PongMessage>(Ping);
             BindStream<PingMessage, PongMessage>(Ping);
             BindDuplexStream<PingMessage, PongMessage>(Ping);
+
+            BindInvoke(Greet);
         }
 
 
@@ -90,6 +92,10 @@ namespace DataCore.Adapter.Tests {
             return Task.FromResult(result.Reader);
         }
 
+
+        public string Greet() {
+            return "Hello, world!";
+        }
     }
 
 
@@ -109,4 +115,20 @@ namespace DataCore.Adapter.Tests {
         public DateTime UtcServerTime { get; set; }
 
     }
+
+
+    public static class HelloWorldConstants {
+
+        public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/hello-world/";
+
+    }
+
+
+    [ExtensionFeature(HelloWorldConstants.FeatureUri)]
+    public interface IHelloWorld : IAdapterExtensionFeature {
+
+        string Greet();
+
+    }
+
 }

@@ -87,7 +87,7 @@ namespace DataCore.Adapter {
                 // We don't check to see if the type is annotated with [AdapterFeature] when 
                 // comparing against standard features, because we use unit tests to ensure 
                 // that all standard features are correctly annotated.
-                ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<AdapterExtensionFeatureAttribute>())) &&
+                ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<ExtensionFeatureAttribute>())) &&
                 type != s_adapterFeatureType && 
                 type != s_adapterExtensionFeatureType;
         }

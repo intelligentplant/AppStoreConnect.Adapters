@@ -48,22 +48,31 @@ Adapters can define any number of the following standard features:
 
 ## Extension Features
 
-In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./Extensions/IAdapterExtensionFeature.cs) and must be annotated using the [AdapterExtensionFeatureAttribute](./Extensions/AdapterExtensionFeatureAttribute.cs) attribute, with a relative feature URI e.g.
+In addition to standard features that inherit from [IAdapterFeature](./IAdapterFeature.cs), adapter implementers can also define extension features on their adapters. Extension features must inherit from [IAdapterExtensionFeature](./Extensions/IAdapterExtensionFeature.cs) and must be annotated using the [ExtensionFeatureAttribute](./Extensions/ExtensionFeatureAttribute.cs) attribute, with a relative feature URI e.g.
 
 ```csharp
-[AdapterExtensionFeature(
+[ExtensionFeature(
     "com.myco/my-example", 
-    DisplayName = "My Example", 
+    Name = "My Example", 
     Description = "An example extension feature"
 )]
 public interface IMyExampleExtensionFeature : IAdapterExtensionFeature {
-    // - snip -
+    
+    [ExtensionFeatureOperation(
+        Description = "Greets a person.",
+        InputParameterDescription = "The name of a person.",
+        OutputParameterDescription = "The greeting."
+    )]
+    string Greet(string name);
+
 }
 ```
 
 > *NOTE:* The absolute URI for an extension feature will be relative to `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` e.g. the relative URI `com.myco/my-example` will be transformed into `asc:features/extensions/com.myco/my-example/`.
 
-In order to simplify implementation of non-standard adapter features, the [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class in the [DataCore.Adapter](/src/DataCore.Adapter) project can be used as the basis of an extension feature implementation.
+The [ExtensionFeatureOperationAttribute](./Extensions/ExtensionFeatureOperationAttribute.cs) attribute can be used to annotate extension feature operations. This information can then be used when building the list of operation descriptors for a feature.
+
+In order to simplify implementation of non-standard adapter features, the [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class in the [DataCore.Adapter](/src/DataCore.Adapter) project can be used as the basis of an extension feature implementation. This class offers a number of `BindInvoke`, `BindStream`, and `BindDuplexStream` method overloads to automatically register methods on the implementation to be handled by the `Invoke`, `Stream` or `DuplexStream` method defined by `IAdapterExtensionFeature` as appropriate.
 
 
 ## Helper Classes
