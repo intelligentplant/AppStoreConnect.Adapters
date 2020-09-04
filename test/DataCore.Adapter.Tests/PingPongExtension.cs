@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ using IntelligentPlant.BackgroundTasks;
 namespace DataCore.Adapter.Tests {
 
     [AdapterExtensionFeature(FeatureUri)]
+    [DisplayName("Ping Pong")]
+    [Description("Sends a pong message for every ping message")]
     public class PingPongExtension : AdapterExtensionFeature {
 
         public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/ping-pong/";

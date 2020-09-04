@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -13,6 +14,45 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
     // Adds hub methods for invoking extension adapter features.
 
     public partial class AdapterHub {
+
+        /// <summary>
+        /// Gets the descriptor for the specified extension feature.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The extension feature URI to retrieve the descriptor for.
+        /// </param>
+        /// <returns>
+        ///   The feature descriptor.
+        /// </returns>
+        public async Task<FeatureDescriptor> GetDescriptor(
+            string adapterId,
+            Uri featureUri
+        ) {
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+
+            if (featureUri == null || !featureUri.IsAbsoluteUri) {
+                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri), nameof(featureUri));
+            }
+
+            featureUri = UriHelper.EnsurePathHasTrailingSlash(featureUri);
+
+            var resolved = await ResolveAdapterAndExtensionFeature(
+                adapterCallContext,
+                adapterId,
+                featureUri,
+                Context.ConnectionAborted
+            ).ConfigureAwait(false);
+
+            return await resolved.Feature.GetDescriptor(
+                adapterCallContext, 
+                featureUri, 
+                Context.ConnectionAborted
+            ).ConfigureAwait(false);
+        }
+
 
         /// <summary>
         /// Gets the available operations for the specified extension feature.
@@ -47,6 +87,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             var ops = await resolved.Feature.GetOperations(
                 adapterCallContext,
+                featureUri,
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 

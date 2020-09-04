@@ -47,6 +47,27 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        public override async Task<FeatureDescriptor> GetDescriptor(GetExtensionDescriptorRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+
+            if (!UriHelper.TryCreateUriWithTrailingSlash(request.FeatureUri, out var featureUri)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.FeatureUri)));
+            }
+
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
+
+            try {
+                var result = await adapter.Feature.GetDescriptor(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
+                return result.ToGrpcFeatureDescriptor();
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
+            }
+        }
+
+
         /// <summary>
         /// Gets the available operations for an extension feature.
         /// </summary>
@@ -71,7 +92,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.GetOperations(adapterCallContext, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.GetOperations(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
                 var response = new GetExtensionOperationsResponse();
                 if (result != null) {
                     foreach (var item in result) {

@@ -366,6 +366,13 @@ message WriteTagValueResult {
 }
 
 
+message FeatureDescriptor {
+    string feature_uri = 1;
+    string display_name = 2;
+    string description = 3;
+}
+
+
 message ExtensionFeatureOperationDescriptor {
     string operation_id = 1;
     ExtensionFeatureOperationType operation_type = 2;

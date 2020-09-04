@@ -8,10 +8,17 @@ import "Types.proto";
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service ExtensionFeaturesService {
+    rpc GetDescriptor(GetExtensionDescriptorRequest) returns (FeatureDescriptor);
     rpc GetOperations(GetExtensionOperationsRequest) returns (GetExtensionOperationsResponse);
     rpc InvokeExtension(InvokeExtensionRequest) returns (InvokeExtensionResponse);
     rpc InvokeStreamingExtension(InvokeExtensionRequest) returns (stream InvokeExtensionResponse);
     rpc InvokeDuplexStreamingExtension(stream InvokeExtensionRequest) returns (stream InvokeExtensionResponse);
+}
+
+
+message GetExtensionDescriptorRequest {
+    string adapter_id = 1;
+    string feature_uri = 2;
 }
 
 

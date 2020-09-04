@@ -28,7 +28,25 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async Task<IEnumerable<Adapter.Extensions.ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected override async Task<Common.FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
+            var response = client.GetDescriptorAsync(new GetExtensionDescriptorRequest() {
+                AdapterId = Proxy.RemoteDescriptor.Id,
+                FeatureUri = featureUri?.ToString() ?? string.Empty
+            }, Proxy.GetCallOptions(context, cancellationToken));
+
+            var result = await response.ResponseAsync.ConfigureAwait(false);
+
+            return result.ToAdapterFeatureDescriptor();
+        }
+
+
+        /// <inheritdoc/>
+        protected override async Task<IEnumerable<Adapter.Extensions.ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context,
             Uri featureUri,
             CancellationToken cancellationToken

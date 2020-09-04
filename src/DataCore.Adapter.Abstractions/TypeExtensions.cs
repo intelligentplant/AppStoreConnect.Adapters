@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter {
@@ -166,16 +169,16 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The matching attributes.
         /// </returns>
-        private static IEnumerable<TAttr> GetAttributeFeatureAttributes<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
+        private static IEnumerable<(Type type, TAttr attr)> GetAttributeFeatureAttributes<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
             var attribute = type.GetCustomAttribute<TAttr>();
             if (attribute != null) {
-                yield return attribute;
+                yield return (type, attribute);
             }
 
             if (type.IsConcreteClass()) {
                 foreach (var ifType in type.GetInterfaces()) {
-                    foreach (var attr in ifType.GetAttributeFeatureAttributes<TAttr>()) {
-                        yield return attr;
+                    foreach (var val in ifType.GetAttributeFeatureAttributes<TAttr>()) {
+                        yield return val;
                     }
                 }
             }
@@ -222,7 +225,7 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static Uri GetAdapterFeatureUri(this Type type) {
             return type.IsAdapterFeature()
-                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.FirstOrDefault()?.Uri
+                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.FirstOrDefault().attr?.Uri
                 : null;
         }
 
@@ -242,7 +245,7 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static IEnumerable<Uri> GetAdapterFeatureUris(this Type type) {
             return type.IsAdapterFeature()
-                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.Select(x => x.Uri)?.ToArray() ?? Array.Empty<Uri>()
+                ? type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>()?.Select(x => x.attr.Uri)?.ToArray() ?? Array.Empty<Uri>()
                 : Array.Empty<Uri>();
         }
 
@@ -337,6 +340,88 @@ namespace DataCore.Adapter {
 
             var diff = uri.MakeRelativeUri(attr.Uri);
             return !diff.IsAbsoluteUri && !diff.OriginalString.StartsWith("../", StringComparison.Ordinal);
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="FeatureDescriptor"/> from the specified feature type. The type 
+        /// must be annotated with <see cref="AdapterFeatureAttribute"/> (or a derived type), or 
+        /// it must implement an interface that is annotated in this way.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
+        ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   If the <paramref name="type"/> (or the interface that it implements) is annotated 
+        ///   with a <see cref="DisplayAttribute"/> or a <see cref="DisplayNameAttribute"/>, this 
+        ///   will be used to set the <see cref="FeatureDescriptor.DisplayName"/>. If no display 
+        ///   name can be inferred, the <see cref="Type.FullName"/> property of the type will be 
+        ///   used.
+        /// </para>
+        /// 
+        /// <para>
+        ///   If the <paramref name="type"/> (or the interface that it implements) is annotated 
+        ///   with a <see cref="DisplayAttribute"/> or a <see cref="DescriptionAttribute"/>, this 
+        ///   will be used to set the <see cref="FeatureDescriptor.Description"/>.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static FeatureDescriptor CreateFeatureDescriptor(this Type type) {
+            if (type == null) {
+                return null;
+            }
+
+            var attr = type.GetAttributeFeatureAttributes<AdapterFeatureAttribute>().FirstOrDefault();
+            if (attr.attr == null) {
+                return null;
+            }
+
+            var uri = attr.attr.Uri;
+
+            var displayAttr = attr.type.GetCustomAttribute<DisplayAttribute>();
+            var displayName = displayAttr?.Name ?? attr.type.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+            var description = displayAttr?.Description ?? attr.type.GetCustomAttribute<DescriptionAttribute>()?.Description;
+
+            if (string.IsNullOrWhiteSpace(displayName)) {
+                displayName = type.FullName;
+            }
+
+            if (displayName.Length > FeatureDescriptor.MaxDisplayNameLength) {
+                displayName = displayName.Substring(0, FeatureDescriptor.MaxDisplayNameLength);
+            }
+
+            if (description != null && description.Length > FeatureDescriptor.MaxDescriptionLength) {
+                description = description.Substring(0, FeatureDescriptor.MaxDescriptionLength);
+            }
+
+            return new FeatureDescriptor() {
+                Uri = uri,
+                DisplayName = displayName,
+                Description = description
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="FeatureDescriptor"/> from the specified feature type. The type 
+        /// must be annotated with <see cref="AdapterFeatureAttribute"/> (or a derived type), or 
+        /// it must implement an interface that is annotated in this way.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <returns>
+        ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
+        ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
+        /// </returns>
+        public static FeatureDescriptor CreateFeatureDescriptor<TFeature>(this TFeature feature) where TFeature : IAdapterFeature {
+            return typeof(TFeature).CreateFeatureDescriptor();
         }
 
     }

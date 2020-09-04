@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.Extensions {
 
     /// <summary>
@@ -21,10 +23,44 @@ namespace DataCore.Adapter.Extensions {
     public interface IAdapterExtensionFeature : IAdapterFeature {
 
         /// <summary>
+        /// Gets the descriptor for the extension feature.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI that the descriptor is being requested for. This is used as a hint 
+        ///   to the implementing type, in case the type implements multiple extension feature 
+        ///   contracts.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The extension feature descriptor.
+        /// </returns>
+        /// <remarks>
+        ///   If the implementing type implements multiple extension features, and <paramref name="featureUri"/> 
+        ///   is <see langword="null"/>, the implementing type should return its first available 
+        ///   descriptor.
+        /// </remarks>
+        Task<FeatureDescriptor> GetDescriptor(
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        );
+
+
+        /// <summary>
         /// Gets the operations that are supported by the extension feature.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI that the operations are being requested for. This is used as a hint 
+        ///   to the implementing type, in case the type implements multiple extension feature 
+        ///   contracts.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -32,8 +68,14 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The operation descriptors.
         /// </returns>
+        /// <remarks>
+        ///   If the implementing type implements multiple extension features, and <paramref name="featureUri"/> 
+        ///   is <see langword="null"/>, the implementing type should return operation descriptors 
+        ///   for all of its implemented features.
+        /// </remarks>
         Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
             IAdapterCallContext context,
+            Uri featureUri,
             CancellationToken cancellationToken
         );
 

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,59 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
+        /// Gets the descriptor for the specified extension feature.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="id">
+        ///   The extension feature URI.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a <see cref="FeatureDescriptor"/> object.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/descriptor")]
+        public async Task<IActionResult> GetDescriptor(
+            string adapterId, 
+            [FromQuery] Uri id, 
+            CancellationToken cancellationToken = default
+        ) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            if (id == null || !id.IsAbsoluteUri) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, id)); // 400
+            }
+
+            id = UriHelper.EnsurePathHasTrailingSlash(id);
+
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, id, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, id)); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+
+            try {
+                var descriptor = await resolvedFeature.Feature.GetDescriptor(callContext, id, cancellationToken).ConfigureAwait(false);
+                return Ok(descriptor); // 200
+            }
+            catch (ArgumentException e) {
+                return BadRequest(e.Message); // 400
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
+        }
+
+
+        /// <summary>
         /// Gets the available operations on an extension feature.
         /// </summary>
         /// <param name="adapterId">
@@ -105,7 +159,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             try {
-                var ops = await resolvedFeature.Feature.GetOperations(callContext, cancellationToken).ConfigureAwait(false);
+                var ops = await resolvedFeature.Feature.GetOperations(callContext, id, cancellationToken).ConfigureAwait(false);
                 // Note that we filter out any non-invocation operations here!
                 return Ok(ops?.Where(x => x != null && x.OperationType == ExtensionFeatureOperationType.Invoke).ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>()); // 200
             }

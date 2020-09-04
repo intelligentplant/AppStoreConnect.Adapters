@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.SignalR.Client;
@@ -36,12 +37,55 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
 
         /// <summary>
+        /// Gets the descriptor for the specified extension feature.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The extension feature URI to retrieve the descriptor for.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The feature descriptor.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="featureUri"/> is <see langword="null"/>.
+        /// </exception>
+        public async Task<FeatureDescriptor> GetDescriptorAsync(
+            string adapterId,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
+            }
+
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            return await connection.InvokeAsync<FeatureDescriptor>(
+                "GetDescriptor",
+                adapterId,
+                featureUri,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
         /// Gets the available operations for the specified extension feature.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="featureId">
+        /// <param name="featureUri">
         ///   The extension feature URI to retrieve the operation descriptors for.
         /// </param>
         /// <param name="cancellationToken">
@@ -54,25 +98,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="featureId"/> is <see langword="null"/>.
+        ///   <paramref name="featureUri"/> is <see langword="null"/>.
         /// </exception>
         public async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsAsync(
             string adapterId,
-            Uri featureId,
+            Uri featureUri,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (featureId == null) {
-                throw new ArgumentNullException(nameof(featureId));
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<ExtensionFeatureOperationDescriptor>>(
                 "GetExtensionOperations",
                 adapterId,
-                featureId,
+                featureUri,
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -84,7 +128,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
+        /// <param name="operationUri">
         ///   The URI of the operation to invoke.
         /// </param>
         /// <param name="argument">
@@ -100,26 +144,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
+        ///   <paramref name="operationUri"/> is <see langword="null"/>.
         /// </exception>
         public async Task<string> InvokeExtensionAsync(
             string adapterId,
-            Uri operationId,
+            Uri operationUri,
             string argument,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (operationUri == null) {
+                throw new ArgumentNullException(nameof(operationUri));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<string>(
                 "InvokeExtension",
                 adapterId,
-                operationId,
+                operationUri,
                 argument,
                 cancellationToken
             ).ConfigureAwait(false);
@@ -132,7 +176,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
+        /// <param name="operationUri">
         ///   The URI of the operation to invoke.
         /// </param>
         /// <param name="argument">
@@ -148,26 +192,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
+        ///   <paramref name="operationUri"/> is <see langword="null"/>.
         /// </exception>
         public async Task<ChannelReader<string>> InvokeStreamingExtensionAsync(
             string adapterId,
-            Uri operationId,
+            Uri operationUri,
             string argument,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (operationUri == null) {
+                throw new ArgumentNullException(nameof(operationUri));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<string>(
                 "InvokeStreamingExtension",
                 adapterId,
-                operationId,
+                operationUri,
                 argument,
                 cancellationToken
             ).ConfigureAwait(false);
@@ -180,7 +224,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
+        /// <param name="operationUri">
         ///   The URI of the operation to invoke.
         /// </param>
         /// <param name="channel">
@@ -196,29 +240,29 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
+        ///   <paramref name="operationUri"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
         public async Task<ChannelReader<string>> InvokeDuplexStreamingExtensionAsync(
             string adapterId,
-            Uri operationId,
+            Uri operationUri,
             ChannelReader<string> channel,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (operationUri == null) {
+                throw new ArgumentNullException(nameof(operationUri));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<string>(
                 "InvokeDuplexStreamingExtension",
                 adapterId,
-                operationId,
+                operationUri,
                 channel,
                 cancellationToken
             ).ConfigureAwait(false);

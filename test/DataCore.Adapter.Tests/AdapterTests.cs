@@ -622,6 +622,33 @@ namespace DataCore.Adapter.Tests {
         #region [ Ping-Pong Extension ]
 
         [TestMethod]
+        public Task PingPongExtensionShouldReturnDescriptor() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var expected = typeof(PingPongExtension).CreateFeatureDescriptor();
+                var actual = await feature.GetDescriptor(context, null, default).ConfigureAwait(false);
+
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.Uri, actual.Uri);
+                Assert.AreEqual(expected.DisplayName, actual.DisplayName);
+                if (expected.Description == null) {
+                    // If the expected description is null, some adapters (e.g. gRPC proxy) will 
+                    // return string.Empty as null values are not allowed in gRPC messages.
+                    Assert.IsTrue(string.IsNullOrEmpty(actual.Description));
+                }
+                else {
+                    Assert.AreEqual(expected.Description, actual.Description);
+                }
+            });
+        }
+
+
+        [TestMethod]
         public Task PingPongExtensionShouldReturnAvailableOperations() {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
@@ -630,7 +657,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
                 var expectedOperations = ExpectedExtensionFeatureOperationTypes();
 
                 foreach (var type in expectedOperations) {
@@ -653,7 +680,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
                 var expectedOperations = ExpectedExtensionFeatureOperationTypes();
 
                 operations = operations.Where(x => expectedOperations.Contains(x.OperationType)).ToArray();
@@ -690,7 +717,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke)?.OperationId;
                 if (operationId == null) {
@@ -728,7 +755,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Stream)?.OperationId;
                 if (operationId == null) {
@@ -774,7 +801,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var operations = await feature.GetOperations(context, default).ConfigureAwait(false);
+                var operations = await feature.GetOperations(context, null, default).ConfigureAwait(false);
 
                 var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.DuplexStream)?.OperationId;
                 if (operationId == null) {

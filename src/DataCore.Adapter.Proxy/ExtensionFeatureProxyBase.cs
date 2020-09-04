@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Proxy {
@@ -49,12 +50,45 @@ namespace DataCore.Adapter.Proxy {
 
 
         /// <inheritdoc/>
-        protected sealed override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected sealed override Task<FeatureDescriptor> GetDescriptor(
             IAdapterCallContext context, 
+            Uri featureUri,
             CancellationToken cancellationToken
         ) {
-            return GetOperations(context, _featureUri.Value, cancellationToken);
+            return GetDescriptorFromRemoteAdapter(context, _featureUri.Value, cancellationToken);
         }
+
+
+        /// <inheritdoc/>
+        protected sealed override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+            IAdapterCallContext context, 
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            return GetOperationsFromRemoteAdapter(context, _featureUri.Value, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Gets the descriptor for the extension feature.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The URI of the extension feature to retrieve the descriptor for.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The extension feature descriptor.
+        /// </returns>
+        protected abstract Task<FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        );
 
 
         /// <summary>
@@ -72,7 +106,7 @@ namespace DataCore.Adapter.Proxy {
         /// <returns>
         ///   The operation descriptors.
         /// </returns>
-        protected abstract Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected abstract Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context,
             Uri featureUri,
             CancellationToken cancellationToken

@@ -15,16 +15,6 @@ namespace DataCore.Adapter {
         /// </summary>
         public Uri Uri { get; }
 
-        /// <summary>
-        /// The display name for the feature.
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// The description for the feature.
-        /// </summary>
-        public string Description { get; set; }
-
 
         /// <summary>
         /// Creates a new <see cref="AdapterFeatureAttribute"/>.

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Proxy;
 
@@ -29,7 +30,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected override Task<FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            var client = Proxy.GetClient();
+            return client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri, cancellationToken);
+        }
+
+
+        /// <inheritdoc/>
+        protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context, 
             Uri featureUri,
             CancellationToken cancellationToken

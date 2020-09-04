@@ -10,6 +10,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Extensions {
@@ -75,9 +77,25 @@ namespace DataCore.Adapter.Extensions {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
 
             foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
-                var opUri = GetOperationUri(featureUri, nameof(IAdapterExtensionFeature.GetOperations), ExtensionFeatureOperationType.Invoke);
+                // Create auto-binding for GetDescriptor method
+                var opUri = GetOperationUri(
+                    featureUri,
+                    nameof(IAdapterExtensionFeature.GetDescriptor),
+                    ExtensionFeatureOperationType.Invoke
+                );
                 _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
-                    var ops = await this.GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
+                    var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
+                    return SerializeObject(desc);
+                };
+
+                // Create auto-binding for GetOperations method
+                opUri = GetOperationUri(
+                    featureUri, 
+                    nameof(IAdapterExtensionFeature.GetOperations), 
+                    ExtensionFeatureOperationType.Invoke
+                );
+                _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
+                    var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
                     return SerializeObject(ops);
                 };
             }
@@ -85,14 +103,22 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> IAdapterExtensionFeature.GetOperations(
+        Task<FeatureDescriptor> IAdapterExtensionFeature.GetDescriptor(
             IAdapterCallContext context, 
+            Uri featureUri,
             CancellationToken cancellationToken
         ) {
-            return _boundDescriptors
-                .Values
-                .Concat(await GetOperations(context, cancellationToken).ConfigureAwait(false))
-                .ToArray();
+            return GetDescriptor(context, featureUri, cancellationToken);
+        }
+
+
+        /// <inheritdoc/>
+        Task<IEnumerable<ExtensionFeatureOperationDescriptor>> IAdapterExtensionFeature.GetOperations(
+            IAdapterCallContext context, 
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            return GetOperations(context, featureUri, cancellationToken);
         }
 
 
@@ -123,12 +149,52 @@ namespace DataCore.Adapter.Extensions {
         }
 
 
+        /// <summary>
+        /// Gets the descriptor for the extension feature.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI that the operations are being requested for. This is used as a hint 
+        ///   to the implementing type, in case the type implements multiple extension feature 
+        ///   contracts.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The extension feature descriptor.
+        /// </returns>
+        /// <remarks>
+        ///   It is not normally required to override this method. Override only if the feature 
+        ///   descriptor is not generated using an <see cref="AdapterExtensionFeatureAttribute"/>.
+        /// </remarks>
+        protected virtual Task<FeatureDescriptor> GetDescriptor(
+            IAdapterCallContext context,
+            Uri featureUri,
+            CancellationToken cancellationToken
+        ) {
+            var result = featureUri == null
+                ? GetType().CreateFeatureDescriptor()
+                : GetType()
+                    .GetAdapterFeatureTypes()
+                    .FirstOrDefault(x => x.HasAdapterFeatureUri(featureUri))
+                    ?.CreateFeatureDescriptor();
+
+            return Task.FromResult(result);
+        }
+
+
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
         /// Gets the operations that are supported by the extension feature.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The requested feature URI.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -153,11 +219,21 @@ namespace DataCore.Adapter.Extensions {
         protected virtual Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context,
+            Uri featureUri,
             CancellationToken cancellationToken
         ) {
-            return Task.FromResult<IEnumerable<ExtensionFeatureOperationDescriptor>>(
-                Array.Empty<ExtensionFeatureOperationDescriptor>()
-            );
+            var result = _boundDescriptors
+                .Values
+                .Where(x => {
+                    if (featureUri == null) {
+                        return true;
+                    }
+
+                    return UriHelper.IsChildPath(x.OperationId, featureUri);
+                })
+                .ToArray();
+
+            return Task.FromResult<IEnumerable<ExtensionFeatureOperationDescriptor>>(result);
         }
 
 

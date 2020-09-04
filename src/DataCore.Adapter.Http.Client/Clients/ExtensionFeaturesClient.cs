@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -39,12 +40,60 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
+        /// Gets the descriptor for the specified extension feature.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The extension feature URI to retrieve the descriptor for.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The feature descriptor.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="featureUri"/> is <see langword="null"/>.
+        /// </exception>
+        public async Task<FeatureDescriptor> GetDescriptorAsync(
+            string adapterId,
+            Uri featureUri,
+            RequestMetadata metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
+            }
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/descriptor?id={Uri.EscapeDataString(featureUri.ToString())}";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                httpResponse.EnsureSuccessStatusCode();
+
+                return await httpResponse.Content.ReadAsAsync<FeatureDescriptor>(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
         /// Gets the available operations for the specified extension feature.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="featureId">
+        /// <param name="featureUri">
         ///   The extension feature URI to retrieve the operation descriptors for.
         /// </param>
         /// <param name="metadata">
@@ -60,22 +109,22 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="featureId"/> is <see langword="null"/>.
+        ///   <paramref name="featureUri"/> is <see langword="null"/>.
         /// </exception>
         public async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsAsync(
             string adapterId,
-            Uri featureId,
+            Uri featureUri,
             RequestMetadata metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (featureId == null) {
-                throw new ArgumentNullException(nameof(featureId));
+            if (featureUri == null) {
+                throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?id={Uri.EscapeDataString(featureId.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?id={Uri.EscapeDataString(featureUri.ToString())}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -92,7 +141,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
+        /// <param name="operationUri">
         ///   The URI of the operation to invoke.
         /// </param>
         /// <param name="argument">
@@ -111,11 +160,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
+        ///   <paramref name="operationUri"/> is <see langword="null"/>.
         /// </exception>
         public async Task<string> InvokeExtensionAsync(
             string adapterId,
-            Uri operationId,
+            Uri operationUri,
             string argument,
             RequestMetadata metadata = null,
             CancellationToken cancellationToken = default
@@ -123,11 +172,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (operationUri == null) {
+                throw new ArgumentNullException(nameof(operationUri));
             }
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke?id={Uri.EscapeDataString(operationId.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke?id={Uri.EscapeDataString(operationUri.ToString())}";
 
             using (var formData = new FormUrlEncodedContent(new Dictionary<string, string>() { [nameof(argument)] = argument }))
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, formData, metadata))

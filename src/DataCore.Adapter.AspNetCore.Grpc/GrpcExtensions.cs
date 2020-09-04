@@ -1118,6 +1118,35 @@ namespace DataCore.Adapter {
 
         #region [ Extensions ]
 
+        public static Common.FeatureDescriptor ToAdapterFeatureDescriptor(this Grpc.FeatureDescriptor descriptor) {
+            if (descriptor == null) {
+                return null;
+            }
+
+            return new Common.FeatureDescriptor() { 
+                Uri = Uri.TryCreate(descriptor.FeatureUri, UriKind.Absolute, out var uri)
+                    ? uri
+                    : null,
+                DisplayName = descriptor.DisplayName,
+                Description = descriptor.Description
+            };
+        }
+
+
+        public static Grpc.FeatureDescriptor ToGrpcFeatureDescriptor(this Common.FeatureDescriptor descriptor) {
+            if (descriptor == null) {
+                return null;
+            }
+
+            return new Grpc.FeatureDescriptor() {
+                FeatureUri = descriptor.Uri?.ToString() ?? string.Empty,
+                DisplayName = descriptor.DisplayName ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty
+            };
+        }
+
+
+
         public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 return null;
