@@ -346,7 +346,7 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
-                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key.Name);
+                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key);
                 var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 
                 // Create new result that uses normalised name.
@@ -430,7 +430,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   An implementation of <paramref name="featureType"/> has already been registered.
         /// </exception>
-        public void AddFeature(Type featureType, object feature) {
+        public void AddFeature(Type featureType, IAdapterFeature feature) {
             CheckDisposed();
             _features.Add(featureType, feature);
         }

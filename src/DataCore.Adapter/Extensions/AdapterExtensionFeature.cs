@@ -112,7 +112,7 @@ namespace DataCore.Adapter.Extensions {
                 context, 
                 featureUri == null 
                     ? null 
-                    : UriHelper.EnsurePathHasTrailingSlash(featureUri), 
+                    : UriExtensions.EnsurePathHasTrailingSlash(featureUri), 
                 cancellationToken
             );
         }
@@ -128,7 +128,7 @@ namespace DataCore.Adapter.Extensions {
                 context,
                 featureUri == null
                     ? null
-                    : UriHelper.EnsurePathHasTrailingSlash(featureUri),
+                    : UriExtensions.EnsurePathHasTrailingSlash(featureUri),
                 cancellationToken
             );
         }
@@ -241,7 +241,7 @@ namespace DataCore.Adapter.Extensions {
                         return true;
                     }
 
-                    return UriHelper.IsChildPath(x.OperationId, featureUri);
+                    return UriExtensions.IsChildPath(x.OperationId, featureUri);
                 })
                 .ToArray();
 
@@ -725,7 +725,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The operation URI.
         /// </returns>
         private static Uri GetOperationUri(Uri featureUri, string unqualifiedName, ExtensionFeatureOperationType operationType) {
-            return UriHelper.EnsurePathHasTrailingSlash(new Uri(
+            return UriExtensions.EnsurePathHasTrailingSlash(new Uri(
                 featureUri,
                 unqualifiedName.EndsWith("/", StringComparison.Ordinal)
                     ? string.Concat(unqualifiedName, operationType.ToString())
@@ -766,7 +766,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (!UriHelper.IsChildPath(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!UriExtensions.IsChildPath(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
                 featureUri = null;
                 error = Resources.Error_InvalidExtensionFeatureOperationUri;
                 return false;

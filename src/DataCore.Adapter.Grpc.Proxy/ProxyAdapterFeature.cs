@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             var featureInstances = new Dictionary<Type, object>();
 
             foreach (var featureUriOrName in remoteAdapterFeatures) {
-                var implementation = UriHelper.TryCreateUriWithTrailingSlash(featureUriOrName, out var uri)
+                var implementation = UriExtensions.TryCreateUriWithTrailingSlash(featureUriOrName, out var uri)
                     ? _featureImplementations.FirstOrDefault(x => x.Key.HasAdapterFeatureUri(uri))
                     : _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(featureUriOrName, StringComparison.OrdinalIgnoreCase));
 
@@ -106,7 +106,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     featureInstances[implementation.Value] = feature;
                 }
 
-                proxy.AddFeature(implementation.Key, feature);
+                proxy.AddFeature(implementation.Key, (IAdapterFeature) feature);
             }
         }
 

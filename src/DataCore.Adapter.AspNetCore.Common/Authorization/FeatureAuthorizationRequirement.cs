@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// The adapter feature to authorize. Can be <see langword="null"/> if the requirement is that 
         /// the adapter is visible to the caller.
         /// </summary>
-        public Type Feature { get; }
+        public Uri FeatureUri { get; }
         
 
         /// <summary>
@@ -22,26 +22,10 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// <param name="feature">
         ///   The feature type.
         /// </param>
-        internal FeatureAuthorizationRequirement(Type feature) {
-            Feature = feature;
+        internal FeatureAuthorizationRequirement(Uri feature) {
+            FeatureUri = feature;
         }
 
     }
 
-
-    /// <summary>
-    /// A helper class to provide an <see cref="IAuthorizationRequirement"/> containing an adapter 
-    /// feature.
-    /// </summary>
-    /// <typeparam name="TFeature">
-    ///   The feature type.
-    /// </typeparam>
-    public class FeatureAuthorizationRequirement<TFeature> : FeatureAuthorizationRequirement where TFeature : IAdapterFeature {
-
-        /// <summary>
-        /// Creates a new <see cref="FeatureAuthorizationRequirement{TFeature}"/> object.
-        /// </summary>
-        public FeatureAuthorizationRequirement() : base(typeof(TFeature)) { }
-
-    }
 }

@@ -182,7 +182,7 @@ namespace DataCore.Adapter.Http.Proxy {
                 try {
                     var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
                     if (impl == null) {
-                        if (!UriHelper.TryCreateUriWithTrailingSlash(extensionFeature, out var featureUri)) {
+                        if (!UriExtensions.TryCreateUriWithTrailingSlash(extensionFeature, out var featureUri)) {
                             Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }

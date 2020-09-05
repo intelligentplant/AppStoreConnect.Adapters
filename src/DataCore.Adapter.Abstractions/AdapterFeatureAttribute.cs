@@ -83,7 +83,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 
@@ -130,7 +130,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(relativeUriString));
             }
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(baseUriString, out var baseUri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(baseUriString, out var baseUri)) {
                 throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(baseUriString));
             }
 
@@ -138,13 +138,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
             }
 
-            var absoluteUri = UriHelper.EnsurePathHasTrailingSlash(
+            var absoluteUri = UriExtensions.EnsurePathHasTrailingSlash(
                 relativeUri.IsAbsoluteUri
                     ? relativeUri
                     : new Uri(baseUri, relativeUri)
             );
 
-            if (!UriHelper.IsChildPath(absoluteUri, baseUri)) {
+            if (!UriExtensions.IsChildPath(absoluteUri, baseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
             }
 

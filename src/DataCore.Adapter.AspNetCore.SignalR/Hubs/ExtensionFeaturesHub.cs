@@ -37,7 +37,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri), nameof(featureUri));
             }
 
-            featureUri = UriHelper.EnsurePathHasTrailingSlash(featureUri);
+            featureUri = UriExtensions.EnsurePathHasTrailingSlash(featureUri);
 
             var resolved = await ResolveAdapterAndExtensionFeature(
                 adapterCallContext,
@@ -76,7 +76,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri), nameof(featureUri));
             }
 
-            featureUri = UriHelper.EnsurePathHasTrailingSlash(featureUri);
+            featureUri = UriExtensions.EnsurePathHasTrailingSlash(featureUri);
 
             var resolved = await ResolveAdapterAndExtensionFeature(
                 adapterCallContext,
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
             }
 
-            operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
+            operationId = UriExtensions.EnsurePathHasTrailingSlash(operationId);
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -170,7 +170,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
             }
 
-            operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
+            operationId = UriExtensions.EnsurePathHasTrailingSlash(operationId);
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -220,7 +220,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
             }
 
-            operationId = UriHelper.EnsurePathHasTrailingSlash(operationId);
+            operationId = UriExtensions.EnsurePathHasTrailingSlash(operationId);
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }

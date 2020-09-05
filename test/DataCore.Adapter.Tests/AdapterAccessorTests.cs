@@ -119,40 +119,6 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeUnqualifiedStandardFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeQualifiedStandardFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).FullName);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
-            }
-        }
-
-
-        [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeExtensionFeatureUri() {
             using (var adapter = new ExampleAdapter()) {
                 ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
@@ -175,63 +141,13 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeQualifiedExtensionFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(TestExtension).FullName);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is TestExtension);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldNotResolveUnqualifiedExtensionFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(TestExtension).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsFalse(resolved.IsFeatureResolved);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveButNotAuthorizeFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true, false);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsFalse(resolved.IsFeatureAuthorized);
-            }
-        }
-
-
-        [TestMethod]
         public async Task AdapterAccessor_ShouldNotResolveMissingFeatureName() {
             using (var adapter = new ExampleAdapter()) {
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadRawTagValues).Name);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, WellKnownFeatures.RealTimeData.ReadRawTagValues);
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsFalse(resolved.IsFeatureResolved);
@@ -290,7 +206,7 @@ namespace DataCore.Adapter.Tests {
                 return Task.FromResult(_authorizeAdapter);
             }
 
-            public Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+            public Task<bool> AuthorizeAdapterFeature(IAdapter adapter, IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
                 return Task.FromResult(_authorizeFeature);
             }
         }

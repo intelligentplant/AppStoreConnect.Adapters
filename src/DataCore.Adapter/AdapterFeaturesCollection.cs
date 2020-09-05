@@ -23,11 +23,11 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The implemented features.
         /// </summary>
-        private readonly ConcurrentDictionary<Type, object> _features = new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentDictionary<Uri, IAdapterFeature> _features = new ConcurrentDictionary<Uri, IAdapterFeature>();
 
 
         /// <inheritdoc/>
-        public IEnumerable<Type> Keys {
+        public IEnumerable<Uri> Keys {
             get { return _features.Keys; }
         }
 
@@ -35,10 +35,10 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1043:Use Integral Or String Argument For Indexers", Justification = "Features are identified by type")]
-        public object this[Type key] {
+        public IAdapterFeature this[Uri key] {
             get {
                 return key == null || !_features.TryGetValue(key, out var value)
-                    ? null
+                    ? default
                     : value;
             }
         }
@@ -84,8 +84,7 @@ namespace DataCore.Adapter {
         /// </param>
         /// <param name="addStandardFeatures">
         ///   Specifies if standard adapter feature implementations should be added to the 
-        ///   collection. Standard feature types can be obtained by calling 
-        ///   <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>.
+        ///   collection.
         /// </param>
         /// <param name="addExtensionFeatures">
         ///   Specifies if extension adapter feature implementations should be added to the 
@@ -113,11 +112,11 @@ namespace DataCore.Adapter {
                 if (!addExtensionFeatures && feature.IsExtensionAdapterFeature()) {
                     continue;
                 }
-                AddInternal(feature, featureProvider, false);
+                AddInternal(feature, (IAdapterFeature) featureProvider, false);
             }
 
             if (addExtensionFeatures && type.IsConcreteExtensionAdapterFeature()) {
-                AddInternal(type, featureProvider, false);
+                AddInternal(type, (IAdapterFeature) featureProvider, false);
             }
         }
 
@@ -144,14 +143,17 @@ namespace DataCore.Adapter {
         ///   An implementation of <paramref name="featureType"/> has already been registered and 
         ///   <paramref name="throwOnAlreadyAdded"/> is <see langword="true"/>.
         /// </exception>
-        private void AddInternal(Type featureType, object feature, bool throwOnAlreadyAdded) {
+        private void AddInternal(Type featureType, IAdapterFeature feature, bool throwOnAlreadyAdded) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
             if (!featureType.IsInstanceOfType(feature)) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
             }
-            if (!_features.TryAdd(featureType, feature)) {
+
+            var uri = featureType.GetAdapterFeatureUri();
+
+            if (!_features.TryAdd(uri, feature)) {
                 if (throwOnAlreadyAdded) {
                     throw new ArgumentException(Resources.Error_FeatureIsAlreadyRegistered, nameof(featureType));
                 }
@@ -183,7 +185,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   An implementation of <paramref name="featureType"/> has already been registered.
         /// </exception>
-        public void Add(Type featureType, object feature) {
+        public void Add(Type featureType, IAdapterFeature feature) {
             if (featureType == null) {
                 throw new ArgumentNullException(nameof(featureType));
             }
@@ -238,6 +240,7 @@ namespace DataCore.Adapter {
                     nameof(ExtensionFeatureAttribute)
                 ), nameof(feature));
             }
+
             AddInternal(typeof(TFeature), feature, true);
         }
 
@@ -282,6 +285,53 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Removes an adapter feature.
         /// </summary>
+        /// <param name="uri">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was removed, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public bool Remove(Uri uri) {
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return _features.TryRemove(uri, out var _);
+        }
+
+
+        /// <summary>
+        /// Removes an adapter feature.
+        /// </summary>
+        /// <param name="uriString">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was removed, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public bool Remove(string uriString) {
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
+            }
+
+            return _features.TryRemove(uri, out var _);
+        }
+
+
+        /// <summary>
+        /// Removes an adapter feature.
+        /// </summary>
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
@@ -289,7 +339,11 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature was removed, or <see langword="false"/> otherwise.
         /// </returns>
         public bool Remove<TFeature>() where TFeature : IAdapterFeature {
-            return _features.TryRemove(typeof(TFeature), out var _);
+            var uri = typeof(TFeature).GetAdapterFeatureUri();
+            if (uri == null) {
+                return false;
+            }
+            return _features.TryRemove(uri, out var _);
         }
 
 

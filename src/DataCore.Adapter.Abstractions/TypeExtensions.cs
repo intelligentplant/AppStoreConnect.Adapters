@@ -83,12 +83,12 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return 
+            return
                 // We don't check to see if the type is annotated with [AdapterFeature] when 
                 // comparing against standard features, because we use unit tests to ensure 
                 // that all standard features are correctly annotated.
                 ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<ExtensionFeatureAttribute>())) &&
-                type != s_adapterFeatureType && 
+                type != s_adapterFeatureType &&
                 type != s_adapterExtensionFeatureType;
         }
 
@@ -262,7 +262,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasAdapterFeatureUri(this Type type, string uriString) {
-            if (!UriHelper.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 return false;
             }
             return type.HasAdapterFeatureUri(uri);
@@ -308,7 +308,7 @@ namespace DataCore.Adapter {
         ///   the specified URI, or <see langword="false"/> otherwise.
         /// </returns>
         private static bool HasAdapterFeatureUriWithPrefix(this Type type, string uriString) {
-            if (!UriHelper.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 return false;
             }
 

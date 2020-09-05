@@ -66,12 +66,12 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
 
         /// <inheritdoc/>
-        public async Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+        public async Task<bool> AuthorizeAdapterFeature(IAdapter adapter, IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
             if (!UseAuthorization || context == null) {
                 return true;
             }
 
-            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement<TFeature>()).ConfigureAwait(false);
+            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement(featureUri)).ConfigureAwait(false);
             return result.Succeeded;
         }
     }

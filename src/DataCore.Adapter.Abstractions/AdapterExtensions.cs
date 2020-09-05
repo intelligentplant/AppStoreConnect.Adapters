@@ -13,76 +13,235 @@ namespace DataCore.Adapter {
     public static class AdapterExtensions {
 
         /// <summary>
-        /// Gets the specified adapter feature.
+        /// Gets the specified adapter feature cast to the specified type.
         /// </summary>
         /// <typeparam name="TFeature">
-        ///   The feature type.
+        ///   The type to cast the feature to.
         /// </typeparam>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <returns>
-        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
-        ///   feature.
-        /// </returns>
-        public static TFeature GetFeature<TFeature>(this IAdapter adapter) where TFeature : IAdapterFeature {
-            if (adapter?.Features == null) {
-                return default;
-            }
-            return adapter.Features.Get<TFeature>();
-        }
-
-
-        /// <summary>
-        /// Gets the specified adapter feature using the feature URI or name.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="featureUriOrName">
-        ///   The feature URI or name.
+        /// <param name="uri">
+        ///   The feature URI
         /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        public static object GetFeature(this IAdapter adapter, string featureUriOrName) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static TFeature GetFeature<TFeature>(
+            this IAdapter adapter,
+            Uri uri
+        ) where TFeature : IAdapterFeature {
             if (adapter?.Features == null) {
-                return default;
+                throw new ArgumentNullException(nameof(adapter));
             }
-            return adapter.Features.Get(featureUriOrName);
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return adapter.Features.Get<TFeature>(uri);
         }
 
 
         /// <summary>
-        /// Gets the specified adapter feature using the feature URI.
+        /// Gets the specified adapter feature cast to the specified type.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The type to cast the feature to.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI string.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static TFeature GetFeature<TFeature>(
+            this IAdapter adapter,
+            string uriString
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            return adapter.Features.Get<TFeature>(uriString);
+        }
+
+
+        /// <summary>
+        /// Gets the specified adapter feature.
         /// </summary>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureUri">
+        /// <param name="uri">
         ///   The feature URI.
         /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
         ///   feature.
         /// </returns>
-        public static object GetFeature(this IAdapter adapter, Uri featureUri) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static object GetFeature(this IAdapter adapter, Uri uri) {
             if (adapter?.Features == null) {
-                return default;
+                throw new ArgumentNullException(nameof(adapter));
             }
-            return adapter.Features.Get(featureUri);
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            return adapter.Features[uri];
+        }
+
+
+        /// <summary>
+        /// Gets the specified adapter feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI string.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static object GetFeature(this IAdapter adapter, string uriString) {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            return adapter.Features.Get(uriString);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature cast to the specified type.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The type to cast the feature to.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool TryGetFeature<TFeature>(
+            this IAdapter adapter,
+            Uri uri,
+            out TFeature feature
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return adapter.Features.TryGet(uri, out feature);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature cast to the specified type.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The type to cast the feature to.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static bool TryGetFeature<TFeature>(
+            this IAdapter adapter,
+            string uriString,
+            out TFeature feature
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            return adapter.Features.TryGet(uriString, out feature);
         }
 
 
         /// <summary>
         /// Tries to get the specified adapter feature.
         /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature type.
-        /// </typeparam>
         /// <param name="adapter">
         ///   The adapter.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI string.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
@@ -91,95 +250,35 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool TryGetFeature<TFeature>(
-            this IAdapter adapter,
-            out TFeature feature
-        ) where TFeature : IAdapterFeature {
-            if (adapter?.Features == null) {
-                feature = default;
-                return false;
-            }
-            return adapter.Features.TryGet(out feature);
-        }
-
-
-        /// <summary>
-        /// Tries to get the specified adapter feature implementation by URI or name.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="featureUriOrName">
-        ///   The feature URI or name. This must match either the URI of the feature, the 
-        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
-        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
-        ///   for extension features.
-        /// </param>
-        /// <param name="feature">
-        ///   The implemented feature.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
         public static bool TryGetFeature(
             this IAdapter adapter,
-            string featureUriOrName,
-            out object feature
+            Uri uri,
+            out IAdapterFeature feature
         ) {
             if (adapter?.Features == null) {
-                feature = default;
-                return false;
+                throw new ArgumentNullException(nameof(adapter));
             }
-            return adapter.Features.TryGet(featureUriOrName, out feature);
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return adapter.Features.TryGet(uri, out feature);
         }
 
 
         /// <summary>
-        /// Tries to get the specified adapter feature implementation by URI or name.
+        /// Tries to get the specified adapter feature.
         /// </summary>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureUriOrName">
-        ///   The feature URI or name. This must match either the URI of the feature, the 
-        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
-        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
-        ///   for extension features.
-        /// </param>
-        /// <param name="feature">
-        ///   The implemented feature.
-        /// </param>
-        /// <param name="featureType">
-        ///   The feature type that <paramref name="featureUriOrName"/> was resolved to.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        internal static bool TryGetFeature(
-            this IAdapter adapter,
-            string featureUriOrName,
-            out object feature,
-            out Type featureType
-        ) {
-            if (adapter?.Features == null) {
-                feature = default;
-                featureType = default;
-                return false;
-            }
-            return adapter.Features.TryGet(featureUriOrName, out feature, out featureType);
-        }
-
-
-        /// <summary>
-        /// Tries to get the specified adapter feature implementation by URI.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="featureUri">
-        ///   The feature URI.
+        /// <param name="uriString">
+        ///   The feature URI string.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
@@ -188,50 +287,27 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
         public static bool TryGetFeature(
             this IAdapter adapter,
-            Uri featureUri,
-            out object feature
+            string uriString,
+            out IAdapterFeature feature
         ) {
             if (adapter?.Features == null) {
-                feature = default;
-                return false;
+                throw new ArgumentNullException(nameof(adapter));
             }
-            return adapter.Features.TryGet(featureUri, out feature);
-        }
-
-
-        /// <summary>
-        /// Tries to get the specified adapter feature implementation by URI.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="featureUri">
-        ///   The feature URI.
-        /// </param>
-        /// <param name="feature">
-        ///   The implemented feature.
-        /// </param>
-        /// <param name="featureType">
-        ///   The feature type that <paramref name="featureUri"/> was resolved to.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        internal static bool TryGetFeature(
-            this IAdapter adapter,
-            Uri featureUri,
-            out object feature,
-            out Type featureType
-        ) {
-            if (adapter?.Features == null) {
-                feature = default;
-                featureType = default;
-                return false;
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
             }
-            return adapter.Features.TryGet(featureUri, out feature, out featureType);
+            return adapter.Features.TryGet(uriString, out feature);
         }
 
 
@@ -252,8 +328,8 @@ namespace DataCore.Adapter {
             var standardFeatures = adapter
                 .Features
                     ?.Keys
-                    ?.Where(x => x.IsStandardAdapterFeature())
-                .ToArray() ?? Array.Empty<Type>();
+                    ?.Where(x => x.IsStandardFeatureUri())
+                .ToArray() ?? Array.Empty<Uri>();
 
             var extensionFeatures = adapter
                 .Features
@@ -265,8 +341,8 @@ namespace DataCore.Adapter {
                 adapter.Descriptor.Id,
                 adapter.Descriptor.Name,
                 adapter.Descriptor.Description,
-                standardFeatures.Select(x => x.GetAdapterFeatureUri()).Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
-                extensionFeatures.Select(x => x.GetAdapterFeatureUri()).Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
+                standardFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
+                extensionFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
                 adapter.Properties
             );
         }
@@ -276,18 +352,46 @@ namespace DataCore.Adapter {
         /// Tests if the adapter contains the specified feature in its <see cref="IAdapter.Features"/> 
         /// collection.
         /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature type.
-        /// </typeparam>
         /// <param name="adapter">
         ///   The adapter.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool HasFeature<TFeature>(this IAdapter adapter) where TFeature : IAdapterFeature {
-            return adapter?.Features?.Contains<TFeature>() ?? false;
+        public static bool HasFeature(this IAdapter adapter, Uri uri) {
+            if (adapter == null || uri == null) {
+                return false;
+            }
+            return adapter?.Features?.Contains(uri) ?? false;
+        }
+
+
+        /// <summary>
+        /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
+        /// list.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool HasFeature(this AdapterDescriptorExtended descriptor, Uri uri) {
+            if (descriptor == null || uri == null) {
+                return false;
+            }
+
+            var uriString = uri.ToString();
+
+            return descriptor.Features.Any(f => string.Equals(f, uriString, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, uriString, StringComparison.Ordinal));
         }
 
 
@@ -298,18 +402,69 @@ namespace DataCore.Adapter {
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="featureUriOrName">
-        ///   The feature URI or name. This must match either the URI of the feature, the 
-        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
-        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
-        ///   for extension features.
+        /// <param name="uriString">
+        ///   The feature URI.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool HasFeature(this IAdapter adapter, string featureUriOrName) {
-            return adapter?.Features?.Contains(featureUriOrName) ?? false;
+        public static bool HasFeature(this IAdapter adapter, string uriString) {
+            if (adapter?.Features == null || string.IsNullOrEmpty(uriString)) {
+                return false;
+            }
+            return adapter.Features.Contains(uriString);
+        }
+
+
+        /// <summary>
+        /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
+        /// list.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool HasFeature(this AdapterDescriptorExtended descriptor, string uriString) {
+            if (descriptor == null || string.IsNullOrEmpty(uriString)) {
+                return false;
+            }
+
+            return descriptor.Features.Any(f => string.Equals(f, uriString, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, uriString, StringComparison.Ordinal));
+        }
+
+
+        /// <summary>
+        /// Tests if the adapter contains the specified feature in its <see cref="IAdapter.Features"/> 
+        /// collection.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool HasFeature<TFeature>(this IAdapter adapter) {
+            if (adapter?.Features == null) {
+                return false;
+            }
+
+            var uri = typeof(TFeature).GetAdapterFeatureUri();
+            if (uri == null) {
+                return false;
+            }
+
+            return adapter.HasFeature(uri);
         }
 
 
@@ -320,47 +475,24 @@ namespace DataCore.Adapter {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
-        /// <param name="descriptor">
+        /// <param name="adapter">
         ///   The descriptor.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool HasFeature<TFeature>(this AdapterDescriptorExtended descriptor) where TFeature : IAdapterFeature {
-            if (descriptor == null) {
+        public static bool HasFeature<TFeature>(this AdapterDescriptorExtended adapter) {
+            if (adapter?.Features == null) {
                 return false;
             }
 
-            return typeof(TFeature).IsExtensionAdapterFeature()
-                ? descriptor.HasFeature(typeof(TFeature).FullName)
-                : descriptor.HasFeature(typeof(TFeature).Name);
-        }
-
-
-        /// <summary>
-        /// Tests if the descriptor contains the specified feature in its <see cref="AdapterDescriptorExtended.Features"/> 
-        /// list.
-        /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor.
-        /// </param>
-        /// <param name="featureUriOrName">
-        ///   The feature URI or name. This must match either the URI of the feature, the 
-        ///   <see cref="MemberInfo.Name"/> or <see cref="Type.FullName"/> of the feature type for 
-        ///   standard adapter features, or the <see cref="Type.FullName"/> of the feature type 
-        ///   for extension features.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the feature is in the list, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        public static bool HasFeature(this AdapterDescriptorExtended descriptor, string featureUriOrName) {
-            if (descriptor == null || string.IsNullOrWhiteSpace(featureUriOrName)) {
+            var uri = typeof(TFeature).GetAdapterFeatureUri();
+            if (uri == null) {
                 return false;
             }
 
-            return descriptor.Features.Any(f => string.Equals(f, featureUriOrName, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, featureUriOrName, StringComparison.Ordinal));
+            return adapter.HasFeature(uri);
         }
 
     }

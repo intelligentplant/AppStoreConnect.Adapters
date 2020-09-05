@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter {
@@ -24,19 +25,23 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the <paramref name="context"/> is authorized to access the 
         ///   adapter, or <see langword="false"/> otherwise.
         /// </returns>
-        Task<bool> AuthorizeAdapter(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken);
+        Task<bool> AuthorizeAdapter(
+            IAdapter adapter, 
+            IAdapterCallContext context, 
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// Authorizes access to an adapter feature.
         /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The adapter feature.
-        /// </typeparam>
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
         /// <param name="context">
         ///  The call context to authorize.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The URI of the adapter feature.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -45,7 +50,12 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the <paramref name="context"/> is authorized to access the 
         ///   adapter feature, or <see langword="false"/> otherwise.
         /// </returns>
-        Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature;
+        Task<bool> AuthorizeAdapterFeature(
+            IAdapter adapter, 
+            IAdapterCallContext context, 
+            Uri featureUri,
+            CancellationToken cancellationToken
+        );
 
     }
 }

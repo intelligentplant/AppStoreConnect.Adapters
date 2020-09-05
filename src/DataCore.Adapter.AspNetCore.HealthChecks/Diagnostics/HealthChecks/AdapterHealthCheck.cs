@@ -42,7 +42,7 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
                 Adapter = x,
                 HealthCheckResult = Task.Run(async () => { 
                     try {
-                        var feature = x.Features.Get<Adapter.Diagnostics.IHealthCheck>();
+                        var feature = x.Features.Get<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck);
                         if (feature == null) {
                             return x.IsRunning 
                                 ? Adapter.Diagnostics.HealthCheckResult.Healthy(null) 

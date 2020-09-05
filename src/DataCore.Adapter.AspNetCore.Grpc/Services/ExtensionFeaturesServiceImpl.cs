@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task<FeatureDescriptor> GetDescriptor(GetExtensionDescriptorRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(request.FeatureUri, out var featureUri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(request.FeatureUri, out var featureUri)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.FeatureUri)));
             }
 
@@ -83,7 +83,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task<GetExtensionOperationsResponse> GetOperations(GetExtensionOperationsRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(request.FeatureUri, out var featureUri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(request.FeatureUri, out var featureUri)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.FeatureUri)));
             }
 
@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task<InvokeExtensionResponse> InvokeExtension(InvokeExtensionRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
@@ -167,7 +167,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         public override async Task InvokeStreamingExtension(InvokeExtensionRequest request, IServerStreamWriter<InvokeExtensionResponse> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
@@ -224,7 +224,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var request = requestStream.Current;
 
-            if (!UriHelper.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(request.OperationId, out var operationId)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
