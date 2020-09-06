@@ -52,7 +52,7 @@ If your source implements some of these capabilities but not others, you can use
 Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
 
 
-# Extension Features
+## Extension Features
 
 Extension features must inherit from [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs), and must be annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which identifies the URI for the extension, as well as additional properties such as the display name and description.
 
