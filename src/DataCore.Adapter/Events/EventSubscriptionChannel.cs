@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Events {
     /// <typeparam name="TIdentifier">
     ///   The subscription ID type.
     /// </typeparam>
-    internal class EventSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, string, EventMessage> {
+    public class EventSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, string, EventMessage> {
 
         /// <summary>
         /// The subscription type.

@@ -11,7 +11,8 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Holds information about a subscription channel.
     /// </summary>
-    internal class SubscriptionChannel<TIdentifier, TTopic, TValue> : IDisposable {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Subclasses should only exist inside this library")]
+    public class SubscriptionChannel<TIdentifier, TTopic, TValue> : IDisposable {
 
         /// <summary>
         /// Indicates if the subscription has been disposed.

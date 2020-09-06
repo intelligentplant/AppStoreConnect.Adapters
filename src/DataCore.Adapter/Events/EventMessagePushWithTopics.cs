@@ -102,7 +102,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
         /// </summary>
-        protected bool HasSubscriptions { get; private set; }
+        protected bool HasSubscriptions { get { return !_subscriptions.IsEmpty; } }
 
         /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Events {
             // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
 
-            OnSubscriptionAdded();
+            OnSubscriptionAdded(subscription);
         }
 
 
@@ -231,9 +231,8 @@ namespace DataCore.Adapter.Events {
             finally {
                 _subscriptionsLock.ExitWriteLock();
                 subscription.Dispose();
-                HasSubscriptions = _subscriptions.Count > 0;
-                HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                OnSubscriptionCancelled();
+                HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+                OnSubscriptionCancelled(subscription);
             }
         }
 
@@ -382,13 +381,19 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected virtual void OnSubscriptionAdded() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionAdded(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
         /// Invoked when a subscription is cancelled.
         /// </summary>
-        protected virtual void OnSubscriptionCancelled() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionCancelled(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>

@@ -27,20 +27,18 @@ Both `AdapterBase` and `AdapterBase<T>` add out-of-the-box support for the [IHea
 Whenever the health status of your adapter changes (e.g. you become disconnected from an external service that the adapter relies on), you should call the `OnHealthStatusChanged` method from your implementation. This will recompute the overall health status of the adapter and push the update to any subscribers to the `IHealthCheck` feature.
 
 
-## IEventMessagePush
+## IEventMessagePush / IEventMessagePushWIthTopics
 
-To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) feature to your adapter, you can add or extend the [EventMessagePush](/src/DataCore.Adapter.Abstractions/Events/EventMessagePush.cs) class. To push values to subscribers, call the `ValueReceived` method on your `EventMessagePush` object.
+To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) and/or [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) features to your adapter, you can add or extend the [EventMessagePush](./Events/EventMessagePush.cs) and [EventMessagePushWithTopics](./Events/EventMessagePushWithTopics.cs) classes respectively. To push values to subscribers, call the `ValueReceived` method on the feature.
 
-If your source supports its own subscription mechanism, you can extend the `EventMessagePush` class to interface with it in the appropriate extension points. In particular, you can override the `CreateSubscription` method if you need to customise the behaviour of the subscription class itself. An example of when you might want to use this option would be if the source you are connecting to requires you to create a separate, authenticated stream for each subscriber, and you prefer to encapsulate that logic inside the subscription class.
+If your source supports its own subscription mechanism, you can extend the `EventMessagePush` and `EventMessagePushWithTopics` classes to interface with it in the appropriate extension points.
 
 
 ## ISnapshotTagValuePush
 
-To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](./RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](./RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis.
+To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](./RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](./RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis. To push values to subscribers, call the `ValueReceived` method on the feature.
 
-If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class to interface with it in the appropriate extension points. In particular, you can override the `CreateSubscription` method if you need to customise the behaviour of the subscription class itself. An example of when you might want to use this option would be if the source you are connecting to requires you to create a separate, authenticated stream for each subscriber, and you prefer to encapsulate that logic inside the subscription class.
-
-To push values to subscribers, call the `ValueReceived` method on your `SnapshotTagValuePush` instance. When working directly with subscription objects, you can call the `ValueReceived` method on the subscription.
+If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class to interface with it in the appropriate extension points.
 
 
 ## Historical Data Queries 
@@ -49,7 +47,7 @@ If your underlying source does not support aggregated, values-at-times, or plot 
 
 If your source implements some of these capabilities but not others, you can use the classes in the `DataCore.Adapter.RealTimeData.Utilities` namespace to assist with the implementation of the missing functionality if desired.
 
-Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
+> Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
 
 
 ## Extension Features

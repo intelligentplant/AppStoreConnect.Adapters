@@ -172,7 +172,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private async Task OnSubscriptionAddedInternal(SubscriptionChannel<int, TagIdentifier, TagValueQueryResult> subscription) {
+        private async Task OnSubscriptionAddedInternal(TagValueSubscriptionChannel<int> subscription) {
             foreach (var topic in subscription.Topics) {
                 if (_currentValueByTagId.TryGetValue(topic.Id, out var value)) {
                     subscription.Publish(value, true);
@@ -214,7 +214,7 @@ namespace DataCore.Adapter.RealTimeData {
             // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
 
-            OnSubscriptionAdded();
+            OnSubscriptionAdded(subscription);
         }
 
 
@@ -262,7 +262,7 @@ namespace DataCore.Adapter.RealTimeData {
             finally {
                 _subscriptionsLock.ExitWriteLock();
                 subscription.Dispose();
-                OnSubscriptionCancelled();
+                OnSubscriptionCancelled(subscription);
             }
         }
 
@@ -469,13 +469,19 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected virtual void OnSubscriptionAdded() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionAdded(TagValueSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
         /// Invoked when a subscription is cancelled.
         /// </summary>
-        protected virtual void OnSubscriptionCancelled() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionCancelled(TagValueSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>

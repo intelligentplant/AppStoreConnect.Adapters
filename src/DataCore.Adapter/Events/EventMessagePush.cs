@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
         /// </summary>
-        protected bool HasSubscriptions { get; private set; }
+        protected bool HasSubscriptions { get { return !_subscriptions.IsEmpty; } }
 
         /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
@@ -148,9 +148,8 @@ namespace DataCore.Adapter.Events {
             );
             _subscriptions[subscriptionId] = subscription;
 
-            HasSubscriptions = _subscriptions.Count > 0;
-            HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            OnSubscriptionAdded();
+            HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+            OnSubscriptionAdded(subscription);
 
             return Task.FromResult(subscription.Reader);
         }
@@ -159,13 +158,19 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected virtual void OnSubscriptionAdded() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionAdded(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
         /// Invoked when a subscription is removed.
         /// </summary>
-        protected virtual void OnSubscriptionCancelled() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionCancelled(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
@@ -220,9 +225,8 @@ namespace DataCore.Adapter.Events {
 
             if (_subscriptions.TryRemove(id, out var subscription)) {
                 subscription.Dispose();
-                HasSubscriptions = _subscriptions.Count > 0;
-                HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                OnSubscriptionCancelled();
+                HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+                OnSubscriptionCancelled(subscription);
             }
         }
 

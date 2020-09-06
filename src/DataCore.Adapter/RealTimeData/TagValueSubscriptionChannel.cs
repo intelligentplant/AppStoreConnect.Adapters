@@ -12,7 +12,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <typeparam name="TIdentifier">
     ///   The subscription ID type.
     /// </typeparam>
-    internal class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
+    public class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
 
         /// <summary>
         /// Creates a new <see cref="TagValueSubscriptionChannel{TIdentifier}"/> object.
