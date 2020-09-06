@@ -264,7 +264,9 @@ namespace DataCore.Adapter {
         /// </remarks>
         public static IEnumerable<Uri> GetAdapterFeatureUris(this Type type) {
             return type.IsAdapterFeature()
-                ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()?.Select(x => x.attr.Uri)?.ToArray() ?? Array.Empty<Uri>()
+                ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()
+                    ?.Select(x => x.attr.Uri)
+                    ?.ToArray() ?? Array.Empty<Uri>()
                 : Array.Empty<Uri>();
         }
 
@@ -291,7 +293,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Tests if the type is annotated with the specified adapter feature URI.
+        /// Tests if the type is directly annotated with the specified adapter feature URI.
         /// </summary>
         /// <param name="type">
         ///   The type.
@@ -310,7 +312,7 @@ namespace DataCore.Adapter {
             if (uri == null) {
                 throw new ArgumentNullException(nameof(uri));
             }
-            return type.GetAdapterFeatureUris().Any(x => uri.Equals(x));
+            return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
         }
 
 
@@ -336,6 +338,7 @@ namespace DataCore.Adapter {
             }
 
             var attr = type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>().FirstOrDefault();
+
             if (attr.attr == null) {
                 return null;
             }
@@ -373,6 +376,9 @@ namespace DataCore.Adapter {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
+        /// <param name="feature">
+        ///   The feature type.
+        /// </param>
         /// <returns>
         ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
         ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
