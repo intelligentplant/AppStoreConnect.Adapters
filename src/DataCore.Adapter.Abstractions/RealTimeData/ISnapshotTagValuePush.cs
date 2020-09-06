@@ -10,9 +10,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.SnapshotTagValuePush,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_SnapshotTagValuePush),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_SnapshotTagValuePush)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_SnapshotTagValuePush),
+        Description = nameof(AbstractionsResources.Description_SnapshotTagValuePush)
     )]
     public interface ISnapshotTagValuePush : IAdapterFeature {
 

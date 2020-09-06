@@ -8,9 +8,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.WriteAnnotations,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteTagValueAnnotations),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteTagValueAnnotations)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_WriteTagValueAnnotations),
+        Description = nameof(AbstractionsResources.Description_WriteTagValueAnnotations)
     )]
     public interface IWriteTagValueAnnotations : IAdapterFeature {
 

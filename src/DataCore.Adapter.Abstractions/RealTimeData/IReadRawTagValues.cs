@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.ReadRawTagValues,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadRawTagValues),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadRawTagValues)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadRawTagValues),
+        Description = nameof(AbstractionsResources.Description_ReadRawTagValues)
     )]
     public interface IReadRawTagValues : IAdapterFeature {
 

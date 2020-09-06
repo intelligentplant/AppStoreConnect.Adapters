@@ -130,7 +130,7 @@ namespace System.ComponentModel.DataAnnotations {
 
                     // If the property is not configured properly, then throw a missing member exception
                     if (badlyConfigured) {
-                        string exceptionMessage = string.Format(DataCoreAdapterAbstractionsResources.LocalizableString_LocalizationFailed, _propertyName, _resourceType.FullName, _propertyValue);
+                        string exceptionMessage = string.Format(AbstractionsResources.LocalizableString_LocalizationFailed, _propertyName, _resourceType.FullName, _propertyValue);
                         _cachedResult = () => { throw new InvalidOperationException(exceptionMessage); };
                     }
                     else {

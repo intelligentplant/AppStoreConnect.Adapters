@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.TagSearch,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_TagSearch),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_TagSearch)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_TagSearch),
+        Description = nameof(AbstractionsResources.Description_TagSearch)
     )]
     public interface ITagSearch : IAdapterFeature, ITagInfo {
 

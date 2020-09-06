@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.WriteSnapshotTagValues,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteSnapshotTagValues),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteSnapshotTagValues)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_WriteSnapshotTagValues),
+        Description = nameof(AbstractionsResources.Description_WriteSnapshotTagValues)
     )]
     public interface IWriteSnapshotTagValues : IAdapterFeature {
 

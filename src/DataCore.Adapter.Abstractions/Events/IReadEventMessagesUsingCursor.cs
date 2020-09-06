@@ -10,9 +10,9 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.Events.ReadEventMessagesUsingCursor,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadEventMessagesUsingCursor),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadEventMessagesUsingCursor)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadEventMessagesUsingCursor),
+        Description = nameof(AbstractionsResources.Description_ReadEventMessagesUsingCursor)
     )]
     public interface IReadEventMessagesUsingCursor : IAdapterFeature {
 

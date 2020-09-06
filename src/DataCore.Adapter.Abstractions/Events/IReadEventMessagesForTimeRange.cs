@@ -9,9 +9,9 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.Events.ReadEventMessagesForTimeRange,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadEventMessagesForTimeRange),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadEventMessagesForTimeRange)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadEventMessagesForTimeRange),
+        Description = nameof(AbstractionsResources.Description_ReadEventMessagesForTimeRange)
     )]
     public interface IReadEventMessagesForTimeRange : IAdapterFeature {
 

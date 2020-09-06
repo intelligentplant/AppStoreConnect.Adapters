@@ -78,15 +78,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdInterpolate,
-            DataCoreAdapterAbstractionsResources.DataFunction_Interp_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Interp_Description,
+            AbstractionsResources.DataFunction_Interp_Name,
+            AbstractionsResources.DataFunction_Interp_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new [] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation, 
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueWorstCase, 
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation, 
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueWorstCase, 
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -96,15 +96,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Average { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdAverage,
-            DataCoreAdapterAbstractionsResources.DataFunction_Avg_Name, 
-            DataCoreAdapterAbstractionsResources.DataFunction_Avg_Description,
+            AbstractionsResources.DataFunction_Avg_Name, 
+            AbstractionsResources.DataFunction_Avg_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -114,20 +114,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Minimum { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdMinimum,
-            DataCoreAdapterAbstractionsResources.DataFunction_Min_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Min_Description,
+            AbstractionsResources.DataFunction_Min_Name,
+            AbstractionsResources.DataFunction_Min_Description,
             DataFunctionSampleTimeType.Raw,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMinimum,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation_Description
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation,
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMinimum,
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation_Description
                 ),
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -137,20 +137,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Maximum { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdMaximum,
-            DataCoreAdapterAbstractionsResources.DataFunction_Max_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Max_Description,
+            AbstractionsResources.DataFunction_Max_Name,
+            AbstractionsResources.DataFunction_Max_Description,
             DataFunctionSampleTimeType.Raw,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMaximum,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_TimestampCalculation_Description
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation,
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMaximum,
+                    AbstractionsResources.DataFunction_Property_TimestampCalculation_Description
                 ),
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -160,15 +160,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Count { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdCount,
-            DataCoreAdapterAbstractionsResources.DataFunction_Count_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Count_Description,
+            AbstractionsResources.DataFunction_Count_Name,
+            AbstractionsResources.DataFunction_Count_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -178,15 +178,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Range { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdRange,
-            DataCoreAdapterAbstractionsResources.DataFunction_Range_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Range_Description,
+            AbstractionsResources.DataFunction_Range_Name,
+            AbstractionsResources.DataFunction_Range_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -196,15 +196,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Delta { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdDelta,
-            DataCoreAdapterAbstractionsResources.DataFunction_Delta_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Delta_Description,
+            AbstractionsResources.DataFunction_Delta_Name,
+            AbstractionsResources.DataFunction_Delta_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -214,15 +214,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor PercentGood { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdPercentGood,
-            DataCoreAdapterAbstractionsResources.DataFunction_PercentGood_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_PercentGood_Description,
+            AbstractionsResources.DataFunction_PercentGood_Name,
+            AbstractionsResources.DataFunction_PercentGood_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -232,15 +232,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor PercentBad { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdPercentBad,
-            DataCoreAdapterAbstractionsResources.DataFunction_PercentBad_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_PercentBad_Description,
+            AbstractionsResources.DataFunction_PercentBad_Name,
+            AbstractionsResources.DataFunction_PercentBad_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -251,15 +251,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdVariance,
-            DataCoreAdapterAbstractionsResources.DataFunction_Variance_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_Variance_Description,
+            AbstractionsResources.DataFunction_Variance_Name,
+            AbstractionsResources.DataFunction_Variance_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );
@@ -270,15 +270,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public static DataFunctionDescriptor StandardDeviation { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdStandardDeviation,
-            DataCoreAdapterAbstractionsResources.DataFunction_StandardDeviation_Name,
-            DataCoreAdapterAbstractionsResources.DataFunction_StandardDeviation_Description,
+            AbstractionsResources.DataFunction_StandardDeviation_Name,
+            AbstractionsResources.DataFunction_StandardDeviation_Description,
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.Custom,
             new[] {
                 AdapterProperty.Create(
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    DataCoreAdapterAbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
                 )
             }
         );

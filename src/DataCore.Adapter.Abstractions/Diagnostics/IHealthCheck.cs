@@ -9,9 +9,9 @@ namespace DataCore.Adapter.Diagnostics {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.Diagnostics.HealthCheck,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_HealthCheck),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_HealthCheck)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_HealthCheck),
+        Description = nameof(AbstractionsResources.Description_HealthCheck)
     )]
     public interface IHealthCheck : IAdapterFeature {
 

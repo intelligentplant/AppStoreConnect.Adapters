@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.ReadAnnotations,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadTagValueAnnotations),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadTagValueAnnotations)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadTagValueAnnotations),
+        Description = nameof(AbstractionsResources.Description_ReadTagValueAnnotations)
     )]
     public interface IReadTagValueAnnotations : IAdapterFeature {
 

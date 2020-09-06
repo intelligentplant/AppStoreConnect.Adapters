@@ -9,9 +9,9 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.Events.EventMessagePush,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_EventMessagePush),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_EventMessagePush)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_EventMessagePush),
+        Description = nameof(AbstractionsResources.Description_EventMessagePush)
     )]
     public interface IEventMessagePush : IAdapterFeature {
 

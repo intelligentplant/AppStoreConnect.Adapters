@@ -11,9 +11,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.TagInfo,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_TagInfo),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_TagInfo)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_TagInfo),
+        Description = nameof(AbstractionsResources.Description_TagInfo)
     )]
     public interface ITagInfo : IAdapterFeature {
 

@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.ReadPlotTagValues,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_ReadPlotTagVaues),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_ReadPlotTagVaues)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadPlotTagVaues),
+        Description = nameof(AbstractionsResources.Description_ReadPlotTagVaues)
     )]
     public interface IReadPlotTagValues : IAdapterFeature {
 

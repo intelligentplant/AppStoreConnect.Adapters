@@ -9,9 +9,9 @@ namespace DataCore.Adapter.RealTimeData {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.RealTimeData.WriteHistoricalTagValues,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteHistoricalTagValues),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteHistoricalTagValues)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_WriteHistoricalTagValues),
+        Description = nameof(AbstractionsResources.Description_WriteHistoricalTagValues)
     )]
     public interface IWriteHistoricalTagValues : IAdapterFeature {
 

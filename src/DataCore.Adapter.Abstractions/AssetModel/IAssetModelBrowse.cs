@@ -9,9 +9,9 @@ namespace DataCore.Adapter.AssetModel {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.AssetModel.AssetModelBrowse,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_AssetModelBrowse),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_AssetModelBrowse)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_AssetModelBrowse),
+        Description = nameof(AbstractionsResources.Description_AssetModelBrowse)
     )]
     public interface IAssetModelBrowse : IAdapterFeature {
 

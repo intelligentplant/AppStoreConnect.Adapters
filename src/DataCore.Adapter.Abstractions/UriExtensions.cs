@@ -96,7 +96,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uri));
             }
             if (!uri.IsAbsoluteUri) {
-                throw new ArgumentException(DataCoreAdapterAbstractionsResources.Error_RelativeUrisAreNotSupported, nameof(uri));
+                throw new ArgumentException(AbstractionsResources.Error_RelativeUrisAreNotSupported, nameof(uri));
             }
 
             if (uri.LocalPath.EndsWith("/", StringComparison.Ordinal)) {

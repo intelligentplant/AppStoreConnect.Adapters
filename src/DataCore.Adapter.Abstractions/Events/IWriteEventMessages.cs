@@ -9,9 +9,9 @@ namespace DataCore.Adapter.Events {
     /// </summary>
     [AdapterFeature(
         WellKnownFeatures.Events.WriteEventMessages,
-        ResourceType = typeof(DataCoreAdapterAbstractionsResources),
-        Name = nameof(DataCoreAdapterAbstractionsResources.DisplayName_WriteEventMessages),
-        Description = nameof(DataCoreAdapterAbstractionsResources.Description_WriteEventMessages)
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_WriteEventMessages),
+        Description = nameof(AbstractionsResources.Description_WriteEventMessages)
     )]
     public interface IWriteEventMessages : IAdapterFeature {
 

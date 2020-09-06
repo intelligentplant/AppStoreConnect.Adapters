@@ -22,14 +22,14 @@ namespace DataCore.Adapter {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class DataCoreAdapterAbstractionsResources {
+    public class AbstractionsResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal DataCoreAdapterAbstractionsResources() {
+        internal AbstractionsResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace DataCore.Adapter {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.DataCoreAdapterAbstractionsResources", typeof(DataCoreAdapterAbstractionsResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.AbstractionsResources", typeof(AbstractionsResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -340,7 +340,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows browsing of the adapter&apos;s asset model hierarchy..
+        ///   Looks up a localized string similar to Allows browsing of an adapter&apos;s asset model hierarchy..
         /// </summary>
         public static string Description_AssetModelBrowse {
             get {
@@ -349,7 +349,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows the adapter&apos;s asset model hierarchy to be searched..
+        ///   Looks up a localized string similar to Allows an adapter&apos;s asset model hierarchy to be searched..
         /// </summary>
         public static string Description_AssetModelSearch {
             get {
@@ -358,7 +358,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows subscribers to receive event messages from the adapter in real-time..
+        ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time..
         /// </summary>
         public static string Description_EventMessagePush {
             get {
@@ -367,7 +367,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows subscribers to receive event messages from the adapter in real-time for specific topics..
+        ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time for specific topics..
         /// </summary>
         public static string Description_EventMessagePushWithTopics {
             get {
@@ -376,7 +376,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows the adapter&apos;s health status to be polled or subscribed to..
+        ///   Looks up a localized string similar to Allows an adapter&apos;s health status to be polled or subscribed to..
         /// </summary>
         public static string Description_HealthCheck {
             get {
@@ -385,7 +385,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows the event message history on the adapter to be polled using a time range..
+        ///   Looks up a localized string similar to Allows the event message history on an adapter to be polled using a time range..
         /// </summary>
         public static string Description_ReadEventMessagesForTimeRange {
             get {
@@ -394,7 +394,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows the event message history on the adapter to be polled using a cursor to define the starting point..
+        ///   Looks up a localized string similar to Allows the event message history on an adapter to be polled using a cursor to define the starting point..
         /// </summary>
         public static string Description_ReadEventMessagesUsingCursor {
             get {
@@ -403,7 +403,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for historical tag values using a visualisation-friendly aggregation..
+        ///   Looks up a localized string similar to Allows polling of historical tag values using a visualisation-friendly aggregation..
         /// </summary>
         public static string Description_ReadPlotTagVaues {
             get {
@@ -412,7 +412,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for historical tag values using a supported aggregate function to compute the results..
+        ///   Looks up a localized string similar to Allows polling of historical tag values using a supported aggregate function to compute the results..
         /// </summary>
         public static string Description_ReadProcessedTagValues {
             get {
@@ -421,7 +421,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for raw, unprocessed historical tag values..
+        ///   Looks up a localized string similar to Allows polling of raw, unprocessed historical tag values..
         /// </summary>
         public static string Description_ReadRawTagValues {
             get {
@@ -430,7 +430,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for snapshot (instantaneous) tag values..
+        ///   Looks up a localized string similar to Allows polling of snapshot (instantaneous) tag values..
         /// </summary>
         public static string Description_ReadSnapshotTagValues {
             get {
@@ -439,7 +439,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for annotations on historical tag values..
+        ///   Looks up a localized string similar to Allows polling of annotations on historical tag values..
         /// </summary>
         public static string Description_ReadTagValueAnnotations {
             get {
@@ -448,7 +448,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be polled for tag values at specific timestamps in history..
+        ///   Looks up a localized string similar to Allows polling of tag values at specific timestamps in history..
         /// </summary>
         public static string Description_ReadTagValuesAtTimes {
             get {
@@ -457,7 +457,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows subscribers to receive snapshot tag value updates from the adapter in real-time..
+        ///   Looks up a localized string similar to Allows subscribers to receive snapshot tag value updates from an adapter in real-time..
         /// </summary>
         public static string Description_SnapshotTagValuePush {
             get {
@@ -466,7 +466,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows retrieval of the adapter&apos;s tag definitions using the tag&apos;s ID or name..
+        ///   Looks up a localized string similar to Allows retrieval of an adapter&apos;s tag definitions using the tag&apos;s ID or name..
         /// </summary>
         public static string Description_TagInfo {
             get {
@@ -475,7 +475,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows the adapter&apos;s tag definitions to be searched..
+        ///   Looks up a localized string similar to Allows an adapter&apos;s tag definitions to be searched..
         /// </summary>
         public static string Description_TagSearch {
             get {
@@ -484,7 +484,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter can be used as an event sink for messages generated by external sources..
+        ///   Looks up a localized string similar to Allows an adapter to be used as an event sink for messages generated by external sources..
         /// </summary>
         public static string Description_WriteEventMessages {
             get {
@@ -493,7 +493,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter allows tag values from an external source to be written directly into its history archive..
+        ///   Looks up a localized string similar to Allows tag values from an external source to be written directly into an adapter&apos;s history archive..
         /// </summary>
         public static string Description_WriteHistoricalTagValues {
             get {
@@ -502,7 +502,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter allows the snapshot value of its tags to be updated from an external source..
+        ///   Looks up a localized string similar to Allows the snapshot value of an adapter&apos;s tags to be updated from an external source..
         /// </summary>
         public static string Description_WriteSnapshotTagValues {
             get {
@@ -511,7 +511,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter allows tag value annotations to be created, updated, and deleted..
+        ///   Looks up a localized string similar to Allows tag value annotations on an adapter to be created, updated, and deleted..
         /// </summary>
         public static string Description_WriteTagValueAnnotations {
             get {
