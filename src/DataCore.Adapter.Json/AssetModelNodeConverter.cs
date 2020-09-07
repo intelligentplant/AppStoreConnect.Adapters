@@ -20,6 +20,7 @@ namespace DataCore.Adapter.Json {
             string id = null;
             string name = null;
             NodeType nodeType = NodeType.Unknown;
+            string nodeSubType = null;
             string description = null;
             string parent = null;
             bool hasChildren = false;
@@ -45,6 +46,9 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AssetModelNode.NodeType), StringComparison.OrdinalIgnoreCase)) {
                     nodeType = JsonSerializer.Deserialize<NodeType>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(AssetModelNode.NodeSubType), StringComparison.OrdinalIgnoreCase)) {
+                    nodeSubType = JsonSerializer.Deserialize<string>(ref reader, options);
+                }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Description), StringComparison.OrdinalIgnoreCase)) {
                     description = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
@@ -65,7 +69,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new AssetModelNode(id, name, nodeType, description, parent, hasChildren, dataReference, properties);
+            return new AssetModelNode(id, name, nodeType, nodeSubType, description, parent, hasChildren, dataReference, properties);
         }
 
 

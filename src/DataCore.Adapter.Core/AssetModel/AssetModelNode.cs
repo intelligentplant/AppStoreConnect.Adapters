@@ -30,6 +30,13 @@ namespace DataCore.Adapter.AssetModel {
         public NodeType NodeType { get; }
 
         /// <summary>
+        /// The subtype of the node. This is a text value supplied by the adapter, intended to 
+        /// provide more information about the node type (e.g. if the node represents a conceptual 
+        /// item such as a folder in a hierarchical structure).
+        /// </summary>
+        public string NodeSubType { get; }
+
+        /// <summary>
         /// The node description.
         /// </summary>
         public string Description { get; }
@@ -67,6 +74,11 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="nodeType">
         ///   The node type.
         /// </param>
+        /// <param name="nodeSubType">
+        ///   The subtype of the node. This is a text value supplied by the adapter, intended to 
+        ///   provide more information about the node type (e.g. if the node represents a conceptual 
+        ///   item such as a folder in a hierarchical structure).
+        /// </param>
         /// <param name="description">
         ///   The node description.
         /// </param>
@@ -92,6 +104,7 @@ namespace DataCore.Adapter.AssetModel {
             string id, 
             string name, 
             NodeType nodeType,
+            string nodeSubType,
             string description, 
             string parent, 
             bool hasChildren, 
@@ -101,6 +114,7 @@ namespace DataCore.Adapter.AssetModel {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             NodeType = nodeType;
+            NodeSubType = nodeSubType;
             Description = description;
             Parent = parent;
             HasChildren = hasChildren;

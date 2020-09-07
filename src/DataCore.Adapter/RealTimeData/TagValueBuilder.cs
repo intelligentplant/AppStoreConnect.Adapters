@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData.Utilities;

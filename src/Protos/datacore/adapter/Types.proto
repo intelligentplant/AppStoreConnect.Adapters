@@ -118,8 +118,9 @@ message AssetModelNode {
     repeated AdapterProperty properties = 7;
     bool has_children = 8;
     AssetModelNodeType node_type = 9;
-    AssetModelDataReference data_reference = 10;
-    bool has_data_reference = 11;
+    string node_sub_type = 10;
+    AssetModelDataReference data_reference = 11;
+    bool has_data_reference = 12;
 }
 
 

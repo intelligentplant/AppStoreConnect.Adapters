@@ -38,18 +38,24 @@ namespace DataCore.Adapter.Example.Features {
 
                 var tags = await dataReferencesChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-                _nodes = nodeDefinitions.Select(x => new AssetModelNode(
-                    x.Id,
-                    x.Name,
-                    x.NodeType,
-                    x.Description,
-                    x.Parent,
-                    x.Children?.Any() ?? false,
-                    string.IsNullOrWhiteSpace(x.DataReference)
-                        ? null
-                        : new DataReference(adapterId, tags.First(t => t.Id.Equals(x.DataReference, StringComparison.Ordinal) || t.Name.Equals(x.DataReference, StringComparison.Ordinal))),
-                    x.Properties.Select(p => Common.AdapterProperty.Create(p.Key, p.Value))
-                )).ToDictionary(x => x.Id);
+                _nodes = nodeDefinitions.Select(x => 
+                    AssetModelNodeBuilder
+                        .Create()
+                        .WithId(x.Id)
+                        .WithName(x.Name)
+                        .WithNodeType(x.NodeType)
+                        .WithDescription(x.Description)
+                        .WithParent(x.Parent)
+                        .WithChildren(x.Children?.Any() ?? false)
+                        .WithDataReference(string.IsNullOrWhiteSpace(x.DataReference)
+                            ? null
+                            : new DataReference(
+                                adapterId, 
+                                tags.First(t => t.Id.Equals(x.DataReference, StringComparison.Ordinal) || t.Name.Equals(x.DataReference, StringComparison.Ordinal))
+                            )
+                        )
+                        .Build()
+                ).ToDictionary(x => x.Id);
             }
         }
 

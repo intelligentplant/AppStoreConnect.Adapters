@@ -264,6 +264,7 @@ namespace DataCore.Adapter.Tests {
                 "Id",
                 "Name",
                 NodeType.Variable,
+                null,
                 "Description",
                 "Parent",
                 true,
@@ -280,6 +281,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Name, actual.Name);
             Assert.AreEqual(expected.NodeType, actual.NodeType);
+            Assert.AreEqual(expected.NodeSubType, actual.NodeSubType);
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Parent, actual.Parent);
             Assert.AreEqual(expected.HasChildren, actual.HasChildren);

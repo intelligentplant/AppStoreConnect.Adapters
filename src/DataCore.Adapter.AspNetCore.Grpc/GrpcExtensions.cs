@@ -93,6 +93,7 @@ namespace DataCore.Adapter {
                 node.Id,
                 node.Name,
                 node.NodeType.ToAdapterAssetModelNodeType(),
+                node.NodeSubType,
                 node.Description,
                 string.IsNullOrWhiteSpace(node.Parent)
                     ? null
@@ -124,6 +125,7 @@ namespace DataCore.Adapter {
                 Id = node.Id ?? string.Empty,
                 Name = node.Name ?? string.Empty,
                 NodeType = node.NodeType.ToGrpcAssetModelNodeType(),
+                NodeSubType = node.NodeSubType ?? string.Empty,
                 Description = node.Description ?? string.Empty,
                 Parent = node.Parent ?? string.Empty,
                 HasChildren = node.HasChildren,
