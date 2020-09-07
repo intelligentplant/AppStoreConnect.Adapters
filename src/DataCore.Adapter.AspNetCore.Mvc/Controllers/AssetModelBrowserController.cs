@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AssetModel;
@@ -73,34 +74,39 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = await feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
-                ParentId = string.IsNullOrWhiteSpace(start)
-                    ? null
-                    : start,
-                PageSize = pageSize,
-                Page = page
-            }, cancellationToken).ConfigureAwait(false);
+            try {
+                var resultChannel = await feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
+                    ParentId = string.IsNullOrWhiteSpace(start)
+                        ? null
+                        : start,
+                    PageSize = pageSize,
+                    Page = page
+                }, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-            var itemsRead = 0;
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var item) && item != null) {
-                    ++itemsRead;
-                    result.Add(item);
+                var itemsRead = 0;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var item) && item != null) {
+                        ++itemsRead;
+                        result.Add(item);
 
-                    if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                        break;
+                        if (itemsRead >= MaxNodesPerQuery) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                            break;
+                        }
                     }
                 }
-            }
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -133,28 +139,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-            var itemsRead = 0;
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var item) && item != null) {
-                    ++itemsRead;
-                    result.Add(item);
+                var itemsRead = 0;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var item) && item != null) {
+                        ++itemsRead;
+                        result.Add(item);
 
-                    if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                        break;
+                        if (itemsRead >= MaxNodesPerQuery) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                            break;
+                        }
                     }
                 }
-            }
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -186,28 +197,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-            var itemsRead = 0;
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var item) && item != null) {
-                    ++itemsRead;
-                    result.Add(item);
+                var itemsRead = 0;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var item) && item != null) {
+                        ++itemsRead;
+                        result.Add(item);
 
-                    if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                        break;
+                        if (itemsRead >= MaxNodesPerQuery) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                            break;
+                        }
                     }
                 }
-            }
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -240,28 +256,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelSearch))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-            var itemsRead = 0;
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var item) && item != null) {
-                    ++itemsRead;
-                    result.Add(item);
+                var itemsRead = 0;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var item) && item != null) {
+                        ++itemsRead;
+                        result.Add(item);
 
-                    if (itemsRead >= MaxNodesPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                        break;
+                        if (itemsRead >= MaxNodesPerQuery) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                            break;
+                        }
                     }
                 }
-            }
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
     }

@@ -1,6 +1,13 @@
-﻿using DataCore.Adapter.AssetModel;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter {
@@ -14,10 +21,89 @@ namespace DataCore.Adapter {
     public static class WellKnownFeatures {
 
         /// <summary>
+        /// Cached URI for <see cref="Extensions.ExtensionFeatureBasePath"/>.
+        /// </summary>
+        internal static Uri ExtensionFeatureBasePath { get; } = new Uri(Extensions.ExtensionFeatureBasePath);
+
+        /// <summary>
+        /// Holds cached versions of all well-known features as URIs.
+        /// </summary>
+        internal static IReadOnlyDictionary<string, Uri> UriCache;
+
+
+
+        /// <summary>
+        /// Initialises <see cref="UriCache"/>
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Complex initialisation")]
+        static WellKnownFeatures() {
+            var keys = new[] { 
+                AssetModel.AssetModelBrowse,
+                AssetModel.AssetModelSearch,
+                Diagnostics.HealthCheck,
+                Events.EventMessagePush,
+                Events.EventMessagePushWithTopics,
+                Events.ReadEventMessagesForTimeRange,
+                Events.ReadEventMessagesUsingCursor,
+                Events.WriteEventMessages,
+                RealTimeData.ReadAnnotations,
+                RealTimeData.ReadPlotTagValues,
+                RealTimeData.ReadProcessedTagValues,
+                RealTimeData.ReadRawTagValues,
+                RealTimeData.ReadSnapshotTagValues,
+                RealTimeData.ReadTagValuesAtTimes,
+                RealTimeData.SnapshotTagValuePush,
+                RealTimeData.TagInfo,
+                RealTimeData.TagSearch,
+                RealTimeData.WriteAnnotations,
+                RealTimeData.WriteHistoricalTagValues,
+                RealTimeData.WriteSnapshotTagValues,
+                Extensions.ExtensionFeatureBasePath
+            };
+
+            UriCache = new ReadOnlyDictionary<string, Uri>(keys.ToDictionary(k => k, k => k.CreateUriWithTrailingSlash()));
+        }
+
+
+
+        /// <summary>
+        /// Gets a feature <see cref="Uri"/> from the cache, or creates a new URI object.
+        /// </summary>
+        /// <param name="uriString">
+        ///   The URI string.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Uri"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "URI parsing")]
+        public static Uri GetOrCreateFeatureUri(string uriString) {
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+
+            if (UriCache.TryGetValue(uriString, out var uri)) {
+                return uri;
+            }
+
+            if (!Uri.TryCreate(uriString, UriKind.Absolute, out uri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
+            }
+
+            return uri.EnsurePathHasTrailingSlash();
+        }
+
+
+        /// <summary>
         /// Defines URIs for well-known asset model adapter features.
         /// </summary>
-
         public static class AssetModel {
+
             /// <summary>
             /// URI for <see cref="IAssetModelBrowse"/>.
             /// </summary>
@@ -141,6 +227,19 @@ namespace DataCore.Adapter {
             /// URI for <see cref="IWriteSnapshotTagValues"/>.
             /// </summary>
             public const string WriteSnapshotTagValues = "asc:features/real-time-data/values/write/snapshot/";
+
+        }
+
+
+        /// <summary>
+        /// Defines URIs related to extension features.
+        /// </summary>
+        public static class Extensions {
+
+            /// <summary>
+            /// The root URI for all extension features (i.e. features extension <see cref="IAdapterExtensionFeature"/>).
+            /// </summary>
+            public const string ExtensionFeatureBasePath = "asc:extensions/";
 
         }
 

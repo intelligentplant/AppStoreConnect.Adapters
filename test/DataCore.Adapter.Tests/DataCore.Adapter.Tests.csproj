@@ -28,9 +28,4 @@
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Protobuf Include="..\..\examples\DataCore.Adapter.ExampleAdapter\protos\**\*.proto" GrpcServices="None" />
-    <Content Include="@(Protobuf)" LinkBase="protos" />
-  </ItemGroup>
-
 </Project>

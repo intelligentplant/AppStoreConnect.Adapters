@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Proxy;
+
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
     /// <summary>
@@ -23,7 +25,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory ExtensionFeatureFactory { get; set; }
+        public ExtensionFeatureFactory<SignalRAdapterProxy> ExtensionFeatureFactory { get; set; }
 
     }
 }

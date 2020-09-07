@@ -53,7 +53,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IReadRawTagValues"/> instance that will provide raw tag values to the 
         ///   helper.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
         ///   Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -63,10 +63,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService scheduler) {
+        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
             _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
-            _backgroundTaskService = scheduler ?? BackgroundTaskService.Default;
+            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
         }
 
 
@@ -87,7 +87,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see cref="IsCompatible"/>.
         /// </exception>
         public static ReadHistoricalTagValues ForAdapter(AdapterBase adapter) {
-            return ForAdapter(adapter, adapter?.TaskScheduler);
+            return ForAdapter(adapter, adapter?.BackgroundTaskService);
         }
 
 
@@ -97,9 +97,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="adapter">
         ///   The adapter.
         /// </param>
-        /// <param name="scheduler">
-        ///   The scheduler to use when running background tasks. If the value specified is 
-        ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. If the 
+        ///   value specified is <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> 
+        ///   will be used.
         /// </param>
         /// <returns>
         ///   A new <see cref="ReadHistoricalTagValues"/> object.
@@ -111,7 +112,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="adapter"/> does not meet the requirements specified by 
         ///   <see cref="IsCompatible"/>.
         /// </exception>
-        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService scheduler = null) {
+        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService backgroundTaskService = null) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -123,7 +124,7 @@ namespace DataCore.Adapter.RealTimeData {
             return new ReadHistoricalTagValues(
                 adapter.Features.Get<ITagInfo>(), 
                 adapter.Features.Get<IReadRawTagValues>(), 
-                scheduler
+                backgroundTaskService
             );
         }
 

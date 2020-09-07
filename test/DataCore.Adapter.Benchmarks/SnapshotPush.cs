@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Benchmarks {
             null, 
             null
         ) {
-            Scheduler.QueueBackgroundWorkItem(async ct => { 
+            BackgroundTaskService.QueueBackgroundWorkItem(async ct => { 
                 while (await _subscriptionsAdded.Reader.WaitToReadAsync(ct)) {
                     if (!_subscriptionsAdded.Reader.TryRead(out var tag)) {
                         continue;

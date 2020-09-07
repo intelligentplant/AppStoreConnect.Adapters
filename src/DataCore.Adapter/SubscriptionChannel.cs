@@ -11,7 +11,8 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Holds information about a subscription channel.
     /// </summary>
-    internal class SubscriptionChannel<TIdentifier, TTopic, TValue> : IDisposable {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Subclasses should only exist inside this library")]
+    public class SubscriptionChannel<TIdentifier, TTopic, TValue> : IDisposable {
 
         /// <summary>
         /// Indicates if the subscription has been disposed.
@@ -154,7 +155,7 @@ namespace DataCore.Adapter {
             // This is the actual channel exposed via the Reader property.
             _outChannel = Channel.CreateUnbounded<TValue>(new UnboundedChannelOptions() {
                 SingleReader = true,
-                SingleWriter = true,
+                SingleWriter = false,
             });
 
             Topics = topics;
@@ -216,27 +217,27 @@ namespace DataCore.Adapter {
         /// </returns>
         private async Task RunIngressLoop(CancellationToken cancellationToken) {
             try {
-                while (!cancellationToken.IsCancellationRequested) {
-                    try {
-                        var val = await _inChannel.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                while (await _inChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (_inChannel.Reader.TryRead(out var val)) {
                         if (val.Immediate || PublishInterval <= TimeSpan.Zero) {
                             if (PublishInterval > TimeSpan.Zero) {
                                 // Cancel next publish if one is already pending.
                                 _publishPending = 0;
                                 _nextPublishedValue = default;
                             }
-                            await _outChannel.Writer.WriteAsync(val.Value, cancellationToken).ConfigureAwait(false);
+                            _outChannel.Writer.TryWrite(val.Value);
                             continue;
                         }
 
                         _nextPublishedValue = val.Value;
                         _publishPending = 1;
                     }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
                 }
             }
+            catch (OperationCanceledException) { }
+            catch (ChannelClosedException) { }
             catch (Exception e) {
+                _inChannel.Writer.TryComplete(e);
                 _outChannel.Writer.TryComplete(e);
             }
             finally {
@@ -259,17 +260,26 @@ namespace DataCore.Adapter {
         ///   cancellaion.
         /// </returns>
         private async Task RunEgressLoop(CancellationToken cancellationToken) {
-            while (!cancellationToken.IsCancellationRequested) {
-                await Task.Delay(PublishInterval, cancellationToken).ConfigureAwait(false);
-                var publishPending = Interlocked.Exchange(ref _publishPending, 0);
-                if (publishPending == 0) {
-                    continue;
+            try {
+                while (!cancellationToken.IsCancellationRequested) {
+                    await Task.Delay(PublishInterval, cancellationToken).ConfigureAwait(false);
+                    var publishPending = Interlocked.Exchange(ref _publishPending, 0);
+                    if (publishPending == 0) {
+                        continue;
+                    }
+                    var val = _nextPublishedValue;
+                    if (val == null) {
+                        continue;
+                    }
+                    _outChannel.Writer.TryWrite(val);
                 }
-                var val = _nextPublishedValue;
-                if (val == null) {
-                    continue;
-                }
-                await _outChannel.Writer.WriteAsync(val, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception e) {
+                _outChannel.Writer.TryComplete(e);
+            }
+            finally {
+                _outChannel.Writer.TryComplete();
             }
         }
 

@@ -14,6 +14,7 @@ using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
 using System.ComponentModel.DataAnnotations;
+using DataCore.Adapter.Proxy;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -33,11 +34,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// The ID of the remote adapter.
         /// </summary>
         private readonly string _remoteAdapterId;
-
-        /// <summary>
-        /// Session ID to use with topic-based subscriptions.
-        /// </summary>
-        internal string RemoteSessionId { get; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Information about the remote host.
@@ -95,7 +91,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
-        private readonly ExtensionFeatureFactory _extensionFeatureFactory;
+        private readonly ExtensionFeatureFactory<GrpcAdapterProxy> _extensionFeatureFactory;
 
 
 #if NETSTANDARD2_1
@@ -245,30 +241,34 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, getAdapterResponse.Adapter.Features);
 
-            if (_extensionFeatureFactory != null) {
-                foreach (var extensionFeature in getAdapterResponse.Adapter.Extensions) {
-                    if (string.IsNullOrWhiteSpace(extensionFeature)) {
-                        continue;
-                    }
+            foreach (var extensionFeature in getAdapterResponse.Adapter.Extensions) {
+                if (string.IsNullOrWhiteSpace(extensionFeature)) {
+                    continue;
+                }
 
-                    try {
-                        var impl = _extensionFeatureFactory.Invoke(extensionFeature, this);
-                        if (impl == null) {
+                try {
+                    var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
+                    if (impl == null) {
+                        if (!UriExtensions.TryCreateUriWithTrailingSlash(extensionFeature, out var featureUri)) {
                             Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }
 
-                        AddFeatures(impl, addStandardFeatures: false);
+                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<GrpcAdapterProxy, Extensions.AdapterExtensionFeatureImpl>(
+                            this,
+                            featureUri
+                        );
                     }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
-                    }
+                    AddFeatures(impl, addStandardFeatures: false);
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
-                TaskScheduler.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
+                BackgroundTaskService.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
             }
         }
 

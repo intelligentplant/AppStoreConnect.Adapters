@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for writing new snapshot values to adapter tags.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.WriteSnapshotTagValues)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.WriteSnapshotTagValues,
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_WriteSnapshotTagValues),
+        Description = nameof(AbstractionsResources.Description_WriteSnapshotTagValues)
+    )]
     public interface IWriteSnapshotTagValues : IAdapterFeature {
 
         /// <summary>

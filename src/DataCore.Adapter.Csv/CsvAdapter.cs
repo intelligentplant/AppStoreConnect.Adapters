@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The adapter options.
         /// </param>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -56,8 +56,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, CsvAdapterOptions options, IBackgroundTaskService taskScheduler, ILogger<CsvAdapter> logger)
-            : base(id, options, taskScheduler, logger) {
+        public CsvAdapter(string id, CsvAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+            : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }
 
@@ -458,7 +458,7 @@ namespace DataCore.Adapter.Csv {
                 foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
                     ch.TryWrite(TagDefinition.FromExisting(item));
                 }
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagDefinition>>(result);
         }
@@ -479,7 +479,7 @@ namespace DataCore.Adapter.Csv {
                         ch.TryWrite(TagDefinition.FromExisting(tag));
                     }
                 }
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagDefinition>>(result);
         }
@@ -526,7 +526,7 @@ namespace DataCore.Adapter.Csv {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
@@ -698,7 +698,7 @@ namespace DataCore.Adapter.Csv {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }

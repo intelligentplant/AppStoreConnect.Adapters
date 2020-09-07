@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
@@ -80,27 +81,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesForTimeRange))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false);
-            var result = new List<EventMessage>();
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var msg) || msg == null) {
-                    continue;
+            try {
+                var reader = await feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false);
+                var result = new List<EventMessage>();
+
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var msg) || msg == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxEventMessagesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(msg);
                 }
 
-                if (result.Count > MaxEventMessagesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                    break;
-                }
-
-                result.Add(msg);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -133,27 +140,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesUsingCursor))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
-            var result = new List<EventMessageWithCursorPosition>();
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var msg) || msg == null) {
-                    continue;
+            try {
+                var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
+                var result = new List<EventMessageWithCursorPosition>();
+
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var msg) || msg == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxEventMessagesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(msg);
                 }
 
-                if (result.Count > MaxEventMessagesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                    break;
-                }
-
-                result.Add(msg);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -192,46 +205,51 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteEventMessages))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
 
-            var writeChannel = ChannelExtensions.CreateEventMessageWriteChannel(MaxEventMessagesPerWriteRequest);
+            try {
+                var writeChannel = ChannelExtensions.CreateEventMessageWriteChannel(MaxEventMessagesPerWriteRequest);
 
-            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var itemsWritten = 0;
+                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    var itemsWritten = 0;
 
-                foreach (var evt in request.Events) {
-                    ++itemsWritten;
+                    foreach (var evt in request.Events) {
+                        ++itemsWritten;
 
-                    if (evt == null) {
-                        continue;
+                        if (evt == null) {
+                            continue;
+                        }
+
+                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            break;
+                        }
+
+                        ch.TryWrite(evt);
+
+                        if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
+                            break;
+                        }
                     }
+                }, true, _backgroundTaskService, cancellationToken);
 
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
+                var resultChannel = await feature.WriteEventMessages(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
+                var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
 
-                    ch.TryWrite(evt);
-
-                    if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
-                        break;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var res) && res != null) {
+                        result.Add(res);
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = await feature.WriteEventMessages(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-            var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
-
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var res) && res != null) {
-                    result.Add(res);
-                }
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
     }

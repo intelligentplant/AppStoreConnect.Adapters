@@ -8,6 +8,8 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Extensions;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.AspNetCore.SignalR;
 
@@ -175,6 +177,49 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             if (!resolvedFeature.IsFeatureResolved) {
                 throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(TFeature)));
+            }
+
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                throw new SecurityException(Resources.Error_NotAuthorizedToAccessFeature);
+            }
+
+            return resolvedFeature;
+        }
+
+
+        /// <summary>
+        /// Resolves an adapter and extension feature, and throws an exception if the adapter cannot be 
+        /// resolved, or the caller is authorized to access the feature.
+        /// </summary>
+        /// <param name="adapterCallContext">
+        ///   The adapter call context.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The adapter and feature.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> could not be resolved.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The adapter does not support the requested feature.
+        /// </exception>
+        /// <exception cref="SecurityException">
+        ///   The caller is not authorized to access the adapter feature.
+        /// </exception>
+        private async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext adapterCallContext, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
+            var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(adapterCallContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+            }
+
+            if (!resolvedFeature.IsFeatureResolved) {
+                throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri));
             }
 
             if (!resolvedFeature.IsFeatureAuthorized) {

@@ -162,9 +162,26 @@
     <value>Invalid base date: {0}</value>
     <comment>{0} - base date string</comment>
   </data>
+  <data name="Error_InvalidExtensionFeatureOperationUri" xml:space="preserve">
+    <value>The specified URI is not a valid extension feature operation URI.</value>
+  </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
     <value>Object does not implement feature '{0}'.</value>
     <comment>{0} - feature name</comment>
+  </data>
+  <data name="Error_NotAnAdapterFeature" xml:space="preserve">
+    <value>'{0}' is not a valid adapter feature type. Standard features must be interfaces that extend '{1}' and are annotated with '{2}'. Non-standard features must be interfaces or classes that extend '{3}' and are annotated with '{4}'.</value>
+    <comment>{0} - Invalid type name
+{1} - IAdapterFeature name
+{2} - AnnotationFeatureAttribute name
+{3} - IAdapterExtensionFeature name
+{4} - AdapterExtensionFeatureAttributeName
+</comment>
+  </data>
+  <data name="Error_NotAnExtensionFeatureInterface" xml:space="preserve">
+    <value>You must specify an extension feature interface type (i.e. an interface derived from {0} and annotated with {1}).</value>
+    <comment>{0} - IAdapterExtensionFeature name
+{1} - AdapterFeatureAttribute name</comment>
   </data>
   <data name="Error_TooManySubscriptions" xml:space="preserve">
     <value>Too many subscriptions.</value>

@@ -18,18 +18,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="DataCoreAdapterAbstractionsResources.Designer.cs">
+    <Compile Update="AbstractionsResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>DataCoreAdapterAbstractionsResources.resx</DependentUpon>
+      <DependentUpon>AbstractionsResources.resx</DependentUpon>
       <CustomToolNamespace></CustomToolNamespace>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="DataCoreAdapterAbstractionsResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>DataCoreAdapterAbstractionsResources.Designer.cs</LastGenOutput>
+    <EmbeddedResource Update="AbstractionsResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AbstractionsResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>

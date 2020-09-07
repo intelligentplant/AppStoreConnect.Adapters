@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter {
@@ -22,7 +24,7 @@ namespace DataCore.Adapter {
         private static readonly Type s_adapterExtensionFeatureType = typeof(IAdapterExtensionFeature);
 
         /// <summary>
-        /// Array of all standard adapter feature types.
+        /// Array of all standard adapter feature type interfaces.
         /// </summary>
         private static readonly Type[] s_standardAdapterFeatureTypes = typeof(IAdapterFeature)
             .Assembly
@@ -31,13 +33,32 @@ namespace DataCore.Adapter {
             .Where(x => s_adapterFeatureType.IsAssignableFrom(x))
             .Where(x => x != s_adapterFeatureType)
             .Where(x => x != s_adapterExtensionFeatureType)
-            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute())
+            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute<AdapterFeatureAttribute>())
             .ToArray();
 
 
         /// <summary>
+        /// Tests if the type is a non-abstract class that is not a generic type definition.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is a non-abstract class that is not a generic 
+        ///   type definition, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsConcreteClass(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            return type.IsClass && !type.IsAbstract && !type.IsGenericTypeDefinition;
+        }
+
+
+        /// <summary>
         /// Gets the <see cref="Type"/> objects that correspond to the standard adapter feature 
-        /// types.
+        /// type interfaces.
         /// </summary>
         /// <returns>
         ///   The adapter feature types.
@@ -48,7 +69,8 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Tests if the type is an adapter feature.
+        /// Tests if the type is an adapter feature. See the remarks section for details on how 
+        /// adapter features are identified.
         /// </summary>
         /// <param name="type">
         ///   The type.
@@ -57,17 +79,37 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the type is an adapter feature, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
+        /// <remarks>
+        /// 
+        /// Adapter feature types are identified in one of the following ways:
+        /// 
+        /// <list type="bullet">
+        /// <item>
+        ///   <description>
+        ///     The <paramref name="type"/> is an interface that is derived from one of the 
+        ///     standard adapter feature interfaces returned by a call to <see cref="GetStandardAdapterFeatureTypes"/>.
+        ///   </description>
+        /// </item>
+        /// <item>
+        ///   <description>
+        ///     The <paramref name="type"/> is derived from <see cref="IAdapterExtensionFeature"/> 
+        ///     and is annotated with an <see cref="ExtensionFeatureAttribute"/>.
+        ///   </description>
+        /// </item>
+        /// </list>
+        /// 
+        /// </remarks>
         public static bool IsAdapterFeature(this Type type) {
             if (type == null) {
                 return false;
             }
 
-            return type.IsInterface && 
+            return
                 // We don't check to see if the type is annotated with [AdapterFeature] when 
                 // comparing against standard features, because we use unit tests to ensure 
                 // that all standard features are correctly annotated.
-                (s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type)) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute())) &&
-                type != s_adapterFeatureType && 
+                ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<ExtensionFeatureAttribute>())) &&
+                type != s_adapterFeatureType &&
                 type != s_adapterExtensionFeatureType;
         }
 
@@ -103,6 +145,21 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Tests if the type is a concrete implementation of an extension adapter feature.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the type is a concrete extension adapter feature implementation, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsConcreteExtensionAdapterFeature(this Type type) {
+            return type.IsExtensionAdapterFeature() && type.IsConcreteClass();
+        }
+
+
+        /// <summary>
         /// Tests if a type has been annotated with an <see cref="AdapterFeatureAttribute"/>.
         /// </summary>
         /// <param name="type">
@@ -112,8 +169,62 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the type has been annotated with an <see cref="AdapterFeatureAttribute"/>, 
         ///   or <see langword="false"/> otherwise.
         /// </returns>
-        private static bool IsAnnotatedWithAttributeFeatureAttribute(this Type type) {
-            return type.GetCustomAttribute<AdapterFeatureAttribute>() != null;
+        private static bool IsAnnotatedWithAttributeFeatureAttribute<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
+            return type.GetAdapterFeatureAttributes<TAttr>().Any();
+        }
+
+
+        /// <summary>
+        /// Gets all instances of <see cref="AdapterFeatureAttribute"/> (or a derived type) found 
+        /// directly on the type, or on any interfaces the type implements (if the type is a 
+        /// non-abstract, non-generic class).
+        /// </summary>
+        /// <typeparam name="TAttr">
+        ///   The attribute type.
+        /// </typeparam>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The matching attributes.
+        /// </returns>
+        private static IEnumerable<(Type type, TAttr attr)> GetAdapterFeatureAttributes<TAttr>(this Type type) where TAttr : AdapterFeatureAttribute {
+            var attribute = type.GetCustomAttribute<TAttr>();
+            if (attribute != null) {
+                yield return (type, attribute);
+            }
+
+            if (type.IsConcreteClass()) {
+                foreach (var ifType in type.GetInterfaces()) {
+                    foreach (var val in ifType.GetAdapterFeatureAttributes<TAttr>()) {
+                        yield return val;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the adapter feature types implemented by the specified type.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature types.
+        /// </returns>
+        public static IEnumerable<Type> GetAdapterFeatureTypes(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type.IsAdapterFeature()) {
+                yield return type;
+            }
+
+            foreach (var featureType in type.GetInterfaces().Where(x => x.IsAdapterFeature())) {
+                yield return featureType;
+            }
         }
 
 
@@ -127,10 +238,36 @@ namespace DataCore.Adapter {
         ///   The adapter feature URI for the type, or <see langword="null"/> if the type is not 
         ///   an adapter feature type.
         /// </returns>
+        /// <remarks>
+        ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
+        ///   features, only the first implemented feature URI will be returned.
+        /// </remarks>
         public static Uri GetAdapterFeatureUri(this Type type) {
-            return type.IsAdapterFeature() 
-                ? type.GetCustomAttribute<AdapterFeatureAttribute>()?.Uri
+            return type.IsAdapterFeature()
+                ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()?.FirstOrDefault().attr?.Uri
                 : null;
+        }
+
+
+        /// <summary>
+        /// Gets the adapter feature URIs for the type.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   The adapter feature URIs for the type.
+        /// </returns>
+        /// <remarks>
+        ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
+        ///   features, the URIs for all implemented features will be returned.
+        /// </remarks>
+        public static IEnumerable<Uri> GetAdapterFeatureUris(this Type type) {
+            return type.IsAdapterFeature()
+                ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()
+                    ?.Select(x => x.attr.Uri)
+                    ?.ToArray() ?? Array.Empty<Uri>()
+                : Array.Empty<Uri>();
         }
 
 
@@ -148,7 +285,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasAdapterFeatureUri(this Type type, string uriString) {
-            if (!AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 return false;
             }
             return type.HasAdapterFeatureUri(uri);
@@ -156,7 +293,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Tests if the type is annotated with the specified adapter feature URI.
+        /// Tests if the type is directly annotated with the specified adapter feature URI.
         /// </summary>
         /// <param name="type">
         ///   The type.
@@ -176,6 +313,78 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uri));
             }
             return type.GetAdapterFeatureUri()?.Equals(uri) ?? false;
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="FeatureDescriptor"/> from the specified feature type. The type 
+        /// must be annotated with <see cref="AdapterFeatureAttribute"/> (or a derived type), or 
+        /// it must implement an interface that is annotated in this way.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
+        ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
+        /// </returns>
+        /// <remarks>
+        /// If the <see cref="AdapterFeatureAttribute"/> does not define a display name, the 
+        /// display name will be set to the <see cref="Type.FullName"/> of the <paramref name="type"/>.
+        /// </remarks>
+        public static FeatureDescriptor CreateFeatureDescriptor(this Type type) {
+            if (type == null) {
+                return null;
+            }
+
+            var attr = type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>().FirstOrDefault();
+
+            if (attr.attr == null) {
+                return null;
+            }
+
+            var uri = attr.attr.Uri;
+
+            var displayName = attr.attr.GetName();
+            var description = attr.attr.GetDescription();
+
+            if (string.IsNullOrWhiteSpace(displayName)) {
+                displayName = type.FullName;
+            }
+
+            if (displayName.Length > FeatureDescriptor.MaxDisplayNameLength) {
+                displayName = displayName.Substring(0, FeatureDescriptor.MaxDisplayNameLength);
+            }
+
+            if (description != null && description.Length > FeatureDescriptor.MaxDescriptionLength) {
+                description = description.Substring(0, FeatureDescriptor.MaxDescriptionLength);
+            }
+
+            return new FeatureDescriptor() {
+                Uri = uri,
+                DisplayName = displayName,
+                Description = description
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="FeatureDescriptor"/> from the specified feature type. The type 
+        /// must be annotated with <see cref="AdapterFeatureAttribute"/> (or a derived type), or 
+        /// it must implement an interface that is annotated in this way.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="feature">
+        ///   The feature type.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
+        ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
+        /// </returns>
+        public static FeatureDescriptor CreateFeatureDescriptor<TFeature>(this TFeature feature) where TFeature : IAdapterFeature {
+            return typeof(TFeature).CreateFeatureDescriptor();
         }
 
     }

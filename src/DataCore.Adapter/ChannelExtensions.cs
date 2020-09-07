@@ -490,7 +490,7 @@ namespace DataCore.Adapter {
         /// <typeparam name="T">
         ///   The channel item type.
         /// </typeparam>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
         ///   background.
         /// </param>
@@ -511,14 +511,14 @@ namespace DataCore.Adapter {
         ///   <paramref name="workItem"/>.
         /// </param>
         public static void QueueBackgroundChannelOperation<T>(
-            this IBackgroundTaskService scheduler, 
+            this IBackgroundTaskService backgroundTaskService, 
             Func<ChannelWriter<T>, CancellationToken, Task> workItem, 
             ChannelWriter<T> channel, 
             bool complete = true, 
             CancellationToken cancellationToken = default
         ) {
-            if (scheduler == null) {
-                throw new ArgumentNullException(nameof(scheduler));
+            if (backgroundTaskService == null) {
+                throw new ArgumentNullException(nameof(backgroundTaskService));
             }
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
@@ -527,7 +527,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            scheduler.QueueBackgroundWorkItem(async ct => { 
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
                 try {
                     await workItem(channel, ct).ConfigureAwait(false);
                 }
@@ -551,7 +551,7 @@ namespace DataCore.Adapter {
         /// <typeparam name="T">
         ///   The channel item type.
         /// </typeparam>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
         ///   background.
         /// </param>
@@ -572,14 +572,14 @@ namespace DataCore.Adapter {
         ///   <paramref name="workItem"/>.
         /// </param>
         public static void QueueBackgroundChannelOperation<T>(
-            this IBackgroundTaskService scheduler,
+            this IBackgroundTaskService backgroundTaskService,
             Action<ChannelWriter<T>, CancellationToken> workItem,
             ChannelWriter<T> channel,
             bool complete = true,
             CancellationToken cancellationToken = default
         ) {
-            if (scheduler == null) {
-                throw new ArgumentNullException(nameof(scheduler));
+            if (backgroundTaskService == null) {
+                throw new ArgumentNullException(nameof(backgroundTaskService));
             }
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
@@ -588,7 +588,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            scheduler.QueueBackgroundWorkItem(ct => {
+            backgroundTaskService.QueueBackgroundWorkItem(ct => {
                 try {
                     workItem(channel, ct);
                 }
@@ -611,7 +611,7 @@ namespace DataCore.Adapter {
         /// <typeparam name="T">
         ///   The channel item type.
         /// </typeparam>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
         ///   background.
         /// </param>
@@ -627,13 +627,13 @@ namespace DataCore.Adapter {
         ///   <paramref name="workItem"/>.
         /// </param>
         public static void QueueBackgroundChannelOperation<T>(
-            this IBackgroundTaskService scheduler,
+            this IBackgroundTaskService backgroundTaskService,
             Func<ChannelReader<T>, CancellationToken, Task> workItem,
             ChannelReader<T> channel,
             CancellationToken cancellationToken = default
         ) {
-            if (scheduler == null) {
-                throw new ArgumentNullException(nameof(scheduler));
+            if (backgroundTaskService == null) {
+                throw new ArgumentNullException(nameof(backgroundTaskService));
             }
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
@@ -642,7 +642,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            scheduler.QueueBackgroundWorkItem(async ct => {
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => {
                 await workItem(channel, ct).ConfigureAwait(false);
             }, null, cancellationToken);
         }
@@ -654,7 +654,7 @@ namespace DataCore.Adapter {
         /// <typeparam name="T">
         ///   The channel item type.
         /// </typeparam>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
         ///   background.
         /// </param>
@@ -670,13 +670,13 @@ namespace DataCore.Adapter {
         ///   <paramref name="workItem"/>.
         /// </param>
         public static void QueueBackgroundChannelOperation<T>(
-            this IBackgroundTaskService scheduler,
+            this IBackgroundTaskService backgroundTaskService,
             Action<ChannelReader<T>, CancellationToken> workItem,
             ChannelReader<T> channel,
             CancellationToken cancellationToken = default
         ) {
-            if (scheduler == null) {
-                throw new ArgumentNullException(nameof(scheduler));
+            if (backgroundTaskService == null) {
+                throw new ArgumentNullException(nameof(backgroundTaskService));
             }
             if (workItem == null) {
                 throw new ArgumentNullException(nameof(workItem));
@@ -685,7 +685,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            scheduler.QueueBackgroundWorkItem(ct => {
+            backgroundTaskService.QueueBackgroundWorkItem(ct => {
                 workItem(channel, ct);
             }, null, cancellationToken);
         }
@@ -708,7 +708,7 @@ namespace DataCore.Adapter {
         ///   Indicates if the channel should be marked as completed once the operation has finished. 
         ///   The channel will always be marked as completed if the operation throws an exception.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -722,7 +722,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelWriter{T}, CancellationToken, Task}, ChannelWriter{T}, bool, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -730,11 +730,11 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(func));
             }
 
-            if (scheduler == null) {
-                scheduler = BackgroundTaskService.Default;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation(async (ch, ct) => {
+            backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
                 await func(ch, ct).ConfigureAwait(false);
             }, channel, complete, cancellationToken);
         }
@@ -757,7 +757,7 @@ namespace DataCore.Adapter {
         ///   Indicates if the channel should be marked as completed once the operation has finished. 
         ///   The channel will always be marked as completed if the operation throws an exception.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -771,7 +771,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelWriter{T}, CancellationToken}, ChannelWriter{T}, bool, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -779,11 +779,11 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(func));
             }
 
-            if (scheduler == null) {
-                scheduler = BackgroundTaskService.Default;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation((ch, ct) => {
+            backgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 func(ch, ct);
             }, channel, complete, cancellationToken);
         }
@@ -801,7 +801,7 @@ namespace DataCore.Adapter {
         /// <param name="func">
         ///   The background operation to run.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -815,7 +815,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelReader{T}, CancellationToken, Task}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -823,11 +823,11 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(func));
             }
 
-            if (scheduler == null) {
-                scheduler = BackgroundTaskService.Default;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation(async (ch, ct) => {
+            backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
                 await func(ch, ct).ConfigureAwait(false);
             }, channel, cancellationToken);
         }
@@ -845,7 +845,7 @@ namespace DataCore.Adapter {
         /// <param name="func">
         ///   The background operation to run.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -859,7 +859,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelReader{T}, CancellationToken}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -867,11 +867,11 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(func));
             }
 
-            if (scheduler == null) {
-                scheduler = BackgroundTaskService.Default;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation((ch, ct) => {
+            backgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 func(ch, ct);
             }, channel, cancellationToken);
         }
@@ -948,6 +948,9 @@ namespace DataCore.Adapter {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
+            if (callback == null) {
+                throw new ArgumentNullException(nameof(callback));
+            }
             
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 while (channel.TryRead(out var item)) {
@@ -973,7 +976,7 @@ namespace DataCore.Adapter {
         /// <param name="callback">
         ///   The transform function to use.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
@@ -984,7 +987,7 @@ namespace DataCore.Adapter {
         ///   A new <see cref="ChannelReader{T}"/> that will transform and emit items read from 
         ///   the original channel.
         /// </returns>
-        public static ChannelReader<TOut> Transform<TIn, TOut>(this ChannelReader<TIn> channel, Func<TIn, TOut> callback, IBackgroundTaskService scheduler = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TOut> Transform<TIn, TOut>(this ChannelReader<TIn> channel, Func<TIn, TOut> callback, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -994,11 +997,11 @@ namespace DataCore.Adapter {
 
             var result = Channel.CreateUnbounded<TOut>();
 
-            if (scheduler == null) {
-                scheduler = BackgroundTaskService.Default;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            scheduler.QueueBackgroundChannelOperation(async (ch, ct) => {
+            backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
                 try {
                     while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         while (ch.TryRead(out var item)) {

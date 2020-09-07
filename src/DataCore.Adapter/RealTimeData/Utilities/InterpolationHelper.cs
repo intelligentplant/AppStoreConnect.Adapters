@@ -515,7 +515,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data for the calculations.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The background task service to use when writing values into the channel.
         /// </param>
         /// <param name="cancellationToken">
@@ -524,7 +524,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetPreviousValuesAtSampleTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, IBackgroundTaskService scheduler, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TagValueQueryResult> GetPreviousValuesAtSampleTimes(
+            TagSummary tag, 
+            IEnumerable<DateTime> utcSampleTimes, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            IBackgroundTaskService backgroundTaskService, 
+            CancellationToken cancellationToken = default
+        ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -534,12 +540,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = true,
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = true
             });
 
-            result.Writer.RunBackgroundOperation((ch, ct) => GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, ch, ct), true, scheduler, cancellationToken);
+            result.Writer.RunBackgroundOperation((ch, ct) => GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, ch, ct), true, backgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -566,7 +572,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A <see cref="Task"/> that will perform the calculations.
         /// </returns>
-        private static async Task GetPreviousValuesAtTimes(TagSummary tag, IEnumerable<DateTime> utcSampleTimes, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async Task GetPreviousValuesAtTimes(
+            TagSummary tag, 
+            IEnumerable<DateTime> utcSampleTimes, 
+            ChannelReader<TagValueQueryResult> rawData, 
+            ChannelWriter<TagValueQueryResult> resultChannel, 
+            CancellationToken cancellationToken
+        ) {
             var sampleTimesEnumerator = utcSampleTimes.GetEnumerator();
             try {
                 if (!sampleTimesEnumerator.MoveNext()) {

@@ -50,7 +50,6 @@ Modify the `Run` method in `Program.cs` as follows:
 ```csharp
 private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {
     await using (IAdapter adapter = new Adapter(AdapterId, AdapterDisplayName, AdapterDescription)) {
-
         await adapter.StartAsync(cancellationToken);
 
         Console.WriteLine();
@@ -69,9 +68,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
         var snapshotPushFeature = adapter.GetFeature<ISnapshotTagValuePush>();
 
-        using (var subscription = await snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest()))
-        using (cancellationToken.Register(() => subscription.Cancel())) {
-            var tags = await tagSearchFeature.FindTags(
+        var tags = await tagSearchFeature.FindTags(
                 context,
                 new FindTagsRequest() {
                     Name = "Sin*",
@@ -80,35 +77,36 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
                 cancellationToken
             );
 
-            await tags.WaitToReadAsync(cancellationToken);
-            tags.TryRead(out var tag);
+        await tags.WaitToReadAsync(cancellationToken);
+        tags.TryRead(out var tag);
 
-            Console.WriteLine();
-            Console.WriteLine("[Tag Details]");
-            Console.WriteLine($"  Name: {tag.Name}");
-            Console.WriteLine($"  ID: {tag.Id}");
-            Console.WriteLine($"  Description: {tag.Description}");
-            Console.WriteLine("  Properties:");
-            foreach (var prop in tag.Properties) {
-                Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-            }
-
-            await subscription.AddTagToSubscription(tag.Id);
-
-            Console.WriteLine("  Snapshot Value:");
-            subscription.Reader.RunBackgroundOperation(async (ch, ct) => {
-                await foreach (var value in ch.ReadAllAsync(ct)) {
-                    Console.WriteLine($"    - {value.Value}");
-                }
-            }, null, cancellationToken);
-
-            await subscription.Completed;
+        Console.WriteLine();
+        Console.WriteLine("[Tag Details]");
+        Console.WriteLine($"  Name: {tag.Name}");
+        Console.WriteLine($"  ID: {tag.Id}");
+        Console.WriteLine($"  Description: {tag.Description}");
+        Console.WriteLine("  Properties:");
+        foreach (var prop in tag.Properties) {
+            Console.WriteLine($"    - {prop.Name} = {prop.Value}");
         }
+
+        var subscription = await snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
+            Tags = new[] { tag.Id }
+        }, cancellationToken);
+
+        subscription.RunBackgroundOperation(async (ch, ct) => {
+            Console.WriteLine("  Snapshot Value:");
+            await foreach (var value in ch.ReadAllAsync(ct)) {
+                Console.WriteLine($"    - {value.Value}");
+            }
+        }, null, cancellationToken);
+
+        await subscription.Completion;
     }
 }
 ```
 
-After displaying the usual adapter information, the `Run` method will create a new subscription, and will then register a callback with the method's cancellation token parameter to cancel the subscription when the cancellation token fires. The method then searches for a single tag with a name starting with `Sin` (i.e. our `Sinusoid_Wave` tag), and then adds that tag to the subscription. It then uses the `RunBackgroundOperation` extension method on the subscription's `Values` property (a `ChannelReader<T>`) to values read from the channel and print them to the screen.
+After displaying the usual adapter information, the `Run` method searches for a single tag with a name starting with `Sin` (i.e. our `Sinusoid_Wave` tag), and then creates a subscription on that tag. It then uses the `RunBackgroundOperation` extension method on the subscription result (a `ChannelReader<T>`) to values read from the channel and print them to the screen.
 
 Once the background operation has been registered, the method waits for the subscription's `Completed` property (a `Task`) to complete before existing. The task will complete when the subscription is cancelled. In the program's `Main` method in part 1, we added an event handler that will cancel the cancellation token when `CTRL+C` is pressed.
 

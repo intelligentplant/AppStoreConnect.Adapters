@@ -12,7 +12,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <typeparam name="TIdentifier">
     ///   The subscription ID type.
     /// </typeparam>
-    internal class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
+    public class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
 
         /// <summary>
         /// Creates a new <see cref="TagValueSubscriptionChannel{TIdentifier}"/> object.
@@ -23,8 +23,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The context for the subscriber.
         /// </param>
-        /// <param name="scheduler">
-        ///   The task scheduler, used to run publish operations in a background task if required.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/>, used to run publish operations in a 
+        ///   background task if required.
         /// </param>
         /// <param name="tags">
         ///   The tags to subscribe to.
@@ -50,7 +51,7 @@ namespace DataCore.Adapter.RealTimeData {
         public TagValueSubscriptionChannel(
             TIdentifier id,
             IAdapterCallContext context,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             IEnumerable<TagIdentifier> tags,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
@@ -59,7 +60,7 @@ namespace DataCore.Adapter.RealTimeData {
         ) : base(
             id,
             context,
-            scheduler,
+            backgroundTaskService,
             tags,
             publishInterval,
             cancellationTokens,

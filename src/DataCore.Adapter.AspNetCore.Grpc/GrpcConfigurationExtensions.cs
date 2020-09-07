@@ -49,6 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
             MapService<TagValuesServiceImpl>(endpoints, builder);
+            MapService<ExtensionFeaturesServiceImpl>(endpoints, builder);
 
             return endpoints;
         }

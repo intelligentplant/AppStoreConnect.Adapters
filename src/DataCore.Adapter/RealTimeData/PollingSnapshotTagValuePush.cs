@@ -60,9 +60,10 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The maximum number of concurrent subscriptions allowed. A value less than one 
         ///   indicates no limit.
         /// </param>
-        /// <param name="scheduler">
-        ///   The scheduler to use when running background tasks. If the value specified is 
-        ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. If the 
+        ///   value specified is <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> 
+        ///   will be used.
         /// </param>
         /// <param name="logger">
         ///   The logger to use. Can be <see langword="null"/>.
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.RealTimeData {
             IReadSnapshotTagValues readSnapshotFeature, 
             TimeSpan pollingInterval,
             int maxConcurrentSubscriptions,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             ILogger logger
         ) : base(
             new SnapshotTagValuePushOptions() { 
@@ -87,7 +88,7 @@ namespace DataCore.Adapter.RealTimeData {
                 MaxSubscriptionCount = maxConcurrentSubscriptions,
                 TagResolver = SnapshotTagValuePushOptions.CreateTagResolver(tagInfoFeature)
             }, 
-            scheduler,
+            backgroundTaskService,
             logger
         ) {
             _readSnapshotFeature = readSnapshotFeature ?? throw new ArgumentNullException(nameof(readSnapshotFeature));
@@ -95,7 +96,7 @@ namespace DataCore.Adapter.RealTimeData {
                 ? pollingInterval
                 : DefaultPollingInterval;
 
-            Scheduler.QueueBackgroundWorkItem(RunSnapshotPollingLoop, null, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(RunSnapshotPollingLoop, null, DisposedToken);
         }
 
 
@@ -128,7 +129,7 @@ namespace DataCore.Adapter.RealTimeData {
             TimeSpan pollingInterval,
             int maxConcurrentSubscriptions = 0
         ) {
-            return ForAdapter(adapter, pollingInterval, maxConcurrentSubscriptions, adapter?.TaskScheduler, adapter?.Logger);
+            return ForAdapter(adapter, pollingInterval, maxConcurrentSubscriptions, adapter?.BackgroundTaskService, adapter?.Logger);
         }
 
 
@@ -146,9 +147,10 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The maximum number of concurrent subscriptions allowed. A value less than one 
         ///   indicates no limit.
         /// </param>
-        /// <param name="scheduler">
-        ///   The scheduler to use when running background tasks. If the value specified is 
-        ///   <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> will be used.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. If the 
+        ///   value specified is <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> 
+        ///   will be used.
         /// </param>
         /// <param name="logger">
         ///   The logger to use. Can be <see langword="null"/>.
@@ -167,7 +169,7 @@ namespace DataCore.Adapter.RealTimeData {
             IAdapter adapter,
             TimeSpan pollingInterval,
             int maxConcurrentSubscriptions = 0,
-            IBackgroundTaskService scheduler = null,
+            IBackgroundTaskService backgroundTaskService = null,
             ILogger logger = null
         ) {
             if (adapter == null) {
@@ -183,7 +185,7 @@ namespace DataCore.Adapter.RealTimeData {
                 adapter.Features.Get<IReadSnapshotTagValues>(),
                 pollingInterval,
                 maxConcurrentSubscriptions,
-                scheduler,
+                backgroundTaskService,
                 logger
             );
         }
@@ -221,7 +223,7 @@ namespace DataCore.Adapter.RealTimeData {
             base.OnTagAdded(tag);
 
             // Immediately get the current value.
-            Scheduler.QueueBackgroundWorkItem(ct => RefreshValues(new[] { tag.Id }, ct), DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ct => RefreshValues(new[] { tag.Id }, ct), DisposedToken);
         }
 
 

@@ -44,6 +44,11 @@ namespace DataCore.Adapter {
         private bool _isDisposed;
 
         /// <summary>
+        /// Indicates if the resources disposed by <see cref="DisposeCommon"/> have been disposed.
+        /// </summary>
+        private bool _isDisposedCommon;
+
+        /// <summary>
         /// Logging.
         /// </summary>
         protected internal ILogger Logger { get; }
@@ -90,7 +95,7 @@ namespace DataCore.Adapter {
         /// <see cref="StopToken"/> is always added to the list of <see cref="CancellationToken"/> 
         /// instances that the background task observes.
         /// </summary>
-        public IBackgroundTaskService TaskScheduler { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The adapter descriptor.
@@ -167,7 +172,7 @@ namespace DataCore.Adapter {
         /// <param name="description">
         ///   The adapter description.
         /// </param>
-        /// <param name="scheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
         ///   Specify <see langword="null"/> to use <see cref="BackgroundTaskService.Default"/>.
         /// </param>
@@ -188,7 +193,7 @@ namespace DataCore.Adapter {
             string id, 
             string name = null, 
             string description = null, 
-            IBackgroundTaskService scheduler = null, 
+            IBackgroundTaskService backgroundTaskService = null, 
             ILogger logger = null
         ) {
             if (string.IsNullOrWhiteSpace(id)) {
@@ -210,7 +215,7 @@ namespace DataCore.Adapter {
 
             StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
-            TaskScheduler = new BackgroundTaskServiceWrapper(this, scheduler ?? BackgroundTaskService.Default);
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(this, backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);
 
@@ -341,7 +346,7 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
-                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key.Name);
+                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key);
                 var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 
                 // Create new result that uses normalised name.
@@ -425,7 +430,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   An implementation of <paramref name="featureType"/> has already been registered.
         /// </exception>
-        public void AddFeature(Type featureType, object feature) {
+        public void AddFeature(Type featureType, IAdapterFeature feature) {
             CheckDisposed();
             _features.Add(featureType, feature);
         }
@@ -456,6 +461,55 @@ namespace DataCore.Adapter {
         public void AddFeatures(object provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
             CheckDisposed();
             _features.AddFromProvider(provider ?? throw new ArgumentNullException(nameof(provider)), addStandardFeatures, addExtensionFeatures);
+        }
+
+
+        /// <summary>
+        /// Adds all standard adapter features implemented by the specified feature provider. 
+        /// Standard feature types can be obtained by calling <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>
+        /// </summary>
+        /// <param name="provider">
+        ///   The object that will provide the adapter feature implementations.
+        /// </param>
+        public void AddStandardFeatures(object provider) {
+            AddFeatures(provider, true, false);
+        }
+
+
+        /// <summary>
+        /// Adds all extension adapter features implemented by the specified feature provider. See 
+        /// the remarks for details on how extension feature types are identified.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   Extension feature implementations supplied by the <paramref name="provider"/> are 
+        ///   identified in one of two ways:
+        /// </para>
+        /// 
+        /// <list type="number">
+        ///   <item>
+        ///     <description>
+        ///       If the <paramref name="provider"/> implements <see cref="IAdapterExtensionFeature"/> 
+        ///       and is directly annotated with <see cref="ExtensionFeatureAttribute"/>, the 
+        ///       <paramref name="provider"/> will be directly registered using its own type as the 
+        ///       index in the adapter's features dictionary.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       If the <paramref name="provider"/> implements any interfaces that extend 
+        ///       <see cref="IAdapterExtensionFeature"/> that are annotated with 
+        ///       <see cref="ExtensionFeatureAttribute"/>, the <paramref name="provider"/> 
+        ///       will be registered using each of the implemented extension feature interfaces.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public void AddExtensionFeatures(object provider) {
+            AddFeatures(provider, false, true);
         }
 
 
@@ -702,12 +756,18 @@ namespace DataCore.Adapter {
         /// <see cref="DisposeAsyncCore"/>.
         /// </summary>
         private void DisposeCommon() {
+            if (_isDisposedCommon || _isDisposed) {
+                return;
+            }
+
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _healthCheckManager.Dispose();
             _properties.Clear();
             _loggerScope.Dispose();
             _startupLock.Dispose();
+
+            _isDisposedCommon = true;
         }
 
 
@@ -752,9 +812,10 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> as an additional cancellation token.
+        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> 
+        /// as an additional cancellation token.
         /// </summary>
-        private class BackgroundTaskServiceWrapper : IBackgroundTaskService {
+        private class BackgroundTaskServiceWrapper : IBackgroundTaskService, IDisposable {
 
             /// <summary>
             /// The owning adapter.
@@ -765,6 +826,12 @@ namespace DataCore.Adapter {
             /// The inner <see cref="IBackgroundTaskService"/> to use.
             /// </summary>
             private readonly IBackgroundTaskService _inner;
+
+            /// <inheritdoc/>
+            public bool IsRunning => _inner.IsRunning;
+
+            /// <inheritdoc/>
+            public int QueuedItemCount => _inner.QueuedItemCount;
 
 
             /// <summary>
@@ -784,16 +851,18 @@ namespace DataCore.Adapter {
 
             /// <inheritdoc/>
             public void QueueBackgroundWorkItem(BackgroundWorkItem workItem) {
-                if (workItem == null) {
-                    throw new ArgumentNullException(nameof(workItem));
-                }
-
                 if (workItem.WorkItemAsync != null) {
                     _inner.QueueBackgroundWorkItem(workItem.WorkItemAsync, workItem.Description, _adapter.StopToken);
                 }
                 else {
                     _inner.QueueBackgroundWorkItem(workItem.WorkItem, workItem.Description, _adapter.StopToken);
                 }
+            }
+
+
+            /// <inheritdoc/>
+            public void Dispose() {
+                // No action required.
             }
 
         }

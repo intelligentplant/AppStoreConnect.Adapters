@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -157,11 +158,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
+            try {
+                return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
     }

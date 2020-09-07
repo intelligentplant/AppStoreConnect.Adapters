@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Example;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
@@ -121,103 +119,23 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeUnqualifiedStandardFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeQualifiedStandardFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).FullName);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is IReadSnapshotTagValues);
-            }
-        }
-
-
-        [TestMethod]
         public async Task AdapterAccessor_ShouldResolveAndAuthorizeExtensionFeatureUri() {
             using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
+                ((AdapterFeaturesCollection) adapter.Features).AddFromProvider(new TestExtension());
                 var authService = new AuthorizationService(true);
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, ExtensionFeatureUri);
+                var resolved = await accessor.GetAdapterAndFeature(
+                    context, 
+                    adapter.Descriptor.Id, 
+                    WellKnownFeatures.Extensions.ExtensionFeatureBasePath + ExtensionFeatureUri
+                );
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsTrue(resolved.IsFeatureResolved);
                 Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is ITestExtension);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveAndAuthorizeQualifiedExtensionFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(ITestExtension).FullName);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsTrue(resolved.IsFeatureAuthorized);
-                Assert.IsTrue(resolved.Feature is ITestExtension);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldNotResolveUnqualifiedExtensionFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                ((AdapterFeaturesCollection) adapter.Features).Add<ITestExtension, TestExtension>(new TestExtension());
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(ITestExtension).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsFalse(resolved.IsFeatureResolved);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldResolveButNotAuthorizeFeatureName() {
-            using (var adapter = new ExampleAdapter()) {
-                var authService = new AuthorizationService(true, false);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadSnapshotTagValues).Name);
-
-                Assert.IsTrue(resolved.IsAdapterResolved);
-                Assert.IsTrue(resolved.IsFeatureResolved);
-                Assert.IsFalse(resolved.IsFeatureAuthorized);
+                Assert.IsTrue(resolved.Feature is TestExtension);
             }
         }
 
@@ -229,30 +147,28 @@ namespace DataCore.Adapter.Tests {
                 var accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, typeof(IReadRawTagValues).Name);
+                var resolved = await accessor.GetAdapterAndFeature(context, adapter.Descriptor.Id, WellKnownFeatures.RealTimeData.ReadRawTagValues);
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
                 Assert.IsFalse(resolved.IsFeatureResolved);
             }
         }
 
-        private const string ExtensionFeatureUri = "unit-test:test-extension";
-
-        [AdapterFeature(ExtensionFeatureUri)]
-        private interface ITestExtension : IAdapterExtensionFeature {
-
-            GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request);
-
-        }
+        private const string ExtensionFeatureUri = "unit-test/test-extension";
 
 
-        private class TestExtension : ITestExtension { 
+        [ExtensionFeature(ExtensionFeatureUri)]
+        private class TestExtension : AdapterExtensionFeature {
 
-            public GetCurrentTimeResponse GetCurrentTime(GetCurrentTimeRequest request) {
-                return new GetCurrentTimeResponse() {
-                    UtcTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.UtcNow)
-                };
+            public TestExtension() : base(null) {
+                BindInvoke(GetCurrentTime);
             }
+
+
+            public DateTime GetCurrentTime(IAdapterCallContext context) {
+                return DateTime.UtcNow;
+            }
+
         }
 
 
@@ -290,7 +206,7 @@ namespace DataCore.Adapter.Tests {
                 return Task.FromResult(_authorizeAdapter);
             }
 
-            public Task<bool> AuthorizeAdapterFeature<TFeature>(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+            public Task<bool> AuthorizeAdapterFeature(IAdapter adapter, IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
                 return Task.FromResult(_authorizeFeature);
             }
         }

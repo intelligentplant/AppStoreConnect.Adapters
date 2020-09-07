@@ -26,9 +26,9 @@ namespace DataCore.Adapter.RealTimeData {
         private bool _isDisposed;
 
         /// <summary>
-        /// The scheduler to use when running background tasks.
+        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService Scheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The logger.
@@ -111,24 +111,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="options">
         ///   The feature options.
         /// </param>
-        /// <param name="scheduler">
-        ///   The scheduler to use when running background tasks.
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </param>
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
         public SnapshotTagValuePush(
             SnapshotTagValuePushOptions options,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             ILogger logger
         ) {
             _options = options ?? new SnapshotTagValuePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
-            Scheduler.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
-            Scheduler.QueueBackgroundWorkItem(ProcessValueChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ProcessValueChangesChannel, DisposedToken);
         }
 
 
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private async Task OnSubscriptionAddedInternal(SubscriptionChannel<int, TagIdentifier, TagValueQueryResult> subscription) {
+        private async Task OnSubscriptionAddedInternal(TagValueSubscriptionChannel<int> subscription) {
             foreach (var topic in subscription.Topics) {
                 if (_currentValueByTagId.TryGetValue(topic.Id, out var value)) {
                     subscription.Publish(value, true);
@@ -214,7 +214,7 @@ namespace DataCore.Adapter.RealTimeData {
             // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
 
-            OnSubscriptionAdded();
+            OnSubscriptionAdded(subscription);
         }
 
 
@@ -262,7 +262,7 @@ namespace DataCore.Adapter.RealTimeData {
             finally {
                 _subscriptionsLock.ExitWriteLock();
                 subscription.Dispose();
-                OnSubscriptionCancelled();
+                OnSubscriptionCancelled(subscription);
             }
         }
 
@@ -304,39 +304,48 @@ namespace DataCore.Adapter.RealTimeData {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
-                if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
                     break;
                 }
 
-                if (!_topicSubscriptionChangesChannel.Reader.TryRead(out var change) || change.Tag == null) {
-                    continue;
-                }
+                while (_topicSubscriptionChangesChannel.Reader.TryRead(out var change)) {
+                    if (change.Tag == null) {
+                        continue;
+                    }
+                    try {
+                        if (change.Added) {
+                            OnTagAdded(change.Tag);
+                        }
+                        else {
+                            OnTagRemoved(change.Tag);
+                        }
 
-                try {
-                    if (change.Added) {
-                        OnTagAdded(change.Tag);
+                        if (change.Processed != null) {
+                            change.Processed.TrySetResult(true);
+                        }
                     }
-                    else {
-                        OnTagRemoved(change.Tag);
-                    }
+                    catch (Exception e) {
+                        if (change.Processed != null) {
+                            change.Processed.TrySetException(e);
+                        }
 
-                    if (change.Processed != null) {
-                        change.Processed.TrySetResult(true);
+                        Logger.LogError(
+                            e,
+                            Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
+                            change.Tag,
+                            change.Added
+                                ? SubscriptionUpdateAction.Subscribe
+                                : SubscriptionUpdateAction.Unsubscribe
+                        );
                     }
-                }
-                catch (Exception e) {
-                    if (change.Processed != null) {
-                        change.Processed.TrySetException(e);
-                    }
-
-                    Logger.LogError(
-                        e,
-                        Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
-                        change.Tag,
-                        change.Added
-                            ? SubscriptionUpdateAction.Subscribe
-                            : SubscriptionUpdateAction.Unsubscribe
-                    );
                 }
             }
         }
@@ -355,32 +364,42 @@ namespace DataCore.Adapter.RealTimeData {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task ProcessValueChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
-                if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
                     break;
                 }
 
-                if (!_masterChannel.Reader.TryRead(out var item)) {
-                    continue;
-                }
-
-                Publish?.Invoke(item.Value);
-
-                foreach (var subscriber in item.Subscribers) {
+                while (_masterChannel.Reader.TryRead(out var item)) {
                     if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
 
-                    try {
-                        using (var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, subscriber.CancellationToken)) {
-                            var success = subscriber.Publish(item.Value);
-                            if (!success) {
-                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                    Publish?.Invoke(item.Value);
+
+                    foreach (var subscriber in item.Subscribers) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
+                        }
+
+                        try {
+                            using (var ct = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, subscriber.CancellationToken)) {
+                                var success = subscriber.Publish(item.Value);
+                                if (!success) {
+                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                                }
                             }
                         }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        catch (OperationCanceledException) { }
+                        catch (Exception e) {
+                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        }
                     }
                 }
             }
@@ -426,7 +445,7 @@ namespace DataCore.Adapter.RealTimeData {
             var subscription = new TagValueSubscriptionChannel<int>(
                 subscriptionId,
                 context,
-                Scheduler,
+                BackgroundTaskService,
                 tags,
                 request.PublishInterval,
                 new[] { DisposedToken, cancellationToken },
@@ -450,13 +469,19 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected virtual void OnSubscriptionAdded() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionAdded(TagValueSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
         /// Invoked when a subscription is cancelled.
         /// </summary>
-        protected virtual void OnSubscriptionCancelled() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionCancelled(TagValueSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>

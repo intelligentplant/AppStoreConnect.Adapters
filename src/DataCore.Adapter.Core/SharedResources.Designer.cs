@@ -61,6 +61,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An absolute URI is required..
+        /// </summary>
+        public static string Error_AbsoluteUriRequired {
+            get {
+                return ResourceManager.GetString("Error_AbsoluteUriRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a content type..
         /// </summary>
         public static string Error_ContentTypeIsRequired {
@@ -178,11 +187,11 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adapter features must be interfaces extending {0}. Non-standard features must extend {1}. All features must be annotated with {2}..
+        ///   Looks up a localized string similar to A relative URI is required..
         /// </summary>
-        public static string Error_NotAnAdapterFeature {
+        public static string Error_RelativeUriRequired {
             get {
-                return ResourceManager.GetString("Error_NotAnAdapterFeature", resourceCulture);
+                return ResourceManager.GetString("Error_RelativeUriRequired", resourceCulture);
             }
         }
         

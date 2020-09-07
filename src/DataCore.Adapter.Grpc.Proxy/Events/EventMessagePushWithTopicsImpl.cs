@@ -7,7 +7,7 @@ using DataCore.Adapter.Events;
 namespace DataCore.Adapter.Grpc.Proxy.Events {
 
     /// <summary>
-    /// <see cref="IEventMessageSubscriptionWithTopics"/> implementation.
+    /// <see cref="IEventMessagePushWithTopics"/> implementation.
     /// </summary>
     internal class EventMessagePushWithTopicsImpl : ProxyAdapterFeature, IEventMessagePushWithTopics {
 

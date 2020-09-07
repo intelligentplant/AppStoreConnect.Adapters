@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.AspNetCore.SignalR.Client;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {

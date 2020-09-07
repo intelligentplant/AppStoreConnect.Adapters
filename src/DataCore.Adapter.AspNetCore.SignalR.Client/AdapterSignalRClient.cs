@@ -72,6 +72,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public TagValuesClient TagValues { get; }
 
         /// <summary>
+        /// The strongly-typed client for invoking extension features on an adapter.
+        /// </summary>
+        public ExtensionFeaturesClient Extensions { get; }
+
+        /// <summary>
         /// Occurs when the connection is closed.
         /// </summary>
         /// <remarks>
@@ -128,6 +133,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
             Events = new EventsClient(this);
+            Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
             TagSearch = new TagSearchClient(this);
             TagValueAnnotations = new TagValueAnnotationsClient(this);

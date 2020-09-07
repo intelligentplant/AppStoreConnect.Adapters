@@ -8,7 +8,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// Feature for subscribing to receive snapshot tag value changes from an adapter via a push 
     /// notification.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.SnapshotTagValuePush)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.SnapshotTagValuePush,
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_SnapshotTagValuePush),
+        Description = nameof(AbstractionsResources.Description_SnapshotTagValuePush)
+    )]
     public interface ISnapshotTagValuePush : IAdapterFeature {
 
         /// <summary>

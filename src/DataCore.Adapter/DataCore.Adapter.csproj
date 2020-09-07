@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="IntelligentPlant.BackgroundTasks" Version="$(IntelligentPlantBackgroundTasksVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

@@ -6,8 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" PrivateAssets="all" />
-    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
     
@@ -25,11 +23,5 @@
     <None Remove="tag-data.csv" />
     <EmbeddedResource Include="tag-data.csv" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include=".\protos\**\*.proto" GrpcServices="None" />
-    <Content Include="@(Protobuf)" />
-  </ItemGroup>
-
 
 </Project>

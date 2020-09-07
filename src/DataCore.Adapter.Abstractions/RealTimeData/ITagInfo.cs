@@ -9,7 +9,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for requesting information about tags.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.TagInfo)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.TagInfo,
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_TagInfo),
+        Description = nameof(AbstractionsResources.Description_TagInfo)
+    )]
     public interface ITagInfo : IAdapterFeature {
 
         /// <summary>

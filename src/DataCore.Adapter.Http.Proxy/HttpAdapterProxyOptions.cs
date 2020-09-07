@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Proxy;
+
 namespace DataCore.Adapter.Http.Proxy {
     /// <summary>
     /// Options for creating a <see cref="HttpAdapterProxy"/>.
@@ -29,7 +31,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory ExtensionFeatureFactory { get; set; }
+        public ExtensionFeatureFactory<HttpAdapterProxy> ExtensionFeatureFactory { get; set; }
 
     }
 }

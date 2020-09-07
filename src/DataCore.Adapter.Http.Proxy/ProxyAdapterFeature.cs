@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
         protected IBackgroundTaskService TaskScheduler {
-            get { return _proxy.TaskScheduler; }
+            get { return _proxy.BackgroundTaskService; }
         }
 
 
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Http.Proxy {
             var featureInstances = new Dictionary<Type, object>();
 
             foreach (var featureUriOrName in remoteAdapterFeatures) { 
-                var implementation = AdapterFeatureAttribute.TryCreateFeatureUriWithTrailingSlash(featureUriOrName, out var uri)
+                var implementation = UriExtensions.TryCreateUriWithTrailingSlash(featureUriOrName, out var uri)
                     ? _featureImplementations.FirstOrDefault(x => x.Key.HasAdapterFeatureUri(uri))
                     : _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(featureUriOrName, StringComparison.OrdinalIgnoreCase));
 
@@ -106,7 +106,7 @@ namespace DataCore.Adapter.Http.Proxy {
                     featureInstances[implementation.Value] = feature;
                 }
 
-                proxy.AddFeature(implementation.Key, feature);
+                proxy.AddFeature(implementation.Key, (IAdapterFeature) feature);
             }
         }
 

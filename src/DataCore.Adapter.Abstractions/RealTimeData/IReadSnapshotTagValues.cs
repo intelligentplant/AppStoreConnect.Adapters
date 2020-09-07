@@ -7,7 +7,12 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Feature for reading snapshot tag values from an adapter.
     /// </summary>
-    [AdapterFeature(WellKnownFeatures.RealTimeData.ReadSnapshotTagValues)]
+    [AdapterFeature(
+        WellKnownFeatures.RealTimeData.ReadSnapshotTagValues,
+        ResourceType = typeof(AbstractionsResources),
+        Name = nameof(AbstractionsResources.DisplayName_ReadSnapshotTagValues),
+        Description = nameof(AbstractionsResources.Description_ReadSnapshotTagValues)
+    )]
     public interface IReadSnapshotTagValues : IAdapterFeature {
 
         /// <summary>

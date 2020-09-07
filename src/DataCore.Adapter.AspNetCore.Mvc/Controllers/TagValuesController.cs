@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
@@ -82,27 +83,32 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var reader = await feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>(request.Tags.Count());
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+                var result = new List<TagValueQueryResult>(request.Tags.Count());
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -134,27 +140,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
-            var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>(request.Tags.Count());
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+            try {
+                var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+
+                var result = new List<TagValueQueryResult>(request.Tags.Count());
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -190,28 +202,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var reader = await feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>(request.Tags.Count());
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+                var result = new List<TagValueQueryResult>(request.Tags.Count());
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -243,27 +260,32 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var reader = await feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueQueryResult>(request.Tags.Count());
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+                var result = new List<TagValueQueryResult>(request.Tags.Count());
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -302,28 +324,33 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
 
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<ProcessedTagValueQueryResult>(request.Tags.Count());
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+                var result = new List<ProcessedTagValueQueryResult>(request.Tags.Count());
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxSamplesPerReadRequest) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -359,12 +386,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await (await feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
-            return Ok(result); // 200
+            try {
+                var result = await (await feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -403,46 +435,51 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteSnapshotTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+            try {
+                var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
 
-            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var itemsWritten = 0;
+                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    var itemsWritten = 0;
 
-                foreach (var value in request.Values) {
-                    ++itemsWritten;
+                    foreach (var value in request.Values) {
+                        ++itemsWritten;
 
-                    if (value == null) {
-                        continue;
+                        if (value == null) {
+                            continue;
+                        }
+
+                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            break;
+                        }
+
+                        ch.TryWrite(value);
+
+                        if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                            break;
+                        }
                     }
+                }, true, _backgroundTaskService, cancellationToken);
 
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
+                var resultChannel = await feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
 
-                    ch.TryWrite(value);
+                var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 
-                    if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                        break;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var res) && res != null) {
+                        result.Add(res);
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = await feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-            var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var res) && res != null) {
-                    result.Add(res);
-                }
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -481,46 +518,51 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteHistoricalTagValues))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+            try {
+                var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
 
-            writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var itemsWritten = 0;
+                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    var itemsWritten = 0;
 
-                foreach (var value in values.Values) {
-                    ++itemsWritten;
+                    foreach (var value in values.Values) {
+                        ++itemsWritten;
 
-                    if (value == null) {
-                        continue;
+                        if (value == null) {
+                            continue;
+                        }
+
+                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                            break;
+                        }
+
+                        ch.TryWrite(value);
+
+                        if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                            break;
+                        }
                     }
+                }, true, _backgroundTaskService, cancellationToken);
 
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
+                var resultChannel = await feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
 
-                    ch.TryWrite(value);
+                var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
 
-                    if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                        break;
+                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (resultChannel.TryRead(out var res) && res != null) {
+                        result.Add(res);
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
 
-            var resultChannel = await feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-            var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-            while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (resultChannel.TryRead(out var res) && res != null) {
-                    result.Add(res);
-                }
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
     }

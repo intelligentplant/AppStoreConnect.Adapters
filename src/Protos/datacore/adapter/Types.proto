@@ -114,16 +114,28 @@ message AssetModelNode {
     string name = 2;
     string description = 3;
     string parent = 4;
-    repeated AssetModelNodeMeasurement measurements = 6;
+    // 6 not in use
     repeated AdapterProperty properties = 7;
     bool has_children = 8;
+    AssetModelNodeType node_type = 9;
+    AssetModelDataReference data_reference = 10;
+    bool has_data_reference = 11;
 }
 
 
-message AssetModelNodeMeasurement {
-    string name = 1;
-    string adapter_id = 2;
-    datacore.adapter.TagSummary tag = 3;
+enum AssetModelNodeType {
+    ASSET_MODEL_NODE_TYPE_UNKNOWN = 0;
+    ASSET_MODEL_NODE_TYPE_OBJECT = 1;
+    ASSET_MODEL_NODE_TYPE_VARIABLE = 2;
+    ASSET_MODEL_NODE_TYPE_OBJECT_TYPE = 3;
+    ASSET_MODEL_NODE_TYPE_VARIABLE_TYPE = 4;
+    ASSET_MODEL_NODE_TYPE_OTHER = 5;
+}
+
+
+message AssetModelDataReference {
+    string adapter_id = 1;
+    TagIdentifier tag = 2;
 }
 
 
@@ -363,4 +375,34 @@ message WriteTagValueResult {
     WriteOperationStatus write_status = 4;
     string notes = 5;
     repeated AdapterProperty properties = 6;
+}
+
+
+message FeatureDescriptor {
+    string feature_uri = 1;
+    string display_name = 2;
+    string description = 3;
+}
+
+
+message ExtensionFeatureOperationDescriptor {
+    string operation_id = 1;
+    ExtensionFeatureOperationType operation_type = 2;
+    string name = 3;
+    string description = 4;
+    ExtensionFeatureOperationParameterDescriptor input = 5;
+    ExtensionFeatureOperationParameterDescriptor output = 6;
+}
+
+
+enum ExtensionFeatureOperationType {
+    EXTENSION_FEATURE_OPERATION_TYPE_INVOKE = 0;
+    EXTENSION_FEATURE_OPERATION_TYPE_STREAM = 1;
+    EXTENSION_FEATURE_OPERATION_TYPE_DUPLEX_STREAM = 2;
+}
+
+
+message ExtensionFeatureOperationParameterDescriptor {
+    string description = 1;
+    string example_value = 2;
 }

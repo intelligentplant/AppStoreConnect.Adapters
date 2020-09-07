@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.RealTimeData;
@@ -65,27 +66,32 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
 
-            var result = new List<TagValueAnnotationQueryResult>();
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var value) || value == null) {
-                    continue;
+                var result = new List<TagValueAnnotationQueryResult>();
+                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    if (!reader.TryRead(out var value) || value == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxAnnotationsPerQuery) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
+                        break;
+                    }
+
+                    result.Add(value);
                 }
 
-                if (result.Count > MaxAnnotationsPerQuery) {
-                    Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
-                    break;
-                }
-
-                result.Add(value);
+                return Ok(result); // 200
             }
-
-            return Ok(result); // 200
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -120,16 +126,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.ReadAnnotation(callContext, new ReadAnnotationRequest() {
-                Tag = tagId,
-                AnnotationId = annotationId
-            }, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.ReadAnnotation(callContext, new ReadAnnotationRequest() {
+                    Tag = tagId,
+                    AnnotationId = annotationId
+                }, cancellationToken).ConfigureAwait(false);
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -165,16 +176,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.CreateAnnotation(callContext, new CreateAnnotationRequest() {
-                Tag = tagId,
-                Annotation = annotation
-            }, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.CreateAnnotation(callContext, new CreateAnnotationRequest() {
+                    Tag = tagId,
+                    Annotation = annotation
+                }, cancellationToken).ConfigureAwait(false);
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -213,17 +229,22 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.UpdateAnnotation(callContext, new UpdateAnnotationRequest() {
-                Tag = tagId,
-                AnnotationId = annotationId,
-                Annotation = annotation
-            }, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.UpdateAnnotation(callContext, new UpdateAnnotationRequest() {
+                    Tag = tagId,
+                    AnnotationId = annotationId,
+                    Annotation = annotation
+                }, cancellationToken).ConfigureAwait(false);
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
 
@@ -259,16 +280,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteTagValueAnnotations))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return Unauthorized(); // 401
+                return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            var result = await feature.DeleteAnnotation(callContext, new DeleteAnnotationRequest() {
-                Tag = tagId,
-                AnnotationId = annotationId
-            }, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.DeleteAnnotation(callContext, new DeleteAnnotationRequest() {
+                    Tag = tagId,
+                    AnnotationId = annotationId
+                }, cancellationToken).ConfigureAwait(false);
 
-            return Ok(result); // 200
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
+            }
         }
 
     }

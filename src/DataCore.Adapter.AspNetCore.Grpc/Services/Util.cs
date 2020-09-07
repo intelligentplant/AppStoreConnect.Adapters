@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Extensions;
+
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -48,10 +50,61 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(callContext?.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, Resources.Error_NotAuthorized));
+                CreatePermissionDeniedException();
             }
 
             return resolvedFeature;
+        }
+
+
+        /// <summary>
+        /// Gets the specified adapter feature.
+        /// </summary>
+        /// <param name="callContext">
+        ///   The context describing the caller.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   The adapter accessor to use.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter to retrieve the feature from.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The requested adapter feature.
+        /// </returns>
+        /// <exception cref="RpcException">
+        ///   The adapter could not be resolved.
+        /// </exception>
+        /// <exception cref="RpcException">
+        ///   The adapter does not provide the requested feature.
+        /// </exception>
+        internal static async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
+            var resolvedFeature = await adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                throw new RpcException(new Status(StatusCode.NotFound, string.Format(callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(callContext?.CultureInfo, Resources.Error_UnsupportedInterface, featureUri)));
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                throw CreatePermissionDeniedException();
+            }
+
+            return resolvedFeature;
+        }
+
+
+        /// <summary>
+        /// Creates an <see cref="RpcException"/> with a <see cref="StatusCode.PermissionDenied"/> status.
+        /// </summary>
+        internal static RpcException CreatePermissionDeniedException() {
+            return new RpcException(new Status(StatusCode.PermissionDenied, Resources.Error_NotAuthorized));
         }
 
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataCore.Adapter {
 
@@ -7,8 +8,24 @@ namespace DataCore.Adapter {
     /// interfaces inheriting from <see cref="IAdapterFeature"/>) to provide additional 
     /// metadata describing the feature.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Interface)]
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
     public class AdapterFeatureAttribute : Attribute {
+
+        /// <summary>
+        /// The localised display name.
+        /// </summary>
+        private readonly LocalizableString _name = new LocalizableString(nameof(Name));
+
+        /// <summary>
+        /// The localised description.
+        /// </summary>
+        private readonly LocalizableString _description = new LocalizableString(nameof(Description));
+
+        /// <summary>
+        /// The resource type used to retrieved localised values for the display name and 
+        /// description.
+        /// </summary>
+        private Type _resourceType;
 
         /// <summary>
         /// The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
@@ -16,14 +33,35 @@ namespace DataCore.Adapter {
         public Uri Uri { get; }
 
         /// <summary>
+        /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
+        /// </summary>
+        public Type ResourceType {
+            get => _resourceType;
+            set {
+                if (_resourceType != value) {
+                    _resourceType = value;
+
+                    _name.ResourceType = value;
+                    _description.ResourceType = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// The display name for the feature.
         /// </summary>
-        public string DisplayName { get; set; }
+        public string Name { 
+            get => _name.Value;
+            set => _name.Value = value;
+        }
 
         /// <summary>
         /// The description for the feature.
         /// </summary>
-        public string Description { get; set; }
+        public string Description {
+            get => _description.Value;
+            set => _description.Value = value;
+        }
 
 
         /// <summary>
@@ -45,42 +83,97 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
 
-            if (!TryCreateFeatureUriWithTrailingSlash(uriString, out var uri)) {
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
+
             Uri = uri;
         }
 
 
         /// <summary>
-        /// Creates an absolute <see cref="Uri"/> from the specified URI string, ensuring that the 
-        /// <see cref="Uri"/> is created with a trailing forwards slash.
+        /// Creates a new <see cref="AdapterFeatureAttribute"/> with a URI that is relative to the 
+        /// specified absolute base path.
         /// </summary>
-        /// <param name="uriString">
-        ///   The URI string.
+        /// <param name="baseUriString">
+        ///   The absolute base URI. The feature URI will be relative to this path.
         /// </param>
-        /// <param name="uri">
-        ///   The created <see cref="Uri"/>.
+        /// <param name="relativeUriString">
+        ///   The relative feature URI. Note that the URI assigned to the <see cref="Uri"/> 
+        ///   property will always have a trailing forwards slash (/) appended if required.
         /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if a URI could be created, or <see langword="false"/> otherwise.
-        /// </returns>
-        public static bool TryCreateFeatureUriWithTrailingSlash(string uriString, out Uri uri) {
-            if (uriString == null) {
-                uri = null;
-                return false;
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="baseUriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="relativeUriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="baseUriString"/> is not a valid absolute URI.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="relativeUriString"/> is not a valid relative URI.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="relativeUriString"/> is a relative URI that results in an absolute 
+        ///   path that is not a child path of <paramref name="baseUriString"/>.
+        /// </exception>
+        /// <remarks>
+        ///   <paramref name="relativeUriString"/> can specify an absolute URI if it is a child 
+        ///   path of <paramref name="baseUriString"/>.
+        /// </remarks>
+        internal AdapterFeatureAttribute(string baseUriString, string relativeUriString) {
+            if (baseUriString == null) {
+                throw new ArgumentNullException(nameof(baseUriString));
+            }
+            if (relativeUriString == null) {
+                throw new ArgumentNullException(nameof(relativeUriString));
             }
 
-#if NETSTANDARD2_0
-            if (!uriString.EndsWith("/", StringComparison.Ordinal)) {
-#else
-            if (!uriString.EndsWith('/')) {
-#endif
-                uriString += '/';
+            if (!UriExtensions.TryCreateUriWithTrailingSlash(baseUriString, out var baseUri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(baseUriString));
             }
 
-            return Uri.TryCreate(uriString, UriKind.Absolute, out uri);
+            if (!Uri.TryCreate(relativeUriString, UriKind.RelativeOrAbsolute, out var relativeUri)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
+            }
+
+            var absoluteUri = UriExtensions.EnsurePathHasTrailingSlash(
+                relativeUri.IsAbsoluteUri
+                    ? relativeUri
+                    : new Uri(baseUri, relativeUri)
+            );
+
+            if (!UriExtensions.IsChildPath(absoluteUri, baseUri)) {
+                throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
+            }
+
+            Uri = absoluteUri;
         }
+
+
+        /// <summary>
+        /// Gets the display name for the adapter feature. This can be either a literal string 
+        /// specified by the <see cref="Name"/> property, or a localised string found when 
+        /// <see cref="ResourceType"/> is specified and <see cref="Name"/> represents a resource 
+        /// key within the resource type.
+        /// </summary>
+        /// <returns>
+        ///   The display name for the adapter feature.
+        /// </returns>
+        public string GetName() => _name.GetLocalizableValue();
+
+
+        /// <summary>
+        /// Gets the description for the adapter feature. This can be either a literal string 
+        /// specified by the <see cref="Description"/> property, or a localised string found when 
+        /// <see cref="ResourceType"/> is specified and <see cref="Description"/> represents a 
+        /// resource key within the resource type.
+        /// </summary>
+        /// <returns>
+        ///   The description for the adapter feature.
+        /// </returns>
+        public string GetDescription() => _description.GetLocalizableValue();
 
     }
 }

@@ -91,7 +91,10 @@ namespace DataCore.Adapter.Tests {
                     );
 
                     // Add in-memory event message management
-                    adapter.AddFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
+                    adapter.AddStandardFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
+
+                    // Add ping-pong extension
+                    adapter.AddExtensionFeatures(new PingPongExtension(adapter));
 
                     return adapter;
                 });

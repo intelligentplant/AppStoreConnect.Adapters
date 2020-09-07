@@ -24,9 +24,9 @@ namespace DataCore.Adapter.Events {
     public class EventMessagePush : IEventMessagePush, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
-        /// The scheduler to use when running background tasks.
+        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService Scheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// Logging.
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Indicates if the subscription manager currently holds any subscriptions.
         /// </summary>
-        protected bool HasSubscriptions { get; private set; }
+        protected bool HasSubscriptions { get { return !_subscriptions.IsEmpty; } }
 
         /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
@@ -103,18 +103,18 @@ namespace DataCore.Adapter.Events {
         /// <param name="options">
         ///   The feature options.
         /// </param>
-        /// <param name="scheduler">
-        ///   The task scheduler to use when running background operations.
+        /// <param name="backgroundTaskService">
+        ///   The backgrounnd task service to use when running background operations.
         /// </param>
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService scheduler, ILogger logger) {
+        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService backgroundTaskService, ILogger logger) {
             _options = options ?? new EventMessagePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            Scheduler = scheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            Scheduler.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
+            BackgroundTaskService.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
         }
 
 
@@ -138,7 +138,7 @@ namespace DataCore.Adapter.Events {
             var subscription = new EventSubscriptionChannel<int>(
                 subscriptionId,
                 context,
-                Scheduler,
+                BackgroundTaskService,
                 null,
                 request.SubscriptionType, 
                 TimeSpan.Zero,
@@ -148,9 +148,8 @@ namespace DataCore.Adapter.Events {
             );
             _subscriptions[subscriptionId] = subscription;
 
-            HasSubscriptions = _subscriptions.Count > 0;
-            HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            OnSubscriptionAdded();
+            HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+            OnSubscriptionAdded(subscription);
 
             return Task.FromResult(subscription.Reader);
         }
@@ -159,13 +158,19 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Invoked when a subscription is created.
         /// </summary>
-        protected virtual void OnSubscriptionAdded() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionAdded(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
         /// Invoked when a subscription is removed.
         /// </summary>
-        protected virtual void OnSubscriptionCancelled() { }
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        protected virtual void OnSubscriptionCancelled(EventSubscriptionChannel<int> subscription) { }
 
 
         /// <summary>
@@ -220,9 +225,8 @@ namespace DataCore.Adapter.Events {
 
             if (_subscriptions.TryRemove(id, out var subscription)) {
                 subscription.Dispose();
-                HasSubscriptions = _subscriptions.Count > 0;
-                HasActiveSubscriptions = _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                OnSubscriptionCancelled();
+                HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+                OnSubscriptionCancelled(subscription);
             }
         }
 
@@ -297,38 +301,45 @@ namespace DataCore.Adapter.Events {
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
-            try {
-                while (await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (_masterChannel.Reader.TryRead(out var message)) {
-                        if (message == null) {
-                            continue;
+            while (!cancellationToken.IsCancellationRequested) {
+                try {
+                    if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException) {
+                    break;
+                }
+                catch (ChannelClosedException) {
+                    break;
+                }
+
+                while (_masterChannel.Reader.TryRead(out var message)) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        break;
+                    }
+
+                    if (message == null) {
+                        continue;
+                    }
+
+                    var subscribers = _subscriptions.Values.ToArray();
+                    foreach (var subscriber in subscribers) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
                         }
 
-                        var subscribers = _subscriptions.Values.ToArray();
-                        foreach (var subscriber in subscribers) {
-                            if (cancellationToken.IsCancellationRequested) {
-                                break;
+                        try {
+                            var success = subscriber.Publish(message);
+                            if (!success) {
+                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                             }
-
-                            try {
-                                var success = subscriber.Publish(message);
-                                if (!success) {
-                                    Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
-                                }
-                            }
-                            catch (OperationCanceledException) { }
-                            catch (Exception e) {
-                                Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
-                            }
+                        }
+                        catch (Exception e) {
+                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException) {
-                // Cancellation token fired
-            }
-            catch (ChannelClosedException) {
-                // Channel was closed
             }
         }
 
