@@ -13,6 +13,32 @@ namespace DataCore.Adapter {
     public static class AdapterExtensions {
 
         /// <summary>
+        /// Gets the specified adapter feature.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        public static TFeature GetFeature<TFeature>(
+            this IAdapter adapter
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            return adapter.Features.Get<TFeature>();
+        }
+
+
+        /// <summary>
         /// Gets the specified adapter feature cast to the specified type.
         /// </summary>
         /// <typeparam name="TFeature">
@@ -106,7 +132,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uri"/> is <see langword="null"/>.
         /// </exception>
-        public static object GetFeature(this IAdapter adapter, Uri uri) {
+        public static IAdapterFeature GetFeature(this IAdapter adapter, Uri uri) {
             if (adapter?.Features == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -140,7 +166,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
-        public static object GetFeature(this IAdapter adapter, string uriString) {
+        public static IAdapterFeature GetFeature(this IAdapter adapter, string uriString) {
             if (adapter?.Features == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -148,6 +174,36 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
             return adapter.Features.Get(uriString);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified adapter feature.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool TryGetFeature<TFeature>(
+            this IAdapter adapter,
+            out TFeature feature
+        ) where TFeature : IAdapterFeature {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            return adapter.Features.TryGet(out feature);
         }
 
 

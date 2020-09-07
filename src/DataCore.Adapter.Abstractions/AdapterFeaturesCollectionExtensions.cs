@@ -198,6 +198,35 @@ namespace DataCore.Adapter {
         #region [ TryGet ]
 
         /// <summary>
+        /// Tries to get the specified feature.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved and is an instance of 
+        ///   <typeparamref name="TFeature"/>, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="features"/> is <see langword="null"/>.
+        /// </exception>
+        ///
+        public static bool TryGet<TFeature>(
+            this IAdapterFeaturesCollection features,
+            out TFeature feature
+        ) where TFeature : IAdapterFeature {
+            feature = features.Get<TFeature>();
+            return feature != null;
+        }
+
+
+        /// <summary>
         /// Tries to get the specified feature cast to the specified type.
         /// </summary>
         /// <typeparam name="TFeature">
