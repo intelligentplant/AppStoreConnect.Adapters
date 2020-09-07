@@ -22,6 +22,60 @@ namespace DataCore.Adapter {
         #region [ Asset Model ]
 
         /// <summary>
+        /// Converts a gRPC asset model node type to its adapter equivalent.
+        /// </summary>
+        /// <param name="nodeType">
+        ///   The gRPC node type.
+        /// </param>
+        /// <returns>
+        ///   The adapter node type.
+        /// </returns>
+        public static AssetModel.NodeType ToAdapterAssetModelNodeType(this Grpc.AssetModelNodeType nodeType) {
+            switch (nodeType) {
+                case Grpc.AssetModelNodeType.Object:
+                    return AssetModel.NodeType.Object;
+                case Grpc.AssetModelNodeType.Variable:
+                    return AssetModel.NodeType.Variable;
+                case Grpc.AssetModelNodeType.ObjectType:
+                    return AssetModel.NodeType.ObjectType;
+                case Grpc.AssetModelNodeType.VariableType:
+                    return AssetModel.NodeType.VariableType;
+                case Grpc.AssetModelNodeType.Other:
+                    return AssetModel.NodeType.Other;
+                default:
+                    return AssetModel.NodeType.Unknown;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts an adapter asset model node type to its gRPC equivalent.
+        /// </summary>
+        /// <param name="nodeType">
+        ///   The adapter node type.
+        /// </param>
+        /// <returns>
+        ///   The gRPC node type.
+        /// </returns>
+        public static Grpc.AssetModelNodeType ToGrpcAssetModelNodeType(this AssetModel.NodeType nodeType) {
+            switch (nodeType) {
+                case AssetModel.NodeType.Object:
+                    return Grpc.AssetModelNodeType.Object;
+                case AssetModel.NodeType.Variable:
+                    return Grpc.AssetModelNodeType.Variable;
+                case AssetModel.NodeType.ObjectType:
+                    return Grpc.AssetModelNodeType.ObjectType;
+                case AssetModel.NodeType.VariableType:
+                    return Grpc.AssetModelNodeType.VariableType;
+                case AssetModel.NodeType.Other:
+                    return Grpc.AssetModelNodeType.Other;
+                default:
+                    return Grpc.AssetModelNodeType.Unknown;
+            }
+        }
+
+
+        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="node">
@@ -35,15 +89,18 @@ namespace DataCore.Adapter {
                 return null;
             }
 
-            return AssetModel.AssetModelNode.Create(
+            return new AssetModel.AssetModelNode(
                 node.Id,
                 node.Name,
+                node.NodeType.ToAdapterAssetModelNodeType(),
                 node.Description,
                 string.IsNullOrWhiteSpace(node.Parent)
                     ? null
                     : node.Parent,
                 node.HasChildren,
-                node.Measurements.Select(x => AssetModel.AssetModelNodeMeasurement.Create(x.Name, x.AdapterId, RealTimeData.TagSummary.Create(x.Tag.Id, x.Tag.Name, x.Tag.Description, x.Tag.Units, x.Tag.DataType.ToAdapterVariantType()))).ToArray(),
+                node.HasDataReference
+                    ? new AssetModel.DataReference(node.DataReference.AdapterId, new RealTimeData.TagIdentifier(node.DataReference.Tag.Id, node.DataReference.Tag.Name))
+                    : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
         }
@@ -66,26 +123,20 @@ namespace DataCore.Adapter {
             var result = new Grpc.AssetModelNode() {
                 Id = node.Id ?? string.Empty,
                 Name = node.Name ?? string.Empty,
+                NodeType = node.NodeType.ToGrpcAssetModelNodeType(),
                 Description = node.Description ?? string.Empty,
                 Parent = node.Parent ?? string.Empty,
-                HasChildren = node.HasChildren
+                HasChildren = node.HasChildren,
+                HasDataReference = node.DataReference != null,
+                DataReference = new Grpc.AssetModelDataReference() {
+                    AdapterId = node.DataReference?.AdapterId ?? string.Empty,
+                    Tag = new Grpc.TagIdentifier() {
+                        Id = node.DataReference?.Tag?.Id ?? string.Empty,
+                        Name = node.DataReference?.Tag?.Name ?? string.Empty
+                    }
+                }
             };
 
-            if (node.Measurements != null && node.Measurements.Any()) {
-                foreach (var item in node.Measurements) {
-                    result.Measurements.Add(new Grpc.AssetModelNodeMeasurement() {
-                        Name = item.Name ?? string.Empty,
-                        AdapterId = item.AdapterId ?? string.Empty,
-                        Tag = new Grpc.TagSummary() {
-                            Id = item.Tag?.Id ?? string.Empty,
-                            Name = item.Tag?.Name ?? string.Empty,
-                            Description = item.Tag?.Description ?? string.Empty,
-                            Units = item.Tag?.Units ?? string.Empty,
-                            DataType = item.Tag?.DataType.ToGrpcVariantType() ?? Grpc.VariantType.Unknown
-                        }
-                    });
-                }
-            }
             if (node.Properties != null) {
                 foreach (var item in node.Properties) {
                     if (item == null) {

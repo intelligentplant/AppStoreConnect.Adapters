@@ -19,10 +19,11 @@ namespace DataCore.Adapter.Json {
 
             string id = null;
             string name = null;
+            NodeType nodeType = NodeType.Unknown;
             string description = null;
             string parent = null;
             bool hasChildren = false;
-            AssetModelNodeMeasurement[] measurements = null;
+            DataReference dataReference = null;
             AdapterProperty[] properties = null;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
@@ -41,6 +42,9 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Name), StringComparison.OrdinalIgnoreCase)) {
                     name = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(AssetModelNode.NodeType), StringComparison.OrdinalIgnoreCase)) {
+                    nodeType = JsonSerializer.Deserialize<NodeType>(ref reader, options);
+                }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Description), StringComparison.OrdinalIgnoreCase)) {
                     description = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
@@ -50,8 +54,8 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AssetModelNode.HasChildren), StringComparison.OrdinalIgnoreCase)) {
                     hasChildren = JsonSerializer.Deserialize<bool>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(AssetModelNode.Measurements), StringComparison.OrdinalIgnoreCase)) {
-                    measurements = JsonSerializer.Deserialize<AssetModelNodeMeasurement[]>(ref reader, options);
+                else if (string.Equals(propertyName, nameof(AssetModelNode.DataReference), StringComparison.OrdinalIgnoreCase)) {
+                    dataReference = JsonSerializer.Deserialize<DataReference>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Properties), StringComparison.OrdinalIgnoreCase)) {
                     properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
@@ -61,7 +65,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return AssetModelNode.Create(id, name, description, parent, hasChildren, measurements, properties);
+            return new AssetModelNode(id, name, nodeType, description, parent, hasChildren, dataReference, properties);
         }
 
 
@@ -75,10 +79,11 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(AssetModelNode.Id), value.Id, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(AssetModelNode.NodeType), value.NodeType, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Description), value.Description, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Parent), value.Parent, options);
             WritePropertyValue(writer, nameof(AssetModelNode.HasChildren), value.HasChildren, options);
-            WritePropertyValue(writer, nameof(AssetModelNode.Measurements), value.Measurements, options);
+            WritePropertyValue(writer, nameof(AssetModelNode.DataReference), value.DataReference, options);
             WritePropertyValue(writer, nameof(AssetModelNode.Properties), value.Properties, options);
             writer.WriteEndObject();
         }

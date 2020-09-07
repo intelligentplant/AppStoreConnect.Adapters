@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+
+using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.Example {
 
@@ -20,6 +20,11 @@ namespace DataCore.Adapter.Example {
         public string Name { get; set; }
 
         /// <summary>
+        /// The node type.
+        /// </summary>
+        public NodeType NodeType { get; set; }
+
+        /// <summary>
         /// The node description.
         /// </summary>
         public string Description { get; set; }
@@ -35,9 +40,9 @@ namespace DataCore.Adapter.Example {
         public IEnumerable<string> Children { get; set; }
 
         /// <summary>
-        /// The measurements associated with the node.
+        /// The tag associated with the node.
         /// </summary>
-        public IEnumerable<AssetModelNodeMeasurementDefinition> Measurements { get; set; }
+        public string DataReference { get; set; }
 
         /// <summary>
         /// Additional properties associated with the node.
@@ -46,21 +51,4 @@ namespace DataCore.Adapter.Example {
 
     }
 
-
-    /// <summary>
-    /// Describes a measurement on an asset model node.
-    /// </summary>
-    internal class AssetModelNodeMeasurementDefinition {
-
-        /// <summary>
-        /// The measurement name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The tag ID or name.
-        /// </summary>
-        public string Tag { get; set; }
-
-    }
 }

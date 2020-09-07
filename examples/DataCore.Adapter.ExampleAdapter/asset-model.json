@@ -1,7 +1,9 @@
 ﻿[
+  // Top Level
   {
     "Id": "834b8bf9-dcdb-4b45-8574-3bb92809d95f",
     "Name": "Wind Power",
+    "NodeType": "Object",
     "Description": "Wind Power Energy Company",
     "Parent": null,
     "Children": [
@@ -10,144 +12,261 @@
     "Measurements": [],
     "Properties": {}
   },
+
+  // UK
   {
     "Id": "a73168d8-b102-4d11-a699-cb35c24ccbed",
     "Name": "UK",
+    "NodeType": "Object",
     "Description": "United Kingdom",
     "Parent": "834b8bf9-dcdb-4b45-8574-3bb92809d95f",
     "Children": [
+      "7cb35bd8-45ca-4966-8d7d-7fcc05808828",
       "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
       "601632d0-bab9-42e9-9536-f9124173a3e2"
     ],
-    "Measurements": [
-      {
-        "Name": "Total Output",
-        "Tag": "/example-org/uk/total-output"
-      }
-    ],
     "Properties": {}
   },
+  {
+    "Id": "7cb35bd8-45ca-4966-8d7d-7fcc05808828",
+    "Name": "Total Output",
+    "NodeType": "Variable",
+    "Description": "Total Output (United Kingdom)",
+    "Parent": "a73168d8-b102-4d11-a699-cb35c24ccbed",
+    "Children": [],
+    "DataReference": "/example-org/uk/total-output",
+    "Properties": {}
+  },
+
+  // Wind Farm 1
   {
     "Id": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
     "Name": "Wind Farm 1",
+    "NodeType": "Object",
     "Description": "Wind Farm 1 (NE Scotland)",
     "Parent": "a73168d8-b102-4d11-a699-cb35c24ccbed",
     "Children": [
+      "0fe4bc43-cf44-4966-9e50-652bb372920f",
       "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
       "4904d533-9a48-4d5f-9775-833b175da7ac"
     ],
-    "Measurements": [
-      {
-        "Name": "Total Output",
-        "Tag": "/example-org/uk/wind-farm-1/total-output"
-      }
-    ],
     "Properties": {}
   },
+  {
+    "Id": "0fe4bc43-cf44-4966-9e50-652bb372920f",
+    "Name": "Total Output",
+    "NodeType": "Variable",
+    "Description": "Total Output (Wind Farm 1)",
+    "Parent": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/total-output",
+    "Properties": {}
+  },
+
+  // Wind Farm 1/Turbine 1
   {
     "Id": "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
     "Name": "Turbine 1",
+    "NodeType": "Object",
     "Description": "Turbine 1 (Wind Farm 1)",
     "Parent": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
-    "Children": [],
-    "Measurements": [
-      {
-        "Name": "Rotation Speed",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-1/rotation-speed"
-      },
-      {
-        "Name": "Wind Speed",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-1/wind-speed"
-      },
-      {
-        "Name": "Output",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-1/output"
-      }
+    "Children": [
+      "2fc3a615-ae59-47db-93ea-6eb2ce755f44",
+      "42327164-1dd6-49c4-a3d5-b8d544cb58f9",
+      "67e88409-0897-43c4-8a58-56661b1c0b21"
     ],
     "Properties": {}
   },
+  {
+    "Id": "2fc3a615-ae59-47db-93ea-6eb2ce755f44",
+    "Name": "Rotation Speed",
+    "NodeType": "Variable",
+    "Description": "Rotation Speed (Turbine 1)",
+    "Parent": "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-1/rotation-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "42327164-1dd6-49c4-a3d5-b8d544cb58f9",
+    "Name": "Wind Speed",
+    "NodeType": "Variable",
+    "Description": "Wind Speed (Turbine 1)",
+    "Parent": "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-1/wind-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "67e88409-0897-43c4-8a58-56661b1c0b21",
+    "Name": "Output",
+    "NodeType": "Variable",
+    "Description": "Output (Turbine 1)",
+    "Parent": "f34fbf51-a551-4c47-bd28-6b83ea86d8e3",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-1/output",
+    "Properties": {}
+  },
+
+  // Wind Farm 1/Turbine 2
   {
     "Id": "4904d533-9a48-4d5f-9775-833b175da7ac",
     "Name": "Turbine 2",
+    "NodeType": "Object",
     "Description": "Turbine 2 (Wind Farm 1)",
     "Parent": "91a2afa5-8a6e-43ab-b35d-7726daf25cc0",
-    "Children": [],
-    "Measurements": [
-      {
-        "Name": "Rotation Speed",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-2/rotation-speed"
-      },
-      {
-        "Name": "Wind Speed",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-2/wind-speed"
-      },
-      {
-        "Name": "Output",
-        "Tag": "/example-org/uk/wind-farm-1/turbine-2/output"
-      }
+    "Children": [
+      "f40b655a-bb06-46e1-9087-93f79e03c7e1",
+      "c462e914-4c90-4ae2-add2-ded010573e9b",
+      "78a90e1a-ce08-4440-acbe-04a592dd6a23"
     ],
     "Properties": {}
   },
+  {
+    "Id": "f40b655a-bb06-46e1-9087-93f79e03c7e1",
+    "Name": "Rotation Speed",
+    "NodeType": "Variable",
+    "Description": "Rotation Speed (Turbine 2)",
+    "Parent": "4904d533-9a48-4d5f-9775-833b175da7ac",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-2/rotation-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "c462e914-4c90-4ae2-add2-ded010573e9b",
+    "Name": "Wind Speed",
+    "NodeType": "Variable",
+    "Description": "Wind Speed (Turbine 2)",
+    "Parent": "4904d533-9a48-4d5f-9775-833b175da7ac",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-2/wind-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "78a90e1a-ce08-4440-acbe-04a592dd6a23",
+    "Name": "Output",
+    "NodeType": "Variable",
+    "Description": "Output (Turbine 2)",
+    "Parent": "4904d533-9a48-4d5f-9775-833b175da7ac",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-1/turbine-2/output",
+    "Properties": {}
+  },
+
+  // Wind Farm 2
   {
     "Id": "601632d0-bab9-42e9-9536-f9124173a3e2",
     "Name": "Wind Farm 2",
+    "NodeType": "Object",
     "Description": "Wind Farm 2 (Shetland)",
     "Parent": "a73168d8-b102-4d11-a699-cb35c24ccbed",
     "Children": [
+      "f14757f0-3de6-4fd1-ac20-ef3dcb0b742b",
       "8fc36334-b8c2-4a94-9545-4e45215883f9",
       "d562652c-6b18-4c78-be58-c563381513dd"
     ],
-    "Measurements": [
-      {
-        "Name": "Total Output",
-        "Tag": "/example-org/uk/wind-farm-2/total-output"
-      }
-    ],
     "Properties": {}
   },
+  {
+    "Id": "f14757f0-3de6-4fd1-ac20-ef3dcb0b742b",
+    "Name": "Total Output",
+    "NodeType": "Variable",
+    "Description": "Total Output (Wind Farm 2)",
+    "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/total-output",
+    "Properties": {}
+  },
+
+  // Wind Farm 2/Turbine 3
   {
     "Id": "8fc36334-b8c2-4a94-9545-4e45215883f9",
     "Name": "Turbine 3",
+    "NodeType": "Object",
     "Description": "Turbine 3 (Wind Farm 2)",
     "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
-    "Children": [],
-    "Measurements": [
-      {
-        "Name": "Rotation Speed",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-3/rotation-speed"
-      },
-      {
-        "Name": "Wind Speed",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-3/wind-speed"
-      },
-      {
-        "Name": "Output",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-3/output"
-      }
+    "Children": [
+      "c1c8acde-4756-4da9-b2fc-05a36278b2f7",
+      "50a1ee30-0e33-4e17-b5da-02a977cfc5f9",
+      "c27987b3-fd93-47cb-b94a-1de51d304864"
     ],
     "Properties": {}
   },
   {
-    "Id": "d562652c-6b18-4c78-be58-c563381513dd",
-    "Name": "Turbine 4",
-    "Description": "Turbine 4 (Wind Farm 2)",
-    "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Id": "c1c8acde-4756-4da9-b2fc-05a36278b2f7",
+    "Name": "Rotation Speed",
+    "NodeType": "Variable",
+    "Description": "Rotation Speed (Turbine 3)",
+    "Parent": "8fc36334-b8c2-4a94-9545-4e45215883f9",
     "Children": [],
-    "Measurements": [
-      {
-        "Name": "Rotation Speed",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-4/rotation-speed"
-      },
-      {
-        "Name": "Wind Speed",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-4/wind-speed"
-      },
-      {
-        "Name": "Output",
-        "Tag": "/example-org/uk/wind-farm-2/turbine-4/output"
-      }
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-3/rotation-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "50a1ee30-0e33-4e17-b5da-02a977cfc5f9",
+    "Name": "Wind Speed",
+    "NodeType": "Variable",
+    "Description": "Wind Speed (Turbine 3)",
+    "Parent": "8fc36334-b8c2-4a94-9545-4e45215883f9",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-3/wind-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "c27987b3-fd93-47cb-b94a-1de51d304864",
+    "Name": "Output",
+    "NodeType": "Variable",
+    "Description": "Output (Turbine 3)",
+    "Parent": "8fc36334-b8c2-4a94-9545-4e45215883f9",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-3/output",
+    "Properties": {}
+  },
+
+  // Wind Farm 2/Turbine 4
+  {
+    "Id": "d562652c-6b18-4c78-be58-c563381513dd",
+    "Name": "Turbine 3",
+    "NodeType": "Object",
+    "Description": "Turbine 3 (Wind Farm 2)",
+    "Parent": "601632d0-bab9-42e9-9536-f9124173a3e2",
+    "Children": [
+      "340abf5e-6167-4ce7-803d-76697f2e639a",
+      "7e7a0c32-b515-4c1d-9aa9-b67e81e5d5a6",
+      "e649b8fa-bbf6-45e2-9c8b-1560b66a894f"
     ],
     "Properties": {}
+  },
+  {
+    "Id": "340abf5e-6167-4ce7-803d-76697f2e639a",
+    "Name": "Rotation Speed",
+    "NodeType": "Variable",
+    "Description": "Rotation Speed (Turbine 4)",
+    "Parent": "d562652c-6b18-4c78-be58-c563381513dd",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-4/rotation-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "7e7a0c32-b515-4c1d-9aa9-b67e81e5d5a6",
+    "Name": "Wind Speed",
+    "NodeType": "Variable",
+    "Description": "Wind Speed (Turbine 4)",
+    "Parent": "d562652c-6b18-4c78-be58-c563381513dd",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-4/wind-speed",
+    "Properties": {}
+  },
+  {
+    "Id": "e649b8fa-bbf6-45e2-9c8b-1560b66a894f",
+    "Name": "Output",
+    "NodeType": "Variable",
+    "Description": "Output (Turbine 4)",
+    "Parent": "d562652c-6b18-4c78-be58-c563381513dd",
+    "Children": [],
+    "DataReference": "/example-org/uk/wind-farm-2/turbine-4/output",
+    "Properties": {}
   }
+
 ]
 

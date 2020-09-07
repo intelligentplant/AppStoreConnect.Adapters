@@ -114,16 +114,28 @@ message AssetModelNode {
     string name = 2;
     string description = 3;
     string parent = 4;
-    repeated AssetModelNodeMeasurement measurements = 6;
+    // 6 not in use
     repeated AdapterProperty properties = 7;
     bool has_children = 8;
+    AssetModelNodeType node_type = 9;
+    AssetModelDataReference data_reference = 10;
+    bool has_data_reference = 11;
 }
 
 
-message AssetModelNodeMeasurement {
-    string name = 1;
-    string adapter_id = 2;
-    datacore.adapter.TagSummary tag = 3;
+enum AssetModelNodeType {
+    ASSET_MODEL_NODE_TYPE_UNKNOWN = 0;
+    ASSET_MODEL_NODE_TYPE_OBJECT = 1;
+    ASSET_MODEL_NODE_TYPE_VARIABLE = 2;
+    ASSET_MODEL_NODE_TYPE_OBJECT_TYPE = 3;
+    ASSET_MODEL_NODE_TYPE_VARIABLE_TYPE = 4;
+    ASSET_MODEL_NODE_TYPE_OTHER = 5;
+}
+
+
+message AssetModelDataReference {
+    string adapter_id = 1;
+    TagIdentifier tag = 2;
 }
 
 

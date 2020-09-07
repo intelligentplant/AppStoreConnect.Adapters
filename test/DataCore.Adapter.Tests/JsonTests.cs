@@ -263,13 +263,11 @@ namespace DataCore.Adapter.Tests {
             var expected = new AssetModelNode(
                 "Id",
                 "Name",
+                NodeType.Variable,
                 "Description",
                 "Parent",
                 true,
-                new [] {
-                    new AssetModelNodeMeasurement("Measurement1", "AdapterId1", new TagSummary("Id1", "Name1", "Description1", "Units1", VariantType.Double)),
-                    new AssetModelNodeMeasurement("Measurement2", "AdapterId2", new TagSummary("Id2", "Name2", "Description2", "Units2", VariantType.String))
-                },
+                new DataReference("AdapterId1", new TagIdentifier("Id1", "Name1")),
                 new [] {
                     AdapterProperty.Create("Prop1", 100),
                     AdapterProperty.Create("Prop2", "Value")
@@ -281,24 +279,15 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Name, actual.Name);
+            Assert.AreEqual(expected.NodeType, actual.NodeType);
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Parent, actual.Parent);
-
             Assert.AreEqual(expected.HasChildren, actual.HasChildren);
-
-            Assert.AreEqual(expected.Measurements.Count(), actual.Measurements.Count());
-            for (var i = 0; i < expected.Measurements.Count(); i++) {
-                var expectedValue = expected.Measurements.ElementAt(i);
-                var actualValue = actual.Measurements.ElementAt(i);
-
-                Assert.AreEqual(expectedValue.Name, actualValue.Name);
-                Assert.AreEqual(expectedValue.AdapterId, actualValue.AdapterId);
-                Assert.AreEqual(expectedValue.Tag.Id, actualValue.Tag.Id);
-                Assert.AreEqual(expectedValue.Tag.Name, actualValue.Tag.Name);
-                Assert.AreEqual(expectedValue.Tag.Description, actualValue.Tag.Description);
-                Assert.AreEqual(expectedValue.Tag.Units, actualValue.Tag.Units);
-                Assert.AreEqual(expectedValue.Tag.DataType, actualValue.Tag.DataType);
-            }
+            Assert.IsNotNull(actual.DataReference);
+            Assert.AreEqual(expected.DataReference.AdapterId, actual.DataReference.AdapterId);
+            Assert.IsNotNull(actual.DataReference.Tag);
+            Assert.AreEqual(expected.DataReference.Tag.Id, actual.DataReference.Tag.Id);
+            Assert.AreEqual(expected.DataReference.Tag.Name, actual.DataReference.Tag.Name);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
             for (var i = 0; i < expected.Properties.Count(); i++) {
@@ -308,28 +297,6 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
             }
-        }
-
-
-        [TestMethod]
-        public void AssetModelNodeMeasurement_ShouldRoundTrip() {
-            var options = GetOptions();
-            var expected = new AssetModelNodeMeasurement(
-                "Name",
-                "Id",
-                new TagSummary("Id", "Name", "Description", "Units", VariantType.Double)
-            );
-
-            var json = JsonSerializer.Serialize(expected, options);
-            var actual = JsonSerializer.Deserialize<AssetModelNodeMeasurement>(json, options);
-
-            Assert.AreEqual(expected.Name, actual.Name);
-            Assert.AreEqual(expected.AdapterId, actual.AdapterId);
-            Assert.AreEqual(expected.Tag.Id, actual.Tag.Id);
-            Assert.AreEqual(expected.Tag.Name, actual.Tag.Name);
-            Assert.AreEqual(expected.Tag.Description, actual.Tag.Description);
-            Assert.AreEqual(expected.Tag.Units, actual.Tag.Units);
-            Assert.AreEqual(expected.Tag.DataType, actual.Tag.DataType);
         }
 
 

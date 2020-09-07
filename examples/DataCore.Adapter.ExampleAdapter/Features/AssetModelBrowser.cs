@@ -30,30 +30,24 @@ namespace DataCore.Adapter.Example.Features {
                 var json = reader.ReadToEnd();
                 var nodeDefinitions = Newtonsoft.Json.JsonConvert.DeserializeObject<AssetModelNodeDefinition[]>(json);
 
-                var tagIdsOrNames = nodeDefinitions.SelectMany(x => x.Measurements.Select(m => m.Tag)).ToArray();
-                var tagsChannel = await tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
-                    Tags = tagIdsOrNames
+                var dataReferences = nodeDefinitions.Where(x => !string.IsNullOrWhiteSpace(x.DataReference)).Select(x => x.DataReference).ToArray();
+
+                var dataReferencesChannel = await tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
+                    Tags = dataReferences
                 }, cancellationToken).ConfigureAwait(false);
 
-                var tags = await tagsChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
+                var tags = await dataReferencesChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-                _nodes = nodeDefinitions.Select(x => AssetModelNode.Create(
+                _nodes = nodeDefinitions.Select(x => new AssetModelNode(
                     x.Id,
                     x.Name,
+                    x.NodeType,
                     x.Description,
                     x.Parent,
                     x.Children?.Any() ?? false,
-                    x.Measurements.Select(m => {
-                        var tag = tags.FirstOrDefault(t => string.Equals(t.Id, m.Tag, StringComparison.Ordinal) || string.Equals(t.Name, m.Tag, StringComparison.Ordinal));
-                        if (tag == null) {
-                            return null;
-                        }
-                        return AssetModelNodeMeasurement.Create(
-                            m.Name,
-                            adapterId,
-                            RealTimeData.TagSummary.Create(tag.Id, tag.Name, tag.Description, tag.Units, Common.VariantType.Double)
-                        );
-                    }).Where(m => m != null),
+                    string.IsNullOrWhiteSpace(x.DataReference)
+                        ? null
+                        : new DataReference(adapterId, tags.First(t => t.Id.Equals(x.DataReference, StringComparison.Ordinal) || t.Name.Equals(x.DataReference, StringComparison.Ordinal))),
                     x.Properties.Select(p => Common.AdapterProperty.Create(p.Key, p.Value))
                 )).ToDictionary(x => x.Id);
             }
