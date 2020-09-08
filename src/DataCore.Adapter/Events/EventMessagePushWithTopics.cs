@@ -142,6 +142,24 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
+        /// Gets the composite set of topics that are currently being subscribed to by all 
+        /// subscribers.
+        /// </summary>
+        /// <returns>
+        ///   The subscribed topics.
+        /// </returns>
+        protected IEnumerable<string> GetSubscribedTopics() {
+            _subscriptionsLock.EnterReadLock();
+            try {
+                return _subscriberCount.Keys.ToArray();
+            }
+            finally {
+                _subscriptionsLock.ExitReadLock();
+            }
+        }
+
+
+        /// <summary>
         /// Invoked by a subscription object when a topic is added to the subscription.
         /// </summary>
         /// <param name="subscription">

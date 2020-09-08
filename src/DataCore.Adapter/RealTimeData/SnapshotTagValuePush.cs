@@ -92,7 +92,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Maps from tag ID to the subscriber count for that tag.
         /// </summary>
-        private readonly Dictionary<string, int> _subscriberCount = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<TagIdentifier, int> _subscriberCount = new Dictionary<TagIdentifier, int>(TagIdentifierComparer.Id);
 
         /// <summary>
         /// For protecting access to <see cref="_subscriberCount"/>.
@@ -167,6 +167,24 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Gets the composite set of tags that are currently being subscribed to by all 
+        /// subscribers.
+        /// </summary>
+        /// <returns>
+        ///   The subscribed tags.
+        /// </returns>
+        protected IEnumerable<TagIdentifier> GetSubscribedTags() {
+            _subscriptionsLock.EnterReadLock();
+            try {
+                return _subscriberCount.Keys.ToArray();
+            }
+            finally {
+                _subscriptionsLock.ExitReadLock();
+            }
+        }
+
+
+        /// <summary>
         /// Invoked when a tag is added to a subscription.
         /// </summary>
         /// <param name="subscription">
@@ -191,12 +209,12 @@ namespace DataCore.Adapter.RealTimeData {
 
                     ++subscription.SubscribedTopicCount;
 
-                    if (!_subscriberCount.TryGetValue(topic.Id, out var subscriberCount)) {
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         subscriberCount = 0;
                         isNewSubscription = true;
                     }
 
-                    _subscriberCount[topic.Id] = ++subscriberCount;
+                    _subscriberCount[topic] = ++subscriberCount;
                     if (isNewSubscription) {
                         processed = new TaskCompletionSource<bool>();
                         _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
@@ -244,18 +262,18 @@ namespace DataCore.Adapter.RealTimeData {
 
                     --subscription.SubscribedTopicCount;
 
-                    if (!_subscriberCount.TryGetValue(topic.Id, out var subscriberCount)) {
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         continue;
                     }
 
                     --subscriberCount;
 
                     if (subscriberCount == 0) {
-                        _subscriberCount.Remove(topic.Id);
+                        _subscriberCount.Remove(topic);
                         _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, null));
                     }
                     else {
-                        _subscriberCount[topic.Id] = subscriberCount;
+                        _subscriberCount[topic] = subscriberCount;
                     }
                 }
             }
