@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
@@ -30,6 +31,32 @@ namespace DataCore.Adapter {
         /// </summary>
         internal static IReadOnlyDictionary<string, Uri> UriCache;
 
+        /// <summary>
+        /// Lookup from standard feature URI string to interface definition.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<string, Type> s_standardFeatureTypeLookup = new ReadOnlyDictionary<string, Type>(new Dictionary<string, Type>() { 
+            [AssetModel.AssetModelBrowse] = typeof(IAssetModelBrowse),
+            [AssetModel.AssetModelSearch] = typeof(IAssetModelSearch),
+            [Diagnostics.HealthCheck] = typeof(IHealthCheck),
+            [Events.EventMessagePush] = typeof(IEventMessagePush),
+            [Events.EventMessagePushWithTopics] = typeof(IEventMessagePushWithTopics),
+            [Events.ReadEventMessagesForTimeRange] = typeof(IReadEventMessagesForTimeRange),
+            [Events.ReadEventMessagesUsingCursor] = typeof(IReadEventMessagesUsingCursor),
+            [Events.WriteEventMessages] = typeof(IWriteEventMessages),
+            [RealTimeData.ReadAnnotations] = typeof(IReadTagValueAnnotations),
+            [RealTimeData.ReadPlotTagValues] = typeof(IReadPlotTagValues),
+            [RealTimeData.ReadProcessedTagValues] = typeof(IReadProcessedTagValues),
+            [RealTimeData.ReadRawTagValues] = typeof(IReadRawTagValues),
+            [RealTimeData.ReadSnapshotTagValues] = typeof(IReadSnapshotTagValues),
+            [RealTimeData.ReadTagValuesAtTimes] = typeof(IReadTagValuesAtTimes),
+            [RealTimeData.SnapshotTagValuePush] = typeof(ISnapshotTagValuePush),
+            [RealTimeData.TagInfo] = typeof(ITagInfo),
+            [RealTimeData.TagSearch] = typeof(ITagSearch),
+            [RealTimeData.WriteAnnotations] = typeof(IWriteTagValueAnnotations),
+            [RealTimeData.WriteHistoricalTagValues] = typeof(IWriteHistoricalTagValues),
+            [RealTimeData.WriteSnapshotTagValues] = typeof(IWriteSnapshotTagValues)
+        });
+
 
 
         /// <summary>
@@ -37,29 +64,9 @@ namespace DataCore.Adapter {
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Complex initialisation")]
         static WellKnownFeatures() {
-            var keys = new[] { 
-                AssetModel.AssetModelBrowse,
-                AssetModel.AssetModelSearch,
-                Diagnostics.HealthCheck,
-                Events.EventMessagePush,
-                Events.EventMessagePushWithTopics,
-                Events.ReadEventMessagesForTimeRange,
-                Events.ReadEventMessagesUsingCursor,
-                Events.WriteEventMessages,
-                RealTimeData.ReadAnnotations,
-                RealTimeData.ReadPlotTagValues,
-                RealTimeData.ReadProcessedTagValues,
-                RealTimeData.ReadRawTagValues,
-                RealTimeData.ReadSnapshotTagValues,
-                RealTimeData.ReadTagValuesAtTimes,
-                RealTimeData.SnapshotTagValuePush,
-                RealTimeData.TagInfo,
-                RealTimeData.TagSearch,
-                RealTimeData.WriteAnnotations,
-                RealTimeData.WriteHistoricalTagValues,
-                RealTimeData.WriteSnapshotTagValues,
+            var keys = s_standardFeatureTypeLookup.Keys.Concat(new[] { 
                 Extensions.ExtensionFeatureBasePath
-            };
+            });
 
             UriCache = new ReadOnlyDictionary<string, Uri>(keys.ToDictionary(k => k, k => k.CreateUriWithTrailingSlash()));
         }
@@ -96,6 +103,59 @@ namespace DataCore.Adapter {
             }
 
             return uri.EnsurePathHasTrailingSlash();
+        }
+
+
+        /// <summary>
+        /// Tries to get the descriptor for the specified feature URI.
+        /// </summary>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="descriptor">
+        ///   The feature descriptor.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if <paramref name="featureUri"/> was resolved to a standard 
+        ///   feature, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool TryGetFeatureDescriptor(Uri featureUri, out FeatureDescriptor descriptor) {
+            descriptor = null;
+
+            if (featureUri == null) {
+                return false;
+            }
+
+            return TryGetFeatureDescriptor(featureUri.ToString(), out descriptor);
+        }
+
+
+        /// <summary>
+        /// Tries to get the descriptor for the specified feature URI.
+        /// </summary>
+        /// <param name="featureUri">
+        ///   The feature URI.
+        /// </param>
+        /// <param name="descriptor">
+        ///   The feature descriptor.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if <paramref name="featureUri"/> was resolved to a standard 
+        ///   feature, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool TryGetFeatureDescriptor(string featureUri, out FeatureDescriptor descriptor) {
+            descriptor = null;
+
+            if (string.IsNullOrWhiteSpace(featureUri)) {
+                return false;
+            }
+
+            if (!s_standardFeatureTypeLookup.TryGetValue(featureUri, out var type)) {
+                return false;
+            }
+
+            descriptor = type.CreateFeatureDescriptor();
+            return true;
         }
 
 
