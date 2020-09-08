@@ -261,8 +261,51 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNodeBuilder WithDataReference(string adapterId, TagIdentifier tag) {
+        public AssetModelNodeBuilder WithDataReference(string adapterId, TagSummary tag) {
             _dataReference = new DataReference(adapterId, tag);
+            return this;
+        }
+
+
+        /// <summary>
+        /// Updates the node's data reference.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID for the data reference.
+        /// </param>
+        /// <param name="tagId">
+        ///   The tag ID for the data reference.
+        /// </param>
+        /// <param name="tagName">
+        ///   The tag display name.
+        /// </param>
+        /// <param name="description">
+        ///   The tag description.
+        /// </param>
+        /// <param name="units">
+        ///   The tag's unit of measure.
+        /// </param>
+        /// <param name="dataType">
+        ///   The tag's data type.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="AssetModelNodeBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeBuilder WithDataReference(
+            string adapterId, 
+            string tagId, 
+            string tagName, 
+            string description = null, 
+            string units = null, 
+            VariantType dataType = VariantType.Unknown
+        ) {
+            _dataReference = new DataReference(adapterId, new TagSummary(tagId, tagName, description, units, dataType));
             return this;
         }
 

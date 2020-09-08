@@ -100,7 +100,16 @@ namespace DataCore.Adapter {
                     : node.Parent,
                 node.HasChildren,
                 node.HasDataReference
-                    ? new AssetModel.DataReference(node.DataReference.AdapterId, new RealTimeData.TagIdentifier(node.DataReference.Tag.Id, node.DataReference.Tag.Name))
+                    ? new AssetModel.DataReference(
+                        node.DataReference.AdapterId, 
+                        new RealTimeData.TagSummary(
+                            node.DataReference.Tag.Id, 
+                            node.DataReference.Tag.Name, 
+                            node.DataReference.Tag.Description, 
+                            node.DataReference.Tag.Units, 
+                            node.DataReference.Tag.DataType.ToAdapterVariantType()
+                        )
+                    )
                     : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -132,9 +141,12 @@ namespace DataCore.Adapter {
                 HasDataReference = node.DataReference != null,
                 DataReference = new Grpc.AssetModelDataReference() {
                     AdapterId = node.DataReference?.AdapterId ?? string.Empty,
-                    Tag = new Grpc.TagIdentifier() {
+                    Tag = new Grpc.TagSummary() {
                         Id = node.DataReference?.Tag?.Id ?? string.Empty,
-                        Name = node.DataReference?.Tag?.Name ?? string.Empty
+                        Name = node.DataReference?.Tag?.Name ?? string.Empty,
+                        Description = node.DataReference?.Tag?.Description ?? string.Empty,
+                        Units = node.DataReference?.Tag?.Units ?? string.Empty,
+                        DataType = node.DataReference?.Tag?.DataType.ToGrpcVariantType() ?? Grpc.VariantType.Unknown
                     }
                 }
             };

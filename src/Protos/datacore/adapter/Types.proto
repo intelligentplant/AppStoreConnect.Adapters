@@ -136,7 +136,7 @@ enum AssetModelNodeType {
 
 message AssetModelDataReference {
     string adapter_id = 1;
-    TagIdentifier tag = 2;
+    TagSummary tag = 2;
 }
 
 
