@@ -16,9 +16,9 @@ namespace DataCore.Adapter.AssetModel {
         public string AdapterId { get; }
 
         /// <summary>
-        /// The tag summary for the reference.
+        /// The tag identifier for the reference.
         /// </summary>
-        public TagSummary Tag { get; }
+        public TagIdentifier Tag { get; }
 
 
         /// <summary>
@@ -28,9 +28,9 @@ namespace DataCore.Adapter.AssetModel {
         ///   The adapter ID for the data reference.
         /// </param>
         /// <param name="tag">
-        ///   The tag summary for the data reference.
+        ///   The tag identifier for the data reference.
         /// </param>
-        public DataReference(string adapterId, TagSummary tag) {
+        public DataReference(string adapterId, TagIdentifier tag) {
             AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
             Tag = tag ?? throw new ArgumentNullException(nameof(tag));
         }

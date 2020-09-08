@@ -102,12 +102,9 @@ namespace DataCore.Adapter {
                 node.HasDataReference
                     ? new AssetModel.DataReference(
                         node.DataReference.AdapterId, 
-                        new RealTimeData.TagSummary(
+                        new RealTimeData.TagIdentifier(
                             node.DataReference.Tag.Id, 
-                            node.DataReference.Tag.Name, 
-                            node.DataReference.Tag.Description, 
-                            node.DataReference.Tag.Units, 
-                            node.DataReference.Tag.DataType.ToAdapterVariantType()
+                            node.DataReference.Tag.Name
                         )
                     )
                     : null,
@@ -141,12 +138,9 @@ namespace DataCore.Adapter {
                 HasDataReference = node.DataReference != null,
                 DataReference = new Grpc.AssetModelDataReference() {
                     AdapterId = node.DataReference?.AdapterId ?? string.Empty,
-                    Tag = new Grpc.TagSummary() {
+                    Tag = new Grpc.TagIdentifier() {
                         Id = node.DataReference?.Tag?.Id ?? string.Empty,
-                        Name = node.DataReference?.Tag?.Name ?? string.Empty,
-                        Description = node.DataReference?.Tag?.Description ?? string.Empty,
-                        Units = node.DataReference?.Tag?.Units ?? string.Empty,
-                        DataType = node.DataReference?.Tag?.DataType.ToGrpcVariantType() ?? Grpc.VariantType.Unknown
+                        Name = node.DataReference?.Tag?.Name ?? string.Empty
                     }
                 }
             };

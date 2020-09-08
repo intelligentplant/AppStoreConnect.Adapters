@@ -290,9 +290,6 @@ namespace DataCore.Adapter.Tests {
             Assert.IsNotNull(actual.DataReference.Tag);
             Assert.AreEqual(expected.DataReference.Tag.Id, actual.DataReference.Tag.Id);
             Assert.AreEqual(expected.DataReference.Tag.Name, actual.DataReference.Tag.Name);
-            Assert.AreEqual(expected.DataReference.Tag.Description, actual.DataReference.Tag.Description);
-            Assert.AreEqual(expected.DataReference.Tag.Units, actual.DataReference.Tag.Units);
-            Assert.AreEqual(expected.DataReference.Tag.DataType, actual.DataReference.Tag.DataType);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
             for (var i = 0; i < expected.Properties.Count(); i++) {
