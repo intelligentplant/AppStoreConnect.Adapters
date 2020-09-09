@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Channel that is used to publish changes to subscribed topics.
         /// </summary>
-        private readonly Channel<(string Topic, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(string, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
+        private readonly Channel<(List<string> Topics, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(List<string>, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
@@ -166,11 +166,12 @@ namespace DataCore.Adapter.Events {
         ///   The subscription.
         /// </param>
         private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription) {
-            var isNewSubscription = false;
             TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
+                var newTopics = new List<string>();
+
                 foreach (var topic in subscription.Topics) {
                     if (subscription.CancellationToken.IsCancellationRequested) {
                         break;
@@ -180,14 +181,15 @@ namespace DataCore.Adapter.Events {
 
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         subscriberCount = 0;
-                        isNewSubscription = true;
+                        newTopics.Add(topic);
                     }
 
                     _subscriberCount[topic] = ++subscriberCount;
-                    if (isNewSubscription) {
-                        processed = new TaskCompletionSource<bool>();
-                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
-                    }
+                }
+
+                if (newTopics.Count > 0) {
+                    processed = new TaskCompletionSource<bool>();
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((newTopics, true, processed));
                 }
             }
             finally {
@@ -222,6 +224,8 @@ namespace DataCore.Adapter.Events {
 
             _subscriptionsLock.EnterWriteLock();
             try {
+                var removedTopics = new List<string>();
+
                 foreach (var topic in subscription.Topics) {
                     if (subscription.SubscribedTopicCount <= 0) {
                         // We've already unsubscribed from all of the topics we managed to 
@@ -239,11 +243,15 @@ namespace DataCore.Adapter.Events {
 
                     if (subscriberCount == 0) {
                         _subscriberCount.Remove(topic);
-                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, null));
+                        removedTopics.Add(topic);
                     }
                     else {
                         _subscriberCount[topic] = subscriberCount;
                     }
+                }
+
+                if (removedTopics.Count > 0) {
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedTopics, false, null));
                 }
             }
             finally {
@@ -258,22 +266,22 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Called when the number of subscribers for a topic changes from zero to one.
         /// </summary>
-        /// <param name="topic">
-        ///   The topic.
+        /// <param name="topics">
+        ///   The topics that were added.
         /// </param>
-        protected virtual void OnTopicAdded(string topic) {
-            _options.OnTopicSubscriptionAdded?.Invoke(topic);
+        protected virtual void OnTopicsAdded(IEnumerable<string> topics) {
+            _options.OnTopicSubscriptionsAdded?.Invoke(topics);
         }
 
 
         /// <summary>
         /// Called when the number of subscribers for a topic changes from one to zero.
         /// </summary>
-        /// <param name="topic">
-        ///   The topic.
+        /// <param name="topics">
+        ///   The topics that were removed.
         /// </param>
-        protected virtual void OnTopicRemoved(string topic) {
-            _options.OnTopicSubscriptionRemoved?.Invoke(topic);
+        protected virtual void OnTopicsRemoved(IEnumerable<string> topics) {
+            _options.OnTopicSubscriptionsRemoved?.Invoke(topics);
         }
 
 
@@ -308,16 +316,12 @@ namespace DataCore.Adapter.Events {
                         break;
                     }
 
-                    if (string.IsNullOrWhiteSpace(change.Topic)) {
-                        continue;
-                    }
-
                     try {
                         if (change.Added) {
-                            OnTopicAdded(change.Topic);
+                            OnTopicsAdded(change.Topics);
                         }
                         else {
-                            OnTopicRemoved(change.Topic);
+                            OnTopicsRemoved(change.Topics);
                         }
 
                         if (change.Processed != null) {
@@ -332,7 +336,7 @@ namespace DataCore.Adapter.Events {
                         Logger.LogError(
                             e,
                             Resources.Log_ErrorWhileProcessingSubscriptionTopicChange,
-                            change.Topic,
+                            change.Topics.Count,
                             change.Added
                                 ? SubscriptionUpdateAction.Subscribe
                                 : SubscriptionUpdateAction.Unsubscribe
@@ -521,7 +525,7 @@ namespace DataCore.Adapter.Events {
                 subscriptionId,
                 context,
                 BackgroundTaskService,
-                request.Topics,
+                request.Topics.Where(x => x != null),
                 request.SubscriptionType,
                 TimeSpan.Zero,
                 new[] { DisposedToken, cancellationToken },
@@ -636,13 +640,13 @@ namespace DataCore.Adapter.Events {
         /// A delegate that is invoked when the number of subscribers for a topic changes from zero 
         /// to one.
         /// </summary>
-        public Action<string> OnTopicSubscriptionAdded { get; set; }
+        public Action<IEnumerable<string>> OnTopicSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a topic changes from one 
         /// to zero.
         /// </summary>
-        public Action<string> OnTopicSubscriptionRemoved { get; set; }
+        public Action<IEnumerable<string>> OnTopicSubscriptionsRemoved { get; set; }
 
     }
 

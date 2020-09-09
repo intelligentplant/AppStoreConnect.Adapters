@@ -215,28 +215,30 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagAdded(TagIdentifier tag) {
+        protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
             lock (_subscribedTags) {
-                _subscribedTags.Add(tag);
+                _subscribedTags.AddRange(tags);
             }
 
-            base.OnTagAdded(tag);
+            base.OnTagsAdded(tags);
 
             // Immediately get the current value.
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RefreshValues(new[] { tag.Id }, ct), DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(ct => RefreshValues(tags.Select(x => x.Id).ToArray(), ct), DisposedToken);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnTagRemoved(TagIdentifier tag) {
+        protected override void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
             lock (_subscribedTags) {
-                var toBeRemoved = _subscribedTags.FindIndex(x => TagIdentifierComparer.Id.Equals(x, tag));
-                if (toBeRemoved >= 0) {
-                    _subscribedTags.RemoveAt(toBeRemoved);
+                foreach (var tag in tags) {
+                    var toBeRemoved = _subscribedTags.FindIndex(x => TagIdentifierComparer.Id.Equals(x, tag));
+                    if (toBeRemoved >= 0) {
+                        _subscribedTags.RemoveAt(toBeRemoved);
+                    }
                 }
             }
 
-            base.OnTagRemoved(tag);
+            base.OnTagsRemoved(tags);
         }
 
 

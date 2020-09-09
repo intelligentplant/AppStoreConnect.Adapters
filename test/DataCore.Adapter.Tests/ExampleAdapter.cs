@@ -91,16 +91,18 @@ namespace DataCore.Adapter.Tests {
             public SnapshotSubscriptionManager() : base(null, null, null) { }
 
 
-            protected override void OnTagAdded(TagIdentifier tag) {
-                base.OnTagAdded(tag);
-                ValueReceived(new TagValueQueryResult(
-                    tag.Id,
-                    tag.Name,
-                    TagValueBuilder.Create()
-                        .WithUtcSampleTime(DateTime.MinValue)
-                        .WithValue(0)
-                        .Build()
-                )).GetAwaiter().GetResult();
+            protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+                base.OnTagsAdded(tags);
+                foreach (var tag in tags) {
+                    ValueReceived(new TagValueQueryResult(
+                        tag.Id,
+                        tag.Name,
+                        TagValueBuilder.Create()
+                            .WithUtcSampleTime(DateTime.MinValue)
+                            .WithValue(0)
+                            .Build()
+                    )).GetAwaiter().GetResult();
+                }
             }
 
         }

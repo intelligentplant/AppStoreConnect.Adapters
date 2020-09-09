@@ -68,7 +68,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Channel that is used to publish changes to subscribed tags.
         /// </summary>
-        private readonly Channel<(TagIdentifier Tag, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(TagIdentifier, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
+        private readonly Channel<(List<TagIdentifier> Tags, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(List<TagIdentifier>, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
@@ -197,11 +197,12 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }
 
-            var isNewSubscription = false;
             TaskCompletionSource<bool> processed = null;
 
             _subscriptionsLock.EnterWriteLock();
             try {
+                var newSubscriptions = new List<TagIdentifier>();
+
                 foreach (var topic in subscription.Topics) {
                     if (subscription.CancellationToken.IsCancellationRequested) {
                         break;
@@ -211,14 +212,15 @@ namespace DataCore.Adapter.RealTimeData {
 
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         subscriberCount = 0;
-                        isNewSubscription = true;
+                        newSubscriptions.Add(topic);
                     }
 
                     _subscriberCount[topic] = ++subscriberCount;
-                    if (isNewSubscription) {
-                        processed = new TaskCompletionSource<bool>();
-                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, true, processed));
-                    }
+                }
+
+                if (newSubscriptions.Count > 0) {
+                    processed = new TaskCompletionSource<bool>();
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((newSubscriptions, true, processed));
                 }
             }
             finally {
@@ -253,6 +255,8 @@ namespace DataCore.Adapter.RealTimeData {
 
             _subscriptionsLock.EnterWriteLock();
             try {
+                var removedSubscriptions = new List<TagIdentifier>();
+
                 foreach (var topic in subscription.Topics) {
                     if (subscription.SubscribedTopicCount <= 0) {
                         // We've already unsubscribed from all of the topics we managed to 
@@ -270,11 +274,15 @@ namespace DataCore.Adapter.RealTimeData {
 
                     if (subscriberCount == 0) {
                         _subscriberCount.Remove(topic);
-                        _topicSubscriptionChangesChannel.Writer.TryWrite((topic, false, null));
+                        removedSubscriptions.Add(topic);
                     }
                     else {
                         _subscriberCount[topic] = subscriberCount;
                     }
+                }
+
+                if (removedSubscriptions.Count > 0) {
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null));
                 }
             }
             finally {
@@ -288,24 +296,26 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Called when the number of subscribers for a tag changes from zero to one.
         /// </summary>
-        /// <param name="tag">
-        ///   The tag.
+        /// <param name="tags">
+        ///   The tags that have been added.
         /// </param>
-        protected virtual void OnTagAdded(TagIdentifier tag) {
-            _options.OnTagSubscriptionAdded?.Invoke(tag);
+        protected virtual void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+            _options.OnTagSubscriptionsAdded?.Invoke(tags);
         }
 
 
         /// <summary>
         /// Called when the number of subscribers for a tag changes from one to zero.
         /// </summary>
-        /// <param name="tag">
-        ///   The tag.
+        /// <param name="tags">
+        ///   The tags that have been removed.
         /// </param>
-        protected virtual void OnTagRemoved(TagIdentifier tag) {
-            _options.OnTagSubscriptionRemoved?.Invoke(tag);
+        protected virtual void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
+            _options.OnTagSubscriptionsRemoved?.Invoke(tags);
             // Remove current value if we are caching it.
-            _currentValueByTagId.TryRemove(tag.Id, out var _);
+            foreach (var tag in tags) {
+                _currentValueByTagId.TryRemove(tag.Id, out var _);
+            }
         }
 
 
@@ -335,15 +345,12 @@ namespace DataCore.Adapter.RealTimeData {
                 }
 
                 while (_topicSubscriptionChangesChannel.Reader.TryRead(out var change)) {
-                    if (change.Tag == null) {
-                        continue;
-                    }
                     try {
                         if (change.Added) {
-                            OnTagAdded(change.Tag);
+                            OnTagsAdded(change.Tags);
                         }
                         else {
-                            OnTagRemoved(change.Tag);
+                            OnTagsRemoved(change.Tags);
                         }
 
                         if (change.Processed != null) {
@@ -358,7 +365,7 @@ namespace DataCore.Adapter.RealTimeData {
                         Logger.LogError(
                             e,
                             Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
-                            change.Tag,
+                            change.Tags.Count,
                             change.Added
                                 ? SubscriptionUpdateAction.Subscribe
                                 : SubscriptionUpdateAction.Unsubscribe
@@ -661,13 +668,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
         /// to one.
         /// </summary>
-        public Action<TagIdentifier> OnTagSubscriptionAdded { get; set; }
+        public Action<IEnumerable<TagIdentifier>> OnTagSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from one 
         /// to zero.
         /// </summary>
-        public Action<TagIdentifier> OnTagSubscriptionRemoved { get; set; }
+        public Action<IEnumerable<TagIdentifier>> OnTagSubscriptionsRemoved { get; set; }
 
 
 

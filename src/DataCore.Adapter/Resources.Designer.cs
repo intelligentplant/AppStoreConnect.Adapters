@@ -466,7 +466,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Tag = &apos;{tag}&apos;, Action = &apos;{action}&apos;.
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change for {count} tags: Action = &apos;{action}&apos;.
         /// </summary>
         internal static string Log_ErrorWhileProcessingSnapshotSubscriptionChange {
             get {
@@ -475,7 +475,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change: Topic = &apos;{topic}&apos;, Action = &apos;{action}&apos;.
+        ///   Looks up a localized string similar to An error occurred while processing a subscription change for {count} topics: Action = &apos;{action}&apos;.
         /// </summary>
         internal static string Log_ErrorWhileProcessingSubscriptionTopicChange {
             get {

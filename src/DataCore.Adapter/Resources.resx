@@ -266,10 +266,10 @@
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
   <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change: Tag = '{tag}', Action = '{action}'</value>
+    <value>An error occurred while processing a subscription change for {count} tags: Action = '{action}'</value>
   </data>
   <data name="Log_ErrorWhileProcessingSubscriptionTopicChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change: Topic = '{topic}', Action = '{action}'</value>
+    <value>An error occurred while processing a subscription change for {count} topics: Action = '{action}'</value>
   </data>
   <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
     <value>Evicted event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>

@@ -67,9 +67,11 @@ namespace DataCore.Adapter.Benchmarks {
         }
 
 
-        protected override void OnTagAdded(TagIdentifier tag) {
-            base.OnTagAdded(tag);
-            _subscriptionsAdded.Writer.TryWrite(tag);
+        protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+            base.OnTagsAdded(tags);
+            foreach (var tag in tags) {
+                _subscriptionsAdded.Writer.TryWrite(tag);
+            }
         }
 
 
