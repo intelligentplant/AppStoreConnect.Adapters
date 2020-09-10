@@ -250,7 +250,7 @@ namespace DataCore.Adapter.Events {
                                 Common.WriteStatus.Success,
                                 null,
                                 new[] {
-                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition))
+                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))
                                 }
                             ));
                         }

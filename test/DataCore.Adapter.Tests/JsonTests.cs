@@ -30,7 +30,12 @@ namespace DataCore.Adapter.Tests {
 
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
             Assert.AreEqual(variant.Type, deserialized.Type);
-            Assert.AreEqual(variant.Value, deserialized.Value);
+
+            var actualVal = (deserialized.Type == VariantType.Object || deserialized.Type == VariantType.Unknown) && deserialized.Value is JsonElement jsonElement
+                ? JsonSerializer.Deserialize<T>(jsonElement.GetRawText(), options)
+                : deserialized.Value;
+
+            Assert.AreEqual(variant.Value, actualVal);
         }
 
 
@@ -168,6 +173,16 @@ namespace DataCore.Adapter.Tests {
         public void Variant_UrlShouldRoundTrip(string value) {
             var options = GetOptions();
             VariantRoundTripTest(new Uri(value, UriKind.Absolute), options);
+        }
+
+
+        [TestMethod]
+        public void Variant_CustomClassShouldRoundTrip() {
+            var options = GetOptions();
+            VariantRoundTripTest(new VariantTestClass() {
+                TestName = TestContext.TestName, 
+                UtcTimestamp = DateTime.UtcNow
+            }, options);
         }
 
 
@@ -1162,6 +1177,28 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
             }
+        }
+
+
+        private class VariantTestClass {
+
+            public string TestName { get; set; }
+
+            public DateTime UtcTimestamp { get; set; }
+
+
+            public override int GetHashCode() {
+                return HashCode.Combine(TestName, UtcTimestamp);
+            }
+
+
+            public override bool Equals(object obj) {
+                if (!(obj is VariantTestClass s)) {
+                    return false;
+                }
+                return string.Equals(TestName, s.TestName) && UtcTimestamp.Equals(s.UtcTimestamp);
+            }
+
         }
 
     }

@@ -814,23 +814,18 @@ namespace DataCore.Adapter.Tests {
                 var writeResults = await feature.WriteEventMessages(context, values.PublishToChannel(), CancellationToken);
                 var index = 0;
 
-                //CancelAfter(TimeSpan.FromSeconds(1));
+                CancelAfter(TimeSpan.FromSeconds(1));
 
-                try {
-                    await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(result);
-                        Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
-
-                        ++index;
+                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
                     }
-                }
-                catch (InvalidOperationException e) {
+                    var expected = values[index];
 
+                    Assert.IsNotNull(result);
+                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
+
+                    ++index;
                 }
             });
         }

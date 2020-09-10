@@ -18,6 +18,8 @@ namespace DataCore.Adapter.Json {
             VariantType? valueType = null;
             JsonElement valueElement = default;
 
+            var startDepth = reader.CurrentDepth;
+
             do {
                 if (!reader.Read()) {
                     ThrowInvalidJsonError();
@@ -41,8 +43,8 @@ namespace DataCore.Adapter.Json {
                 else {
                     reader.Skip();
                 }
-            } while (reader.TokenType != JsonTokenType.EndObject);
-
+            } while (reader.CurrentDepth != startDepth || reader.TokenType != JsonTokenType.EndObject);
+            
             if (valueType == VariantType.Null) {
                 return Variant.Null;
             }
@@ -65,7 +67,7 @@ namespace DataCore.Adapter.Json {
                 case VariantType.Int64:
                     return Variant.FromValue(valueElement.GetInt64());
                 case VariantType.Object:
-                    return Variant.FromValue(valueElement);
+                    return Variant.FromValue(valueElement.Clone(), VariantType.Object);
                 case VariantType.SByte:
                     return Variant.FromValue(valueElement.GetSByte());
                 case VariantType.String:
@@ -82,7 +84,7 @@ namespace DataCore.Adapter.Json {
                     return Variant.FromValue(new Uri(valueElement.GetString(), UriKind.Absolute));
                 case VariantType.Unknown:
                 default:
-                    return Variant.FromValue(valueElement);
+                    return Variant.FromValue(valueElement.Clone(), VariantType.Unknown);
             }
         }
 
