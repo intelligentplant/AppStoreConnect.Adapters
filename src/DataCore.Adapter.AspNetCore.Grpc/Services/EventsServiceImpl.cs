@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 using Grpc.Core;
@@ -94,50 +95,83 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <summary>
-        /// Creates a topic-based event message subscription to an adapter using the adapter's 
-        /// <see cref="IEventMessagePushWithTopics"/> feature. For event streams that do not 
-        /// require topic subscriptions, see <see cref="CreateEventPushChannel"/>.
+        /// Creates a topic-based event subscription stream to an adapter using the adapter's 
+        /// <see cref="IEventMessagePushWithTopics"/> feature. For an event stream that does not 
+        /// use topics, see <see cref="CreateEventPushChannel"/>.
         /// </summary>
-        /// <param name="request">
-        ///   The request.
+        /// <param name="requestStream">
+        ///   The request stream.
         /// </param>
         /// <param name="responseStream">
-        ///   The response stream to write event messages to.
+        ///   The response stream.
         /// </param>
         /// <param name="context">
         ///   The call context.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task"/> that will publish emitted event messages to the 
-        ///   <paramref name="responseStream"/>.
+        ///   A <see cref="Task"/> that will publish emitted event messages to the <paramref name="responseStream"/>.
         /// </returns>
         /// <seealso cref="CreateEventPushChannel"/>
-        public override async Task CreateEventTopicPushChannel(CreateEventTopicPushChannelRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
+        public override async Task CreateEventTopicPushChannel(IAsyncStreamReader<CreateEventTopicPushChannelRequest> requestStream, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
-            var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageTopicSubscriptionRequest() {
-                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
-                    ? EventMessageSubscriptionType.Active
-                    : EventMessageSubscriptionType.Passive,
-                Topics = request.Topics.ToArray(),
-                Properties = new Dictionary<string, string>(request.Properties)
-            }, cancellationToken).ConfigureAwait(false);
+            var updateChannel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
 
             try {
-                while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var msg) && msg != null) {
-                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
+                // Keep reading from the request stream until we get an item that allows us to create 
+                // the subscription.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != CreateEventTopicPushChannelRequest.OperationOneofCase.Create) {
+                        continue;
                     }
+
+                    // We received a create request!
+
+                    var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, _adapterAccessor, requestStream.Current.Create.AdapterId, cancellationToken).ConfigureAwait(false);
+
+                    var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateEventMessageTopicSubscriptionRequest() {
+                        SubscriptionType = requestStream.Current.Create.SubscriptionType == EventSubscriptionType.Active
+                                    ? EventMessageSubscriptionType.Active
+                                    : EventMessageSubscriptionType.Passive,
+                        Topics = requestStream.Current.Create.Topics.ToArray(),
+                        Properties = new Dictionary<string, string>(requestStream.Current.Create.Properties)
+                    }, updateChannel, cancellationToken).ConfigureAwait(false);
+
+                    subscription.RunBackgroundOperation(async (ch, ct) => {
+                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (ch.TryRead(out var val)) {
+                                if (val == null) {
+                                    continue;
+                                }
+                                await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
+                            }
+                        }
+                    }, _backgroundTaskService, cancellationToken);
+
+                    // Break out of the initial loop; we'll handle subscription updates below!
+                    break;
+                }
+
+                // Now keep reading subscription changes.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != CreateEventTopicPushChannelRequest.OperationOneofCase.Update) {
+                        continue;
+                    }
+
+                    updateChannel.Writer.TryWrite(new EventMessageSubscriptionUpdate() { 
+                        Action = requestStream.Current.Update.Action == SubscriptionUpdateAction.Subscribe
+                            ? Common.SubscriptionUpdateAction.Subscribe
+                            : Common.SubscriptionUpdateAction.Unsubscribe,
+                        Topics = requestStream.Current.Update.Topics.ToArray()
+                    });
                 }
             }
-            catch (OperationCanceledException) {
-                // Do nothing
+            catch (Exception e) {
+                updateChannel.Writer.TryComplete(e);
             }
-            catch (ChannelClosedException) {
-                // Do nothing
+            finally {
+                updateChannel.Writer.TryComplete();
             }
         }
 
@@ -206,59 +240,55 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
-            // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<Events.WriteEventMessageItem>>(StringComparer.OrdinalIgnoreCase);
+            var valueChannel = Channel.CreateUnbounded<Events.WriteEventMessageItem>();
 
             try {
+                // Keep reading from the request stream until we get an item that allows us to create 
+                // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    var request = requestStream.Current;
-                    if (request == null) {
+                    if (requestStream.Current.OperationCase != WriteEventMessageRequest.OperationOneofCase.Init) {
                         continue;
                     }
 
-                    if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
-                        // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
-                        var adapterId = adapter.Adapter.Descriptor.Id;
+                    // We received a create request!
 
-                        writeChannel = System.Threading.Channels.Channel.CreateUnbounded<Events.WriteEventMessageItem>(new UnboundedChannelOptions() {
-                            AllowSynchronousContinuations = false,
-                            SingleReader = true,
-                            SingleWriter = true
-                        });
-                        writeChannels[adapterId] = writeChannel;
+                    var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
 
-                        var resultsChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
-                        resultsChannel.RunBackgroundOperation(async (ch, ct) => {
-                            while (!ct.IsCancellationRequested) {
-                                var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                    var subscription = await adapter.Feature.WriteEventMessages(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
+
+                    subscription.RunBackgroundOperation(async (ch, ct) => {
+                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (ch.TryRead(out var val)) {
                                 if (val == null) {
                                     continue;
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcWriteEventMessageResult(adapterId)).ConfigureAwait(false);
+                                await responseStream.WriteAsync(val.ToGrpcWriteEventMessageResult()).ConfigureAwait(false);
                             }
-                        }, _backgroundTaskService, cancellationToken);
+                        }
+                    }, _backgroundTaskService, cancellationToken);
+
+                    // Break out of the initial loop; we'll handle the actual writes below!
+                    break;
+                }
+
+                // Now handle write requests.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != WriteEventMessageRequest.OperationOneofCase.Write) {
+                        continue;
                     }
 
-                    var adapterRequest = request.ToAdapterWriteEventMessageItem();
-                    Util.ValidateObject(adapterRequest);
-                    writeChannel.Writer.TryWrite(adapterRequest);
+                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteEventMessageItem());
                 }
             }
             catch (Exception e) {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete(e);
-                }
+                valueChannel.Writer.TryComplete(e);
             }
             finally {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete();
-                }
+                valueChannel.Writer.TryComplete();
             }
         }
 

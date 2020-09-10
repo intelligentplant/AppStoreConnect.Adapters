@@ -15,6 +15,7 @@ namespace DataCore.Adapter.Events {
         /// The topics to read messages for. This property will be ignored if the adapter does not 
         /// support a topic-based event model.
         /// </summary>
+        [MaxLength(100)]
         public IEnumerable<string> Topics { get; set; }
 
         /// <summary>

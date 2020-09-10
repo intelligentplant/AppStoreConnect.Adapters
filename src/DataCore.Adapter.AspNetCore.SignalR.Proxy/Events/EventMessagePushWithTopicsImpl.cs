@@ -1,7 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events {
@@ -24,13 +26,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events {
         public Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             SignalRAdapterProxy.ValidateObject(request);
 
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             return GetClient().Events.CreateEventMessageTopicChannelAsync(
                 AdapterId, 
                 request, 
+                channel,
                 cancellationToken
             );
         }

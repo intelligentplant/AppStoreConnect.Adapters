@@ -13,13 +13,13 @@
   <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>3.1.7</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.7</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>3.1.8</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.8</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>1.1.1</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.7</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.7</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.8</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.8</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->

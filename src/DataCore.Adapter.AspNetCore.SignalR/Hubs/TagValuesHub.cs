@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -16,14 +17,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Snapshot Subscription Management ]
 
         /// <summary>
-        /// Creates a snapshot tag value subscription. Note that this does not add any tags to the 
-        /// subscription; this must be done separately via calls to <see cref="CreateSnapshotTagValueChannel"/>.
+        /// Creates a snapshot tag value subscription.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to subscribe to.
         /// </param>
         /// <param name="request">
         ///   The subscription request parameters.
+        /// </param>
+        /// <param name="channel">
+        ///   A channel that can be used to publish subscription changes.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the subscription.
@@ -34,13 +37,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
             string adapterId,
             CreateSnapshotTagValueSubscriptionRequest request,
+            ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

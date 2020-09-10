@@ -480,6 +480,9 @@ namespace DataCore.Adapter {
             }
             catch (OperationCanceledException) { }
             catch (ChannelClosedException) { }
+            catch (Exception e) {
+                destination.TryComplete(e);
+            }
         }
 
 

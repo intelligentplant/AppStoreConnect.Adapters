@@ -1069,7 +1069,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapter event message write item.
         /// </returns>
-        public static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this Grpc.WriteEventMessageRequest writeRequest) {
+        public static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this Grpc.WriteEventMessageItem writeRequest) {
             if (writeRequest == null) {
                 return null;
             } 
@@ -1095,19 +1095,15 @@ namespace DataCore.Adapter {
         /// <param name="item">
         ///   The adapter event message write item.
         /// </param>
-        /// <param name="adapterId">
-        ///   The target adapter ID.
-        /// </param>
         /// <returns>
         ///   The adapter event message write item.
         /// </returns>
-        public static Grpc.WriteEventMessageRequest ToGrpcWriteEventMessageItem(this Events.WriteEventMessageItem item, string adapterId) {
+        public static Grpc.WriteEventMessageItem ToGrpcWriteEventMessageItem(this Events.WriteEventMessageItem item) {
             if (item == null) {
                 return null;
             }
 
-            return new Grpc.WriteEventMessageRequest() {
-                AdapterId = adapterId ?? string.Empty,
+            return new Grpc.WriteEventMessageItem() {
                 CorrelationId = item.CorrelationId ?? string.Empty,
                 Message = item.EventMessage.ToGrpcEventMessage()
             };
@@ -1149,13 +1145,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The gRPC write event message result.
         /// </returns>
-        public static Grpc.WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.WriteEventMessageResult adapterResult, string adapterId) {
+        public static Grpc.WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.WriteEventMessageResult adapterResult) {
             if (adapterResult == null) {
                 return null;
             }
             
             var result = new Grpc.WriteEventMessageResult() {
-                AdapterId = adapterId ?? string.Empty,
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 WriteStatus = adapterResult.Status.ToGrpcWriteStatus()
@@ -1900,7 +1895,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapter tag value write item.
         /// </returns>
-        public static RealTimeData.WriteTagValueItem ToAdapterWriteTagValueItem(this Grpc.WriteTagValueRequest writeRequest) {
+        public static RealTimeData.WriteTagValueItem ToAdapterWriteTagValueItem(this Grpc.WriteTagValueItem writeRequest) {
             if (writeRequest == null) {
                 return null;
             }
@@ -1924,19 +1919,15 @@ namespace DataCore.Adapter {
         /// <param name="item">
         ///   The adapter tag value write item.
         /// </param>
-        /// <param name="adapterId">
-        ///   The destination adapter ID.
-        /// </param>
         /// <returns>
         ///   The gRPC tag value write item.
         /// </returns>
-        public static Grpc.WriteTagValueRequest ToGrpcWriteTagValueItem(this RealTimeData.WriteTagValueItem item, string adapterId) {
+        public static Grpc.WriteTagValueItem ToGrpcWriteTagValueItem(this RealTimeData.WriteTagValueItem item) {
             if (item == null) {
                 return null;
             }
 
-            return new Grpc.WriteTagValueRequest() {
-                AdapterId = adapterId,
+            return new Grpc.WriteTagValueItem() {
                 CorrelationId = item.CorrelationId ?? string.Empty,
                 TagId = item.TagId ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(item.Value.UtcSampleTime),
@@ -1977,19 +1968,15 @@ namespace DataCore.Adapter {
         /// <param name="adapterResult">
         ///   The adapter tag value write result.
         /// </param>
-        /// <param name="adapterId">
-        ///   The adapter ID that the value was written to.
-        /// </param>
         /// <returns>
         ///   The gRPC tag value write result.
         /// </returns>
-        public static Grpc.WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.WriteTagValueResult adapterResult, string adapterId) {
+        public static Grpc.WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.WriteTagValueResult adapterResult) {
             if (adapterResult == null) {
                 return null;
             }
 
             var result = new Grpc.WriteTagValueResult() {
-                AdapterId = adapterId ?? string.Empty,
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,

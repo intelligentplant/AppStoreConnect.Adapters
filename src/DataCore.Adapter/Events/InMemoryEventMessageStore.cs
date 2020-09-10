@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
@@ -34,6 +36,11 @@ namespace DataCore.Adapter.Events {
         /// Logging.
         /// </summary>
         private readonly ILogger Logger;
+
+        /// <summary>
+        /// The <see cref="IBackgroundTaskService"/> to use.
+        /// </summary>
+        private readonly IBackgroundTaskService _backgroundTaskService;
 
         /// <summary>
         /// <see cref="IEventMessagePush"/> handler.
@@ -92,6 +99,7 @@ namespace DataCore.Adapter.Events {
         ) {
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _disposedToken = _disposedTokenSource.Token;
+            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
             _push = new EventMessagePush(options, backgroundTaskService, Logger);
             _pushWithTopics = new EventMessagePushWithTopics(new EventMessagePushWithTopicsOptions() { 
                 AdapterId = options.AdapterId
@@ -114,9 +122,10 @@ namespace DataCore.Adapter.Events {
         Task<ChannelReader<EventMessage>> IEventMessagePushWithTopics.Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
-            return ((IEventMessagePushWithTopics) _pushWithTopics).Subscribe(context, request, cancellationToken);
+            return ((IEventMessagePushWithTopics) _pushWithTopics).Subscribe(context, request, channel, cancellationToken);
         }
 
 
@@ -226,23 +235,25 @@ namespace DataCore.Adapter.Events {
             channel.RunBackgroundOperation(async (ch, ct) => {
                 try {
                     while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var item) || item?.EventMessage == null) {
-                            continue;
-                        }
-
-                        var cursorPosition = await WriteEventMessage(item.EventMessage, ct).ConfigureAwait(false);
-                        if (!await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            break;
-                        }
-
-                        result.Writer.TryWrite(new WriteEventMessageResult(
-                            item.CorrelationId, 
-                            Common.WriteStatus.Success, 
-                            null, 
-                            new [] {
-                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition))
+                        while (ch.TryRead(out var item)) {
+                            if (item?.EventMessage == null) {
+                                continue;
                             }
-                        ));
+
+                            var cursorPosition = await WriteEventMessage(item.EventMessage, ct).ConfigureAwait(false);
+                            if (!await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                                break;
+                            }
+
+                            result.Writer.TryWrite(new WriteEventMessageResult(
+                                item.CorrelationId,
+                                Common.WriteStatus.Success,
+                                null,
+                                new[] {
+                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition))
+                                }
+                            ));
+                        }
                     }
                 }
                 catch (Exception e) {
@@ -251,9 +262,9 @@ namespace DataCore.Adapter.Events {
                 finally {
                     result.Writer.TryComplete();
                 }
-            }, null, cancellationToken);
+            }, _backgroundTaskService, cancellationToken);
 
-            return Task.FromResult<ChannelReader<WriteEventMessageResult>>(result);
+            return Task.FromResult(result.Reader);
         }
 
 

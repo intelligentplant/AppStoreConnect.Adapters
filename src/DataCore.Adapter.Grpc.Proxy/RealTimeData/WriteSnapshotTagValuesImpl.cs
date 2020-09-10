@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<Adapter.RealTimeData.WriteTagValueItem> channel, CancellationToken cancellationToken) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -30,36 +30,50 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcStream = client.WriteSnapshotTagValues(GetCallOptions(context, cancellationToken));
 
+            // Create the subscription.
+            await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
+                Init = new WriteTagValueInitMessage() {
+                    AdapterId = AdapterId
+                }
+            }).ConfigureAwait(false);
+
+            // Stream subscription changes.
             channel.RunBackgroundOperation(async (ch, ct) => {
                 try {
                     while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (ch.TryRead(out var item) && item != null) {
-                            await grpcStream.RequestStream.WriteAsync(item.ToGrpcWriteTagValueItem(AdapterId)).ConfigureAwait(false);
+                        while (ch.TryRead(out var update)) {
+                            if (update == null) {
+                                continue;
+                            }
+
+                            await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
+                                Write = update.ToGrpcWriteTagValueItem()
+                            }).ConfigureAwait(false);
                         }
                     }
                 }
                 finally {
-                    await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    if (!ct.IsCancellationRequested) {
+                        await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    }
                 }
-            }, TaskScheduler, cancellationToken);
+            }, BackgroundTaskService, cancellationToken);
 
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
+            // Stream the results.
+            var result = ChannelExtensions.CreateTagValueWriteResultChannel(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcStream.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult(), ct).ConfigureAwait(false);
+                // Read tag values.
+                while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                    if (grpcStream.ResponseStream.Current == null) {
+                        continue;
                     }
-                }
-                finally {
-                    grpcStream.Dispose();
-                }
-            }, true, TaskScheduler, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult(), ct).ConfigureAwait(false);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
     }

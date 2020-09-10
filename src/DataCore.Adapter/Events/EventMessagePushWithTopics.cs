@@ -160,36 +160,48 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Invoked by a subscription object when a topic is added to the subscription.
+        /// Called when topics are added to a subscription.
         /// </summary>
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription) {
+        /// <param name="topics">
+        ///   The subscription topics
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the operation.
+        /// </returns>
+        private async Task OnTopicsAddedToSubscriptionInternal(EventSubscriptionChannel<int> subscription, IEnumerable<string> topics, CancellationToken cancellationToken) {
             TaskCompletionSource<bool> processed = null;
+
+            subscription.AddTopics(topics);
 
             _subscriptionsLock.EnterWriteLock();
             try {
-                var newTopics = new List<string>();
+                var newSubscriptions = new List<string>();
 
-                foreach (var topic in subscription.Topics) {
-                    if (subscription.CancellationToken.IsCancellationRequested) {
+                foreach (var topic in topics) {
+                    if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
-
-                    ++subscription.SubscribedTopicCount;
+                    if (topic == null) {
+                        continue;
+                    }
 
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         subscriberCount = 0;
-                        newTopics.Add(topic);
+                        newSubscriptions.Add(topic);
                     }
 
                     _subscriberCount[topic] = ++subscriberCount;
                 }
 
-                if (newTopics.Count > 0) {
+                if (newSubscriptions.Count > 0) {
                     processed = new TaskCompletionSource<bool>();
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((newTopics, true, processed));
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((newSubscriptions, true, processed));
                 }
             }
             finally {
@@ -201,8 +213,65 @@ namespace DataCore.Adapter.Events {
             }
 
             // Wait for last change to be processed.
-            await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
+            await processed.Task.WithCancellation(cancellationToken).ConfigureAwait(false);
+        }
 
+
+        /// <summary>
+        /// Called when topics are removed from a subscription.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="topics">.
+        ///   The subscription topics
+        /// </param>
+        /// <returns>
+        ///   A task that will process the operation.
+        /// </returns>
+        private void OnTopicsRemovedFromSubscriptionInternal(EventSubscriptionChannel<int> subscription, IEnumerable<string> topics) {
+            _subscriptionsLock.EnterWriteLock();
+            try {
+                var removedSubscriptions = new List<string>();
+
+                foreach (var topic in topics) {
+                    if (topic == null || !subscription.RemoveTopic(topic)) {
+                        continue;
+                    }
+
+                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
+                        continue;
+                    }
+
+                    --subscriberCount;
+
+                    if (subscriberCount == 0) {
+                        _subscriberCount.Remove(topic);
+                        removedSubscriptions.Add(topic);
+                    }
+                    else {
+                        _subscriberCount[topic] = subscriberCount;
+                    }
+                }
+
+                if (removedSubscriptions.Count > 0) {
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null));
+                }
+            }
+            finally {
+                _subscriptionsLock.ExitWriteLock();
+            }
+        }
+
+
+        /// <summary>
+        /// Invoked by a subscription object when a topic is added to the subscription.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription, IEnumerable<string> initialTopics) {
+            await OnTopicsAddedToSubscriptionInternal(subscription, initialTopics, subscription.CancellationToken).ConfigureAwait(false);
             OnSubscriptionAdded(subscription);
         }
 
@@ -222,40 +291,10 @@ namespace DataCore.Adapter.Events {
                 return;
             }
 
-            _subscriptionsLock.EnterWriteLock();
             try {
-                var removedTopics = new List<string>();
-
-                foreach (var topic in subscription.Topics) {
-                    if (subscription.SubscribedTopicCount <= 0) {
-                        // We've already unsubscribed from all of the topics we managed to 
-                        // subscribe to when the subscription was created.
-                        break;
-                    }
-
-                    --subscription.SubscribedTopicCount;
-
-                    if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
-                        continue;
-                    }
-
-                    --subscriberCount;
-
-                    if (subscriberCount == 0) {
-                        _subscriberCount.Remove(topic);
-                        removedTopics.Add(topic);
-                    }
-                    else {
-                        _subscriberCount[topic] = subscriberCount;
-                    }
-                }
-
-                if (removedTopics.Count > 0) {
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedTopics, false, null));
-                }
+                OnTopicsRemovedFromSubscriptionInternal(subscription, subscription.Topics);
             }
             finally {
-                _subscriptionsLock.ExitWriteLock();
                 subscription.Dispose();
                 HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
                 OnSubscriptionCancelled(subscription);
@@ -504,10 +543,50 @@ namespace DataCore.Adapter.Events {
         }
 
 
+        /// <summary>
+        /// Runs a long-running task that will process changes on a subscription.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="channel">
+        ///   The subscription changes channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The long-running task.
+        /// </returns>
+        private async Task RunSubscriptionChanngesListener(EventSubscriptionChannel<int> subscription, ChannelReader<EventMessageSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (channel.TryRead(out var item)) {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (item?.Topics == null) {
+                        continue;
+                    }
+
+                    var topics = item.Topics.Where(x => x != null).ToArray();
+                    if (topics.Length == 0) {
+                        continue;
+                    }
+
+                    if (item.Action == SubscriptionUpdateAction.Subscribe) {
+                        await OnTopicsAddedToSubscriptionInternal(subscription, topics, cancellationToken).ConfigureAwait(false);
+                    }
+                    else {
+                        OnTopicsRemovedFromSubscriptionInternal(subscription, topics);
+                    }
+                }
+            }
+        }
+
+
         /// <inheritdoc/>
         public async Task<ChannelReader<EventMessage>> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             if (_isDisposed) {
@@ -515,6 +594,9 @@ namespace DataCore.Adapter.Events {
             }
 
             ValidationExtensions.ValidateObject(request);
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
             if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
                 throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
@@ -525,7 +607,6 @@ namespace DataCore.Adapter.Events {
                 subscriptionId,
                 context,
                 BackgroundTaskService,
-                request.Topics.Where(x => x != null),
                 request.SubscriptionType,
                 TimeSpan.Zero,
                 new[] { DisposedToken, cancellationToken },
@@ -535,12 +616,14 @@ namespace DataCore.Adapter.Events {
             _subscriptions[subscriptionId] = subscription;
 
             try {
-                await OnSubscriptionAddedInternal(subscription).ConfigureAwait(false);
+                await OnSubscriptionAddedInternal(subscription, request.Topics?.Where(x => x != null) ?? Array.Empty<string>()).ConfigureAwait(false);
             }
             catch {
                 OnSubscriptionCancelledInternal(subscriptionId);
                 throw;
             }
+
+            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChanngesListener(subscription, channel, ct), subscription.CancellationToken);
 
             return subscription.Reader;
         }

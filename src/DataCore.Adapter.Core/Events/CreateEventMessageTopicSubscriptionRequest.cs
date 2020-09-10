@@ -12,8 +12,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The topic names.
         /// </summary>
-        [Required]
-        [MinLength(1)]
+        [MaxLength(100)]
         public IEnumerable<string> Topics { get; set; }
 
 

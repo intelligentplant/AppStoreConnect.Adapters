@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                         await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
                     }
                 }
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }

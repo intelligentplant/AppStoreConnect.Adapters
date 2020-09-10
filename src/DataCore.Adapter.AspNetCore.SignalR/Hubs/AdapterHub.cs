@@ -34,7 +34,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <summary>
         /// Task scheduler for running background operations.
         /// </summary>
-        protected IBackgroundTaskService TaskScheduler { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
-            TaskScheduler = taskScheduler ?? BackgroundTaskService.Default;
+            BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
         }
 
 

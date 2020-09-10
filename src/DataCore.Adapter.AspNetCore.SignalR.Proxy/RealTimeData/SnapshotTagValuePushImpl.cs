@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using IntelligentPlant.BackgroundTasks;
 
@@ -26,12 +28,22 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<TagValueQueryResult>> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request, CancellationToken cancellationToken) {
-            SignalRAdapterProxy.ValidateObject(request); 
-            
+        public Task<ChannelReader<TagValueQueryResult>> Subscribe(
+            IAdapterCallContext context, 
+            CreateSnapshotTagValueSubscriptionRequest request, 
+            ChannelReader<TagValueSubscriptionUpdate> channel,
+            CancellationToken cancellationToken
+        ) {
+            SignalRAdapterProxy.ValidateObject(request);
+
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
             return GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
                 AdapterId,
                 request,
+                channel,
                 cancellationToken
             );
         }

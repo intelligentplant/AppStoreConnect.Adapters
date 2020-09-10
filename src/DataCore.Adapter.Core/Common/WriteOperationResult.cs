@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -40,7 +41,7 @@ namespace DataCore.Adapter.Common {
         protected WriteOperationResult(WriteStatus status, string notes, IEnumerable<AdapterProperty> properties) {
             Status = status;
             Notes = notes;
-            Properties = properties?.ToArray();
+            Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
 
     }

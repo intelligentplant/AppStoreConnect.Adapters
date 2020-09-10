@@ -12,7 +12,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service TagValuesService {
     // Snapshot polling/push
     rpc ReadSnapshotTagValues (ReadSnapshotTagValuesRequest) returns (stream TagValueQueryResult);
-    rpc CreateSnapshotPushChannel (CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
+    rpc CreateSnapshotPushChannel (stream CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
 
     // Historical data polling
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
@@ -37,10 +37,24 @@ message ReadSnapshotTagValuesRequest {
 
 // Snapshot tag value push
 message CreateSnapshotPushChannelRequest {
+    oneof operation {
+        CreateSnapshotPushChannelMessage create = 1;
+        UpdateSnapshotPushChannelMessage update = 2;
+    }
+}
+
+
+message CreateSnapshotPushChannelMessage {
     string adapter_id = 1;
     map<string, string> properties = 2;
     google.protobuf.Duration publish_interval = 3;
     repeated string tags = 4;
+}
+
+
+message UpdateSnapshotPushChannelMessage {
+    SubscriptionUpdateAction action = 1;
+    repeated string tags = 2;
 }
 
 
@@ -89,4 +103,18 @@ message ReadProcessedTagValuesRequest {
     google.protobuf.Duration sample_interval = 5;
     repeated string data_functions = 6;
     map<string,string> properties = 7;
+}
+
+
+// Write tag values
+message WriteTagValueRequest {
+    oneof operation {
+        WriteTagValueInitMessage init = 1;
+        WriteTagValueItem write = 2;
+    }
+}
+
+
+message WriteTagValueInitMessage {
+    string adapter_id = 1;
 }
