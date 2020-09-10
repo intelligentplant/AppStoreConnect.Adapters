@@ -139,7 +139,6 @@ namespace DataCore.Adapter.Events {
                 subscriptionId,
                 context,
                 BackgroundTaskService,
-                null,
                 request.SubscriptionType, 
                 TimeSpan.Zero,
                 new [] { DisposedToken, cancellationToken },

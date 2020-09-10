@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<Adapter.Events.WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<Adapter.Events.WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -30,36 +30,50 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             var client = CreateClient<EventsService.EventsServiceClient>();
             var grpcStream = client.WriteEventMessages(GetCallOptions(context, cancellationToken));
 
+            // Create the subscription.
+            await grpcStream.RequestStream.WriteAsync(new WriteEventMessageRequest() { 
+                Init = new WriteEventMessageInitMessage() {
+                    AdapterId = AdapterId
+                }
+            }).ConfigureAwait(false);
+
+            // Stream subscription changes.
             channel.RunBackgroundOperation(async (ch, ct) => {
                 try {
                     while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (ch.TryRead(out var item) && item != null) {
-                            await grpcStream.RequestStream.WriteAsync(item.ToGrpcWriteEventMessageItem(AdapterId)).ConfigureAwait(false);
+                        while (ch.TryRead(out var update)) {
+                            if (update == null) {
+                                continue;
+                            }
+
+                            await grpcStream.RequestStream.WriteAsync(new WriteEventMessageRequest() {
+                                Write = update.ToGrpcWriteEventMessageItem()
+                            }).ConfigureAwait(false);
                         }
                     }
                 }
                 finally {
-                    await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    if (!ct.IsCancellationRequested) {
+                        await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    }
                 }
-            }, TaskScheduler, cancellationToken);
+            }, BackgroundTaskService, cancellationToken);
 
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
+            // Stream the results.
+            var result = ChannelExtensions.CreateEventMessageWriteResultChannel(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcStream.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteEventMessageResult(), ct).ConfigureAwait(false);
+                // Read results.
+                while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                    if (grpcStream.ResponseStream.Current == null) {
+                        continue;
                     }
-                }
-                finally {
-                    grpcStream.Dispose();
-                }
-            }, true, TaskScheduler, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteEventMessageResult(), ct).ConfigureAwait(false);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
     }
 }

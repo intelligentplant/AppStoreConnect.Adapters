@@ -33,9 +33,6 @@ namespace DataCore.Adapter.Events {
         /// <param name="backgroundTaskService">
         ///   The background task service, used to run publish operations in a background task if required.
         /// </param>
-        /// <param name="topics">
-        ///   The topics to subscribe to.
-        /// </param>
         /// <param name="subscriptionType">
         ///   The subscription type to create.
         /// </param>
@@ -61,7 +58,6 @@ namespace DataCore.Adapter.Events {
             TIdentifier id,
             IAdapterCallContext context,
             IBackgroundTaskService backgroundTaskService,
-            IEnumerable<string> topics,
             EventMessageSubscriptionType subscriptionType,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
@@ -71,7 +67,6 @@ namespace DataCore.Adapter.Events {
             id,
             context,
             backgroundTaskService,
-            topics,
             publishInterval,
             cancellationTokens,
             cleanup,

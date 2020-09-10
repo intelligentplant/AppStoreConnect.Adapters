@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -21,7 +22,7 @@ namespace DataCore.Adapter.Tests {
 
             var options = new SnapshotTagValuePushOptions() {
                 AdapterId = TestContext.TestName,
-                TagResolver = (ctx, name, ct) => new ValueTask<TagIdentifier>(new TagIdentifier(name, name))
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -42,8 +43,114 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(TestContext.TestName, emitted.TagId);
                 Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                Assert.AreEqual(now, emitted.Value.UtcSampleTime);
-                Assert.AreEqual(now.Ticks, emitted.Value.GetValueOrDefault<long>());
+                Assert.AreEqual(val.UtcSampleTime, emitted.Value.UtcSampleTime);
+                Assert.AreEqual(val.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
+            }
+        }
+
+
+        [TestMethod]
+        public async Task SnapshotSubscriptionShouldEmitValuesAfterSubscriptionChange() {
+            var now = DateTime.UtcNow;
+
+            var options = new SnapshotTagValuePushOptions() {
+                AdapterId = TestContext.TestName,
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+            };
+
+            var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
+
+            using (var feature = new SnapshotTagValuePush(options, null, null)) {
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest(),
+                    channel,
+                    CancellationToken
+                );
+
+                var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
+
+                channel.Writer.TryWrite(new TagValueSubscriptionUpdate() { 
+                    Action = Common.SubscriptionUpdateAction.Subscribe,
+                    Tags = new [] { TestContext.TestName }
+                });
+
+                var val2 = TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
+                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                try {
+                    var count = 0;
+                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
+                        ++count;
+                        if (count > 1) {
+                            Assert.Fail("Only one value should be received.");
+                        }
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                        Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                        Assert.AreEqual(val2.UtcSampleTime, emitted.Value.UtcSampleTime);
+                        Assert.AreEqual(val2.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
+                    }
+                }
+                catch (OperationCanceledException) { }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task SnapshotSubscriptionShouldNotEmitValuesAfterSubscriptionChange() {
+            var now = DateTime.UtcNow;
+
+            var options = new SnapshotTagValuePushOptions() {
+                AdapterId = TestContext.TestName,
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+            };
+
+            var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
+
+            using (var feature = new SnapshotTagValuePush(options, null, null)) {
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest() { 
+                        Tags = new[] { TestContext.TestName }
+                    },
+                    channel,
+                    CancellationToken
+                );
+
+                var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
+
+                channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
+                    Action = Common.SubscriptionUpdateAction.Unsubscribe,
+                    Tags = new[] { TestContext.TestName }
+                });
+
+                await Task.Delay(1000, CancellationToken);
+
+                var val2 = TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
+                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                try {
+                    var count = 0;
+                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
+                        ++count;
+                        if (count > 1) {
+                            Assert.Fail("Only one value should be received.");
+                        }
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                        Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                        Assert.AreEqual(val1.UtcSampleTime, emitted.Value.UtcSampleTime);
+                        Assert.AreEqual(val1.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
+                    }
+                }
+                catch (OperationCanceledException) { }
             }
         }
 
@@ -55,7 +162,7 @@ namespace DataCore.Adapter.Tests {
 
             var options = new SnapshotTagValuePushOptions() { 
                 AdapterId = TestContext.TestName,
-                TagResolver = (ctx, name, ct) => new ValueTask<TagIdentifier>(new TagIdentifier(name, name))
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
             var valueCount = 0;
@@ -103,7 +210,7 @@ namespace DataCore.Adapter.Tests {
             var options = new SnapshotTagValuePushOptions() {
                 AdapterId = TestContext.TestName,
                 MaxSubscriptionCount = 1,
-                TagResolver = (ctx, name, ct) => new ValueTask<TagIdentifier>(new TagIdentifier(name, name))
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -209,6 +316,132 @@ namespace DataCore.Adapter.Tests {
                 var emitted = await subscription.ReadAsync(CancellationToken);
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(msg.Message, emitted.Message);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionShouldEmitValuesAfterSubscriptionChange() {
+            var now = DateTime.UtcNow;
+            var topic = Guid.NewGuid().ToString();
+
+            var options = new EventMessagePushWithTopicsOptions() {
+                AdapterId = TestContext.TestName
+            };
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest(),
+                    CancellationToken
+                );
+
+                var msg1 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now)
+                    .WithMessage(TestContext.TestName)
+                    .Build();
+
+                await feature.ValueReceived(msg1, CancellationToken);
+
+                channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
+                    Action = Common.SubscriptionUpdateAction.Subscribe,
+                    Topics = new[] { TestContext.TestName }
+                });
+
+                var msg2 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now.AddSeconds(1))
+                    .WithMessage(TestContext.TestName)
+                    .Build();
+
+                await feature.ValueReceived(msg2, CancellationToken);
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                try {
+                    var count = 0;
+                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
+                        ++count;
+                        if (count > 1) {
+                            Assert.Fail("Only one value should be received.");
+                        }
+
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(msg2.UtcEventTime, emitted.UtcEventTime);
+                        Assert.AreEqual(msg2.Message, emitted.Message);
+                    }
+                }
+                catch (OperationCanceledException) { }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionShouldNotEmitValuesAfterSubscriptionChange() {
+            var now = DateTime.UtcNow;
+            var topic = Guid.NewGuid().ToString();
+
+            var options = new EventMessagePushWithTopicsOptions() {
+                AdapterId = TestContext.TestName
+            };
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topics = new[] { TestContext.TestName }
+                    },
+                    CancellationToken
+                );
+
+                var msg1 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now)
+                    .WithMessage(TestContext.TestName)
+                    .Build();
+
+                await feature.ValueReceived(msg1, CancellationToken);
+
+                channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
+                    Action = Common.SubscriptionUpdateAction.Unsubscribe,
+                    Topics = new[] { TestContext.TestName }
+                });
+
+                await Task.Delay(1000, CancellationToken);
+
+                var msg2 = EventMessageBuilder
+                    .Create()
+                    .WithTopic(topic)
+                    .WithUtcEventTime(now.AddSeconds(1))
+                    .WithMessage(TestContext.TestName)
+                    .Build();
+
+                await feature.ValueReceived(msg2, CancellationToken);
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                try {
+                    var count = 0;
+                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
+                        ++count;
+                        if (count > 1) {
+                            Assert.Fail("Only one value should be received.");
+                        }
+
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
+                        Assert.AreEqual(msg1.Message, emitted.Message);
+                    }
+                }
+                catch (OperationCanceledException) { }
             }
         }
 

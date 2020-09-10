@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -24,19 +25,27 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="request">
         ///   The subscription request.
         /// </param>
+        /// <param name="channel">
+        ///   A channel that can be used to publish changes to the channel's subscription topics.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(string adapterId, CreateEventMessageTopicSubscriptionRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(
+            string adapterId, 
+            CreateEventMessageTopicSubscriptionRequest request, 
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            CancellationToken cancellationToken
+        ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -137,6 +146,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             return await adapter.Feature.WriteEventMessages(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
+
         }
 
         #endregion

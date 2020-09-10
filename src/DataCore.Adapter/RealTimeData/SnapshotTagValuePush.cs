@@ -133,36 +133,32 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Gets the <see cref="TagIdentifier"/> that corresponds to the specified tag name or ID.
+        /// Gets the <see cref="TagIdentifier"/> objects that corresponds to the specified tag names or IDs.
         /// </summary>
         /// <param name="context">
         ///   The call context for the caller.
         /// </param>
-        /// <param name="tag">
-        ///   The tag ID or name.
+        /// <param name="tags">
+        ///   The tag IDs or names.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will return the <see cref="TagIdentifier"/> for the tag. If the tag does 
-        ///   not exist, or the caller is not authorized to access the tag, the return value will 
-        ///   be <see langword="null"/>.
+        ///   A task that will return the <see cref="TagIdentifier"/> objects for the tags. If a tag does 
+        ///   not exist, or the caller is not authorized to access the tag, no entry should be returned 
+        ///   for that tag.
         /// </returns>
         /// <remarks>
         ///   If the <see cref="SnapshotTagValuePushOptions"/> for the manager does not 
         ///   specify a <see cref="SnapshotTagValuePushOptions.TagResolver"/> callback, a 
-        ///   <see cref="TagIdentifier"/> using the specified <paramref name="tag"/> as the name 
-        ///   and ID will be returned.
+        ///   <see cref="TagIdentifier"/> will be returned for each entry in the <paramref name="tags"/> 
+        ///   list using the entry as the tag ID and name.
         /// </remarks>
-        protected virtual async ValueTask<TagIdentifier> ResolveTag(IAdapterCallContext context, string tag, CancellationToken cancellationToken) {
-            if (string.IsNullOrWhiteSpace(tag)) {
-                return null;
-            }
-
+        protected virtual async ValueTask<IEnumerable<TagIdentifier>> ResolveTags(IAdapterCallContext context, IEnumerable<string> tags, CancellationToken cancellationToken) {
             return _options.TagResolver == null
-                ? new TagIdentifier(tag, tag)
-                : await _options.TagResolver.Invoke(context, tag, cancellationToken).ConfigureAwait(false);
+                ? tags.Select(tag => new TagIdentifier(tag, tag))
+                : await _options.TagResolver.Invoke(context, tags, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -185,13 +181,21 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Invoked when a tag is added to a subscription.
+        /// Called when topics are added to a subscription.
         /// </summary>
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        private async Task OnSubscriptionAddedInternal(TagValueSubscriptionChannel<int> subscription) {
-            foreach (var topic in subscription.Topics) {
+        /// <param name="topics">
+        ///   The subscription topics
+        /// </param>
+        /// <returns>
+        ///   A task that will process the operation.
+        /// </returns>
+        private async Task OnTopicsAddedToSubscription(TagValueSubscriptionChannel<int> subscription, IEnumerable<TagIdentifier> topics, CancellationToken cancellationToken) {
+            subscription.AddTopics(topics);
+
+            foreach (var topic in topics) {
                 if (_currentValueByTagId.TryGetValue(topic.Id, out var value)) {
                     subscription.Publish(value, true);
                 }
@@ -203,12 +207,10 @@ namespace DataCore.Adapter.RealTimeData {
             try {
                 var newSubscriptions = new List<TagIdentifier>();
 
-                foreach (var topic in subscription.Topics) {
+                foreach (var topic in topics) {
                     if (subscription.CancellationToken.IsCancellationRequested) {
                         break;
                     }
-
-                    ++subscription.SubscribedTopicCount;
 
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         subscriberCount = 0;
@@ -233,38 +235,30 @@ namespace DataCore.Adapter.RealTimeData {
 
             // Wait for last change to be processed.
             await processed.Task.WithCancellation(DisposedToken).ConfigureAwait(false);
-
-            OnSubscriptionAdded(subscription);
         }
 
 
         /// <summary>
-        /// Invoked when a subscription has been cancelled.
+        /// Called when topics are removed from a subscription.
         /// </summary>
-        /// <param name="subscriptionId">
-        ///   The subscription ID.
+        /// <param name="subscription">
+        ///   The subscription.
         /// </param>
-        private void OnSubscriptionCancelledInternal(int subscriptionId) {
-            if (_isDisposed) {
-                return;
-            }
-
-            if (!_subscriptions.TryRemove(subscriptionId, out var subscription)) {
-                return;
-            }
-
+        /// <param name="topics">.
+        ///   The subscription topics
+        /// </param>
+        /// <returns>
+        ///   A task that will process the operation.
+        /// </returns>
+        private void OnTagsRemovedFromSubscription(TagValueSubscriptionChannel<int> subscription, IEnumerable<TagIdentifier> topics) {
             _subscriptionsLock.EnterWriteLock();
             try {
                 var removedSubscriptions = new List<TagIdentifier>();
 
-                foreach (var topic in subscription.Topics) {
-                    if (subscription.SubscribedTopicCount <= 0) {
-                        // We've already unsubscribed from all of the topics we managed to 
-                        // subscribe to when the subscription was created.
-                        break;
+                foreach (var topic in topics) {
+                    if (topic == null || !subscription.RemoveTopic(topic)) {
+                        continue;
                     }
-
-                    --subscription.SubscribedTopicCount;
 
                     if (!_subscriberCount.TryGetValue(topic, out var subscriberCount)) {
                         continue;
@@ -287,6 +281,48 @@ namespace DataCore.Adapter.RealTimeData {
             }
             finally {
                 _subscriptionsLock.ExitWriteLock();
+            }
+        } 
+
+
+        /// <summary>
+        /// Invoked when a subscription is created.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="initialTopics">
+        ///   The initial topics to subscribe to.
+        /// </param>
+        private async Task OnSubscriptionAddedInternal(TagValueSubscriptionChannel<int> subscription, IEnumerable<string> initialTopics) {
+            var initialTags = initialTopics.Any()
+                ? await ResolveTags(subscription.Context, initialTopics, subscription.CancellationToken).ConfigureAwait(false)
+                : Array.Empty<TagIdentifier>();
+            initialTags = initialTags.Where(x => x != null).ToArray();
+            await OnTopicsAddedToSubscription(subscription, initialTags, subscription.CancellationToken).ConfigureAwait(false);
+            OnSubscriptionAdded(subscription);
+        }
+
+
+        /// <summary>
+        /// Invoked when a subscription has been cancelled.
+        /// </summary>
+        /// <param name="subscriptionId">
+        ///   The subscription ID.
+        /// </param>
+        private void OnSubscriptionCancelledInternal(int subscriptionId) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (!_subscriptions.TryRemove(subscriptionId, out var subscription)) {
+                return;
+            }
+
+            try {
+                OnTagsRemovedFromSubscription(subscription, subscription.Topics);
+            }
+            finally {
                 subscription.Dispose();
                 OnSubscriptionCancelled(subscription);
             }
@@ -431,10 +467,56 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Runs a long-running task that will process changes on a subscription.
+        /// </summary>
+        /// <param name="subscription">
+        ///   The subscription.
+        /// </param>
+        /// <param name="channel">
+        ///   The subscription changes channel.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The long-running task.
+        /// </returns>
+        private async Task RunSubscriptionChanngesListener(TagValueSubscriptionChannel<int> subscription, ChannelReader<TagValueSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (channel.TryRead(out var item)) {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (item?.Tags == null) {
+                        continue;
+                    }
+
+                    var topics = item.Tags.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+                    if (topics.Length == 0) {
+                        continue;
+                    }
+
+                    var tags = await ResolveTags(subscription.Context, topics, cancellationToken).ConfigureAwait(false);
+                    tags = tags.Where(x => x != null).ToArray();
+                    if (!tags.Any()) {
+                        continue;
+                    }
+
+                    if (item.Action == SubscriptionUpdateAction.Subscribe) {
+                        await OnTopicsAddedToSubscription(subscription, tags, cancellationToken).ConfigureAwait(false);
+                    }
+                    else {
+                        OnTagsRemovedFromSubscription(subscription, tags);
+                    }
+                }
+            }
+        }
+
+
         /// <inheritdoc/>
         public async Task<ChannelReader<TagValueQueryResult>> Subscribe(
             IAdapterCallContext context,
             CreateSnapshotTagValueSubscriptionRequest request,
+            ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             if (_isDisposed) {
@@ -442,24 +524,8 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             ValidationExtensions.ValidateObject(request);
-
-            var tags = new HashSet<TagIdentifier>(TagIdentifierComparer.Id);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken)) {
-                var ct = ctSource.Token;
-                foreach (var tag in request.Tags) {
-                    ct.ThrowIfCancellationRequested();
-                    var tagId = await ResolveTag(context, tag, ct).ConfigureAwait(false);
-                    if (tagId == null) {
-                        continue;
-                    }
-                    tags.Add(tagId);
-                }
-            }
-
-            if (tags.Count == 0) {
-                // No valid tags specified.
-                throw new ArgumentException(Resources.Error_CannotResolveAnySubscriptionTopics, nameof(request));
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
             }
 
             if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
@@ -471,7 +537,6 @@ namespace DataCore.Adapter.RealTimeData {
                 subscriptionId,
                 context,
                 BackgroundTaskService,
-                tags,
                 request.PublishInterval,
                 new[] { DisposedToken, cancellationToken },
                 () => OnSubscriptionCancelledInternal(subscriptionId),
@@ -480,12 +545,14 @@ namespace DataCore.Adapter.RealTimeData {
             _subscriptions[subscriptionId] = subscription;
 
             try {
-                await OnSubscriptionAddedInternal(subscription).ConfigureAwait(false);
+                await OnSubscriptionAddedInternal(subscription, request.Tags?.Where(x => x != null) ?? Array.Empty<string>()).ConfigureAwait(false);
             }
             catch {
                 OnSubscriptionCancelledInternal(subscriptionId);
                 throw;
             }
+
+            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChanngesListener(subscription, channel, ct), subscription.CancellationToken);
 
             return subscription.Reader;
         }
@@ -662,7 +729,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that will receive tag names or IDs and will return the matching 
         /// <see cref="TagIdentifier"/>.
         /// </summary>
-        public Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> TagResolver { get; set; }
+        public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> TagResolver { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
@@ -689,22 +756,17 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new delegate.
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Prevent error propagation when a channel closes unexpectedly")]
-        public static Func<IAdapterCallContext, string, CancellationToken, ValueTask<TagIdentifier>> CreateTagResolver(ITagInfo feature) {
+        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(ITagInfo feature) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
 
-            return async (context, tag, cancellationToken) => {
+            return async (context, tags, cancellationToken) => {
                 var ch = await feature.GetTags(context, new GetTagsRequest() { 
-                    Tags = new [] { tag }
+                    Tags = tags
                 }, cancellationToken).ConfigureAwait(false);
 
-                try {
-                    return await ch.ReadAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch {
-                    return null;
-                }
+                return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
             };
         }
 

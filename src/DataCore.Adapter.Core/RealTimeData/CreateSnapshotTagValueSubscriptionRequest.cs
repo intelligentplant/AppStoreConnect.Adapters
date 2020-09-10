@@ -15,8 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The tag names or IDs to subscribe to.
         /// </summary>
-        [Required]
-        [MinLength(1)]
+        [MaxLength(100)]
         public IEnumerable<string> Tags { get; set; }
 
         /// <summary>

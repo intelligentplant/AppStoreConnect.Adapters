@@ -65,7 +65,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-            return TagIdentifierComparer.IdAndName.GetHashCode(this);
+            return TagIdentifierComparer.Id.GetHashCode(this);
         }
 
 
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public bool Equals(TagIdentifier other) {
-            return TagIdentifierComparer.IdAndName.Equals(this, other);
+            return TagIdentifierComparer.Id.Equals(this, other);
         }
 
     }

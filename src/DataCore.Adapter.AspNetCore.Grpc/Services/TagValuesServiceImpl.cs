@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 using Grpc.Core;
@@ -47,34 +48,64 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
-        public override async Task CreateSnapshotPushChannel(
-            CreateSnapshotPushChannelRequest request, 
-            IServerStreamWriter<TagValueQueryResult> responseStream, 
-            ServerCallContext context
-        ) {
+        public override async Task CreateSnapshotPushChannel(IAsyncStreamReader<CreateSnapshotPushChannelRequest> requestStream, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
-            var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() {
-                Tags = request.Tags.ToArray(),
-                PublishInterval = request.PublishInterval.ToTimeSpan(),
-                Properties = new Dictionary<string, string>(request.Properties)
-            }, cancellationToken).ConfigureAwait(false);
+            var updateChannel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
             try {
-                while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var msg) && msg != null) {
-                        await responseStream.WriteAsync(msg.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                // Keep reading from the request stream until we get an item that allows us to create 
+                // the subscription.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != CreateSnapshotPushChannelRequest.OperationOneofCase.Create) {
+                        continue;
                     }
+
+                    // We received a create request!
+
+                    var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, requestStream.Current.Create.AdapterId, cancellationToken).ConfigureAwait(false);
+
+                    var subscription = await adapter.Feature.Subscribe(adapterCallContext, new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tags = requestStream.Current.Create.Tags.ToArray(),
+                        PublishInterval = requestStream.Current.Create.PublishInterval.ToTimeSpan(),
+                        Properties = new Dictionary<string, string>(requestStream.Current.Create.Properties)
+                    }, updateChannel, cancellationToken).ConfigureAwait(false);
+
+                    subscription.RunBackgroundOperation(async (ch, ct) => {
+                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (ch.TryRead(out var val)) {
+                                if (val == null) {
+                                    continue;
+                                }
+                                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                            }
+                        }
+                    }, _backgroundTaskService, cancellationToken);
+
+                    // Break out of the initial loop; we'll handle subscription updates below!
+                    break;
+                }
+
+                // Now keep reading subscription changes.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != CreateSnapshotPushChannelRequest.OperationOneofCase.Update) {
+                        continue;
+                    }
+
+                    updateChannel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
+                        Action = requestStream.Current.Update.Action == SubscriptionUpdateAction.Subscribe
+                            ? Common.SubscriptionUpdateAction.Subscribe
+                            : Common.SubscriptionUpdateAction.Unsubscribe,
+                        Tags = requestStream.Current.Update.Tags.ToArray()
+                    });
                 }
             }
-            catch (OperationCanceledException) {
-                // Do nothing
+            catch (Exception e) {
+                updateChannel.Writer.TryComplete(e);
             }
-            catch (ChannelClosedException) {
-                // Do nothing
+            finally {
+                updateChannel.Writer.TryComplete();
             }
         }
 
@@ -235,111 +266,110 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteSnapshotTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
-            // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+            var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
 
             try {
+                // Keep reading from the request stream until we get an item that allows us to create 
+                // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    var request = requestStream.Current;
-                    if (request == null) {
+                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Init) {
                         continue;
                     }
 
-                    if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
-                        // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
-                        var adapterId = adapter.Adapter.Descriptor.Id;
+                    // We received a create request!
 
-                        writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
-                        writeChannels[adapterId] = writeChannel;
+                    var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
 
-                        var resultsChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
-                        resultsChannel.RunBackgroundOperation(async (ch, ct) => {
-                            while (!ct.IsCancellationRequested) {
-                                var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                    var subscription = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
+
+                    subscription.RunBackgroundOperation(async (ch, ct) => {
+                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (ch.TryRead(out var val)) {
                                 if (val == null) {
                                     continue;
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
+                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
                             }
-                        }, _backgroundTaskService, cancellationToken);
+                        }
+                    }, _backgroundTaskService, cancellationToken);
+
+                    // Break out of the initial loop; we'll handle the actual writes below.
+                    break;
+                }
+
+                // Now handle write requests.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
+                        continue;
                     }
 
-                    var adapterRequest = request.ToAdapterWriteTagValueItem();
-                    Util.ValidateObject(adapterRequest);
-                    await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
+                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
                 }
             }
             catch (Exception e) {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete(e);
-                }
+                valueChannel.Writer.TryComplete(e);
             }
             finally {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete();
-                }
+                valueChannel.Writer.TryComplete();
             }
         }
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are emitted via the response channel")]
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
-            // For writing values to the target adapters.
-            var writeChannels = new Dictionary<string, System.Threading.Channels.Channel<RealTimeData.WriteTagValueItem>>(StringComparer.OrdinalIgnoreCase);
+            var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
 
             try {
+                // Keep reading from the request stream until we get an item that allows us to create 
+                // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    var request = requestStream.Current;
-                    if (request == null) {
+                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Init) {
                         continue;
                     }
 
-                    if (!writeChannels.TryGetValue(request.AdapterId, out var writeChannel)) {
-                        // We've not created a write channel to this adapter, so we'll create one now.
-                        var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
-                        var adapterId = adapter.Adapter.Descriptor.Id;
+                    // We received a create request!
 
-                        writeChannel = ChannelExtensions.CreateTagValueWriteChannel();
-                        writeChannels[adapterId] = writeChannel;
+                    var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
 
-                        var resultsChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, writeChannel.Reader, cancellationToken).ConfigureAwait(false);
-                        resultsChannel.RunBackgroundOperation(async (ch, ct) => {
-                            while (!ct.IsCancellationRequested) {
-                                var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                    var subscription = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
+
+                    subscription.RunBackgroundOperation(async (ch, ct) => {
+                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (ch.TryRead(out var val)) {
                                 if (val == null) {
                                     continue;
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult(adapterId)).ConfigureAwait(false);
+                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
                             }
-                        }, _backgroundTaskService, cancellationToken);
+                        }
+                    }, _backgroundTaskService, cancellationToken);
+
+                    // Break out of the initial loop; we'll handle the actual writes below!
+                    break;
+                }
+
+                // Now handle write requests.
+                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
+                        continue;
                     }
 
-                    var adapterRequest = request.ToAdapterWriteTagValueItem();
-                    Util.ValidateObject(adapterRequest);
-                    await writeChannel.Writer.WriteAsync(adapterRequest, cancellationToken).ConfigureAwait(false);
+                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
                 }
             }
             catch (Exception e) {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete(e);
-                }
+                valueChannel.Writer.TryComplete(e);
             }
             finally {
-                foreach (var item in writeChannels) {
-                    item.Value.Writer.TryComplete();
-                }
+                valueChannel.Writer.TryComplete();
             }
         }
 

@@ -180,19 +180,17 @@ enum EventReadDirection {
 }
 
 
-message WriteEventMessageRequest {
+message WriteEventMessageItem {
     string correlation_id = 1;
-    string adapter_id = 2;
-    EventMessage message = 3;
+    EventMessage message = 2;
 }
 
 
 message WriteEventMessageResult {
     string correlation_id = 1;
-    string adapter_id = 2;
-    WriteOperationStatus write_status = 3;
-    string notes = 4;
-    repeated AdapterProperty properties = 5;
+    WriteOperationStatus write_status = 2;
+    string notes = 3;
+    repeated AdapterProperty properties = 4;
 }
 
 
@@ -358,24 +356,22 @@ message DataFunctionDescriptor {
 }
 
 
-message WriteTagValueRequest {
+message WriteTagValueItem {
     string correlation_id = 1;
-    string adapter_id = 2;
-    string tag_id = 3;
-    google.protobuf.Timestamp utc_sample_time = 4;
-    Variant value = 5;
-    TagValueStatus status = 7;
-    string units = 8;
+    string tag_id = 2;
+    google.protobuf.Timestamp utc_sample_time = 3;
+    Variant value = 4;
+    TagValueStatus status = 5;
+    string units = 6;
 }
 
 
 message WriteTagValueResult {
     string correlation_id = 1;
-    string adapter_id = 2;
-    string tag_id = 3;
-    WriteOperationStatus write_status = 4;
-    string notes = 5;
-    repeated AdapterProperty properties = 6;
+    string tag_id = 2;
+    WriteOperationStatus write_status = 3;
+    string notes = 4;
+    repeated AdapterProperty properties = 5;
 }
 
 

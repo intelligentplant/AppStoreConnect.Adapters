@@ -212,7 +212,6 @@ namespace DataCore.Adapter.Diagnostics {
                 subscriptionId,
                 context,
                 _adapter.BackgroundTaskService,
-                null,
                 TimeSpan.Zero,
                 new[] { _adapter.StopToken, cancellationToken },
                 () => OnHealthCheckSubscriptionCancelled(subscriptionId),

@@ -1,7 +1,10 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events {
@@ -21,49 +24,79 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.EventMessage>> Subscribe(
+        public async Task<ChannelReader<Adapter.Events.EventMessage>> Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             GrpcAdapterProxy.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<EventsService.EventsServiceClient>();
+            var client = CreateClient<EventsService.EventsServiceClient>();
+            var grpcStream = client.CreateEventTopicPushChannel(GetCallOptions(context, cancellationToken));
 
-                var grpcRequest = new CreateEventTopicPushChannelRequest() {
-                    AdapterId = AdapterId,
-                    SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
-                        ? EventSubscriptionType.Active
-                        : EventSubscriptionType.Passive
-                };
-
-                grpcRequest.Topics.Add(request.Topics);
-
-                if (request.Properties != null) {
-                    foreach (var item in request.Properties) {
-                        grpcRequest.Properties.Add(item.Key, item.Value ?? string.Empty);
-                    }
+            var createSubscriptionMessage = new CreateEventTopicPushChannelMessage() {
+                AdapterId = AdapterId,
+                SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
+                    ? EventSubscriptionType.Active
+                    : EventSubscriptionType.Passive
+            };
+            createSubscriptionMessage.Topics.Add(request.Topics?.Where(x => x != null) ?? Array.Empty<string>());
+            if (request.Properties != null) {
+                foreach (var item in request.Properties) {
+                    createSubscriptionMessage.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
+            }
 
-                using (var grpcChannel = client.CreateEventTopicPushChannel(
-                   grpcRequest,
-                   GetCallOptions(context, ct)
-                )) {
-                    // Read event messages.
-                    while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                        if (grpcChannel.ResponseStream.Current == null) {
+            // Create the subscription.
+            await grpcStream.RequestStream.WriteAsync(new CreateEventTopicPushChannelRequest() {
+                Create = createSubscriptionMessage
+            }).ConfigureAwait(false);
+
+            // Stream subscription changes.
+            channel.RunBackgroundOperation(async (ch, ct) => {
+                while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    while (ch.TryRead(out var update)) {
+                        if (update == null) {
                             continue;
                         }
 
-                        await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+                        var msg = new UpdateEventTopicPushChannelMessage() {
+                            Action = update.Action == Common.SubscriptionUpdateAction.Subscribe
+                                ? SubscriptionUpdateAction.Subscribe
+                                : SubscriptionUpdateAction.Unsubscribe
+                        };
+                        msg.Topics.Add(update.Topics.Where(x => x != null));
+                        if (msg.Topics.Count == 0) {
+                            continue;
+                        }
+
+                        await grpcStream.RequestStream.WriteAsync(new CreateEventTopicPushChannelRequest() {
+                            Update = msg
+                        }).ConfigureAwait(false);
                     }
                 }
-            }, true, TaskScheduler, cancellationToken);
+            }, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+            // Stream the results.
+            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                // Read tag values.
+                while (await grpcStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                    if (grpcStream.ResponseStream.Current == null) {
+                        continue;
+                    }
+
+                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
     }

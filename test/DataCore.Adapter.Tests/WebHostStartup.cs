@@ -46,6 +46,7 @@ namespace DataCore.Adapter.Tests {
             services.AddLogging(options => {
                 options.AddConsole();
                 options.AddDebug();
+                options.SetMinimumLevel(LogLevel.Trace);
             });
 
             services.AddHttpClient(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
@@ -92,6 +93,9 @@ namespace DataCore.Adapter.Tests {
 
                     // Add in-memory event message management
                     adapter.AddStandardFeatures(sp.GetService<Events.InMemoryEventMessageStore>());
+
+                    // Add dummy tag value writing.
+                    adapter.AddStandardFeatures(new NullValueWrite());
 
                     // Add ping-pong extension
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter));

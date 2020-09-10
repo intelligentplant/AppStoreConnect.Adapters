@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
@@ -211,6 +214,42 @@ namespace DataCore.Adapter.Tests {
                     Tags = new[] { tagDetails.Id }
                 }, CancellationToken);
                 Assert.IsNotNull(subscription);
+
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
+                    Assert.IsTrue(tagDetails.Id.Equals(val.TagId) || tagDetails.Id.Equals(val.TagName, StringComparison.OrdinalIgnoreCase));
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<ISnapshotTagValuePush>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ISnapshotTagValuePush>();
+                    return;
+                }
+
+                var tagDetails = GetReadTagValuesQueryDetails();
+                var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
+
+                var subscription = await feature.Subscribe(
+                    context, 
+                    new CreateSnapshotTagValueSubscriptionRequest(), 
+                    channel,
+                    CancellationToken
+                );
+                Assert.IsNotNull(subscription);
+
+                // Now add the tag to the subscription.
+
+                channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
+                    Action = SubscriptionUpdateAction.Subscribe,
+                    Tags = new[] { tagDetails.Id }
+                });
 
                 using (var ctSource = new CancellationTokenSource(1000)) {
                     var val = await subscription.ReadAsync(ctSource.Token);
@@ -481,6 +520,58 @@ namespace DataCore.Adapter.Tests {
             });
         }
 
+
+        [TestMethod]
+        public Task EventTopicSubscriptionShouldAllowSubscriptionChanges() {
+            var topic = TestContext.TestName;
+
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IEventMessagePushWithTopics>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IEventMessagePushWithTopics>();
+                    return;
+                }
+
+                var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
+
+                var subscription = await feature.Subscribe(
+                    context,
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        SubscriptionType = EventMessageSubscriptionType.Active
+                    },
+                    channel,
+                    CancellationToken
+                );
+
+                Assert.IsNotNull(subscription);
+
+                await Task.Delay(1000, CancellationToken);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, topic);
+
+                await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => {
+                    using (var ctSource = new CancellationTokenSource(1000)) {
+                        var val = await subscription.ReadAsync(ctSource.Token);
+                        Assert.Fail("Should not receive value.");
+                    }
+                });
+
+                channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
+                    Action = SubscriptionUpdateAction.Subscribe,
+                    Topics = new[] { topic }
+                });
+
+                await Task.Delay(1000, CancellationToken);
+                await EmitTestEvent(adapter, EventMessageSubscriptionType.Active, topic);
+
+                using (var ctSource = new CancellationTokenSource(1000)) {
+                    var val = await subscription.ReadAsync(ctSource.Token);
+                    Assert.IsNotNull(val);
+                    Assert.AreEqual(topic, val.Topic);
+                }
+
+            });
+        }
+
         #endregion
 
         #region [ IReadEventMessagesForTimeRange ]
@@ -613,6 +704,133 @@ namespace DataCore.Adapter.Tests {
                     else {
                         Assert.IsTrue(messages2.First().UtcEventTime <= messages.Last().UtcEventTime);
                     }
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IWriteSnapshotTagValues / IWriteHistoricalTagValues ]
+
+        [TestMethod]
+        public Task WriteSnapshotTagValuesShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteSnapshotTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteSnapshotTagValues>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteTagValueItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteTagValueItem() {  
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        TagId = TestContext.TestName,
+                        Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    });
+                }
+
+                var writeResults = await feature.WriteSnapshotTagValues(context, values.PublishToChannel(), CancellationToken);
+                var index = 0;
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
+                    }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(result);
+                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
+
+                    ++index;
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task WriteHistoricalTagValuesShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteHistoricalTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteHistoricalTagValues>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteTagValueItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteTagValueItem() {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        TagId = TestContext.TestName,
+                        Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    });
+                }
+
+                var writeResults = await feature.WriteHistoricalTagValues(context, values.PublishToChannel(), CancellationToken);
+                var index = 0;
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
+                    }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(result);
+                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
+
+                    ++index;
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IWriteSnapshotTagValues / IWriteHistoricalTagValues ]
+
+        [TestMethod]
+        public Task WriteEventMessagesShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteEventMessages>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteEventMessages>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteEventMessageItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteEventMessageItem() {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        EventMessage = EventMessageBuilder.Create().Build()
+                    });
+                }
+
+                var writeResults = await feature.WriteEventMessages(context, values.PublishToChannel(), CancellationToken);
+                var index = 0;
+
+                //CancelAfter(TimeSpan.FromSeconds(1));
+
+                try {
+                    await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
+                        if (index > values.Count) {
+                            Assert.Fail("Too many results received");
+                        }
+                        var expected = values[index];
+
+                        Assert.IsNotNull(result);
+                        Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
+
+                        ++index;
+                    }
+                }
+                catch (InvalidOperationException e) {
+
                 }
             });
         }

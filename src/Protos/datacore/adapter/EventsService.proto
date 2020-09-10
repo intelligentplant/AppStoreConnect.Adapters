@@ -11,7 +11,7 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 service EventsService {
     // Push 
     rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessage);
-    rpc CreateEventTopicPushChannel(CreateEventTopicPushChannelRequest) returns (stream EventMessage);
+    rpc CreateEventTopicPushChannel(stream CreateEventTopicPushChannelRequest) returns (stream EventMessage);
 
     // Polling
     rpc GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest) returns (stream EventMessage);
@@ -30,10 +30,24 @@ message CreateEventPushChannelRequest {
 
 
 message CreateEventTopicPushChannelRequest {
+    oneof operation {
+        CreateEventTopicPushChannelMessage create = 1;
+        UpdateEventTopicPushChannelMessage update = 2;
+    }
+}
+
+
+message CreateEventTopicPushChannelMessage {
     string adapter_id = 1;
     EventSubscriptionType subscription_type = 2;
     repeated string topics = 3;
     map<string,string> properties = 4;
+}
+
+
+message UpdateEventTopicPushChannelMessage {
+    SubscriptionUpdateAction action = 1;
+    repeated string topics = 2;
 }
 
 
@@ -56,4 +70,18 @@ message GetEventMessagesUsingCursorPositionRequest {
     map<string,string> properties = 5;
     int32 page_size = 6;
     string topic = 7;
+}
+
+
+// Write tag values
+message WriteEventMessageRequest {
+    oneof operation {
+        WriteEventMessageInitMessage init = 1;
+        WriteEventMessageItem write = 2;
+    }
+}
+
+
+message WriteEventMessageInitMessage {
+    string adapter_id = 1;
 }

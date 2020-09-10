@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -76,15 +78,29 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="request">
         ///   Additional subscription properties.
         /// </param>
+        /// <param name="channel">
+        ///   A channel that can be used to add topics to or remove topics from the subscription.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannelAsync(string adapterId, CreateEventMessageTopicSubscriptionRequest request, CancellationToken cancellationToken) {
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannelAsync(
+            string adapterId,
+            CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            CancellationToken cancellationToken
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
@@ -92,6 +108,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 "CreateEventMessageTopicChannel",
                 adapterId,
                 request,
+                channel,
                 cancellationToken
             ).ConfigureAwait(false);
         }

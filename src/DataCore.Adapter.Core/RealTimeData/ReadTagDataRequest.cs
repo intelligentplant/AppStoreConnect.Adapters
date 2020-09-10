@@ -16,6 +16,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
+        [MaxLength(100)]
         public IEnumerable<string> Tags { get; set; }
 
 

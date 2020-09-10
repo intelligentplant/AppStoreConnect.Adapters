@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -43,6 +45,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="request">
         ///   The subscription request.
         /// </param>
+        /// <param name="channel">
+        ///   A channel that can be used to add tags to or remove tags from the subscription.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -52,6 +57,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
             string adapterId,
             CreateSnapshotTagValueSubscriptionRequest request,
+            ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -60,12 +66,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<TagValueQueryResult>(
                 "CreateSnapshotTagValueChannel",
                 adapterId,
                 request,
+                channel,
                 cancellationToken
             ).ConfigureAwait(false);
         }

@@ -59,12 +59,18 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The subscription topics.
         /// </summary>
-        public IEnumerable<TTopic> Topics { get; }
+        private readonly List<TTopic> _topics;
 
         /// <summary>
-        /// Indicates how many of the <see cref="Topics"/> are actually being observed.
+        /// The subscription topics.
         /// </summary>
-        public int SubscribedTopicCount { get; internal set; }
+        public IEnumerable<TTopic> Topics {
+            get {
+                lock (_topics) {
+                    return _topics.ToArray();
+                }
+            }
+        }
 
         /// <summary>
         /// The publish interval. A value less than or equal to <see cref="TimeSpan.Zero"/> 
@@ -105,9 +111,6 @@ namespace DataCore.Adapter {
         /// <param name="scheduler">
         ///   The task scheduler, used to run publish operations in a background task if required.
         /// </param>
-        /// <param name="topics">
-        ///   The topics to subscribe to.
-        /// </param>
         /// <param name="publishInterval">
         ///   The publish interval for the subscription. When greater than <see cref="TimeSpan.Zero"/>, 
         ///   a background task will be used to periodically publish the last-received message. 
@@ -130,7 +133,6 @@ namespace DataCore.Adapter {
             TIdentifier id,
             IAdapterCallContext context,
             IBackgroundTaskService scheduler,
-            IEnumerable<TTopic> topics,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
             Action cleanup,
@@ -158,7 +160,7 @@ namespace DataCore.Adapter {
                 SingleWriter = false,
             });
 
-            Topics = topics;
+            _topics = new List<TTopic>();
             PublishInterval = publishInterval;
 
             _cancellationTokenSource = cancellationTokens == null || cancellationTokens.Length == 0
@@ -178,6 +180,35 @@ namespace DataCore.Adapter {
             // If we have a publish interval, run a background task to handle this.
             if (PublishInterval > TimeSpan.Zero) {
                 scheduler.QueueBackgroundWorkItem(RunEgressLoop, CancellationToken);
+            }
+        }
+
+
+        /// <summary>
+        /// Adds topics to the subscription.
+        /// </summary>
+        /// <param name="topics">
+        ///   The topics.
+        /// </param>
+        internal void AddTopics(IEnumerable<TTopic> topics) {
+            lock (_topics) {
+                _topics.AddRange(topics);
+            }
+        }
+
+
+        /// <summary>
+        /// Removes a topic from the subscription.
+        /// </summary>
+        /// <param name="topic">
+        ///   The topics.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the topic was removed, or <see langword="false"/> if no matching topic was found.
+        /// </returns>
+        internal bool RemoveTopic(TTopic topic) {
+            lock (_topics) {
+                return _topics.Remove(topic);
             }
         }
 

@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
-        protected IBackgroundTaskService TaskScheduler {
+        protected IBackgroundTaskService BackgroundTaskService {
             get { return _proxy.BackgroundTaskService; }
         }
 

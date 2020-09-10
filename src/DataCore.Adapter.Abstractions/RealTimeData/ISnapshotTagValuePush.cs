@@ -25,6 +25,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="request">
         ///   A request describing the subscription settings.
         /// </param>
+        /// <param name="channel">
+        ///   A channel that will add tags to or remove tags from the subscription.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the subscription.
         /// </param>
@@ -34,6 +37,7 @@ namespace DataCore.Adapter.RealTimeData {
         Task<ChannelReader<TagValueQueryResult>> Subscribe(
             IAdapterCallContext context,
             CreateSnapshotTagValueSubscriptionRequest request,
+            ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         );
 
