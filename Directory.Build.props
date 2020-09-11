@@ -14,7 +14,7 @@
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant Ltd.</Company>
     <PackagePrefix>IntelligentPlant.AppStoreConnect</PackagePrefix>
-    <PackageProjectUrl>https://github.com/intelligentplant/app-store-connect-adapters</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/intelligentplant/AppStoreConnect.Adapters</PackageProjectUrl>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages\$(Configuration)</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <NeutralLanguage>en</NeutralLanguage>
