@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -13,7 +14,7 @@ namespace DataCore.Adapter.Events {
         /// The topic names.
         /// </summary>
         [MaxLength(100)]
-        public IEnumerable<string> Topics { get; set; }
+        public IEnumerable<string> Topics { get; set; } = Array.Empty<string>();
 
 
         /// <inheritdoc/>

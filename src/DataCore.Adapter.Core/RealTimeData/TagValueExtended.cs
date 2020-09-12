@@ -14,12 +14,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Notes associated with the value.
         /// </summary>
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         /// <summary>
         /// An error message associated with the value.
         /// </summary>
-        public string Error { get; set; }
+        public string? Error { get; set; }
 
         /// <summary>
         /// Additional value properties.
@@ -55,10 +55,10 @@ namespace DataCore.Adapter.RealTimeData {
             DateTime utcSampleTime, 
             Variant value, 
             TagValueStatus status, 
-            string units, 
-            string notes, 
-            string error, 
-            IEnumerable<AdapterProperty> properties
+            string? units, 
+            string? notes, 
+            string? error, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(utcSampleTime, value, status, units) {
             Notes = notes;
             Error = error;
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
-        public static TagValueExtended Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units, string notes, string error, IEnumerable<AdapterProperty> properties) {
+        public static TagValueExtended Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units, string? notes, string? error, IEnumerable<AdapterProperty>? properties) {
             return new TagValueExtended(utcSampleTime, value, status, units, notes, error, properties);
         }
 

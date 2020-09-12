@@ -12,12 +12,12 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The name filter.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The description filter.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
     }
 }

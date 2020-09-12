@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The adapter description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public AdapterDescriptor(string id, string name, string description) {
+        public AdapterDescriptor(string id, string name, string? description) {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
                 : id;
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public static AdapterDescriptor Create(string id, string name, string description) {
+        public static AdapterDescriptor Create(string id, string name, string? description) {
             return new AdapterDescriptor(id, name, description);
         }
 

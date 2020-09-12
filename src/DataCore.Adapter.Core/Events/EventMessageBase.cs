@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Events {
         ///   The topic might be set using e.g. the MQTT channel or the OPC UA node that emitted 
         ///   the message
         /// </remarks>
-        public string Topic { get; }
+        public string? Topic { get; }
 
         /// <summary>
         /// The UTC timestamp of the event.
@@ -40,12 +40,12 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The event category.
         /// </summary>
-        public string Category { get; }
+        public string? Category { get; }
 
         /// <summary>
         /// The event message.
         /// </summary>
-        public string Message { get; }
+        public string? Message { get; }
 
         /// <summary>
         /// Additional event properties.
@@ -77,7 +77,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   The event properties.
         /// </param>
-        protected EventMessageBase(string id, string topic, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
+        protected EventMessageBase(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? message, IEnumerable<AdapterProperty>? properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Topic = topic;
             UtcEventTime = utcEventTime;

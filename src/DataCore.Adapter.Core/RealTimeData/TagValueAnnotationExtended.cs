@@ -50,9 +50,9 @@ namespace DataCore.Adapter.RealTimeData {
             AnnotationType annotationType, 
             DateTime utcStartTime, 
             DateTime? utcEndTime, 
-            string value, 
-            string description, 
-            IEnumerable<AdapterProperty> properties
+            string? value, 
+            string? description, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(annotationType, utcStartTime, utcEndTime, value, description, properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
         }
@@ -86,7 +86,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueAnnotationExtended Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
+        public static TagValueAnnotationExtended Create(string id, AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string? value, string? description, IEnumerable<AdapterProperty>? properties) {
             return new TagValueAnnotationExtended(
                 id,
                 annotationType,

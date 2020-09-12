@@ -25,7 +25,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
-            return value.GetValueOrDefault<T>(default);
+            return value.GetValueOrDefault<T>(default!);
         }
 
 

@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
-        public string CorrelationId { get; }
+        public string? CorrelationId { get; }
 
 
         /// <summary>
@@ -33,10 +33,10 @@ namespace DataCore.Adapter.Events {
         /// </param>,
         /// 
         public WriteEventMessageResult(
-            string correlationId,
+            string? correlationId,
             WriteStatus status, 
-            string notes, 
-            IEnumerable<AdapterProperty> properties
+            string? notes, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
             CorrelationId = correlationId;
         }
@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public static WriteEventMessageResult Create(string correlationId, WriteStatus status, string notes, IEnumerable<AdapterProperty> properties)  {
+        public static WriteEventMessageResult Create(string? correlationId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties)  {
             return new WriteEventMessageResult(correlationId, status, notes, properties);
         }
 

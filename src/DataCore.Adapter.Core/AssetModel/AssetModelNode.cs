@@ -34,17 +34,17 @@ namespace DataCore.Adapter.AssetModel {
         /// provide more information about the node type (e.g. if the node represents a conceptual 
         /// item such as a folder in a hierarchical structure).
         /// </summary>
-        public string NodeSubType { get; }
+        public string? NodeSubType { get; }
 
         /// <summary>
         /// The node description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// The parent ID of the node. Top-level nodes will have a value of <see langword="null"/>.
         /// </summary>
-        public string Parent { get; }
+        public string? Parent { get; }
 
         /// <summary>
         /// Indicates if this node has any child nodes.
@@ -54,7 +54,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The data reference associated with the node.
         /// </summary>
-        public DataReference DataReference { get; }
+        public DataReference? DataReference { get; }
 
         /// <summary>
         /// Additional properties associated with the node.
@@ -104,12 +104,12 @@ namespace DataCore.Adapter.AssetModel {
             string id, 
             string name, 
             NodeType nodeType,
-            string nodeSubType,
-            string description, 
-            string parent, 
+            string? nodeSubType,
+            string? description, 
+            string? parent, 
             bool hasChildren, 
-            DataReference dataReference, 
-            IEnumerable<AdapterProperty> properties
+            DataReference? dataReference, 
+            IEnumerable<AdapterProperty>? properties
         ) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));

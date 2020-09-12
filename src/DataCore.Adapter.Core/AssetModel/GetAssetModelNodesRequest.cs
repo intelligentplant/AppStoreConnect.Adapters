@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -15,7 +16,7 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<string> Nodes { get; set; }
+        public IEnumerable<string> Nodes { get; set; } = Array.Empty<string>();
 
 
         /// <summary>

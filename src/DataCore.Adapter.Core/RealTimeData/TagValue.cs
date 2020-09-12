@@ -26,7 +26,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The value units.
         /// </summary>
-        public string Units { get; }
+        public string? Units { get; }
 
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
+        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
             UtcSampleTime = utcSampleTime;
             Value = value;
             Status = status;
@@ -67,7 +67,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string units) {
+        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
             return new TagValue(utcSampleTime, value, status, units);
         }
 
@@ -87,13 +87,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The formatted value.
         /// </returns>
-        public string ToString(string format) {
+        public string ToString(string? format) {
             return ToString(format, null);
         }
 
 
         /// <inheritdoc/>
-        public string ToString(string format, IFormatProvider formatProvider) {
+        public string ToString(string? format, IFormatProvider? formatProvider) {
             var formattedValue = Value.ToString(format ?? Variant.GetDefaultFormat(Value.Type), formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
             var formattedStatus = Status == TagValueStatus.Good

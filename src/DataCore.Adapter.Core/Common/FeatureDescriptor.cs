@@ -22,20 +22,20 @@ namespace DataCore.Adapter.Common {
         /// The extension feature URI.
         /// </summary>
         [Required]
-        public Uri Uri { get; set; }
+        public Uri Uri { get; set; } = default!;
 
         /// <summary>
         /// The feature display name.
         /// </summary>
         [Required]
         [MaxLength(MaxDisplayNameLength)]
-        public string DisplayName { get; set; }
+        public string DisplayName { get; set; } = default!;
 
         /// <summary>
         /// The feature description.
         /// </summary>
         [MaxLength(MaxDescriptionLength)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
     }
 }

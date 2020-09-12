@@ -13,12 +13,12 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The application name.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
         /// <summary>
         /// The application description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// The Semantic Versioning v2 (https://semver.org/spec/v2.0.0.html) application version.
@@ -28,7 +28,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Information about the application vendor.
         /// </summary>
-        public VendorInfo Vendor { get; }
+        public VendorInfo? Vendor { get; }
 
         /// <summary>
         /// Custom properties supplied by the hosting application.
@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Common {
         /// The <see cref="HostInfo"/> to use when an instance is not provided by the hosting 
         /// application.
         /// </summary>
-        public static HostInfo Unspecified { get; } = Create(SharedResources.HostInfo_Unspecified_Name, SharedResources.HostInfo_Unspecified_Description, "0.0.0", null, null);
+        public static HostInfo Unspecified { get; } = Create(SharedResources.HostInfo_Unspecified_Name, SharedResources.HostInfo_Unspecified_Description, "0.0.0", null);
 
 
         /// <summary>
@@ -62,14 +62,14 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional host properties.
         /// </param>
-        public HostInfo(string name, string description, string version, VendorInfo vendor, IEnumerable<AdapterProperty> properties) {
+        public HostInfo(string? name, string? description, string? version, VendorInfo? vendor, IEnumerable<AdapterProperty>? properties) {
             Name = name?.Trim();
             Description = description?.Trim();
             Version = NuGet.Versioning.SemanticVersion.TryParse(version, out var semVer)
-            ? semVer.ToFullString()
-            : System.Version.TryParse(version, out var v)
-                ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString(System.Globalization.CultureInfo.CurrentCulture)).ToFullString()
-                : new NuGet.Versioning.SemanticVersion(0, 0, 0).ToFullString();
+                ? semVer.ToFullString()
+                : System.Version.TryParse(version, out var v)
+                    ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString(System.Globalization.CultureInfo.CurrentCulture)).ToFullString()
+                    : new NuGet.Versioning.SemanticVersion(0, 0, 0).ToFullString();
             Vendor = vendor;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional host properties.
         /// </param>
-        public static HostInfo Create(string name, string description, string version, VendorInfo vendor, params AdapterProperty[] properties) {
+        public static HostInfo Create(string? name, string? description, string? version, VendorInfo? vendor, params AdapterProperty[] properties) {
             return Create(name, description, version, vendor, (IEnumerable<AdapterProperty>) properties);
         }
 
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional host properties.
         /// </param>
-        public static HostInfo Create(string name, string description, string version, VendorInfo vendor, IEnumerable<AdapterProperty> properties) {
+        public static HostInfo Create(string? name, string? description, string? version, VendorInfo? vendor, IEnumerable<AdapterProperty>? properties) {
             return new HostInfo(name, description, version, vendor, properties);
         }
 

@@ -30,12 +30,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The annotation value.
         /// </summary>
-        public string Value { get; }
+        public string? Value { get; }
 
         /// <summary>
         /// An additional description or explanation of the annotation.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// Additional annotation properties.
@@ -65,12 +65,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Additional annotation properties.
         /// </param>
-        public TagValueAnnotation(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
+        public TagValueAnnotation(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string? value, string? description, IEnumerable<AdapterProperty>? properties) {
             AnnotationType = annotationType;
             UtcStartTime = utcStartTime.ToUniversalTime();
             UtcEndTime = annotationType == AnnotationType.Instantaneous
-            ? null
-            : utcEndTime?.ToUniversalTime();
+                ? null
+                : utcEndTime?.ToUniversalTime();
             Value = value;
             Description = description;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
@@ -99,7 +99,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Additional annotation properties.
         /// </param>
-        public static TagValueAnnotation Create(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string value, string description, IEnumerable<AdapterProperty> properties) {
+        public static TagValueAnnotation Create(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string? value, string? description, IEnumerable<AdapterProperty>? properties) {
             return new TagValueAnnotation(annotationType, utcStartTime, utcEndTime, value, description, properties);
         }
 

@@ -13,13 +13,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// The tag ID or name.
         /// </summary>
         [Required]
-        public string Tag { get; set; }
+        public string Tag { get; set; } = default!;
 
         /// <summary>
         /// The annotation ID.
         /// </summary>
         [Required]
-        public string AnnotationId { get; set; }
+        public string AnnotationId { get; set; } = default!;
 
     }
 }

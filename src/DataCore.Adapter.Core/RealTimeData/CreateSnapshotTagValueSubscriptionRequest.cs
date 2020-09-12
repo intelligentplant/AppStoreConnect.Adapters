@@ -16,7 +16,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The tag names or IDs to subscribe to.
         /// </summary>
         [MaxLength(100)]
-        public IEnumerable<string> Tags { get; set; }
+        public IEnumerable<string> Tags { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Specifies how frequently new values should be emitted from the subscription. 

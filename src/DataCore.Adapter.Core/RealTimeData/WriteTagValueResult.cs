@@ -13,7 +13,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
-        public string CorrelationId { get; }
+        public string? CorrelationId { get; }
 
         /// <summary>
         /// The ID of the tag.
@@ -44,11 +44,11 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
         public WriteTagValueResult(
-            string correlationId, 
+            string? correlationId, 
             string tagId, 
             WriteStatus status, 
-            string notes, 
-            IEnumerable<AdapterProperty> properties
+            string? notes, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
             CorrelationId = correlationId;
             TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
@@ -76,7 +76,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public static WriteTagValueResult Create(string correlationId, string tagId, WriteStatus status, string notes, IEnumerable<AdapterProperty> properties) {
+        public static WriteTagValueResult Create(string? correlationId, string tagId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
             return new WriteTagValueResult(correlationId, tagId, status, notes, properties);
         }
 

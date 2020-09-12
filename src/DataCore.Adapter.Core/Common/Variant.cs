@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The value.
         /// </summary>
-        public object Value { get; }
+        public object? Value { get; }
 
         /// <summary>
         /// The variant type.
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="type">
         ///   The variant type.
         /// </param>
-        public Variant(object value, VariantType type) {
+        public Variant(object? value, VariantType type) {
             Value = value;
             Type = type;
         }
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Common {
         ///   When a value is provided, the <see cref="Type"/> of the resulting variant is set to 
         ///   this value instead of being inferred from the <paramref name="value"/>.
         /// </param>
-        public static Variant FromValue(object value, VariantType? typeOverride = null) {
+        public static Variant FromValue(object? value, VariantType? typeOverride = null) {
             if (value is Variant v) {
                 return new Variant(v.Value, v.Type);
             }
@@ -127,7 +127,7 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="true"/> if the string was successfully parsed, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool TryParse(string s, VariantType type, IFormatProvider provider, out Variant variant) {
+        public static bool TryParse(string s, VariantType type, IFormatProvider? provider, out Variant variant) {
             if (s == null) {
                 variant = Null;
                 return type == VariantType.Null;
@@ -272,7 +272,7 @@ namespace DataCore.Adapter.Common {
         ///   The default format to use when <see cref="ToString()"/> is called.
         /// </returns>
         public static string GetDefaultFormat(VariantType type) {
-            string format = null;
+            string format = null!;
 
             // Special handling for some types to ensure correct round-tripping. 
             // See https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings
@@ -310,7 +310,7 @@ namespace DataCore.Adapter.Common {
         ///   The formatted value.
         /// </returns>
         public override string ToString() {
-            return ToString(GetDefaultFormat(Type), null);
+            return ToString(GetDefaultFormat(Type), null!);
         }
 
 
@@ -324,14 +324,14 @@ namespace DataCore.Adapter.Common {
         ///   The formatted value.
         /// </returns>
         public string ToString(string format) {
-            return ToString(format, null);
+            return ToString(format, null!);
         }
 
 
         /// <inheritdoc/>
-        public string ToString(string format, IFormatProvider formatProvider) {
+        public string ToString(string? format, IFormatProvider? formatProvider) {
             if (Value == null) {
-                return null;
+                return null!;
             }
             if (Value is string s) {
                 return s;
@@ -385,105 +385,105 @@ namespace DataCore.Adapter.Common {
         public static implicit operator Variant(bool val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator bool(Variant val) => (bool) val.Value;
+        public static explicit operator bool(Variant val) => val.Value == null ? default : (bool) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(sbyte val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator sbyte(Variant val) => (sbyte) val.Value;
+        public static explicit operator sbyte(Variant val) => val.Value == null ? default : (sbyte) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(byte val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator byte(Variant val) => (byte) val.Value;
+        public static explicit operator byte(Variant val) => val.Value == null ? default : (byte) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(short val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator short(Variant val) => (short) val.Value;
+        public static explicit operator short(Variant val) => val.Value == null ? default : (short) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(ushort val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator ushort(Variant val) => (ushort) val.Value;
+        public static explicit operator ushort(Variant val) => val.Value == null ? default : (ushort) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(int val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator int(Variant val) => (int) val.Value;
+        public static explicit operator int(Variant val) => val.Value == null ? default : (int) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(uint val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator uint(Variant val) => (uint) val.Value;
+        public static explicit operator uint(Variant val) => val.Value == null ? default : (uint) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(long val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator long(Variant val) => (long) val.Value;
+        public static explicit operator long(Variant val) => val.Value == null ? default : (long) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(ulong val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator ulong(Variant val) => (ulong) val.Value;
+        public static explicit operator ulong(Variant val) => val.Value == null ? default : (ulong) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(float val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator float(Variant val) => (float) val.Value;
+        public static explicit operator float(Variant val) => val.Value == null ? default : (float) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(double val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator double(Variant val) => (double) val.Value;
+        public static explicit operator double(Variant val) => val.Value == null ? default : (double) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(string val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator string(Variant val) => (string) val.Value;
+        public static explicit operator string(Variant val) => (string) val.Value!;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(Uri val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator Uri(Variant val) => (Uri) val.Value;
+        public static explicit operator Uri(Variant val) => (Uri) val.Value!;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(DateTime val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator DateTime(Variant val) => (DateTime) val.Value;
+        public static explicit operator DateTime(Variant val) => val.Value == null ? default : (DateTime) val.Value;
 
 
         /// <inheritdoc/>
         public static implicit operator Variant(TimeSpan val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static explicit operator TimeSpan(Variant val) => (TimeSpan) val.Value;
+        public static explicit operator TimeSpan(Variant val) => val.Value == null ? default : (TimeSpan) val.Value;
 
     }
 

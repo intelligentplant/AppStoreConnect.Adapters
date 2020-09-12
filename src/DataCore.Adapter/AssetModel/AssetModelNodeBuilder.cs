@@ -295,7 +295,10 @@ namespace DataCore.Adapter.AssetModel {
         ///   <paramref name="adapterId"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
+        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagName"/> is <see langword="null"/>.
         /// </exception>
         public AssetModelNodeBuilder WithDataReference(
             string adapterId, 

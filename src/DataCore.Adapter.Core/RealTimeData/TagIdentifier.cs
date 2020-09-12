@@ -71,7 +71,7 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public override bool Equals(object obj) {
-            return Equals(obj as TagIdentifier);
+            return obj is TagIdentifier id ? Equals(id) : false;
         }
 
 

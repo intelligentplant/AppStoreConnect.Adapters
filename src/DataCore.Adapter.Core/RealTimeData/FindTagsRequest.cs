@@ -11,27 +11,27 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The tag name filter.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The tag description filter.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// The tag units filter.
         /// </summary>
-        public string Units { get; set; }
+        public string? Units { get; set; }
 
         /// <summary>
         /// The tag label filter.
         /// </summary>
-        public string Label { get; set; }
+        public string? Label { get; set; }
 
         /// <summary>
         /// Additional filters on bespoke tag properties.
         /// </summary>
-        public IDictionary<string, string> Other { get; set; }
+        public IDictionary<string, string>? Other { get; set; }
 
     }
 }

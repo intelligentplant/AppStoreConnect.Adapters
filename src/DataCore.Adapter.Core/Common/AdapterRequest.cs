@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Common {
         /// Additional request properties. These can be used to provide bespoke query parameters 
         /// supported by the adapter.
         /// </summary>
-        public IDictionary<string, string> Properties { get; set; }
+        public IDictionary<string, string>? Properties { get; set; }
 
 
         /// <summary>

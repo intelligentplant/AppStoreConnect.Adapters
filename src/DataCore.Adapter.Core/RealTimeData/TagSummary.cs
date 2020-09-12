@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -13,12 +12,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The tag description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// The tag units.
         /// </summary>
-        public string Units { get; }
+        public string? Units { get; }
 
         /// <summary>
         /// The tag data type.
@@ -50,7 +49,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagSummary(string id, string name, string description, string units, VariantType dataType) 
+        public TagSummary(string id, string name, string? description, string? units, VariantType dataType) 
             : base(id, name) {
             Description = description ?? string.Empty;
             Units = units ?? string.Empty;
@@ -82,7 +81,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagSummary Create(string id, string name, string description, string units, VariantType dataType) {
+        public static TagSummary Create(string id, string name, string? description, string? units, VariantType dataType) {
             return new TagSummary(id, name, description, units, dataType);
         }
 

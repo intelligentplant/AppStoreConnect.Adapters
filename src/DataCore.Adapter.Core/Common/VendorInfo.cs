@@ -12,14 +12,14 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The vendor name.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
 
 
         /// <summary>
         /// The vendor URL.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
 
 
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
-        public VendorInfo(string name, string url) {
+        public VendorInfo(string? name, string? url) {
             Name = name?.Trim();
             Url = url;
         }
@@ -47,7 +47,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="url">
         ///   The vendor URL.
         /// </param>
-        public static VendorInfo Create(string name, string url) {
+        public static VendorInfo Create(string? name, string? url) {
             return new VendorInfo(name, url);
         }
 

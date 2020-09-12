@@ -51,12 +51,12 @@ namespace DataCore.Adapter.Events {
         /// </exception>
         public EventMessageWithCursorPosition(
             string id, 
-            string topic,
+            string? topic,
             DateTime utcEventTime, 
             EventPriority priority, 
-            string category, 
-            string message, 
-            IEnumerable<AdapterProperty> properties, 
+            string? category, 
+            string? message, 
+            IEnumerable<AdapterProperty>? properties, 
             string cursorPosition
         ) : base(id, topic, utcEventTime, priority, category, message, properties) {
             CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition));
@@ -93,7 +93,7 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
-        public static EventMessageWithCursorPosition Create(string id, string topic, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties, string cursorPosition) {
+        public static EventMessageWithCursorPosition Create(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? message, IEnumerable<AdapterProperty>? properties, string cursorPosition) {
             return new EventMessageWithCursorPosition(id, topic, utcEventTime, priority, category, message, properties, cursorPosition);
         }
 

@@ -26,7 +26,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The function description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// The method used to compute the sample time for a calculated value.
@@ -75,10 +75,10 @@ namespace DataCore.Adapter.RealTimeData {
         public DataFunctionDescriptor(
             string id, 
             string name, 
-            string description, 
+            string? description, 
             DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
             DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
-            IEnumerable<AdapterProperty> properties = null
+            IEnumerable<AdapterProperty>? properties = null
         ) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
@@ -119,11 +119,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </exception>
         public static DataFunctionDescriptor Create(
             string id, 
-            string name = null, 
-            string description = null, 
+            string? name = null, 
+            string? description = null, 
             DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
             DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
-            IEnumerable<AdapterProperty> properties = null
+            IEnumerable<AdapterProperty>? properties = null
         ) {
             return new DataFunctionDescriptor(id, name ?? id, description, sampleTime, status, properties);
         }

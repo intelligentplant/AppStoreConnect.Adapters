@@ -46,7 +46,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public DigitalStateSet(string id, string name, IEnumerable<DigitalState> states) {
+        public DigitalStateSet(string id, string name, IEnumerable<DigitalState>? states) {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
                 : id;
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public static DigitalStateSet Create(string id, string name, IEnumerable<DigitalState> states) {
+        public static DigitalStateSet Create(string id, string name, IEnumerable<DigitalState>? states) {
             return new DigitalStateSet(
                 id,
                 name, 

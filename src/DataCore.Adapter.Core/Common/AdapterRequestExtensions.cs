@@ -68,9 +68,9 @@ namespace DataCore.Adapter.Common {
         ///   and <see cref="Uri"/>. Conversion will fail for any other type.
         /// </remarks>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "TryGet pattern")]
-        public static bool TryGetProperty<T>(this AdapterRequest request, string key, IFormatProvider formatProvider, out T value) {
+        public static bool TryGetProperty<T>(this AdapterRequest request, string key, IFormatProvider? formatProvider, out T value) {
             if (request?.Properties == null || key == null || !request.Properties.TryGetValue(key, out var val)) {
-                value = default;
+                value = default!;
                 return false;
             }
 
@@ -84,7 +84,7 @@ namespace DataCore.Adapter.Common {
             }
 
             if (val == null) {
-                value = default;
+                value = default!;
                 return false;
             }
 
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.Common {
                     return true;
                 }
                 catch {
-                    value = default;
+                    value = default!;
                     return false;
                 }
             }
@@ -111,7 +111,7 @@ namespace DataCore.Adapter.Common {
                 return true;
             }
 
-            value = default;
+            value = default!;
             return false;
         }
 

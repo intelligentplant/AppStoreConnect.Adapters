@@ -165,7 +165,7 @@ namespace DataCore.Adapter.Common {
         ///   instance of <typeparamref name="T"/>.
         /// </returns>
         public static T GetValueOrDefault<T>(this Variant variant) {
-            return GetValueOrDefault<T>(variant, default);
+            return GetValueOrDefault<T>(variant, default!);
         }
 
 

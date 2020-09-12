@@ -15,7 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<string> DataFunctions { get; set; }
+        public IEnumerable<string> DataFunctions { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The sample interval to use in the aggregation.

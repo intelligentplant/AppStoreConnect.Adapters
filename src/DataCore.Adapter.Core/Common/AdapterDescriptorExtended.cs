@@ -58,10 +58,10 @@ namespace DataCore.Adapter.Common {
         public AdapterDescriptorExtended(
             string id, 
             string name, 
-            string description, 
-            IEnumerable<string> features, 
-            IEnumerable<string> extensions, 
-            IEnumerable<AdapterProperty> properties
+            string? description, 
+            IEnumerable<string>? features, 
+            IEnumerable<string>? extensions, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(id, name, description) {
             Features = features?.ToArray() ?? Array.Empty<string>();
             Extensions = extensions?.ToArray() ?? Array.Empty<string>();
@@ -98,7 +98,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public static AdapterDescriptorExtended Create(string id, string name, string description, IEnumerable<string> features, IEnumerable<string> extensions, IEnumerable<AdapterProperty> properties) {
+        public static AdapterDescriptorExtended Create(string id, string name, string? description, IEnumerable<string>? features, IEnumerable<string>? extensions, IEnumerable<AdapterProperty>? properties) {
             return new AdapterDescriptorExtended(id, name, description, features, extensions, properties);
         }
 

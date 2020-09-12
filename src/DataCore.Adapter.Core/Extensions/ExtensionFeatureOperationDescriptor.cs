@@ -10,7 +10,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The operation URI.
         /// </summary>
-        public Uri OperationId { get; set; }
+        public Uri OperationId { get; set; } = default!;
 
         /// <summary>
         /// The operation type.
@@ -20,22 +20,22 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The display name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = default!;
 
         /// <summary>
         /// The description.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// The input parameter descriptor for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor Input { get; set; }
+        public ExtensionFeatureOperationParameterDescriptor? Input { get; set; }
 
         /// <summary>
         /// The output parameter descriptor for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor Output { get; set; }
+        public ExtensionFeatureOperationParameterDescriptor? Output { get; set; }
 
     }
 
@@ -71,12 +71,12 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// A description of the parameter value.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// An example value.
         /// </summary>
-        public string ExampleValue { get; set; }
+        public string? ExampleValue { get; set; }
 
     }
 

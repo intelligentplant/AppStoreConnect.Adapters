@@ -15,7 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The discrete states for the tag. If <see cref="TagSummary.DataType"/> is not 
         /// <see cref="VariantType.Int32"/>, this property will be <see langword="null"/>.
         /// </summary>
-        public IEnumerable<DigitalState> States { get; }
+        public IEnumerable<DigitalState>? States { get; }
 
         /// <summary>
         /// Bespoke tag properties.
@@ -65,12 +65,12 @@ namespace DataCore.Adapter.RealTimeData {
         public TagDefinition(
             string id, 
             string name, 
-            string description, 
-            string units, 
+            string? description, 
+            string? units, 
             VariantType dataType, 
-            IEnumerable<DigitalState> states, 
-            IEnumerable<AdapterProperty> properties, 
-            IEnumerable<string> labels
+            IEnumerable<DigitalState>? states, 
+            IEnumerable<AdapterProperty>? properties, 
+            IEnumerable<string>? labels
         ) : base(id, name, description, units, dataType) {
             States = dataType != VariantType.Int32
                 ? null
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagDefinition Create(string id, string name, string description, string units, VariantType dataType, IEnumerable<DigitalState> states, IEnumerable<AdapterProperty> properties, IEnumerable<string> labels) {
+        public static TagDefinition Create(string id, string name, string? description, string? units, VariantType dataType, IEnumerable<DigitalState>? states, IEnumerable<AdapterProperty>? properties, IEnumerable<string>? labels) {
             return new TagDefinition(id, name, description, units, dataType, states, properties, labels);
         }
 

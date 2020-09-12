@@ -37,12 +37,12 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessage(
             string id, 
-            string topic,
+            string? topic,
             DateTime utcEventTime, 
             EventPriority priority, 
-            string category, 
-            string message, 
-            IEnumerable<AdapterProperty> properties
+            string? category, 
+            string? message, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(id ?? Guid.NewGuid().ToString(), topic, utcEventTime, priority, category, message, properties) { }
 
 
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional event properties.
         /// </param>
-        public static EventMessage Create(string id, string topic, DateTime utcEventTime, EventPriority priority, string category, string message, IEnumerable<AdapterProperty> properties) {
+        public static EventMessage Create(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? message, IEnumerable<AdapterProperty>? properties) {
             return new EventMessage(id, topic, utcEventTime, priority, category, message, properties);
         }
     

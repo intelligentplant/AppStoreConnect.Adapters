@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using DataCore.Adapter.Common;
+﻿using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -13,7 +11,7 @@ namespace DataCore.Adapter.AssetModel {
         /// The ID of the parent node to start at. Specify <see langword="null"/> to request top-level 
         /// nodes.
         /// </summary>
-        public string ParentId { get; set; }
+        public string? ParentId { get; set; }
 
 
         /// <summary>

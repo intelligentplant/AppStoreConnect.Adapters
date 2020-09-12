@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Events {
         /// support a topic-based event model.
         /// </summary>
         [MaxLength(100)]
-        public IEnumerable<string> Topics { get; set; }
+        public IEnumerable<string>? Topics { get; set; }
 
         /// <summary>
         /// The UTC start time for the request.

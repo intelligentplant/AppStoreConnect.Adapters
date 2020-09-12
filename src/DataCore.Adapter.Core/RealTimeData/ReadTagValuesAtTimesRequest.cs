@@ -14,7 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<DateTime> UtcSampleTimes { get; set; }
+        public IEnumerable<DateTime> UtcSampleTimes { get; set; } = Array.Empty<DateTime>();
 
     }
 }

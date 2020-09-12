@@ -10,13 +10,13 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The optional correlation ID for the operation.
         /// </summary>
-        public string CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
 
         /// <summary>
         /// The event message to write.
         /// </summary>
         [Required]
-        public EventMessage EventMessage { get; set; }
+        public EventMessage EventMessage { get; set; } = default!;
 
     }
 }

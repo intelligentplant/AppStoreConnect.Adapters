@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -16,7 +17,7 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<string> Topics { get; set; }
+        public IEnumerable<string> Topics { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The subscription action.

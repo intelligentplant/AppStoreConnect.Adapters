@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Notes associated with the write.
         /// </summary>
-        public string Notes { get; }
+        public string? Notes { get; }
 
         /// <summary>
         /// Additional properties related to the write.
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        protected WriteOperationResult(WriteStatus status, string notes, IEnumerable<AdapterProperty> properties) {
+        protected WriteOperationResult(WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
             Status = status;
             Notes = notes;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();

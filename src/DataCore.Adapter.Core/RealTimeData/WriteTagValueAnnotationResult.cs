@@ -49,8 +49,8 @@ namespace DataCore.Adapter.RealTimeData {
             string tagId, 
             string annotationId, 
             WriteStatus status, 
-            string notes, 
-            IEnumerable<AdapterProperty> properties
+            string? notes, 
+            IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
             TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
             AnnotationId = annotationId ?? throw new ArgumentNullException(nameof(annotationId));
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string notes, IEnumerable<AdapterProperty> properties) {
+        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
             return new WriteTagValueAnnotationResult(tagId, annotationId, status, notes, properties);
         }
 

@@ -24,12 +24,12 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The description of the health check that was performed.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
         /// <summary>
         /// The error that occurred when checking the status (if any).
         /// </summary>
-        public string Error { get; }
+        public string? Error { get; }
 
         /// <summary>
         /// Additional data associated with the health check.
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The inner results that contributed to the status of this result.
         /// </summary>
-        public IEnumerable<HealthCheckResult> InnerResults { get; }
+        public IEnumerable<HealthCheckResult>? InnerResults { get; }
 
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The inner results that contributed to the status of this result. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        public HealthCheckResult(string displayName, HealthStatus status, string description, string error, IDictionary<string, string> data, IEnumerable<HealthCheckResult> innerResults) {
+        public HealthCheckResult(string? displayName, HealthStatus status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
                 : displayName;
@@ -97,10 +97,10 @@ namespace DataCore.Adapter.Diagnostics {
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
         public static HealthCheckResult Composite(
-            string displayName, 
-            IEnumerable<HealthCheckResult> innerResults, 
-            string description = null, 
-            IDictionary<string, string> data = null
+            string? displayName, 
+            IEnumerable<HealthCheckResult>? innerResults, 
+            string? description = null, 
+            IDictionary<string, string>? data = null
         ) {
             if (innerResults == null) {
                 return Healthy(displayName, description, data);
@@ -136,7 +136,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
-        public static HealthCheckResult Healthy(string displayName, string description = null, IDictionary<string, string> data = null, IEnumerable<HealthCheckResult> innerResults = null) {
+        public static HealthCheckResult Healthy(string? displayName, string? description = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
             return new HealthCheckResult(displayName, HealthStatus.Healthy, description, null, data, innerResults);
         }
 
@@ -164,7 +164,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
-        public static HealthCheckResult Degraded(string displayName, string description = null, string error = null, IDictionary<string, string> data = null, IEnumerable<HealthCheckResult> innerResults = null) {
+        public static HealthCheckResult Degraded(string? displayName, string? description = null, string? error = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
             return new HealthCheckResult(displayName, HealthStatus.Degraded, description, error, data, innerResults);
         }
 
@@ -192,7 +192,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
-        public static HealthCheckResult Unhealthy(string displayName, string description = null, string error = null, IDictionary<string, string> data = null, IEnumerable<HealthCheckResult> innerResults = null) {
+        public static HealthCheckResult Unhealthy(string? displayName, string? description = null, string? error = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
             return new HealthCheckResult(displayName, HealthStatus.Unhealthy, description, error, data, innerResults);
         }
 

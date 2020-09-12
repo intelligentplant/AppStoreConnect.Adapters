@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Common {
         ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
         ///   multi-character wildcards respectively.
         /// </remarks>
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         /// <summary>
         /// The adapter name filter.
@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Common {
         ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
         ///   multi-character wildcards respectively.
         /// </remarks>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The adapter description filter.
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Common {
         ///   Partial matches can be specified; <c>?</c> and <c>*</c> can be used as single- and 
         ///   multi-character wildcards respectively.
         /// </remarks>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// The adapter feature filters.
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Common {
         ///   filters, the <see cref="Features"/> filters must exactly match the name of a 
         ///   standard or extension feature.
         /// </remarks>
-        public IEnumerable<string> Features { get; set; }
+        public IEnumerable<string>? Features { get; set; }
 
     }
 }

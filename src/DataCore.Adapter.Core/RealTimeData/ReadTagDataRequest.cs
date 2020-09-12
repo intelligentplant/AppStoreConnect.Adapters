@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -17,7 +18,7 @@ namespace DataCore.Adapter.RealTimeData {
         [Required]
         [MinLength(1)]
         [MaxLength(100)]
-        public IEnumerable<string> Tags { get; set; }
+        public IEnumerable<string> Tags { get; set; } = Array.Empty<string>();
 
 
         /// <summary>
