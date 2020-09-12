@@ -319,7 +319,7 @@ namespace DataCore.Adapter.Events {
                         ? _eventMessages
                         : _eventMessages.Reverse();
                 }
-                else if (!CursorPosition.TryParse(request.CursorPosition, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
+                else if (!CursorPosition.TryParse(request.CursorPosition!, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
                     return Task.FromResult(Array.Empty<EventMessageWithCursorPosition>().PublishToChannel());
                 }
                 else {

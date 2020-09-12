@@ -20,7 +20,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The error that caused the current retry. Can be <see langword="null"/>.
         /// </summary>
-        public Exception RetryReason { get; set; }
+        public Exception? RetryReason { get; set; }
 
     }
 

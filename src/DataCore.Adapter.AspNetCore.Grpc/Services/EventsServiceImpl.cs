@@ -112,6 +112,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ///   A <see cref="Task"/> that will publish emitted event messages to the <paramref name="responseStream"/>.
         /// </returns>
         /// <seealso cref="CreateEventPushChannel"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public override async Task CreateEventTopicPushChannel(IAsyncStreamReader<CreateEventTopicPushChannelRequest> requestStream, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -240,6 +241,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;

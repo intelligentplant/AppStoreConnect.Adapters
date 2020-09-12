@@ -133,7 +133,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see langword="true"/> if the instances are equal, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public bool Equals(TagIdentifier x, TagIdentifier y) {
+        public bool Equals(TagIdentifier? x, TagIdentifier? y) {
             if (x == null && y == null) {
                 return true;
             }

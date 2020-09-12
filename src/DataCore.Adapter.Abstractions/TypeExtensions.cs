@@ -302,7 +302,7 @@ namespace DataCore.Adapter {
             if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
                 return false;
             }
-            return type.HasAdapterFeatureUri(uri);
+            return type.HasAdapterFeatureUri(uri!);
         }
 
 
@@ -369,7 +369,7 @@ namespace DataCore.Adapter {
                 displayName = type.FullName;
             }
 
-            if (displayName.Length > FeatureDescriptor.MaxDisplayNameLength) {
+            if (displayName!.Length > FeatureDescriptor.MaxDisplayNameLength) {
                 displayName = displayName.Substring(0, FeatureDescriptor.MaxDisplayNameLength);
             }
 

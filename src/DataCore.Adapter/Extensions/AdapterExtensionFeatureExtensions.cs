@@ -104,6 +104,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private static async Task<ChannelReader<TOut>> StreamInternal<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
@@ -185,6 +186,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private static async Task<ChannelReader<TOut>> DuplexStreamInternal<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
@@ -290,6 +292,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "Extension is overload for method that takes a Uri")]
         public static Task<FeatureDescriptor?> GetDescriptor(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
@@ -315,6 +318,7 @@ namespace DataCore.Adapter.Extensions {
 
             return feature.GetDescriptor(context, uri, cancellationToken);
         }
+
 
 
         /// <summary>
@@ -349,6 +353,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
         /// </exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "Extension is overload for method that takes a URI")]
         public static Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,

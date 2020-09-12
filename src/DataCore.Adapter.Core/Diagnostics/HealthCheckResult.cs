@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Diagnostics {
         public HealthCheckResult(string? displayName, HealthStatus status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
-                : displayName;
+                : displayName!;
             Status = status;
             Description = description;
             Error = error;

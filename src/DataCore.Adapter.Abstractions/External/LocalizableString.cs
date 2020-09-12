@@ -130,7 +130,9 @@ namespace System.ComponentModel.DataAnnotations {
 
                     // If the property is not configured properly, then throw a missing member exception
                     if (badlyConfigured) {
+#pragma warning disable CA1305 // Specify IFormatProvider
                         string exceptionMessage = string.Format(AbstractionsResources.LocalizableString_LocalizationFailed, _propertyName, _resourceType.FullName, _propertyValue);
+#pragma warning restore CA1305 // Specify IFormatProvider
                         _cachedResult = () => { throw new InvalidOperationException(exceptionMessage); };
                     }
                     else {

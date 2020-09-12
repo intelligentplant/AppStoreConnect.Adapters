@@ -27,9 +27,6 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IBackgroundTaskService"/>, used to run publish operations in a 
         ///   background task if required.
         /// </param>
-        /// <param name="tags">
-        ///   The tags to subscribe to.
-        /// </param>
         /// <param name="publishInterval">
         ///   The publish interval for the subscription. When greater than <see cref="TimeSpan.Zero"/>, 
         ///   a background task will be used to periodically publish the last-received message. 

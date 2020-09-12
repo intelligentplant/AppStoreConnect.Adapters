@@ -376,9 +376,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The <see cref="AdapterDescriptorExtended"/> for the adapter.
         /// </returns>
+        /// <exception cref="AdapterDescriptorExtended">
+        ///  <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
         public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) {
             if (adapter == null) {
-                return null;
+                throw new ArgumentNullException(nameof(adapter));
             }
 
             var standardFeatures = adapter

@@ -199,7 +199,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new gRPC client instance.
         /// </returns>
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
-            return (TClient) Activator.CreateInstance(typeof(TClient), _channel);
+            return (TClient) Activator.CreateInstance(typeof(TClient), _channel)!;
         }
 
 
@@ -256,7 +256,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<GrpcAdapterProxy, Extensions.AdapterExtensionFeatureImpl>(
                             this,
-                            featureUri
+                            featureUri!
                         );
                     }
                     AddFeatures(impl, addStandardFeatures: false);
@@ -362,7 +362,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
             if (!string.IsNullOrWhiteSpace(context?.CorrelationId)) {
                 // We have a correlation ID for the context; use it on the outgoing call as 
                 // well.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 headers.Add("Request-Id", context.CorrelationId);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
             }
 
             return new GrpcCore.CallOptions(
@@ -474,7 +476,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             );
 #else
             var coreChannel = _channel as GrpcCore.Channel;
-            var state = coreChannel.State;
+            var state = coreChannel!.State;
 
             switch (state) {
                 case GrpcCore.ChannelState.Ready:

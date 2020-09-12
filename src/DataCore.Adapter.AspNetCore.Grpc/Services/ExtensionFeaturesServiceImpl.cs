@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri!, cancellationToken).ConfigureAwait(false);
 
             try {
                 var result = await adapter.Feature.GetDescriptor(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri!, cancellationToken).ConfigureAwait(false);
 
             try {
                 var result = await adapter.Feature.GetOperations(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
@@ -132,7 +132,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, error));
             }
 
@@ -141,7 +141,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.Invoke(adapterCallContext, operationId, request.Argument, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.Invoke(adapterCallContext, operationId!, request.Argument, cancellationToken).ConfigureAwait(false);
                 return new InvokeExtensionResponse() {
                     Result = result ?? string.Empty
                 };
@@ -174,7 +174,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, error));
             }
 
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.Stream(adapterCallContext, operationId, request.Argument, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.Stream(adapterCallContext, operationId!, request.Argument, cancellationToken).ConfigureAwait(false);
                 while (!cancellationToken.IsCancellationRequested) {
                     var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
                     await responseStream.WriteAsync(new InvokeExtensionResponse() {
@@ -214,6 +214,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <returns>
         ///   A <see cref="Task"/> that will process the request.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public override async Task InvokeDuplexStreamingExtension(IAsyncStreamReader<InvokeExtensionRequest> requestStream, IServerStreamWriter<InvokeExtensionResponse> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -231,7 +232,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(adapterCallContext?.CultureInfo, Resources.Error_UnsupportedInterface, request.OperationId)));
             }
 
-            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, error));
             }
 
@@ -246,7 +247,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 });
                 inputChannel.Writer.TryWrite(request.Argument);
 
-                var result = await adapter.Feature.DuplexStream(adapterCallContext, operationId, inputChannel, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.DuplexStream(adapterCallContext, operationId!, inputChannel, cancellationToken).ConfigureAwait(false);
 
                 // Run a background operation to process the remaining request stream items.
                 _backgroundTaskService.QueueBackgroundWorkItem(async ct => {

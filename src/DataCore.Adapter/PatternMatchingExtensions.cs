@@ -104,7 +104,7 @@ namespace DataCore.Adapter {
         ///   If <paramref name="s"/> is <see langword="null"/>, the method will always return 
         ///   <see langword="false"/>.
         /// </remarks>
-        public static bool Like(this string s, Regex expression) {
+        public static bool Like(this string? s, Regex expression) {
             if (expression == null) {
                 throw new ArgumentNullException(nameof(expression));
             }
@@ -159,7 +159,7 @@ namespace DataCore.Adapter {
         ///     bool like2 = myString.Like("He?o, wor?d!"); // returns false
         ///   </code>
         /// </example>
-        public static bool Like(this string s, string pattern) {
+        public static bool Like(this string? s, string pattern) {
             if (pattern == null) {
                 throw new ArgumentNullException(nameof(pattern));
             }

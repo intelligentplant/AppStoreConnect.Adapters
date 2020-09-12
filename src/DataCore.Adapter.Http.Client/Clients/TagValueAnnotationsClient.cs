@@ -76,7 +76,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
+#pragma warning disable CA1062 // Validate arguments of public methods
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+#pragma warning restore CA1062 // Validate arguments of public methods
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -174,7 +176,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/create";
+#pragma warning disable CA1062 // Validate arguments of public methods
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/create";
+#pragma warning restore CA1062 // Validate arguments of public methods
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -223,7 +227,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
+#pragma warning disable CA1062 // Validate arguments of public methods
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+#pragma warning restore CA1062 // Validate arguments of public methods
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -272,7 +278,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
+#pragma warning disable CA1062 // Validate arguments of public methods
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+#pragma warning restore CA1062 // Validate arguments of public methods
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Delete, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

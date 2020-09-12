@@ -153,7 +153,7 @@ namespace DataCore.Adapter {
 
             var uri = featureType.GetAdapterFeatureUri();
 
-            if (!_features.TryAdd(uri, feature)) {
+            if (!_features.TryAdd(uri!, feature)) {
                 if (throwOnAlreadyAdded) {
                     throw new ArgumentException(Resources.Error_FeatureIsAlreadyRegistered, nameof(featureType));
                 }

@@ -223,7 +223,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             try {
                 var result = new ContentResult() {
-                    Content = await resolvedFeature.Feature.Invoke(callContext, id, argument, cancellationToken).ConfigureAwait(false),
+                    Content = await resolvedFeature.Feature.Invoke(callContext, id, argument ?? string.Empty, cancellationToken).ConfigureAwait(false),
                     ContentType = "application/json",
                     StatusCode = 200
                 };

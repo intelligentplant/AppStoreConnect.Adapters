@@ -243,7 +243,7 @@ namespace DataCore.Adapter {
                 context, 
                 adapterId,
                 featureUri.TryCreateUriWithTrailingSlash(out var uri)
-                    ? uri
+                    ? uri!
                     : throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(featureUri)), 
                 cancellationToken
             );

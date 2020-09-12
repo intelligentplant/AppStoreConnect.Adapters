@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package datacore.adapter;
 
-import "google/protobuf/timestamp.proto";
 import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";

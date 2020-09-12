@@ -191,8 +191,8 @@ namespace DataCore.Adapter.Csv {
             string units;
             string dataType;
 
-            props.TryGetValue(nameof(name), out name);
-            props.TryGetValue(nameof(id), out id);
+            props.TryGetValue(nameof(name), out name!);
+            props.TryGetValue(nameof(id), out id!);
 
             if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(id)) {
                 // No name or ID specified.
@@ -208,17 +208,17 @@ namespace DataCore.Adapter.Csv {
             }
 
             return TagDefinition.Create(
-                id ?? name,
+                id ?? name!,
                 name ?? id!,
-                props.TryGetValue(nameof(description), out description) 
+                props.TryGetValue(nameof(description), out description!) 
                     ? description 
                     : string.Empty,
-                props.TryGetValue(nameof(units), out units)
+                props.TryGetValue(nameof(units), out units!)
                     ? units
                     : string.Empty,
                 states.Count > 0
                     ? Common.VariantType.Int32
-                    : props.TryGetValue(nameof(dataType), out dataType) && Enum.TryParse<Common.VariantType>(dataType, out var dataTypeActual)
+                    : props.TryGetValue(nameof(dataType), out dataType!) && Enum.TryParse<Common.VariantType>(dataType, out var dataTypeActual)
                         ? dataTypeActual
                         : Common.VariantType.Double,
                 states.Count > 0
@@ -907,13 +907,13 @@ namespace DataCore.Adapter.Csv {
                         // the maximum number of raw samples we are allowed to use in a query, move to the 
                         // next tag.
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
-                        if (!dataSet.Values.TryGetValue(tag.Id, out csvValuesForTag)) {
+                        if (!dataSet.Values.TryGetValue(tag.Id, out csvValuesForTag!)) {
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                             continue;
                         }
 
                         TagValueExtended unmodifiedSample;
-                        if (!csvValuesForTag.TryGetValue(unmodifiedSampleTime, out unmodifiedSample)) {
+                        if (!csvValuesForTag.TryGetValue(unmodifiedSampleTime, out unmodifiedSample!)) {
                             continue;
                         }
 

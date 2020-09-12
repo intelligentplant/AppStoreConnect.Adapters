@@ -1169,6 +1169,15 @@ namespace DataCore.Adapter {
 
         #region [ Extensions ]
 
+        /// <summary>
+        /// Converts a gRPC feature descriptor to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Common.FeatureDescriptor ToAdapterFeatureDescriptor(this Grpc.FeatureDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1184,6 +1193,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts an adapter feature descriptor to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Grpc.FeatureDescriptor ToGrpcFeatureDescriptor(this Common.FeatureDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1197,7 +1215,15 @@ namespace DataCore.Adapter {
         }
 
 
-
+        /// <summary>
+        /// Converts a gRPC extension operation descriptor to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1216,6 +1242,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts an adapter extension operation descriptor to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Grpc.ExtensionFeatureOperationDescriptor ToGrpcExtensionOperatorDescriptor(this Extensions.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1232,6 +1267,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts a gRPC extension operation parameter descriptor to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Extensions.ExtensionFeatureOperationParameterDescriptor ToAdapterExtensionFeatureParameterDescriptor(this Grpc.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Extensions.ExtensionFeatureOperationParameterDescriptor();
@@ -1244,6 +1288,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts an adapter extension operation descriptor to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor.
+        /// </returns>
         public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 
@@ -1259,6 +1312,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts a gRPC extension feature operation type to its adapter equivalent.
+        /// </summary>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
+        /// <returns>
+        ///   The converted operation type.
+        /// </returns>
         public static Extensions.ExtensionFeatureOperationType ToAdapterExtensionFeatureOperationType(this Grpc.ExtensionFeatureOperationType operationType) {
             switch (operationType) {
                 case Grpc.ExtensionFeatureOperationType.Stream:
@@ -1271,6 +1333,15 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts a gRPC extension feature operation type to its adapter equivalent.
+        /// </summary>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
+        /// <returns>
+        ///   The converted operation type.
+        /// </returns>
         public static Grpc.ExtensionFeatureOperationType ToGrpcExtensionFeatureOperationType(this Extensions.ExtensionFeatureOperationType operationType) {
             switch (operationType) {
                 case Extensions.ExtensionFeatureOperationType.Stream:

@@ -23,7 +23,7 @@ namespace DataCore.Adapter {
         /// The next value that will be published. Ignored if the <see cref="PublishInterval"/> 
         /// is less than or equal to <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        private TValue _nextPublishedValue;
+        private TValue _nextPublishedValue = default!;
 
         /// <summary>
         /// Indicates if a publish is pending.
@@ -246,6 +246,7 @@ namespace DataCore.Adapter {
         ///   A task that will run until the <paramref name="cancellationToken"/> requests 
         ///   cancellaion.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private async Task RunIngressLoop(CancellationToken cancellationToken) {
             try {
                 while (await _inChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -254,7 +255,7 @@ namespace DataCore.Adapter {
                             if (PublishInterval > TimeSpan.Zero) {
                                 // Cancel next publish if one is already pending.
                                 _publishPending = 0;
-                                _nextPublishedValue = default;
+                                _nextPublishedValue = default!;
                             }
                             _outChannel.Writer.TryWrite(val.Value);
                             continue;
@@ -290,6 +291,7 @@ namespace DataCore.Adapter {
         ///   A task that will run until the <paramref name="cancellationToken"/> requests 
         ///   cancellaion.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private async Task RunEgressLoop(CancellationToken cancellationToken) {
             try {
                 while (!cancellationToken.IsCancellationRequested) {
@@ -317,20 +319,44 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        /// <summary>
+        /// Class finalizer.
+        /// </summary>
+        ~SubscriptionChannel() {
+            Dispose(false);
+        }
+
+
+        /// <summary>
+        /// Releases managed and unmanaged resources.
+        /// </summary>
+        /// <param name="disposing">
+        ///   <see langword="true"/> if the object is being disposed, or <see langword="false"/> 
+        ///   it if is being finalized.
+        /// </param>
+        protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
 
-            _ctRegistration.Dispose();
-            if (!CancellationToken.IsCancellationRequested) {
-                // Cancellation token source has not fired yet. Since we disposed of the 
-                // registration for the cleanup callback above, we'll manually call it here, to 
-                // ensure that cleanup occurs.
-                _cleanup.Invoke();
+            if (disposing) {
+                _ctRegistration.Dispose();
+                if (!CancellationToken.IsCancellationRequested) {
+                    // Cancellation token source has not fired yet. Since we disposed of the 
+                    // registration for the cleanup callback above, we'll manually call it here, to 
+                    // ensure that cleanup occurs.
+                    _cleanup.Invoke();
+                }
+                _cancellationTokenSource.Dispose();
             }
-            _cancellationTokenSource.Dispose();
 
             _isDisposed = true;
         }
+
     }
 }

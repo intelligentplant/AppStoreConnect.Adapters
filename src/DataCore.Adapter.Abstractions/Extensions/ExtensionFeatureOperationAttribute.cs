@@ -54,6 +54,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The display name for the operation.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Name {
             get => _name.Value;
             set => _name.Value = value;
@@ -62,6 +63,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the operation.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Description {
             get => _description.Value;
             set => _description.Value = value;
@@ -71,6 +73,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the input parameter.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? InputParameterDescription {
             get => _inputParamDescription.Value;
             set => _inputParamDescription.Value = value;
@@ -80,6 +83,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the output parameter.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? OutputParameterDescription {
             get => _outputParamDescription.Value;
             set => _outputParamDescription.Value = value;

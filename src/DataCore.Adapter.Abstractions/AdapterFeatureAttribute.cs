@@ -47,9 +47,11 @@ namespace DataCore.Adapter {
             }
         }
 
+
         /// <summary>
         /// The display name for the feature.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Name { 
             get => _name.Value;
             set => _name.Value = value;
@@ -58,6 +60,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The description for the feature.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Description {
             get => _description.Value;
             set => _description.Value = value;
@@ -87,7 +90,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 
-            Uri = uri;
+            Uri = uri!;
         }
 
 
@@ -141,10 +144,10 @@ namespace DataCore.Adapter {
             var absoluteUri = UriExtensions.EnsurePathHasTrailingSlash(
                 relativeUri.IsAbsoluteUri
                     ? relativeUri
-                    : new Uri(baseUri, relativeUri)
+                    : new Uri(baseUri!, relativeUri)
             );
 
-            if (!UriExtensions.IsChildOf(absoluteUri, baseUri)) {
+            if (!UriExtensions.IsChildOf(absoluteUri, baseUri!)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
             }
 

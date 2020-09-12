@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
             foreach (var featureUriOrName in remoteAdapterFeatures) { 
                 var implementation = UriExtensions.TryCreateUriWithTrailingSlash(featureUriOrName, out var uri)
-                    ? _featureImplementations.FirstOrDefault(x => x.Key.HasAdapterFeatureUri(uri))
+                    ? _featureImplementations.FirstOrDefault(x => x.Key.HasAdapterFeatureUri(uri!))
                     : _featureImplementations.FirstOrDefault(x => x.Key.Name.Equals(featureUriOrName, StringComparison.OrdinalIgnoreCase));
 
                 // .Key = adapter feature interface
@@ -103,10 +103,10 @@ namespace DataCore.Adapter.Http.Proxy {
 
                 if (!featureInstances.TryGetValue(implementation.Value, out var feature)) {
                     feature = Activator.CreateInstance(implementation.Value, proxy);
-                    featureInstances[implementation.Value] = feature;
+                    featureInstances[implementation.Value] = feature!;
                 }
 
-                proxy.AddFeature(implementation.Key, (IAdapterFeature) feature);
+                proxy.AddFeature(implementation.Key, (IAdapterFeature) feature!);
             }
         }
 

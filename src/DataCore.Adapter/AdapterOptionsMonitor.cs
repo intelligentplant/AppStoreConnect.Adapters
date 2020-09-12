@@ -20,7 +20,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The current adapter options.
         /// </summary>
-        public TAdapterOptions CurrentValue { get; private set; }
+        public TAdapterOptions CurrentValue { get; private set; } = new TAdapterOptions();
 
 
         /// <summary>
@@ -62,7 +62,13 @@ namespace DataCore.Adapter {
         /// <param name="options">
         ///   The updated options.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
         public void Set(TAdapterOptions options) {
+            if (options == null) {
+                throw new ArgumentNullException(nameof(options));
+            }
             CurrentValue = options;
             Notify(CurrentValue);
         }

@@ -189,7 +189,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<HttpAdapterProxy, Extensions.AdapterExtensionFeatureImpl>(
                             this,
-                            featureUri
+                            featureUri!
                         );
                     }
                     AddFeatures(impl, addStandardFeatures: false);

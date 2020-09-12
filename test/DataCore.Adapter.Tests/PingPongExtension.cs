@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Tests {
 
             var result = Channel.CreateUnbounded<PongMessage>();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            result.Writer.RunBackgroundOperation((ch, ct) => {
                 result.Writer.TryWrite(new PongMessage() {
                     CorrelationId = message.CorrelationId,
                     UtcServerTime = DateTime.UtcNow

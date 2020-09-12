@@ -206,7 +206,7 @@ namespace DataCore.Adapter {
             if (id.Length > MaxIdLength) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, MaxIdLength), nameof(id));
             }
-            if (name.Length > MaxNameLength) {
+            if (name!.Length > MaxNameLength) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterNameIsTooLong, MaxNameLength), nameof(name));
             }
             if (description != null && description.Length > MaxDescriptionLength) {
@@ -270,7 +270,7 @@ namespace DataCore.Adapter {
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
                         _descriptor.Id, 
-                        name, 
+                        name!, 
                         description ?? _descriptor.Description
                     );
                 }
@@ -353,7 +353,7 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
-                var healthCheckName = string.Format(context?.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key);
+                var healthCheckName = string.Format(context.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key);
                 var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 
                 // Create new result that uses normalised name.

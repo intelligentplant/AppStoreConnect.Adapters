@@ -42,7 +42,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var fileVersion = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyFileVersionAttribute>(asm);
             return string.IsNullOrEmpty(fileVersion?.Version)
                 ? string.Concat(asm.GetName().Name, " v", asm.GetName().Version)
-                : string.Concat(asm.GetName().Name, " v", fileVersion.Version);
+                : string.Concat(asm.GetName().Name, " v", fileVersion!.Version);
         }, LazyThreadSafetyMode.PublicationOnly);
 
         /// <summary>

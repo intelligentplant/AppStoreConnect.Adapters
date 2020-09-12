@@ -202,7 +202,7 @@ namespace DataCore.Adapter.Json {
                 JsonSerializer.Serialize(writer, value.Value, typeof(T), options);
             }
             else if (typeof(T) == typeof(TimeSpan)) {
-                JsonSerializer.Serialize(writer, value.Value.ToString(), typeof(string), options);
+                JsonSerializer.Serialize(writer, value.Value?.ToString(), typeof(string), options);
             }
             else {
                 JsonSerializer.Serialize(writer, value.GetValueOrDefault<T>(), options);

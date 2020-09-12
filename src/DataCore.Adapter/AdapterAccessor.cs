@@ -66,13 +66,13 @@ namespace DataCore.Adapter {
             }
 
             if (!string.IsNullOrWhiteSpace(request.Id)) {
-                adapters = adapters.Where(x => x.Descriptor.Id.Like(request.Id));
+                adapters = adapters.Where(x => x.Descriptor.Id.Like(request.Id!));
             }
             if (!string.IsNullOrWhiteSpace(request.Name)) {
-                adapters = adapters.Where(x => x.Descriptor.Name.Like(request.Name));
+                adapters = adapters.Where(x => x.Descriptor.Name.Like(request.Name!));
             }
             if (!string.IsNullOrWhiteSpace(request.Description)) {
-                adapters = adapters.Where(x => x.Descriptor.Description!.Like(request.Description));
+                adapters = adapters.Where(x => x.Descriptor.Description!.Like(request.Description!));
             }
             if (request.Features != null) {
                 foreach (var item in request.Features) {

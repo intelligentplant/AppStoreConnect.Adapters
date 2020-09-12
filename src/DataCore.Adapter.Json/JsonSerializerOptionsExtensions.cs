@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Json {
                 .Where(x => !x.IsAbstract)
                 .Where(x => jsonConverterType.IsAssignableFrom(x));
 
-            s_converters = converterTypes.Select(x => (JsonConverter) Activator.CreateInstance(x)).ToArray();
+            s_converters = converterTypes.Select(x => (JsonConverter) Activator.CreateInstance(x)!).ToArray();
         }
 
 

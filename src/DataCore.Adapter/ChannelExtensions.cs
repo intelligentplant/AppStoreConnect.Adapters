@@ -18,10 +18,13 @@ namespace DataCore.Adapter {
         /// </summary>
         public const int TagDefinitionChannelCapacity = 100;
 
+
+#pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
         /// Capacity of channels created using <see cref="CreateTagValueChannel{T}"/>.
         /// </summary>
         public const int TagValueChannelCapacity = 100;
+#pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
         /// <summary>
         /// Capacity of channels created using <see cref="CreateTagValueAnnotationChannel"/>.
@@ -440,6 +443,7 @@ namespace DataCore.Adapter {
         }
 
 
+
         /// <summary>
         /// Republishes items read from the channel reader to a destination channel.
         /// </summary>
@@ -459,6 +463,7 @@ namespace DataCore.Adapter {
         ///   A task that will read and republish items from the source channel until it completes 
         ///   or the <paramref name="cancellationToken"/> fires.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public static async Task Forward<T>(this ChannelReader<T> source, ChannelWriter<T> destination, CancellationToken cancellationToken = default) {
             if (source == null) {
                 throw new ArgumentNullException(nameof(source));
