@@ -238,11 +238,18 @@ namespace DataCore.Adapter {
         ///   The adapter feature URI for the type, or <see langword="null"/> if the type is not 
         ///   an adapter feature type.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
         /// <remarks>
         ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
         ///   features, only the first implemented feature URI will be returned.
         /// </remarks>
-        public static Uri GetAdapterFeatureUri(this Type type) {
+        public static Uri? GetAdapterFeatureUri(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
             return type.IsAdapterFeature()
                 ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()?.FirstOrDefault().attr?.Uri
                 : null;
@@ -262,7 +269,14 @@ namespace DataCore.Adapter {
         ///   If <paramref name="type"/> is a concrete class that implements multiple adapter 
         ///   features, the URIs for all implemented features will be returned.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
         public static IEnumerable<Uri> GetAdapterFeatureUris(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
             return type.IsAdapterFeature()
                 ? type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>()
                     ?.Select(x => x.attr.Uri)
@@ -328,13 +342,16 @@ namespace DataCore.Adapter {
         ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
         ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
         /// <remarks>
         /// If the <see cref="AdapterFeatureAttribute"/> does not define a display name, the 
         /// display name will be set to the <see cref="Type.FullName"/> of the <paramref name="type"/>.
         /// </remarks>
-        public static FeatureDescriptor CreateFeatureDescriptor(this Type type) {
+        public static FeatureDescriptor? CreateFeatureDescriptor(this Type type) {
             if (type == null) {
-                return null;
+                throw new ArgumentNullException(nameof(type));
             }
 
             var attr = type.GetAdapterFeatureAttributes<AdapterFeatureAttribute>().FirstOrDefault();
@@ -383,7 +400,7 @@ namespace DataCore.Adapter {
         ///   A new <see cref="FeatureDescriptor"/> object, or <see langword="null"/> if an 
         ///   <see cref="AdapterFeatureAttribute"/> to create the descriptor from cannot be found.
         /// </returns>
-        public static FeatureDescriptor CreateFeatureDescriptor<TFeature>(this TFeature feature) where TFeature : IAdapterFeature {
+        public static FeatureDescriptor? CreateFeatureDescriptor<TFeature>(this TFeature feature) where TFeature : IAdapterFeature {
             return typeof(TFeature).CreateFeatureDescriptor();
         }
 

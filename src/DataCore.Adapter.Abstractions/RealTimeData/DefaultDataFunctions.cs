@@ -312,7 +312,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The matching <see cref="DataFunctionDescriptor"/>, or <see langword="null"/> if no 
         ///   match was found.
         /// </returns>
-        public static DataFunctionDescriptor FindById(string id) {
+        public static DataFunctionDescriptor? FindById(string id) {
             if (string.IsNullOrEmpty(id)) {
                 return null;
             }

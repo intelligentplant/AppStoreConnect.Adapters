@@ -61,7 +61,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The requested adapter.
         /// </returns>
-        Task<IAdapter> GetAdapter(
+        Task<IAdapter?> GetAdapter(
             IAdapterCallContext context, 
             string adapterId,
             bool enabledOnly = true,

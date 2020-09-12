@@ -119,7 +119,7 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if <paramref name="featureUri"/> was resolved to a standard 
         ///   feature, or <see langword="false"/> otherwise.
         /// </returns>
-        public static bool TryGetFeatureDescriptor(Uri featureUri, out FeatureDescriptor descriptor) {
+        public static bool TryGetFeatureDescriptor(Uri featureUri, out FeatureDescriptor? descriptor) {
             descriptor = null;
 
             if (featureUri == null) {
@@ -143,7 +143,7 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if <paramref name="featureUri"/> was resolved to a standard 
         ///   feature, or <see langword="false"/> otherwise.
         /// </returns>
-        public static bool TryGetFeatureDescriptor(string featureUri, out FeatureDescriptor descriptor) {
+        public static bool TryGetFeatureDescriptor(string featureUri, out FeatureDescriptor? descriptor) {
             descriptor = null;
 
             if (string.IsNullOrWhiteSpace(featureUri)) {

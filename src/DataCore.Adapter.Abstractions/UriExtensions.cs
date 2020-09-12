@@ -46,7 +46,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uri));
             }
 
-            return uri.IsChildPath(WellKnownFeatures.ExtensionFeatureBasePath);
+            return uri.IsChildOf(WellKnownFeatures.ExtensionFeatureBasePath);
         }
 
 
@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return uri.IsChildPath(WellKnownFeatures.UriCache[WellKnownFeatures.Extensions.ExtensionFeatureBasePath]);
+            return uri.IsChildOf(WellKnownFeatures.UriCache[WellKnownFeatures.Extensions.ExtensionFeatureBasePath]);
         }
 
 
@@ -122,7 +122,7 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if a URI could be created, or <see langword="false"/> otherwise.
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Method is for URI parsing")]
-        public static bool TryCreateUriWithTrailingSlash(this string uriString, out Uri uri) {
+        public static bool TryCreateUriWithTrailingSlash(this string uriString, out Uri? uri) {
             if (uriString == null) {
                 uri = null;
                 return false;
@@ -187,14 +187,14 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="parentUri"/> is <see langword="null"/>.
         /// </exception>
-        public static bool IsChildPath(this Uri uri, Uri parentUri) {
+        public static bool IsChildOf(this Uri uri, Uri parentUri) {
             if (uri == null) {
                 throw new ArgumentNullException(nameof(uri));
             }
             if (parentUri == null) {
                 throw new ArgumentNullException(nameof(parentUri));
             }
-
+            
             if (!uri.IsAbsoluteUri || !parentUri.IsAbsoluteUri || uri.Equals(parentUri)) {
                 return false;
             }
@@ -222,7 +222,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="parentUriString"/> is <see langword="null"/>.
         /// </exception>
-        public static bool IsChildPath(this Uri uri, string parentUriString) {
+        public static bool IsChildOf(this Uri uri, string parentUriString) {
             if (uri == null) {
                 throw new ArgumentNullException(nameof(uri));
             }
@@ -234,7 +234,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return IsChildPath(uri, parentUri);
+            return IsChildOf(uri, parentUri);
         }
 
     }

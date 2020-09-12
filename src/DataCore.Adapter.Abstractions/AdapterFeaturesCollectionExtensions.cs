@@ -39,10 +39,10 @@ namespace DataCore.Adapter {
             var uri = typeof(TFeature).GetAdapterFeatureUri();
 
             if (uri == null) {
-                return default;
+                return default!;
             }
 
-            return features[uri] is TFeature feature ? feature : default;
+            return features[uri] is TFeature feature ? feature : default!;
         }
 
 
@@ -79,7 +79,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uri));
             }
 
-            return features[uri] is TFeature feature ? feature : default;
+            return features[uri] is TFeature feature ? feature : default!;
         }
 
 
@@ -124,7 +124,7 @@ namespace DataCore.Adapter {
 
             return features[uri] is TFeature feature 
                 ? feature 
-                : default;
+                : default!;
         }
 
 

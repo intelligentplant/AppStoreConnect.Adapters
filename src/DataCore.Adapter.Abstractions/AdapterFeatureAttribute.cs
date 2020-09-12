@@ -25,7 +25,7 @@ namespace DataCore.Adapter {
         /// The resource type used to retrieved localised values for the display name and 
         /// description.
         /// </summary>
-        private Type _resourceType;
+        private Type? _resourceType;
 
         /// <summary>
         /// The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
@@ -35,7 +35,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
         /// </summary>
-        public Type ResourceType {
+        public Type? ResourceType {
             get => _resourceType;
             set {
                 if (_resourceType != value) {
@@ -50,7 +50,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The display name for the feature.
         /// </summary>
-        public string Name { 
+        public string? Name { 
             get => _name.Value;
             set => _name.Value = value;
         }
@@ -58,7 +58,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The description for the feature.
         /// </summary>
-        public string Description {
+        public string? Description {
             get => _description.Value;
             set => _description.Value = value;
         }
@@ -144,7 +144,7 @@ namespace DataCore.Adapter {
                     : new Uri(baseUri, relativeUri)
             );
 
-            if (!UriExtensions.IsChildPath(absoluteUri, baseUri)) {
+            if (!UriExtensions.IsChildOf(absoluteUri, baseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(relativeUriString));
             }
 
@@ -161,7 +161,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The display name for the adapter feature.
         /// </returns>
-        public string GetName() => _name.GetLocalizableValue();
+        public string? GetName() => _name.GetLocalizableValue();
 
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The description for the adapter feature.
         /// </returns>
-        public string GetDescription() => _description.GetLocalizableValue();
+        public string? GetDescription() => _description.GetLocalizableValue();
 
     }
 }

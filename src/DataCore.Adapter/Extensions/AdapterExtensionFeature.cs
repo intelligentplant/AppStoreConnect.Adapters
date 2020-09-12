@@ -241,7 +241,7 @@ namespace DataCore.Adapter.Extensions {
                         return true;
                     }
 
-                    return UriExtensions.IsChildPath(x.OperationId, featureUri);
+                    return UriExtensions.IsChildOf(x.OperationId, featureUri);
                 })
                 .ToArray();
 
@@ -766,7 +766,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (!UriExtensions.IsChildPath(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!UriExtensions.IsChildOf(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
                 featureUri = null;
                 error = Resources.Error_InvalidExtensionFeatureOperationUri;
                 return false;

@@ -33,13 +33,13 @@ namespace DataCore.Adapter.Extensions {
         /// The resource type used to retrieved localised values for the display name, description,
         /// input parameter description, and output parameter description.
         /// </summary>
-        private Type _resourceType;
+        private Type? _resourceType;
 
 
         /// <summary>
         /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
         /// </summary>
-        public Type ResourceType {
+        public Type? ResourceType {
             get => _resourceType;
             set {
                 if (_resourceType != value) {
@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The display name for the operation.
         /// </summary>
-        public string Name {
+        public string? Name {
             get => _name.Value;
             set => _name.Value = value;
         }
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the operation.
         /// </summary>
-        public string Description {
+        public string? Description {
             get => _description.Value;
             set => _description.Value = value;
         }
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the input parameter.
         /// </summary>
-        public string InputParameterDescription {
+        public string? InputParameterDescription {
             get => _inputParamDescription.Value;
             set => _inputParamDescription.Value = value;
         }
@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The description for the output parameter.
         /// </summary>
-        public string OutputParameterDescription {
+        public string? OutputParameterDescription {
             get => _outputParamDescription.Value;
             set => _outputParamDescription.Value = value;
         }
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The display name for the operation.
         /// </returns>
-        public string GetName() => _name.GetLocalizableValue();
+        public string? GetName() => _name.GetLocalizableValue();
 
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The description for the operation.
         /// </returns>
-        public string GetDescription() => _description.GetLocalizableValue();
+        public string? GetDescription() => _description.GetLocalizableValue();
 
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The input parameter description for the operation.
         /// </returns>
-        public string GetInputParameterDescription() => _inputParamDescription.GetLocalizableValue();
+        public string? GetInputParameterDescription() => _inputParamDescription.GetLocalizableValue();
 
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The output parameter description for the operation.
         /// </returns>
-        public string GetOutputParameterDescription() => _outputParamDescription.GetLocalizableValue();
+        public string? GetOutputParameterDescription() => _outputParamDescription.GetLocalizableValue();
 
     }
 }

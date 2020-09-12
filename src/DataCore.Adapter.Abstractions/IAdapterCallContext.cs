@@ -12,22 +12,22 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The calling user.
         /// </summary>
-        ClaimsPrincipal User { get; }
+        ClaimsPrincipal? User { get; }
 
         /// <summary>
         /// The host-specified connection ID for the caller.
         /// </summary>
-        string ConnectionId { get; }
+        string? ConnectionId { get; }
 
         /// <summary>
         /// The host-specified correlation ID for the current operation.
         /// </summary>
-        string CorrelationId { get; }
+        string? CorrelationId { get; }
 
         /// <summary>
         /// The <see cref="System.Globalization.CultureInfo"/> for the caller.
         /// </summary>
-        CultureInfo CultureInfo { get; }
+        CultureInfo? CultureInfo { get; }
 
         /// <summary>
         /// Additional items related to the call context.
