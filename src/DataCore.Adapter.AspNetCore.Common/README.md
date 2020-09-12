@@ -64,7 +64,7 @@ services
         "A brief description of the hosting application",
         "0.9.0-alpha", // SemVer v2
         VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-        AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+        AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
     ))
     .AddAdapter<MyAdapter>()
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();

@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The property description.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
 
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterProperty(string name, Variant value, string description = null) {
+        public AdapterProperty(string name, Variant value, string? description = null) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
             Description = description;
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterProperty Create(string name, Variant value, string description = null) {
+        public static AdapterProperty Create(string name, Variant value, string? description = null) {
             return new AdapterProperty(name, value, description);
         }
 
@@ -88,7 +88,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterProperty Create(string name, object value, string description = null) {
+        public static AdapterProperty Create(string name, object value, string? description = null) {
             return new AdapterProperty(name, value is Variant v ? v : Variant.FromValue(value), description);
         }
 

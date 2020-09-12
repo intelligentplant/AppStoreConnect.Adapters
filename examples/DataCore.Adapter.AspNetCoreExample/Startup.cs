@@ -33,7 +33,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     new [] {
                         Common.AdapterProperty.Create(
                             "Project URL",
-                            new Uri("https://github.com/intelligentplant/app-store-connect-adapters"),
+                            new Uri("https://github.com/intelligentplant/AppStoreConnect.Adapters"),
                             "GitHub repository URL for the project"
                         )
                     }

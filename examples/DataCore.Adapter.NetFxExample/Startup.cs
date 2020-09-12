@@ -20,7 +20,7 @@ namespace DataCore.Adapter.NetFxExample {
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     properties: new[] {
-                        Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+                        Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
                     }
                 );
 

@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Tests {
                     "An example App Store Connect Adapters host running on ASP.NET Core 3.0",
                     GetType().Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                    Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/app-store-connect-adapters")
+                    Common.AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
                 ))
                 .AddServices(svc => {
                     // Register an in-memory event manager for use by our adapter. We register this 

@@ -169,7 +169,7 @@ namespace DataCore.Adapter.Tests {
 
         [DataTestMethod]
         [DataRow("https://appstore.intelligentplant.com")]
-        [DataRow("https://github.com/intelligentplant/app-store-connect-adapters")]
+        [DataRow("https://github.com/intelligentplant/AppStoreConnect.Adapters")]
         public void Variant_UrlShouldRoundTrip(string value) {
             var options = GetOptions();
             VariantRoundTripTest(new Uri(value, UriKind.Absolute), options);
