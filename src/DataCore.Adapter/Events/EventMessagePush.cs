@@ -91,11 +91,6 @@ namespace DataCore.Adapter.Events {
             SingleWriter = true
         });
 
-        /// <summary>
-        /// Emits all messages that are published to the internal master channel.
-        /// </summary>
-        public event Action<EventMessage> Publish;
-
 
         /// <summary>
         /// Creates a new <see cref="EventMessagePush"/> object.
@@ -109,7 +104,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public EventMessagePush(EventMessagePushOptions options, IBackgroundTaskService backgroundTaskService, ILogger logger) {
+        public EventMessagePush(EventMessagePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
             _options = options ?? new EventMessagePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
@@ -126,6 +121,12 @@ namespace DataCore.Adapter.Events {
         ) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
+            }
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
             }
 
             ValidationExtensions.ValidateObject(request);
@@ -353,7 +354,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
-        public string AdapterId { get; set; }
+        public string AdapterId { get; set; } = default!;
 
         /// <summary>
         /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 

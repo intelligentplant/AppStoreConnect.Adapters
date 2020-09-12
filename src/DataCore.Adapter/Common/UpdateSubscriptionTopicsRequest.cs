@@ -11,7 +11,7 @@ namespace DataCore.Adapter.Common {
         /// The topic or name to add or remove.
         /// </summary>
         [Required]
-        public string Topic { get; set; }
+        public string Topic { get; set; } = default!;
 
         /// <summary>
         /// The type of the subscription modification.

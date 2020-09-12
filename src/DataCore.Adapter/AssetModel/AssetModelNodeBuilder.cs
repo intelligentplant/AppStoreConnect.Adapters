@@ -15,12 +15,12 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The node ID.
         /// </summary>
-        private string _id;
+        private string? _id;
 
         /// <summary>
         /// The node name.
         /// </summary>
-        private string _name;
+        private string? _name;
 
         /// <summary>
         /// The node type.
@@ -30,17 +30,17 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The node sub type.
         /// </summary>
-        private string _nodeSubType;
+        private string? _nodeSubType;
 
         /// <summary>
         /// The node description.
         /// </summary>
-        private string _description;
+        private string? _description;
 
         /// <summary>
         /// The ndoe's parent ID.
         /// </summary>
-        private string _parentId;
+        private string? _parentId;
 
         /// <summary>
         /// Flags if the node has children.
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The node's data reference.
         /// </summary>
-        private DataReference _dataReference;
+        private DataReference? _dataReference;
 
         /// <summary>
         /// Bespoke node properties.
@@ -121,8 +121,8 @@ namespace DataCore.Adapter.AssetModel {
         /// </returns>
         public AssetModelNode Build() {
             return new AssetModelNode(
-                _id, 
-                _name, 
+                _id!, 
+                _name!, 
                 _nodeType, 
                 _nodeSubType, 
                 _description, 
@@ -176,7 +176,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        public AssetModelNodeBuilder WithNodeType(NodeType type, string subType = null) {
+        public AssetModelNodeBuilder WithNodeType(NodeType type, string? subType = null) {
             _nodeType = type;
             _nodeSubType = subType;
             return this;
@@ -279,15 +279,6 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="tagName">
         ///   The tag display name.
         /// </param>
-        /// <param name="description">
-        ///   The tag description.
-        /// </param>
-        /// <param name="units">
-        ///   The tag's unit of measure.
-        /// </param>
-        /// <param name="dataType">
-        ///   The tag's data type.
-        /// </param>
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
@@ -303,12 +294,9 @@ namespace DataCore.Adapter.AssetModel {
         public AssetModelNodeBuilder WithDataReference(
             string adapterId, 
             string tagId, 
-            string tagName, 
-            string description = null, 
-            string units = null, 
-            VariantType dataType = VariantType.Unknown
+            string tagName
         ) {
-            _dataReference = new DataReference(adapterId, new TagSummary(tagId, tagName, description, units, dataType));
+            _dataReference = new DataReference(adapterId, new TagIdentifier(tagId, tagName));
             return this;
         }
 

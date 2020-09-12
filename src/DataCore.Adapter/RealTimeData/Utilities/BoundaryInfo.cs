@@ -11,12 +11,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///<summary>
         /// The best-quality value before the boundary.
         /// </summary>
-        public TagValueExtended BestQualityValue { get; private set; }
+        public TagValueExtended? BestQualityValue { get; private set; }
 
         /// <summary>
         /// The closest value before the boundary.
         /// </summary>
-        public TagValueExtended ClosestValue { get; private set; }
+        public TagValueExtended? ClosestValue { get; private set; }
 
         /// <summary>
         /// The status of the boundary. The value will be <see cref="TagValueStatus.Uncertain"/> 
@@ -79,9 +79,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            yield return BestQualityValue;
+            if (BestQualityValue != null) {
+                yield return BestQualityValue;
+            }
 
-            if (ClosestValue != BestQualityValue) {
+            if (ClosestValue != null && ClosestValue != BestQualityValue) {
                 yield return ClosestValue;
             }
         }

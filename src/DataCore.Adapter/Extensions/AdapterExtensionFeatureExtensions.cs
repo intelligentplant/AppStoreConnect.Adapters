@@ -290,7 +290,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
         /// </exception>
-        public static Task<FeatureDescriptor> GetDescriptor(
+        public static Task<FeatureDescriptor?> GetDescriptor(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             string uriString,
@@ -309,7 +309,7 @@ namespace DataCore.Adapter.Extensions {
 
             uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
 
-            if (!UriExtensions.IsChildOf(uri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!uri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 
@@ -368,7 +368,7 @@ namespace DataCore.Adapter.Extensions {
 
             uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
 
-            if (!UriExtensions.IsChildOf(uri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!uri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 
@@ -521,7 +521,7 @@ namespace DataCore.Adapter.Extensions {
                 feature,
                 context,
                 operationId,
-                (object) null,
+                (object) null!,
                 AdapterExtensionFeature.DeserializeObject<TOut>,
                 cancellationToken
             );
@@ -574,7 +574,7 @@ namespace DataCore.Adapter.Extensions {
                 feature,
                 context,
                 operationId,
-                (object) null,
+                (object) null!,
                 json => AdapterExtensionFeature.DeserializeAnonymousType(json, anonymousTypeDefinition),
                 cancellationToken
             );
@@ -726,7 +726,7 @@ namespace DataCore.Adapter.Extensions {
                 feature,
                 context,
                 operationId,
-                (object) null,
+                (object) null!,
                 AdapterExtensionFeature.DeserializeObject<TOut>,
                 cancellationToken
             );
@@ -779,7 +779,7 @@ namespace DataCore.Adapter.Extensions {
                 feature,
                 context,
                 operationId,
-                (object) null,
+                (object) null!,
                 json => AdapterExtensionFeature.DeserializeAnonymousType(json, anonymousTypeDefinition),
                 cancellationToken
             );

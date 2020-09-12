@@ -157,6 +157,10 @@ namespace DataCore.Adapter.Diagnostics {
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             await _updateLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try {
                 var results = await _adapter.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
@@ -205,6 +209,10 @@ namespace DataCore.Adapter.Diagnostics {
         ) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);

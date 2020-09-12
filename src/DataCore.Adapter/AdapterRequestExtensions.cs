@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DataCore.Adapter {
@@ -20,9 +21,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The selected items.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="items"/> is <see langword="null"/>.
+        /// </exception>
         public static IEnumerable<T> SelectPage<T>(this IOrderedEnumerable<T> items, Common.IPageableAdapterRequest request) {
             if (items == null) {
-                return null;
+                throw new ArgumentNullException(nameof(items));
             }
 
             if (request == null) {

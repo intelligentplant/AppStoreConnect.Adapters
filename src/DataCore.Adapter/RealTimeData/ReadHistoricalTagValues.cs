@@ -63,7 +63,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService backgroundTaskService) {
+        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService? backgroundTaskService) {
             _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
             _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
@@ -112,7 +112,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="adapter"/> does not meet the requirements specified by 
         ///   <see cref="IsCompatible"/>.
         /// </exception>
-        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService backgroundTaskService = null) {
+        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService? backgroundTaskService = null) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -154,6 +154,13 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             ValidationExtensions.ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
@@ -261,6 +268,12 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
             ValidationExtensions.ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
@@ -296,12 +309,19 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }, true, _backgroundTaskService, cancellationToken);
 
-            return Task.FromResult<ChannelReader<ProcessedTagValueQueryResult>>(result); ;
+            return Task.FromResult<ChannelReader<ProcessedTagValueQueryResult>>(result);
         }
 
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             ValidationExtensions.ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();

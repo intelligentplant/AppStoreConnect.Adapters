@@ -99,11 +99,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
-        /// <summary>
-        /// Emits all values that are published to the internal master channel.
-        /// </summary>
-        public event Action<TagValueQueryResult> Publish;
-
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePush"/> object.
@@ -118,9 +113,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The logger to use.
         /// </param>
         public SnapshotTagValuePush(
-            SnapshotTagValuePushOptions options,
-            IBackgroundTaskService backgroundTaskService,
-            ILogger logger
+            SnapshotTagValuePushOptions? options,
+            IBackgroundTaskService? backgroundTaskService,
+            ILogger? logger
         ) {
             _options = options ?? new SnapshotTagValuePushOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
@@ -189,6 +184,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="topics">
         ///   The subscription topics
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   A task that will process the operation.
         /// </returns>
@@ -201,14 +199,14 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }
 
-            TaskCompletionSource<bool> processed = null;
+            TaskCompletionSource<bool> processed = null!;
 
             _subscriptionsLock.EnterWriteLock();
             try {
                 var newSubscriptions = new List<TagIdentifier>();
 
                 foreach (var topic in topics) {
-                    if (subscription.CancellationToken.IsCancellationRequested) {
+                    if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
 
@@ -335,7 +333,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tags">
         ///   The tags that have been added.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tags"/> is <see langword="null"/>.
+        /// </exception>
         protected virtual void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+            if (tags == null) {
+                throw new ArgumentNullException(nameof(tags));
+            }
             _options.OnTagSubscriptionsAdded?.Invoke(tags);
         }
 
@@ -346,7 +350,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tags">
         ///   The tags that have been removed.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tags"/> is <see langword="null"/>.
+        /// </exception>
         protected virtual void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
+            if (tags == null) {
+                throw new ArgumentNullException(nameof(tags));
+            }
             _options.OnTagSubscriptionsRemoved?.Invoke(tags);
             // Remove current value if we are caching it.
             foreach (var tag in tags) {
@@ -442,8 +452,6 @@ namespace DataCore.Adapter.RealTimeData {
                         break;
                     }
 
-                    Publish?.Invoke(item.Value);
-
                     foreach (var subscriber in item.Subscribers) {
                         if (cancellationToken.IsCancellationRequested) {
                             break;
@@ -522,7 +530,12 @@ namespace DataCore.Adapter.RealTimeData {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
             ValidationExtensions.ValidateObject(request);
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
@@ -716,7 +729,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
-        public string AdapterId { get; set; }
+        public string AdapterId { get; set; } = default!;
 
         /// <summary>
         /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
@@ -729,19 +742,19 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that will receive tag names or IDs and will return the matching 
         /// <see cref="TagIdentifier"/>.
         /// </summary>
-        public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> TagResolver { get; set; }
+        public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>>? TagResolver { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
         /// to one.
         /// </summary>
-        public Action<IEnumerable<TagIdentifier>> OnTagSubscriptionsAdded { get; set; }
+        public Action<IEnumerable<TagIdentifier>>? OnTagSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from one 
         /// to zero.
         /// </summary>
-        public Action<IEnumerable<TagIdentifier>> OnTagSubscriptionsRemoved { get; set; }
+        public Action<IEnumerable<TagIdentifier>>? OnTagSubscriptionsRemoved { get; set; }
 
 
 

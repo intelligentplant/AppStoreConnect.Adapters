@@ -74,10 +74,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   The interpolated sample.
         /// </returns>
-        private static TagValueExtended InterpolateSample(
+        private static TagValueExtended? InterpolateSample(
             DateTime utcSampleTime, 
-            TagValueExtended valueBefore, 
-            TagValueExtended valueAfter,
+            TagValueExtended? valueBefore, 
+            TagValueExtended? valueAfter,
             bool forceUncertainStatus
         ) {
             // If either value is not numeric, we'll just return the earlier value with the requested 
@@ -90,8 +90,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 double.IsNaN(y0) || 
                 double.IsNaN(y1) || 
                 double.IsInfinity(y0) || 
-                double.IsInfinity(y1)) {
-                
+                double.IsInfinity(y1)
+            ) {
                 return valueBefore == null 
                     ? null 
                     : TagValueBuilder.CreateFromExisting(valueBefore)
@@ -105,6 +105,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .Build();
             }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             var x0 = valueBefore.UtcSampleTime;
             var x1 = valueAfter.UtcSampleTime;
 
@@ -121,6 +122,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .WithNotes($"Interpolated using samples @ {valueBefore.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z and {valueAfter.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z.")
                 .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                 .Build();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
         }
 
 
@@ -156,11 +159,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        private static TagValueExtended GetValueAtTime(
+        private static TagValueExtended? GetValueAtTime(
             TagSummary tag, 
             DateTime utcSampleTime, 
-            TagValueExtended valueBefore, 
-            TagValueExtended valueAfter, 
+            TagValueExtended? valueBefore, 
+            TagValueExtended? valueAfter, 
             InterpolationCalculationType interpolationType,
             bool forceUncertainStatus = false
         ) {
@@ -251,7 +254,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueExtended GetPreviousValueAtSampleTime(
+        public static TagValueExtended? GetPreviousValueAtSampleTime(
             TagSummary tag,
             DateTime utcSampleTime,
             TagValueExtended valueBefore,
@@ -295,7 +298,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueExtended GetInterpolatedValueAtSampleTime(
+        public static TagValueExtended? GetInterpolatedValueAtSampleTime(
             TagSummary tag,
             DateTime utcSampleTime,
             TagValueExtended valueBefore,
@@ -332,7 +335,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public static TagValueExtended GetInterpolatedValueAtSampleTime(
+        public static TagValueExtended? GetInterpolatedValueAtSampleTime(
             TagSummary tag,
             DateTime utcSampleTime,
             IEnumerable<TagValueExtended> values
@@ -586,8 +589,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 var nextSampleTime = sampleTimesEnumerator.Current;
-                TagValueExtended value1 = null;
-                TagValueExtended value0 = null;
+                TagValueExtended value1 = null!;
+                TagValueExtended value0 = null!;
                 var sampleTimesRemaining = true;
 
                 while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -611,6 +614,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                                 sampleTimesRemaining = false;
                             }
 
+                            if (interpolatedValue == null) {
+                                continue;
+                            }
+
                             if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                                 resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
                             }
@@ -627,7 +634,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     value1 != null) {
 
                     var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
-                    if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
+                    
+                    if (interpolatedValue != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                         resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
                     }
                 }

@@ -29,17 +29,17 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The units.
         /// </summary>
-        private string _units;
+        private string? _units;
 
         /// <summary>
         /// Notes associated with the value.
         /// </summary>
-        private string _notes;
+        private string? _notes;
 
         /// <summary>
         /// Error message associated with the value.
         /// </summary>
-        private string _error;
+        private string? _error;
 
         /// <summary>
         /// Bespoke tag value properties.
@@ -187,7 +187,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithUnits(string units) {
+        public TagValueBuilder WithUnits(string? units) {
             _units = units;
             return this;
         }
@@ -202,7 +202,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithNotes(string notes) {
+        public TagValueBuilder WithNotes(string? notes) {
             _notes = notes;
             return this;
         }
@@ -220,7 +220,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <remarks>
         ///   The status of the value will also be set to <see cref="TagValueStatus.Bad"/>.
         /// </remarks>
-        public TagValueBuilder WithError(string error) {
+        public TagValueBuilder WithError(string? error) {
             _error = error;
             _status = TagValueStatus.Bad;
             return this;
@@ -287,7 +287,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        internal TagValueBuilder WithBucketProperties(Utilities.TagValueBucket bucket) {
+        internal TagValueBuilder WithBucketProperties(TagValueBucket bucket) {
             if (bucket != null) {
                 return WithProperties(
                     AdapterProperty.Create(CommonTagPropertyNames.BucketStart, bucket.UtcBucketStart),

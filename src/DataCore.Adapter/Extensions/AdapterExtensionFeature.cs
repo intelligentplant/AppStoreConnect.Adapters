@@ -103,9 +103,9 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        Task<FeatureDescriptor> IAdapterExtensionFeature.GetDescriptor(
+        Task<FeatureDescriptor?> IAdapterExtensionFeature.GetDescriptor(
             IAdapterCallContext context, 
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             return GetDescriptor(
@@ -121,7 +121,7 @@ namespace DataCore.Adapter.Extensions {
         /// <inheritdoc/>
         Task<IEnumerable<ExtensionFeatureOperationDescriptor>> IAdapterExtensionFeature.GetOperations(
             IAdapterCallContext context, 
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             return GetOperations(
@@ -182,9 +182,9 @@ namespace DataCore.Adapter.Extensions {
         ///   It is not normally required to override this method. Override only if the feature 
         ///   descriptor is not generated using an <see cref="ExtensionFeatureAttribute"/>.
         /// </remarks>
-        protected virtual Task<FeatureDescriptor> GetDescriptor(
+        protected virtual Task<FeatureDescriptor?> GetDescriptor(
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             var result = featureUri == null
@@ -231,7 +231,7 @@ namespace DataCore.Adapter.Extensions {
         protected virtual Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             var result = _boundDescriptors
@@ -410,7 +410,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <see langword="false"/> otherwise.
         /// </returns>
         private static bool TryGetInterfaceMethodDeclaration(MethodInfo method, out MethodInfo interfaceMethod) {
-            interfaceMethod = null;
+            interfaceMethod = null!;
 
             // Get all of the extension feature interface mappings defined by the implementing type 
             // for the method.
@@ -491,11 +491,11 @@ namespace DataCore.Adapter.Extensions {
             out string inputParameterDescription,
             out string outputParameterDescription
         ) {
-            operationId = null;
-            displayName = null;
-            description = null;
-            inputParameterDescription = null;
-            outputParameterDescription = null;
+            operationId = null!;
+            displayName = null!;
+            description = null!;
+            inputParameterDescription = null!;
+            outputParameterDescription = null!;
 
             if (method == null) {
                 return false;
@@ -520,8 +520,8 @@ namespace DataCore.Adapter.Extensions {
             else {
                 // We are unable to determine the extension feature that this method is associated 
                 // with, so we can't create a descriptor for it.
-                methodDeclaration = null;
-                extensionFeatureType = null;
+                methodDeclaration = null!;
+                extensionFeatureType = null!;
             }
 
             if (methodDeclaration == null || extensionFeatureType == null) {
@@ -531,10 +531,10 @@ namespace DataCore.Adapter.Extensions {
             operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name, operationType);
             var attr = methodDeclaration.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
 
-            displayName = attr?.GetName();
-            description = attr?.GetDescription();
-            inputParameterDescription = attr?.GetInputParameterDescription();
-            outputParameterDescription = attr?.GetOutputParameterDescription();
+            displayName = attr?.GetName()!;
+            description = attr?.GetDescription()!;
+            inputParameterDescription = attr?.GetInputParameterDescription()!;
+            outputParameterDescription = attr?.GetOutputParameterDescription()!;
 
             if (string.IsNullOrWhiteSpace(displayName)) {
                 displayName = methodDeclaration.Name;
@@ -630,7 +630,7 @@ namespace DataCore.Adapter.Extensions {
                         : inputParameterDescription ?? "<UNKNOWN>",
                     ExampleValue = !hasInputParameter 
                         ? SerializeObject(new object()) 
-                        : SerializeObject(inputParameterExample, true) ?? "<UNKNOWN>"
+                        : SerializeObject(inputParameterExample!, true) ?? "<UNKNOWN>"
                 },
                 Output = new ExtensionFeatureOperationParameterDescriptor() {
                     Description = !hasReturnParameter
@@ -638,7 +638,7 @@ namespace DataCore.Adapter.Extensions {
                         : returnParameterDescription ?? "<UNKNOWN>",
                     ExampleValue = !hasReturnParameter
                         ? SerializeObject(new object())
-                        : SerializeObject(returnParameterExample, true) ?? "<UNKNOWN>"
+                        : SerializeObject(returnParameterExample!, true) ?? "<UNKNOWN>"
                 },
             };
         }
@@ -705,7 +705,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             var featureUri = featureType.GetAdapterFeatureUri();
-            return GetOperationUri(featureUri, unqualifiedName, operationType);
+            return GetOperationUri(featureUri!, unqualifiedName, operationType);
         }
 
 
@@ -753,21 +753,21 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationUri"/> is <see langword="null"/>.
         /// </exception>
-        public static bool TryGetFeatureUriFromOperationUri(Uri operationUri, out Uri featureUri, out string error) {
+        public static bool TryGetFeatureUriFromOperationUri(Uri operationUri, out Uri featureUri, out string? error) {
             if (operationUri == null) {
                 throw new ArgumentNullException(nameof(operationUri));
             }
-
+            
             error = null;
 
             if (!operationUri.IsAbsoluteUri) {
-                featureUri = null;
+                featureUri = null!;
                 error = SharedResources.Error_AbsoluteUriRequired;
                 return false;
             }
 
-            if (!UriExtensions.IsChildOf(operationUri, WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
-                featureUri = null;
+            if (!operationUri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+                featureUri = null!;
                 error = Resources.Error_InvalidExtensionFeatureOperationUri;
                 return false;
             }
@@ -877,7 +877,7 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   The serialized value.
         /// </returns>
-        public static string SerializeObject(object value, bool indented = false) {
+        public static string SerializeObject(object? value, bool indented = false) {
             return Newtonsoft.Json.JsonConvert.SerializeObject(
                 value, 
                 indented 

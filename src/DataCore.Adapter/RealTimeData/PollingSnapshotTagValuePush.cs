@@ -80,8 +80,8 @@ namespace DataCore.Adapter.RealTimeData {
             IReadSnapshotTagValues readSnapshotFeature, 
             TimeSpan pollingInterval,
             int maxConcurrentSubscriptions,
-            IBackgroundTaskService backgroundTaskService,
-            ILogger logger
+            IBackgroundTaskService? backgroundTaskService,
+            ILogger? logger
         ) : base(
             new SnapshotTagValuePushOptions() { 
                 AdapterId = adapterId,
@@ -169,8 +169,8 @@ namespace DataCore.Adapter.RealTimeData {
             IAdapter adapter,
             TimeSpan pollingInterval,
             int maxConcurrentSubscriptions = 0,
-            IBackgroundTaskService backgroundTaskService = null,
-            ILogger logger = null
+            IBackgroundTaskService? backgroundTaskService = null,
+            ILogger? logger = null
         ) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
@@ -216,6 +216,11 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+            if (tags == null) {
+                base.OnTagsAdded(tags!);
+                return;
+            }
+
             lock (_subscribedTags) {
                 _subscribedTags.AddRange(tags);
             }
@@ -229,6 +234,11 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         protected override void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
+            if (tags == null) {
+                base.OnTagsRemoved(tags!);
+                return;
+            }
+
             lock (_subscribedTags) {
                 foreach (var tag in tags) {
                     var toBeRemoved = _subscribedTags.FindIndex(x => TagIdentifierComparer.Id.Equals(x, tag));
@@ -300,9 +310,12 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            var channel = await _readSnapshotFeature.ReadSnapshotTagValues(null, new ReadSnapshotTagValuesRequest() {
-                Tags = tags
-            }, cancellationToken).ConfigureAwait(false);
+            var channel = await _readSnapshotFeature.ReadSnapshotTagValues(
+                new DefaultAdapterCallContext(), 
+                new ReadSnapshotTagValuesRequest() {
+                    Tags = tags
+                }, cancellationToken
+            ).ConfigureAwait(false);
 
             while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.TryRead(out var val) && val != null) {
                 await ValueReceived(val, cancellationToken).ConfigureAwait(false);

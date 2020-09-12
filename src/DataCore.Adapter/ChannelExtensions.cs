@@ -725,7 +725,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelWriter{T}, CancellationToken, Task}, ChannelWriter{T}, bool, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -774,7 +774,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelWriter{T}, CancellationToken}, ChannelWriter{T}, bool, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -818,7 +818,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelReader{T}, CancellationToken, Task}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -862,7 +862,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
         /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelReader{T}, CancellationToken}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -990,7 +990,7 @@ namespace DataCore.Adapter {
         ///   A new <see cref="ChannelReader{T}"/> that will transform and emit items read from 
         ///   the original channel.
         /// </returns>
-        public static ChannelReader<TOut> Transform<TIn, TOut>(this ChannelReader<TIn> channel, Func<TIn, TOut> callback, IBackgroundTaskService backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static ChannelReader<TOut> Transform<TIn, TOut>(this ChannelReader<TIn> channel, Func<TIn, TOut> callback, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }

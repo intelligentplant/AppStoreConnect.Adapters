@@ -28,19 +28,21 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            if (!String.IsNullOrWhiteSpace(filter.Name)) {
+#pragma warning disable CS8604 // Possible null reference argument.
+
+            if (!string.IsNullOrWhiteSpace(filter.Name)) {
                 if (!tag.Name.Like(filter.Name)) {
                     return false;
                 }
             }
 
-            if (!String.IsNullOrWhiteSpace(filter.Description)) {
+            if (!string.IsNullOrWhiteSpace(filter.Description)) {
                 if (!tag.Description.Like(filter.Description)) {
                     return false;
                 }
             }
 
-            if (!String.IsNullOrWhiteSpace(filter.Units)) {
+            if (!string.IsNullOrWhiteSpace(filter.Units)) {
                 if (!tag.Units.Like(filter.Units)) {
                     return false;
                 }
@@ -62,6 +64,7 @@ namespace DataCore.Adapter.RealTimeData {
                     }
                 }
             }
+#pragma warning restore CS8604 // Possible null reference argument.
 
             return true;
         }
@@ -79,9 +82,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The matching tags.
         /// </returns>
-        public static IEnumerable<TagDefinition> ApplyFilter(this IEnumerable<TagDefinition> tags, FindTagsRequest filter) {
+        public static IEnumerable<TagDefinition> ApplyFilter(this IEnumerable<TagDefinition> tags, FindTagsRequest? filter) {
             if (tags == null) {
-                return null;
+                throw new ArgumentNullException(nameof(tags));
             }
 
             if (filter == null) {

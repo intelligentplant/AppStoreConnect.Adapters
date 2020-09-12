@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The event message topic (e.g. the MQTT channel that emitted the message).
         /// </summary>
-        private string _topic;
+        private string? _topic;
 
         /// <summary>
         /// The UTC event timestamp.
@@ -33,12 +33,12 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The event category.
         /// </summary>
-        private string _category;
+        private string? _category;
 
         /// <summary>
         /// The event message.
         /// </summary>
-        private string _message;
+        private string? _message;
 
         /// <summary>
         /// Additional event properties.
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithTopic(string topic) {
+        public EventMessageBuilder WithTopic(string? topic) {
             _topic = topic;
             return this;
         }
@@ -217,7 +217,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithCategory(string category) {
+        public EventMessageBuilder WithCategory(string? category) {
             _category = category;
             return this;
         }
@@ -232,7 +232,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The updated <see cref="EventMessageBuilder"/>.
         /// </returns>
-        public EventMessageBuilder WithMessage(string message) {
+        public EventMessageBuilder WithMessage(string? message) {
             _message = message;
             return this;
         }

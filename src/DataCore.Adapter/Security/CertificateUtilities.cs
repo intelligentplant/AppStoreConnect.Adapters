@@ -232,24 +232,24 @@ namespace DataCore.Adapter.Security {
         public static bool TryParseCertificateStorePath(string path, out StoreLocation location, out string name, out string thumbprintOrSubjectName) {
             if (path == null) {
                 location = default;
-                name = null;
-                thumbprintOrSubjectName = null;
+                name = null!;
+                thumbprintOrSubjectName = null!;
                 return false;
             }
 
             var m = s_certPathWithThumbprintRegex.Match(path);
             if (!m.Success) {
                 location = default;
-                name = null;
-                thumbprintOrSubjectName = null;
+                name = null!;
+                thumbprintOrSubjectName = null!;
                 return false;
             }
             
             var loc = m.Groups["location"].Value;
             if (!Enum.TryParse(loc, out location)) {
                 location = default;
-                name = null;
-                thumbprintOrSubjectName = null;
+                name = null!;
+                thumbprintOrSubjectName = null!;
                 return false;
             }
 
@@ -274,12 +274,12 @@ namespace DataCore.Adapter.Security {
         /// </returns>
         public static bool TryLoadCertificateFromStore(string path, out X509Certificate2 certificate) {
             if (path == null) {
-                certificate = null;
+                certificate = null!;
                 return false;
             }
 
             if (!TryParseCertificateStorePath(path, out var location, out var name, out var thumbprintOrSubjectName)) {
-                certificate = null;
+                certificate = null!;
                 return false;
             }
 

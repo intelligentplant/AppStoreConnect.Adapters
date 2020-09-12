@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
                 adapters = adapters.Where(x => x.Descriptor.Name.Like(request.Name));
             }
             if (!string.IsNullOrWhiteSpace(request.Description)) {
-                adapters = adapters.Where(x => x.Descriptor.Description.Like(request.Description));
+                adapters = adapters.Where(x => x.Descriptor.Description!.Like(request.Description));
             }
             if (request.Features != null) {
                 foreach (var item in request.Features) {
@@ -102,7 +102,7 @@ namespace DataCore.Adapter {
         }
 
         /// <inheritdoc/>
-        public async Task<IAdapter> GetAdapter(
+        public async Task<IAdapter?> GetAdapter(
             IAdapterCallContext context, 
             string adapterId, 
             bool enabledOnly = true,

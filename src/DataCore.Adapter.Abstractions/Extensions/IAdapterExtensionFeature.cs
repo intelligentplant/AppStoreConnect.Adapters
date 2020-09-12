@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Extensions {
         ///   is <see langword="null"/>, the implementing type should return its first available 
         ///   descriptor.
         /// </remarks>
-        Task<FeatureDescriptor> GetDescriptor(
+        Task<FeatureDescriptor?> GetDescriptor(
             IAdapterCallContext context,
             Uri? featureUri,
             CancellationToken cancellationToken
@@ -101,7 +101,7 @@ namespace DataCore.Adapter.Extensions {
         Task<string> Invoke(
             IAdapterCallContext context, 
             Uri operationId, 
-            string? json, 
+            string json, 
             CancellationToken cancellationToken
         );
 
@@ -127,7 +127,7 @@ namespace DataCore.Adapter.Extensions {
         Task<ChannelReader<string>> Stream(
             IAdapterCallContext context, 
             Uri operationId, 
-            string? json, 
+            string json, 
             CancellationToken cancellationToken
         );
 

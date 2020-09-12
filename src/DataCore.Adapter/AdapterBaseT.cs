@@ -55,8 +55,8 @@ namespace DataCore.Adapter {
         protected AdapterBase(
             string id, 
             TAdapterOptions options, 
-            IBackgroundTaskService backgroundTaskService = null, 
-            ILogger logger = null
+            IBackgroundTaskService? backgroundTaskService = null, 
+            ILogger? logger = null
         ) : this(id, new AdapterOptionsMonitor<TAdapterOptions>(options), backgroundTaskService, logger) { }
 
 
@@ -90,8 +90,8 @@ namespace DataCore.Adapter {
         protected AdapterBase(
             string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
-            IBackgroundTaskService backgroundTaskService = null, 
-            ILogger logger = null
+            IBackgroundTaskService? backgroundTaskService = null, 
+            ILogger? logger = null
         ) : base(
             id, 
             optionsMonitor?.CurrentValue?.Name, 
@@ -99,7 +99,7 @@ namespace DataCore.Adapter {
             backgroundTaskService,
             logger
         ) {
-            if (optionsMonitor == null) {
+            if (optionsMonitor?.CurrentValue == null) {
                 throw new ArgumentNullException(nameof(optionsMonitor));
             }
 

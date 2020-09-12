@@ -102,7 +102,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan bucketSize, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -201,7 +201,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan bucketSize, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tags == null) {
@@ -348,7 +348,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(bucketSize), utcStartTime, utcEndTime);
 
-            TagValueExtended lastValuePreviousBucket = null;
+            TagValueExtended lastValuePreviousBucket = null!;
 
             while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!rawData.TryRead(out var val)) {

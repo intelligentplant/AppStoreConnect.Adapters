@@ -13,7 +13,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The annotation ID.
         /// </summary>
-        private string _id;
+        private string? _id;
 
         /// <summary>
         /// The annotation type.
@@ -34,12 +34,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The annotation value.
         /// </summary>
-        private string _value;
+        private string? _value;
 
         /// <summary>
         /// The annotation description.
         /// </summary>
-        private string _description;
+        private string? _description;
 
         /// <summary>
         /// Additional annotation properties.
@@ -110,7 +110,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueAnnotationExtended"/> object.
         /// </returns>
         public TagValueAnnotationExtended Build() {
-            return TagValueAnnotationExtended.Create(_id, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
+            return TagValueAnnotationExtended.Create(_id!, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
         }
 
 
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueAnnotationBuilder"/>.
         /// </returns>
-        public TagValueAnnotationBuilder WithValue(string value) {
+        public TagValueAnnotationBuilder WithValue(string? value) {
             _value = value;
             return this;
         }
@@ -198,7 +198,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueAnnotationBuilder"/>.
         /// </returns>
-        public TagValueAnnotationBuilder WithDescription(string description) {
+        public TagValueAnnotationBuilder WithDescription(string? description) {
             _description = description;
             return this;
         }

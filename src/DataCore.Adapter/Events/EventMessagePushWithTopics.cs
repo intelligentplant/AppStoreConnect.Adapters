@@ -112,12 +112,7 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         protected bool HasActiveSubscriptions { get; private set; }
 
-        /// <summary>
-        /// Emits all values that are published to the internal master channel.
-        /// </summary>
-        public event Action<EventMessage> Publish;
-
-
+        
         /// <summary>
         /// Creates a new <see cref="EventMessagePushWithTopics"/> object.
         /// </summary>
@@ -130,7 +125,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions options, IBackgroundTaskService scheduler, ILogger logger) {
+        public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions? options, IBackgroundTaskService? scheduler, ILogger? logger) {
             _options = options ?? new EventMessagePushWithTopicsOptions();
             _maxSubscriptionCount = _options.MaxSubscriptionCount;
             BackgroundTaskService = scheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
@@ -175,7 +170,7 @@ namespace DataCore.Adapter.Events {
         ///   A task that will process the operation.
         /// </returns>
         private async Task OnTopicsAddedToSubscriptionInternal(EventSubscriptionChannel<int> subscription, IEnumerable<string> topics, CancellationToken cancellationToken) {
-            TaskCompletionSource<bool> processed = null;
+            TaskCompletionSource<bool> processed = null!;
 
             subscription.AddTopics(topics);
 
@@ -269,6 +264,9 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         /// <param name="subscription">
         ///   The subscription.
+        /// </param>
+        /// <param name="initialTopics">
+        ///   The initial topics to subscribe to,
         /// </param>
         private async Task OnSubscriptionAddedInternal(EventSubscriptionChannel<int> subscription, IEnumerable<string> initialTopics) {
             await OnTopicsAddedToSubscriptionInternal(subscription, initialTopics, subscription.CancellationToken).ConfigureAwait(false);
@@ -417,8 +415,6 @@ namespace DataCore.Adapter.Events {
                         break;
                     }
 
-                    Publish?.Invoke(item.Value);
-
                     foreach (var subscriber in item.Subscribers) {
                         if (cancellationToken.IsCancellationRequested) {
                             break;
@@ -538,7 +534,7 @@ namespace DataCore.Adapter.Events {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual bool IsTopicMatch(string subscriptionTopic, string eventMessageTopic) {
+        protected virtual bool IsTopicMatch(string subscriptionTopic, string? eventMessageTopic) {
             return string.Equals(subscriptionTopic, eventMessageTopic, StringComparison.Ordinal);
         }
 
@@ -592,7 +588,12 @@ namespace DataCore.Adapter.Events {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
-
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
             ValidationExtensions.ValidateObject(request);
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
@@ -710,7 +711,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The adapter name to use when creating subscription IDs.
         /// </summary>
-        public string AdapterId { get; set; }
+        public string AdapterId { get; set; } = default!;
 
         /// <summary>
         /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
@@ -723,13 +724,13 @@ namespace DataCore.Adapter.Events {
         /// A delegate that is invoked when the number of subscribers for a topic changes from zero 
         /// to one.
         /// </summary>
-        public Action<IEnumerable<string>> OnTopicSubscriptionsAdded { get; set; }
+        public Action<IEnumerable<string>>? OnTopicSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a topic changes from one 
         /// to zero.
         /// </summary>
-        public Action<IEnumerable<string>> OnTopicSubscriptionsRemoved { get; set; }
+        public Action<IEnumerable<string>>? OnTopicSubscriptionsRemoved { get; set; }
 
     }
 

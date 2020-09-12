@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Common {
         ///   The first entry in <paramref name="properties"/> that matches the specified name. A 
         ///   case-insensitive comparison is used.
         /// </returns>
-        public static AdapterProperty FindProperty(this IEnumerable<AdapterProperty> properties, string name) {
+        public static AdapterProperty? FindProperty(this IEnumerable<AdapterProperty> properties, string name) {
             if (properties == null || name == null) {
                 return null;
             }

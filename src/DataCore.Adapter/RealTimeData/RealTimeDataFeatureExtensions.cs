@@ -44,7 +44,7 @@ namespace DataCore.Adapter.RealTimeData {
             this IWriteSnapshotTagValues feature, 
             IAdapterCallContext context, 
             IEnumerable<WriteTagValueItem> values, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
@@ -101,7 +101,7 @@ namespace DataCore.Adapter.RealTimeData {
             this IWriteHistoricalTagValues feature, 
             IAdapterCallContext context, 
             IEnumerable<WriteTagValueItem> values, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {

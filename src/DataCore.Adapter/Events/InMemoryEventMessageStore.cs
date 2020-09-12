@@ -75,12 +75,6 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Emits all messages that are published to the internal master channel.
-        /// </summary>
-        public event Action<EventMessage> Publish;
-
-
-        /// <summary>
         /// Creates a new <see cref="InMemoryEventMessageStore"/> object.
         /// </summary>
         /// <param name="options">
@@ -94,8 +88,8 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public InMemoryEventMessageStore(
             InMemoryEventMessageManagerOptions options, 
-            IBackgroundTaskService backgroundTaskService, 
-            ILogger logger
+            IBackgroundTaskService? backgroundTaskService, 
+            ILogger? logger
         ) {
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _disposedToken = _disposedTokenSource.Token;
@@ -179,8 +173,6 @@ namespace DataCore.Adapter.Events {
 
             await _push.ValueReceived(message, cancellationToken).ConfigureAwait(false);
             await _pushWithTopics.ValueReceived(message, cancellationToken).ConfigureAwait(false);
-
-            Publish?.Invoke(message);
 
             return cursorPosition;
         }

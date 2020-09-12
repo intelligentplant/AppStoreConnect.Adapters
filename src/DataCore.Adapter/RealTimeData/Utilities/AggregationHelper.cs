@@ -66,7 +66,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// The descriptors for the default supported data functions.
         /// </summary>
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         private static readonly Lazy<IEnumerable<DataFunctionDescriptor>> s_defaultDataFunctions = new Lazy<IEnumerable<DataFunctionDescriptor>>(() => s_defaultAggregatorMap.Keys.Select(x => DefaultDataFunctions.FindById(x)).ToArray(), LazyThreadSafetyMode.PublicationOnly);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
 
         /// <summary>
         /// Maps from aggregate ID to descriptor for custom aggregates that have been registered.
@@ -732,7 +734,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -816,7 +818,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime,
             TimeSpan sampleInterval,
             IEnumerable<TagValueQueryResult> rawData,
-            IBackgroundTaskService backgroundTaskService = null,
+            IBackgroundTaskService? backgroundTaskService = null,
             CancellationToken cancellationToken = default
         ) {
             if (rawData == null) {
@@ -884,7 +886,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
             ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService backgroundTaskService = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
             CancellationToken cancellationToken = default
         ) {
             if (tags == null) {
@@ -1051,7 +1053,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             DateTime utcEndTime,
             TimeSpan sampleInterval,
             IEnumerable<TagValueQueryResult> rawData,
-            IBackgroundTaskService backgroundTaskService = null,
+            IBackgroundTaskService? backgroundTaskService = null,
             CancellationToken cancellationToken = default
         ) {
             if (rawData == null) {
@@ -1152,11 +1154,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         // Add the end boundary value(s) from the previous bucket as the start 
                         // boundary value(s) on the new one.
                         if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                            if (previousBucket.EndBoundary.BestQualityValue != null) {
+                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                            }
                         }
                         else {
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
+                            if (previousBucket.EndBoundary.BestQualityValue != null) {
+                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                            }
+                            if (previousBucket.EndBoundary.ClosestValue != null) {
+                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
+                            }
                         }
                     } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd);
                 }
@@ -1189,11 +1197,17 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     // Add the end boundary value(s) from the previous bucket as the start 
                     // boundary value(s) on the new one.
                     if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
-                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                        if (previousBucket.EndBoundary.BestQualityValue != null) {
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                        }
                     }
                     else {
-                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                        bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
+                        if (previousBucket.EndBoundary.BestQualityValue != null) {
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
+                        }
+                        if (previousBucket.EndBoundary.ClosestValue != null) {
+                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
+                        }
                     }
 
                     await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);

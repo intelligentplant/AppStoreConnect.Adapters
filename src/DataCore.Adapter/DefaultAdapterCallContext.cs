@@ -12,7 +12,7 @@ namespace DataCore.Adapter {
     public class DefaultAdapterCallContext : IAdapterCallContext {
 
         /// <inheritdoc/>
-        public ClaimsPrincipal User { get; }
+        public ClaimsPrincipal? User { get; }
 
         /// <inheritdoc/>
         public string ConnectionId { get; }
@@ -43,10 +43,10 @@ namespace DataCore.Adapter {
         ///   The culture info.
         /// </param>
         public DefaultAdapterCallContext(
-            ClaimsPrincipal user = null,
-            string connectionId = null,
-            string correlationId = null,
-            CultureInfo cultureInfo = null
+            ClaimsPrincipal? user = null,
+            string? connectionId = null,
+            string? correlationId = null,
+            CultureInfo? cultureInfo = null
         ) {
             User = user;
             ConnectionId = connectionId ?? Guid.NewGuid().ToString();

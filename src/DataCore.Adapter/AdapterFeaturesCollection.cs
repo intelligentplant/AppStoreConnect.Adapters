@@ -38,7 +38,7 @@ namespace DataCore.Adapter {
         public IAdapterFeature this[Uri key] {
             get {
                 return key == null || !_features.TryGetValue(key, out var value)
-                    ? default
+                    ? default!
                     : value;
             }
         }

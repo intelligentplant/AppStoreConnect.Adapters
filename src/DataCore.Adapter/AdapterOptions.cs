@@ -19,7 +19,7 @@ namespace DataCore.Adapter {
             Description = nameof(AdapterOptionsResources.AdapterOptions_Name_Description),
             Order = 0
         )]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The adapter description.
@@ -31,7 +31,7 @@ namespace DataCore.Adapter {
             Description = nameof(AdapterOptionsResources.AdapterOptions_Description_Description),
             Order = 1
         )]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// A flag indicating if the adapter is enabled or not.

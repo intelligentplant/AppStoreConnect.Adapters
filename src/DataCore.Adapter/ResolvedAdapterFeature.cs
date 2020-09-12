@@ -26,7 +26,7 @@ namespace DataCore.Adapter {
         /// The feature. The value will be <see langword="null"/> if the adapter or feature could not 
         /// be resolved.
         /// </summary>
-        public TFeature Feature => IsFeatureResolved ? _feature : default;
+        public TFeature Feature => IsFeatureResolved ? _feature : default!;
 
         /// <summary>
         /// <see langword="true"/> if the adapter was resolved, or <see langword="false"/> otherwise.

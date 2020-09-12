@@ -191,10 +191,10 @@ namespace DataCore.Adapter {
         /// </exception>
         protected AdapterBase(
             string id, 
-            string name = null, 
-            string description = null, 
-            IBackgroundTaskService backgroundTaskService = null, 
-            ILogger logger = null
+            string? name = null, 
+            string? description = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
+            ILogger? logger = null
         ) {
             if (string.IsNullOrWhiteSpace(id)) {
                 id = Guid.NewGuid().ToString();
@@ -265,7 +265,7 @@ namespace DataCore.Adapter {
         ///   The new adapter description. Specify <see langword="null"/> to leave the description 
         ///   unchanged.
         /// </param>
-        protected void UpdateDescriptor(string name = null, string description = null) {
+        protected void UpdateDescriptor(string? name = null, string? description = null) {
             if (!string.IsNullOrWhiteSpace(name)) {
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
@@ -324,10 +324,17 @@ namespace DataCore.Adapter {
         ///   A <see cref="Task{TResult}"/> that will return the <see cref="HealthCheckResult"/> for the 
         ///   health check.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
         protected async Task<IEnumerable<HealthCheckResult>> CheckFeatureHealthAsync(
             IAdapterCallContext context,
             CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             if (!IsRunning) {
                 return Array.Empty<HealthCheckResult>();
             }
@@ -556,7 +563,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="key"/> i <see langword="null"/>.
         /// </exception>
-        protected void AddProperty(string key, object value, string description = null) {
+        protected void AddProperty(string key, object value, string? description = null) {
             CheckDisposed();
             if (key == null) {
                 throw new ArgumentNullException(nameof(key));
@@ -855,7 +862,7 @@ namespace DataCore.Adapter {
                     _inner.QueueBackgroundWorkItem(workItem.WorkItemAsync, workItem.Description, _adapter.StopToken);
                 }
                 else {
-                    _inner.QueueBackgroundWorkItem(workItem.WorkItem, workItem.Description, _adapter.StopToken);
+                    _inner.QueueBackgroundWorkItem(workItem.WorkItem!, workItem.Description, _adapter.StopToken);
                 }
             }
 
