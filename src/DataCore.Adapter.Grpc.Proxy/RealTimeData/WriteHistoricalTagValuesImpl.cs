@@ -23,6 +23,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<Adapter.RealTimeData.WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }

@@ -197,7 +197,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             string adapterId, 
             [FromQuery] Uri id, 
             [FromForm]
-            string argument = null, 
+            string? argument = null, 
             CancellationToken cancellationToken = default
         ) {
             var callContext = new HttpAdapterCallContext(HttpContext);

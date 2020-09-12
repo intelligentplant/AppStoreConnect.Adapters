@@ -113,12 +113,12 @@ namespace Microsoft.Extensions.DependencyInjection {
         public static IAdapterConfigurationBuilder AddHostInfo(
             this IAdapterConfigurationBuilder builder,
             string name,
-            string description = null,
-            string version = null,
-            VendorInfo vendor = null,
+            string? description = null,
+            string? version = null,
+            VendorInfo? vendor = null,
             bool includeOperatingSystemDetails = true,
             bool includeContainerDetails = true,
-            IEnumerable<AdapterProperty> properties = null
+            IEnumerable<AdapterProperty>? properties = null
         ) {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));

@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// The ID of the remote adapter.
         /// </summary>
         [Required]
-        public string RemoteId { get; set; }
+        public string RemoteId { get; set; } = default!;
 
         /// <summary>
         /// The interval to use between re-polling the health status of the remote adapter. 
@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory<HttpAdapterProxy> ExtensionFeatureFactory { get; set; }
+        public ExtensionFeatureFactory<HttpAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
     }
 }

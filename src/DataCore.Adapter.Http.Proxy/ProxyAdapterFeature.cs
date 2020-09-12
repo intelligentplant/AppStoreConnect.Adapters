@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// The adapter ID for the remote adapter.
         /// </summary>
         protected string AdapterId {
-            get { return _proxy.RemoteDescriptor?.Id; }
+            get { return _proxy.RemoteDescriptor?.Id!; }
         }
 
         /// <summary>

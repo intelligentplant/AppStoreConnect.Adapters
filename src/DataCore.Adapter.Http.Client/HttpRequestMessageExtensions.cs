@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        private static HttpRequestMessage AddCorrelationId(this HttpRequestMessage request, string correlationId) {
+        private static HttpRequestMessage AddCorrelationId(this HttpRequestMessage request, string? correlationId) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <returns>
         ///   The <paramref name="request"/>.
         /// </returns>
-        public static HttpRequestMessage AddRequestMetadata(this HttpRequestMessage request, RequestMetadata metadata) {
+        public static HttpRequestMessage AddRequestMetadata(this HttpRequestMessage request, RequestMetadata? metadata) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }

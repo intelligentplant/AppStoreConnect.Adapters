@@ -22,6 +22,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }

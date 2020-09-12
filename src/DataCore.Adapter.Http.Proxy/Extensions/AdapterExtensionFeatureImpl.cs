@@ -27,15 +27,16 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override Task<FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+        protected override Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
             IAdapterCallContext context, 
-            Uri featureUri, 
+            Uri? featureUri, 
             CancellationToken cancellationToken
         ) {
             var client = Proxy.GetClient();
             return client.Extensions.GetDescriptorAsync(
                 Proxy.RemoteDescriptor.Id,
-                featureUri, context?.ToRequestMetadata(),
+                featureUri!, 
+                context?.ToRequestMetadata(),
                 cancellationToken
             );
         }
@@ -44,20 +45,21 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
         /// <inheritdoc/>
         protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             var client = Proxy.GetClient();
             return client.Extensions.GetOperationsAsync(
                 Proxy.RemoteDescriptor.Id, 
-                featureUri, context?.ToRequestMetadata(), 
+                featureUri!, 
+                context?.ToRequestMetadata(), 
                 cancellationToken
             );
         }
 
 
         /// <inheritdoc/>
-        protected override Task<string> Invoke(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+        protected override Task<string> InvokeInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
             var client = Proxy.GetClient();
             return client.Extensions.InvokeExtensionAsync(
                 Proxy.RemoteDescriptor.Id, 
@@ -65,7 +67,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
                 argument, 
                 context?.ToRequestMetadata(), 
                 cancellationToken
-            );
+            )!;
         }
 
     }

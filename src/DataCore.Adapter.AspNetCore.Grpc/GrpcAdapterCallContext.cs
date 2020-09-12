@@ -1,4 +1,6 @@
-﻿using Grpc.Core;
+﻿using System;
+
+using Grpc.Core;
 
 namespace DataCore.Adapter.AspNetCore.Grpc {
 
@@ -14,8 +16,11 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
         /// <param name="serverCallContext">
         ///   The gRPC server call context.
         /// </param>
-        public GrpcAdapterCallContext(ServerCallContext serverCallContext)
-            : base(serverCallContext?.GetHttpContext()) { }
+        public GrpcAdapterCallContext(ServerCallContext serverCallContext) : base(serverCallContext?.GetHttpContext()!) { 
+            if (serverCallContext == null) {
+                throw new ArgumentNullException(nameof(serverCallContext));
+            }
+        }
 
     }
 }

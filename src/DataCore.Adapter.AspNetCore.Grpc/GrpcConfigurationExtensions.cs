@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <returns>
         ///   The endpoint route builder.
         /// </returns>
-        public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) {
+        public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder>? builder) {
             MapService<AdaptersServiceImpl>(endpoints, builder);
             MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
             MapService<EventsServiceImpl>(endpoints, builder);
@@ -67,7 +67,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <param name="builder">
         ///   The optional builder for the registered endpoint.
         /// </param>
-        private static void MapService<TService>(IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder> builder) where TService : class {
+        private static void MapService<TService>(IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder>? builder) where TService : class {
             var endpoint = endpoints.MapGrpcService<TService>();
             builder?.Invoke(typeof(TService), endpoint);
         }

@@ -30,43 +30,43 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override Task<FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+        protected override Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             var client = Proxy.GetClient();
-            return client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri, cancellationToken);
+            return client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken)!;
         }
 
 
         /// <inheritdoc/>
         protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context, 
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             var client = Proxy.GetClient();
-            return client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri, cancellationToken);
+            return client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        protected override Task<string> Invoke(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+        protected override Task<string> InvokeInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, operationId, argument, cancellationToken);
+            return client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, operationId, argument, cancellationToken)!;
         }
 
 
         /// <inheritdoc/>
-        protected override Task<ChannelReader<string>> Stream(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+        protected override Task<ChannelReader<string>> StreamInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, operationId, argument, cancellationToken);
+            return client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, operationId, argument, cancellationToken)!;
         }
 
 
         /// <inheritdoc/>
-        protected override Task<ChannelReader<string>> DuplexStream(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
+        protected override Task<ChannelReader<string>> DuplexStreamInternal(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
             var client = Proxy.GetClient();
             return client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, operationId, channel, cancellationToken);
         }

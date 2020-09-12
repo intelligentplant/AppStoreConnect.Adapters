@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -69,7 +68,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<TagValueAnnotationExtended> ReadAnnotationAsync(
             string adapterId, 
             ReadAnnotationRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -77,7 +76,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -118,7 +117,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(
             string adapterId, 
             ReadAnnotationsRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -167,7 +166,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<WriteTagValueAnnotationResult> CreateAnnotationAsync(
             string adapterId, 
             CreateAnnotationRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -175,9 +174,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/create";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/create";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request.Annotation, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
@@ -216,7 +215,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<WriteTagValueAnnotationResult> UpdateAnnotationAsync(
             string adapterId, 
             UpdateAnnotationRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -224,9 +223,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request.Annotation, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
@@ -265,7 +264,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<WriteTagValueAnnotationResult> DeleteAnnotationAsync(
             string adapterId, 
             DeleteAnnotationRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -273,7 +272,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request?.Tag)}/{Uri.EscapeDataString(request?.AnnotationId)}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Delete, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {

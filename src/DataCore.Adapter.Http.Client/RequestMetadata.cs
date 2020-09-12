@@ -11,13 +11,13 @@ namespace DataCore.Adapter.Http.Client {
         /// <summary>
         /// The principal associated with the request.
         /// </summary>
-        public ClaimsPrincipal Principal { get; set; }
+        public ClaimsPrincipal? Principal { get; set; }
 
         /// <summary>
         /// The correlation ID for the request. When specified, the <c>Request-Id</c> header on the 
         /// outgoing request will be set to this value.
         /// </summary>
-        public string CorrelationId { get; set; }
+        public string? CorrelationId { get; set; }
 
         /// <summary>
         /// Additional headers to add to the request.
@@ -46,10 +46,10 @@ namespace DataCore.Adapter.Http.Client {
         ///   Additional items related to the request.
         /// </param>
         public RequestMetadata(
-            ClaimsPrincipal principal = null, 
-            string correlationId = null, 
-            IDictionary<string, string> headers = null, 
-            IDictionary<object, object> items = null
+            ClaimsPrincipal? principal = null, 
+            string? correlationId = null, 
+            IDictionary<string, string>? headers = null, 
+            IDictionary<object, object>? items = null
         ) {
             Principal = principal;
             CorrelationId = correlationId;

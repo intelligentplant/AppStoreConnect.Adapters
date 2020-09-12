@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// <summary>
         /// The ASP.NET Core authorization service.
         /// </summary>
-        private readonly IAuthorizationService _authorizationService;
+        private readonly IAuthorizationService _authorizationService = default!;
 
         /// <summary>
         /// Indicates if authorization will be applied to adapter API calls. This will be <see langword="false"/> 

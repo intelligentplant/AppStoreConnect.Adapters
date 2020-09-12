@@ -17,13 +17,13 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string id = null;
-            string topic = null;
+            string id = null!;
+            string topic = null!;
             DateTime utcEventTime = default;
             EventPriority priority = EventPriority.Unknown;
-            string category = null;
-            string message = null;
-            AdapterProperty[] properties = null;
+            string category = null!;
+            string message = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

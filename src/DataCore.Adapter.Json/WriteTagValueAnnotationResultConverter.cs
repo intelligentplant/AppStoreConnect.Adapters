@@ -15,11 +15,11 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string tagId = null;
-            string annotationId = null;
+            string tagId = null!;
+            string annotationId = null!;
             WriteStatus status = WriteStatus.Unknown;
-            string notes = null;
-            AdapterProperty[] properties = null;
+            string notes = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

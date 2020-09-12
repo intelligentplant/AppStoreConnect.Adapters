@@ -18,7 +18,7 @@ namespace DataCore.Adapter.AspNetCore {
         /// The listener registration if an <see cref="IOptionsMonitor{TOptions}"/> is used to 
         /// provide options.
         /// </summary>
-        private readonly IDisposable _listenerRegistration;
+        private readonly IDisposable _listenerRegistration = default!;
 
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.AspNetCore {
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
         public AspNetCoreAdapterOptionsMonitor(IOptions<TAdapterOptions> options) 
-            : base(options?.Value) { 
+            : base(options?.Value!) { 
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }

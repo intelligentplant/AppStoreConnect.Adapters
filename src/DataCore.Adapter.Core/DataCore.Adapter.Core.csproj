@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Core</PackageId>
     <Description>Base types for App Store Connect adapters.</Description>

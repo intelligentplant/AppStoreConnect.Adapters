@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -22,6 +23,10 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.Events.EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             GrpcAdapterProxy.ValidateObject(request);
 
             var client = CreateClient<EventsService.EventsServiceClient>();

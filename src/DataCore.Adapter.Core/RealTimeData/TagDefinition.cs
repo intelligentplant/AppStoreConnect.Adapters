@@ -15,7 +15,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The discrete states for the tag. If <see cref="TagSummary.DataType"/> is not 
         /// <see cref="VariantType.Int32"/>, this property will be <see langword="null"/>.
         /// </summary>
-        public IEnumerable<DigitalState>? States { get; }
+        public IEnumerable<DigitalState> States { get; }
 
         /// <summary>
         /// Bespoke tag properties.
@@ -73,8 +73,8 @@ namespace DataCore.Adapter.RealTimeData {
             IEnumerable<string>? labels
         ) : base(id, name, description, units, dataType) {
             States = dataType != VariantType.Int32
-                ? null
-                : states?.ToArray();
+                ? Array.Empty<DigitalState>()
+                : states?.ToArray() ?? Array.Empty<DigitalState>();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
             Labels = labels?.ToArray() ?? Array.Empty<string>();
         }

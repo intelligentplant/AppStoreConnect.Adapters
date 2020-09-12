@@ -17,15 +17,15 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string id = null;
-            string name = null;
+            string id = null!;
+            string name = null!;
             NodeType nodeType = NodeType.Unknown;
-            string nodeSubType = null;
-            string description = null;
-            string parent = null;
+            string nodeSubType = null!;
+            string description = null!;
+            string parent = null!;
             bool hasChildren = false;
-            DataReference dataReference = null;
-            AdapterProperty[] properties = null;
+            DataReference dataReference = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

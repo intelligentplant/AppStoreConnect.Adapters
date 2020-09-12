@@ -104,12 +104,12 @@ namespace DataCore.Adapter {
 
             var adapter = await adapterAccessor.GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
-                return new ResolvedAdapterFeature<TFeature>(null, default, false);
+                return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
             }
 
             var feature = adapter.GetFeature<TFeature>(featureUri);
             if (feature == null) {
-                return new ResolvedAdapterFeature<TFeature>(adapter, default, false);
+                return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
             }
 
             var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, featureUri, cancellationToken).ConfigureAwait(false);
@@ -154,13 +154,13 @@ namespace DataCore.Adapter {
             
             var adapter = await adapterAccessor.GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
-                return new ResolvedAdapterFeature<TFeature>(null, default, false);
+                return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
             }
 
             var uri = typeof(TFeature).GetAdapterFeatureUri();
 
             if (uri == null || !adapter.TryGetFeature<TFeature>(uri, out var feature)) {
-                return new ResolvedAdapterFeature<TFeature>(adapter, default, false);
+                return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
             }
 
             var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, uri, cancellationToken).ConfigureAwait(false);

@@ -112,7 +112,13 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         protected bool HasActiveSubscriptions { get; private set; }
 
-        
+        /// <summary>
+        /// Publishes all event messages passed to the <see cref="EventMessagePushWithTopics"/> via the 
+        /// <see cref="ValueReceived"/> method.
+        /// </summary>
+        public event Action<EventMessage>? Publish;
+
+
         /// <summary>
         /// Creates a new <see cref="EventMessagePushWithTopics"/> object.
         /// </summary>
@@ -250,7 +256,7 @@ namespace DataCore.Adapter.Events {
                 }
 
                 if (removedSubscriptions.Count > 0) {
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null));
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null!));
                 }
             }
             finally {
@@ -415,6 +421,8 @@ namespace DataCore.Adapter.Events {
                         break;
                     }
 
+                    Publish?.Invoke(item.Value);
+
                     foreach (var subscriber in item.Subscribers) {
                         if (cancellationToken.IsCancellationRequested) {
                             break;
@@ -482,10 +490,6 @@ namespace DataCore.Adapter.Events {
             }
             finally {
                 _subscriptionsLock.ExitReadLock();
-            }
-
-            if (subscribers.Length == 0) {
-                return false;
             }
 
             try {

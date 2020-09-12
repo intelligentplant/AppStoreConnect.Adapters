@@ -47,6 +47,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
+        /// <inheritdoc/>
         public override async Task<FeatureDescriptor> GetDescriptor(GetExtensionDescriptorRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
 
@@ -60,7 +61,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 var result = await adapter.Feature.GetDescriptor(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcFeatureDescriptor();
+                return result == null 
+                    ? null! 
+                    : result.ToGrpcFeatureDescriptor();
             }
             catch (SecurityException) {
                 throw Util.CreatePermissionDeniedException();

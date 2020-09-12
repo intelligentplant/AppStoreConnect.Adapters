@@ -12,6 +12,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     /// <returns>
     ///   The configured hub connection.
     /// </returns>
-    public delegate HubConnection ConnectionFactory(string key = null);
+    public delegate HubConnection ConnectionFactory(string? key = null);
 
 }

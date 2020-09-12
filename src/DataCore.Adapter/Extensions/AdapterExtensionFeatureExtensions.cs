@@ -67,7 +67,7 @@ namespace DataCore.Adapter.Extensions {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            return deserialize(result);
+            return deserialize(result!);
         }
 
 

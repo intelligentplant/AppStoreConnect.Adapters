@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -21,6 +22,10 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
 
         /// <inheritdoc />
         public Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             HttpAdapterProxy.ValidateObject(request);
 
             var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);

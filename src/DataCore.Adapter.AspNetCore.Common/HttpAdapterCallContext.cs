@@ -19,13 +19,13 @@ namespace DataCore.Adapter.AspNetCore {
         private readonly HttpContext _httpContext;
 
         /// <inheritdoc/>
-        public ClaimsPrincipal User {
+        public ClaimsPrincipal? User {
             get { return _httpContext.User; }
         }
 
         /// <inheritdoc/>
         public string ConnectionId {
-            get { return _httpContext.Connection?.Id; }
+            get { return _httpContext.Connection.Id; }
         }
 
         /// <inheritdoc/>
@@ -35,7 +35,7 @@ namespace DataCore.Adapter.AspNetCore {
 
         /// <inheritdoc/>
         public CultureInfo CultureInfo {
-            get { return _httpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture; }
+            get { return _httpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture ?? CultureInfo.CurrentCulture; }
         }
 
         /// <inheritdoc/>

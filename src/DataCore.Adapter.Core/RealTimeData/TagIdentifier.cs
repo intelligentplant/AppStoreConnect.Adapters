@@ -70,13 +70,16 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) {
-            return obj is TagIdentifier id ? Equals(id) : false;
+        public override bool Equals(object? obj) {
+            return Equals(obj as TagIdentifier);
         }
 
 
         /// <inheritdoc/>
-        public bool Equals(TagIdentifier other) {
+        public bool Equals(TagIdentifier? other) {
+            if (other == null) {
+                return false;
+            }
             return TagIdentifierComparer.Id.Equals(this, other);
         }
 

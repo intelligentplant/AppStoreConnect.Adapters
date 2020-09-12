@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Json {
             DateTime utcSampleTime = default;
             Variant value = Variant.Null;
             TagValueStatus status = TagValueStatus.Uncertain;
-            string units = null;
+            string units = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

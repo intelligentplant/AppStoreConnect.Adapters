@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -21,6 +22,9 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(IAdapterCallContext context, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             HttpAdapterProxy.ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);

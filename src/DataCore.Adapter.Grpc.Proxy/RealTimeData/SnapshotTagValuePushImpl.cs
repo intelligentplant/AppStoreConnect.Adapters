@@ -36,6 +36,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             GrpcAdapterProxy.ValidateObject(request);
 
             if (channel == null) {

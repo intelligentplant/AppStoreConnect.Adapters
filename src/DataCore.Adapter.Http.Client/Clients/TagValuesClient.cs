@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -70,7 +68,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagValueQueryResult>> ReadSnapshotTagValuesAsync(
             string adapterId, 
             ReadSnapshotTagValuesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -119,7 +117,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagValueQueryResult>> ReadRawTagValuesAsync(
             string adapterId, 
             ReadRawTagValuesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -168,7 +166,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagValueQueryResult>> ReadPlotTagValuesAsync(
             string adapterId, 
             ReadPlotTagValuesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -217,7 +215,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagValueQueryResult>> ReadTagValuesAtTimesAsync(
             string adapterId, 
             ReadTagValuesAtTimesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -257,7 +255,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctionsAsync(
             string adapterId, 
-            RequestMetadata metadata = null, 
+            RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -305,7 +303,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<ProcessedTagValueQueryResult>> ReadProcessedTagValuesAsync(
             string adapterId, 
             ReadProcessedTagValuesRequest request, 
-            RequestMetadata metadata = null, 
+            RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -354,7 +352,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotValuesAsync(
             string adapterId, 
             WriteTagValuesRequest request, 
-            RequestMetadata metadata = null, 
+            RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -403,7 +401,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalValuesAsync(
             string adapterId, 
             WriteTagValuesRequest request, 
-            RequestMetadata metadata = null, 
+            RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

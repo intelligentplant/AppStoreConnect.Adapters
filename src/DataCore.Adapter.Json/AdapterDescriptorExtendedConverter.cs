@@ -15,12 +15,12 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string id = null;
-            string name = null;
-            string description = null;
-            string[] features = null;
-            string[] extensions = null;
-            AdapterProperty[] properties = null;
+            string id = null!;
+            string name = null!;
+            string description = null!;
+            string[] features = null!;
+            string[] extensions = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

@@ -86,7 +86,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static AssetModel.AssetModelNode ToAdapterAssetModelNode(this Grpc.AssetModelNode node) {
             if (node == null) {
-                return null;
+                throw new ArgumentNullException(nameof(node));
             }
 
             return new AssetModel.AssetModelNode(
@@ -124,7 +124,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.AssetModelNode ToGrpcAssetModelNode(this AssetModel.AssetModelNode node) {
             if (node == null) {
-                return null;
+                throw new ArgumentNullException(nameof(node));
             }
 
             var result = new Grpc.AssetModelNode() {
@@ -287,7 +287,7 @@ namespace DataCore.Adapter {
                     value = BitConverter.ToBoolean(bytes, 0);
                     break;
                 case Grpc.VariantType.Byte:
-                    value = bytes?.FirstOrDefault();
+                    value = bytes.FirstOrDefault();
                     break;
                 case Grpc.VariantType.Datetime:
                     value = DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt)
@@ -310,7 +310,7 @@ namespace DataCore.Adapter {
                     value = BitConverter.ToInt64(bytes, 0);
                     break;
                 case Grpc.VariantType.Null:
-                    value = null;
+                    value = null!;
                     break;
                 case Grpc.VariantType.Object:
                     var serializerOptions = new System.Text.Json.JsonSerializerOptions();
@@ -318,7 +318,7 @@ namespace DataCore.Adapter {
                     value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions);
                     break;
                 case Grpc.VariantType.Sbyte:
-                    value = (sbyte) bytes?.FirstOrDefault();
+                    value = (sbyte) bytes.FirstOrDefault();
                     break;
                 case Grpc.VariantType.String:
                     value = System.Text.Encoding.UTF8.GetString(bytes);
@@ -340,11 +340,11 @@ namespace DataCore.Adapter {
                 case Grpc.VariantType.Url:
                     value = Uri.TryCreate(System.Text.Encoding.UTF8.GetString(bytes), UriKind.Absolute, out var url)
                         ? url
-                        : default;
+                        : default!;
                     break;
                 case Grpc.VariantType.Unknown:
                 default:
-                    value = null;
+                    value = null!;
                     break;
             }
 
@@ -456,7 +456,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Common.AdapterProperty ToAdapterProperty(this Grpc.AdapterProperty property) {
             if (property == null) {
-                return null;
+                throw new ArgumentNullException(nameof(property));
             }
 
             return Common.AdapterProperty.Create(
@@ -478,7 +478,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.AdapterProperty ToGrpcAdapterProperty(this Common.AdapterProperty property) {
             if (property == null) {
-                return null;
+                throw new ArgumentNullException(nameof(property));
             }
 
             var result = new Grpc.AdapterProperty() {
@@ -550,7 +550,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Common.HostInfo ToAdapterHostInfo(this Grpc.HostInfo hostInfo) {
             if (hostInfo == null) {
-                return null;
+                throw new ArgumentNullException(nameof(hostInfo));
             }
 
             return Common.HostInfo.Create(
@@ -574,14 +574,14 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.HostInfo ToGrpcHostInfo(this Common.HostInfo hostInfo) {
             if (hostInfo == null) {
-                return null;
+                throw new ArgumentNullException(nameof(hostInfo));
             }
 
             var result = new Grpc.HostInfo() { 
                 Name = hostInfo.Name ?? string.Empty,
                 Description = hostInfo.Description ?? string.Empty,
                 Version = hostInfo.Version ?? string.Empty,
-                VendorInfo = hostInfo.Vendor.ToGrpcVendorInfo()
+                VendorInfo = hostInfo.Vendor?.ToGrpcVendorInfo() ?? new Grpc.VendorInfo()
             };
 
             if (hostInfo.Properties != null) {
@@ -608,7 +608,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Common.VendorInfo ToAdapterVendorInfo(this Grpc.VendorInfo vendorInfo) {
             if (vendorInfo == null) {
-                return null;
+                throw new ArgumentNullException(nameof(vendorInfo));
             }
 
             return Common.VendorInfo.Create(vendorInfo.Name, vendorInfo.Url);
@@ -626,7 +626,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.VendorInfo ToGrpcVendorInfo(this Common.VendorInfo vendorInfo) {
             if (vendorInfo == null) {
-                return null;
+                throw new ArgumentNullException(nameof(vendorInfo));
             }
 
             return new Grpc.VendorInfo() { 
@@ -647,7 +647,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Common.AdapterDescriptor ToAdapterDescriptor(this Grpc.AdapterDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return Common.AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
@@ -665,7 +665,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.AdapterDescriptor ToGrpcAdapterDescriptor(this Common.AdapterDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return new Grpc.AdapterDescriptor() { 
@@ -687,12 +687,12 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Common.AdapterDescriptorExtended ToExtendedAdapterDescriptor(this Grpc.ExtendedAdapterDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return Common.AdapterDescriptorExtended.Create(
-                descriptor.AdapterDescriptor?.Id,
-                descriptor.AdapterDescriptor?.Name,
+                descriptor.AdapterDescriptor.Id,
+                descriptor.AdapterDescriptor.Name,
                 descriptor.AdapterDescriptor?.Description,
                 descriptor.Features,
                 descriptor.Extensions,
@@ -712,7 +712,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.ExtendedAdapterDescriptor ToGrpcExtendedAdapterDescriptor(this Common.AdapterDescriptorExtended descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             var result = new Grpc.ExtendedAdapterDescriptor() { 
@@ -959,7 +959,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Events.EventMessage ToAdapterEventMessage(this Grpc.EventMessage message) {
             if (message == null) {
-                return null;
+                throw new ArgumentNullException(nameof(message));
             }
 
             return Events.EventMessage.Create(
@@ -985,7 +985,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.EventMessage ToGrpcEventMessage(this Events.EventMessageBase message) {
             if (message == null) {
-                return null;
+                throw new ArgumentNullException(nameof(message));
             }
 
             var result = new Grpc.EventMessage() {
@@ -1021,7 +1021,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Events.EventMessageWithCursorPosition ToAdapterEventMessageWithCursorPosition(this Grpc.EventMessageWithCursorPosition message) {
             if (message == null) {
-                return null;
+                throw new ArgumentNullException(nameof(message));
             }
 
             return Events.EventMessageWithCursorPosition.Create(
@@ -1048,7 +1048,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.EventMessageWithCursorPosition ToGrpcEventMessageWithCursorPosition(this Events.EventMessageWithCursorPosition message) {
             if (message == null) {
-                return null;
+                throw new ArgumentNullException(nameof(message));
             }
 
             var result = new Grpc.EventMessageWithCursorPosition() {
@@ -1071,13 +1071,13 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Events.WriteEventMessageItem ToAdapterWriteEventMessageItem(this Grpc.WriteEventMessageItem writeRequest) {
             if (writeRequest == null) {
-                return null;
+                throw new ArgumentNullException(nameof(writeRequest));
             } 
 
             return new Events.WriteEventMessageItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 EventMessage = Events.EventMessage.Create(
-                    writeRequest.Message?.Id,
+                    writeRequest.Message?.Id ?? Guid.NewGuid().ToString(),
                     writeRequest.Message?.Topic,
                     writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
                     writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.EventPriority.Unknown,
@@ -1100,7 +1100,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.WriteEventMessageItem ToGrpcWriteEventMessageItem(this Events.WriteEventMessageItem item) {
             if (item == null) {
-                return null;
+                throw new ArgumentNullException(nameof(item));
             }
 
             return new Grpc.WriteEventMessageItem() {
@@ -1121,7 +1121,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Events.WriteEventMessageResult ToAdapterWriteEventMessageResult(this Grpc.WriteEventMessageResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return Events.WriteEventMessageResult.Create(
@@ -1139,15 +1139,12 @@ namespace DataCore.Adapter {
         /// <param name="adapterResult">
         ///   The adapter write event message result.
         /// </param>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
         /// <returns>
         ///   The gRPC write event message result.
         /// </returns>
         public static Grpc.WriteEventMessageResult ToGrpcWriteEventMessageResult(this Events.WriteEventMessageResult adapterResult) {
             if (adapterResult == null) {
-                return null;
+                throw new ArgumentNullException(nameof(adapterResult));
             }
             
             var result = new Grpc.WriteEventMessageResult() {
@@ -1174,13 +1171,13 @@ namespace DataCore.Adapter {
 
         public static Common.FeatureDescriptor ToAdapterFeatureDescriptor(this Grpc.FeatureDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return new Common.FeatureDescriptor() { 
                 Uri = Uri.TryCreate(descriptor.FeatureUri, UriKind.Absolute, out var uri)
                     ? uri
-                    : null,
+                    : null!,
                 DisplayName = descriptor.DisplayName,
                 Description = descriptor.Description
             };
@@ -1189,7 +1186,7 @@ namespace DataCore.Adapter {
 
         public static Grpc.FeatureDescriptor ToGrpcFeatureDescriptor(this Common.FeatureDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return new Grpc.FeatureDescriptor() {
@@ -1203,13 +1200,13 @@ namespace DataCore.Adapter {
 
         public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return new Extensions.ExtensionFeatureOperationDescriptor() { 
                 OperationId = Uri.TryCreate(descriptor.OperationId, UriKind.Absolute, out var uri)
                     ? uri
-                    : null,
+                    : null!,
                 OperationType = descriptor.OperationType.ToAdapterExtensionFeatureOperationType(),
                 Name = descriptor.Name,
                 Description = descriptor.Description,
@@ -1221,7 +1218,7 @@ namespace DataCore.Adapter {
 
         public static Grpc.ExtensionFeatureOperationDescriptor ToGrpcExtensionOperatorDescriptor(this Extensions.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return new Grpc.ExtensionFeatureOperationDescriptor() {
@@ -1300,7 +1297,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagDefinition ToAdapterTagDefinition(this Grpc.TagDefinition tagDefinition) {
             if (tagDefinition == null) {
-                return null;
+                throw new ArgumentNullException(nameof(tagDefinition));
             }
 
             return RealTimeData.TagDefinition.Create(
@@ -1327,7 +1324,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagDefinition ToGrpcTagDefinition(this RealTimeData.TagDefinition tag) {
             if (tag == null) {
-                return null;
+                throw new ArgumentNullException(nameof(tag));
             }
 
             var result = new Grpc.TagDefinition() {
@@ -1380,7 +1377,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.DigitalState ToAdapterDigitalState(this Grpc.DigitalState state) {
             if (state == null) {
-                return null;
+                throw new ArgumentNullException(nameof(state));
             }
 
             return RealTimeData.DigitalState.Create(state.Name, state.Value);
@@ -1398,7 +1395,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.DigitalState ToGrpcDigitalState(this RealTimeData.DigitalState state) {
             if (state == null) {
-                return null;
+                throw new ArgumentNullException(nameof(state));
             }
 
             return new Grpc.DigitalState() {
@@ -1419,7 +1416,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.DigitalStateSet ToAdapterDigitalStateSet(this Grpc.DigitalStateSet set) {
             if (set == null) {
-                return null;
+                throw new ArgumentNullException(nameof(set));
             }
 
             return RealTimeData.DigitalStateSet.Create(set.Id, set.Name, set.States.Select(x => x.ToAdapterDigitalState()));
@@ -1437,7 +1434,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.DigitalStateSet ToGrpcDigitalStateSet(this RealTimeData.DigitalStateSet set) {
             if (set == null) {
-                return null;
+                throw new ArgumentNullException(nameof(set));
             }
 
             var result = new Grpc.DigitalStateSet() {
@@ -1514,7 +1511,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagValueExtended ToAdapterTagValue(this Grpc.TagValue tagValue) {
             if (tagValue == null) {
-                return null;
+                throw new ArgumentNullException(nameof(tagValue));
             }
 
             return RealTimeData.TagValueExtended.Create(
@@ -1540,7 +1537,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagValue ToGrpcTagValue(this RealTimeData.TagValueExtended tagValue) {
             if (tagValue == null) {
-                return null;
+                throw new ArgumentNullException(nameof(tagValue));
             }
 
             var result = new Grpc.TagValue() {
@@ -1576,7 +1573,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagValueQueryResult ToAdapterTagValueQueryResult(this Grpc.TagValueQueryResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return RealTimeData.TagValueQueryResult.Create(
@@ -1600,7 +1597,10 @@ namespace DataCore.Adapter {
         ///   The adapter tag value query result.
         /// </returns>
         public static Grpc.TagValueQueryResult ToGrpcTagValueQueryResult(this RealTimeData.TagValueQueryResult value, Grpc.TagValueQueryType queryType) {
-            return ToGrpcTagValueQueryResult(value?.Value, value?.TagId, value?.TagName, queryType);
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+            return ToGrpcTagValueQueryResult(value.Value, value.TagId, value.TagName, queryType);
         }
 
 
@@ -1624,7 +1624,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagValueQueryResult ToGrpcTagValueQueryResult(this RealTimeData.TagValueExtended value, string tagId, string tagName, Grpc.TagValueQueryType queryType) {
             if (value == null) {
-                return null;
+                throw new ArgumentNullException(nameof(value));
             }
             
             var result = new Grpc.TagValueQueryResult() {
@@ -1649,7 +1649,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.ProcessedTagValueQueryResult ToAdapterProcessedTagValueQueryResult(this Grpc.ProcessedTagValueQueryResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return RealTimeData.ProcessedTagValueQueryResult.Create(
@@ -1674,12 +1674,16 @@ namespace DataCore.Adapter {
         ///   The adapter processed tag value query result.
         /// </returns>
         public static Grpc.ProcessedTagValueQueryResult ToGrpcProcessedTagValueQueryResult(this RealTimeData.ProcessedTagValueQueryResult value, Grpc.TagValueQueryType queryType) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+            
             var result = new Grpc.ProcessedTagValueQueryResult() {
-                TagId = value?.TagId ?? string.Empty,
-                TagName = value?.TagName ?? string.Empty,
-                DataFunction = value?.DataFunction ?? string.Empty,
+                TagId = value.TagId ?? string.Empty,
+                TagName = value.TagName ?? string.Empty,
+                DataFunction = value.DataFunction ?? string.Empty,
                 QueryType = queryType,
-                Value = value?.Value.ToGrpcTagValue()
+                Value = value.Value.ToGrpcTagValue()
             };
 
             return result;
@@ -1797,7 +1801,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.DataFunctionDescriptor ToAdapterDataFunctionDescriptor(this Grpc.DataFunctionDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
             return RealTimeData.DataFunctionDescriptor.Create(
@@ -1822,7 +1826,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.DataFunctionDescriptor ToGrpcDataFunctionDescriptor(this RealTimeData.DataFunctionDescriptor descriptor) {
             if (descriptor == null) {
-                return null;
+                throw new ArgumentNullException(nameof(descriptor));
             }
             
             var result = new Grpc.DataFunctionDescriptor() {
@@ -1897,7 +1901,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.WriteTagValueItem ToAdapterWriteTagValueItem(this Grpc.WriteTagValueItem writeRequest) {
             if (writeRequest == null) {
-                return null;
+                throw new ArgumentNullException(nameof(writeRequest));
             }
 
             return new RealTimeData.WriteTagValueItem() {
@@ -1924,7 +1928,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.WriteTagValueItem ToGrpcWriteTagValueItem(this RealTimeData.WriteTagValueItem item) {
             if (item == null) {
-                return null;
+                throw new ArgumentNullException(nameof(item));
             }
 
             return new Grpc.WriteTagValueItem() {
@@ -1949,7 +1953,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.WriteTagValueResult ToAdapterWriteTagValueResult(this Grpc.WriteTagValueResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return RealTimeData.WriteTagValueResult.Create(
@@ -1973,7 +1977,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.WriteTagValueResult ToGrpcWriteTagValueResult(this RealTimeData.WriteTagValueResult adapterResult) {
             if (adapterResult == null) {
-                return null;
+                throw new ArgumentNullException(nameof(adapterResult));
             }
 
             var result = new Grpc.WriteTagValueResult() {
@@ -2047,7 +2051,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagValueAnnotation ToAdapterTagValueAnnotation(this Grpc.TagValueAnnotationBase annotation) {
             if (annotation == null) {
-                return null;
+                throw new ArgumentNullException(nameof(annotation));
             }
 
             return RealTimeData.TagValueAnnotation.Create(
@@ -2074,7 +2078,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagValueAnnotationBase ToGrpcTagValueAnnotationBase(this RealTimeData.TagValueAnnotation annotation) {
             if (annotation == null) {
-                return null;
+                throw new ArgumentNullException(nameof(annotation));
             }
 
             var result = new Grpc.TagValueAnnotationBase() {
@@ -2086,7 +2090,7 @@ namespace DataCore.Adapter {
             };
 
             if (result.HasUtcEndTime) {
-                result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
+                result.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime!.Value);
             }
 
             if (annotation.Properties != null) {
@@ -2113,7 +2117,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagValueAnnotationExtended ToAdapterTagValueAnnotation(this Grpc.TagValueAnnotation annotation) {
             if (annotation == null) {
-                return null;
+                throw new ArgumentNullException(nameof(annotation));
             }
 
             return RealTimeData.TagValueAnnotationExtended.Create(
@@ -2141,7 +2145,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagValueAnnotation ToGrpcTagValueAnnotation(this RealTimeData.TagValueAnnotationExtended annotation) {
             if (annotation == null) {
-                return null;
+                throw new ArgumentNullException(nameof(annotation));
             }
 
             var result = new Grpc.TagValueAnnotation() {
@@ -2150,7 +2154,7 @@ namespace DataCore.Adapter {
             };
 
             if (result.Annotation.HasUtcEndTime) {
-                result.Annotation.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime.Value);
+                result.Annotation.UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(annotation.UtcEndTime!.Value);
             }
 
             if (annotation.Properties != null) {
@@ -2177,7 +2181,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.TagValueAnnotationQueryResult ToAdapterTagValueAnnotationQueryResult(this Grpc.TagValueAnnotationQueryResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return RealTimeData.TagValueAnnotationQueryResult.Create(
@@ -2199,7 +2203,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.TagValueAnnotationQueryResult ToGrpcTagValueAnnotationQueryResult(this RealTimeData.TagValueAnnotationQueryResult annotation) {
             if (annotation == null) {
-                return null;
+                throw new ArgumentNullException(nameof(annotation));
             }
             
             var result = new Grpc.TagValueAnnotationQueryResult() {
@@ -2223,7 +2227,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static RealTimeData.WriteTagValueAnnotationResult ToAdapterWriteTagValueAnnotationResult(this Grpc.WriteTagValueAnnotationResult result) {
             if (result == null) {
-                return null;
+                throw new ArgumentNullException(nameof(result));
             }
 
             return RealTimeData.WriteTagValueAnnotationResult.Create(
@@ -2250,7 +2254,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public static Grpc.WriteTagValueAnnotationResult ToGrpcWriteTagValueAnnotationResult(this RealTimeData.WriteTagValueAnnotationResult adapterResult, string adapterId) {
             if (adapterResult == null) {
-                return null;
+                throw new ArgumentNullException(nameof(adapterResult));
             }
 
             var result = new Grpc.WriteTagValueAnnotationResult() {

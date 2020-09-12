@@ -23,6 +23,9 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }

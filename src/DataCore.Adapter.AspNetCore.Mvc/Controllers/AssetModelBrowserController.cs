@@ -64,7 +64,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
-        public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string start = null, int page = 1, int pageSize = 10) {
+        public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string? start = null, int page = 1, int pageSize = 10) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

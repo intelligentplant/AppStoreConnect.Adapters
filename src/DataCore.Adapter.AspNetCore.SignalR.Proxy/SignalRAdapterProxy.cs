@@ -37,12 +37,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Information about the remote host.
         /// </summary>
-        private HostInfo _remoteHostInfo;
+        private HostInfo _remoteHostInfo = default!;
 
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private AdapterDescriptorExtended _remoteDescriptor;
+        private AdapterDescriptorExtended _remoteDescriptor = default!;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteDescriptor"/>.
@@ -85,7 +85,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
-        private readonly ExtensionFeatureFactory<SignalRAdapterProxy> _extensionFeatureFactory;
+        private readonly ExtensionFeatureFactory<SignalRAdapterProxy>? _extensionFeatureFactory;
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -108,7 +108,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <param name="options">
         ///   The proxy options.
         /// </param>
-        /// <param name="taskScheduler">
+        /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
@@ -118,12 +118,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         public SignalRAdapterProxy(
             string id,
             SignalRAdapterProxyOptions options, 
-            IBackgroundTaskService taskScheduler, 
-            ILogger<SignalRAdapterProxy> logger
+            IBackgroundTaskService? backgroundTaskService, 
+            ILogger<SignalRAdapterProxy>? logger
         ) : base(
             id,
             options, 
-            taskScheduler, 
+            backgroundTaskService, 
             logger
         ) {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));

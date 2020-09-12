@@ -53,7 +53,7 @@ namespace DataCore.Adapter {
         Task<bool> AuthorizeAdapterFeature(
             IAdapter adapter, 
             IAdapterCallContext context, 
-            Uri? featureUri,
+            Uri featureUri,
             CancellationToken cancellationToken
         );
 

@@ -6,6 +6,7 @@
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Mvc</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

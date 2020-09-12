@@ -31,6 +31,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The SignalR server builder.
         /// </returns>
         public static ISignalRServerBuilder AddDataCoreAdapterSignalR(this ISignalRServerBuilder builder) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
 #if NETSTANDARD2_0
             return builder;
 #else
@@ -94,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <returns>
         ///   The endpoint route builder.
         /// </returns>
-        public static IEndpointRouteBuilder MapDataCoreAdapterHubs(this IEndpointRouteBuilder endpoints, Action<Type, HubEndpointConventionBuilder> builder) {
+        public static IEndpointRouteBuilder MapDataCoreAdapterHubs(this IEndpointRouteBuilder endpoints, Action<Type, HubEndpointConventionBuilder>? builder) {
             var hubEndpointBuilder = endpoints.MapHub<AdapterHub>(HubRoute);
             builder?.Invoke(typeof(AdapterHub), hubEndpointBuilder);
             return endpoints;

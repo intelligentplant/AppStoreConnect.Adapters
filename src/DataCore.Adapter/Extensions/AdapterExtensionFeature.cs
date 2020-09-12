@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        protected AdapterExtensionFeature(IBackgroundTaskService backgroundTaskService) {
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
 
             foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
@@ -103,12 +103,12 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        Task<FeatureDescriptor?> IAdapterExtensionFeature.GetDescriptor(
+        public Task<FeatureDescriptor?> GetDescriptor(
             IAdapterCallContext context, 
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            return GetDescriptor(
+            return GetDescriptorInternal(
                 context, 
                 featureUri == null 
                     ? null 
@@ -119,12 +119,12 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        Task<IEnumerable<ExtensionFeatureOperationDescriptor>> IAdapterExtensionFeature.GetOperations(
+        public Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
             IAdapterCallContext context, 
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            return GetOperations(
+            return GetOperationsInternal(
                 context,
                 featureUri == null
                     ? null
@@ -135,29 +135,39 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        Task<string> IAdapterExtensionFeature.Invoke(IAdapterCallContext context, Uri operationId, string json, CancellationToken cancellationToken) {
+        public Task<string> Invoke(
+            IAdapterCallContext context, 
+            Uri operationId, 
+            string json, 
+            CancellationToken cancellationToken
+        ) {
             if (operationId == null) {
                 throw new ArgumentNullException(nameof(operationId));
             }
-            return Invoke(context, operationId, json, cancellationToken);
+            return InvokeInternal(context, operationId, json, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<string>> IAdapterExtensionFeature.Stream(IAdapterCallContext context, Uri operationId, string json, CancellationToken cancellationToken) {
+        public Task<ChannelReader<string>> Stream(
+            IAdapterCallContext context, 
+            Uri operationId, 
+            string json, 
+            CancellationToken cancellationToken
+        ) {
             if (operationId == null) {
                 throw new ArgumentNullException(nameof(operationId));
             }
-            return Stream(context, operationId, json, cancellationToken);
+            return StreamInternal(context, operationId, json, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<string>> IAdapterExtensionFeature.DuplexStream(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
+        public Task<ChannelReader<string>> DuplexStream(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
             if (operationId == null) {
                 throw new ArgumentNullException(nameof(operationId));
             }
-            return DuplexStream(context, operationId, channel, cancellationToken);
+            return DuplexStreamInternal(context, operationId, channel, cancellationToken);
         }
 
 
@@ -182,7 +192,7 @@ namespace DataCore.Adapter.Extensions {
         ///   It is not normally required to override this method. Override only if the feature 
         ///   descriptor is not generated using an <see cref="ExtensionFeatureAttribute"/>.
         /// </remarks>
-        protected virtual Task<FeatureDescriptor?> GetDescriptor(
+        protected virtual Task<FeatureDescriptor?> GetDescriptorInternal(
             IAdapterCallContext context,
             Uri? featureUri,
             CancellationToken cancellationToken
@@ -228,7 +238,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected virtual Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context,
             Uri? featureUri,
@@ -282,7 +292,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<string> Invoke(
+        protected virtual Task<string> InvokeInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             Uri operationId, 
@@ -294,7 +304,6 @@ namespace DataCore.Adapter.Extensions {
             }
             throw new MissingMethodException(operationId?.ToString());
         }
-
 
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
@@ -330,7 +339,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<string>> Stream(
+        protected virtual Task<ChannelReader<string>> StreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             Uri operationId, 
@@ -379,7 +388,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<string>> DuplexStream(
+        protected virtual Task<ChannelReader<string>> DuplexStreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             Uri operationId, 
@@ -415,11 +424,11 @@ namespace DataCore.Adapter.Extensions {
             // Get all of the extension feature interface mappings defined by the implementing type 
             // for the method.
             var interfaceMappings = method
-                .ReflectedType
+                .ReflectedType!
                 .GetTypeInfo()
                 .ImplementedInterfaces
                 .Where(x => x.IsExtensionAdapterFeature())
-                .Select(x => method.ReflectedType.GetInterfaceMap(x));
+                .Select(x => method.ReflectedType!.GetInterfaceMap(x));
 
             foreach (var mapping in interfaceMappings) {
                 var methodIndex = -1;
@@ -508,14 +517,14 @@ namespace DataCore.Adapter.Extensions {
                 // We found the method declaration on an extension feature interface. We'll use 
                 // this interface definition and the associated method declaration to retrieve 
                 // metadata required to create the extension feature operation descriptor.
-                extensionFeatureType = methodDeclaration.ReflectedType;
+                extensionFeatureType = methodDeclaration.ReflectedType!;
             }
-            else if (method.ReflectedType.IsExtensionAdapterFeature()) {
+            else if (method.ReflectedType!.IsExtensionAdapterFeature()) {
                 // The reflected type for the method is an extension feature, so we will look 
                 // directly on the method and its reflected type for metadata required to create 
                 // the extension feature operation descriptor.
                 methodDeclaration = method;
-                extensionFeatureType = method.ReflectedType;
+                extensionFeatureType = method.ReflectedType!;
             }
             else {
                 // We are unable to determine the extension feature that this method is associated 

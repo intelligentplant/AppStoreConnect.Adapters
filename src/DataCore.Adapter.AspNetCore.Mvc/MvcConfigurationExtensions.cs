@@ -2,6 +2,8 @@
 using DataCore.Adapter.Json;
 #endif
 
+using System;
+
 namespace Microsoft.Extensions.DependencyInjection {
 
     /// <summary>
@@ -20,7 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </returns>
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
             if (builder == null) {
-                return builder;
+                throw new ArgumentNullException(nameof(builder));
             }
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);

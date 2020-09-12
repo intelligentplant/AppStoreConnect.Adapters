@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </returns>
         public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
             FindAdaptersRequest request,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             AdapterHttpClient.ValidateObject(request);
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<AdapterDescriptorExtended> GetAdapterAsync(
             string adapterId,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -128,7 +128,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<HealthCheckResult> CheckAdapterHealthAsync(
             string adapterId, 
-            RequestMetadata metadata = null, 
+            RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

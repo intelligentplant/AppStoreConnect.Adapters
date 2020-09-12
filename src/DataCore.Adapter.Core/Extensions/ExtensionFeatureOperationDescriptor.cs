@@ -30,12 +30,12 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The input parameter descriptor for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor? Input { get; set; }
+        public ExtensionFeatureOperationParameterDescriptor Input { get; set; } = default!;
 
         /// <summary>
         /// The output parameter descriptor for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor? Output { get; set; }
+        public ExtensionFeatureOperationParameterDescriptor Output { get; set; } = default!;
 
     }
 

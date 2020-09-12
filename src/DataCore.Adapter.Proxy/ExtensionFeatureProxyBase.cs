@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Proxy {
         /// <summary>
         /// Lazy-loaded feature URI for this instance.
         /// </summary>
-        private readonly Lazy<Uri> _featureUri;
+        private readonly Lazy<Uri?> _featureUri;
 
         /// <summary>
         /// Gets the proxy adapter.
@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Proxy {
         /// </exception>
         protected ExtensionFeatureProxyBase(TProxy proxy) : base(proxy?.BackgroundTaskService) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
-            _featureUri = new Lazy<Uri>(() => {
+            _featureUri = new Lazy<Uri?>(() => {
                 return GetType()
                     .GetAdapterFeatureTypes()
                     .FirstOrDefault()
@@ -50,9 +50,9 @@ namespace DataCore.Adapter.Proxy {
 
 
         /// <inheritdoc/>
-        protected sealed override Task<FeatureDescriptor> GetDescriptor(
+        protected sealed override Task<FeatureDescriptor?> GetDescriptorInternal(
             IAdapterCallContext context, 
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             return GetDescriptorFromRemoteAdapter(context, _featureUri.Value, cancellationToken);
@@ -60,9 +60,9 @@ namespace DataCore.Adapter.Proxy {
 
 
         /// <inheritdoc/>
-        protected sealed override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
+        protected sealed override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsInternal(
             IAdapterCallContext context, 
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             return GetOperationsFromRemoteAdapter(context, _featureUri.Value, cancellationToken);
@@ -84,9 +84,9 @@ namespace DataCore.Adapter.Proxy {
         /// <returns>
         ///   The extension feature descriptor.
         /// </returns>
-        protected abstract Task<FeatureDescriptor> GetDescriptorFromRemoteAdapter(
+        protected abstract Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         );
 
@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Proxy {
         /// </returns>
         protected abstract Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context,
-            Uri featureUri,
+            Uri? featureUri,
             CancellationToken cancellationToken
         );
 

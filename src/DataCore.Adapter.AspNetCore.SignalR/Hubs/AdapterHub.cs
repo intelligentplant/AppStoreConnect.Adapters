@@ -99,7 +99,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await AdapterAccessor.GetAdapter(adapterCallContext, adapterId, true, Context.ConnectionAborted).ConfigureAwait(false);
-            return adapter.CreateExtendedAdapterDescriptor();
+            return adapter == null ? null! : adapter.CreateExtendedAdapterDescriptor();
         }
 
 
@@ -196,6 +196,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </param>
         /// <param name="adapterId">
         ///   The adapter ID.
+        /// </param>
+        /// <param name="featureUri">
+        ///   The feature URI.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.

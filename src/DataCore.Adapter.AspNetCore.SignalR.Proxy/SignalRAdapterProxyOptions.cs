@@ -13,19 +13,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// The ID of the remote adapter.
         /// </summary>
         [Required]
-        public string RemoteId { get; set; }
+        public string RemoteId { get; set; } = default!;
 
         /// <summary>
         /// A factory method that creates hub connections on behalf of the proxy.
         /// </summary>
         [Required]
-        public ConnectionFactory ConnectionFactory { get; set; }
+        public ConnectionFactory ConnectionFactory { get; set; } = default!;
 
         /// <summary>
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory<SignalRAdapterProxy> ExtensionFeatureFactory { get; set; }
+        public ExtensionFeatureFactory<SignalRAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
     }
 }

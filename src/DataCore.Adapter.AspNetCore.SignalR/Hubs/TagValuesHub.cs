@@ -52,9 +52,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         #region [ Polling Data Queries ]
 
         /// <summary>
-        /// Gets snapshot tag values via polling. Use <see cref="CreateSnapshotTagValueSubscription"/> 
-        /// and <see cref="CreateSnapshotTagValueChannel"/> to receive snapshot tag 
-        /// values via push messages.
+        /// Gets snapshot tag values via polling. Use <see cref="CreateSnapshotTagValueChannel"/> 
+        /// to receive snapshot tag values via push messages.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID.

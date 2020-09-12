@@ -15,9 +15,9 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string name = null;
+            string name = null!;
             Variant value = Variant.Null;
-            string description = null;
+            string description = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

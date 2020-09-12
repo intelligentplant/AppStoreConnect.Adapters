@@ -13,12 +13,12 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// The tag definitions, indexed by ID.
         /// </summary>
-        public IDictionary<string, TagDefinition> Tags { get; internal set; }
+        public IDictionary<string, TagDefinition> Tags { get; internal set; } = default!;
 
         /// <summary>
         /// The tag definitions, indexed by name.
         /// </summary>
-        internal ILookup<string, TagDefinition> TagsByName { get; set; }
+        internal ILookup<string, TagDefinition> TagsByName { get; set; } = default!;
 
         /// <summary>
         /// The tag count.
@@ -28,12 +28,12 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// The UTC sample times read from the CSV.
         /// </summary>
-        public IEnumerable<DateTime> UtcSampleTimes { get; internal set; }
+        public IEnumerable<DateTime> UtcSampleTimes { get; internal set; } = default!;
 
         /// <summary>
         /// The raw tag values read from the CSV, indexed by tag ID and then UTC sample time.
         /// </summary>
-        public IDictionary<string, SortedList<DateTime, TagValueExtended>> Values { get; internal set; }
+        public IDictionary<string, SortedList<DateTime, TagValueExtended>> Values { get; internal set; } = default!;
 
         /// <summary>
         /// The earliest UTC sample time read from the CSV.

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -70,7 +68,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<EventMessage>> ReadEventMessagesAsync(
             string adapterId, 
             ReadEventMessagesForTimeRangeRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -119,7 +117,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<EventMessageWithCursorPosition>> ReadEventMessagesAsync(
             string adapterId, 
             ReadEventMessagesUsingCursorRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -169,7 +167,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(
             string adapterId, 
             WriteEventMessagesRequest request, 
-            RequestMetadata metadata,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

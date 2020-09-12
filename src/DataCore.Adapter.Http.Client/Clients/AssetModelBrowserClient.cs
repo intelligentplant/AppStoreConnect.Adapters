@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AssetModel;
 
 namespace DataCore.Adapter.Http.Client.Clients {
@@ -69,7 +68,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<AssetModelNode>> BrowseNodesAsync(
             string adapterId, 
             BrowseAssetModelNodesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -117,7 +116,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<AssetModelNode>> GetNodesAsync(
             string adapterId, GetAssetModelNodesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -166,7 +165,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<AssetModelNode>> FindNodesAsync(
             string adapterId, 
             FindAssetModelNodesRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

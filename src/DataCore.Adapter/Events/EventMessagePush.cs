@@ -82,6 +82,12 @@ namespace DataCore.Adapter.Events {
         protected bool HasActiveSubscriptions { get; private set; }
 
         /// <summary>
+        /// Publishes all event messages passed to the <see cref="EventMessagePush"/> via the 
+        /// <see cref="ValueReceived"/> method.
+        /// </summary>
+        public event Action<EventMessage>? Publish;
+
+        /// <summary>
         /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
@@ -322,6 +328,8 @@ namespace DataCore.Adapter.Events {
                     if (message == null) {
                         continue;
                     }
+
+                    Publish?.Invoke(message);
 
                     var subscribers = _subscriptions.Values.ToArray();
                     foreach (var subscriber in subscribers) {

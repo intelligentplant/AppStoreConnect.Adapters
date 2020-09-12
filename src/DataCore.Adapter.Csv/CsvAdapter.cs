@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// CSV parsing task.
         /// </summary>
-        private Lazy<Task<CsvDataSet>> _csvParseTask;
+        private Lazy<Task<CsvDataSet>> _csvParseTask = default!;
 
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace DataCore.Adapter.Csv {
         /// </returns>
         private static TagDefinition ParseTagDefinition(string item, CsvAdapterOptions options) {
             if (string.IsNullOrWhiteSpace(item)) {
-                return null;
+                return null!;
             }
 
             if (!item.StartsWith("[", StringComparison.Ordinal) || !item.EndsWith("]", StringComparison.Ordinal)) { 
@@ -196,7 +196,7 @@ namespace DataCore.Adapter.Csv {
 
             if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(id)) {
                 // No name or ID specified.
-                return null;
+                return null!;
             }
 
             var states = new Dictionary<string, int>();
@@ -209,7 +209,7 @@ namespace DataCore.Adapter.Csv {
 
             return TagDefinition.Create(
                 id ?? name,
-                name ?? id,
+                name ?? id!,
                 props.TryGetValue(nameof(description), out description) 
                     ? description 
                     : string.Empty,
@@ -251,7 +251,7 @@ namespace DataCore.Adapter.Csv {
                 throw new ArgumentException($"Invalid time zone ID: {options.TimeZone}.", nameof(options));
             }
 
-            var cultureInfo = options?.CultureInfo ?? CultureInfo.CurrentCulture;
+            var cultureInfo = options.CultureInfo ?? CultureInfo.CurrentCulture;
 
             var tags = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
             var sampleTimes = new List<DateTime>();
@@ -276,7 +276,7 @@ namespace DataCore.Adapter.Csv {
 
             Func<Stream> getCsvStream;
             if (string.IsNullOrWhiteSpace(options.CsvFile)) {
-                getCsvStream = options.GetCsvStream;
+                getCsvStream = options.GetCsvStream!;
             }
             else {
                 var csvFile = Path.IsPathRooted(options.CsvFile)
@@ -507,7 +507,7 @@ namespace DataCore.Adapter.Csv {
         /// <returns>
         ///   The matching tag definition, or <see langword="null"/>.
         /// </returns>
-        private static TagDefinition GetTagByIdOrName(string idOrName, CsvDataSet dataSet) {
+        private static TagDefinition? GetTagByIdOrName(string idOrName, CsvDataSet dataSet) {
             if (dataSet.Tags.TryGetValue(idOrName, out var tag)) {
                 return tag;
             }
@@ -604,7 +604,9 @@ namespace DataCore.Adapter.Csv {
 
             if (!dataSet.IsDataLoopingAllowed) {
                 foreach (var tag in tags) {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                         continue;
                     }
 
@@ -631,7 +633,9 @@ namespace DataCore.Adapter.Csv {
                 // We're inside the data set - the snapshot value is the last value earlier than or 
                 // at the current time.
                 foreach (var tag in tags) {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                         continue;
                     }
 
@@ -780,7 +784,9 @@ namespace DataCore.Adapter.Csv {
                 // For every valid tag in the request, return the raw values inside the requested time range.
 
                 foreach (var tag in tags) {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                         continue;
                     }
 
@@ -900,7 +906,9 @@ namespace DataCore.Adapter.Csv {
                         // If there are no raw values for the current tag, or if we have already exceeded 
                         // the maximum number of raw samples we are allowed to use in a query, move to the 
                         // next tag.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                         if (!dataSet.Values.TryGetValue(tag.Id, out csvValuesForTag)) {
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                             continue;
                         }
 

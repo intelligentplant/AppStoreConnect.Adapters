@@ -2,6 +2,8 @@
 using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common;
 
+#nullable disable
+
 namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>

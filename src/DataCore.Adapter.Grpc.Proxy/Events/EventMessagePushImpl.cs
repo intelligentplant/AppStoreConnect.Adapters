@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
@@ -25,6 +26,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             GrpcAdapterProxy.ValidateObject(request);
 
             var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);

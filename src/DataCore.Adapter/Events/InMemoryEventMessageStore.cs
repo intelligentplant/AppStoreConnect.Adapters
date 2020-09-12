@@ -73,6 +73,11 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         private long _sequenceId;
 
+        /// <summary>
+        /// Publishes all event messages written to the <see cref="InMemoryEventMessageStore"/>.
+        /// </summary>
+        public event Action<EventMessage>? Publish;
+
 
         /// <summary>
         /// Creates a new <see cref="InMemoryEventMessageStore"/> object.
@@ -171,6 +176,7 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitWriteLock();
             }
 
+            Publish?.Invoke(message);
             await _push.ValueReceived(message, cancellationToken).ConfigureAwait(false);
             await _pushWithTopics.ValueReceived(message, cancellationToken).ConfigureAwait(false);
 

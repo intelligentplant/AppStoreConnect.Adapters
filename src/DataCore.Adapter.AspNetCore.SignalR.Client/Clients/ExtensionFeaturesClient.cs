@@ -257,6 +257,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             if (operationUri == null) {
                 throw new ArgumentNullException(nameof(operationUri));
             }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             return await connection.StreamAsChannelAsync<string>(

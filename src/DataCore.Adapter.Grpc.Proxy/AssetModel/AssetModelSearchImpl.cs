@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -22,6 +23,9 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             GrpcAdapterProxy.ValidateObject(request);
 
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();

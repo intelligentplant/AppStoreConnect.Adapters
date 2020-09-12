@@ -99,6 +99,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
+        /// <summary>
+        /// Publishes all values passed to the <see cref="SnapshotTagValuePush"/> via the 
+        /// <see cref="ValueReceived"/> method.
+        /// </summary>
+        public event Action<TagValueQueryResult>? Publish;
+
 
         /// <summary>
         /// Creates a new <see cref="SnapshotTagValuePush"/> object.
@@ -274,7 +280,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
 
                 if (removedSubscriptions.Count > 0) {
-                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null));
+                    _topicSubscriptionChangesChannel.Writer.TryWrite((removedSubscriptions, false, null!));
                 }
             }
             finally {
@@ -451,6 +457,8 @@ namespace DataCore.Adapter.RealTimeData {
                     if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
+
+                    Publish?.Invoke(item.Value);
 
                     foreach (var subscriber in item.Subscribers) {
                         if (cancellationToken.IsCancellationRequested) {

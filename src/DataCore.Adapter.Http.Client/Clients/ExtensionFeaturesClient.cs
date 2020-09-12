@@ -63,10 +63,10 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="featureUri"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<FeatureDescriptor> GetDescriptorAsync(
+        public async Task<FeatureDescriptor?> GetDescriptorAsync(
             string adapterId,
             Uri featureUri,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -76,7 +76,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/descriptor?id={Uri.EscapeDataString(featureUri.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/descriptor?id={Uri.EscapeDataString(featureUri?.ToString()!)}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsAsync(
             string adapterId,
             Uri featureUri,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -166,7 +166,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             string adapterId,
             Uri operationUri,
             string argument,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

@@ -36,12 +36,12 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// Information about the remote host.
         /// </summary>
-        private HostInfo _remoteHostInfo;
+        private HostInfo _remoteHostInfo = default!;
 
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private AdapterDescriptorExtended _remoteDescriptor;
+        private AdapterDescriptorExtended _remoteDescriptor = default!;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteDescriptor"/>.
@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
-        private readonly ExtensionFeatureFactory<HttpAdapterProxy> _extensionFeatureFactory;
+        private readonly ExtensionFeatureFactory<HttpAdapterProxy>? _extensionFeatureFactory;
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -124,8 +124,8 @@ namespace DataCore.Adapter.Http.Proxy {
             string id,
             AdapterHttpClient client, 
             HttpAdapterProxyOptions options, 
-            IBackgroundTaskService taskScheduler, 
-            ILogger<HttpAdapterProxy> logger
+            IBackgroundTaskService? taskScheduler, 
+            ILogger<HttpAdapterProxy>? logger
         ) : base(
             id,
             options, 

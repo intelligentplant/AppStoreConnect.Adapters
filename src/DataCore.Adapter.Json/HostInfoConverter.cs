@@ -16,11 +16,11 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string name = null;
-            string description = null;
-            string version = null;
-            VendorInfo vendor = null;
-            IEnumerable<AdapterProperty> properties = null;
+            string name = null!;
+            string description = null!;
+            string version = null!;
+            VendorInfo vendor = null!;
+            IEnumerable<AdapterProperty> properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

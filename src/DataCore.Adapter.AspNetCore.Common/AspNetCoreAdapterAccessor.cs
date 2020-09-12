@@ -27,7 +27,7 @@ namespace DataCore.Adapter {
         /// <param name="adapters">
         ///   The ASP.NET Core hosted services.
         /// </param>
-        public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter> adapters) 
+        public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
             : base(authorizationService) {
             _adapters = adapters?.ToArray() ?? Array.Empty<IAdapter>();
         }

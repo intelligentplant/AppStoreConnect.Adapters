@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -21,6 +22,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             SignalRAdapterProxy.ValidateObject(request);
 
             var client = GetClient();

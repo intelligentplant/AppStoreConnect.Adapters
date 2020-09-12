@@ -42,8 +42,10 @@ namespace DataCore.Adapter.Json {
         /// <returns>
         ///   The converted property name.
         /// </returns>
-        protected string ConvertPropertyName(string name, JsonSerializerOptions options) {
+        protected string ConvertPropertyName(string name, JsonSerializerOptions? options) {
+#pragma warning disable CS8603 // Possible null reference return.
             return options?.ConvertPropertyName(name);
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
 

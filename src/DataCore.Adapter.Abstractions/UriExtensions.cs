@@ -122,9 +122,9 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if a URI could be created, or <see langword="false"/> otherwise.
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Method is for URI parsing")]
-        public static bool TryCreateUriWithTrailingSlash(this string uriString, out Uri? uri) {
+        public static bool TryCreateUriWithTrailingSlash(this string uriString, out Uri uri) {
             if (uriString == null) {
-                uri = null;
+                uri = null!;
                 return false;
             }
 

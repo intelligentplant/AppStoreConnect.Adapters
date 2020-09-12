@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A new <see cref="RequestMetadata"/> object.
         /// </returns>
-        public static RequestMetadata ToRequestMetadata(this IAdapterCallContext context) {
+        public static RequestMetadata ToRequestMetadata(this IAdapterCallContext? context) {
             return new RequestMetadata(
                 context?.User,
                 context?.CorrelationId,

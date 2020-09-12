@@ -17,14 +17,14 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string id = null;
-            string name = null;
-            string description = null;
-            string units = null;
+            string id = null!;
+            string name = null!;
+            string description = null!;
+            string units = null!;
             VariantType dataType = VariantType.Unknown;
-            DigitalState[] states = null;
-            AdapterProperty[] properties = null;
-            string[] labels = null;
+            DigitalState[] states = null!;
+            AdapterProperty[] properties = null!;
+            string[] labels = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

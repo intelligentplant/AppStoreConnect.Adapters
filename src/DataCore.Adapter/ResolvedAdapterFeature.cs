@@ -81,7 +81,7 @@ namespace DataCore.Adapter {
 
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
             if (!(obj is ResolvedAdapterFeature<TFeature> resolvedFeature)) {
                 return false;
             }

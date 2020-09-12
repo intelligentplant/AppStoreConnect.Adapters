@@ -17,13 +17,13 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string id = null;
+            string id = null!;
             AnnotationType annotationType = AnnotationType.Instantaneous;
             DateTime utcStartTime = default;
             DateTime? utcEndTime = null;
-            string value = null;
-            string description = null;
-            AdapterProperty[] properties = null;
+            string value = null!;
+            string description = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

@@ -16,12 +16,12 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string displayName = default;
+            string displayName = default!;
             HealthStatus status = default;
-            string description = default;
-            string error = default;
-            IDictionary<string, string> data = default;
-            IEnumerable<HealthCheckResult> innerResults = null;
+            string description = default!;
+            string error = default!;
+            IDictionary<string, string> data = default!;
+            IEnumerable<HealthCheckResult> innerResults = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

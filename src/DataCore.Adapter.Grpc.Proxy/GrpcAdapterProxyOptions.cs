@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// The ID of the remote adapter to connect to.
         /// </summary>
         [Required]
-        public string RemoteId { get; set; }
+        public string RemoteId { get; set; } = default!;
 
         /// <summary>
         /// The interval at which to send a heartbeat message to the remote service.
@@ -24,13 +24,13 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// A factory that can be used to set per-call credentials for gRPC calls.
         /// </summary>
-        public GetGrpcCallCredentials GetCallCredentials { get; set; }
+        public GetGrpcCallCredentials GetCallCredentials { get; set; } = default!;
 
         /// <summary>
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory<GrpcAdapterProxy> ExtensionFeatureFactory { get; set; }
+        public ExtensionFeatureFactory<GrpcAdapterProxy> ExtensionFeatureFactory { get; set; } = default!;
 
     }
 }

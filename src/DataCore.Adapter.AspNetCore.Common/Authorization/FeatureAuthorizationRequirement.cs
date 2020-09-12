@@ -13,7 +13,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// The adapter feature to authorize. Can be <see langword="null"/> if the requirement is that 
         /// the adapter is visible to the caller.
         /// </summary>
-        public Uri FeatureUri { get; }
+        public Uri? FeatureUri { get; }
         
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         /// <param name="feature">
         ///   The feature type.
         /// </param>
-        internal FeatureAuthorizationRequirement(Uri feature) {
+        internal FeatureAuthorizationRequirement(Uri? feature) {
             FeatureUri = feature;
         }
 

@@ -168,7 +168,7 @@ namespace DataCore.Adapter.Http.Client {
         protected internal static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             Uri url, 
-            RequestMetadata metadata
+            RequestMetadata? metadata
         ) {
             return new HttpRequestMessage(
                 method ?? throw new ArgumentNullException(nameof(method)),
@@ -201,7 +201,7 @@ namespace DataCore.Adapter.Http.Client {
         protected internal static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             string url, 
-            RequestMetadata metadata
+            RequestMetadata? metadata
         ) {
             return CreateHttpRequestMessage(
                 method, 
@@ -242,7 +242,7 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             Uri url, 
             TContent content, 
-            RequestMetadata metadata
+            RequestMetadata? metadata
         ) {
             var result = CreateHttpRequestMessage(method, url, metadata);
             result.Content = content is HttpContent httpContent
@@ -284,7 +284,7 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             string url, 
             TContent content, 
-            RequestMetadata metadata
+            RequestMetadata? metadata
         ) {
             return CreateHttpRequestMessage(
                 method,

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -26,6 +27,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             SignalRAdapterProxy.ValidateObject(request);
 
             return GetClient().Events.CreateEventMessageChannelAsync(

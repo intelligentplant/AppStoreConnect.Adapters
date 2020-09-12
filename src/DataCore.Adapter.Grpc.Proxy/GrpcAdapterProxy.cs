@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 
-#if NETSTANDARD2_1
+#if NET461 == false
 using GrpcNet = Grpc.Net;
 #endif
 
@@ -38,12 +38,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Information about the remote host.
         /// </summary>
-        private Common.HostInfo _remoteHostInfo;
+        private Common.HostInfo _remoteHostInfo = default!;
 
         /// <summary>
         /// The descriptor for the remote adapter.
         /// </summary>
-        private AdapterDescriptorExtended _remoteDescriptor;
+        private AdapterDescriptorExtended _remoteDescriptor = default!;
 
         /// <summary>
         /// Lock for accessing <see cref="_remoteHostInfo"/> and <see cref="_remoteDescriptor"/>.
@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Gets per-call credentials.
         /// </summary>
-        private readonly GetGrpcCallCredentials _getCallCredentials;
+        private readonly GetGrpcCallCredentials? _getCallCredentials;
 
         /// <summary>
         /// gRPC channel.
@@ -91,10 +91,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
-        private readonly ExtensionFeatureFactory<GrpcAdapterProxy> _extensionFeatureFactory;
+        private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
 
 
-#if NETSTANDARD2_1
+#if NET461 == false
 
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
@@ -126,8 +126,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
             string id,
             GrpcNet.Client.GrpcChannel channel, 
             GrpcAdapterProxyOptions options, 
-            IBackgroundTaskService taskScheduler, 
-            ILogger<GrpcAdapterProxy> logger
+            IBackgroundTaskService? taskScheduler, 
+            ILogger<GrpcAdapterProxy>? logger
         ) : base(
             id,
             options, 
@@ -216,7 +216,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private async Task Init(CancellationToken cancellationToken) {
             var callOptions = new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
-                credentials: GetCallCredentials(null)
+                credentials: GetCallCredentials(new DefaultAdapterCallContext())
             );
 
             var hostInfoClient = CreateClient<HostInfoService.HostInfoServiceClient>();
@@ -279,7 +279,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
-#if NETSTANDARD2_1
+#if NET461 == false
         /// <inheritdoc/>
         protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
@@ -367,7 +367,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
             return new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
-                credentials: GetCallCredentials(context),
+                credentials: GetCallCredentials(context!),
                 headers: headers
             );
         }
@@ -385,7 +385,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </returns>
         private async Task RunRemoteHealthSubscription(CancellationToken cancellationToken) {
             var client = CreateClient<AdaptersService.AdaptersServiceClient>();
-            var callOptions = GetCallOptions(null, cancellationToken);
+            var callOptions = GetCallOptions(new DefaultAdapterCallContext(), cancellationToken);
 
             var healthCheckStream = client.CreateAdapterHealthPushChannel(new CreateAdapterHealthPushChannelRequest() { 
                 AdapterId = _remoteAdapterId
@@ -461,7 +461,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 return results;
             }
 
-#if NETSTANDARD2_1
+#if NET461 == false
             // Grpc.Net channel doesn't expose a way of getting the channel state.
             results.Add(
                 Diagnostics.HealthCheckResult.Composite(
@@ -521,7 +521,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   or no <see cref="GrpcAdapterProxyOptions.GetCallCredentials"/> delegate was supplied 
         ///   when creating the proxy, the result will be <see langword="null"/>.
         /// </returns>
-        public GrpcCore.CallCredentials GetCallCredentials(IAdapterCallContext context) {
+        public GrpcCore.CallCredentials? GetCallCredentials(IAdapterCallContext context) {
             if (_getCallCredentials == null) {
                 return null;
             }

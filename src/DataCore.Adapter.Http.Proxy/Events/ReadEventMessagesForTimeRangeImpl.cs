@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -20,6 +21,10 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
         /// <inheritdoc />
         public Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             HttpAdapterProxy.ValidateObject(request);
 
             var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>(-1);

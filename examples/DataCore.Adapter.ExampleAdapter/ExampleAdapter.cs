@@ -92,6 +92,8 @@ namespace DataCore.Adapter.Example {
                 };
             }
 
+            
+
         }
 
     }

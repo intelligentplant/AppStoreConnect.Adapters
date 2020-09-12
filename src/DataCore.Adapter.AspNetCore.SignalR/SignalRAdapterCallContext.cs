@@ -19,7 +19,7 @@ namespace DataCore.Adapter.AspNetCore {
         private readonly HubCallerContext _hubCallerContext;
 
         /// <inheritdoc/>
-        public ClaimsPrincipal User {
+        public ClaimsPrincipal? User {
             get { return _hubCallerContext.User; }
         }
 
@@ -30,12 +30,12 @@ namespace DataCore.Adapter.AspNetCore {
 
         /// <inheritdoc/>
         public string CorrelationId {
-            get { return null; }
+            get { return string.Empty; }
         }
 
         /// <inheritdoc/>
         public CultureInfo CultureInfo {
-            get { return _hubCallerContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture; }
+            get { return _hubCallerContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture ?? CultureInfo.CurrentCulture; }
         }
 
         /// <inheritdoc/>

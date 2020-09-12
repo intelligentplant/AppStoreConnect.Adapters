@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -22,6 +23,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             GrpcAdapterProxy.ValidateObject(request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();

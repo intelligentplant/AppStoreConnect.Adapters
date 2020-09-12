@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
@@ -70,7 +69,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagDefinition>> FindTagsAsync(
             string adapterId, 
             FindTagsRequest request, 
-            RequestMetadata metadata,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -119,7 +118,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<TagDefinition>> GetTagsAsync(
             string adapterId, 
             GetTagsRequest request, 
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -168,7 +167,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         public async Task<IEnumerable<AdapterProperty>> GetTagPropertiesAsync(
             string adapterId,
             GetTagPropertiesRequest request,
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {

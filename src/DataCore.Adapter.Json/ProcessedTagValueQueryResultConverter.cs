@@ -16,10 +16,10 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string tagId = null;
-            string tagName = null;
-            TagValueExtended value = null;
-            string dataFunction = null;
+            string tagId = null!;
+            string tagName = null!;
+            TagValueExtended value = null!;
+            string dataFunction = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

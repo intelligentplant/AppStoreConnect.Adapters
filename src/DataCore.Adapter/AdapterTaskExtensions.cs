@@ -43,7 +43,7 @@ namespace DataCore.Adapter {
 
             // This disposes the registration as soon as one of the tasks trigger
             using (cancellationToken.Register(state => {
-                ((TaskCompletionSource<object>) state).TrySetResult(null);
+                ((TaskCompletionSource<object>) state!).TrySetResult(null!);
             }, tcs)) {
                 var resultTask = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
                 if (resultTask == tcs.Task) {
@@ -87,7 +87,7 @@ namespace DataCore.Adapter {
 
             // This disposes the registration as soon as one of the tasks trigger
             using (cancellationToken.Register(state => {
-                ((TaskCompletionSource<object>) state).TrySetResult(null);
+                ((TaskCompletionSource<object>) state!).TrySetResult(null!);
             }, tcs)) {
                 var resultTask = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
                 if (resultTask == tcs.Task) {

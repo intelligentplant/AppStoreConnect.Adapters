@@ -197,7 +197,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/find")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
-        public async Task<IActionResult> FindTags(string adapterId, string name = null, string description = null, string units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+        public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
                 Description = description,

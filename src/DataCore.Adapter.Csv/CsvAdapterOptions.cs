@@ -20,13 +20,13 @@ namespace DataCore.Adapter.Csv {
         /// The path to the CSV file to load. Can be <see langword="null"/> if the 
         /// <see cref="GetCsvStream"/> callback is provided instead.
         /// </summary>
-        public string CsvFile { get; set; }
+        public string? CsvFile { get; set; }
 
         /// <summary>
         /// A callback that will return a stream to read CSV data from. The stream will be disposed 
         /// once the CSV data has been read.
         /// </summary>
-        public Func<Stream> GetCsvStream { get; set; }
+        public Func<Stream>? GetCsvStream { get; set; }
 
         /// <summary>
         /// The index of the time stamp field in the CSV file.
@@ -38,18 +38,18 @@ namespace DataCore.Adapter.Csv {
         /// The time stamp format used in the CSV file. A value is only required if the time stamps 
         /// are specified in a non-standard format.
         /// </summary>
-        public string TimeStampFormat { get; set; }
+        public string? TimeStampFormat { get; set; }
 
         /// <summary>
         /// The time zone that the time stamps are in.
         /// </summary>
-        public string TimeZone { get; set; }
+        public string? TimeZone { get; set; }
 
         /// <summary>
         /// The <see cref="System.Globalization.CultureInfo"/> to use when parsing numbers and time 
         /// stamps.
         /// </summary>
-        public CultureInfo CultureInfo { get; set; }
+        public CultureInfo? CultureInfo { get; set; }
 
         /// <summary>
         /// The interval, in milliseconds, between snapshot push updates. An internal polling request 

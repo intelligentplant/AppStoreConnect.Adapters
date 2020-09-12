@@ -339,7 +339,7 @@ namespace DataCore.Adapter.Common {
 
             return (format != null && Value is IFormattable formattable)
                 ? formattable.ToString(format, formatProvider)
-                : Value.ToString();
+                : Value?.ToString()!;
         }
 
 
@@ -354,7 +354,7 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
             if (!(obj is Variant v)) {
                 return false;
             }

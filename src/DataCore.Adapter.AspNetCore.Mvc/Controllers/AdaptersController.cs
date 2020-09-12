@@ -67,7 +67,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("")]
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public Task<IActionResult> FindAdapters(string id = null, string name = null, string description = null, [FromQuery] string[] feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+        public Task<IActionResult> FindAdapters(string? id = null, string? name = null, string? description = null, [FromQuery] string[]? feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             var request = new FindAdaptersRequest() { 
                 Id = id,
                 Name = name,

@@ -36,7 +36,8 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
         /// <inheritdoc/>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) {
-            var adapters = await _adapterAccessor.GetAllAdapters(null, cancellationToken).ConfigureAwait(false);
+            var adapterCallContext = new DefaultAdapterCallContext();
+            var adapters = await _adapterAccessor.GetAllAdapters(adapterCallContext, cancellationToken).ConfigureAwait(false);
 
             var healthChecks = adapters.Select(x => new {
                 Adapter = x,
@@ -48,7 +49,7 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
                                 ? Adapter.Diagnostics.HealthCheckResult.Healthy(null) 
                                 : Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, Resources.HealthChecks_AdapterNotRunning);
                         }
-                        return await feature.CheckHealthAsync(null, cancellationToken).ConfigureAwait(false);
+                        return await feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception e) {
                         return Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());

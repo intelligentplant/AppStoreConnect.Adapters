@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   A task that will return information about the remote host.
         /// </returns>
         public async Task<HostInfo> GetHostInfoAsync(
-            RequestMetadata metadata = null,
+            RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))

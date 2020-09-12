@@ -23,6 +23,9 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
         /// <inheritdoc/>
         public async Task<ChannelReader<Adapter.Events.WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<Adapter.Events.WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }

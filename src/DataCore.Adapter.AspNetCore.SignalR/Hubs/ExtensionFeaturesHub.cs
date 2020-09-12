@@ -46,11 +46,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            return await resolved.Feature.GetDescriptor(
+            return (await resolved.Feature.GetDescriptor(
                 adapterCallContext, 
                 featureUri, 
                 Context.ConnectionAborted
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false))!;
         }
 
 
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            return ops?.Where(x => x != null).ToArray();
+            return ops?.Where(x => x != null)?.ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>();
         }
 
 
@@ -132,12 +132,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
+#pragma warning disable CS8603 // Possible null reference return.
             return await resolved.Feature.Invoke(
                 adapterCallContext, 
                 operationId, 
                 argument, 
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
 
@@ -182,12 +184,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
             return await resolved.Feature.Stream(
                 adapterCallContext,
                 operationId,
                 argument,
                 cancellationToken
             ).ConfigureAwait(false);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
 
 
@@ -232,12 +236,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
             return await resolved.Feature.DuplexStream(
                 adapterCallContext,
                 operationId,
-                channel,
+                channel!,
                 cancellationToken
             ).ConfigureAwait(false);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
 
     }

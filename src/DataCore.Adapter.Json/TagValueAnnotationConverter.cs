@@ -19,10 +19,10 @@ namespace DataCore.Adapter.Json {
 
             AnnotationType annotationType = AnnotationType.Instantaneous;
             DateTime utcStartTime = default;
-            DateTime? utcEndTime = null;
-            string value = null;
-            string description = null;
-            AdapterProperty[] properties = null;
+            DateTime? utcEndTime = null!;
+            string value = null!;
+            string description = null!;
+            AdapterProperty[] properties = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {

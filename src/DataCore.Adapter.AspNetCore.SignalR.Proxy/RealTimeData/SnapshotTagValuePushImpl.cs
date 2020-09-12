@@ -34,6 +34,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             ChannelReader<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             SignalRAdapterProxy.ValidateObject(request);
 
             if (channel == null) {
