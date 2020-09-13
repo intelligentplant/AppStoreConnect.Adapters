@@ -15,6 +15,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Subscription Management ]
 
+#if NETSTANDARD2_0 == false
+
         /// <summary>
         /// Creates a channel that will receive event messages from the specified adapter using 
         /// the <see cref="IEventMessagePushWithTopics"/> feature.
@@ -48,6 +50,39 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
+#else
+
+        /// <summary>
+        /// Creates a channel that will receive event messages from the specified adapter using 
+        /// the <see cref="IEventMessagePushWithTopics"/> feature.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The subscription request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel reader that the subscriber can observe to receive new event messages.
+        /// </returns>
+        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(
+            string adapterId,
+            CreateEventMessageTopicSubscriptionRequest request,
+            CancellationToken cancellationToken
+        ) {
+            // Resolve the adapter and feature.
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+
+            // Create the subscription.
+            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+        }
+
+#endif
+
 
         /// <summary>
         /// Creates a channel that will receive event messages from the specified adapter using 
@@ -74,9 +109,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
-        #endregion
+    #endregion
 
-        #region [ Polling Queries ]
+    #region [ Polling Queries ]
 
         /// <summary>
         /// Reads event messages occurring inside the specified time range.
@@ -123,9 +158,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return await adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
-        #endregion
+    #endregion
 
-        #region [ Write Event Messages ]
+    #region [ Write Event Messages ]
+
+#if NETSTANDARD2_0 == false
 
         /// <summary>
         /// Writes event messages to the specified adapter.
@@ -149,7 +186,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         }
 
-        #endregion
+#endif
+
+    #endregion
 
     }
 }

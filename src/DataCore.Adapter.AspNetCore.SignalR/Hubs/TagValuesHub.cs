@@ -16,6 +16,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Snapshot Subscription Management ]
 
+#if NETSTANDARD2_0 == false
+
         /// <summary>
         /// Creates a snapshot tag value subscription.
         /// </summary>
@@ -46,6 +48,37 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
         }
+
+#else
+
+        /// <summary>
+        /// Creates a snapshot tag value subscription.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to subscribe to.
+        /// </param>
+        /// <param name="request">
+        ///   The subscription request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
+        /// </returns>
+        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannel(
+            string adapterId,
+            CreateSnapshotTagValueSubscriptionRequest request,
+            CancellationToken cancellationToken
+        ) {
+            // Resolve the adapter and feature.
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+
+            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+        }
+
+#endif
 
         #endregion
 
@@ -190,6 +223,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Tag Value Write ]
 
+#if NETSTANDARD2_0 == false
+
         /// <summary>
         /// Writes values to the specified adapter's snapshot.
         /// </summary>
@@ -232,6 +267,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             return await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
         }
+
+#endif
 
         #endregion
 

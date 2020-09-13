@@ -194,6 +194,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
 
+#if NETSTANDARD2_0 == false
 
         /// <summary>
         /// Invokes a duplex streaming extension feature on an adapter.
@@ -245,6 +246,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             ).ConfigureAwait(false);
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
+
+#endif
 
     }
 }
