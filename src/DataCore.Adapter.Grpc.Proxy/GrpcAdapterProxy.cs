@@ -301,7 +301,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 #endif
 
 
-#if NETSTANDARD2_0
+#if NET461
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
