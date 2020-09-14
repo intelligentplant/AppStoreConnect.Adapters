@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -186,9 +187,45 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         }
 
+#else
+
+        /// <summary>
+        /// Writes an event message to the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="item">
+        ///   The event message to write.
+        /// </param>
+        /// <returns>
+        ///   The write result.
+        /// </returns>
+        public async Task<WriteEventMessageResult> WriteEventMessage(string adapterId, WriteEventMessageItem item) {
+            if (item == null) {
+                throw new ArgumentNullException(nameof(item));
+            }
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
+                var cancellationToken = ctSource.Token;
+                try {
+                    var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+                    var inChannel = Channel.CreateUnbounded<WriteEventMessageItem>();
+                    inChannel.Writer.TryWrite(item);
+                    inChannel.Writer.TryComplete();
+
+                    var outChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally {
+                    ctSource.Cancel();
+                }
+            }
+        }
+
 #endif
 
-    #endregion
+        #endregion
 
     }
 }

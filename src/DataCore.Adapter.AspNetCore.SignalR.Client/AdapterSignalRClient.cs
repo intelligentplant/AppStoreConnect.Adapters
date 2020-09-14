@@ -34,6 +34,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         private readonly bool _disposeConnection;
 
         /// <summary>
+        /// The ASP.NET Core SignalR compatibility level for the client.
+        /// </summary>
+        public CompatibilityLevel CompatibilityLevel { get; }
+
+        /// <summary>
         /// The strongly-typed client for querying the remote host about available adapters.
         /// </summary>
         public AdaptersClient Adapters { get; }
@@ -123,12 +128,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   When <see langword="true"/>, the <paramref name="hubConnection"/> will be disposed 
         ///   when the client is disposed.
         /// </param>
+        /// <param name="compatibilityLevel">
+        ///   The compatibility level to use. Specify <see cref="CompatibilityLevel.Latest"/> 
+        ///   unless you are connecting to an ASP.NET Core 2.x host application.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="hubConnection"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterSignalRClient(HubConnection hubConnection, bool disposeConnection) {
+        public AdapterSignalRClient(HubConnection hubConnection, bool disposeConnection, CompatibilityLevel compatibilityLevel) {
             _hubConnection = hubConnection ?? throw new ArgumentNullException(nameof(hubConnection));
             _disposeConnection = disposeConnection;
+            CompatibilityLevel = compatibilityLevel;
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
@@ -147,15 +157,19 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// <param name="hubConnection">
         ///   The SignalR hub connection for the client.
         /// </param>
+        /// <param name="compatibilityLevel">
+        ///   The compatibility level to use. Specify <see cref="CompatibilityLevel.Latest"/> 
+        ///   unless you are connecting to an ASP.NET Core 2.x host application.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="hubConnection"/> is <see langword="null"/>.
         /// </exception>
         /// <remarks>
         ///   The client will not dispose the <paramref name="hubConnection"/> when it is disposed. 
-        ///   Use the <see cref="AdapterSignalRClient(HubConnection, bool)"/> constructor overload 
-        ///   to override this behaviour.
+        ///   Use the <see cref="AdapterSignalRClient(HubConnection, bool, CompatibilityLevel)"/> 
+        ///   constructor overload to override this behaviour.
         /// </remarks>
-        public AdapterSignalRClient(HubConnection hubConnection) : this(hubConnection, false) { }
+        public AdapterSignalRClient(HubConnection hubConnection, CompatibilityLevel compatibilityLevel = CompatibilityLevel.Latest) : this(hubConnection, false, compatibilityLevel) { }
 
 
         /// <summary>

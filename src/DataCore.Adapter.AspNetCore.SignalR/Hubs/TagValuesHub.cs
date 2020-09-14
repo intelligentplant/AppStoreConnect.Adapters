@@ -268,6 +268,77 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             return await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
         }
 
+#else
+
+        /// <summary>
+        /// Writes a tag value to the specified adapter's snapshot.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="item">
+        ///   The value to write.
+        /// </param>
+        /// <returns>
+        ///   The write result.
+        /// </returns>
+        public async Task<WriteTagValueResult> WriteSnapshotTagValue(string adapterId, WriteTagValueItem item) {
+            if (item == null) {
+                throw new ArgumentNullException(nameof(item));
+            }
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
+                var cancellationToken = ctSource.Token;
+                try {
+                    var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
+                    inChannel.Writer.TryWrite(item);
+                    inChannel.Writer.TryComplete();
+
+                    var outChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally {
+                    ctSource.Cancel();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Writes a tag value to the specified adapter's history archive.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="item">
+        ///   The value to write.
+        /// </param>
+        /// <returns>
+        ///   The write result.
+        /// </returns>
+        public async Task<WriteTagValueResult> WriteHistoricalTagValue(string adapterId, WriteTagValueItem item) {
+            if (item == null) {
+                throw new ArgumentNullException(nameof(item));
+            }
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
+                var cancellationToken = ctSource.Token;
+                try {
+                    var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
+                    inChannel.Writer.TryWrite(item);
+                    inChannel.Writer.TryComplete();
+
+                    var outChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally {
+                    ctSource.Cancel();
+                }
+            }
+        }
+
 #endif
 
         #endregion

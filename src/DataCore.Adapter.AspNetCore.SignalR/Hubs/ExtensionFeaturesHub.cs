@@ -247,6 +247,61 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
         }
 
+#else
+
+        /// <summary>
+        /// Invokes a duplex streaming extension feature on an adapter for a single input and output.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to query.
+        /// </param>
+        /// <param name="operationId">
+        ///   The URI of the operation to invoke.
+        /// </param>
+        /// <param name="value">
+        ///   The input value for the operation.
+        /// </param>
+        /// <returns>
+        ///   The operation result.
+        /// </returns>
+        public async Task<string> InvokeDuplexStreamingExtension(
+            string adapterId,
+            Uri operationId,
+            string value
+        ) {
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            if (operationId == null || !operationId.IsAbsoluteUri) {
+                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
+            }
+
+            operationId = UriExtensions.EnsurePathHasTrailingSlash(operationId);
+            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
+                throw new ArgumentException(error, nameof(operationId));
+            }
+
+            var resolved = await ResolveAdapterAndExtensionFeature(
+                adapterCallContext,
+                adapterId,
+                featureUri,
+                Context.ConnectionAborted
+            ).ConfigureAwait(false);
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
+                var cancellationToken = ctSource.Token;
+                try {
+                    var inChannel = Channel.CreateUnbounded<string>();
+                    inChannel.Writer.TryWrite(value);
+                    inChannel.Writer.TryComplete();
+
+                    var outChannel = await resolved.Feature.DuplexStream(adapterCallContext, operationId, inChannel, cancellationToken).ConfigureAwait(false);
+                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally {
+                    ctSource.Cancel();
+                }
+            }
+        }
+
 #endif
 
     }

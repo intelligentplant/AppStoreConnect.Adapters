@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Proxy;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
@@ -14,6 +15,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </summary>
         [Required]
         public string RemoteId { get; set; } = default!;
+
+        /// <summary>
+        /// The SignalR compatibility level to use.
+        /// </summary>
+        public CompatibilityLevel CompatibilityLevel { get; set; } = CompatibilityLevel.Latest;
 
         /// <summary>
         /// A factory method that creates hub connections on behalf of the proxy.

@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
+
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
@@ -104,13 +108,139 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessage>(
-                "CreateEventMessageTopicChannel",
-                adapterId,
-                request,
-                channel,
-                cancellationToken
-            ).ConfigureAwait(false);
+
+            if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
+                // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
+                return await connection.StreamAsChannelAsync<EventMessage>(
+                    "CreateEventMessageTopicChannel",
+                    adapterId,
+                    request,
+                    channel,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+
+            // We are using ASP.NET Core 2.x, so we cannot use client-to-server streaming. Instead, 
+            // we will make a separate streaming call for each topic, and cancel it when we detect 
+            // that the topic has been unsubscribed from.
+
+            // This is our single output channel.
+            var result = Channel.CreateUnbounded<EventMessage>(new UnboundedChannelOptions() { 
+                SingleWriter = false
+            });
+
+            // Cancellation token source for each subscribed topic, indexed by topic name.
+            var subscriptions = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
+
+            // Task completion source that we will complete when the cancellation token passed to 
+            // the method fires.
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var ctReg = cancellationToken.Register(() => {
+                result.Writer.TryComplete();
+                tcs.TrySetResult(true);
+            });
+
+            // Local function that will run the subscription for a topic until the cancellation 
+            // token fires.
+            async Task RunTopicSubscription(string topic, CancellationToken ct) {
+                var req = new CreateEventMessageTopicSubscriptionRequest() { 
+                    SubscriptionType = request.SubscriptionType,
+                    Properties = request.Properties,
+                    Topics = new [] { topic }
+                };
+                var ch = await connection.StreamAsChannelAsync<EventMessage>(
+                    "CreateEventMessageTopicChannel",
+                    adapterId,
+                    req,
+                    ct
+                ).ConfigureAwait(false);
+
+                while (!ct.IsCancellationRequested) {
+                    var val = await ch.ReadAsync(ct).ConfigureAwait(false);
+                    await result!.Writer.WriteAsync(val, ct).ConfigureAwait(false);
+                }
+            }
+
+            // Local function that will add or remove subscriptions for individual topics.
+            void ProcessTopicSubscriptionChange(IEnumerable<string> topics, bool added) {
+                foreach (var topic in topics) {
+                    if (topic == null) {
+                        continue;
+                    }
+
+                    if (added) {
+                        if (subscriptions!.ContainsKey(topic)) {
+                            continue;
+                        }
+
+                        var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        var ct = ctSource.Token;
+                        subscriptions[topic] = ctSource;
+                        _ = Task.Run(async () => {
+                            try {
+                                await RunTopicSubscription(topic, ct).ConfigureAwait(false);
+                            }
+#pragma warning disable CA1031 // Do not catch general exception types
+                            catch { }
+#pragma warning restore CA1031 // Do not catch general exception types
+                            finally {
+                                if (subscriptions!.TryRemove(topic, out var cts)) {
+                                    cts.Cancel();
+                                    cts.Dispose();
+                                }
+                            }
+                        }, ct);
+                    }
+                    else {
+                        if (subscriptions!.TryRemove(topic, out var ctSource)) {
+                            ctSource.Cancel();
+                            ctSource.Dispose();
+                        }
+                    }
+                }
+            }
+
+            // Background task that will add/remove subscriptions to indivudual topics subscription 
+            // changes occur.
+            _ = Task.Run(async () => { 
+                try {
+                    if (request.Topics.Any()) {
+                        ProcessTopicSubscriptionChange(request.Topics, true);
+                    }
+
+                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        while (channel.TryRead(out var update)) {
+                            if (update?.Topics == null || !update.Topics.Any()) {
+                                continue;
+                            }
+
+                            ProcessTopicSubscriptionChange(update.Topics, update.Action == SubscriptionUpdateAction.Subscribe);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    result.Writer.TryComplete(e);
+                }
+                finally {
+                    // Ensure that we wait until the cancellation token for the overall subscription has 
+                    // actually fired before we dispose of any remaining subscriptions.
+                    await tcs.Task.ConfigureAwait(false);
+                    ctReg.Dispose();
+                    result.Writer.TryComplete();
+                    foreach (var topic in subscriptions.Keys.ToArray()) {
+                        if (subscriptions!.TryRemove(topic, out var ctSource)) {
+                            ctSource.Cancel();
+                            ctSource.Dispose();
+                        }
+                    }
+                }
+            }, cancellationToken);
+
+            return result;
         }
 
 
@@ -227,12 +357,55 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<WriteEventMessageResult>(
-                "WriteEventMessages",
-                adapterId,
-                channel,
-                cancellationToken
-            ).ConfigureAwait(false);
+            if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
+                // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
+                return await connection.StreamAsChannelAsync<WriteEventMessageResult>(
+                    "WriteEventMessages",
+                    adapterId,
+                    channel,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+
+            // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
+            // we will read the channel ourselves and make an invocation call for every value.
+            var result = Channel.CreateUnbounded<WriteEventMessageResult>();
+
+            _ = Task.Run(async () => { 
+                try {
+                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        while (channel.TryRead(out var val)) {
+                            if (cancellationToken.IsCancellationRequested) {
+                                break;
+                            }
+                            if (val == null) {
+                                continue;
+                            }
+
+                            var writeResult = await connection.InvokeAsync<WriteEventMessageResult>(
+                                "WriteEventMessage",
+                                adapterId,
+                                val,
+                                cancellationToken
+                            ).ConfigureAwait(false);
+
+                            await result.Writer.WriteAsync(writeResult, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    result.Writer.TryComplete(e);
+                }
+                finally {
+                    result.Writer.TryComplete();
+                }
+            }, cancellationToken);
+
+            return result.Reader;
         }
 
     }

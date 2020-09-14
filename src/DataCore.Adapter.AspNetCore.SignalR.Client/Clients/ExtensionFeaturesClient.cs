@@ -262,13 +262,57 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<string>(
-                "InvokeDuplexStreamingExtension",
-                adapterId,
-                operationUri,
-                channel,
-                cancellationToken
-            ).ConfigureAwait(false);
+            if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
+                // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
+                return await connection.StreamAsChannelAsync<string>(
+                    "InvokeDuplexStreamingExtension",
+                    adapterId,
+                    operationUri,
+                    channel,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
+
+            // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
+            // we will read the channel ourselves and make an invocation call for every value.
+            var result = Channel.CreateUnbounded<string>();
+
+            _ = Task.Run(async () => {
+                try {
+                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        while (channel.TryRead(out var val)) {
+                            if (cancellationToken.IsCancellationRequested) {
+                                break;
+                            }
+                            if (val == null) {
+                                continue;
+                            }
+
+                            var writeResult = await connection.InvokeAsync<string>(
+                                "InvokeDuplexStreamingExtension",
+                                adapterId,
+                                operationUri,
+                                val,
+                                cancellationToken
+                            ).ConfigureAwait(false);
+
+                            await result.Writer.WriteAsync(writeResult, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    result.Writer.TryComplete(e);
+                }
+                finally {
+                    result.Writer.TryComplete();
+                }
+            }, cancellationToken);
+
+            return result.Reader;
         }
 
     }

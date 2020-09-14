@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
@@ -132,7 +130,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             _client = new Lazy<AdapterSignalRClient>(() => {
                 var conn = _connectionFactory.Invoke(null);
                 AddHubEventHandlers(conn);
-                return new AdapterSignalRClient(conn, true);
+                return new AdapterSignalRClient(conn, true, Options!.CompatibilityLevel);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
