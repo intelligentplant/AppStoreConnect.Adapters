@@ -2,8 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Http.Client;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -57,34 +60,34 @@ namespace DataCore.Adapter.Tests {
 
 
         protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType, string topic) {
-            var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
+            var httpClient = ActivatorUtilities.CreateInstance<AdapterHttpClient>(
+                WebHostInitializer.ApplicationServices,
+                WebHostInitializer.ApplicationServices.GetRequiredService<IHttpClientFactory>().CreateClient(WebHostStartup.HttpClientName)
+            );
             
             var msg = EventMessageBuilder
-                    .Create()
-                    .WithTopic(topic)
-                    .WithUtcEventTime(DateTime.UtcNow)
-                    .WithCategory(TestContext.FullyQualifiedTestClassName)
-                    .WithMessage(TestContext.TestName)
-                    .WithPriority(EventPriority.Low)
-                    .Build();
+                .Create()
+                .WithTopic(topic)
+                .WithUtcEventTime(DateTime.UtcNow)
+                .WithCategory(TestContext.FullyQualifiedTestClassName)
+                .WithMessage(TestContext.TestName)
+                .WithPriority(EventPriority.Low)
+                .Build();
 
-            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            Action<EventMessage> onPublish = evt => { 
-                if (evt.Id.Equals(msg.Id)) {
-                    tcs.TrySetResult(true);
+            var correlationId = Guid.NewGuid().ToString();
+
+            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostStartup.AdapterId, new WriteEventMessagesRequest() { 
+                Events = new [] { 
+                    new WriteEventMessageItem() {
+                        EventMessage = msg,
+                        CorrelationId = correlationId
+                    }
                 }
-            };
-            eventMessageManager.Publish += onPublish;
+            }).ConfigureAwait(false);
 
-            await eventMessageManager.WriteEventMessages(msg);
-
-            try {
-                // Wait for the message to actually be published.
-                await tcs.Task;
-            }
-            finally {
-                eventMessageManager.Publish -= onPublish;
-            }
+            Assert.IsNotNull(writeResult);
+            Assert.AreEqual(1, writeResult.Count());
+            Assert.AreEqual(correlationId, writeResult.First().CorrelationId);
         }
 
 
