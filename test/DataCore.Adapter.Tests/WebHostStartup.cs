@@ -74,7 +74,7 @@ namespace DataCore.Adapter.Tests {
                     // Register an in-memory event manager for use by our adapter. We register this 
                     // with the container just to that we can resolve it from test classes to insert 
                     // required test data.
-                    svc.AddSingleton<Events.InMemoryEventMessageManagerOptions>();
+                    svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
                     svc.AddSingleton(sp => {
                         return ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Events.InMemoryEventMessageStore>>());
                     });

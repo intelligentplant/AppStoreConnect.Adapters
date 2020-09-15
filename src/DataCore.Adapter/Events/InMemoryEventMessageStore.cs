@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Events {
         ///   The logger for the <see cref="InMemoryEventMessageStore"/>.
         /// </param>
         public InMemoryEventMessageStore(
-            InMemoryEventMessageManagerOptions options, 
+            InMemoryEventMessageStoreOptions options, 
             IBackgroundTaskService? backgroundTaskService, 
             ILogger? logger
         ) {
@@ -507,7 +507,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Options for <see cref="InMemoryEventMessageStore"/>.
     /// </summary>
-    public class InMemoryEventMessageManagerOptions : EventMessagePushOptions {
+    public class InMemoryEventMessageStoreOptions : EventMessagePushOptions {
 
         /// <summary>
         /// The capacity of the store. When the store reaches capacity, the messages with the

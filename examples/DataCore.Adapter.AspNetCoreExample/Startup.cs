@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
@@ -38,14 +39,24 @@ namespace DataCore.Adapter.AspNetCoreExample {
                         )
                     }
                 )
+                .AddServices(svc => {
+                    svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
+                })
                 .AddAdapter<ExampleAdapter>()
                 .AddAdapter(sp => {
-                    return ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
+                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,
                         CsvFile = "DummySensorData.csv"
                     });
+
+                    // Add in-memory event message management
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())    
+                    );
+
+                    return adapter;
                 });
                 //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 
