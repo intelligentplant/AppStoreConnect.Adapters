@@ -83,16 +83,18 @@ namespace DataCore.Adapter.Tests {
 
                 try {
                     var count = 0;
-                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
-                        ++count;
-                        if (count > 1) {
-                            Assert.Fail("Only one value should be received.");
+                    while (await subscription.WaitToReadAsync(CancellationToken)) {
+                        while (subscription.TryRead(out var emitted)) {
+                            ++count;
+                            if (count > 1) {
+                                Assert.Fail("Only one value should be received.");
+                            }
+                            Assert.IsNotNull(emitted);
+                            Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                            Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                            Assert.AreEqual(val2.UtcSampleTime, emitted.Value.UtcSampleTime);
+                            Assert.AreEqual(val2.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
                         }
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                        Assert.AreEqual(val2.UtcSampleTime, emitted.Value.UtcSampleTime);
-                        Assert.AreEqual(val2.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
                     }
                 }
                 catch (OperationCanceledException) { }
@@ -138,16 +140,18 @@ namespace DataCore.Adapter.Tests {
 
                 try {
                     var count = 0;
-                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
-                        ++count;
-                        if (count > 1) {
-                            Assert.Fail("Only one value should be received.");
+                    while (await subscription.WaitToReadAsync(CancellationToken)) {
+                        while (subscription.TryRead(out var emitted)) {
+                            ++count;
+                            if (count > 1) {
+                                Assert.Fail("Only one value should be received.");
+                            }
+                            Assert.IsNotNull(emitted);
+                            Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                            Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                            Assert.AreEqual(val1.UtcSampleTime, emitted.Value.UtcSampleTime);
+                            Assert.AreEqual(val1.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
                         }
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                        Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                        Assert.AreEqual(val1.UtcSampleTime, emitted.Value.UtcSampleTime);
-                        Assert.AreEqual(val1.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
                     }
                 }
                 catch (OperationCanceledException) { }
@@ -365,15 +369,17 @@ namespace DataCore.Adapter.Tests {
 
                 try {
                     var count = 0;
-                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
-                        ++count;
-                        if (count > 1) {
-                            Assert.Fail("Only one value should be received.");
-                        }
+                    while (await subscription.WaitToReadAsync(CancellationToken)) {
+                        while (subscription.TryRead(out var emitted)) {
+                            ++count;
+                            if (count > 1) {
+                                Assert.Fail("Only one value should be received.");
+                            }
 
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(msg2.UtcEventTime, emitted.UtcEventTime);
-                        Assert.AreEqual(msg2.Message, emitted.Message);
+                            Assert.IsNotNull(emitted);
+                            Assert.AreEqual(msg2.UtcEventTime, emitted.UtcEventTime);
+                            Assert.AreEqual(msg2.Message, emitted.Message);
+                        }
                     }
                 }
                 catch (OperationCanceledException) { }
@@ -430,15 +436,17 @@ namespace DataCore.Adapter.Tests {
 
                 try {
                     var count = 0;
-                    await foreach (var emitted in subscription.ReadAllAsync(CancellationToken)) {
-                        ++count;
-                        if (count > 1) {
-                            Assert.Fail("Only one value should be received.");
-                        }
+                    while (await subscription.WaitToReadAsync(CancellationToken)) {
+                        while (subscription.TryRead(out var emitted)) {
+                            ++count;
+                            if (count > 1) {
+                                Assert.Fail("Only one value should be received.");
+                            }
 
-                        Assert.IsNotNull(emitted);
-                        Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
-                        Assert.AreEqual(msg1.Message, emitted.Message);
+                            Assert.IsNotNull(emitted);
+                            Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
+                            Assert.AreEqual(msg1.Message, emitted.Message);
+                        }
                     }
                 }
                 catch (OperationCanceledException) { }

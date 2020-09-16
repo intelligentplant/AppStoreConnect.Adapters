@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -23,9 +22,9 @@ namespace DataCore.Adapter.Tests {
 
         protected abstract TAdapter CreateAdapter();
 
-        protected abstract ReadTagValuesQueryDetails GetReadTagValuesQueryDetails();
+        protected abstract Task<ReadTagValuesQueryDetails> GetReadTagValuesQueryDetails();
 
-        protected abstract ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails();
+        protected abstract Task<ReadEventMessagesQueryDetails> GetReadEventMessagesQueryDetails();
 
         protected abstract Task EmitTestEvent(TAdapter adapter, EventMessageSubscriptionType subscriptionType, string topic);
 
@@ -40,18 +39,22 @@ namespace DataCore.Adapter.Tests {
 
         [TestInitialize]
         public void TestInitialize() {
-            _scope = WebHostInitializer.ApplicationServices.CreateScope();
+            _scope = AssemblyInitializer.ApplicationServices.CreateScope();
         }
 
 
         [TestCleanup]
         public void TestCleanup() {
-            _scope.Dispose();
+            _scope?.Dispose();
         }
 
 
         protected async Task RunAdapterTest(Func<TAdapter, IAdapterCallContext, Task> callback) {
             var adapter = CreateAdapter();
+            if (adapter == null) {
+                Assert.Inconclusive("Adapter creation delegate returned null.");
+            }
+
             try {
                 await adapter.StartAsync(CancellationToken);
                 var context = ExampleCallContext.ForPrincipal(null);
@@ -157,7 +160,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
                 var channel = await feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { tagDetails.Id }
                 }, CancellationToken);
@@ -181,7 +184,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
                 var channel = await feature.ReadSnapshotTagValues(context, new ReadSnapshotTagValuesRequest() {
                     Tags = new[] { tagDetails.Id }
                 }, CancellationToken);
@@ -208,7 +211,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
 
                 var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
                     Tags = new[] { tagDetails.Id }
@@ -233,7 +236,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
                 var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
                 var subscription = await feature.Subscribe(
@@ -272,7 +275,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
 
                 var channel = await feature.ReadRawTagValues(
                     context,
@@ -307,7 +310,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
 
                 var channel = await feature.ReadPlotTagValues(
                     context,
@@ -359,7 +362,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
                 // Calculate sample interval for 10 buckets.
                 var sampleInterval = TimeSpan.FromSeconds((tagDetails.HistoryEndTime - tagDetails.HistoryStartTime).TotalSeconds / 10);
 
@@ -397,7 +400,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var tagDetails = GetReadTagValuesQueryDetails();
+                var tagDetails = await GetReadTagValuesQueryDetails();
                 var sampleTimes = new List<DateTime>();
                 var baseInterval = (tagDetails.HistoryEndTime - tagDetails.HistoryStartTime).TotalSeconds / 50;
                 var counter = 0;
@@ -587,7 +590,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var queryDetails = GetReadEventMessagesQueryDetails();
+                var queryDetails = await GetReadEventMessagesQueryDetails();
 
                 var channel = await feature.ReadEventMessagesForTimeRange(
                     context,
@@ -643,7 +646,7 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
-        #region [ IReadEventMessagesForTimeRange ]
+        #region [ IReadEventMessagesUsingCursor ]
 
         [DataTestMethod]
         [DataRow(EventReadDirection.Forwards)]
@@ -656,7 +659,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var queryDetails = GetReadEventMessagesQueryDetails();
+                var queryDetails = await GetReadEventMessagesQueryDetails();
 
                 var channel = await feature.ReadEventMessagesUsingCursor(
                     context,
@@ -736,16 +739,18 @@ namespace DataCore.Adapter.Tests {
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
-                    if (index > values.Count) {
-                        Assert.Fail("Too many results received");
+                while (await writeResults.WaitToReadAsync(CancellationToken)) {
+                    while (writeResults.TryRead(out var item)) {
+                        if (index > values.Count) {
+                            Assert.Fail("Too many results received");
+                        }
+                        var expected = values[index];
+
+                        Assert.IsNotNull(item);
+                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                        ++index;
                     }
-                    var expected = values[index];
-
-                    Assert.IsNotNull(result);
-                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
-
-                    ++index;
                 }
             });
         }
@@ -775,16 +780,18 @@ namespace DataCore.Adapter.Tests {
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
-                    if (index > values.Count) {
-                        Assert.Fail("Too many results received");
+                while (await writeResults.WaitToReadAsync(CancellationToken)) {
+                    while (writeResults.TryRead(out var item)) {
+                        if (index > values.Count) {
+                            Assert.Fail("Too many results received");
+                        }
+                        var expected = values[index];
+
+                        Assert.IsNotNull(item);
+                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                        ++index;
                     }
-                    var expected = values[index];
-
-                    Assert.IsNotNull(result);
-                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
-
-                    ++index;
                 }
             });
         }
@@ -816,16 +823,18 @@ namespace DataCore.Adapter.Tests {
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                await foreach (var result in writeResults.ReadAllAsync(CancellationToken)) {
-                    if (index > values.Count) {
-                        Assert.Fail("Too many results received");
+                while (await writeResults.WaitToReadAsync(CancellationToken)) {
+                    while (writeResults.TryRead(out var item)) {
+                        if (index > values.Count) {
+                            Assert.Fail("Too many results received");
+                        }
+                        var expected = values[index];
+
+                        Assert.IsNotNull(item);
+                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                        ++index;
                     }
-                    var expected = values[index];
-
-                    Assert.IsNotNull(result);
-                    Assert.AreEqual(expected.CorrelationId, result.CorrelationId);
-
-                    ++index;
                 }
             });
         }
@@ -1123,16 +1132,19 @@ namespace DataCore.Adapter.Tests {
                     var ct = ctSource.Token;
 
                     var messagesRead = 0;
-                    await foreach(var pongMessage in reader.ReadAllAsync(ct).ConfigureAwait(false)) {
-                        ++messagesRead;
-                        if (messagesRead > pingMessages.Count) {
-                            Assert.Fail("Incorrect number of pong messages received.");
+
+                    while (await reader.WaitToReadAsync(CancellationToken)) {
+                        while (reader.TryRead(out var pongMessage)) {
+                            ++messagesRead;
+                            if (messagesRead > pingMessages.Count) {
+                                Assert.Fail("Incorrect number of pong messages received.");
+                            }
+
+                            var pingMessage = pingMessages[messagesRead - 1];
+
+                            Assert.IsNotNull(pongMessage);
+                            Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
                         }
-
-                        var pingMessage = pingMessages[messagesRead - 1];
-
-                        Assert.IsNotNull(pongMessage);
-                        Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
                     }
 
                     Assert.AreEqual(pingMessages.Count, messagesRead, "Incorrect number of pong messages received.");

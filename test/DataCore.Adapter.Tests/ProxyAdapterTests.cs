@@ -22,24 +22,31 @@ namespace DataCore.Adapter.Tests {
 
 
         protected sealed override TProxy CreateAdapter() {
-            return CreateProxy(WebHostStartup.AdapterId);
+            return CreateProxy(WebHostConfiguration.AdapterId);
         }
 
 
-        protected sealed override ReadTagValuesQueryDetails GetReadTagValuesQueryDetails() {
+        protected sealed override Task<ReadTagValuesQueryDetails> GetReadTagValuesQueryDetails() {
             var now = DateTime.UtcNow;
-            return new ReadTagValuesQueryDetails(WebHostStartup.TestTagId) { 
+            var result = new ReadTagValuesQueryDetails(WebHostConfiguration.TestTagId) { 
                 HistoryStartTime = now.AddDays(-1),
                 HistoryEndTime = now
             };
+
+            return Task.FromResult(result);
         }
 
 
-        protected sealed override ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails() {
+        protected sealed override async Task<ReadEventMessagesQueryDetails> GetReadEventMessagesQueryDetails() {
             if (!s_historicalTestEventsInitialized) {
                 s_historicalTestEventsInitialized = true;
+
+                var httpClient = ActivatorUtilities.CreateInstance<AdapterHttpClient>(
+                    AssemblyInitializer.ApplicationServices,
+                    AssemblyInitializer.ApplicationServices.GetRequiredService<IHttpClientFactory>().CreateClient(WebHostConfiguration.HttpClientName)
+                );
+
                 var now = DateTime.UtcNow;
-                var eventMessageManager = ServiceProvider.GetService<InMemoryEventMessageStore>();
                 var messages = Enumerable.Range(-100, 100).Select(x => EventMessageBuilder
                     .Create()
                     .WithUtcEventTime(now.AddMinutes(x))
@@ -48,8 +55,18 @@ namespace DataCore.Adapter.Tests {
                     .WithPriority(EventPriority.Low)
                     .Build()
                 ).ToArray();
+
+                var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequest() {
+                    Events = messages.Select(msg => new WriteEventMessageItem() { 
+                        CorrelationId = msg.Id,
+                        EventMessage = msg
+                    }).ToArray()
+                }).ConfigureAwait(false);
+
+                Assert.IsNotNull(writeResult);
+                Assert.AreEqual(messages.Length, writeResult.Count());
+
                 s_historicalTestEventsStartTime = messages.First().UtcEventTime;
-                eventMessageManager.WriteEventMessages(messages);
             }
 
             return new ReadEventMessagesQueryDetails() { 
@@ -61,8 +78,8 @@ namespace DataCore.Adapter.Tests {
 
         protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType, string topic) {
             var httpClient = ActivatorUtilities.CreateInstance<AdapterHttpClient>(
-                WebHostInitializer.ApplicationServices,
-                WebHostInitializer.ApplicationServices.GetRequiredService<IHttpClientFactory>().CreateClient(WebHostStartup.HttpClientName)
+                AssemblyInitializer.ApplicationServices,
+                AssemblyInitializer.ApplicationServices.GetRequiredService<IHttpClientFactory>().CreateClient(WebHostConfiguration.HttpClientName)
             );
             
             var msg = EventMessageBuilder
@@ -76,7 +93,7 @@ namespace DataCore.Adapter.Tests {
 
             var correlationId = Guid.NewGuid().ToString();
 
-            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostStartup.AdapterId, new WriteEventMessagesRequest() { 
+            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequest() { 
                 Events = new [] { 
                     new WriteEventMessageItem() {
                         EventMessage = msg,

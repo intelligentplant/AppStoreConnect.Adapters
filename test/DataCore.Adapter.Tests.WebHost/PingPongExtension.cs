@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Tests {
         Name = "Ping Pong",
         Description = "Responds to every ping message with a pong message"
     )]
-    public class PingPongExtension : AdapterExtensionFeature, IHelloWorld {
+    internal class PingPongExtension : AdapterExtensionFeature, IHelloWorld {
 
         public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/ping-pong/";
 
@@ -88,15 +88,17 @@ namespace DataCore.Adapter.Tests {
             var result = Channel.CreateUnbounded<PongMessage>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await foreach (var message in channel.ReadAllAsync(ct).ConfigureAwait(false)) {
-                    if (message == null) {
-                        continue;
-                    }
+                while (await channel.WaitToReadAsync(ct)) {
+                    while (channel.TryRead(out var message)) {
+                        if (message == null) {
+                            continue;
+                        }
 
-                    result.Writer.TryWrite(new PongMessage() {
-                        CorrelationId = message.CorrelationId,
-                        UtcServerTime = DateTime.UtcNow
-                    });
+                        result.Writer.TryWrite(new PongMessage() {
+                            CorrelationId = message.CorrelationId,
+                            UtcServerTime = DateTime.UtcNow
+                        });
+                    }
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
@@ -110,7 +112,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    public class PingMessage {
+    internal class PingMessage {
 
         public Guid CorrelationId { get; set; }
 
@@ -119,7 +121,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    public class PongMessage {
+    internal class PongMessage {
 
         public Guid CorrelationId { get; set; }
 
@@ -128,7 +130,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    public static class HelloWorldConstants {
+    internal static class HelloWorldConstants {
 
         public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/hello-world/";
 
@@ -136,7 +138,7 @@ namespace DataCore.Adapter.Tests {
 
 
     [ExtensionFeature(HelloWorldConstants.FeatureUri)]
-    public interface IHelloWorld : IAdapterExtensionFeature {
+    internal interface IHelloWorld : IAdapterExtensionFeature {
 
         string Greet();
 

@@ -18,13 +18,13 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override ReadTagValuesQueryDetails GetReadTagValuesQueryDetails() {
-            return TestTag1;
+        protected override Task<ReadTagValuesQueryDetails> GetReadTagValuesQueryDetails() {
+            return Task.FromResult(TestTag1);
         }
 
 
-        protected override ReadEventMessagesQueryDetails GetReadEventMessagesQueryDetails() {
-            return null;
+        protected override Task<ReadEventMessagesQueryDetails> GetReadEventMessagesQueryDetails() {
+            return Task.FromResult<ReadEventMessagesQueryDetails>(null);
         }
 
 

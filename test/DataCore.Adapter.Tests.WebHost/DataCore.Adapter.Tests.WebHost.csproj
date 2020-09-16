@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>DataCore.Adapter.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Proxy\DataCore.Adapter.Grpc.Proxy.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
+  </ItemGroup>
+
+</Project>
