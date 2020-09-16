@@ -102,6 +102,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     });
                 }
             }
+            catch (OperationCanceledException) { }
             catch (Exception e) {
                 updateChannel.Writer.TryComplete(e);
             }
@@ -313,6 +314,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
                 }
             }
+            catch (OperationCanceledException) { }
             catch (Exception e) {
                 valueChannel.Writer.TryComplete(e);
             }
@@ -368,6 +370,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
                 }
             }
+            catch (OperationCanceledException) { }
             catch (Exception e) {
                 valueChannel.Writer.TryComplete(e);
             }
