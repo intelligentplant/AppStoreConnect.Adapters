@@ -487,9 +487,9 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The <see cref="IAdapterConfigurationBuilder"/>.
         /// </returns>
         private static IAdapterConfigurationBuilder AddDefaultServices(this IAdapterConfigurationBuilder builder) {
+            builder.AddBackgroundTaskService(options => options.AllowWorkItemRegistrationWhileStopped = true);
             builder.Services.AddSingleton(HostInfo.Unspecified);
             builder.AddAdapterAccessor<AspNetCoreAdapterAccessor>();
-            builder.AddBackgroundTaskService();
             builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             builder.AddAutomaticInitialization();
             return builder;

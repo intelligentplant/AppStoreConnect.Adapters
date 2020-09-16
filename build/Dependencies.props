@@ -45,7 +45,7 @@
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>15.0.5</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>2.0.1</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksVersion>3.0.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.7.0</NSwagAspNetCoreVersion>
