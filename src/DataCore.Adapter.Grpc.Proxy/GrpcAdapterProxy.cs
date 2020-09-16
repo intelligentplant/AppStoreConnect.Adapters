@@ -89,6 +89,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly GrpcCore.ChannelBase _channel;
 
         /// <summary>
+        /// When <see langword="true"/>, the <see cref="_channel"/> will be shut down when the 
+        /// adapter is disposed.
+        /// </summary>
+        private readonly bool _closeChannelOnDispose;
+
+        /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
         private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
@@ -138,6 +144,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+            _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
         }
 
 #else
@@ -184,6 +191,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = Options?.GetCallCredentials;
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+            _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
         }
 
 #endif
@@ -279,34 +287,26 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
-#if NET461 == false
         /// <inheritdoc/>
         protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
         }
-#else
-        /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "gRPC channel shutdown errors should not propagate")]
-        protected override async Task StopAsync(CancellationToken cancellationToken) {
-            if (_channel is GrpcCore.Channel channel) {
-                try {
-                    await channel.ShutdownAsync().WithCancellation(cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ChannelShutdownError);
-                }
-            }
-        }
-#endif
 
 
-#if NET461
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            if (disposing && _channel is GrpcCore.Channel channel) {
-                Task.Run(() => channel.ShutdownAsync()).GetAwaiter().GetResult();
+            if (disposing && _closeChannelOnDispose) {
+                Task.Run(async () => {
+                    try {
+                        await _channel.ShutdownAsync().ConfigureAwait(false);
+                    }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                        Logger.LogError(e, Resources.Log_ChannelShutdownError);
+                    }
+                }).GetAwaiter().GetResult();
             }
         }
 
@@ -314,11 +314,17 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <inheritdoc/>
         protected override async ValueTask DisposeAsyncCore() {
             await base.DisposeAsyncCore().ConfigureAwait(false);
-            if (_channel is GrpcCore.Channel channel) {
-                await channel.ShutdownAsync().ConfigureAwait(false);
+            if (_closeChannelOnDispose) {
+                try {
+                    await _channel.ShutdownAsync().ConfigureAwait(false);
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    Logger.LogError(e, Resources.Log_ChannelShutdownError);
+                }
             }
         }
-#endif
 
 
         /// <summary>

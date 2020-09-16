@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 using DataCore.Adapter.Proxy;
 
+using GrpcCore = Grpc.Core;
+
 namespace DataCore.Adapter.Grpc.Proxy {
 
     /// <summary>
@@ -31,6 +33,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// extension feature.
         /// </summary>
         public ExtensionFeatureFactory<GrpcAdapterProxy> ExtensionFeatureFactory { get; set; } = default!;
+
+        /// <summary>
+        /// When <see langword="true"/>, <see cref="GrpcCore.ChannelBase.ShutdownAsync"/> will be 
+        /// called on the channel passed to the adapter's constructor when the adapter is disposed.
+        /// </summary>
+        public bool CloseChannelOnDispose { get; set; }
 
     }
 }
