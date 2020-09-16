@@ -60,17 +60,16 @@ namespace DataCore.Adapter.Tests {
                 var backgroundTaskService = (BackgroundTaskService) ApplicationServices.GetService<IBackgroundTaskService>();
                 _ = backgroundTaskService.RunAsync(s_cleanupTokenSource.Token);
 
-                const string dotnetExeName = "dotnet";
-                const string webHostAsm = "DataCore.Adapter.Tests.WebHost.dll";
+                const string webHostAsm = "DataCore.Adapter.Tests.WebHost.exe";
                 var webHostBaseDir = new System.IO.DirectoryInfo(System.IO.Path.Combine(AppContext.BaseDirectory, "webhost")).FullName;
                 var webHostFullPath = System.IO.Path.Combine(webHostBaseDir, webHostAsm);
 
                 var process = new Process() {
                     EnableRaisingEvents = true,
                     StartInfo = new ProcessStartInfo() { 
-                        FileName = dotnetExeName,
+                        FileName = webHostFullPath,
                         WorkingDirectory = webHostBaseDir,
-                        Arguments = $"\"{webHostFullPath}\" {Process.GetCurrentProcess().Id}",
+                        Arguments = $"{Process.GetCurrentProcess().Id}",
                         UseShellExecute = true
                     }
                 };
