@@ -46,16 +46,13 @@ namespace DataCore.Adapter.Security {
         /// <param name="builder">
         ///   The string builder to write the output to.
         /// </param>
-        private static void PemEncode(byte[] bytes, string label, IEnumerable<string> explanatoryText, StringBuilder builder) {
+        private static void PemEncode(byte[] bytes, string? label, IEnumerable<string>? explanatoryText, StringBuilder builder) {
             if (bytes == null) {
                 throw new ArgumentNullException(nameof(bytes));
             }
-            if (label == null) {
-                throw new ArgumentNullException(nameof(label));
-            }
 
             if (explanatoryText != null) {
-                foreach (var item in explanatoryText) {
+                foreach (var item in explanatoryText.Where(x => x != null)) {
                     builder.Append(item);
                     builder.Append('\n');
                 }
@@ -63,9 +60,11 @@ namespace DataCore.Adapter.Security {
 
             var base64String = Convert.ToBase64String(bytes);
 
-            builder.Append("-----BEGIN ");
-            builder.Append(label);
-            builder.Append("-----\n");
+            if (!string.IsNullOrEmpty(label)) {
+                builder.Append("-----BEGIN ");
+                builder.Append(label);
+                builder.Append("-----\n");
+            }
 
             var i = 0;
             var @continue = false;
@@ -81,9 +80,38 @@ namespace DataCore.Adapter.Security {
                 builder.Append('\n');
             } while (@continue);
 
-            builder.Append("-----END ");
-            builder.Append(label);
-            builder.Append("-----\n");
+            if (!string.IsNullOrEmpty(label)) {
+                builder.Append("-----END ");
+                builder.Append(label);
+                builder.Append("-----\n");
+            }
+        }
+
+
+        /// <summary>
+        /// PEM-encodes the specified bytes.
+        /// </summary>
+        /// <param name="bytes">
+        ///   The bytes to encode.
+        /// </param>
+        /// <param name="label">
+        ///   Optional label to use (e.g. "RSA CERTIFICATE"). The encoded bytes will be prefixed 
+        ///   and suffixed with <c>-----BEGIN {label}-----</c> and <c>-----END {label}-----</c>.
+        /// </param>
+        /// <param name="explanatoryText">
+        ///   Optional lines of explanatory text add to the start of the output string (e.g. 
+        ///   metadata about an X.509 certificate).
+        /// </param>
+        /// <returns>
+        ///   The PEM-encoded bytes.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="bytes"/> is <see langword="null"/>.
+        /// </exception>
+        public static string PemEncode(byte[] bytes, string? label = null, IEnumerable<string>? explanatoryText = null) {
+            var sb = new StringBuilder();
+            PemEncode(bytes, label, explanatoryText, sb);
+            return sb.ToString();
         }
 
 
