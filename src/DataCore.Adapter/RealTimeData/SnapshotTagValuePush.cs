@@ -286,7 +286,7 @@ namespace DataCore.Adapter.RealTimeData {
             finally {
                 _subscriptionsLock.ExitWriteLock();
             }
-        } 
+        }
 
 
         /// <summary>
@@ -566,7 +566,7 @@ namespace DataCore.Adapter.RealTimeData {
             _subscriptions[subscriptionId] = subscription;
 
             try {
-                await OnSubscriptionAddedInternal(subscription, request.Tags?.Where(x => x != null) ?? Array.Empty<string>()).ConfigureAwait(false);
+                await OnSubscriptionAddedInternal(subscription, request.Tags?.Where(x => x != null)?.ToArray() ?? Array.Empty<string>()).ConfigureAwait(false);
             }
             catch {
                 OnSubscriptionCancelledInternal(subscriptionId);
@@ -783,8 +783,8 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return async (context, tags, cancellationToken) => {
-                var ch = await feature.GetTags(context, new GetTagsRequest() { 
-                    Tags = tags
+                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                    Tags = tags?.ToArray()!
                 }, cancellationToken).ConfigureAwait(false);
 
                 return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
