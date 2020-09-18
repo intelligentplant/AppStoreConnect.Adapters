@@ -7,7 +7,7 @@ _This is part 3 of a tutorial series about creating an adapter. The introduction
 
 _The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-03)._
 
-In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` feature. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the [ITagSearch](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagSearch.cs) feature to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags. We will also add some additional wave functions to our adapter, and allow each tag to specify which function it uses to calculate its values.
+In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` interface. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the [ITagSearch](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagSearch.cs) interface to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags. We will also add some additional wave functions to our adapter, and allow each tag to specify which function it uses to calculate its values.
 
 First of all, we will extend our `Adapter` class to implement the `ITagSearch` interface:
 
@@ -86,7 +86,7 @@ The `CreateWaveTypeProperty` method creates a property for our tag definitions t
 
 The `TagDefinition` can hold a variety of information about a tag in addition to the ID and name, including: a description, engineering units, data type, discrete tag states (if required), custom properties, and labels/categories. In our implementation above, we specify that our tags return `double` values.
 
-Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another feature, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
+Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another interface, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
 
 ```csharp
 public Task<ChannelReader<TagDefinition>> GetTags(
@@ -286,7 +286,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
         Console.WriteLine("  Features:");
         foreach (var feature in adapter.Features.Keys) {
-            Console.WriteLine($"    - {feature.Name}");
+            Console.WriteLine($"    - {feature}");
         }
 
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
@@ -335,12 +335,12 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-16T09:10:29Z
+    - Startup Time = 2020-09-18T09:59:25Z
   Features:
-    - IHealthCheck
-    - IReadSnapshotTagValues
-    - ITagSearch
-    - ITagInfo
+    - asc:features/real-time-data/tags/search/
+    - asc:features/real-time-data/tags/info/
+    - asc:features/real-time-data/values/read/snapshot/
+    - asc:features/diagnostics/health-check/
 
 [Tag Details]
   Name: Sawtooth_Wave
@@ -349,7 +349,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Properties:
     - Wave Type = Sawtooth
   Snapshot Value:
-    - 0.033333333333406975 @ 2020-03-16T09:10:29.0000000Z [Good Quality]
+    - 0.16666666666680593 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 
 [Tag Details]
   Name: Sinusoid_Wave
@@ -358,7 +358,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Properties:
     - Wave Type = Sinusoid
   Snapshot Value:
-    - 0.10452846326788355 @ 2020-03-16T09:10:29.0000000Z [Good Quality]
+    - 0.50000000000037892 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 
 [Tag Details]
   Name: Square_Wave
@@ -367,7 +367,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Properties:
     - Wave Type = Square
   Snapshot Value:
-    - 1 @ 2020-03-16T09:10:29.0000000Z [Good Quality]
+    - 1 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 
 [Tag Details]
   Name: Triangle_Wave
@@ -376,10 +376,10 @@ Now, after displaying the initial adapter information, the `Run` method will sea
   Properties:
     - Wave Type = Triangle
   Snapshot Value:
-    - 0.066666666666813951 @ 2020-03-16T09:10:29.0000000Z [Good Quality]
+    - 0.33333333333361187 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 ```
 
-Note that the `ITagSearch` and `ITagInfo` features have been added to our adapter's feature set.
+Note that the URIs for the `ITagSearch` and `ITagInfo` interfaces have been added to our adapter's feature set.
 
 
 ## Next Steps

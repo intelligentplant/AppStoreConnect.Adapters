@@ -9,7 +9,7 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 In order to make our adapter useful, we need to start adding functionality to it. In this chapter, we will add the ability to read current values for instrument measurements to our adapter. Current values are also referred to as snapshot values. In this tutorial, we will use wave functions to compute numerical values for all measurements. In a real-world example, you might be returning readings from IoT sensors, instruments in an industrial process, Windows performance counters, and so on. An instrument measurement can also be referred to as a tag. 
 
-Reading snapshot values is defined using the [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) adapter feature. We'll extend our adapter class to implement this interface:
+Reading snapshot values is defined using the [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) interface. We'll extend our adapter class to implement this interface:
 
 ```csharp
 public class Adapter : AdapterBase, IReadSnapshotTagValues {
@@ -135,7 +135,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
         Console.WriteLine("  Features:");
         foreach (var feature in adapter.Features.Keys) {
-            Console.WriteLine($"    - {feature.Name}");
+            Console.WriteLine($"    - {feature}");
         }
 
         var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
@@ -167,17 +167,17 @@ After displaying the initial adapter information, the `Run` method will now ask 
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-16T09:07:03Z
+    - Startup Time = 2020-09-18T09:58:52Z
   Features:
-    - IHealthCheck
-    - IReadSnapshotTagValues
+    - asc:features/real-time-data/values/read/snapshot/
+    - asc:features/diagnostics/health-check/
 
   Snapshot Values:
-    [Example 1] - 0.30901699437453112 @ 2020-03-16T09:07:03.0000000Z [Good Quality]
-    [Example 2] - 0.30901699437453112 @ 2020-03-16T09:07:03.0000000Z [Good Quality]
+    [Example 1] - -0.74314482547774752 @ 2020-09-18T09:58:52.0000000Z [Good Quality]
+    [Example 2] - -0.74314482547774752 @ 2020-09-18T09:58:52.0000000Z [Good Quality]
 ```
 
-Note that the `IReadSnapshotTagValues` feature has automatically been detected and added to the list of available features.
+Note that the URI for the `IReadSnapshotTagValues` interface (`asc:features/real-time-data/values/read/snapshot/`) has automatically been detected and added to the list of available features.
 
 
 ## Next Steps

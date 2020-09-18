@@ -24,13 +24,13 @@ namespace MyAdapter {
             string id,
             string name,
             string description = null,
-            IBackgroundTaskService scheduler = null,
+            IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
         ) : base(
             id, 
             name, 
             description, 
-            scheduler, 
+            backgroundTaskService, 
             logger
         ) {
             AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
@@ -189,7 +189,7 @@ namespace MyAdapter {
             ValidateRequest(request);
             var result = Channel.CreateUnbounded<TagDefinition>();
 
-            TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 foreach (var tag in request.Tags) {
                     if (ct.IsCancellationRequested) {
                         break;
@@ -216,7 +216,7 @@ namespace MyAdapter {
             ValidateRequest(request);
             var result = Channel.CreateUnbounded<TagDefinition>();
 
-            TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 foreach (var tag in _tagsById.Values.ApplyFilter(request)) {
                     if (ct.IsCancellationRequested) {
                         break;
@@ -238,7 +238,7 @@ namespace MyAdapter {
             var result = Channel.CreateUnbounded<TagValueQueryResult>();
             var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
-            TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 foreach (var tag in request.Tags) {
                     if (ct.IsCancellationRequested) {
                         break;

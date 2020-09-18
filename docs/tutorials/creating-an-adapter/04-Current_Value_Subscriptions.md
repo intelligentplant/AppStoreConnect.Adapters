@@ -9,9 +9,9 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 Adapters can interface with tens of thousands of different measurements, which may be changing value very rapidly. It can often be inefficient to poll large numbers of tags for snapshot values. Instead of polling, it is far more efficient to create a persistent connection to the adapter, choose tags that we want to subscribe to, and have the adapter push those values back to us as they change. 
 
-Snapshot tag value subscriptions are implemented using the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature. In this chapter, we will implement this feature in our adapter, using one of the helper classes available to us in the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package. 
+Snapshot tag value subscriptions are implemented using the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) interface. In this chapter, we will implement this feature in our adapter, using one of the helper classes available to us in the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package. This highlights an important aspect of adapter feature implementations: the adapter does not have to directly implement a feature interface itself. Instead, the implementation can be delegated to another class.
 
-Two helper classes to use when implementing `ISnapshotTagValuePush`. The first, [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs), is used when the system you are connecting to defines its own native subscription system. The `SnapshotTagValuePush` constructor accepts an options parameter where you can define callbacks to be invoked when a subscription is added or removed for a given tag. Alternatively, you can extend `SnapshotTagValuePush` and override its `ResolveTag`, `OnTagAddedToSubscription`, and `OnTagRemovedFromSubscription` methods to perform the bootstrapping required to interface with the native subscription mechanism. You can then call the `ValueReceived` method to send a value for a tag to all subscribers to that tag. 
+Two helper classes can be used when implementing `ISnapshotTagValuePush`. The first, [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs), is used when the system you are connecting to defines its own native subscription system. The `SnapshotTagValuePush` constructor accepts an options parameter where you can define callbacks to be invoked when a subscription is added or removed for a given tag. Alternatively, you can extend `SnapshotTagValuePush` and override its `ResolveTags`, `OnTagsAddedToSubscription`, and `OnTagsRemovedFromSubscription` methods to perform the bootstrapping required to interface with the native subscription mechanism. You can then call the `ValueReceived` method to send a value for a tag to all subscribers to that tag. 
 
 The second helper class is [PollingSnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs). This class extends `SnapshotTagValuePush` by periodically polling the snapshot value of all tags that all callers have subscribed to and pushing the new values to the subscribed callers. `PollingSnapshotTagValuePush` is only compatible with adapters that implement `ITagInfo` (in order to resolve tag IDs or names that callers subscribe to) and `IReadSnapshotTagValues` (in order to poll for new values). Since we are just generating random values in our adapter, and we have already implemented both of the required features, this second helper class is a good fit for us.
 
@@ -22,13 +22,13 @@ public Adapter(
     string id,
     string name,
     string description = null,
-    IBackgroundTaskService scheduler = null,
+    IBackgroundTaskService backgroundTaskService = null,
     ILogger<Adapter> logger = null
 ) : base(
     id, 
     name, 
     description, 
-    scheduler, 
+    backgroundTaskService, 
     logger
 ) {
     AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
@@ -62,7 +62,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
         Console.WriteLine("  Features:");
         foreach (var feature in adapter.Features.Keys) {
-            Console.WriteLine($"    - {feature.Name}");
+            Console.WriteLine($"    - {feature}");
         }
 
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
@@ -117,13 +117,13 @@ Run the program and wait until it receives a few value updates, and then press `
   Name: Example Adapter
   Description: Example adapter, built using the tutorial on GitHub
   Properties:
-    - Startup Time = 2020-03-16T10:00:32Z
+    - Startup Time = 2020-09-18T10:00:07Z
   Features:
-    - IHealthCheck
-    - IReadSnapshotTagValues
-    - ITagSearch
-    - ITagInfo
-    - ISnapshotTagValuePush
+    - asc:features/real-time-data/values/read/snapshot/
+    - asc:features/real-time-data/tags/search/
+    - asc:features/real-time-data/values/push/
+    - asc:features/real-time-data/tags/info/
+    - asc:features/diagnostics/health-check/
 
 [Tag Details]
   Name: Sinusoid_Wave
@@ -132,13 +132,13 @@ Run the program and wait until it receives a few value updates, and then press `
   Properties:
     - Wave Type = Sinusoid
   Snapshot Value:
-    - -0.2079116908175784 @ 2020-03-16T10:00:32.0000000Z [Good Quality]
-    - -0.30901699437483965 @ 2020-03-16T10:00:33.0000000Z [Good Quality]
-    - -0.40673664307534668 @ 2020-03-16T10:00:34.0000000Z [Good Quality]
-    - -0.49999999999963213 @ 2020-03-16T10:00:35.0000000Z [Bad Quality]
+    - 0.74314482547703276 @ 2020-09-18T10:00:08.0000000Z [Good Quality]
+    - 0.809016994374672 @ 2020-09-18T10:00:09.0000000Z [Good Quality]
+    - 0.8660254037842402 @ 2020-09-18T10:00:10.0000000Z [Good Quality]
+    - 0.91354545764246864 @ 2020-09-18T10:00:11.0000000Z [Good Quality]
 ```
 
-Note that the `ISnapshotTagValuePush` is included in the adapter's features, even though we did not explicitly implement this interface on our adapter class!
+Note that the URI for `ISnapshotTagValuePush` is included in the adapter's features, even though we did not explicitly implement this interface on our adapter class!
 
 
 ## Next Steps

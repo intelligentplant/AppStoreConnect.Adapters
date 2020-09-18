@@ -43,7 +43,7 @@ namespace MyAdapter {
                 }
                 Console.WriteLine("  Features:");
                 foreach (var feature in adapter.Features.Keys) {
-                    Console.WriteLine($"    - {feature.Name}");
+                    Console.WriteLine($"    - {feature}");
                 }
 
                 var tagSearchFeature = adapter.GetFeature<ITagSearch>();

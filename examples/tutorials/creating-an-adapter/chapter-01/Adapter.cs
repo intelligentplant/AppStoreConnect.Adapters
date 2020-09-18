@@ -14,9 +14,9 @@ namespace MyAdapter {
             string id,
             string name,
             string description = null,
-            IBackgroundTaskService scheduler = null,
+            IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
-        ) : base(id, name, description, scheduler, logger) { }
+        ) : base(id, name, description, backgroundTaskService, logger) { }
 
 
         protected override Task StartAsync(CancellationToken cancellationToken) {
