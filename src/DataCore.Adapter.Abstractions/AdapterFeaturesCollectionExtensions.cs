@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter {
 
     /// <summary>
@@ -193,6 +195,90 @@ namespace DataCore.Adapter {
             return features[uri];
         }
 
+
+        /// <summary>
+        /// Gets the specified extension feature implementation.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="uri">
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <returns>
+        ///   The extension feature implementation, or <see langword="null"/> if no matching feature was found.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="features"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterExtensionFeature GetExtension(this IAdapterFeaturesCollection features, Uri uri) {
+            if (features == null) {
+                throw new ArgumentNullException(nameof(features));
+            }
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            if (!uri.IsAbsoluteUri) {
+                // Make URI absolute using WellKnownFeatures.ExtensionFeatureBasePath.
+                uri = new Uri(WellKnownFeatures.ExtensionFeatureBasePath, uri);
+            }
+
+            uri = uri.EnsurePathHasTrailingSlash();
+
+            return features[uri] is IAdapterExtensionFeature feature
+                ? feature
+                : default!;
+        }
+
+
+        /// <summary>
+        /// Gets the specified extension feature implementation.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="uriString">
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <returns>
+        ///   The extension feature implementation, or <see langword="null"/> if no matching feature was found.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="features"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static IAdapterExtensionFeature GetExtension(this IAdapterFeaturesCollection features, string uriString) {
+            if (features == null) {
+                throw new ArgumentNullException(nameof(features));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            if (!Uri.TryCreate(uriString, UriKind.RelativeOrAbsolute, out var uri)) {
+                throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
+            }
+
+            if (!uri.IsAbsoluteUri) {
+                // Make URI absolute using WellKnownFeatures.ExtensionFeatureBasePath.
+                uri = new Uri(WellKnownFeatures.ExtensionFeatureBasePath, uri);
+            }
+
+            uri = uri.EnsurePathHasTrailingSlash();
+
+            return features[uri] is IAdapterExtensionFeature feature
+                ? feature
+                : default!;
+        }
+
         #endregion
 
         #region [ TryGet ]
@@ -365,6 +451,76 @@ namespace DataCore.Adapter {
             out IAdapterFeature feature
         ) {
             feature = features.Get(uriString);
+            return feature != null;
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified extension feature implementation.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="uri">
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="features"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uri"/> is not an absolute URI.
+        /// </exception>
+        public static bool TryGetExtension(
+            this IAdapterFeaturesCollection features,
+            Uri uri,
+            out IAdapterExtensionFeature feature
+        ) {
+            feature = features.GetExtension(uri);
+            return feature != null;
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified extension feature implementation.
+        /// </summary>
+        /// <param name="features">
+        ///   The features collection.
+        /// </param>
+        /// <param name="uriString">
+        ///   The extension feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="features"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static bool TryGetExtension(
+            this IAdapterFeaturesCollection features,
+            string uriString,
+            out IAdapterExtensionFeature feature
+        ) {
+            feature = features.GetExtension(uriString);
             return feature != null;
         }
 

@@ -841,7 +841,55 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
-        #region [ Ping-Pong Extension ]
+        #region [ Extensions ]
+
+        [TestMethod]
+        public Task ExtensionShouldBeResolvedViaAbsoluteUri() {
+            return RunAdapterTest((adapter, context) => {
+                Assert.IsNotNull(adapter.GetExtensionFeature(new Uri(PingPongExtension.FeatureUri)));
+                Assert.IsTrue(adapter.TryGetExtensionFeature(new Uri(PingPongExtension.FeatureUri), out var f));
+                Assert.IsNotNull(f);
+
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task ExtensionShouldBeResolvedViaRelativeUri() {
+            return RunAdapterTest((adapter, context) => {
+                Assert.IsNotNull(adapter.GetExtensionFeature(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative)));
+                Assert.IsTrue(adapter.TryGetExtensionFeature(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative), out var f));
+                Assert.IsNotNull(f);
+
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task ExtensionShouldBeResolvedViaAbsoluteUriString() {
+            return RunAdapterTest((adapter, context) => {
+                Assert.IsNotNull(adapter.GetExtensionFeature(PingPongExtension.FeatureUri));
+                Assert.IsTrue(adapter.TryGetExtensionFeature(PingPongExtension.FeatureUri, out var f));
+                Assert.IsNotNull(f);
+
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task ExtensionShouldBeResolvedViaRelativeUriString() {
+            return RunAdapterTest((adapter, context) => {
+                Assert.IsNotNull(adapter.GetExtensionFeature(PingPongExtension.RelativeFeatureUri));
+                Assert.IsTrue(adapter.TryGetExtensionFeature(PingPongExtension.RelativeFeatureUri, out var f));
+                Assert.IsNotNull(f);
+
+                return Task.CompletedTask;
+            });
+        }
+
 
         [TestMethod]
         public Task PingPongExtensionShouldReturnDescriptor() {

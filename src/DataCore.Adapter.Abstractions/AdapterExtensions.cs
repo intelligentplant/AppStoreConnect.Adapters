@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter {
 
@@ -174,6 +175,70 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
             return adapter.Features.Get(uriString);
+        }
+
+
+        /// <summary>
+        /// Gets the specified extension adapter feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterExtensionFeature GetExtensionFeature(this IAdapter adapter, Uri uri) {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            return adapter.Features.GetExtension(uri);
+        }
+
+
+        /// <summary>
+        /// Gets the specified extension adapter feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <returns>
+        ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
+        ///   feature.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static IAdapterExtensionFeature GetExtensionFeature(this IAdapter adapter, string uriString) {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            return adapter.Features.GetExtension(uriString);
         }
 
 
@@ -364,6 +429,83 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
             return adapter.Features.TryGet(uriString, out feature);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified extension adapter feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uri">
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool TryGetExtensionFeature(
+            this IAdapter adapter,
+            Uri uri,
+            out IAdapterExtensionFeature feature
+        ) {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uri == null) {
+                throw new ArgumentNullException(nameof(uri));
+            }
+            return adapter.Features.TryGetExtension(uri, out feature);
+        }
+
+
+        /// <summary>
+        /// Tries to get the specified extension adapter feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="uriString">
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        /// </param>
+        /// <param name="feature">
+        ///   The implemented feature.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the feature was resolved, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="uriString"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="uriString"/> is not an absolute URI.
+        /// </exception>
+        public static bool TryGetExtensionFeature(
+            this IAdapter adapter,
+            string uriString,
+            out IAdapterExtensionFeature feature
+        ) {
+            if (adapter?.Features == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (uriString == null) {
+                throw new ArgumentNullException(nameof(uriString));
+            }
+            return adapter.Features.TryGetExtension(uriString, out feature);
         }
 
 

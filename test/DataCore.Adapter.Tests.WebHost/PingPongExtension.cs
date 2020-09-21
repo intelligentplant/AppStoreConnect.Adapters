@@ -27,7 +27,9 @@ namespace DataCore.Adapter.Tests {
     )]
     internal class PingPongExtension : AdapterExtensionFeature, IHelloWorld {
 
-        public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/ping-pong/";
+        public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + RelativeFeatureUri;
+
+        public const string RelativeFeatureUri = "unit-tests/ping-pong/";
 
 
         internal PingPongExtension(AdapterBase adapter) : this(adapter.BackgroundTaskService) { }
