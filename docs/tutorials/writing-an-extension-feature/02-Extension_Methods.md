@@ -107,7 +107,7 @@ Compile and run the program again and the output will be similar to the followin
 [INVOKE] Pong: 780745b1-d437-490c-b349-a3f2f270806a @ 08:17:46 UTC
 ```
 
-This shows how easy it is to call an extension feature operation. If you do not have a strongly-typed definition for either the request or response type for the operation, you can also use an extension method that uses anonymous types instead, e.g.
+This shows how easy it is to call an extension feature operation. If you do not have a strongly-typed definition for either the request or response type for the operation (for example, if you are using a proxy adapter to communicate with an adapter on a remote server), you can also use an extension method that uses anonymous types instead, e.g.
 
 ```csharp
 var pongMessageAnonymous = await extensionFeature.InvokeWithAnonymousResultType(
