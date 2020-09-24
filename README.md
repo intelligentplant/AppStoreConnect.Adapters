@@ -40,6 +40,7 @@ There are also projects that allow the creation of proxy adapters, and their cor
 * `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
 * `DataCore.Adapter.Http.Client` ([source](/src/DataCore.Adapter.Http.Client)) - a strongly-typed client for querying remote adapters via the HTTP API.
 * `DataCore.Adapter.Http.Proxy` ([source](/src/DataCore.Adapter.Http.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the HTTP client.
+* `DataCore.Adapter.Proxy` ([source](/src/DataCore.Adapter.Proxy)) - shared types used in proxy implementation.
 
 Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) file can be used to create clients for the HTTP API, or imported into tools like [Postman](https://www.getpostman.com/) in order to test API calls.
 
