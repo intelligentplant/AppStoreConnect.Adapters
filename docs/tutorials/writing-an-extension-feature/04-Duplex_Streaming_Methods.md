@@ -17,7 +17,7 @@ Our first step is to add the duplex streaming method to our `PingPongExtension` 
     InputParameterDescription = "The ping message",
     OutputParameterDescription = "The pong message"
 )]
-public Task<ChannelReader<PongMessage>> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
+public ChannelReader<PongMessage> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
     if (messages == null) {
         throw new ArgumentNullException(nameof(messages));
     }
@@ -37,7 +37,7 @@ public Task<ChannelReader<PongMessage>> Ping(ChannelReader<PingMessage> messages
         }
     }, true, BackgroundTaskService, cancellationToken);
 
-    return Task.FromResult(result.Reader);
+    return result.Reader;
 }
 ```
 

@@ -15,6 +15,48 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](http
 Extend [AdapterBase<T>](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
 
 
+## Working with Channels
+
+Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. 
+
+In most cases, it is advisable to create the result channel as soon as possible in your method implementation, start a background task to write values into the channel, and then return the channel as soon as possible. This project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` classes, to easily create, read from, or write to channels in background tasks. For example:
+
+```csharp
+public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
+
+    // -- other code removed for brevity --
+
+    Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(
+        IAdapterCallContext context, 
+        ReadSnapshotTagValuesRequest request, 
+        CancellationToken cancellationToken
+    ) {
+        var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
+
+        channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var values = GetSnapshotValues(request.Tags)) {
+                while (await values.MoveNext(ct).ConfigureAwait(false)) {
+                    var canWrite = await channel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
+                    if (!canWrite) {
+                        return;
+                    }
+
+                    channel.Writer.TryWrite(values.Current);
+                }
+            }
+        }, true, BackgroundTaskService, cancellationToken);
+
+        return Task.FromResult(channel.Reader);
+    }
+
+    private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
+        ...
+    }
+
+}
+```
+
+
 # Implementing Features
 
 Standard adapter features are defined as interfaces in the [DataCore.Adapter.Abstractions](/src/DataCore.Adapter.Abstractions) project. Any features that are implemented directly on your adapter class will be added to the adapter's feature collection automatically. If you delegate a feature implementation to another class (for example, by using the [SnapshotTagValuePush](./RealTimeData/SnapshotTagValuePush.cs) class to add [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter), you must register this feature yourself, by calling the `AddFeature` or `AddFeatures` method inherited from `AdapterBase`.

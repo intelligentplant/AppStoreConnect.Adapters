@@ -49,7 +49,7 @@ namespace MyAdapter {
             InputParameterDescription = "The ping message",
             OutputParameterDescription = "The pong message"
         )]
-        public Task<ChannelReader<PongMessage>> Ping(PingMessage message, CancellationToken cancellationToken) {
+        public ChannelReader<PongMessage> Ping(PingMessage message, CancellationToken cancellationToken) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
@@ -64,7 +64,7 @@ namespace MyAdapter {
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+            return result.Reader;
         }
 
 
@@ -73,7 +73,7 @@ namespace MyAdapter {
             InputParameterDescription = "The ping message",
             OutputParameterDescription = "The pong message"
         )]
-        public Task<ChannelReader<PongMessage>> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
+        public ChannelReader<PongMessage> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
             if (messages == null) {
                 throw new ArgumentNullException(nameof(messages));
             }
@@ -93,7 +93,7 @@ namespace MyAdapter {
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+            return result.Reader;
         }
 
     }
