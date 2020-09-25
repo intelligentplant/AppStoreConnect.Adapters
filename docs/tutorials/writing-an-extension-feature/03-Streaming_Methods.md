@@ -17,7 +17,7 @@ To start, we will create the streaming method on our `PingPongExtension` class:
     InputParameterDescription = "The ping message",
     OutputParameterDescription = "The pong message"
 )]
-public Task<ChannelReader<PongMessage>> Ping(PingMessage message, CancellationToken cancellationToken) {
+public ChannelReader<PongMessage> Ping(PingMessage message, CancellationToken cancellationToken) {
     if (message == null) {
         throw new ArgumentNullException(nameof(message));
     }
@@ -32,7 +32,7 @@ public Task<ChannelReader<PongMessage>> Ping(PingMessage message, CancellationTo
         }
     }, true, BackgroundTaskService, cancellationToken);
 
-    return Task.FromResult(result.Reader);
+    return result.Reader;
 }
 ```
 

@@ -75,36 +75,52 @@ The [ExtensionFeatureOperationAttribute](./Extensions/ExtensionFeatureOperationA
 In order to simplify implementation of non-standard adapter features, the [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class in the [DataCore.Adapter](/src/DataCore.Adapter) project can be used as the basis of an extension feature implementation. This class offers a number of `BindInvoke`, `BindStream`, and `BindDuplexStream` method overloads to automatically register methods on the implementation to be handled by the `Invoke`, `Stream` or `DuplexStream` method defined by `IAdapterExtensionFeature` as appropriate.
 
 
+## Working with Channels
+
+Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. 
+
+In most cases, it is advisable to create the result channel as soon as possible in your method implementation, start a background task to write values into the channel, and then return the channel as soon as possible. The [DataCore.Adapter](/src/DataCore.Adapter) project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` classes, to easily create, read from, or write to channels in background tasks. For example:
+
+```csharp
+public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
+
+    // -- other code removed for brevity --
+
+    Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(
+        IAdapterCallContext context, 
+        ReadSnapshotTagValuesRequest request, 
+        CancellationToken cancellationToken
+    ) {
+        var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
+
+        channel.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var values = GetSnapshotValues(request.Tags)) {
+                while (await values.MoveNext(ct).ConfigureAwait(false)) {
+                    var canWrite = await channel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
+                    if (!canWrite) {
+                        return;
+                    }
+
+                    channel.Writer.TryWrite(values.Current);
+                }
+            }
+        }, true, BackgroundTaskService, cancellationToken);
+
+        return Task.FromResult(channel.Reader);
+    }
+
+    private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
+        ...
+    }
+
+}
+```
+
+
 ## Helper Classes
 
 The [DataCore.Adapter](/src/DataCore.Adapter) project contains a number of helper classes to simplify adapter implementation. For example, if an adapter only natively supports the retrieval of [raw, unprocessed tag values](./RealTimeData/IReadRawTagValues.cs), the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class can be used to provide support for [values-at-times](./RealTimeData/IReadTagValuesAtTimes.cs), [plot](./RealTimeData/IReadPlotTagValues.cs), and [aggregated](./RealTimeData/IReadProcessedTagValues.cs) data queries.
 
-Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. The [DataCore.Adapter](/src/DataCore.Adapter) project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` and classes, to easily create, read from, or write to channels in background tasks:
-
-```csharp
-Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-    var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
-
-    channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-        using (var values = GetSnapshotValues(requestTags)) {
-            while (await values.MoveNext(ct).ConfigureAwait(false)) {
-                var canWrite = await channel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
-                if (!canWrite) {
-                    return;
-                }
-
-                channel.Writer.TryWrite(values.Current);
-            }
-        }
-    }, true, cancellationToken);
-
-    return Task.FromResult(channel.Reader);
-}
-
-private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
-    ...
-}
-```
 
 # Implementing Authorization
 
