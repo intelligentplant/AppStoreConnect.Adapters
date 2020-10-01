@@ -75,6 +75,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37
 		build\Dependencies.props = build\Dependencies.props
 		build\Get-Version.ps1 = build\Get-Version.ps1
 		build\increment-version.ps1 = build\increment-version.ps1
+		build\NetFX.targets = build\NetFX.targets
 		build\Set-TeamCityParameters.ps1 = build\Set-TeamCityParameters.ps1
 		build\tools.ps1 = build\tools.ps1
 		build\version.json = build\version.json
