@@ -103,7 +103,7 @@ services
     });
 ```
 
-7. In your `Startup.cs` file, add adapter Web API controller and SignalR hub endpoints in the `Configure` method:
+6. In your `Startup.cs` file, add adapter Web API controller and SignalR hub endpoints in the `Configure` method:
 
 ```csharp
 app.UseRouting();
