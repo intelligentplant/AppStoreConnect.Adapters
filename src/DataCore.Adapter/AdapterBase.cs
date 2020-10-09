@@ -288,6 +288,22 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Validates the <see cref="IAdapterCallContext"/> passed to an adapter feature method.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual void ValidateContext(IAdapterCallContext context) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+        }
+
+
+        /// <summary>
         /// Validates a request object passed to an adapter feature method.
         /// </summary>
         /// <typeparam name="TRequest">
