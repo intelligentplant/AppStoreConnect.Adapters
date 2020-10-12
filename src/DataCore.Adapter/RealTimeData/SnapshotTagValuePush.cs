@@ -633,7 +633,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             var tagIdentifier = new TagIdentifier(value.TagId, value.TagName);
-            var subscribers = _subscriptions.Values.Where(x => x.Topics.Contains(tagIdentifier)).ToArray();
+            var subscribers = _subscriptions.Values.Where(x => x.Topics.Any(x => IsTopicMatch(x, tagIdentifier))).ToArray();
 
             if (subscribers.Length == 0) {
                 return false;
@@ -654,6 +654,48 @@ namespace DataCore.Adapter.RealTimeData {
                 // The stream manager is being disposed.
                 return false;
             }
+        }
+
+
+        /// <summary>
+        /// Checks to see if the specified subscription topic and tag value topic match.
+        /// </summary>
+        /// <param name="subscriptionTopic">
+        ///   The topic that was specified by the subscriber.
+        /// </param>
+        /// <param name="valueTopic">
+        ///   The topic for the received tag value.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the value should be published to the subscriber, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   This method is used to determine if a tag value will be pushed to a subscriber. 
+        ///   The default behaviour is to return <see langword="true"/> if <paramref name="subscriptionTopic"/> 
+        ///   and <paramref name="valueTopic"/> have matching tag IDs. If a <see cref="SnapshotTagValuePushOptions.IsTopicMatch"/> 
+        ///   delegate is provided in the feature options, this delegate will be invoked if the 
+        ///   default check returns <see langword="false"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Override this method if your adapter allows e.g. the use of wildcards in 
+        ///   subscription topics.
+        /// </para>
+        /// 
+        /// </remarks>
+        protected virtual bool IsTopicMatch(TagIdentifier subscriptionTopic, TagIdentifier valueTopic) {
+            if (TagIdentifierComparer.Id.Equals(subscriptionTopic, valueTopic)) {
+                return true;
+            }
+
+            if (_options.IsTopicMatch != null) {
+                return _options.IsTopicMatch(subscriptionTopic, valueTopic);
+            }
+
+            return false;
         }
 
 
@@ -764,6 +806,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public Action<IEnumerable<TagIdentifier>>? OnTagSubscriptionsRemoved { get; set; }
 
+        /// <summary>
+        /// A delegate that is invoked to determine if the topic for a subscription matches the 
+        /// topic for a received tag value.
+        /// </summary>
+        /// <remarks>
+        ///   The first parameter passed to the delegate is the subscription topic, and the second 
+        ///   parameter is the topic for the received tag value.
+        /// </remarks>
+        public Func<TagIdentifier, TagIdentifier, bool>? IsTopicMatch { get; set; }
 
 
         /// <summary>
