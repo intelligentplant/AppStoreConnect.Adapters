@@ -97,7 +97,15 @@ namespace DataCore.Adapter {
             // * = 0+ characters (i.e. ".*" in regex-speak)
             // ? = 1 character (i.e. "." in regex-speak)
 
-            pattern = Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".");
+#if NETSTANDARD
+            pattern = Regex.Escape(pattern)
+                .Replace(@"\*", ".*")
+                .Replace(@"\?", ".");
+#else
+            pattern = Regex.Escape(pattern)
+                .Replace(@"\*", ".*", StringComparison.Ordinal)
+                .Replace(@"\?", ".", StringComparison.Ordinal);
+#endif
 
             return s.Like(new Regex(pattern, RegexOptions.IgnoreCase));
         }

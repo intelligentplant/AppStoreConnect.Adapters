@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -513,8 +514,8 @@ namespace DataCore.Adapter {
         ///   <see langword="false"/> to leave the channel open. Exceptions thrown by 
         ///   <paramref name="workItem"/> will always cause the channel to complete.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation. A composite token consisting of this token 
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
         ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
         ///   <paramref name="workItem"/>.
         /// </param>
@@ -522,33 +523,10 @@ namespace DataCore.Adapter {
             this IBackgroundTaskService backgroundTaskService, 
             Func<ChannelWriter<T>, CancellationToken, Task> workItem, 
             ChannelWriter<T> channel, 
-            bool complete = true, 
-            CancellationToken cancellationToken = default
+            bool complete, 
+            params CancellationToken[] cancellationTokens
         ) {
-            if (backgroundTaskService == null) {
-                throw new ArgumentNullException(nameof(backgroundTaskService));
-            }
-            if (workItem == null) {
-                throw new ArgumentNullException(nameof(workItem));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
-
-            backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
-                try {
-                    await workItem(channel, ct).ConfigureAwait(false);
-                }
-                catch (Exception e) {
-                    channel.TryComplete(e);
-                    throw;
-                }
-                finally {
-                    if (complete) {
-                        channel.TryComplete();
-                    }
-                }
-            }, null, cancellationToken);
+            backgroundTaskService.QueueBackgroundChannelOperation(workItem, channel, complete, (IEnumerable<CancellationToken>) cancellationTokens);
         }
 
 
@@ -574,8 +552,107 @@ namespace DataCore.Adapter {
         ///   <see langword="false"/> to leave the channel open. Exceptions thrown by 
         ///   <paramref name="workItem"/> will always cause the channel to complete.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation. A composite token consisting of this token 
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
+        ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
+        ///   <paramref name="workItem"/>.
+        /// </param>
+        public static void QueueBackgroundChannelOperation<T>(
+            this IBackgroundTaskService backgroundTaskService,
+            Func<ChannelWriter<T>, CancellationToken, Task> workItem,
+            ChannelWriter<T> channel,
+            bool complete = true,
+            IEnumerable<CancellationToken>? cancellationTokens = null
+        ) {
+            if (backgroundTaskService == null) {
+                throw new ArgumentNullException(nameof(backgroundTaskService));
+            }
+            if (workItem == null) {
+                throw new ArgumentNullException(nameof(workItem));
+            }
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                try {
+                    await workItem(channel, ct).ConfigureAwait(false);
+                }
+                catch (Exception e) {
+                    channel.TryComplete(e);
+                    throw;
+                }
+                finally {
+                    if (complete) {
+                        channel.TryComplete();
+                    }
+                }
+            }, null, cancellationTokens ?? Array.Empty<CancellationToken>());
+        }
+
+
+        /// <summary>
+        /// Queues a background work item that operates on a <see cref="ChannelWriter{T}"/>, 
+        /// optionally completing the channel once the operation has completed.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel item type.
+        /// </typeparam>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
+        ///   background.
+        /// </param>
+        /// <param name="workItem">
+        ///   The operation to perform.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to perform the operation on.
+        /// </param>
+        /// <param name="complete">
+        ///   <see langword="true"/> to complete the channel once the operation completes, or 
+        ///   <see langword="false"/> to leave the channel open. Exceptions thrown by 
+        ///   <paramref name="workItem"/> will always cause the channel to complete.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
+        ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
+        ///   <paramref name="workItem"/>.
+        /// </param>
+        public static void QueueBackgroundChannelOperation<T>(
+            this IBackgroundTaskService backgroundTaskService,
+            Action<ChannelWriter<T>, CancellationToken> workItem,
+            ChannelWriter<T> channel,
+            bool complete,
+            params CancellationToken[] cancellationTokens
+        ) {
+            backgroundTaskService.QueueBackgroundChannelOperation(workItem, channel, complete, (IEnumerable<CancellationToken>) cancellationTokens);
+        }
+
+
+        /// <summary>
+        /// Queues a background work item that operates on a <see cref="ChannelWriter{T}"/>, 
+        /// optionally completing the channel once the operation has completed.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel item type.
+        /// </typeparam>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
+        ///   background.
+        /// </param>
+        /// <param name="workItem">
+        ///   The operation to perform.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to perform the operation on.
+        /// </param>
+        /// <param name="complete">
+        ///   <see langword="true"/> to complete the channel once the operation completes, or 
+        ///   <see langword="false"/> to leave the channel open. Exceptions thrown by 
+        ///   <paramref name="workItem"/> will always cause the channel to complete.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
         ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
         ///   <paramref name="workItem"/>.
         /// </param>
@@ -584,7 +661,7 @@ namespace DataCore.Adapter {
             Action<ChannelWriter<T>, CancellationToken> workItem,
             ChannelWriter<T> channel,
             bool complete = true,
-            CancellationToken cancellationToken = default
+            IEnumerable<CancellationToken>? cancellationTokens = null
         ) {
             if (backgroundTaskService == null) {
                 throw new ArgumentNullException(nameof(backgroundTaskService));
@@ -609,7 +686,7 @@ namespace DataCore.Adapter {
                         channel.TryComplete();
                     }
                 }
-            }, null, cancellationToken);
+            }, null, cancellationTokens ?? Array.Empty<CancellationToken>());
         }
 
 
@@ -629,8 +706,8 @@ namespace DataCore.Adapter {
         /// <param name="channel">
         ///   The channel to perform the operation on.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation. A composite token consisting of this token 
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
         ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
         ///   <paramref name="workItem"/>.
         /// </param>
@@ -638,7 +715,38 @@ namespace DataCore.Adapter {
             this IBackgroundTaskService backgroundTaskService,
             Func<ChannelReader<T>, CancellationToken, Task> workItem,
             ChannelReader<T> channel,
-            CancellationToken cancellationToken = default
+            params CancellationToken[] cancellationTokens
+        ) {
+            backgroundTaskService.QueueBackgroundChannelOperation(workItem, channel, (IEnumerable<CancellationToken>) cancellationTokens);
+        }
+
+
+        /// <summary>
+        /// Queues a background work item that operates on a <see cref="ChannelReader{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel item type.
+        /// </typeparam>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
+        ///   background.
+        /// </param>
+        /// <param name="workItem">
+        ///   The operation to perform.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to perform the operation on.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
+        ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
+        ///   <paramref name="workItem"/>.
+        /// </param>
+        public static void QueueBackgroundChannelOperation<T>(
+            this IBackgroundTaskService backgroundTaskService,
+            Func<ChannelReader<T>, CancellationToken, Task> workItem,
+            ChannelReader<T> channel,
+            IEnumerable<CancellationToken>? cancellationTokens = null
         ) {
             if (backgroundTaskService == null) {
                 throw new ArgumentNullException(nameof(backgroundTaskService));
@@ -652,7 +760,7 @@ namespace DataCore.Adapter {
 
             backgroundTaskService.QueueBackgroundWorkItem(async ct => {
                 await workItem(channel, ct).ConfigureAwait(false);
-            }, null, cancellationToken);
+            }, null, cancellationTokens ?? Array.Empty<CancellationToken>());
         }
 
 
@@ -672,8 +780,8 @@ namespace DataCore.Adapter {
         /// <param name="channel">
         ///   The channel to perform the operation on.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   A cancellation token for the operation. A composite token consisting of this token 
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
         ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
         ///   <paramref name="workItem"/>.
         /// </param>
@@ -681,7 +789,38 @@ namespace DataCore.Adapter {
             this IBackgroundTaskService backgroundTaskService,
             Action<ChannelReader<T>, CancellationToken> workItem,
             ChannelReader<T> channel,
-            CancellationToken cancellationToken = default
+            params CancellationToken[] cancellationTokens
+        ) {
+            backgroundTaskService.QueueBackgroundChannelOperation(workItem, channel, (IEnumerable<CancellationToken>) cancellationTokens);
+        }
+
+
+        /// <summary>
+        /// Queues a background work item that operates on a <see cref="ChannelReader{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel item type.
+        /// </typeparam>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that will queue the operation in the 
+        ///   background.
+        /// </param>
+        /// <param name="workItem">
+        ///   The operation to perform.
+        /// </param>
+        /// <param name="channel">
+        ///   The channel to perform the operation on.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   A cancellation tokens for the operation. A composite token consisting of these tokens 
+        ///   and the lifetime token of the <see cref="IBackgroundTaskService"/> will be passed to
+        ///   <paramref name="workItem"/>.
+        /// </param>
+        public static void QueueBackgroundChannelOperation<T>(
+            this IBackgroundTaskService backgroundTaskService,
+            Action<ChannelReader<T>, CancellationToken> workItem,
+            ChannelReader<T> channel,
+            IEnumerable<CancellationToken>? cancellationTokens = null
         ) {
             if (backgroundTaskService == null) {
                 throw new ArgumentNullException(nameof(backgroundTaskService));
@@ -695,7 +834,55 @@ namespace DataCore.Adapter {
 
             backgroundTaskService.QueueBackgroundWorkItem(ct => {
                 workItem(channel, ct);
-            }, null, cancellationToken);
+            }, null, cancellationTokens ?? Array.Empty<CancellationToken>());
+        }
+
+
+        /// <summary>
+        /// Runs a background operation using the specified channel writer. Once the operation completes, the 
+        /// channel will optionally be marked as completed.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel writer.
+        /// </param>
+        /// <param name="func">
+        ///   The background operation to run.
+        /// </param>
+        /// <param name="complete">
+        ///   Indicates if the channel should be marked as completed once the operation has finished. 
+        ///   The channel will always be marked as completed if the operation throws an exception.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
+        ///   <see langword="null"/> to use the default scheduler.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   The cancellation tokens for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="func"/> is <see langword="null"/>.
+        /// </exception>
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, IEnumerable<CancellationToken>? cancellationTokens = null) {
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+            if (func == null) {
+                throw new ArgumentNullException(nameof(func));
+            }
+
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
+            }
+
+            backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
+                await func(ch, ct).ConfigureAwait(false);
+            }, channel, complete, cancellationTokens);
         }
 
 
@@ -729,8 +916,49 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
-        /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelWriter{T}, CancellationToken, Task}, ChannelWriter{T}, bool, CancellationToken)"/>
         public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Func<ChannelWriter<T>, CancellationToken, Task> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+            channel.RunBackgroundOperation(
+                func, 
+                complete, 
+                backgroundTaskService, 
+                cancellationToken.Equals(default) 
+                    ? null 
+                    : new[] { cancellationToken }
+            );
+        }
+
+
+        /// <summary>
+        /// Runs a background operation using the specified channel writer. Once the operation completes, the 
+        /// channel will optionally be marked as completed.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel writer.
+        /// </param>
+        /// <param name="func">
+        ///   The background operation to run.
+        /// </param>
+        /// <param name="complete">
+        ///   Indicates if the channel should be marked as completed once the operation has finished. 
+        ///   The channel will always be marked as completed if the operation throws an exception.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
+        ///   <see langword="null"/> to use the default scheduler.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="func"/> is <see langword="null"/>.
+        /// </exception>
+        public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, IEnumerable<CancellationToken>? cancellationTokens = null) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -742,9 +970,9 @@ namespace DataCore.Adapter {
                 backgroundTaskService = BackgroundTaskService.Default;
             }
 
-            backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
-                await func(ch, ct).ConfigureAwait(false);
-            }, channel, complete, cancellationToken);
+            backgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
+                func(ch, ct);
+            }, channel, complete, cancellationTokens);
         }
 
 
@@ -778,22 +1006,15 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
-        /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelWriter{T}, CancellationToken}, ChannelWriter{T}, bool, CancellationToken)"/>
         public static void RunBackgroundOperation<T>(this ChannelWriter<T> channel, Action<ChannelWriter<T>, CancellationToken> func, bool complete = true, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
-            if (func == null) {
-                throw new ArgumentNullException(nameof(func));
-            }
-
-            if (backgroundTaskService == null) {
-                backgroundTaskService = BackgroundTaskService.Default;
-            }
-
-            backgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
-                func(ch, ct);
-            }, channel, complete, cancellationToken);
+            channel.RunBackgroundOperation(
+                func, 
+                complete, 
+                backgroundTaskService, 
+                cancellationToken.Equals(default) 
+                    ? null 
+                    : new[] { cancellationToken }
+            );
         }
 
 
@@ -813,8 +1034,8 @@ namespace DataCore.Adapter {
         ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
         ///   <see langword="null"/> to use the default scheduler.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="cancellationTokens">
+        ///   The cancellation tokens for the operation.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
@@ -822,8 +1043,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
-        /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Func{ChannelReader{T}, CancellationToken, Task}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService? backgroundTaskService = null, IEnumerable<CancellationToken>? cancellationTokens = null) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -837,7 +1057,7 @@ namespace DataCore.Adapter {
 
             backgroundTaskService.QueueBackgroundChannelOperation(async (ch, ct) => {
                 await func(ch, ct).ConfigureAwait(false);
-            }, channel, cancellationToken);
+            }, channel, cancellationTokens);
         }
 
 
@@ -866,8 +1086,43 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="func"/> is <see langword="null"/>.
         /// </exception>
-        /// <seealso cref="QueueBackgroundChannelOperation{T}(IBackgroundTaskService, Action{ChannelReader{T}, CancellationToken}, ChannelReader{T}, CancellationToken)"/>
-        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Func<ChannelReader<T>, CancellationToken, Task> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+            channel.RunBackgroundOperation(
+                func, 
+                backgroundTaskService, 
+                cancellationToken.Equals(default) 
+                    ? null 
+                    : new[] { cancellationToken }
+            );
+        }
+
+
+        /// <summary>
+        /// Runs a background operation using the specified channel reader.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel reader.
+        /// </param>
+        /// <param name="func">
+        ///   The background operation to run.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
+        ///   <see langword="null"/> to use the default scheduler.
+        /// </param>
+        /// <param name="cancellationTokens">
+        ///   The cancellation tokens for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="func"/> is <see langword="null"/>.
+        /// </exception>
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService? backgroundTaskService = null, IEnumerable<CancellationToken>? cancellationTokens = null) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -881,7 +1136,43 @@ namespace DataCore.Adapter {
 
             backgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
                 func(ch, ct);
-            }, channel, cancellationToken);
+            }, channel, cancellationTokens);
+        }
+
+
+        /// <summary>
+        /// Runs a background operation using the specified channel reader.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The channel type.
+        /// </typeparam>
+        /// <param name="channel">
+        ///   The channel reader.
+        /// </param>
+        /// <param name="func">
+        ///   The background operation to run.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
+        ///   <see langword="null"/> to use the default scheduler.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="channel"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="func"/> is <see langword="null"/>.
+        /// </exception>
+        public static void RunBackgroundOperation<T>(this ChannelReader<T> channel, Action<ChannelReader<T>, CancellationToken> func, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+            channel.RunBackgroundOperation(
+                func,
+                backgroundTaskService,
+                cancellationToken.Equals(default)
+                    ? null
+                    : new[] { cancellationToken }
+            );
         }
 
 

@@ -528,8 +528,10 @@ namespace DataCore.Adapter.Events {
         /// <para>
         ///   This method is used to determine if an event message will be pushed to a subscriber. 
         ///   The default behaviour is to return <see langword="true"/> if <paramref name="subscriptionTopic"/> 
-        ///   and <paramref name="eventMessageTopic"/> topic are equal using a case-insensitive 
-        ///   match.
+        ///   and <paramref name="eventMessageTopic"/> are equal using a case-insensitive match. 
+        ///   If an <see cref="EventMessagePushWithTopicsOptions.IsTopicMatch"/> delegate is 
+        ///   provided in the feature options, this delegate will be invoked if the default 
+        ///   check returns <see langword="false"/>.
         /// </para>
         /// 
         /// <para>
@@ -539,7 +541,15 @@ namespace DataCore.Adapter.Events {
         /// 
         /// </remarks>
         protected virtual bool IsTopicMatch(string subscriptionTopic, string? eventMessageTopic) {
-            return string.Equals(subscriptionTopic, eventMessageTopic, StringComparison.Ordinal);
+            if (string.Equals(subscriptionTopic, eventMessageTopic, StringComparison.Ordinal)) {
+                return true;
+            }
+
+            if (_options.IsTopicMatch != null) {
+                return _options.IsTopicMatch(subscriptionTopic, eventMessageTopic);
+            }
+
+            return false;
         }
 
 
@@ -735,6 +745,16 @@ namespace DataCore.Adapter.Events {
         /// to zero.
         /// </summary>
         public Action<IEnumerable<string>>? OnTopicSubscriptionsRemoved { get; set; }
+
+        /// <summary>
+        /// A delegate that is invoked to determine if the topic for a subscription matches the 
+        /// topic for a received event message.
+        /// </summary>
+        /// <remarks>
+        ///   The first parameter passed to the delegate is the subscription topic, and the second 
+        ///   parameter is the topic for the received event message.
+        /// </remarks>
+        public Func<string, string?, bool>? IsTopicMatch { get; set; }
 
     }
 
