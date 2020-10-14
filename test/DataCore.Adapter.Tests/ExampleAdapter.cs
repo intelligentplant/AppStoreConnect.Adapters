@@ -130,8 +130,8 @@ namespace DataCore.Adapter.Tests {
             }, null, null) { }
 
 
-            protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
-                base.OnTagsAdded(tags);
+            protected override async Task OnTagsAdded(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
+                await base.OnTagsAdded(tags, cancellationToken).ConfigureAwait(false);
                 foreach (var tag in tags) {
                     ValueReceived(new TagValueQueryResult(
                         tag.Id,

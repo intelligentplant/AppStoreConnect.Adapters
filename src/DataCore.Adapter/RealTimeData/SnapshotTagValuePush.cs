@@ -339,14 +339,23 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tags">
         ///   The tags that have been added.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the change.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tags"/> is <see langword="null"/>.
         /// </exception>
-        protected virtual void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+        protected virtual Task OnTagsAdded(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
-            _options.OnTagSubscriptionsAdded?.Invoke(tags);
+
+            return _options.OnTagSubscriptionsAdded == null
+                ? Task.CompletedTask
+                : _options.OnTagSubscriptionsAdded.Invoke(tags, cancellationToken);
         }
 
 
@@ -356,14 +365,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tags">
         ///   The tags that have been removed.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the change.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tags"/> is <see langword="null"/>.
         /// </exception>
-        protected virtual void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
+        protected virtual async Task OnTagsRemoved(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
             }
-            _options.OnTagSubscriptionsRemoved?.Invoke(tags);
+
+            if (_options.OnTagSubscriptionsRemoved != null) {
+                await _options.OnTagSubscriptionsRemoved.Invoke(tags, cancellationToken).ConfigureAwait(false);
+            }
+
             // Remove current value if we are caching it.
             foreach (var tag in tags) {
                 _currentValueByTagId.TryRemove(tag.Id, out var _);
@@ -399,10 +418,10 @@ namespace DataCore.Adapter.RealTimeData {
                 while (_topicSubscriptionChangesChannel.Reader.TryRead(out var change)) {
                     try {
                         if (change.Added) {
-                            OnTagsAdded(change.Tags);
+                            await OnTagsAdded(change.Tags, cancellationToken).ConfigureAwait(false);
                         }
                         else {
-                            OnTagsRemoved(change.Tags);
+                            await OnTagsRemoved(change.Tags, cancellationToken).ConfigureAwait(false);
                         }
 
                         if (change.Processed != null) {
@@ -798,13 +817,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
         /// to one.
         /// </summary>
-        public Action<IEnumerable<TagIdentifier>>? OnTagSubscriptionsAdded { get; set; }
+        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from one 
         /// to zero.
         /// </summary>
-        public Action<IEnumerable<TagIdentifier>>? OnTagSubscriptionsRemoved { get; set; }
+        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsRemoved { get; set; }
 
         /// <summary>
         /// A delegate that is invoked to determine if the topic for a subscription matches the 

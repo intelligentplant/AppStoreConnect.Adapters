@@ -312,8 +312,23 @@ namespace DataCore.Adapter.Events {
         /// <param name="topics">
         ///   The topics that were added.
         /// </param>
-        protected virtual void OnTopicsAdded(IEnumerable<string> topics) {
-            _options.OnTopicSubscriptionsAdded?.Invoke(topics);
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the change.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="topics"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual Task OnTopicsAdded(IEnumerable<string> topics, CancellationToken cancellationToken) {
+            if (topics == null) {
+                throw new ArgumentNullException(nameof(topics));
+            }
+
+            return _options.OnTopicSubscriptionsAdded == null
+                ? Task.CompletedTask
+                : _options.OnTopicSubscriptionsAdded.Invoke(topics, cancellationToken);
         }
 
 
@@ -323,8 +338,23 @@ namespace DataCore.Adapter.Events {
         /// <param name="topics">
         ///   The topics that were removed.
         /// </param>
-        protected virtual void OnTopicsRemoved(IEnumerable<string> topics) {
-            _options.OnTopicSubscriptionsRemoved?.Invoke(topics);
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will process the change.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="topics"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual Task OnTopicsRemoved(IEnumerable<string> topics, CancellationToken cancellationToken) {
+            if (topics == null) {
+                throw new ArgumentNullException(nameof(topics));
+            }
+
+            return _options.OnTopicSubscriptionsRemoved == null
+                ? Task.CompletedTask
+                : _options.OnTopicSubscriptionsRemoved.Invoke(topics, cancellationToken);
         }
 
 
@@ -361,10 +391,10 @@ namespace DataCore.Adapter.Events {
 
                     try {
                         if (change.Added) {
-                            OnTopicsAdded(change.Topics);
+                            await OnTopicsAdded(change.Topics, cancellationToken).ConfigureAwait(false);
                         }
                         else {
-                            OnTopicsRemoved(change.Topics);
+                            await OnTopicsRemoved(change.Topics, cancellationToken).ConfigureAwait(false);
                         }
 
                         if (change.Processed != null) {
@@ -738,13 +768,13 @@ namespace DataCore.Adapter.Events {
         /// A delegate that is invoked when the number of subscribers for a topic changes from zero 
         /// to one.
         /// </summary>
-        public Action<IEnumerable<string>>? OnTopicSubscriptionsAdded { get; set; }
+        public Func<IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a topic changes from one 
         /// to zero.
         /// </summary>
-        public Action<IEnumerable<string>>? OnTopicSubscriptionsRemoved { get; set; }
+        public Func<IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsRemoved { get; set; }
 
         /// <summary>
         /// A delegate that is invoked to determine if the topic for a subscription matches the 

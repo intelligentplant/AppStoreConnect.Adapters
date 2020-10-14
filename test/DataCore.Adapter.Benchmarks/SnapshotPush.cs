@@ -67,10 +67,10 @@ namespace DataCore.Adapter.Benchmarks {
         }
 
 
-        protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
-            base.OnTagsAdded(tags);
+        protected override async Task OnTagsAdded(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
+            await base.OnTagsAdded(tags, cancellationToken).ConfigureAwait(false);
             foreach (var tag in tags) {
-                _subscriptionsAdded.Writer.TryWrite(tag);
+                await _subscriptionsAdded.Writer.WriteAsync(tag, cancellationToken).ConfigureAwait(false);
             }
         }
 
