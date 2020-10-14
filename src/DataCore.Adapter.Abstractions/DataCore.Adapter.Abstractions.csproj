@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="IntelligentPlant.BackgroundTasks" Version="$(IntelligentPlantBackgroundTasksVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Core\DataCore.Adapter.Core.csproj" />
   </ItemGroup>
 

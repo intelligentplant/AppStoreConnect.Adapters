@@ -5,7 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -215,28 +217,26 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override void OnTagsAdded(IEnumerable<TagIdentifier> tags) {
+        protected override async Task OnTagsAdded(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             if (tags == null) {
-                base.OnTagsAdded(tags!);
-                return;
+                throw new ArgumentNullException(nameof(tags));
             }
 
             lock (_subscribedTags) {
                 _subscribedTags.AddRange(tags);
             }
 
-            base.OnTagsAdded(tags);
+            await base.OnTagsAdded(tags, cancellationToken).ConfigureAwait(false);
 
-            // Immediately get the current value.
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RefreshValues(tags.Select(x => x.Id).ToArray(), ct), DisposedToken);
+            // Immediately get the current values.
+            await RefreshValues(tags.Select(x => x.Id).ToArray(), cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnTagsRemoved(IEnumerable<TagIdentifier> tags) {
+        protected override Task OnTagsRemoved(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             if (tags == null) {
-                base.OnTagsRemoved(tags!);
-                return;
+                throw new ArgumentNullException(nameof(tags));
             }
 
             lock (_subscribedTags) {
@@ -248,7 +248,7 @@ namespace DataCore.Adapter.RealTimeData {
                 }
             }
 
-            base.OnTagsRemoved(tags);
+            return base.OnTagsRemoved(tags, cancellationToken);
         }
 
 

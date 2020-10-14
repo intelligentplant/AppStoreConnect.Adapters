@@ -28,7 +28,7 @@ namespace DataCore.Adapter.Extensions {
     ///   <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> methods to deserialize input values 
     ///   from and serialize output values to JSON.
     /// </remarks>
-    public abstract partial class AdapterExtensionFeature : IAdapterExtensionFeature {
+    public abstract partial class AdapterExtensionFeature : IAdapterExtensionFeature, IBackgroundTaskServiceProvider {
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
         /// </summary>
-        protected IBackgroundTaskService BackgroundTaskService { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
