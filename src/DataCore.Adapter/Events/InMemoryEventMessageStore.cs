@@ -15,7 +15,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements an in-memory event message store that implements push, read, and write operations.
     /// </summary>
-    public sealed class InMemoryEventMessageStore : IEventMessagePush, IEventMessagePushWithTopics, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages, IDisposable {
+    public sealed class InMemoryEventMessageStore : IEventMessagePush, IEventMessagePushWithTopics, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages, IBackgroundTaskServiceProvider, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed;
@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use.
         /// </summary>
-        private readonly IBackgroundTaskService _backgroundTaskService;
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// <see cref="IEventMessagePush"/> handler.
@@ -98,7 +98,7 @@ namespace DataCore.Adapter.Events {
         ) {
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _disposedToken = _disposedTokenSource.Token;
-            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _push = new EventMessagePush(options, backgroundTaskService, Logger);
             _pushWithTopics = new EventMessagePushWithTopics(new EventMessagePushWithTopicsOptions() { 
                 AdapterId = options.AdapterId
@@ -260,7 +260,7 @@ namespace DataCore.Adapter.Events {
                 finally {
                     result.Writer.TryComplete();
                 }
-            }, _backgroundTaskService, cancellationToken);
+            }, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }

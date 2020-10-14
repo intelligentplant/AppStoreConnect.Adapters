@@ -18,7 +18,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Default <see cref="ISnapshotTagValuePush"/> implementation. 
     /// </summary>
-    public class SnapshotTagValuePush : ISnapshotTagValuePush, IFeatureHealthCheck, IDisposable {
+    public class SnapshotTagValuePush : ISnapshotTagValuePush, IFeatureHealthCheck, IBackgroundTaskServiceProvider, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -28,7 +28,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService BackgroundTaskService { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The logger.

@@ -21,12 +21,12 @@ namespace DataCore.Adapter.Events {
     ///   This implementation pushes ephemeral event messages to subscribers. To maintain an 
     ///   in-memory buffer of historical events, use <see cref="InMemoryEventMessageStore"/>.
     /// </remarks>
-    public class EventMessagePush : IEventMessagePush, IFeatureHealthCheck, IDisposable {
+    public class EventMessagePush : IEventMessagePush, IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService BackgroundTaskService { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// Logging.

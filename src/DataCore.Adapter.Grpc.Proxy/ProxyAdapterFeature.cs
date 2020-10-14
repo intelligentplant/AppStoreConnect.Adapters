@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
     ///   assembly for implementations of adapter features. This allows feature implementations to 
     ///   be dynamically instantiated based on what the remote adapter supports.
     /// </remarks>
-    public abstract class ProxyAdapterFeature {
+    public abstract class ProxyAdapterFeature : IBackgroundTaskServiceProvider {
 
         /// <summary>
         /// Maps from feature interface type to the implementation type used for that feature.
@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
-        protected IBackgroundTaskService BackgroundTaskService {
+        public IBackgroundTaskService BackgroundTaskService {
             get { return _proxy.BackgroundTaskService; }
         }
 

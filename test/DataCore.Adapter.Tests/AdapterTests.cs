@@ -716,7 +716,7 @@ namespace DataCore.Adapter.Tests {
         #region [ IWriteSnapshotTagValues / IWriteHistoricalTagValues ]
 
         [TestMethod]
-        public Task WriteSnapshotTagValuesShouldSucceed() {
+        public Task WriteSnapshotTagValuesViaChannelShouldSucceed() {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<IWriteSnapshotTagValues>();
                 if (feature == null) {
@@ -757,7 +757,44 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public Task WriteHistoricalTagValuesShouldSucceed() {
+        public Task WriteSnapshotTagValuesViaEnumerableShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteSnapshotTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteSnapshotTagValues>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteTagValueItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteTagValueItem() {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        TagId = TestContext.TestName,
+                        Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    });
+                }
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var writeResults = await feature.WriteSnapshotTagValues(context, values, CancellationToken);
+                
+                Assert.AreEqual(values.Count, writeResults.Count());
+
+                var index = 0;
+                foreach (var item in writeResults) {
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task WriteHistoricalTagValuesViaChannelShouldSucceed() {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<IWriteHistoricalTagValues>();
                 if (feature == null) {
@@ -796,12 +833,49 @@ namespace DataCore.Adapter.Tests {
             });
         }
 
-        #endregion
-
-        #region [ IWriteSnapshotTagValues / IWriteHistoricalTagValues ]
 
         [TestMethod]
-        public Task WriteEventMessagesShouldSucceed() {
+        public Task WriteHistoricalTagValuesViaEnumerableShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteHistoricalTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteHistoricalTagValues>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteTagValueItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteTagValueItem() {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        TagId = TestContext.TestName,
+                        Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    });
+                }
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var writeResults = await feature.WriteHistoricalTagValues(context, values, CancellationToken);
+
+                Assert.AreEqual(values.Count, writeResults.Count());
+
+                var index = 0;
+                foreach (var item in writeResults) {
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
+                }
+            });
+        }
+
+        #endregion
+
+        #region [ IWriteEventMessages ]
+
+        [TestMethod]
+        public Task WriteEventMessagesViaChannelShouldSucceed() {
             return RunAdapterTest(async (adapter, context) => {
                 var feature = adapter.Features.Get<IWriteEventMessages>();
                 if (feature == null) {
@@ -835,6 +909,42 @@ namespace DataCore.Adapter.Tests {
 
                         ++index;
                     }
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task WriteEventMessagesViaEnumerableShouldSucceed() {
+            return RunAdapterTest(async (adapter, context) => {
+                var feature = adapter.Features.Get<IWriteEventMessages>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteEventMessages>();
+                    return;
+                }
+
+                var now = DateTime.UtcNow;
+                var values = new List<WriteEventMessageItem>();
+                for (var i = 0; i < 5; i++) {
+                    values.Add(new WriteEventMessageItem() {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        EventMessage = EventMessageBuilder.Create().Build()
+                    });
+                }
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var writeResults = await feature.WriteEventMessages(context, values, CancellationToken);
+
+                Assert.AreEqual(values.Count, writeResults.Count());
+
+                var index = 0;
+                foreach (var item in writeResults) {
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
                 }
             });
         }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-
-using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Events {
     /// <summary>
@@ -24,15 +22,11 @@ namespace DataCore.Adapter.Events {
         /// <param name="events">
         ///   The event messages to write.
         /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> to register the operation with. Specify 
-        ///   <see langword="null"/> to use the default scheduler.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   An <see cref="IEnumerable{T}"/> that will contain a write result for each item read from 
         ///   the input <paramref name="events"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -41,7 +35,12 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="events"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(this IWriteEventMessages feature, IAdapterCallContext context, IEnumerable<WriteEventMessageItem> events, IBackgroundTaskService? backgroundTaskService = null, CancellationToken cancellationToken = default) {
+        public static async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessages(
+            this IWriteEventMessages feature, 
+            IAdapterCallContext context, 
+            IEnumerable<WriteEventMessageItem> events,
+            CancellationToken cancellationToken = default
+        ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -58,9 +57,18 @@ namespace DataCore.Adapter.Events {
 
                     ch.TryWrite(item);
                 }
-            }, true, backgroundTaskService, cancellationToken);
+            }, true, feature.BackgroundTaskService, cancellationToken);
 
-            return await feature.WriteEventMessages(context, channel, cancellationToken).ConfigureAwait(false);
+            var result = new List<WriteEventMessageResult>(events.Count());
+            var outChannel = await feature.WriteEventMessages(context, channel, cancellationToken).ConfigureAwait(false);
+
+            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (outChannel.TryRead(out var item)) {
+                    result.Add(item);
+                }
+            }
+
+            return result;
         }
 
     }

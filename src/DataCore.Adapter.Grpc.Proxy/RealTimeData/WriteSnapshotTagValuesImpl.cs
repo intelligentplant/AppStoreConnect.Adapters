@@ -40,6 +40,11 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }).ConfigureAwait(false);
 
+            // Flag is set to true when the input channel completes.
+            var complete = false;
+            // Tracks the number of responses that are pending from the gRPC server.
+            var pendingResponseCount = 0;
+
             // Stream subscription changes.
             channel.RunBackgroundOperation(async (ch, ct) => {
                 try {
@@ -52,13 +57,17 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
                                 Write = update.ToGrpcWriteTagValueItem()
                             }).ConfigureAwait(false);
+
+                            Interlocked.Increment(ref pendingResponseCount);
                         }
                     }
                 }
                 finally {
-                    if (!ct.IsCancellationRequested) {
-                        await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
-                    }
+                    // We do not call CompleteAsync on the gRPC request stream here, because doing 
+                    // so will also cause the response stream to complete, and we may still be 
+                    // waiting for pending write results. Instead, we will set a flag that the 
+                    // response stream task will monitor to determine if it needs to keep running.
+                    complete = true;
                 }
             }, BackgroundTaskService, cancellationToken);
 
@@ -66,13 +75,27 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var result = ChannelExtensions.CreateTagValueWriteResultChannel(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                // Read tag values.
-                while (await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                    if (grpcStream.ResponseStream.Current == null) {
-                        continue;
-                    }
+                try {
+                    // Read results as long as the request stream has not completed or we are 
+                    // still expecting results from the response stream.
+                    while (!complete || pendingResponseCount > 0) {
+                        if (!await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
+                            break;
+                        }
 
-                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult(), ct).ConfigureAwait(false);
+                        Interlocked.Decrement(ref pendingResponseCount);
+
+                        if (grpcStream.ResponseStream.Current == null) {
+                            continue;
+                        }
+                        await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult(), ct).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    if (!ct.IsCancellationRequested) {
+                        // Notify the gRPC server that no more request items are coming.
+                        await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    }
                 }
             }, true, BackgroundTaskService, cancellationToken);
 

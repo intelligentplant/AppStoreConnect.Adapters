@@ -9,7 +9,7 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Describes an App Store Connect adapter.
     /// </summary>
-    public interface IAdapter : IDisposable, IAsyncDisposable {
+    public interface IAdapter : IBackgroundTaskServiceProvider, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Gets the adapter descriptor.

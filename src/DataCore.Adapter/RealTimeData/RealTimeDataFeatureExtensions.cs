@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-
-using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData {
     /// <summary>
@@ -27,11 +25,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
-        /// </param>
         /// <returns>
-        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   An <see cref="IEnumerable{T}"/> that will contain a write result for each item read from 
         ///   the input <paramref name="values"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -40,11 +35,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(
+        public static async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotTagValues(
             this IWriteSnapshotTagValues feature, 
             IAdapterCallContext context, 
-            IEnumerable<WriteTagValueItem> values, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IEnumerable<WriteTagValueItem> values,
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
@@ -63,9 +57,18 @@ namespace DataCore.Adapter.RealTimeData {
 
                     ch.TryWrite(item);
                 }
-            }, true, backgroundTaskService, cancellationToken);
+            }, true, feature.BackgroundTaskService, cancellationToken);
 
-            return await feature.WriteSnapshotTagValues(context, channel, cancellationToken).ConfigureAwait(false);
+            var result = new List<WriteTagValueResult>(values.Count());
+            var outChannel = await feature.WriteSnapshotTagValues(context, channel, cancellationToken).ConfigureAwait(false);
+
+            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (outChannel.TryRead(out var item)) {
+                    result.Add(item);
+                }
+            }
+
+            return result;
         }
 
 
@@ -81,14 +84,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="values">
         ///   The event messages to write.
         /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
+        ///   An <see cref="IEnumerable{T}"/> that will contain a write result for each item read from 
         ///   the input <paramref name="values"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -97,11 +97,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(
+        public static async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalTagValues(
             this IWriteHistoricalTagValues feature, 
             IAdapterCallContext context, 
-            IEnumerable<WriteTagValueItem> values, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IEnumerable<WriteTagValueItem> values,
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
@@ -120,9 +119,18 @@ namespace DataCore.Adapter.RealTimeData {
 
                     ch.TryWrite(item);
                 }
-            }, true, backgroundTaskService, cancellationToken);
+            }, true, feature.BackgroundTaskService, cancellationToken);
 
-            return await feature.WriteHistoricalTagValues(context, channel, cancellationToken).ConfigureAwait(false);
+            var result = new List<WriteTagValueResult>(values.Count());
+            var outChannel = await feature.WriteHistoricalTagValues(context, channel, cancellationToken).ConfigureAwait(false);
+
+            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (outChannel.TryRead(out var item)) {
+                    result.Add(item);
+                }
+            }
+
+            return result;
         }
 
     }
