@@ -124,7 +124,7 @@ App Store Connect can authenticate with adapter hosts via bearer token, client c
 
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given Industrial App Store user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
-To implementat authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
+To implement authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
 
 ```csharp
 services
