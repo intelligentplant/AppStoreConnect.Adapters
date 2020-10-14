@@ -85,6 +85,9 @@ namespace DataCore.Adapter.Tests {
 
         private class FeatureProvider : IReadSnapshotTagValues, IReadEventMessagesForTimeRange {
 
+            public IBackgroundTaskService BackgroundTaskService => IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+
+
             Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }

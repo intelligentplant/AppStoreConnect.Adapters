@@ -19,7 +19,7 @@ namespace DataCore.Adapter.RealTimeData {
     ///   calculation or aggregation. Native implementations of the data queries will almost always 
     ///   perform better, and should be used if available.
     /// </remarks>
-    public class ReadHistoricalTagValues : IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes {
+    public class ReadHistoricalTagValues : IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes, IBackgroundTaskServiceProvider {
 
         /// <summary>
         /// The tag info provider.
@@ -31,10 +31,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private readonly IReadRawTagValues _rawValuesProvider;
 
-        /// <summary>
-        /// For running background operations.
-        /// </summary>
-        private readonly IBackgroundTaskService _backgroundTaskService;
+        /// <inheritdoc/>
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// Provides aggregation support.
@@ -66,7 +64,7 @@ namespace DataCore.Adapter.RealTimeData {
         public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService? backgroundTaskService) {
             _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
-            _backgroundTaskService = backgroundTaskService ?? BackgroundTaskService.Default;
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
         }
 
 
@@ -86,33 +84,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="adapter"/> does not meet the requirements specified by 
         ///   <see cref="IsCompatible"/>.
         /// </exception>
-        public static ReadHistoricalTagValues ForAdapter(AdapterBase adapter) {
-            return ForAdapter(adapter, adapter?.BackgroundTaskService);
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="ReadHistoricalTagValues"/> object for the specified adapter.
-        /// </summary>
-        /// <param name="adapter">
-        ///   The adapter.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. If the 
-        ///   value specified is <see langword="null"/>, <see cref="BackgroundTaskService.Default"/> 
-        ///   will be used.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="ReadHistoricalTagValues"/> object.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapter"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapter"/> does not meet the requirements specified by 
-        ///   <see cref="IsCompatible"/>.
-        /// </exception>
-        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter, IBackgroundTaskService? backgroundTaskService = null) {
+        public static ReadHistoricalTagValues ForAdapter(IAdapter adapter) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -124,7 +96,7 @@ namespace DataCore.Adapter.RealTimeData {
             return new ReadHistoricalTagValues(
                 adapter.Features.Get<ITagInfo>(), 
                 adapter.Features.Get<IReadRawTagValues>(), 
-                backgroundTaskService
+                adapter.BackgroundTaskService
             );
         }
 
@@ -185,7 +157,7 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct).ConfigureAwait(false);
 
-                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, _backgroundTaskService, ct);
+                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, BackgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -197,7 +169,7 @@ namespace DataCore.Adapter.RealTimeData {
 
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }
@@ -296,7 +268,7 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct).ConfigureAwait(false);
 
-                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, _backgroundTaskService, ct);
+                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, BackgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -307,7 +279,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<ProcessedTagValueQueryResult>>(result);
         }
@@ -362,9 +334,9 @@ namespace DataCore.Adapter.RealTimeData {
                                 ch2.TryWrite(val);
                             }
                         }
-                    }, true, _backgroundTaskService, ct);
+                    }, true, BackgroundTaskService, ct);
 
-                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, _backgroundTaskService, ct);
+                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, BackgroundTaskService, ct);
                     while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
                         if (!resultValuesReader.TryRead(out var val) || val == null) {
                             continue;
@@ -375,7 +347,7 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
         }

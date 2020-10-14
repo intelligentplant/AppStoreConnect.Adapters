@@ -41,7 +41,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return result;
         }
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return result;
         }

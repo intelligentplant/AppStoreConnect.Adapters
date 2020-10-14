@@ -15,6 +15,8 @@ using IntelligentPlant.BackgroundTasks;
 namespace DataCore.Adapter.Tests {
     public class ExampleAdapter : IAdapter, ITagInfo, IReadSnapshotTagValues {
 
+        public IBackgroundTaskService BackgroundTaskService => IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+
         public AdapterDescriptor Descriptor { get; }
 
         public IAdapterFeaturesCollection Features { get; }
@@ -37,7 +39,7 @@ namespace DataCore.Adapter.Tests {
             _eventSubscriptionManager = new EventSubscriptionManager();
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
             features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
-            features.AddFromProvider(new PingPongExtension(BackgroundTaskService.Default));
+            features.AddFromProvider(new PingPongExtension(BackgroundTaskService));
             Features = features;
         }
 

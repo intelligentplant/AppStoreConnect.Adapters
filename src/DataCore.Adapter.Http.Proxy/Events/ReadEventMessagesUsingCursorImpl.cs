@@ -37,7 +37,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
                         ch.TryWrite(item);
                     }
                 }
-            }, true, TaskScheduler, cancellationToken);
+            }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }

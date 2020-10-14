@@ -8,12 +8,18 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 
+using IntelligentPlant.BackgroundTasks;
+
 namespace DataCore.Adapter.Tests {
     public class NullValueWrite : 
         IWriteSnapshotTagValues, 
         IWriteHistoricalTagValues
         //IWriteEventMessages 
     {
+
+        public IBackgroundTaskService BackgroundTaskService => IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+
+
         public Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var result = ChannelExtensions.CreateTagValueWriteResultChannel();
 

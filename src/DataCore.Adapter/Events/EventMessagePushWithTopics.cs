@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements <see cref="IEventMessagePushWithTopics"/>.
     /// </summary>
-    public class EventMessagePushWithTopics : IEventMessagePushWithTopics, IFeatureHealthCheck, IDisposable {
+    public class EventMessagePushWithTopics : IEventMessagePushWithTopics, IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
         /// The <see cref="EventMessage"/> property name that contains the event's topic name.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        protected IBackgroundTaskService BackgroundTaskService { get; }
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The logger.
