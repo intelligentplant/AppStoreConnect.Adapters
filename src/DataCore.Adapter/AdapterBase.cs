@@ -728,7 +728,7 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
             CheckDisposed();
-            if (!IsStarting && !IsStarting) {
+            if (!IsStarting && !IsRunning) {
                 return;
             }
 
