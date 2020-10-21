@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Tests {
                     svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
                 })
                 .AddAdapter(sp => {
-                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
+                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, WebHostConfiguration.AdapterId, new Csv.CsvAdapterOptions() {
                         Name = "Sensor CSV",
                         Description = "CSV adapter with dummy sensor data",
                         IsDataLoopingAllowed = true,

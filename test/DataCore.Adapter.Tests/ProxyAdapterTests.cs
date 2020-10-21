@@ -117,6 +117,7 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest((proxy, context) => {
                 Assert.IsNotNull(proxy.RemoteHostInfo);
                 Assert.IsNotNull(proxy.RemoteDescriptor);
+                Assert.IsNotNull(proxy.RemoteDescriptor.TypeDescriptor);
 
                 return Task.CompletedTask;
             });

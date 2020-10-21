@@ -221,7 +221,14 @@ namespace DataCore.Adapter.Tests {
                 },
                 new [] {
                     new AdapterProperty("Property1", new Variant(100, VariantType.Int32))
-                }
+                },
+                new AdapterTypeDescriptor(
+                    new Uri("asc:unit-tests/json-tests/" + TestContext.TestName), 
+                    TestContext.TestName, 
+                    TestContext.TestName, 
+                    "1.0.0",
+                    new VendorInfo("", "")
+                )
             );
 
             var json = JsonSerializer.Serialize(expected, options);
@@ -253,6 +260,14 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
             }
+
+            Assert.IsNotNull(actual.TypeDescriptor);
+            Assert.AreEqual(expected.TypeDescriptor.Uri, actual.TypeDescriptor.Uri);
+            Assert.AreEqual(expected.TypeDescriptor.Name, actual.TypeDescriptor.Name);
+            Assert.AreEqual(expected.TypeDescriptor.Description, actual.TypeDescriptor.Description);
+            Assert.IsNotNull(expected.TypeDescriptor.Vendor);
+            Assert.AreEqual(expected.TypeDescriptor.Vendor.Name, actual.TypeDescriptor.Vendor.Name);
+            Assert.AreEqual(expected.TypeDescriptor.Vendor.Url, actual.TypeDescriptor.Vendor.Url);
         }
 
 

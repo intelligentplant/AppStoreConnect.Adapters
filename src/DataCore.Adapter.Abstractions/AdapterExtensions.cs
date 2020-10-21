@@ -510,6 +510,32 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Creates an <see cref="AdapterTypeDescriptor"/> for the <see cref="IAdapter"/>.
+        /// </summary>
+        /// <returns>
+        ///   The <see cref="AdapterTypeDescriptor"/> for the adapter.
+        /// </returns>
+        public static AdapterTypeDescriptor CreateTypeDescriptor(this IAdapter adapter) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+
+            var type = adapter.GetType();
+            var adapterAttribute = type.GetCustomAttribute<AdapterMetadataAttribute>();
+            var vendorAttribute = type.GetCustomAttribute<VendorInfoAttribute>() ?? type.Assembly.GetCustomAttribute<VendorInfoAttribute>();
+
+            var uri = adapterAttribute?.Uri ?? new Uri(string.Concat("asc:adapter-type/", type.FullName, "/"));
+            return new AdapterTypeDescriptor(
+                uri, 
+                adapterAttribute?.GetName(), 
+                adapterAttribute?.GetDescription(), 
+                type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? type.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? type.Assembly.GetName().Version?.ToString(),
+                vendorAttribute?.CreateVendorInfo()
+            );
+        }
+
+
+        /// <summary>
         /// Creates an <see cref="AdapterDescriptorExtended"/> for the <see cref="IAdapter"/>.
         /// </summary>
         /// <param name="adapter">
@@ -544,7 +570,8 @@ namespace DataCore.Adapter {
                 adapter.Descriptor.Description,
                 standardFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
                 extensionFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
-                adapter.Properties
+                adapter.Properties,
+                adapter.TypeDescriptor
             );
         }
 

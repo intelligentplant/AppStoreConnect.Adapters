@@ -11,6 +11,11 @@ namespace DataCore.Adapter.Common {
     public class AdapterDescriptorExtended : AdapterDescriptor {
 
         /// <summary>
+        /// The adapter type descriptor.
+        /// </summary>
+        public AdapterTypeDescriptor? TypeDescriptor { get; }
+
+        /// <summary>
         /// The names of the implemented standard adapter features.
         /// </summary>
         public IEnumerable<string> Features { get; }
@@ -49,6 +54,9 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional adapter properties.
         /// </param>
+        /// <param name="typeDescriptor">
+        ///   The adapter type descriptor.
+        /// </param>
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
         /// </exception>
@@ -61,11 +69,14 @@ namespace DataCore.Adapter.Common {
             string? description, 
             IEnumerable<string>? features, 
             IEnumerable<string>? extensions, 
-            IEnumerable<AdapterProperty>? properties
+            IEnumerable<AdapterProperty>? properties,
+            AdapterTypeDescriptor? typeDescriptor
         ) : base(id, name, description) {
+            
             Features = features?.ToArray() ?? Array.Empty<string>();
             Extensions = extensions?.ToArray() ?? Array.Empty<string>();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
+            TypeDescriptor = typeDescriptor;
         }
 
 
@@ -92,14 +103,17 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional adapter properties.
         /// </param>
+        /// <param name="typeDescriptor">
+        ///   The adapter type descriptor.
+        /// </param>
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
-        public static AdapterDescriptorExtended Create(string id, string name, string? description, IEnumerable<string>? features, IEnumerable<string>? extensions, IEnumerable<AdapterProperty>? properties) {
-            return new AdapterDescriptorExtended(id, name, description, features, extensions, properties);
+        public static AdapterDescriptorExtended Create(string id, string name, string? description, IEnumerable<string>? features, IEnumerable<string>? extensions, IEnumerable<AdapterProperty>? properties, AdapterTypeDescriptor? typeDescriptor) {
+            return new AdapterDescriptorExtended(id, name, description, features, extensions, properties, typeDescriptor);
         }
 
     }

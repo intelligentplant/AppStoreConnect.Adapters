@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AdapterMetadata_Description" xml:space="preserve">
+    <value>Adapter that uses a looping CSV file as its source data.</value>
+  </data>
+  <data name="AdapterMetadata_DisplayName" xml:space="preserve">
+    <value>CSV</value>
+  </data>
   <data name="Error_NoCsvFileDefined" xml:space="preserve">
     <value>No CSV file was specified. Check that the {0} or {1} property is defined correctly in the adapter options.</value>
     <comment>{0} - CsvFile property name

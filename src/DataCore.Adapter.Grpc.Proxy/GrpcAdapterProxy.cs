@@ -21,6 +21,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
     /// <summary>
     /// Adapter proxy that communicates with a remote adapter via gRPC.
     /// </summary>
+    [AdapterMetadata(
+        "https://www.intelligentplant.com/app-store-connect/adapters/proxies/grpc",
+        ResourceType = typeof(Resources),
+        Name = nameof(Resources.AdapterMetadata_DisplayName),
+        Description = nameof(Resources.AdapterMetadata_Description)
+    )]
     public class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>

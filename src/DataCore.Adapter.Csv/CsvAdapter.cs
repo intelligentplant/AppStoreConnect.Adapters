@@ -9,10 +9,13 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using CsvHelper;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
+
+
 
 namespace DataCore.Adapter.Csv {
 
@@ -20,6 +23,12 @@ namespace DataCore.Adapter.Csv {
     /// App Store Connect adapter that uses a looping CSV file as its source data.
     /// </summary>
     /// <seealso cref="CsvAdapterOptions"/>
+    [AdapterMetadata(
+        "https://www.intelligentplant.com/app-store-connect/adapters/csv",
+        ResourceType = typeof(Resources),
+        Name = nameof(Resources.AdapterMetadata_DisplayName),
+        Description = nameof(Resources.AdapterMetadata_Description)
+    )]
     public class CsvAdapter : AdapterBase<CsvAdapterOptions>, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
 
         /// <summary>

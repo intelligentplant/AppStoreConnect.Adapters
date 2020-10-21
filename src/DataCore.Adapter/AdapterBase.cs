@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
@@ -117,7 +118,6 @@ namespace DataCore.Adapter {
         /// </summary>
         private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
 
-
         /// <inheritdoc/>
         public AdapterDescriptor Descriptor {
             get {
@@ -127,6 +127,9 @@ namespace DataCore.Adapter {
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public AdapterTypeDescriptor TypeDescriptor { get; }
 
         /// <inheritdoc/>
         public IAdapterFeaturesCollection Features {
@@ -215,6 +218,7 @@ namespace DataCore.Adapter {
 
             StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
+            TypeDescriptor = this.CreateTypeDescriptor();
             BackgroundTaskService = new BackgroundTaskServiceWrapper(this, backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);

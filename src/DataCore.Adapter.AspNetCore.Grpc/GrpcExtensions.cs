@@ -677,6 +677,60 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Converts a gRPC adapter type descriptor to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor
+        /// </returns>
+        public static Common.AdapterTypeDescriptor? ToAdapterTypeDescriptor(this Grpc.AdapterTypeDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            if (string.IsNullOrWhiteSpace(descriptor.Uri)) {
+                return null;
+            }
+
+            return new AdapterTypeDescriptor(
+                new Uri(descriptor.Uri, UriKind.Absolute),
+                descriptor.Name,
+                descriptor.Description,
+                descriptor.Version,
+                descriptor.VendorInfo?.ToAdapterVendorInfo()
+            );
+        }
+
+
+        /// <summary>
+        /// Converts an adapter type descriptor to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor.
+        /// </param>
+        /// <returns>
+        ///   The converted descriptor
+        /// </returns>
+        public static Grpc.AdapterTypeDescriptor ToGrpcAdapterTypeDescriptor(this Common.AdapterTypeDescriptor? descriptor) {
+            if (descriptor == null) {
+                return new Grpc.AdapterTypeDescriptor();
+            }
+
+            return new Grpc.AdapterTypeDescriptor() { 
+                Uri = descriptor.Uri.ToString(),
+                Name = descriptor.Name ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty,
+                Version = descriptor.Version ?? string.Empty,
+                VendorInfo = descriptor.Vendor == null
+                    ? new Grpc.VendorInfo() { Name = string.Empty, Url = string.Empty }
+                    : descriptor.Vendor.ToGrpcVendorInfo()
+            };
+        }
+
+
+        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="descriptor">
@@ -696,7 +750,8 @@ namespace DataCore.Adapter {
                 descriptor.AdapterDescriptor?.Description,
                 descriptor.Features,
                 descriptor.Extensions,
-                descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray()
+                descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
+                descriptor.TypeDescriptor.ToAdapterTypeDescriptor()
             );
         }
 
@@ -716,7 +771,8 @@ namespace DataCore.Adapter {
             }
 
             var result = new Grpc.ExtendedAdapterDescriptor() { 
-                AdapterDescriptor = ToGrpcAdapterDescriptor(descriptor)
+                AdapterDescriptor = ToGrpcAdapterDescriptor(descriptor),
+                TypeDescriptor = descriptor.TypeDescriptor.ToGrpcAdapterTypeDescriptor()
             };
 
             if (descriptor.Features != null) {

@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace DataCore.Adapter.Http.Proxy {
 
     /// <summary>
-    /// Adapter proxy that communicates with a remote adapter via SignalR.
+    /// Adapter proxy that communicates with a remote adapter via HTTP.
     /// </summary>
     /// <remarks>
     ///   In order to apply per-call authorization to adapter calls, use the 
@@ -26,6 +26,12 @@ namespace DataCore.Adapter.Http.Proxy {
     ///   <see cref="IAdapterCallContext.User"/> property from the adapter call to the delegating 
     ///   handler prior to sending each HTTP request.
     /// </remarks>
+    [AdapterMetadata(
+        "https://www.intelligentplant.com/app-store-connect/adapters/proxies/http",
+        ResourceType = typeof(Resources),
+        Name = nameof(Resources.AdapterMetadata_DisplayName),
+        Description = nameof(Resources.AdapterMetadata_Description)
+    )]
     public class HttpAdapterProxy : AdapterBase<HttpAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
