@@ -17,6 +17,11 @@ namespace DataCore.Adapter {
         AdapterDescriptor Descriptor { get; }
 
         /// <summary>
+        /// Gets the adapter type descriptor.
+        /// </summary>
+        AdapterTypeDescriptor TypeDescriptor { get; }
+
+        /// <summary>
         /// Gets the feature collection for the adapter.
         /// </summary>
         IAdapterFeaturesCollection Features { get; }

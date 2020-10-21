@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proxy that communicates with a remote adapter via ASP.NET Core SignalR..
+        /// </summary>
+        public static string AdapterMetadata_Description {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SignalR Proxy.
+        /// </summary>
+        public static string AdapterMetadata_DisplayName {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapter ID is required..
         /// </summary>
-        internal static string Error_AdapterIdIsRequired {
+        public static string Error_AdapterIdIsRequired {
             get {
                 return ResourceManager.GetString("Error_AdapterIdIsRequired", resourceCulture);
             }
@@ -72,7 +90,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Connection factory is required..
         /// </summary>
-        internal static string Error_ConnectionFactoryIsRequired {
+        public static string Error_ConnectionFactoryIsRequired {
             get {
                 return ResourceManager.GetString("Error_ConnectionFactoryIsRequired", resourceCulture);
             }
@@ -81,7 +99,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to SignalR Connection.
         /// </summary>
-        internal static string HealthCheck_DisplayName_Connection {
+        public static string HealthCheck_DisplayName_Connection {
             get {
                 return ResourceManager.GetString("HealthCheck_DisplayName_Connection", resourceCulture);
             }
@@ -90,7 +108,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Remote Adapter Health.
         /// </summary>
-        internal static string HealthCheck_DisplayName_RemoteAdapter {
+        public static string HealthCheck_DisplayName_RemoteAdapter {
             get {
                 return ResourceManager.GetString("HealthCheck_DisplayName_RemoteAdapter", resourceCulture);
             }
@@ -99,7 +117,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to SignalR hub connection status is {0}..
         /// </summary>
-        internal static string HealthCheck_ExtensionHubConnectionStatusDescription {
+        public static string HealthCheck_ExtensionHubConnectionStatusDescription {
             get {
                 return ResourceManager.GetString("HealthCheck_ExtensionHubConnectionStatusDescription", resourceCulture);
             }
@@ -108,7 +126,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to SignalR hub connection status is {0}. See inner results for remote adapter health..
         /// </summary>
-        internal static string HealthCheck_HubConnectionStatusDescription {
+        public static string HealthCheck_HubConnectionStatusDescription {
             get {
                 return ResourceManager.GetString("HealthCheck_HubConnectionStatusDescription", resourceCulture);
             }
@@ -117,7 +135,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to SignalR hub connection status is {0}..
         /// </summary>
-        internal static string HealthCheck_HubConnectionStatusDescriptionNoInnerResults {
+        public static string HealthCheck_HubConnectionStatusDescriptionNoInnerResults {
             get {
                 return ResourceManager.GetString("HealthCheck_HubConnectionStatusDescriptionNoInnerResults", resourceCulture);
             }
@@ -126,7 +144,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to The remote adapter does not implement health checks..
         /// </summary>
-        internal static string HealthCheck_RemoteAdapterHealthNotSupported {
+        public static string HealthCheck_RemoteAdapterHealthNotSupported {
             get {
                 return ResourceManager.GetString("HealthCheck_RemoteAdapterHealthNotSupported", resourceCulture);
             }
@@ -135,7 +153,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Unknown.
         /// </summary>
-        internal static string HealthCheck_UnknownConnectionState {
+        public static string HealthCheck_UnknownConnectionState {
             get {
                 return ResourceManager.GetString("HealthCheck_UnknownConnectionState", resourceCulture);
             }
@@ -144,7 +162,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to SignalR Connection ({0}).
         /// </summary>
-        internal static string HeathCheck_DisplayName_ExtensionConnection {
+        public static string HeathCheck_DisplayName_ExtensionConnection {
             get {
                 return ResourceManager.GetString("HeathCheck_DisplayName_ExtensionConnection", resourceCulture);
             }
@@ -153,7 +171,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while running events subscription..
         /// </summary>
-        internal static string Log_EventsSubscriptionError {
+        public static string Log_EventsSubscriptionError {
             get {
                 return ResourceManager.GetString("Log_EventsSubscriptionError", resourceCulture);
             }
@@ -162,7 +180,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
-        internal static string Log_ExtensionFeatureRegistrationError {
+        public static string Log_ExtensionFeatureRegistrationError {
             get {
                 return ResourceManager.GetString("Log_ExtensionFeatureRegistrationError", resourceCulture);
             }
@@ -171,7 +189,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
         /// </summary>
-        internal static string Log_NoExtensionImplementationAvailable {
+        public static string Log_NoExtensionImplementationAvailable {
             get {
                 return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
             }
@@ -180,7 +198,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while running snapshot tag value subscription..
         /// </summary>
-        internal static string Log_SnapshotTagValueSubscriptionError {
+        public static string Log_SnapshotTagValueSubscriptionError {
             get {
                 return ResourceManager.GetString("Log_SnapshotTagValueSubscriptionError", resourceCulture);
             }
@@ -189,7 +207,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to An error occurred while disposing subscriptions..
         /// </summary>
-        internal static string Log_SubscriptionDisposeError {
+        public static string Log_SubscriptionDisposeError {
             get {
                 return ResourceManager.GetString("Log_SubscriptionDisposeError", resourceCulture);
             }

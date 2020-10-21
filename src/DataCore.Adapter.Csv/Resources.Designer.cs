@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Csv {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Csv {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Csv.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace DataCore.Adapter.Csv {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,27 @@ namespace DataCore.Adapter.Csv {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adapter that uses a looping CSV file as its source data..
+        /// </summary>
+        public static string AdapterMetadata_Description {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CSV.
+        /// </summary>
+        public static string AdapterMetadata_DisplayName {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No CSV file was specified. Check that the {0} or {1} property is defined correctly in the adapter options..
         /// </summary>
-        internal static string Error_NoCsvFileDefined {
+        public static string Error_NoCsvFileDefined {
             get {
                 return ResourceManager.GetString("Error_NoCsvFileDefined", resourceCulture);
             }
@@ -72,7 +90,7 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         ///   Looks up a localized string similar to A snapshot polling error occurred..
         /// </summary>
-        internal static string Log_SnapshotPollingError {
+        public static string Log_SnapshotPollingError {
             get {
                 return ResourceManager.GetString("Log_SnapshotPollingError", resourceCulture);
             }

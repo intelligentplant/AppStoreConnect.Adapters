@@ -24,9 +24,13 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\VendorInfo.cs" Link="VendorInfo.cs" />
   </ItemGroup>
 
 </Project>

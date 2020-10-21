@@ -79,16 +79,26 @@ message VendorInfo {
 
 // Adapter models
 
+message AdapterTypeDescriptor {
+    string uri = 1;
+    string name = 2;
+    string description = 3;
+    string version = 4;
+    VendorInfo vendor_info = 5;
+}
+
 message AdapterDescriptor {
     string id = 1;
     string name = 2;
     string description = 3;
 }
+
 message ExtendedAdapterDescriptor {
     AdapterDescriptor adapterDescriptor = 1;
     repeated string features = 2;
     repeated string extensions = 3;
     repeated AdapterProperty properties = 4;
+    AdapterTypeDescriptor type_descriptor = 5;
 }
 
 enum HealthStatus {

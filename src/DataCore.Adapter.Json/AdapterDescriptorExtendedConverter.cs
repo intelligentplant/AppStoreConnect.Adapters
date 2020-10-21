@@ -21,6 +21,7 @@ namespace DataCore.Adapter.Json {
             string[] features = null!;
             string[] extensions = null!;
             AdapterProperty[] properties = null!;
+            AdapterTypeDescriptor typeDescriptor = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -50,12 +51,15 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Properties), StringComparison.OrdinalIgnoreCase)) {
                     properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.TypeDescriptor), StringComparison.OrdinalIgnoreCase)) {
+                    typeDescriptor = JsonSerializer.Deserialize<AdapterTypeDescriptor>(ref reader, options);
+                }
                 else {
                     reader.Skip();
                 }
             }
 
-            return AdapterDescriptorExtended.Create(id, name, description, features, extensions, properties);
+            return AdapterDescriptorExtended.Create(id, name, description, features, extensions, properties, typeDescriptor);
         }
 
 
@@ -74,6 +78,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(AdapterDescriptorExtended.Features), value.Features, options);
             WritePropertyValue(writer, nameof(AdapterDescriptorExtended.Extensions), value.Extensions, options);
             WritePropertyValue(writer, nameof(AdapterDescriptorExtended.Properties), value.Properties, options);
+            WritePropertyValue(writer, nameof(AdapterDescriptorExtended.TypeDescriptor), value.TypeDescriptor, options);
 
             writer.WriteEndObject();
         }

@@ -19,6 +19,8 @@ namespace DataCore.Adapter.Tests {
 
         public AdapterDescriptor Descriptor { get; }
 
+        public AdapterTypeDescriptor TypeDescriptor { get; }
+
         public IAdapterFeaturesCollection Features { get; }
 
         public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
@@ -34,6 +36,7 @@ namespace DataCore.Adapter.Tests {
 
         public ExampleAdapter() {
             Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
+            TypeDescriptor = this.CreateTypeDescriptor();
             var features = new AdapterFeaturesCollection(this);
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();

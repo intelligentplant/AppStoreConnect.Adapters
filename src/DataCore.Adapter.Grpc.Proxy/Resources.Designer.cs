@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DataCore.Adapter.Grpc.Proxy.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,27 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proxy that communicates with a remote adapter via gRPC..
+        /// </summary>
+        public static string AdapterMetadata_Description {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gRPC Proxy.
+        /// </summary>
+        public static string AdapterMetadata_DisplayName {
+            get {
+                return ResourceManager.GetString("AdapterMetadata_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapter ID is required..
         /// </summary>
-        internal static string Error_AdapterIdIsRequired {
+        public static string Error_AdapterIdIsRequired {
             get {
                 return ResourceManager.GetString("Error_AdapterIdIsRequired", resourceCulture);
             }
@@ -72,7 +90,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to gRPC channel state is {0}. See inner results for remote adapter health..
         /// </summary>
-        internal static string HealthCheck_ChannelStateDescription {
+        public static string HealthCheck_ChannelStateDescription {
             get {
                 return ResourceManager.GetString("HealthCheck_ChannelStateDescription", resourceCulture);
             }
@@ -81,7 +99,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to gRPC channel state is {0}..
         /// </summary>
-        internal static string HealthCheck_ChannelStateDescriptionNoInnerResults {
+        public static string HealthCheck_ChannelStateDescriptionNoInnerResults {
             get {
                 return ResourceManager.GetString("HealthCheck_ChannelStateDescriptionNoInnerResults", resourceCulture);
             }
@@ -90,7 +108,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to gRPC Connection.
         /// </summary>
-        internal static string HealthCheck_DisplayName_Connection {
+        public static string HealthCheck_DisplayName_Connection {
             get {
                 return ResourceManager.GetString("HealthCheck_DisplayName_Connection", resourceCulture);
             }
@@ -99,7 +117,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Remote Adapter Health.
         /// </summary>
-        internal static string HealthCheck_DisplayName_RemoteAdapter {
+        public static string HealthCheck_DisplayName_RemoteAdapter {
             get {
                 return ResourceManager.GetString("HealthCheck_DisplayName_RemoteAdapter", resourceCulture);
             }
@@ -108,7 +126,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to See inner results for remote adapter health..
         /// </summary>
-        internal static string HealthCheck_GrpcNetClientDescription {
+        public static string HealthCheck_GrpcNetClientDescription {
             get {
                 return ResourceManager.GetString("HealthCheck_GrpcNetClientDescription", resourceCulture);
             }
@@ -117,7 +135,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to The remote adapter does not implement health checks..
         /// </summary>
-        internal static string HealthCheck_RemoteAdapterHealthNotSupported {
+        public static string HealthCheck_RemoteAdapterHealthNotSupported {
             get {
                 return ResourceManager.GetString("HealthCheck_RemoteAdapterHealthNotSupported", resourceCulture);
             }
@@ -126,7 +144,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while shutting down gRPC channel..
         /// </summary>
-        internal static string Log_ChannelShutdownError {
+        public static string Log_ChannelShutdownError {
             get {
                 return ResourceManager.GetString("Log_ChannelShutdownError", resourceCulture);
             }
@@ -135,7 +153,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while calling the heartbeat endpoint..
         /// </summary>
-        internal static string Log_ErrorDuringHeartbeatInvocation {
+        public static string Log_ErrorDuringHeartbeatInvocation {
             get {
                 return ResourceManager.GetString("Log_ErrorDuringHeartbeatInvocation", resourceCulture);
             }
@@ -144,7 +162,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to Error while registering an extension feature implementation: {0}.
         /// </summary>
-        internal static string Log_ExtensionFeatureRegistrationError {
+        public static string Log_ExtensionFeatureRegistrationError {
             get {
                 return ResourceManager.GetString("Log_ExtensionFeatureRegistrationError", resourceCulture);
             }
@@ -153,7 +171,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to No implementation available for extension feature: {0}.
         /// </summary>
-        internal static string Log_NoExtensionImplementationAvailable {
+        public static string Log_NoExtensionImplementationAvailable {
             get {
                 return ResourceManager.GetString("Log_NoExtensionImplementationAvailable", resourceCulture);
             }
@@ -162,7 +180,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         ///   Looks up a localized string similar to An error occurred while disposing subscriptions..
         /// </summary>
-        internal static string Log_SubscriptionDisposeError {
+        public static string Log_SubscriptionDisposeError {
             get {
                 return ResourceManager.GetString("Log_SubscriptionDisposeError", resourceCulture);
             }

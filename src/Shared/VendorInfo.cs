@@ -1,0 +1,1 @@
+[assembly: DataCore.Adapter.VendorInfo("Intelligent Plant", "https://www.intelligentplant.com")]

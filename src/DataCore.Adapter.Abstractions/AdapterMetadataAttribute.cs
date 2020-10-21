@@ -4,11 +4,11 @@ using System.ComponentModel.DataAnnotations;
 namespace DataCore.Adapter {
 
     /// <summary>
-    /// <see cref="AdapterAttribute"/> is used to annotate concrete implementations of <see cref="IAdapter"/> 
-    /// to provide metadata about an adapter.
+    /// <see cref="AdapterMetadataAttribute"/> is used to annotate concrete implementations of <see cref="IAdapter"/> 
+    /// to provide metadata about an adapter type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class AdapterAttribute : Attribute {
+    public class AdapterMetadataAttribute : Attribute {
 
         /// <summary>
         /// The localised display name.
@@ -80,7 +80,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not a valid URI.
         /// </exception>
-        public AdapterAttribute(string uriString) {
+        public AdapterMetadataAttribute(string uriString) {
             if (uriString == null) {
                 throw new ArgumentNullException(nameof(uriString));
             }
