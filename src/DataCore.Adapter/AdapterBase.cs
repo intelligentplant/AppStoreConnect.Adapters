@@ -728,7 +728,9 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
             CheckDisposed();
-            CheckStarted();
+            if (!IsStarting && !IsRunning) {
+                return;
+            }
 
             var descriptorId = Descriptor.Id;
 
