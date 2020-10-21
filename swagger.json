@@ -1951,6 +1951,15 @@
             "description": "An extended descriptor for an adapter, that includes information about the features that the \nadapter has implemented.",
             "additionalProperties": false,
             "properties": {
+              "typeDescriptor": {
+                "description": "The adapter type descriptor.",
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AdapterTypeDescriptor"
+                  }
+                ]
+              },
               "features": {
                 "type": "array",
                 "description": "The names of the implemented standard adapter features.",
@@ -1975,6 +1984,59 @@
             }
           }
         ]
+      },
+      "AdapterTypeDescriptor": {
+        "type": "object",
+        "description": "Describes an adapter type.",
+        "additionalProperties": false,
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "The URI for the adapter type.",
+            "format": "uri"
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name for the adapter type.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description for the adapter type.",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The adapter type version number, expressed as a Semantic Versioning v2 version.",
+            "nullable": true
+          },
+          "vendor": {
+            "description": "The vendor information for the adapter type.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VendorInfo"
+              }
+            ]
+          }
+        }
+      },
+      "VendorInfo": {
+        "type": "object",
+        "description": "Describes the vendor for the hosting application.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The vendor name.",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The vendor URL.",
+            "nullable": true
+          }
+        }
       },
       "AdapterProperty": {
         "type": "object",
@@ -2680,23 +2742,6 @@
             "items": {
               "$ref": "#/components/schemas/AdapterProperty"
             }
-          }
-        }
-      },
-      "VendorInfo": {
-        "type": "object",
-        "description": "Describes the vendor for the hosting application.",
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The vendor name.",
-            "nullable": true
-          },
-          "url": {
-            "type": "string",
-            "description": "The vendor URL.",
-            "nullable": true
           }
         }
       },
