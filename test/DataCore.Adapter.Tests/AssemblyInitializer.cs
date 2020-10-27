@@ -43,7 +43,7 @@ namespace DataCore.Adapter.Tests {
             if (RunExternalWebHost) {
                 var services = new ServiceCollection();
                 WebHostConfiguration.ConfigureDefaultServices(services);
-                services.AddBackgroundTaskService();
+                services.AddAspNetCoreBackgroundTaskService();
 
 #if NET48
                 // Can't use Grpc.Net with .NET Framework, so need to allow gRPC proxies to be created using a Grpc.Core channel.
