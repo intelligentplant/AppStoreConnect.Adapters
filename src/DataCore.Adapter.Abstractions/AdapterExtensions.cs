@@ -521,17 +521,7 @@ namespace DataCore.Adapter {
             }
 
             var type = adapter.GetType();
-            var adapterAttribute = type.GetCustomAttribute<AdapterMetadataAttribute>();
-            var vendorAttribute = type.GetCustomAttribute<VendorInfoAttribute>() ?? type.Assembly.GetCustomAttribute<VendorInfoAttribute>();
-
-            var uri = adapterAttribute?.Uri ?? new Uri(string.Concat("asc:adapter-type/", type.FullName, "/"));
-            return new AdapterTypeDescriptor(
-                uri, 
-                adapterAttribute?.GetName(), 
-                adapterAttribute?.GetDescription(), 
-                type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? type.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? type.Assembly.GetName().Version?.ToString(),
-                vendorAttribute?.CreateVendorInfo()
-            );
+            return type.CreateAdapterTypeDescriptor()!;
         }
 
 

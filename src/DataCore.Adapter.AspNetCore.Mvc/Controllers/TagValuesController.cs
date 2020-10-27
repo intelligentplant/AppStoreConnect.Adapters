@@ -14,8 +14,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting tag data.
     /// </summary>
     [ApiController]
-    [Area("data-core")]
+    [Area("app-store-connect")]
     [Route("api/[area]/v1.0/tag-values")]
+    // Legacy route for compatibility with v1 of the toolkit
+    [Route("api/data-core/v1.0/tag-values")] 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Validation is performed by MVC framework")]
     public class TagValuesController: ControllerBase {
 
@@ -52,6 +54,31 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public TagValuesController(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
+        }
+
+
+        /// <summary>
+        /// Requests snapshot (current) tag values.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag IDs or names to poll.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the snapshot values for the requested tags.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/snapshot")]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        public Task<IActionResult> ReadSnapshotValues(string adapterId, [FromQuery] string[] tag = null!, CancellationToken cancellationToken = default) {
+            return ReadSnapshotValues(adapterId, new ReadSnapshotTagValuesRequest() { 
+                Tags = tag ?? Array.Empty<string>()
+            }, cancellationToken);
         }
 
 

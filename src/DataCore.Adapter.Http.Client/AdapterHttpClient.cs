@@ -19,6 +19,11 @@ namespace DataCore.Adapter.Http.Client {
         public HttpClient HttpClient { get; }
 
         /// <summary>
+        /// The App Store Connect adapters toolkit version to use.
+        /// </summary>
+        public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
+
+        /// <summary>
         /// The client for querying the remote host about available adapters.
         /// </summary>
         public AdaptersClient Adapters { get; }

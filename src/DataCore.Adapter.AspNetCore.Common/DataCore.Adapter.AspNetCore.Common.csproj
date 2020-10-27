@@ -23,6 +23,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.DependencyInjection\DataCore.Adapter.DependencyInjection.csproj" />
   </ItemGroup>
   
   <ItemGroup>

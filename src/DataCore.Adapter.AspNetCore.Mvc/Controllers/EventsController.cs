@@ -13,8 +13,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for querying event messages on adapters.
     /// </summary>
     [ApiController]
-    [Area("data-core")]
+    [Area("app-store-connect")]
     [Route("api/[area]/v1.0/events")]
+    // Legacy route for compatibility with v1 of the toolkit
+    [Route("api/data-core/v1.0/events")] 
     public class EventsController : ControllerBase {
 
         /// <summary>

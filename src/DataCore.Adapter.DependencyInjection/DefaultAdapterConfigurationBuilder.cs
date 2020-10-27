@@ -1,6 +1,8 @@
 ﻿using System;
 
-namespace Microsoft.Extensions.DependencyInjection {
+using Microsoft.Extensions.DependencyInjection;
+
+namespace DataCore.Adapter.DependencyInjection {
 
     /// <summary>
     /// Default <see cref="IAdapterConfigurationBuilder"/> implementation.

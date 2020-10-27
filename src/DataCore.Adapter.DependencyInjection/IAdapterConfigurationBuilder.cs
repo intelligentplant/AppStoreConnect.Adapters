@@ -1,6 +1,7 @@
-﻿using System;
+﻿
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection {
+namespace DataCore.Adapter.DependencyInjection {
 
     /// <summary>
     /// An interface for configuring App Store Connect adapter services.

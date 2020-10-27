@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.Proxy;
 
 namespace DataCore.Adapter.Http.Proxy {
@@ -14,6 +15,11 @@ namespace DataCore.Adapter.Http.Proxy {
         /// </summary>
         [Required]
         public string RemoteId { get; set; } = default!;
+
+        /// <summary>
+        /// The App Store Connect adapter toolkit version to use when querying the remote adapter.
+        /// </summary>
+        public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
 
         /// <summary>
         /// The interval to use between re-polling the health status of the remote adapter. 

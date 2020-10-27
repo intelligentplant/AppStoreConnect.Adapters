@@ -17,8 +17,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// Controller for invoking extension adapter features.
     /// </summary>
     [ApiController]
-    [Area("data-core")]
+    [Area("app-store-connect")]
     [Route("api/[area]/v1.0/extensions")]
+    // Legacy route for compatibility with v1 of the toolkit
+    [Route("api/data-core/v1.0/extensions")] 
     public class ExtensionFeaturesController : ControllerBase {
 
         /// <summary>

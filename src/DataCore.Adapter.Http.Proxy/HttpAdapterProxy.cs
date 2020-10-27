@@ -139,6 +139,7 @@ namespace DataCore.Adapter.Http.Proxy {
             logger
         ) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            _client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
             _snapshotRefreshInterval = Options?.TagValuePushInterval ?? TimeSpan.FromMinutes(1);

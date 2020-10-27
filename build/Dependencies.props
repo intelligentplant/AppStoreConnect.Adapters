@@ -18,8 +18,9 @@
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>1.1.1</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.8</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.8</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.1.9</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.9</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.9</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
@@ -45,7 +46,7 @@
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>15.0.5</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>3.0.0</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksVersion>4.0.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.7.0</NSwagAspNetCoreVersion>

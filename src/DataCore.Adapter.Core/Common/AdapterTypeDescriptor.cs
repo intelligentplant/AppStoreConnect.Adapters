@@ -10,7 +10,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The URI for the adapter type.
         /// </summary>
-        public Uri Uri { get; }
+        public Uri Id { get; }
 
         /// <summary>
         /// The display name for the adapter type.
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Creates a new <see cref="AdapterTypeDescriptor"/> object.
         /// </summary>
-        /// <param name="uri">
+        /// <param name="id">
         ///   The URI for the adapter type.
         /// </param>
         /// <param name="name">
@@ -52,8 +52,8 @@ namespace DataCore.Adapter.Common {
         /// <param name="vendor">
         ///   The adapter type vendor information.
         /// </param>
-        public AdapterTypeDescriptor(Uri uri, string? name, string? description, string? version, VendorInfo? vendor) {
-            Uri = uri ?? throw new ArgumentNullException(nameof(uri));
+        public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor) {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name;
             Description = description;
             if (version == null) {
