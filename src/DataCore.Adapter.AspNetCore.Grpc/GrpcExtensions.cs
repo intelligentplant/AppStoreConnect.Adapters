@@ -690,12 +690,12 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            if (string.IsNullOrWhiteSpace(descriptor.Uri)) {
+            if (string.IsNullOrWhiteSpace(descriptor.Id)) {
                 return null;
             }
 
             return new AdapterTypeDescriptor(
-                new Uri(descriptor.Uri, UriKind.Absolute),
+                new Uri(descriptor.Id, UriKind.Absolute),
                 descriptor.Name,
                 descriptor.Description,
                 descriptor.Version,
@@ -719,7 +719,7 @@ namespace DataCore.Adapter {
             }
 
             return new Grpc.AdapterTypeDescriptor() { 
-                Uri = descriptor.Uri.ToString(),
+                Id = descriptor.Id.ToString(),
                 Name = descriptor.Name ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty,
                 Version = descriptor.Version ?? string.Empty,

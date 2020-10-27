@@ -404,5 +404,42 @@ namespace DataCore.Adapter {
             return typeof(TFeature).CreateFeatureDescriptor();
         }
 
+
+        /// <summary>
+        /// Creates an <see cref="AdapterTypeDescriptor"/> from the specified adapter type.
+        /// </summary>
+        /// <returns>
+        ///   The <see cref="AdapterTypeDescriptor"/> for the adapter type, or <see langword="null"/> 
+        ///   if the <paramref name="type"/> is not a concrete class that implements <see cref="IAdapter"/>.
+        /// </returns>
+        public static AdapterTypeDescriptor? CreateAdapterTypeDescriptor(this Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (!typeof(IAdapter).IsAssignableFrom(type)) {
+                // Not an adapter type.
+                return null;
+            }
+
+            if (!type.IsClass || type.IsAbstract) {
+                // Not a concrete adapter type.
+                return null;
+            }
+            
+            var adapterAttribute = type.GetCustomAttribute<AdapterMetadataAttribute>();
+            var vendorAttribute = type.GetCustomAttribute<VendorInfoAttribute>() ?? type.Assembly.GetCustomAttribute<VendorInfoAttribute>();
+            var companyName = type.Assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
+
+            var uri = adapterAttribute?.Uri ?? new Uri(string.Concat("asc:adapter-type/", type.FullName, "/"));
+            return new AdapterTypeDescriptor(
+                uri,
+                adapterAttribute?.GetName(),
+                adapterAttribute?.GetDescription(),
+                type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? type.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? type.Assembly.GetName().Version?.ToString(),
+                vendorAttribute?.CreateVendorInfo() ?? (string.IsNullOrWhiteSpace(companyName) ? null : new VendorInfo(companyName, null))
+            );
+        }
+
     }
 }

@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            Uri uri = null!;
+            Uri id = null!;
             string? name = null!;
             string? description = null!;
             string? version = null!;
@@ -32,8 +32,8 @@ namespace DataCore.Adapter.Json {
                     ThrowInvalidJsonError();
                 }
 
-                if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Uri), StringComparison.OrdinalIgnoreCase)) {
-                    uri = JsonSerializer.Deserialize<Uri>(ref reader, options);
+                if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
+                    id = JsonSerializer.Deserialize<Uri>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
                     name = JsonSerializer.Deserialize<string>(ref reader, options);
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new AdapterTypeDescriptor(uri, name, description, version, vendor);
+            return new AdapterTypeDescriptor(id, name, description, version, vendor);
         }
 
 
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
 
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Uri), value.Uri, options);
+            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Id), value.Id.ToString(), options);
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Name), value.Name, options);
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Description), value.Description, options);
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Version), value.Version, options);

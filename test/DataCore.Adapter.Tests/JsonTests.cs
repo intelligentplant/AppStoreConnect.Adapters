@@ -262,7 +262,7 @@ namespace DataCore.Adapter.Tests {
             }
 
             Assert.IsNotNull(actual.TypeDescriptor);
-            Assert.AreEqual(expected.TypeDescriptor.Uri, actual.TypeDescriptor.Uri);
+            Assert.AreEqual(expected.TypeDescriptor.Id, actual.TypeDescriptor.Id);
             Assert.AreEqual(expected.TypeDescriptor.Name, actual.TypeDescriptor.Name);
             Assert.AreEqual(expected.TypeDescriptor.Description, actual.TypeDescriptor.Description);
             Assert.IsNotNull(expected.TypeDescriptor.Vendor);
