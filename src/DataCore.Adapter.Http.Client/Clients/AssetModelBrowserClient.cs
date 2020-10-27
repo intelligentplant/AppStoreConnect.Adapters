@@ -16,7 +16,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// The URL prefix for API calls.
         /// </summary>
-        private const string UrlPrefix = "api/data-core/v1.0/asset-model";
+        private string UrlPrefix => _client.CompatibilityVersion == CompatibilityVersion.Version_1_0
+            ? "api/data-core/v1.0/asset-model"
+            : "api/app-store-connect/v1.0/asset-model";
 
         /// <summary>
         /// The adapter HTTP client that is used to perform the requests.

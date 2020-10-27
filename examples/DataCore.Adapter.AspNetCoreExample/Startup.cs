@@ -90,6 +90,43 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 options.DocumentName = "v1.0";
                 options.Title = "App Store Connect Adapters";
                 options.Description = "HTTP API for querying an App Store Connect adapters host.";
+                options.AddOperationFilter(context => {
+                    // Don't include the legacy routes.
+                    return !context.OperationDescription.Path.StartsWith("/api/data-core/");
+                });
+                options.OperationProcessors.Add(new NSwag.Generation.Processors.OperationProcessor(context => { 
+                    string RemoveWhiteSpace(string s) {
+                        return s.Replace("\n", "").Trim();
+                    }
+
+                    if (context.OperationDescription.Operation.Summary != null) {
+                        context.OperationDescription.Operation.Summary = RemoveWhiteSpace(context.OperationDescription.Operation.Summary);
+                    }
+
+                    if (context.OperationDescription.Operation.Description != null) {
+                        context.OperationDescription.Operation.Description = RemoveWhiteSpace(context.OperationDescription.Operation.Description);
+                    }
+
+                    foreach (var parameter in context.OperationDescription.Operation.Parameters) {
+                        if (parameter.Description == null) {
+                            continue;
+                        }
+                        parameter.Description = RemoveWhiteSpace(parameter.Description);
+                    }
+
+                    if (context.OperationDescription.Operation.RequestBody?.Description != null) {
+                        context.OperationDescription.Operation.RequestBody.Description = RemoveWhiteSpace(context.OperationDescription.Operation.RequestBody.Description);
+                    }
+
+                    foreach (var response in context.OperationDescription.Operation.Responses.Values) {
+                        if (response.Description == null) {
+                            continue;
+                        }
+                        response.Description = RemoveWhiteSpace(response.Description);
+                    }
+
+                    return true;
+                }));
             });
         }
 

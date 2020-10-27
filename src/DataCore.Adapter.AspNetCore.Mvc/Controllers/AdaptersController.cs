@@ -14,8 +14,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting information about the hosted adapters.
     /// </summary>
     [ApiController]
-    [Area("data-core")]
+    [Area("app-store-connect")]
     [Route("api/[area]/v1.0/adapters")]
+    // Legacy route for compatibility with v1 of the toolkit
+    [Route("api/data-core/v1.0/adapters")] 
     public class AdaptersController : ControllerBase {
 
         /// <summary>

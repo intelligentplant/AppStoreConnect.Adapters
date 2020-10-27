@@ -12,8 +12,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// API controller for requesting information about the hosting application.
     /// </summary>
     [ApiController]
-    [Area("data-core")]
+    [Area("app-store-connect")]
     [Route("api/[area]/v1.0/host-info")]
+    // Legacy route for compatibility with v1 of the toolkit
+    [Route("api/data-core/v1.0/host-info")] 
     public class HostInfoController: ControllerBase {
 
         /// <summary>
