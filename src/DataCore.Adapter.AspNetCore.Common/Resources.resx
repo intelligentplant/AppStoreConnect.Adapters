@@ -141,7 +141,25 @@
   <data name="HostProperty_OperatingSystem_Name" xml:space="preserve">
     <value>Operating System</value>
   </data>
+  <data name="Log_AdapterStartError" xml:space="preserve">
+    <value>An error occurred while starting adapter '{AdapterName}' (ID: '{AdapterId}').</value>
+  </data>
+  <data name="Log_AdapterStopError" xml:space="preserve">
+    <value>An error occurred while stopping adapter '{AdapterName}' (ID: '{AdapterId}').</value>
+  </data>
   <data name="Log_ErrorInBackgroundTask" xml:space="preserve">
     <value>Error in background task {WorkItem}.</value>
+  </data>
+  <data name="Log_StartedAdapter" xml:space="preserve">
+    <value>Started adapter '{AdapterName}' (ID: '{AdapterId}').</value>
+  </data>
+  <data name="Log_StartingAdapter" xml:space="preserve">
+    <value>Starting adapter '{AdapterName}' (ID: '{AdapterId}').</value>
+  </data>
+  <data name="Log_StoppedAdapter" xml:space="preserve">
+    <value>Stopped adapter '{AdapterName}' (ID: '{AdapterId}').</value>
+  </data>
+  <data name="Log_StoppingAdapter" xml:space="preserve">
+    <value>Stopping adapter '{AdapterName}' (ID: '{AdapterId}').</value>
   </data>
 </root>

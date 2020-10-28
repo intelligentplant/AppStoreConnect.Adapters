@@ -133,11 +133,65 @@ namespace DataCore.Adapter.AspNetCore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while starting adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_AdapterStartError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStartError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while stopping adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_AdapterStopError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStopError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error in background task {WorkItem}..
         /// </summary>
         internal static string Log_ErrorInBackgroundTask {
             get {
                 return ResourceManager.GetString("Log_ErrorInBackgroundTask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Started adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_StartedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_StartingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopped adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_StoppedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterName}&apos; (ID: &apos;{AdapterId}&apos;)..
+        /// </summary>
+        internal static string Log_StoppingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
             }
         }
     }
