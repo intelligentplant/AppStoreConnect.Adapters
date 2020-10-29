@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter {
@@ -219,7 +220,10 @@ namespace DataCore.Adapter {
             StopToken = _stopTokenSource.Token;
             _descriptor = new AdapterDescriptor(id, name, description);
             TypeDescriptor = this.CreateTypeDescriptor();
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(this, backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default);
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(
+                backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
+                () => StopToken    
+            );
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(_descriptor.Id);
 
@@ -837,63 +841,6 @@ namespace DataCore.Adapter {
         protected virtual async ValueTask DisposeAsyncCore() {
             DisposeCommon();
             await _features.DisposeAsync().ConfigureAwait(false);
-        }
-
-
-        /// <summary>
-        /// <see cref="IBackgroundTaskService"/> implementation that always uses <see cref="StopToken"/> 
-        /// as an additional cancellation token.
-        /// </summary>
-        private class BackgroundTaskServiceWrapper : IBackgroundTaskService, IDisposable {
-
-            /// <summary>
-            /// The owning adapter.
-            /// </summary>
-            private readonly AdapterBase _adapter;
-
-            /// <summary>
-            /// The inner <see cref="IBackgroundTaskService"/> to use.
-            /// </summary>
-            private readonly IBackgroundTaskService _inner;
-
-            /// <inheritdoc/>
-            public bool IsRunning => _inner.IsRunning;
-
-            /// <inheritdoc/>
-            public int QueuedItemCount => _inner.QueuedItemCount;
-
-
-            /// <summary>
-            /// Creates a new <see cref="BackgroundTaskServiceWrapper"/> object.
-            /// </summary>
-            /// <param name="adapter">
-            ///   The owning adapter.
-            /// </param>
-            /// <param name="inner">
-            ///   The inner <see cref="IBackgroundTaskService"/> to use.
-            /// </param>
-            internal BackgroundTaskServiceWrapper(AdapterBase adapter, IBackgroundTaskService inner) {
-                _adapter = adapter;
-                _inner = inner;
-            }
-
-
-            /// <inheritdoc/>
-            public void QueueBackgroundWorkItem(BackgroundWorkItem workItem) {
-                if (workItem.WorkItemAsync != null) {
-                    _inner.QueueBackgroundWorkItem(workItem.WorkItemAsync, workItem.Description, _adapter.StopToken);
-                }
-                else {
-                    _inner.QueueBackgroundWorkItem(workItem.WorkItem!, workItem.Description, _adapter.StopToken);
-                }
-            }
-
-
-            /// <inheritdoc/>
-            public void Dispose() {
-                // No action required.
-            }
-
         }
 
     }

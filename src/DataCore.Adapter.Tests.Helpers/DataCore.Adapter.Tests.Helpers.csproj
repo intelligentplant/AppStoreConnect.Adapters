@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    <RootNamespace>DataCore.Adapter.Tests</RootNamespace>
+    <PackageId>$(PackagePrefix).Adapter.Tests.Helpers</PackageId>
+    <Description>Base MSTest test classes for testing App Store Connect adapters.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestTestFrameworkVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.DependencyInjection\DataCore.Adapter.DependencyInjection.csproj" />
+  </ItemGroup>
+  
+</Project>
