@@ -146,7 +146,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Fail($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned null. Override {methodName} in your test class to return the input data to use for this test.");
+            Assert.Fail($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a value that indicates that it has not been overridden. Override {methodName} in your test class to return the input data to use for this test.");
         }
 
 
@@ -503,9 +503,7 @@ namespace DataCore.Adapter.Tests {
         #region [ IReadSnapshotTagValues ]
 
         /// <summary>
-        /// Gets the request to use with the <see cref="ReadSnapshotTagValuesRequestShouldReturnResults"/>, 
-        /// <see cref="SnapshotTagValueSubscriptionShouldReceiveInitialValues"/> and 
-        /// <see cref="SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges"/> tests.
+        /// Gets the request to use with the <see cref="ReadSnapshotTagValuesRequestShouldReturnResults"/>.
         /// </summary>
         /// <param name="context">
         ///   The test context.
@@ -562,6 +560,41 @@ namespace DataCore.Adapter.Tests {
         #region [ ISnapshotTagValuePush ]
 
         /// <summary>
+        /// Gets the request to use with the <see cref="SnapshotTagValueSubscriptionShouldReceiveInitialValues"/> and 
+        /// <see cref="SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges"/> tests.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="RealTimeData.CreateSnapshotTagValueSubscriptionRequest"/> to use.
+        /// </returns>
+        protected virtual CreateSnapshotTagValueSubscriptionRequest CreateSnapshotTagValueSubscriptionRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Emits snapshot values for <see cref="SnapshotTagValueSubscriptionShouldReceiveInitialValues"/> and <see cref="SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <param name="adapter">
+        ///   The adapter that must to emit the values.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that returns a flag specifying if a test values were emitted.
+        /// </returns>
+        protected virtual Task<bool> EmitTestSnapshotValue(TestContext context, TAdapter adapter, IEnumerable<string> tags, CancellationToken cancellationToken) {
+            return Task.FromResult(false);
+        }
+
+
+        /// <summary>
         /// Verifies that <see cref="ISnapshotTagValuePush.Subscribe"/> returns values for tags 
         /// that are specified in the initial subscription request.
         /// </summary>
@@ -578,18 +611,24 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var request = CreateReadSnapshotTagValuesRequest(TestContext);
+                var request = CreateSnapshotTagValueSubscriptionRequest(TestContext);
                 if (request == null) {
-                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(CreateReadSnapshotTagValuesRequest));
+                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(CreateSnapshotTagValueSubscriptionRequest));
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
-                    Tags = request.Tags,
-                    Properties = request.Properties
-                }, ct).ConfigureAwait(false);
-
+                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
                 Assert.IsNotNull(subscription);
+
+                // Pause briefly to allow the subscription change to take effect, since the change 
+                // will be processed asynchronously to us making the initial request.
+                await Task.Delay(200, ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                if (!testValuesEmitted) {
+                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
+                    return;
+                }
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -625,7 +664,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   A <see cref="Task"/> that will run the test.
         /// </returns>
-        /// <seealso cref="CreateReadSnapshotTagValuesRequest"/>
+        /// <seealso cref="CreateSnapshotTagValueSubscriptionRequest"/>
         [TestMethod]
         public virtual Task SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges() {
             return RunAdapterTest(async (adapter, context, ct) => {
@@ -635,15 +674,18 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var request = CreateReadSnapshotTagValuesRequest(TestContext);
+                var request = CreateSnapshotTagValueSubscriptionRequest(TestContext);
                 if (request == null) {
-                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(CreateReadSnapshotTagValuesRequest));
+                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(CreateSnapshotTagValueSubscriptionRequest));
                     return;
                 }
 
                 var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { Properties = request.Properties }, channel.Reader, ct).ConfigureAwait(false);
+                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
+                    PublishInterval = request.PublishInterval,
+                    Properties = request.Properties 
+                }, channel.Reader, ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(subscription);
 
@@ -653,6 +695,16 @@ namespace DataCore.Adapter.Tests {
                     Action = SubscriptionUpdateAction.Subscribe,
                     Tags = request.Tags
                 });
+
+                // Pause briefly to allow the subscription change to take effect, since the change 
+                // will be processed asynchronously to us making the initial request.
+                await Task.Delay(200, ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                if (!testValuesEmitted) {
+                    AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
+                    return;
+                }
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -1190,7 +1242,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteTagValueItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems() {
+        protected virtual IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems(TestContext context) {
             return null!;
         }
 
@@ -1212,7 +1264,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteSnapshotTagValueItems();
+                var writeItems = CreateWriteSnapshotTagValueItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteSnapshotTagValues>(nameof(CreateWriteSnapshotTagValueItems));
                     return;
@@ -1258,7 +1310,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteTagValueItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems() {
+        protected virtual IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems(TestContext context) {
             return null!;
         }
 
@@ -1280,7 +1332,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteHistoricalTagValueItems();
+                var writeItems = CreateWriteHistoricalTagValueItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteHistoricalTagValues>(nameof(CreateWriteHistoricalTagValueItems));
                     return;
@@ -1621,7 +1673,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteEventMessageItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems() {
+        protected virtual IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems(TestContext context) {
             return null!;
         }
 
@@ -1643,7 +1695,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteEventMessageItems();
+                var writeItems = CreateWriteEventMessageItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteEventMessages>(nameof(CreateWriteEventMessageItems));
                     return;
