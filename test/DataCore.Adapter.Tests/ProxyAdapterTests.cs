@@ -124,13 +124,13 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems() {
+        protected override IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems(TestContext context) {
             var now = DateTime.UtcNow;
             var values = new List<WriteTagValueItem>();
             for (var i = 0; i < 5; i++) {
                 values.Add(new WriteTagValueItem() {
                     CorrelationId = Guid.NewGuid().ToString(),
-                    TagId = TestContext.TestName,
+                    TagId = context.TestName,
                     Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
                 });
             }
@@ -138,13 +138,13 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems() {
+        protected override IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems(TestContext context) {
             var now = DateTime.UtcNow;
             var values = new List<WriteTagValueItem>();
             for (var i = 0; i < 5; i++) {
                 values.Add(new WriteTagValueItem() {
                     CorrelationId = Guid.NewGuid().ToString(),
-                    TagId = TestContext.TestName,
+                    TagId = context.TestName,
                     Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
                 });
             }
@@ -182,12 +182,12 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems() {
+        protected override IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems(TestContext context) {
             var now = DateTime.UtcNow;
             var messages = Enumerable.Range(-200, 100).Select(x => EventMessageBuilder
                 .Create()
                 .WithUtcEventTime(now.AddMinutes(x))
-                .WithCategory(TestContext.FullyQualifiedTestClassName)
+                .WithCategory(context.FullyQualifiedTestClassName)
                 .WithMessage($"Test message")
                 .WithPriority(EventPriority.Low)
                 .Build()

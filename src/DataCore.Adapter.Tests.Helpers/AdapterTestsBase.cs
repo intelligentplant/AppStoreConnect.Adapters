@@ -1242,7 +1242,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteTagValueItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems() {
+        protected virtual IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems(TestContext context) {
             return null!;
         }
 
@@ -1264,7 +1264,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteSnapshotTagValueItems();
+                var writeItems = CreateWriteSnapshotTagValueItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteSnapshotTagValues>(nameof(CreateWriteSnapshotTagValueItems));
                     return;
@@ -1310,7 +1310,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteTagValueItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems() {
+        protected virtual IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems(TestContext context) {
             return null!;
         }
 
@@ -1332,7 +1332,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteHistoricalTagValueItems();
+                var writeItems = CreateWriteHistoricalTagValueItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteHistoricalTagValues>(nameof(CreateWriteHistoricalTagValueItems));
                     return;
@@ -1673,7 +1673,7 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   The collection of <see cref="WriteEventMessageItem"/> objects to use.
         /// </returns>
-        protected virtual IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems() {
+        protected virtual IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems(TestContext context) {
             return null!;
         }
 
@@ -1695,7 +1695,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var writeItems = CreateWriteEventMessageItems();
+                var writeItems = CreateWriteEventMessageItems(TestContext);
                 if (writeItems == null) {
                     AssertInconclusiveDueToMissingTestInput<IWriteEventMessages>(nameof(CreateWriteEventMessageItems));
                     return;
