@@ -28,11 +28,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override IAdapterCallContext CreateCallContext(TestContext context) {
-            return new DefaultAdapterCallContext();
-        }
-
-
         protected override GetTagPropertiesRequest CreateGetTagPropertiesRequest(TestContext context) {
             return new GetTagPropertiesRequest();
         }

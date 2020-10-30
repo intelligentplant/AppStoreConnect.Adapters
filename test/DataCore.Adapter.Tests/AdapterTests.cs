@@ -27,12 +27,6 @@ namespace DataCore.Adapter.Tests {
             return AssemblyInitializer.ApplicationServices.CreateScope();
         }
 
-
-        protected override IAdapterCallContext CreateCallContext(TestContext context) {
-            return new DefaultAdapterCallContext();
-        }
-
-
         #region [ IEventMessagePush ]
 
         [TestMethod]

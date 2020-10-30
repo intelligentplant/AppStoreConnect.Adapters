@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -61,7 +62,14 @@ namespace DataCore.Adapter.Tests {
         /// <returns>
         ///   A new <see cref="IAdapterCallContext"/> instance.
         /// </returns>
-        protected abstract IAdapterCallContext CreateCallContext(TestContext context);
+        protected virtual IAdapterCallContext CreateCallContext(TestContext context) {
+            var identity = new ClaimsIdentity(GetType().FullName, ClaimTypes.Name, ClaimTypes.Role);
+            identity.AddClaim(new Claim(ClaimTypes.Name, context!.TestName));
+
+            var principal = new ClaimsPrincipal(identity);
+
+            return new DefaultAdapterCallContext(principal);
+        }
 
 
         /// <summary>
