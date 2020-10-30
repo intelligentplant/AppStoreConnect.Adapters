@@ -1435,6 +1435,10 @@ namespace DataCore.Adapter.Tests {
                 var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
                 Assert.IsNotNull(subscription);
 
+                // Pause briefly to allow the subscription change to take effect, since the change 
+                // will be processed asynchronously to us making the initial request.
+                await Task.Delay(200, ct).ConfigureAwait(false);
+
                 var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
                 if (!testEventEmitted) {
                     AssertInconclusiveDueToMissingTestInput<IEventMessagePushWithTopics>(nameof(EmitTestEvent));
