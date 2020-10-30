@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Http.Client;
+using DataCore.Adapter.RealTimeData;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,23 +23,184 @@ namespace DataCore.Adapter.Tests {
         protected virtual IEnumerable<string> UnsupportedStandardFeatures => Array.Empty<string>();
 
 
-        protected sealed override TProxy CreateAdapter() {
-            return CreateProxy(WebHostConfiguration.AdapterId);
+        protected sealed override TProxy CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
+            return CreateProxy(WebHostConfiguration.AdapterId, serviceProvider);
         }
 
 
-        protected sealed override Task<ReadTagValuesQueryDetails> GetReadTagValuesQueryDetails() {
-            var now = DateTime.UtcNow;
-            var result = new ReadTagValuesQueryDetails(WebHostConfiguration.TestTagId) { 
-                HistoryStartTime = now.AddDays(-1),
-                HistoryEndTime = now
+        protected override FindTagsRequest CreateFindTagsRequest(TestContext context) {
+            return new FindTagsRequest() { 
+                Name = WebHostConfiguration.TestTagId
             };
-
-            return Task.FromResult(result);
         }
 
 
-        protected sealed override async Task<ReadEventMessagesQueryDetails> GetReadEventMessagesQueryDetails() {
+        protected override GetTagsRequest CreateGetTagsRequest(TestContext context) {
+            return new GetTagsRequest() {
+                Tags = new[] { WebHostConfiguration.TestTagId }
+            };
+        }
+
+
+        protected override GetTagPropertiesRequest CreateGetTagPropertiesRequest(TestContext context) {
+            return new GetTagPropertiesRequest();
+        }
+
+
+        protected sealed override ReadSnapshotTagValuesRequest CreateReadSnapshotTagValuesRequest(TestContext context) {
+            return new ReadSnapshotTagValuesRequest() { 
+                Tags = new[] { WebHostConfiguration.TestTagId }
+            };
+        }
+
+
+        protected override ReadRawTagValuesRequest CreateReadRawTagValuesRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+            return new ReadRawTagValuesRequest() { 
+                Tags = new[] { WebHostConfiguration.TestTagId },
+                UtcStartTime = now.AddDays(-1),
+                UtcEndTime = now
+            };
+        }
+
+
+        protected override ReadPlotTagValuesRequest CreateReadPlotTagValuesRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+            return new ReadPlotTagValuesRequest() {
+                Tags = new[] { WebHostConfiguration.TestTagId },
+                UtcStartTime = now.AddDays(-1),
+                UtcEndTime = now,
+                Intervals = 500
+            };
+        }
+
+
+        protected override ReadProcessedTagValuesRequest CreateReadProcessedTagValuesRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+            return new ReadProcessedTagValuesRequest() {
+                Tags = new[] { WebHostConfiguration.TestTagId },
+                UtcStartTime = now.AddDays(-1),
+                UtcEndTime = now,
+                SampleInterval = TimeSpan.FromHours(3),
+                DataFunctions = new[] {
+                    DefaultDataFunctions.Constants.FunctionIdAverage,
+                    DefaultDataFunctions.Constants.FunctionIdCount,
+                    DefaultDataFunctions.Constants.FunctionIdDelta,
+                    DefaultDataFunctions.Constants.FunctionIdInterpolate,
+                    DefaultDataFunctions.Constants.FunctionIdMaximum,
+                    DefaultDataFunctions.Constants.FunctionIdMinimum,
+                    DefaultDataFunctions.Constants.FunctionIdPercentBad,
+                    DefaultDataFunctions.Constants.FunctionIdPercentGood,
+                    DefaultDataFunctions.Constants.FunctionIdRange,
+                    DefaultDataFunctions.Constants.FunctionIdStandardDeviation,
+                    DefaultDataFunctions.Constants.FunctionIdVariance
+                }
+            };
+        }
+
+
+        protected override ReadTagValuesAtTimesRequest CreateReadTagValuesAtTimesRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+            return new ReadTagValuesAtTimesRequest() { 
+                Tags = new[] { WebHostConfiguration.TestTagId },
+                UtcSampleTimes = new[] { 
+                    now.AddHours(-17),
+                    now.AddHours(-12.5),
+                    now.AddHours(-11.223)
+                }
+            };
+        }
+
+
+        protected override IEnumerable<WriteTagValueItem> CreateWriteSnapshotTagValueItems() {
+            var now = DateTime.UtcNow;
+            var values = new List<WriteTagValueItem>();
+            for (var i = 0; i < 5; i++) {
+                values.Add(new WriteTagValueItem() {
+                    CorrelationId = Guid.NewGuid().ToString(),
+                    TagId = TestContext.TestName,
+                    Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                });
+            }
+            return values;
+        }
+
+
+        protected override IEnumerable<WriteTagValueItem> CreateWriteHistoricalTagValueItems() {
+            var now = DateTime.UtcNow;
+            var values = new List<WriteTagValueItem>();
+            for (var i = 0; i < 5; i++) {
+                values.Add(new WriteTagValueItem() {
+                    CorrelationId = Guid.NewGuid().ToString(),
+                    TagId = TestContext.TestName,
+                    Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                });
+            }
+            return values;
+        }
+
+
+        protected override CreateEventMessageSubscriptionRequest CreateEventMessageSubscriptionRequest(TestContext context) {
+            return new CreateEventMessageSubscriptionRequest() {
+                SubscriptionType = EventMessageSubscriptionType.Active
+            };
+        }
+
+
+        protected override CreateEventMessageTopicSubscriptionRequest CreateEventMessageTopicSubscriptionRequest(TestContext context) {
+            return new CreateEventMessageTopicSubscriptionRequest() {
+                SubscriptionType = EventMessageSubscriptionType.Active,
+                Topics = new[] { context.TestName }
+            };
+        }
+
+
+        protected override ReadEventMessagesForTimeRangeRequest CreateReadEventMessagesForTimeRangeRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+
+            return new ReadEventMessagesForTimeRangeRequest() {
+                UtcStartTime = now.AddMinutes(-10),
+                UtcEndTime = now.AddMinutes(10)
+            };
+        }
+
+
+        protected override ReadEventMessagesUsingCursorRequest CreateReadEventMessagesUsingCursorRequest(TestContext context) {
+            return new ReadEventMessagesUsingCursorRequest();
+        }
+
+
+        protected override IEnumerable<WriteEventMessageItem> CreateWriteEventMessageItems() {
+            var now = DateTime.UtcNow;
+            var messages = Enumerable.Range(-200, 100).Select(x => EventMessageBuilder
+                .Create()
+                .WithUtcEventTime(now.AddMinutes(x))
+                .WithCategory(TestContext.FullyQualifiedTestClassName)
+                .WithMessage($"Test message")
+                .WithPriority(EventPriority.Low)
+                .Build()
+            ).ToArray();
+
+            return messages.Select(x => new WriteEventMessageItem() {
+                CorrelationId = Guid.NewGuid().ToString(),
+                EventMessage = x
+            }).ToArray();
+        }
+
+
+        public override async Task ReadEventMessagesForTimeRangeRequestShouldReturnResults() {
+            await InitHistoricalEventMessages().ConfigureAwait(false);
+            await base.ReadEventMessagesForTimeRangeRequestShouldReturnResults().ConfigureAwait(false);
+        }
+
+
+        public override async Task ReadEventMessagesUsingCursorRequestShouldReturnResults() {
+            await InitHistoricalEventMessages().ConfigureAwait(false);
+            await base.ReadEventMessagesUsingCursorRequestShouldReturnResults().ConfigureAwait(false);
+        }
+
+
+        private async Task InitHistoricalEventMessages() {
             if (!s_historicalTestEventsInitialized) {
                 s_historicalTestEventsInitialized = true;
 
@@ -57,7 +220,7 @@ namespace DataCore.Adapter.Tests {
                 ).ToArray();
 
                 var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequest() {
-                    Events = messages.Select(msg => new WriteEventMessageItem() { 
+                    Events = messages.Select(msg => new WriteEventMessageItem() {
                         CorrelationId = msg.Id,
                         EventMessage = msg
                     }).ToArray()
@@ -69,14 +232,10 @@ namespace DataCore.Adapter.Tests {
                 s_historicalTestEventsStartTime = messages.First().UtcEventTime;
             }
 
-            return new ReadEventMessagesQueryDetails() { 
-                HistoryStartTime = s_historicalTestEventsStartTime,
-                HistoryEndTime = DateTime.UtcNow
-            };
         }
 
 
-        protected override async Task EmitTestEvent(TProxy adapter, EventMessageSubscriptionType subscriptionType, string topic) {
+        protected override async Task<bool> EmitTestEvent(TestContext context, TProxy adapter, CancellationToken cancellationToken) {
             var httpClient = ActivatorUtilities.CreateInstance<AdapterHttpClient>(
                 AssemblyInitializer.ApplicationServices,
                 AssemblyInitializer.ApplicationServices.GetRequiredService<IHttpClientFactory>().CreateClient(WebHostConfiguration.HttpClientName)
@@ -84,10 +243,10 @@ namespace DataCore.Adapter.Tests {
             
             var msg = EventMessageBuilder
                 .Create()
-                .WithTopic(topic)
+                .WithTopic(context.TestName)
                 .WithUtcEventTime(DateTime.UtcNow)
-                .WithCategory(TestContext.FullyQualifiedTestClassName)
-                .WithMessage(TestContext.TestName)
+                .WithCategory(context.FullyQualifiedTestClassName)
+                .WithMessage(context.TestName)
                 .WithPriority(EventPriority.Low)
                 .Build();
 
@@ -102,19 +261,17 @@ namespace DataCore.Adapter.Tests {
                 }
             }).ConfigureAwait(false);
 
-            Assert.IsNotNull(writeResult);
-            Assert.AreEqual(1, writeResult.Count());
-            Assert.AreEqual(correlationId, writeResult.First().CorrelationId);
+            return true;
         }
 
 
-        protected abstract TProxy CreateProxy(string remoteAdapterId);
+        protected abstract TProxy CreateProxy(string remoteAdapterId, IServiceProvider serviceProvider);
 
 
 
         [TestMethod]
         public Task ProxyShouldRetrieveRemoteAdapterDetails() {
-            return RunAdapterTest((proxy, context) => {
+            return RunAdapterTest((proxy, context, ct) => {
                 Assert.IsNotNull(proxy.RemoteHostInfo);
                 Assert.IsNotNull(proxy.RemoteDescriptor);
                 Assert.IsNotNull(proxy.RemoteDescriptor.TypeDescriptor);
@@ -126,7 +283,7 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task ProxyShouldHaveLocalImplementationForAllRemoteStandardFeatures() {
-            return RunAdapterTest((proxy, context) => {
+            return RunAdapterTest((proxy, context, ct) => {
                 foreach (var featureUriOrName in proxy.RemoteDescriptor.Features) {
                     if (UnsupportedStandardFeatures.Contains(featureUriOrName, StringComparer.OrdinalIgnoreCase)) {
                         continue;
@@ -141,7 +298,7 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task ProxyShouldHaveLocalImplementationForAllRemoteExtensionFeatures() {
-            return RunAdapterTest((proxy, context) => {
+            return RunAdapterTest((proxy, context, ct) => {
                 foreach (var featureUriOrName in proxy.RemoteDescriptor.Extensions) {
                     Assert.IsTrue(proxy.HasFeature(featureUriOrName), $"Expected to find local implementation for remote feature: {featureUriOrName}");
                 }

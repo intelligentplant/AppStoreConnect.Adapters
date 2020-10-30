@@ -15,7 +15,9 @@ using IntelligentPlant.BackgroundTasks;
 namespace DataCore.Adapter.Tests {
     public class ExampleAdapter : IAdapter, ITagInfo, IReadSnapshotTagValues {
 
-        public IBackgroundTaskService BackgroundTaskService => IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+        private CancellationTokenSource _stopTokenSource;
+
+        public IBackgroundTaskService BackgroundTaskService { get; }
 
         public AdapterDescriptor Descriptor { get; }
 
@@ -33,26 +35,37 @@ namespace DataCore.Adapter.Tests {
 
         private readonly EventSubscriptionManager _eventSubscriptionManager;
 
+        private readonly EventTopicSubscriptionManager _eventTopicSubscriptionManager;
+
 
         public ExampleAdapter() {
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(
+                IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
+                () => _stopTokenSource?.Token ?? default
+            );
             Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
             TypeDescriptor = this.CreateTypeDescriptor();
             var features = new AdapterFeaturesCollection(this);
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();
+            _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
             features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
+            features.Add<IEventMessagePushWithTopics, EventTopicSubscriptionManager>(_eventTopicSubscriptionManager);
             features.AddFromProvider(new PingPongExtension(BackgroundTaskService));
             Features = features;
         }
 
 
         public Task StartAsync(CancellationToken cancellationToken = default) {
+            _stopTokenSource = new CancellationTokenSource();
             return Task.CompletedTask;
         }
 
 
         public Task StopAsync(CancellationToken cancellationToken = default) {
+            _stopTokenSource?.Cancel();
+            _stopTokenSource?.Dispose();
             return Task.CompletedTask;
         }
 
@@ -120,8 +133,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public ValueTask<bool> WriteTestEventMessage(EventMessage msg) {
-            return _eventSubscriptionManager.ValueReceived(msg);
+        public async ValueTask<bool> WriteTestEventMessage(EventMessage msg) {
+            return await _eventSubscriptionManager.ValueReceived(msg).ConfigureAwait(false) && await _eventTopicSubscriptionManager.ValueReceived(msg).ConfigureAwait(false);
         }
 
 
@@ -153,6 +166,13 @@ namespace DataCore.Adapter.Tests {
         private class EventSubscriptionManager : EventMessagePush {
 
             public EventSubscriptionManager() : base(null, null, null) { }
+
+        }
+
+
+        private class EventTopicSubscriptionManager : EventMessagePushWithTopics {
+
+            public EventTopicSubscriptionManager() : base(null, null, null) { }
 
         }
 

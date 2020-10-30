@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
@@ -28,8 +29,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override HttpAdapterProxy CreateProxy(string remoteAdapterId) {
-            return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(ServiceProvider, nameof(HttpProxyTests), new HttpAdapterProxyOptions() {
+        protected override HttpAdapterProxy CreateProxy(string remoteAdapterId, IServiceProvider serviceProvider) {
+            return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(serviceProvider, nameof(HttpProxyTests), new HttpAdapterProxyOptions() {
                 RemoteId = remoteAdapterId
             });
         }
