@@ -170,7 +170,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The subscribed tags.
         /// </returns>
-        protected IEnumerable<TagIdentifier> GetSubscribedTags() {
+        public IEnumerable<TagIdentifier> GetSubscribedTags() {
             _subscriptionsLock.EnterReadLock();
             try {
                 return _subscriberCount.Keys.ToArray();
