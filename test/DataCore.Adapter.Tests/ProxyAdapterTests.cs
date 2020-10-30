@@ -54,6 +54,18 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        protected override CreateSnapshotTagValueSubscriptionRequest CreateSnapshotTagValueSubscriptionRequest(TestContext context) {
+            return new CreateSnapshotTagValueSubscriptionRequest() {
+                Tags = new[] { WebHostConfiguration.TestTagId }
+            };
+        }
+
+
+        protected override Task<bool> EmitTestSnapshotValue(TestContext context, TProxy adapter, IEnumerable<string> tags, CancellationToken cancellationToken) {
+            return Task.FromResult(true);
+        }
+
+
         protected override ReadRawTagValuesRequest CreateReadRawTagValuesRequest(TestContext context) {
             var now = DateTime.UtcNow;
             return new ReadRawTagValuesRequest() { 

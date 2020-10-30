@@ -47,6 +47,18 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        protected override CreateSnapshotTagValueSubscriptionRequest CreateSnapshotTagValueSubscriptionRequest(TestContext context) {
+            return new CreateSnapshotTagValueSubscriptionRequest() {
+                Tags = new[] { context.TestName }
+            };
+        }
+
+
+        protected override Task<bool> EmitTestSnapshotValue(TestContext context, ExampleAdapter adapter, IEnumerable<string> tags, CancellationToken cancellationToken) {
+            return Task.FromResult(true);
+        }
+
+
         protected override async Task<bool> EmitTestEvent(TestContext context, ExampleAdapter adapter, CancellationToken cancellationToken) {
             await adapter.WriteTestEventMessage(
                 EventMessageBuilder
