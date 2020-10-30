@@ -1,50 +1,88 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
+
     [TestClass]
-    public class ExampleAdapterTests : AdapterTests<ExampleAdapter> {
+    public class ExampleAdapterTests : AdapterTestsBase<ExampleAdapter> {
 
-        private static readonly ReadTagValuesQueryDetails TestTag1 = new ReadTagValuesQueryDetails("Test Tag 1");
+        #region [ AdapterTestsBase<TAdapter> Overrides ]
+
+        protected override IServiceScope CreateServiceScope(TestContext context) {
+            return AssemblyInitializer.ApplicationServices.CreateScope();
+        }
 
 
-        protected override ExampleAdapter CreateAdapter() {
+        protected override ExampleAdapter CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
             return new ExampleAdapter();
         }
 
 
-        protected override Task<ReadTagValuesQueryDetails> GetReadTagValuesQueryDetails() {
-            return Task.FromResult(TestTag1);
+        protected override GetTagPropertiesRequest CreateGetTagPropertiesRequest(TestContext context) {
+            return new GetTagPropertiesRequest();
         }
 
 
-        protected override Task<ReadEventMessagesQueryDetails> GetReadEventMessagesQueryDetails() {
-            return Task.FromResult<ReadEventMessagesQueryDetails>(null);
+        protected override GetTagsRequest CreateGetTagsRequest(TestContext context) {
+            return new GetTagsRequest() {
+                Tags = new[] { context.TestName }
+            };
         }
 
 
-        protected override async Task EmitTestEvent(ExampleAdapter adapter, EventMessageSubscriptionType subscriptionType, string topic) {
+        protected override ReadSnapshotTagValuesRequest CreateReadSnapshotTagValuesRequest(TestContext context) {
+            return new ReadSnapshotTagValuesRequest() { 
+                Tags = new[] { context.TestName }
+            };
+        }
+
+
+        protected override async Task<bool> EmitTestEvent(TestContext context, ExampleAdapter adapter, CancellationToken cancellationToken) {
             await adapter.WriteTestEventMessage(
                 EventMessageBuilder
                     .Create()
-                    .WithTopic(topic)
+                    .WithTopic(context.TestName)
                     .WithUtcEventTime(DateTime.UtcNow)
                     .WithCategory(TestContext.FullyQualifiedTestClassName)
                     .WithMessage(TestContext.TestName)
                     .WithPriority(EventPriority.Low)
                     .Build()
             );
+            return true;
         }
 
 
+        protected override CreateEventMessageSubscriptionRequest CreateEventMessageSubscriptionRequest(TestContext context) {
+            return new CreateEventMessageSubscriptionRequest() { 
+                SubscriptionType = EventMessageSubscriptionType.Active
+            };
+        }
+
+
+        protected override CreateEventMessageTopicSubscriptionRequest CreateEventMessageTopicSubscriptionRequest(TestContext context) {
+            return new CreateEventMessageTopicSubscriptionRequest() { 
+                SubscriptionType = EventMessageSubscriptionType.Active,
+                Topics = new[] { context.TestName }
+            };
+        }
+
+        #endregion
+
+        #region [ Additional Tests ]
+
         [TestMethod]
         public Task UnsupportedFeatureShouldNotBeFound() {
-            return RunAdapterTest((adapter, context) => {
+            return RunAdapterTest((adapter, context, ct) => {
                 var feature = adapter.Features.Get<IFakeAdapterFeature>();
                 Assert.IsNull(feature);
                 return Task.CompletedTask;
@@ -54,7 +92,7 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task SupportedFeatureShouldBeFound() {
-            return RunAdapterTest((adapter, context) => { 
+            return RunAdapterTest((adapter, context, ct) => {
                 var feature = adapter.Features.Get<IReadSnapshotTagValues>();
                 Assert.IsNotNull(feature);
                 return Task.CompletedTask;
@@ -64,21 +102,21 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task SnapshotSubscriptionShouldReceiveAdditionalValues() {
-            return RunAdapterTest(async (adapter, context) => {
+            return RunAdapterTest(async (adapter, context, ct) => {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
 
-                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    Tags = new[] { TestTag1.Id }
-                }, CancellationToken);
+                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
+                    Tags = new[] { TestContext.TestName }
+                }, ct);
 
                 // Write a couple of values that we should then be able to read out again via 
                 // the subscription's channel.
-                var now = System.DateTime.UtcNow;
+                var now = DateTime.UtcNow;
                 await adapter.WriteSnapshotValue(
                     TagValueQueryResult.Create(
-                        TestTag1.Id,
-                        TestTag1.Id,
+                        TestContext.TestName,
+                        TestContext.TestName,
                         TagValueBuilder
                             .Create()
                             .WithUtcSampleTime(now.AddSeconds(-5))
@@ -88,8 +126,8 @@ namespace DataCore.Adapter.Tests {
                 );
                 await adapter.WriteSnapshotValue(
                     TagValueQueryResult.Create(
-                        TestTag1.Id,
-                        TestTag1.Id,
+                        TestContext.TestName,
+                        TestContext.TestName,
                         TagValueBuilder
                             .Create()
                             .WithUtcSampleTime(now.AddSeconds(-1))
@@ -122,6 +160,8 @@ namespace DataCore.Adapter.Tests {
                 }
             });
         }
+
+        #endregion
 
     }
 }

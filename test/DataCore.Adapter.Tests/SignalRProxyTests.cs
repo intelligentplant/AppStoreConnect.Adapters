@@ -1,4 +1,6 @@
-﻿using DataCore.Adapter.AspNetCore.SignalR.Proxy;
+﻿using System;
+
+using DataCore.Adapter.AspNetCore.SignalR.Proxy;
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,8 +10,8 @@ namespace DataCore.Adapter.Tests {
 
     public abstract class SignalRProxyTests : ProxyAdapterTests<SignalRAdapterProxy> {
 
-        protected sealed override SignalRAdapterProxy CreateProxy(string remoteAdapterId) {
-            return ActivatorUtilities.CreateInstance<SignalRAdapterProxy>(ServiceProvider, nameof(SignalRProxyTests), new SignalRAdapterProxyOptions() {
+        protected sealed override SignalRAdapterProxy CreateProxy(string remoteAdapterId, IServiceProvider serviceProvider) {
+            return ActivatorUtilities.CreateInstance<SignalRAdapterProxy>(serviceProvider, nameof(SignalRProxyTests), new SignalRAdapterProxyOptions() {
                 RemoteId = remoteAdapterId,
                 ConnectionFactory = key => {
                     var builder = new HubConnectionBuilder()

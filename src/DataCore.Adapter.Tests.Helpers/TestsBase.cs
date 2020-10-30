@@ -6,19 +6,21 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataCore.Adapter.Tests {
 
     /// <summary>
-    /// Base class for other test classes to inherit from.
+    /// Base class that other test classes can inherit from.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Resources are disposed during test cleanup.")]
     public abstract class TestsBase {
 
         /// <summary>
-        /// The test context for the current test.
+        /// The context for the current test.
         /// </summary>
-        public TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; } = default!;
+
 
         /// <summary>
         /// Cancellation token source that fires after every test.
         /// </summary>
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationTokenSource = default!;
 
         /// <summary>
         /// A cancellation token that will fire during test cleanup.
@@ -31,7 +33,7 @@ namespace DataCore.Adapter.Tests {
         /// </summary>
         [TestInitialize]
         public virtual void Initialize() {
-            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
             CancellationToken = _cancellationTokenSource.Token;
         }
 

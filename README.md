@@ -19,6 +19,8 @@ Some of the core projects in the repository are:
 * `DataCore.Adapter.Core` ([source](/src/DataCore.Adapter.Core)) - a library containing request and response types used by adapters.
 * `DataCore.Adapter.Abstractions` ([source](/src/DataCore.Adapter.Abstractions)) - a library that describes adapters themselves, and the features that they can expose.
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a library that contains base classes and utility classes for simplifying the implementation of adapters and adapter features.
+* `DataCore.Adapter.DependencyInjection ([source](/src/DataCore.Adapter.DependencyInjection))` - types and extension methods for `Microsoft.Extensions.DependencyInjection`, to simplify the registration of required services with a dependency injection container.
+* `DataCore.Adapter.Json` ([source](/src/DataCore.Adapter.Json)) - converters for model types for the `System.Text.Json` JSON serializer.
 
 ## Hosting
 
@@ -47,6 +49,10 @@ Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) f
 ## Adapter Implementations
 
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a library containing an adapter that uses CSV files to serve real-time and historical tag values.
+
+## Testing
+
+* `DataCore.Adapter.Tests.Helpers` ([source](/src/DataCore.Adapter.Tests.Helpers)) - base classes that provide MSTest unit tests for standard adapter features.
 
 ## Example Projects
 
