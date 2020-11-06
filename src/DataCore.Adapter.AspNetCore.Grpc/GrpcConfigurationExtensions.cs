@@ -46,6 +46,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
             MapService<EventsServiceImpl>(endpoints, builder);
             MapService<HostInfoServiceImpl>(endpoints, builder);
+            MapService<TagConfigurationServiceImpl>(endpoints, builder);
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
             MapService<TagValuesServiceImpl>(endpoints, builder);
