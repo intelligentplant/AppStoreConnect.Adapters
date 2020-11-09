@@ -10,10 +10,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Defines a subscription channel for an event message subscription.
     /// </summary>
-    /// <typeparam name="TIdentifier">
-    ///   The subscription ID type.
-    /// </typeparam>
-    public class EventSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, string, EventMessage> {
+    public class EventSubscriptionChannel : SubscriptionChannel<string, EventMessage> {
 
         /// <summary>
         /// The subscription type.
@@ -22,7 +19,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <summary>
-        /// Creates a new <see cref="EventSubscriptionChannel{TIdentifier}"/> object.
+        /// Creates a new <see cref="EventSubscriptionChannel"/> object.
         /// </summary>
         /// <param name="id">
         ///   The subscription ID.
@@ -55,7 +52,7 @@ namespace DataCore.Adapter.Events {
         ///   writing to a full channel.
         /// </param>
         public EventSubscriptionChannel(
-            TIdentifier id,
+            int id,
             IAdapterCallContext context,
             IBackgroundTaskService backgroundTaskService,
             EventMessageSubscriptionType subscriptionType,

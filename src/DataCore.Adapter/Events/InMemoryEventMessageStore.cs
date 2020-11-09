@@ -100,9 +100,12 @@ namespace DataCore.Adapter.Events {
             _disposedToken = _disposedTokenSource.Token;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _push = new EventMessagePush(options, backgroundTaskService, Logger);
-            _pushWithTopics = new EventMessagePushWithTopics(new EventMessagePushWithTopicsOptions() { 
-                AdapterId = options.AdapterId
-            }, backgroundTaskService, Logger);
+            var pushWithTopicsOptions = new EventMessagePushWithTopicsOptions();
+            if (options != null) {
+                pushWithTopicsOptions.MaxSubscriptionCount = options.MaxSubscriptionCount;
+                pushWithTopicsOptions.ChannelCapacity = options.ChannelCapacity;
+            }
+            _pushWithTopics = new EventMessagePushWithTopics(pushWithTopicsOptions, backgroundTaskService, Logger);
             _capacity = options?.Capacity ?? -1;
         }
 

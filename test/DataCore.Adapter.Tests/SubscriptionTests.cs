@@ -20,7 +20,6 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                AdapterId = TestContext.TestName,
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
@@ -53,7 +52,6 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                AdapterId = TestContext.TestName,
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
@@ -106,7 +104,6 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                AdapterId = TestContext.TestName,
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
@@ -163,8 +160,7 @@ namespace DataCore.Adapter.Tests {
             var generationInterval = TimeSpan.FromMilliseconds(50);
             var publishInterval = TimeSpan.FromSeconds(1);
 
-            var options = new SnapshotTagValuePushOptions() { 
-                AdapterId = TestContext.TestName,
+            var options = new SnapshotTagValuePushOptions() {
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
@@ -211,7 +207,6 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                AdapterId = TestContext.TestName,
                 MaxSubscriptionCount = 1,
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
@@ -241,12 +236,11 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                AdapterId = TestContext.TestName,
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray()),
                 IsTopicMatch = (subscribed, received) => {
                     // If we subscribe to "tag_root", we should receive messages with a topic of 
                     // e.g. "tag_root/sub_tag".
-                    return received.Id.StartsWith(subscribed.Id + "/");
+                    return received.Id.Equals(subscribed.Id) || received.Id.StartsWith(subscribed.Id + "/");
                 }
             };
 
@@ -262,17 +256,17 @@ namespace DataCore.Adapter.Tests {
                 // We should receive this value due to our IsTopicMatch delegate
                 var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId1 = TestContext.TestName + "/SubTag";
-                await feature.ValueReceived(TagValueQueryResult.Create(tagId1, tagId1, val1));
+                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId1, tagId1, val1)), "Sub-tag value write failed.");
 
                 // We should not receive this value
                 var val2 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId2 = "Should_Not_Match";
-                await feature.ValueReceived(TagValueQueryResult.Create(tagId2, tagId2, val2));
+                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId2, tagId2, val2)), "Non-matching value write failed.");
 
                 // We should receive this value because it is an exact match for the tag we subscribed to.
                 var val3 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId3 = TestContext.TestName;
-                await feature.ValueReceived(TagValueQueryResult.Create(tagId3, tagId3, val3));
+                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId3, tagId3, val3)), "Exact match value write failed.");
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
@@ -297,9 +291,7 @@ namespace DataCore.Adapter.Tests {
         public async Task EventSubscriptionShouldEmitValues() {
             var now = DateTime.UtcNow;
 
-            var options = new EventMessagePushOptions() {
-                AdapterId = TestContext.TestName
-            };
+            var options = new EventMessagePushOptions();
 
             using (var feature = new EventMessagePush(options, null, null)) {
                 var subscription = await feature.Subscribe(
@@ -324,7 +316,6 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new EventMessagePushOptions() {
-                AdapterId = TestContext.TestName,
                 MaxSubscriptionCount = 1
             };
 
@@ -349,9 +340,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var topic = Guid.NewGuid().ToString();
 
-            var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName
-            };
+            var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var subscription = await feature.Subscribe(
@@ -385,9 +374,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var topic = Guid.NewGuid().ToString();
 
-            var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName
-            };
+            var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
@@ -448,9 +435,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var topic = Guid.NewGuid().ToString();
 
-            var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName
-            };
+            var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
@@ -516,7 +501,6 @@ namespace DataCore.Adapter.Tests {
             var topicRoot = Guid.NewGuid().ToString();
 
             var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName,
                 IsTopicMatch = (subscribed, received) => {
                     // If we subscribe to "topic_root", we should receive messages with a topic of 
                     // e.g. "topic_root/sub_topic".
@@ -593,9 +577,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var topic = Guid.NewGuid().ToString();
 
-            var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName
-            };
+            var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var subscription = await feature.Subscribe(
@@ -651,7 +633,6 @@ namespace DataCore.Adapter.Tests {
             var topic = Guid.NewGuid().ToString();
 
             var options = new EventMessagePushWithTopicsOptions() {
-                AdapterId = TestContext.TestName,
                 MaxSubscriptionCount = 1
             };
 
