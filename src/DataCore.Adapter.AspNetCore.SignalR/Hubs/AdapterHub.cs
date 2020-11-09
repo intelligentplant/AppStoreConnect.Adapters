@@ -120,7 +120,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <summary>
-        /// Creates a channel that will health check messages from the specified adapter.
+        /// Creates a channel that will receive health check messages from the specified adapter.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID.

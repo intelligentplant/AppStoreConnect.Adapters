@@ -9,13 +9,10 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Defines a subscription channel for a tag value subscription.
     /// </summary>
-    /// <typeparam name="TIdentifier">
-    ///   The subscription ID type.
-    /// </typeparam>
-    public class TagValueSubscriptionChannel<TIdentifier> : SubscriptionChannel<TIdentifier, TagIdentifier, TagValueQueryResult> {
+    public class TagValueSubscriptionChannel : SubscriptionChannel<TagIdentifier, TagValueQueryResult> {
 
         /// <summary>
-        /// Creates a new <see cref="TagValueSubscriptionChannel{TIdentifier}"/> object.
+        /// Creates a new <see cref="TagValueSubscriptionChannel"/> object.
         /// </summary>
         /// <param name="id">
         ///   The subscription ID.
@@ -46,7 +43,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   writing to a full channel.
         /// </param>
         public TagValueSubscriptionChannel(
-            TIdentifier id,
+            int id,
             IAdapterCallContext context,
             IBackgroundTaskService backgroundTaskService,
             TimeSpan publishInterval,

@@ -12,7 +12,7 @@ namespace DataCore.Adapter {
     /// Holds information about a subscription channel.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Subclasses should only exist inside this library")]
-    public class SubscriptionChannel<TIdentifier, TTopic, TValue> : IDisposable {
+    public class SubscriptionChannel<TTopic, TValue> : IDisposable {
 
         /// <summary>
         /// Indicates if the subscription has been disposed.
@@ -33,7 +33,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Subscription ID.
         /// </summary>
-        public TIdentifier Id { get; }
+        public int Id { get; }
 
         /// <summary>
         /// The context for the subscriber.
@@ -100,7 +100,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Creates a new <see cref="SubscriptionChannel{TIdentifier, TTopic, TValue}"/> object.
+        /// Creates a new <see cref="SubscriptionChannel{TTopic, TValue}"/> object.
         /// </summary>
         /// <param name="id">
         ///   The subscription ID.
@@ -108,8 +108,8 @@ namespace DataCore.Adapter {
         /// <param name="context">
         ///   The context for the subscriber.
         /// </param>
-        /// <param name="scheduler">
-        ///   The task scheduler, used to run publish operations in a background task if required.
+        /// <param name="backgroundTaskService">
+        ///   The background task service, used to run publish operations in a background task if required.
         /// </param>
         /// <param name="publishInterval">
         ///   The publish interval for the subscription. When greater than <see cref="TimeSpan.Zero"/>, 
@@ -130,9 +130,9 @@ namespace DataCore.Adapter {
         ///   writing to a full channel.
         /// </param>
         public SubscriptionChannel(
-            TIdentifier id,
+            int id,
             IAdapterCallContext context,
-            IBackgroundTaskService scheduler,
+            IBackgroundTaskService backgroundTaskService,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
             Action cleanup,
@@ -175,11 +175,11 @@ namespace DataCore.Adapter {
             };
             _ctRegistration = CancellationToken.Register(_cleanup);
 
-            scheduler.QueueBackgroundWorkItem(RunIngressLoop, CancellationToken);
+            backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, CancellationToken);
 
             // If we have a publish interval, run a background task to handle this.
             if (PublishInterval > TimeSpan.Zero) {
-                scheduler.QueueBackgroundWorkItem(RunEgressLoop, CancellationToken);
+                backgroundTaskService.QueueBackgroundWorkItem(RunEgressLoop, CancellationToken);
             }
         }
 

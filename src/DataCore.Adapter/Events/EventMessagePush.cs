@@ -21,57 +21,7 @@ namespace DataCore.Adapter.Events {
     ///   This implementation pushes ephemeral event messages to subscribers. To maintain an 
     ///   in-memory buffer of historical events, use <see cref="InMemoryEventMessageStore"/>.
     /// </remarks>
-    public class EventMessagePush : IEventMessagePush, IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable {
-
-        /// <summary>
-        /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
-        /// </summary>
-        public IBackgroundTaskService BackgroundTaskService { get; }
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        protected ILogger Logger { get; }
-
-        /// <summary>
-        /// Flags if the object has been disposed.
-        /// </summary>
-        private bool _isDisposed;
-
-        /// <summary>
-        /// Fires when then object is being disposed.
-        /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// A cancellation token that will fire when the object is disposed.
-        /// </summary>
-        protected CancellationToken DisposedToken => _disposedTokenSource.Token;
-
-        /// <summary>
-        /// Feature options.
-        /// </summary>
-        private readonly EventMessagePushOptions _options;
-
-        /// <summary>
-        /// Maximum number of concurrent subscriptions.
-        /// </summary>
-        private readonly int _maxSubscriptionCount;
-
-        /// <summary>
-        /// The last subscription ID that was issued.
-        /// </summary>
-        private int _lastSubscriptionId;
-
-        /// <summary>
-        /// The current subscriptions.
-        /// </summary>
-        private readonly ConcurrentDictionary<int, EventSubscriptionChannel<int>> _subscriptions = new ConcurrentDictionary<int, EventSubscriptionChannel<int>>();
-
-        /// <summary>
-        /// Indicates if the subscription manager currently holds any subscriptions.
-        /// </summary>
-        protected bool HasSubscriptions { get { return !_subscriptions.IsEmpty; } }
+    public class EventMessagePush : SubscriptionManager<EventMessagePushOptions, string, EventMessage, EventSubscriptionChannel>, IEventMessagePush {
 
         /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
@@ -81,22 +31,6 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         protected bool HasActiveSubscriptions { get; private set; }
 
-        /// <summary>
-        /// Publishes all event messages passed to the <see cref="EventMessagePush"/> via the 
-        /// <see cref="ValueReceived"/> method.
-        /// </summary>
-        public event Action<EventMessage>? Publish;
-
-        /// <summary>
-        /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
-        /// consumer thread will then re-publish to subscribers as required.
-        /// </summary>
-        private readonly Channel<EventMessage> _masterChannel = Channel.CreateUnbounded<EventMessage>(new UnboundedChannelOptions() {
-            AllowSynchronousContinuations = false,
-            SingleReader = true,
-            SingleWriter = true
-        });
-
 
         /// <summary>
         /// Creates a new <see cref="EventMessagePush"/> object.
@@ -105,17 +39,35 @@ namespace DataCore.Adapter.Events {
         ///   The feature options.
         /// </param>
         /// <param name="backgroundTaskService">
-        ///   The backgrounnd task service to use when running background operations.
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the subscription manager.
+        ///   The logger to use.
         /// </param>
-        public EventMessagePush(EventMessagePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
-            _options = options ?? new EventMessagePushOptions();
-            _maxSubscriptionCount = _options.MaxSubscriptionCount;
-            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            BackgroundTaskService.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
+        public EventMessagePush(EventMessagePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) 
+            : base(options, backgroundTaskService, logger) { }
+
+
+        /// <inheritdoc/>
+        protected override EventSubscriptionChannel CreateSubscriptionChannel(
+            IAdapterCallContext context, 
+            int id, 
+            int channelCapacity,
+            CancellationToken[] cancellationTokens, 
+            Action cleanup, 
+            object? state
+        ) {
+            var request = (CreateEventMessageSubscriptionRequest) state!;
+            return new EventSubscriptionChannel(
+                id, 
+                context, 
+                BackgroundTaskService, 
+                request?.SubscriptionType ?? EventMessageSubscriptionType.Active, 
+                TimeSpan.Zero, 
+                cancellationTokens, 
+                cleanup, 
+                channelCapacity
+            );
         }
 
 
@@ -125,7 +77,7 @@ namespace DataCore.Adapter.Events {
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
-            if (_isDisposed) {
+            if (IsDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (context == null) {
@@ -137,239 +89,40 @@ namespace DataCore.Adapter.Events {
 
             ValidationExtensions.ValidateObject(request);
 
-            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
-                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
-            }
-
-            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
-            var subscription = new EventSubscriptionChannel<int>(
-                subscriptionId,
-                context,
-                BackgroundTaskService,
-                request.SubscriptionType, 
-                TimeSpan.Zero,
-                new [] { DisposedToken, cancellationToken },
-                () => OnSubscriptionCancelledInternal(subscriptionId),
-                10
-            );
-            _subscriptions[subscriptionId] = subscription;
-
-            HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            OnSubscriptionAdded(subscription);
-
+            var subscription = CreateSubscription(context, request, cancellationToken);
             return Task.FromResult(subscription.Reader);
         }
 
 
-        /// <summary>
-        /// Invoked when a subscription is created.
-        /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
-        /// </param>
-        protected virtual void OnSubscriptionAdded(EventSubscriptionChannel<int> subscription) { }
-
-
-        /// <summary>
-        /// Invoked when a subscription is removed.
-        /// </summary>
-        /// <param name="subscription">
-        ///   The subscription.
-        /// </param>
-        protected virtual void OnSubscriptionCancelled(EventSubscriptionChannel<int> subscription) { }
-
-
-        /// <summary>
-        /// Sends an event message to subscribers.
-        /// </summary>
-        /// <param name="message">
-        ///   The message to publish.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="bool"/> indicating 
-        ///   if the value was published to subscribers.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="message"/> is <see langword="null"/>.
-        /// </exception>
-        public async ValueTask<bool> ValueReceived(EventMessage message, CancellationToken cancellationToken = default) {
-            if (message == null) {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            try {
-                using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
-                    await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
-                    return _masterChannel.Writer.TryWrite(message);
-                }
-            }
-            catch (OperationCanceledException) {
-                if (cancellationToken.IsCancellationRequested) {
-                    // Cancellation token provided by the caller has fired; rethrow the exception.
-                    throw;
-                }
-
-                // The stream manager is being disposed.
-                return false;
-            }
-        }
-
-
-        /// <summary>
-        /// Notifies the <see cref="EventMessagePush"/> that a subscription was cancelled.
-        /// </summary>
-        /// <param name="id">
-        ///   The cancelled subscription ID.
-        /// </param>
-        private void OnSubscriptionCancelledInternal(int id) {
-            if (_isDisposed) {
-                return;
-            }
-
-            if (_subscriptions.TryRemove(id, out var subscription)) {
-                subscription.Dispose();
-                HasActiveSubscriptions = HasSubscriptions && _subscriptions.Values.Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-                OnSubscriptionCancelled(subscription);
-            }
+        /// <inheritdoc/>
+        protected override void OnSubscriptionAdded(EventSubscriptionChannel subscription) {
+            HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
         }
 
 
         /// <inheritdoc/>
-        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var subscriptions = _subscriptions.Values.ToArray();
-
-            var result = HealthCheckResult.Healthy(nameof(EventMessagePush), data: new Dictionary<string, string>() {
-                { Resources.HealthChecks_Data_ActiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo) },
-                { Resources.HealthChecks_Data_PassiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo) }
-            });
-
-            return Task.FromResult(result);
+        protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) { 
+            HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
         }
 
 
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        /// <inheritdoc/>
+        protected override IDictionary<string, string> GetHealthCheckProperties(IAdapterCallContext context) {
+            var result = base.GetHealthCheckProperties(context);
 
+            var subscriptions = GetSubscriptions();
 
-        /// <summary>
-        /// Class finalizer.
-        /// </summary>
-        ~EventMessagePush() {
-            Dispose(false);
-        }
+            result[Resources.HealthChecks_Data_ActiveSubscriberCount] = subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo);
+            result[Resources.HealthChecks_Data_PassiveSubscriberCount] = subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo);
 
-
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the <see cref="EventMessagePush"/> is being 
-        ///   disposed, or <see langword="false"/> if it is being finalized.
-        /// </param>
-        protected virtual void Dispose(bool disposing) {
-            if (_isDisposed) {
-                return;
-            }
-
-            if (disposing) {
-                _disposedTokenSource.Cancel();
-                _disposedTokenSource.Dispose();
-                _masterChannel.Writer.TryComplete();
-
-                foreach (var item in _subscriptions.Values.ToArray()) {
-                    item.Dispose();
-                }
-
-                _subscriptions.Clear();
-            }
-
-            _isDisposed = true;
-        }
-
-
-        /// <summary>
-        /// Long-running task that sends event messages to subscribers whenever they are added to 
-        /// the <see cref="_masterChannel"/>.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   A cancellation token that can be used to stop processing of the queue.
-        /// </param>
-        /// <returns>
-        ///   A task that will complete when the cancellation token fires.
-        /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
-        private async Task PublishToSubscribers(CancellationToken cancellationToken) {
-            while (!cancellationToken.IsCancellationRequested) {
-                try {
-                    if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        break;
-                    }
-                }
-                catch (OperationCanceledException) {
-                    break;
-                }
-                catch (ChannelClosedException) {
-                    break;
-                }
-
-                while (_masterChannel.Reader.TryRead(out var message)) {
-                    if (cancellationToken.IsCancellationRequested) {
-                        break;
-                    }
-
-                    if (message == null) {
-                        continue;
-                    }
-
-                    Publish?.Invoke(message);
-
-                    var subscribers = _subscriptions.Values.ToArray();
-                    foreach (var subscriber in subscribers) {
-                        if (cancellationToken.IsCancellationRequested) {
-                            break;
-                        }
-
-                        try {
-                            var success = subscriber.Publish(message);
-                            if (!success) {
-                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
-                            }
-                        }
-                        catch (Exception e) {
-                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
-                        }
-                    }
-                }
-            }
+            return result;
         }
 
     }
 
 
     /// <summary>
-    /// Options for <see cref="EventMessagePushOptions"/>
+    /// Options for <see cref="EventMessagePush"/>
     /// </summary>
-    public class EventMessagePushOptions {
-
-        /// <summary>
-        /// The adapter name to use when creating subscription IDs.
-        /// </summary>
-        public string AdapterId { get; set; } = default!;
-
-        /// <summary>
-        /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
-        /// attempts to create additional subscriptions will throw exceptions. A value less than 
-        /// one indicates no limit.
-        /// </summary>
-        public int MaxSubscriptionCount { get; set; }
-
-    }
+    public class EventMessagePushOptions : SubscriptionManagerOptions { }
 }

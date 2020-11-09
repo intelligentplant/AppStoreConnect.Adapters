@@ -60,6 +60,14 @@ enum WriteOperationStatus {
 }
 
 
+enum ConfigurationChangeType {
+    CONFIGURATION_CHANGE_TYPE_UNKNOWN = 0;
+    CONFIGURATION_CHANGE_TYPE_CREATED = 1;
+    CONFIGURATION_CHANGE_TYPE_UPDATED = 2;
+    CONFIGURATION_CHANGE_TYPE_DELETED = 3;
+}
+
+
 // Host Info models
 
 message HostInfo {
@@ -243,6 +251,13 @@ message DigitalStateSet {
     string id = 1;
     string name = 2;
     repeated DigitalState states = 3;
+}
+
+
+message TagConfigurationChange {
+    TagIdentifier tag = 1;
+    ConfigurationChangeType change_type = 2;
+    repeated AdapterProperty properties = 3;
 }
 
 

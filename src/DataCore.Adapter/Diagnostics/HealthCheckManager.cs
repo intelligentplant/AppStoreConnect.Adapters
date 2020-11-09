@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The active subscriptions.
         /// </summary>
-        private readonly ConcurrentDictionary<int, SubscriptionChannel<int, string, HealthCheckResult>> _subscriptions = new ConcurrentDictionary<int, SubscriptionChannel<int, string, HealthCheckResult>>();
+        private readonly ConcurrentDictionary<int, SubscriptionChannel<string, HealthCheckResult>> _subscriptions = new ConcurrentDictionary<int, SubscriptionChannel<string, HealthCheckResult>>();
 
         /// <summary>
         /// Lock to ensure that only a single call to <see cref="CheckHealthAsync"/> is ongoing.
@@ -219,7 +219,7 @@ namespace DataCore.Adapter.Diagnostics {
             }
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
-            var subscription = new SubscriptionChannel<int, string, HealthCheckResult>(
+            var subscription = new SubscriptionChannel<string, HealthCheckResult>(
                 subscriptionId,
                 context,
                 _adapter.BackgroundTaskService,
