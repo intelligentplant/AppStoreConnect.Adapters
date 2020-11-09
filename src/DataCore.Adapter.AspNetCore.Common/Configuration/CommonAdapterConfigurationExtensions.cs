@@ -8,6 +8,7 @@ using DataCore.Adapter.AspNetCore.Authorization;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.DependencyInjection;
 
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.Extensions.DependencyInjection {
@@ -36,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             var builder = new DefaultAdapterConfigurationBuilder(services);
-            builder.AddDefaultServices();
+            builder.AddDefaultAspNetCoreServices();
 
             return builder;
         }
@@ -349,9 +350,16 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <returns>
         ///   The <see cref="IAdapterConfigurationBuilder"/>.
         /// </returns>
-        private static IAdapterConfigurationBuilder AddDefaultServices(this IAdapterConfigurationBuilder builder) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddDefaultAspNetCoreServices(this IAdapterConfigurationBuilder builder) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
             builder.Services.AddAspNetCoreBackgroundTaskService(options => options.AllowWorkItemRegistrationWhileStopped = true);
-            builder.Services.AddSingleton(HostInfo.Unspecified);
+            builder.Services.TryAddSingleton(HostInfo.Unspecified);
             builder.AddAdapterAccessor<AspNetCoreAdapterAccessor>();
             builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
             builder.AddAutomaticInitialization();
