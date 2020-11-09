@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Tests {
             // Add adapter services
 
             services
-                .AddDataCoreAdapterServices()
+                .AddDataCoreAdapterAspNetCoreServices()
                 .AddHostInfo(
                     "Unit Test Standalone Host",
                     "Unit Test App Store Connect Adapters host running on ASP.NET Core",

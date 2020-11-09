@@ -76,7 +76,7 @@ Package versions are defined in a [common build properties file](/build/Dependen
 // Register the adapter and required services.
 
 services
-    .AddDataCoreAdapterServices()
+    .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
@@ -134,7 +134,7 @@ To implement authorization in an ASP.NET Core host application, you can extend t
 
 ```csharp
 services
-    .AddDataCoreAdapterServices()
+    .AddDataCoreAdapterAspNetCoreServices()
     // - snip -
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```

@@ -12,7 +12,7 @@ namespace DataCore.Adapter.NetFxExample {
         public void ConfigureServices(IServiceCollection services) {
 
             services
-                .AddDataCoreAdapterServices()
+                .AddDataCoreAdapterAspNetCoreServices()
                 .AddAdapter<ExampleAdapter>()
                 .AddHostInfo(
                     "Example .NET Framework Host",
