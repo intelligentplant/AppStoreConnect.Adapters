@@ -146,7 +146,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Fail($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a value that indicates that it has not been overridden. Override {methodName} in your test class to return the input data to use for this test.");
+            Assert.Inconclusive($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a null value, indicating that the test should be skipped. Override {methodName} in your test class to return a non-null value if you wish to run this test.");
         }
 
 
