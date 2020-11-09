@@ -124,6 +124,20 @@ namespace DataCore.Adapter.Events {
         }
 
 
+        /// <summary>
+        /// Gets the composite set of topics that are currently being subscribed to by all 
+        /// subscribers.
+        /// </summary>
+        /// <returns>
+        ///   The subscribed topics.
+        /// </returns>
+        public IEnumerable<string> GetSubscribedTopics() {
+            lock (_subscriberCount) {
+                return _subscriberCount.Keys.ToArray();
+            }
+        }
+
+
         /// <inheritdoc/>
         protected override bool IsTopicMatch(EventMessage value, IEnumerable<string> topics) {
             if (value?.Topic == null) {
