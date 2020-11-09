@@ -31,15 +31,12 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="services"/> is <see langword="null"/>.
         /// </exception>
-        public static IAdapterConfigurationBuilder AddDataCoreAdapterServices(this IServiceCollection services) {
+        public static IAdapterConfigurationBuilder AddDataCoreAdapterAspNetCoreServices(this IServiceCollection services) {
             if (services == null) {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var builder = new DefaultAdapterConfigurationBuilder(services);
-            builder.AddDefaultAspNetCoreServices();
-
-            return builder;
+            return services.AddDataCoreAdapterServices().AddDefaultAspNetCoreServices();
         }
 
 

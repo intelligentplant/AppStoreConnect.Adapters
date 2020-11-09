@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add adapter services
 
             services
-                .AddDataCoreAdapterServices()
+                .AddDataCoreAdapterAspNetCoreServices()
                 .AddHostInfo(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core",

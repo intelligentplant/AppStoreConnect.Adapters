@@ -14,7 +14,7 @@ Adapter services must be added to the application in the `Startup.cs` file's `Co
 
 ```csharp
 services
-    .AddDataCoreAdapterServices()
+    .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(HostInfo.Create(
         "My Host",
         "A brief description of the hosting application",
