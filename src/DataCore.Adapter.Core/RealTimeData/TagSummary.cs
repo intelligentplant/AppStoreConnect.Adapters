@@ -85,5 +85,26 @@ namespace DataCore.Adapter.RealTimeData {
             return new TagSummary(id, name, description, units, dataType);
         }
 
+
+        /// <summary>
+        /// Creates a new <see cref="TagSummary"/> object that is a copy of an existing instance.
+        /// </summary>
+        /// <param name="other">
+        ///   The <see cref="TagSummary"/> to copy.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="other"/> is <see langword="null"/>.
+        /// </exception>
+        /// <returns>
+        ///   A new <see cref="TagSummary"/> instance.
+        /// </returns>
+        public static TagSummary FromExisting(TagSummary other) {
+            if (other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            return Create(other.Id, other.Name, other.Description, other.Units, other.DataType);
+        }
+
     }
 }

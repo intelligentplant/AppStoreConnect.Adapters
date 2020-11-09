@@ -58,8 +58,32 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        /// <returns>
+        ///   A new <see cref="TagIdentifier"/> instance.
+        /// </returns>
         public static TagIdentifier Create(string id, string name) {
             return new TagIdentifier(id, name);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagIdentifier"/> object that is a copy of an existing instance.
+        /// </summary>
+        /// <param name="other">
+        ///   The <see cref="TagIdentifier"/> to copy.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="other"/> is <see langword="null"/>.
+        /// </exception>
+        /// <returns>
+        ///   A new <see cref="TagIdentifier"/> instance.
+        /// </returns>
+        public static TagIdentifier FromExisting(TagIdentifier other) {
+            if (other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            return Create(other.Id, other.Name);
         }
 
 
