@@ -18,9 +18,7 @@ namespace DataCore.Adapter.Benchmarks {
 
 
         public SnapshotPush(int samplesPerTag) : base(
-            new SnapshotTagValuePushOptions() { 
-                AdapterId = nameof(SnapshotPush)
-            }, 
+            new SnapshotTagValuePushOptions(), 
             null, 
             null
         ) {

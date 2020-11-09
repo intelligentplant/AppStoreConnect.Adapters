@@ -50,6 +50,7 @@ namespace DataCore.Adapter {
             [RealTimeData.ReadSnapshotTagValues] = typeof(IReadSnapshotTagValues),
             [RealTimeData.ReadTagValuesAtTimes] = typeof(IReadTagValuesAtTimes),
             [RealTimeData.SnapshotTagValuePush] = typeof(ISnapshotTagValuePush),
+            [RealTimeData.TagConfigurationChanges] = typeof(ITagConfigurationChanges),
             [RealTimeData.TagInfo] = typeof(ITagInfo),
             [RealTimeData.TagSearch] = typeof(ITagSearch),
             [RealTimeData.WriteAnnotations] = typeof(IWriteTagValueAnnotations),
@@ -262,6 +263,11 @@ namespace DataCore.Adapter {
             /// URI for <see cref="ISnapshotTagValuePush"/>.
             /// </summary>
             public const string SnapshotTagValuePush = "asc:features/real-time-data/values/push/";
+
+            /// <summary>
+            /// URI for <see cref="ITagConfigurationChanges"/>.
+            /// </summary>
+            public const string TagConfigurationChanges = "asc:features/real-time-data/tags/configuration-changes/";
 
             /// <summary>
             /// URI for <see cref="ITagInfo"/>.
