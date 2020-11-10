@@ -2,16 +2,16 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
-    // Adds hub methods for tag configuration queries.
+    // Adds hub methods for configuration change queries.
 
     public partial class AdapterHub {
 
         /// <summary>
-        /// Creates a channel that will receive tag configuration changes from the specified adapter.
+        /// Creates a channel that will receive configuration changes from the specified adapter.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID.
@@ -23,16 +23,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel reader that subscribers can observe to receive tag configuration change 
+        ///   A channel reader that subscribers can observe to receive configuration change 
         ///   notifications.
         /// </returns>
-        public async Task<ChannelReader<TagConfigurationChange>> CreateTagConfigurationChangesChannel(
+        public async Task<ChannelReader<ConfigurationChange>> CreateConfigurationChangesChannel(
             string adapterId,
-            TagConfigurationChangesSubscriptionRequest request,
+            ConfigurationChangesSubscriptionRequest request,
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await ResolveAdapterAndFeature<ITagConfigurationChanges>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await ResolveAdapterAndFeature<IConfigurationChanges>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
             return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }

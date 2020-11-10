@@ -1,4 +1,4 @@
-﻿namespace DataCore.Adapter.Common {
+﻿namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Describes a category for a configuration change.

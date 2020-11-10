@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -7,15 +9,15 @@ using IntelligentPlant.BackgroundTasks;
 
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
-    /// Default implementation of the <see cref="ITagConfigurationChanges"/> feature.
+    /// Default implementation of the <see cref="IConfigurationChanges"/> feature.
     /// </summary>
-    public class TagConfigurationChanges : SubscriptionManager<TagConfigurationChangesOptions, string, TagConfigurationChange, TagConfigurationChangesSubscription>, ITagConfigurationChanges {
+    public class ConfigurationChanges : SubscriptionManager<ConfigurationChangesOptions, string, ConfigurationChange, ConfigurationChangesSubscription>, IConfigurationChanges {
 
         /// <summary>
-        /// Creates a new <see cref="TagConfigurationChanges"/> object.
+        /// Creates a new <see cref="ConfigurationChanges"/> object.
         /// </summary>
         /// <param name="options">
         ///   The subscription manager options.
@@ -26,15 +28,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public TagConfigurationChanges(
-            TagConfigurationChangesOptions? options, 
+        public ConfigurationChanges(
+            ConfigurationChangesOptions? options, 
             IBackgroundTaskService? backgroundTaskService, 
             ILogger? logger
         ) : base(options, backgroundTaskService, logger) { }
 
 
         /// <inheritdoc/>
-        protected override TagConfigurationChangesSubscription CreateSubscriptionChannel(
+        protected override ConfigurationChangesSubscription CreateSubscriptionChannel(
             IAdapterCallContext context, 
             int id, 
             int channelCapacity,
@@ -42,7 +44,7 @@ namespace DataCore.Adapter.RealTimeData {
             Action cleanup,
             object? state
         ) {
-            return new TagConfigurationChangesSubscription(
+            return new ConfigurationChangesSubscription(
                 id,
                 context,
                 BackgroundTaskService,
@@ -54,9 +56,9 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagConfigurationChange>> Subscribe(
+        public Task<ChannelReader<ConfigurationChange>> Subscribe(
             IAdapterCallContext context, 
-            TagConfigurationChangesSubscriptionRequest request, 
+            ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
             if (IsDisposed) {
@@ -72,24 +74,34 @@ namespace DataCore.Adapter.RealTimeData {
             ValidationExtensions.ValidateObject(request);
 
             var subscription = CreateSubscription(context, null, cancellationToken);
+            if (request.ItemTypes != null && request.ItemTypes.Any()) {
+                subscription.AddTopics(request.ItemTypes);
+            }
             return Task.FromResult(subscription.Reader);
         }
+
+
+        /// <inheritdoc/>
+        protected override bool IsTopicMatch(ConfigurationChange value, IEnumerable<string> topics) {
+            return topics.Any(x => string.Equals(value.ItemType, x, StringComparison.OrdinalIgnoreCase));
+        }
+
     }
 
 
     /// <summary>
-    /// Options for <see cref="TagConfigurationChanges"/>
+    /// Options for <see cref="ConfigurationChanges"/>
     /// </summary>
-    public class TagConfigurationChangesOptions : SubscriptionManagerOptions { }
+    public class ConfigurationChangesOptions : SubscriptionManagerOptions { }
 
 
     /// <summary>
-    /// Subscription type for <see cref="TagConfigurationChanges"/>.
+    /// Subscription type for <see cref="ConfigurationChanges"/>.
     /// </summary>
-    public class TagConfigurationChangesSubscription : SubscriptionChannel<string, TagConfigurationChange> {
+    public class ConfigurationChangesSubscription : SubscriptionChannel<string, ConfigurationChange> {
 
         /// <summary>
-        /// Creates a new <see cref="TagConfigurationChangesSubscription"/> object.
+        /// Creates a new <see cref="ConfigurationChangesSubscription"/> object.
         /// </summary>
         /// <param name="id">
         ///   The subscription ID.
@@ -113,7 +125,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see cref="BoundedChannelFullMode.DropWrite"/> is used as the behaviour when 
         ///   writing to a full channel.
         /// </param>
-        public TagConfigurationChangesSubscription(
+        public ConfigurationChangesSubscription(
             int id, 
             IAdapterCallContext context, 
             IBackgroundTaskService backgroundTaskService, 

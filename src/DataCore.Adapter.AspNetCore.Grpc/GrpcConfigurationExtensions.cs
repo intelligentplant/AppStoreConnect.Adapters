@@ -44,9 +44,9 @@ namespace Microsoft.Extensions.DependencyInjection {
         public static IEndpointRouteBuilder MapDataCoreGrpcServices(this IEndpointRouteBuilder endpoints, Action<Type, IEndpointConventionBuilder>? builder) {
             MapService<AdaptersServiceImpl>(endpoints, builder);
             MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
+            MapService<ConfigurationChangesServiceImpl>(endpoints, builder);
             MapService<EventsServiceImpl>(endpoints, builder);
             MapService<HostInfoServiceImpl>(endpoints, builder);
-            MapService<TagConfigurationServiceImpl>(endpoints, builder);
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
             MapService<TagValuesServiceImpl>(endpoints, builder);

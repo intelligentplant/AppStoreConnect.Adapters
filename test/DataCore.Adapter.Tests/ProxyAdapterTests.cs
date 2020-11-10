@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.RealTimeData;
@@ -25,6 +27,32 @@ namespace DataCore.Adapter.Tests {
 
         protected sealed override TProxy CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
             return CreateProxy(WebHostConfiguration.AdapterId, serviceProvider);
+        }
+
+
+        protected override ConfigurationChangesSubscriptionRequest CreateConfigurationChangesSubscriptionRequest(TestContext context) {
+            return new ConfigurationChangesSubscriptionRequest() { 
+                ItemTypes = new[] { ConfigurationChangeItemType.Tag }
+            };
+        }
+
+
+        protected override async Task<bool> EmitTestConfigurationChanges(TestContext context, TProxy adapter, IEnumerable<string> itemTypes, ConfigurationChangeType changeType, CancellationToken cancellationToken) {
+            var remoteAdapter = AssemblyInitializer.ApplicationServices.GetService<IAdapter>();
+            if (remoteAdapter == null) {
+                return false;
+            }
+
+            var feature = remoteAdapter.GetFeature<IConfigurationChanges>() as ConfigurationChanges;
+            if (feature == null) {
+                return false;
+            }
+
+            foreach (var itemType in itemTypes) {
+                await feature.ValueReceived(new ConfigurationChange(itemType, context.TestName, context.TestName, changeType, null), cancellationToken).ConfigureAwait(false);
+            }
+
+            return true;
         }
 
 

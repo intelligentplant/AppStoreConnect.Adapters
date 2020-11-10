@@ -160,6 +160,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You cannot specify a null or white space item type..
+        /// </summary>
+        public static string Error_ItemTypeCannotBeNull {
+            get {
+                return ResourceManager.GetString("Error_ItemTypeCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a name..
         /// </summary>
         public static string Error_NameIsRequired {
@@ -237,6 +246,15 @@ namespace DataCore.Adapter {
         public static string Error_TagSearchRequiresAtLeastOneFilter {
             get {
                 return ResourceManager.GetString("Error_TagSearchRequiresAtLeastOneFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must specify a type..
+        /// </summary>
+        public static string Error_TypeIsRequired {
+            get {
+                return ResourceManager.GetString("Error_TypeIsRequired", resourceCulture);
             }
         }
         

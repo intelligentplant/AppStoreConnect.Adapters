@@ -47,6 +47,7 @@ namespace DataCore.Adapter.Tests {
                 )
                 .AddServices(svc => {
                     svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
+                    svc.AddSingleton<Diagnostics.ConfigurationChangesOptions>();
                 })
                 .AddAdapter(sp => {
                     var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, WebHostConfiguration.AdapterId, new Csv.CsvAdapterOptions() {
@@ -63,6 +64,11 @@ namespace DataCore.Adapter.Tests {
 
                     // Add dummy tag value writing.
                     adapter.AddStandardFeatures(new NullValueWrite());
+
+                    // Add configuration change notifier.
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())    
+                    );
 
                     // Add ping-pong extension
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter));

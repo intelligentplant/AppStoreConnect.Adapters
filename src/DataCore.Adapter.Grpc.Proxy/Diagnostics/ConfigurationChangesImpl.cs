@@ -3,27 +3,27 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
     /// <summary>
-    /// <see cref="ITagConfigurationChanges"/> implementation.
+    /// <see cref="IConfigurationChanges"/> implementation.
     /// </summary>
-    internal class TagConfigurationChangesImpl : ProxyAdapterFeature, ITagConfigurationChanges {
+    internal class ConfigurationChangesImpl : ProxyAdapterFeature, IConfigurationChanges {
 
         /// <summary>
-        /// Creates a new <see cref="TagConfigurationChangesImpl"/> instance.
+        /// Creates a new <see cref="ConfigurationChangesImpl"/> instance.
         /// </summary>
         /// <param name="proxy">
         ///   The proxy that owns the instance.
         /// </param>
-        public TagConfigurationChangesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
+        public ConfigurationChangesImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.RealTimeData.TagConfigurationChange>> Subscribe(
+        public Task<ChannelReader<Adapter.Diagnostics.ConfigurationChange>> Subscribe(
             IAdapterCallContext context, 
-            TagConfigurationChangesSubscriptionRequest request, 
+            ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
             if (context == null) {
@@ -32,14 +32,18 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
 
             GrpcAdapterProxy.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateChannel<Adapter.RealTimeData.TagConfigurationChange>(0);
+            var result = ChannelExtensions.CreateChannel<Adapter.Diagnostics.ConfigurationChange>(0);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<TagConfigurationService.TagConfigurationServiceClient>();
+                var client = CreateClient<ConfigurationChangesService.ConfigurationChangesServiceClient>();
 
-                var grpcRequest = new CreateTagConfigurationChangePushChannelRequest() {
+                var grpcRequest = new CreateConfigurationChangePushChannelRequest() {
                     AdapterId = AdapterId,
                 };
+
+                if (request.ItemTypes != null) {
+                    grpcRequest.ItemTypes.AddRange(request.ItemTypes);
+                }
 
                 if (request.Properties != null) {
                     foreach (var item in request.Properties) {
@@ -57,7 +61,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
                             continue;
                         }
 
-                        await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterTagConfigurationChange(), ct).ConfigureAwait(false);
+                        await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterConfigurationChange(), ct).ConfigureAwait(false);
                     }
                 }
             }, true, BackgroundTaskService, cancellationToken);
