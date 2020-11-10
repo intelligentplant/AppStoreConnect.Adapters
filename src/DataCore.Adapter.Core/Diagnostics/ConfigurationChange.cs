@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// Creates a new <see cref="ConfigurationChange"/> object.
         /// </summary>
         /// <param name="itemType">
-        ///   The type of the item that was modified. Common values are defined in <see cref="ConfigurationChangeItemType"/>.
+        ///   The type of the item that was modified. Common values are defined in <see cref="ConfigurationChangeItemTypes"/>.
         /// </param>
         /// <param name="itemId">
         ///   The ID of the item that was modified.

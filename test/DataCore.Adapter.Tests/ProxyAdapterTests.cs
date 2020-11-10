@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Tests {
 
         protected override ConfigurationChangesSubscriptionRequest CreateConfigurationChangesSubscriptionRequest(TestContext context) {
             return new ConfigurationChangesSubscriptionRequest() { 
-                ItemTypes = new[] { ConfigurationChangeItemType.Tag }
+                ItemTypes = new[] { ConfigurationChangeItemTypes.Tag }
             };
         }
 
