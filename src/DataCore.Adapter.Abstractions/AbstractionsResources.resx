@@ -216,6 +216,9 @@
   <data name="Description_AssetModelSearch" xml:space="preserve">
     <value>Allows an adapter's asset model hierarchy to be searched.</value>
   </data>
+  <data name="Description_ConfigurationChanges" xml:space="preserve">
+    <value>Allows subscribers to receive notifications when items on an adapter such as tags or asset model nodes are created, updated, or deleted.</value>
+  </data>
   <data name="Description_EventMessagePush" xml:space="preserve">
     <value>Allows subscribers to receive event messages from an adapter in real-time.</value>
   </data>
@@ -252,9 +255,6 @@
   <data name="Description_SnapshotTagValuePush" xml:space="preserve">
     <value>Allows subscribers to receive snapshot tag value updates from an adapter in real-time.</value>
   </data>
-  <data name="Description_TagConfigurationChanges" xml:space="preserve">
-    <value>Allows subscribers to receive notifications when tags on the adapter are created, updated, or deleted.</value>
-  </data>
   <data name="Description_TagInfo" xml:space="preserve">
     <value>Allows retrieval of an adapter's tag definitions using the tag's ID or name.</value>
   </data>
@@ -278,6 +278,9 @@
   </data>
   <data name="DisplayName_AssetModelSearch" xml:space="preserve">
     <value>Asset Model Search</value>
+  </data>
+  <data name="DisplayName_ConfigurationChanges" xml:space="preserve">
+    <value>Configuration Changes</value>
   </data>
   <data name="DisplayName_EventMessagePush" xml:space="preserve">
     <value>Event Message Push</value>
@@ -314,9 +317,6 @@
   </data>
   <data name="DisplayName_SnapshotTagValuePush" xml:space="preserve">
     <value>Snapshot Tag Value Push</value>
-  </data>
-  <data name="DisplayName_TagConfigurationChanges" xml:space="preserve">
-    <value>Tag Configuration Changes</value>
   </data>
   <data name="DisplayName_TagInfo" xml:space="preserve">
     <value>Tag Information</value>

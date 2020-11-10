@@ -8,7 +8,9 @@
 using System;
 using System.Globalization;
 using System.Linq;
+
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter {
@@ -534,6 +536,64 @@ namespace DataCore.Adapter {
                 default:
                     return Grpc.ConfigurationChangeType.Unknown;
             }
+        }
+
+
+        /// <summary>
+        /// Converts the value to its adapter equivalent.
+        /// </summary>
+        /// <param name="change">
+        ///   The gRPC configuration change.
+        /// </param>
+        /// <returns>
+        ///   The adapter configuration change.
+        /// </returns>
+        public static Diagnostics.ConfigurationChange ToAdapterConfigurationChange(this Grpc.ConfigurationChange change) {
+            if (change == null) {
+                throw new ArgumentNullException(nameof(change));
+            }
+
+            return new Diagnostics.ConfigurationChange(
+                change.ItemType,
+                change.ItemId,
+                change.ItemName,
+                change.ChangeType.ToAdapterConfigurationChangeType(),
+                change.Properties.Select(x => x.ToAdapterProperty())
+            );
+        }
+
+
+        /// <summary>
+        /// Converts the value to its gRPC equivalent.
+        /// </summary>
+        /// <param name="change">
+        ///   The adapter configuration change.
+        /// </param>
+        /// <returns>
+        ///   The gRPC configuration change.
+        /// </returns>
+        public static Grpc.ConfigurationChange ToGrpcConfigurationChange(this Diagnostics.ConfigurationChange change) {
+            if (change == null) {
+                throw new ArgumentNullException(nameof(change));
+            }
+
+            var result = new Grpc.ConfigurationChange() {
+                ItemType = change.ItemType ?? string.Empty,
+                ItemId = change.ItemId ?? string.Empty,
+                ItemName = change.ItemName ?? string.Empty,
+                ChangeType = change.ChangeType.ToGrpcConfigurationChangeType()
+            };
+
+            if (change.Properties?.Any() ?? false) {
+                foreach (var prop in change.Properties) {
+                    if (prop == null) {
+                        continue;
+                    }
+                    result.Properties.Add(prop.ToGrpcAdapterProperty());
+                }
+            }
+
+            return result;
         }
 
 
@@ -1622,63 +1682,6 @@ namespace DataCore.Adapter {
                     }
 
                     result.States.Add(item.ToGrpcDigitalState());
-                }
-            }
-
-            return result;
-        }
-
-
-        /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="change">
-        ///   The gRPC tag configuration change.
-        /// </param>
-        /// <returns>
-        ///   The adapter tag configuration change.
-        /// </returns>
-        public static RealTimeData.TagConfigurationChange ToAdapterTagConfigurationChange(this Grpc.TagConfigurationChange change) {
-            if (change == null) {
-                throw new ArgumentNullException(nameof(change));
-            }
-
-            return new RealTimeData.TagConfigurationChange(
-                new RealTimeData.TagIdentifier(change.Tag.Id, change.Tag.Name),
-                change.ChangeType.ToAdapterConfigurationChangeType(),
-                change.Properties.Select(x => x.ToAdapterProperty())
-            );
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="change">
-        ///   The adapter tag configuration change.
-        /// </param>
-        /// <returns>
-        ///   The gRPC tag configuration change.
-        /// </returns>
-        public static Grpc.TagConfigurationChange ToGrpcTagConfigurationChange(this RealTimeData.TagConfigurationChange change) {
-            if (change == null) {
-                throw new ArgumentNullException(nameof(change));
-            }
-
-            var result = new Grpc.TagConfigurationChange() {
-                Tag = new Grpc.TagIdentifier() {
-                    Id = change.Tag.Id ?? string.Empty,
-                    Name = change.Tag.Name ?? string.Empty
-                },
-                ChangeType = change.ChangeType.ToGrpcConfigurationChangeType()
-            };
-
-            if (change.Properties?.Any() ?? false) {
-                foreach (var prop in change.Properties) {
-                    if (prop == null) {
-                        continue;
-                    }
-                    result.Properties.Add(prop.ToGrpcAdapterProperty());
                 }
             }
 

@@ -49,6 +49,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public AssetModelBrowserClient AssetModel { get; }
 
         /// <summary>
+        /// The strongly-typed client for subscribing to receive configuration change notifications.
+        /// </summary>
+        public ConfigurationChangesClient ConfigurationChanges { get; }
+
+        /// <summary>
         /// The strongly-typed client for reading event messages from and writing event messages 
         /// to an adapter.
         /// </summary>
@@ -58,11 +63,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// The strongly-typed client for requesting information about the remote host.
         /// </summary>
         public HostInfoClient HostInfo { get; }
-
-        /// <summary>
-        /// The strongly-typed client for performing tag configuration operations.
-        /// </summary>
-        public TagConfigurationClient TagConfiguration { get; }
 
         /// <summary>
         /// The strongly-typed client for browsing tags on an adapter.
@@ -150,7 +150,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             Events = new EventsClient(this);
             Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
-            TagConfiguration = new TagConfigurationClient(this);
+            ConfigurationChanges = new ConfigurationChangesClient(this);
             TagSearch = new TagSearchClient(this);
             TagValueAnnotations = new TagValueAnnotationsClient(this);
             TagValues = new TagValuesClient(this);

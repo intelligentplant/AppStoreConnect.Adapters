@@ -37,6 +37,7 @@ namespace DataCore.Adapter {
         private static readonly IReadOnlyDictionary<string, Type> s_standardFeatureTypeLookup = new ReadOnlyDictionary<string, Type>(new Dictionary<string, Type>() { 
             [AssetModel.AssetModelBrowse] = typeof(IAssetModelBrowse),
             [AssetModel.AssetModelSearch] = typeof(IAssetModelSearch),
+            [Diagnostics.ConfigurationChanges] = typeof(IConfigurationChanges),
             [Diagnostics.HealthCheck] = typeof(IHealthCheck),
             [Events.EventMessagePush] = typeof(IEventMessagePush),
             [Events.EventMessagePushWithTopics] = typeof(IEventMessagePushWithTopics),
@@ -50,7 +51,6 @@ namespace DataCore.Adapter {
             [RealTimeData.ReadSnapshotTagValues] = typeof(IReadSnapshotTagValues),
             [RealTimeData.ReadTagValuesAtTimes] = typeof(IReadTagValuesAtTimes),
             [RealTimeData.SnapshotTagValuePush] = typeof(ISnapshotTagValuePush),
-            [RealTimeData.TagConfigurationChanges] = typeof(ITagConfigurationChanges),
             [RealTimeData.TagInfo] = typeof(ITagInfo),
             [RealTimeData.TagSearch] = typeof(ITagSearch),
             [RealTimeData.WriteAnnotations] = typeof(IWriteTagValueAnnotations),
@@ -184,6 +184,11 @@ namespace DataCore.Adapter {
         public static class Diagnostics {
 
             /// <summary>
+            /// URI for <see cref="IConfigurationChanges"/>.
+            /// </summary>
+            public const string ConfigurationChanges = "asc:features/diagnostics/configuration-changes/";
+
+            /// <summary>
             /// URI for <see cref="IHealthCheck"/>.
             /// </summary>
             public const string HealthCheck = "asc:features/diagnostics/health-check/";
@@ -263,11 +268,6 @@ namespace DataCore.Adapter {
             /// URI for <see cref="ISnapshotTagValuePush"/>.
             /// </summary>
             public const string SnapshotTagValuePush = "asc:features/real-time-data/values/push/";
-
-            /// <summary>
-            /// URI for <see cref="ITagConfigurationChanges"/>.
-            /// </summary>
-            public const string TagConfigurationChanges = "asc:features/real-time-data/tags/configuration-changes/";
 
             /// <summary>
             /// URI for <see cref="ITagInfo"/>.

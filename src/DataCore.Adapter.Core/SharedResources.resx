@@ -150,6 +150,9 @@
   <data name="Error_InvalidUri" xml:space="preserve">
     <value>You must specify a valid URI.</value>
   </data>
+  <data name="Error_ItemTypeCannotBeNull" xml:space="preserve">
+    <value>You cannot specify a null or white space item type.</value>
+  </data>
   <data name="Error_NameIsRequired" xml:space="preserve">
     <value>You must specify a name.</value>
   </data>
@@ -176,6 +179,9 @@
   </data>
   <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
     <value>At least one tag search filter field must be specified.</value>
+  </data>
+  <data name="Error_TypeIsRequired" xml:space="preserve">
+    <value>You must specify a type.</value>
   </data>
   <data name="HostInfo_Unspecified_Description" xml:space="preserve">
     <value>Host information has not been provided.</value>

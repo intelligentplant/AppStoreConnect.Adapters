@@ -358,6 +358,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows subscribers to receive notifications when items on an adapter such as tags or asset model nodes are created, updated, or deleted..
+        /// </summary>
+        public static string Description_ConfigurationChanges {
+            get {
+                return ResourceManager.GetString("Description_ConfigurationChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time..
         /// </summary>
         public static string Description_EventMessagePush {
@@ -466,15 +475,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows subscribers to receive notifications when tags on the adapter are created, updated, or deleted..
-        /// </summary>
-        public static string Description_TagConfigurationChanges {
-            get {
-                return ResourceManager.GetString("Description_TagConfigurationChanges", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Allows retrieval of an adapter&apos;s tag definitions using the tag&apos;s ID or name..
         /// </summary>
         public static string Description_TagInfo {
@@ -543,6 +543,15 @@ namespace DataCore.Adapter {
         public static string DisplayName_AssetModelSearch {
             get {
                 return ResourceManager.GetString("DisplayName_AssetModelSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Configuration Changes.
+        /// </summary>
+        public static string DisplayName_ConfigurationChanges {
+            get {
+                return ResourceManager.GetString("DisplayName_ConfigurationChanges", resourceCulture);
             }
         }
         
@@ -651,15 +660,6 @@ namespace DataCore.Adapter {
         public static string DisplayName_SnapshotTagValuePush {
             get {
                 return ResourceManager.GetString("DisplayName_SnapshotTagValuePush", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tag Configuration Changes.
-        /// </summary>
-        public static string DisplayName_TagConfigurationChanges {
-            get {
-                return ResourceManager.GetString("DisplayName_TagConfigurationChanges", resourceCulture);
             }
         }
         

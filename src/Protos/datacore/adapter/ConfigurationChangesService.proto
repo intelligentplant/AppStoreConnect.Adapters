@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+import "Types.proto";
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service ConfigurationChangesService {
+    rpc CreateConfigurationChangesPushChannel (CreateConfigurationChangePushChannelRequest) returns (stream ConfigurationChange);
+}
+
+
+// Create configuration change subscription
+message CreateConfigurationChangePushChannelRequest {
+    string adapter_id = 1;
+    repeated string item_types = 2;
+    map<string, string> properties = 3;
+}

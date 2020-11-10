@@ -2,21 +2,22 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
-    /// Feature that allows subscribers to be notified when tag configuration changes occur.
+    /// Feature that allows subscribers to be notified when configuration changes on items such as 
+    /// tags and asset model nodes occur.
     /// </summary>
     [AdapterFeature(
-        WellKnownFeatures.RealTimeData.TagConfigurationChanges,
+        WellKnownFeatures.Diagnostics.ConfigurationChanges,
         ResourceType = typeof(AbstractionsResources),
-        Name = nameof(AbstractionsResources.DisplayName_TagConfigurationChanges),
-        Description = nameof(AbstractionsResources.Description_TagConfigurationChanges)
+        Name = nameof(AbstractionsResources.DisplayName_ConfigurationChanges),
+        Description = nameof(AbstractionsResources.Description_ConfigurationChanges)
     )]
-    public interface ITagConfigurationChanges : IAdapterFeature {
+    public interface IConfigurationChanges : IAdapterFeature {
 
         /// <summary>
-        /// Creates a tag configuration changes subscription.
+        /// Creates a configuration changes subscription.
         /// </summary>
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
@@ -30,9 +31,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel reader that will emit configuration changes as they occur.
         /// </returns>
-        Task<ChannelReader<TagConfigurationChange>> Subscribe(
+        Task<ChannelReader<ConfigurationChange>> Subscribe(
             IAdapterCallContext context, 
-            TagConfigurationChangesSubscriptionRequest request,
+            ConfigurationChangesSubscriptionRequest request,
             CancellationToken cancellationToken
         );
 

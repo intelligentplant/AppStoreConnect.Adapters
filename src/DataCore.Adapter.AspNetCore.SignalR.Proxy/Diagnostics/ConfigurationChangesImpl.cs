@@ -3,28 +3,28 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData {
 
     /// <summary>
-    /// Implements <see cref="ITagConfigurationChanges"/>.
+    /// Implements <see cref="IConfigurationChanges"/>.
     /// </summary>
-    internal class TagConfigurationChangesImpl : ProxyAdapterFeature, ITagConfigurationChanges {
+    internal class ConfigurationChangesImpl : ProxyAdapterFeature, IConfigurationChanges {
 
         /// <summary>
-        /// Creates a new <see cref="TagConfigurationChangesImpl"/> object.
+        /// Creates a new <see cref="ConfigurationChangesImpl"/> object.
         /// </summary>
         /// <param name="proxy">
         ///   The owning proxy.
         /// </param>
-        public TagConfigurationChangesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
+        public ConfigurationChangesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagConfigurationChange>> Subscribe(
+        public Task<ChannelReader<ConfigurationChange>> Subscribe(
             IAdapterCallContext context, 
-            TagConfigurationChangesSubscriptionRequest request, 
+            ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
             if (context == null) {
@@ -34,7 +34,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData {
             SignalRAdapterProxy.ValidateObject(request);
 
             var client = GetClient();
-            return client.TagConfiguration.CreateTagConfigurationChangesChannelAsync(AdapterId, request, cancellationToken);
+            return client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, cancellationToken);
         }
     }
 }

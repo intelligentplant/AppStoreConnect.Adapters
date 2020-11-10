@@ -146,7 +146,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Inconclusive($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a null value, indicating that the test should be skipped. Override {methodName} in your test class to return a non-null value if you wish to run this test.");
+            Assert.Inconclusive($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a value that indicates that the test should be skipped. Override {methodName} in your test class to return a non-null value if you wish to run this test.");
         }
 
 
@@ -259,6 +259,110 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest((adapter, context, ct) => {
                 Assert.IsNotNull(adapter.TypeDescriptor);
                 return Task.CompletedTask;
+            });
+        }
+
+        #endregion
+
+        #region [ IConfigurationChanges ]
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="ConfigurationChangesSubscriptionShouldReceiveValues"/> test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="ConfigurationChangesSubscriptionRequest"/> to use.
+        /// </returns>
+        protected virtual ConfigurationChangesSubscriptionRequest CreateConfigurationChangesSubscriptionRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Emits configuration changes for <see cref="ConfigurationChangesSubscriptionShouldReceiveValues"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <param name="adapter">
+        ///   The adapter that must to emit the values.
+        /// </param>
+        /// <param name="itemTypes">
+        ///   The item types to emit changes for.
+        /// </param>
+        /// <param name="changeType">
+        ///   The change type for the changes to emit.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that returns a flag specifying if a test values were emitted.
+        /// </returns>
+        protected virtual Task<bool> EmitTestConfigurationChanges(TestContext context, TAdapter adapter, IEnumerable<string> itemTypes, ConfigurationChangeType changeType, CancellationToken cancellationToken) {
+            return Task.FromResult(false);
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IConfigurationChanges.Subscribe"/> returns values for item 
+        /// types that are specified in the subscription request.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateConfigurationChangesSubscriptionRequest"/>
+        /// <seealso cref="EmitTestConfigurationChanges"/>
+        [TestMethod]
+        public virtual Task ConfigurationChangesSubscriptionShouldReceiveValues() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IConfigurationChanges>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IConfigurationChanges>();
+                    return;
+                }
+
+                var request = CreateConfigurationChangesSubscriptionRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(CreateConfigurationChangesSubscriptionRequest));
+                    return;
+                }
+
+                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(subscription);
+
+                // Pause briefly to allow the subscription change to take effect, since the change 
+                // will be processed asynchronously to us making the initial request.
+                await Task.Delay(200, ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await EmitTestConfigurationChanges(TestContext, adapter, request.ItemTypes, ConfigurationChangeType.Created, ct).ConfigureAwait(false);
+                if (!testValuesEmitted) {
+                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(EmitTestConfigurationChanges));
+                    return;
+                }
+
+                var allItemTypes = new HashSet<string>(request.ItemTypes);
+                var remainingTypes = new HashSet<string>(request.ItemTypes);
+
+                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                    while (subscription.TryRead(out var value)) {
+                        Assert.IsNotNull(value);
+                        if (allItemTypes.Contains(value.ItemType)) {
+                            remainingTypes.Remove(value.ItemType);
+                        }
+                        else {
+                            Assert.Fail($"Expected item types list does not contain '{value.ItemType}'.");
+                        }
+                    }
+
+                    if (remainingTypes.Count == 0) {
+                        break;
+                    }
+                }
+
+                Assert.AreEqual(0, remainingTypes.Count, $"Values were not received for the following item types: {string.Join(", ", remainingTypes)}");
             });
         }
 
@@ -602,6 +706,7 @@ namespace DataCore.Adapter.Tests {
         ///   A <see cref="Task"/> that will run the test.
         /// </returns>
         /// <seealso cref="CreateReadSnapshotTagValuesRequest"/>
+        /// <seealso cref="EmitTestSnapshotValue"/>
         [TestMethod]
         public virtual Task SnapshotTagValueSubscriptionShouldReceiveInitialValues() {
             return RunAdapterTest(async (adapter, context, ct) => {
@@ -1414,6 +1519,7 @@ namespace DataCore.Adapter.Tests {
         ///   A <see cref="Task"/> that will run the test.
         /// </returns>
         /// <seealso cref="CreateEventMessageSubscriptionRequest"/>
+        /// <seealso cref="EmitTestEvent"/>
         [TestMethod]
         public virtual Task EventMessagePushShouldReceiveValues() {
             return RunAdapterTest(async (adapter, context, ct) => {
@@ -1469,6 +1575,7 @@ namespace DataCore.Adapter.Tests {
         ///   A <see cref="Task"/> that will run the test.
         /// </returns>
         /// <seealso cref="CreateEventMessageTopicSubscriptionRequest"/>
+        /// <seealso cref="EmitTestEvent"/>
         [TestMethod]
         public virtual Task EventMessageTopicPushShouldReceiveInitialMessages() {
             return RunAdapterTest(async (adapter, context, ct) => {
