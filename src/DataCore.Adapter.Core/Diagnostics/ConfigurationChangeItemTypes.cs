@@ -4,7 +4,7 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Common values for <see cref="ConfigurationChange.ItemType"/>.
     /// </summary>
-    public static class ConfigurationChangeItemType {
+    public static class ConfigurationChangeItemTypes {
 
         /// <summary>
         /// Asset model node.
