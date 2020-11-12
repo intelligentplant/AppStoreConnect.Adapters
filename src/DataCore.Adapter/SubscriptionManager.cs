@@ -85,7 +85,7 @@ namespace DataCore.Adapter {
         protected bool HasSubscriptions { get { return !_subscriptions.IsEmpty; } }
 
         /// <summary>
-        /// Publishes all event messages passed to the <see cref="SubscriptionManager{TTopic, TValue, TSubscription}"/> 
+        /// Publishes all event messages passed to the <see cref="SubscriptionManager{TOptions, TTopic, TValue, TSubscription}"/> 
         /// via the <see cref="ValueReceived"/> method.
         /// </summary>
         public event Action<TValue>? Publish;

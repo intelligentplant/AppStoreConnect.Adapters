@@ -120,7 +120,9 @@ namespace DataCore.Adapter.Events {
         protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) {
             base.OnSubscriptionCancelled(subscription);
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            OnTopicsRemovedFromSubscriptionInternal(subscription!, subscription.Topics);
+            if (subscription != null) {
+                OnTopicsRemovedFromSubscriptionInternal(subscription, subscription.Topics);
+            }
         }
 
 
