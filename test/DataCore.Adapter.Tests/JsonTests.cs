@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
@@ -343,6 +342,10 @@ namespace DataCore.Adapter.Tests {
                 DataFunctionStatusType.Custom,
                 new[] { 
                     AdapterProperty.Create("prop1", "value1", "description1")
+                },
+                new[] { 
+                    "Alt_Id_1",
+                    "Alt_Id_2"
                 }
             );
 
@@ -360,6 +363,9 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(prop.Name, actualProp.Name);
                 Assert.AreEqual(prop.Value, actualProp.Value);
                 Assert.AreEqual(prop.Description, actualProp.Description);
+            }
+            foreach (var alias in expected.Aliases) {
+                Assert.IsTrue(actual.Aliases.Contains(alias));
             }
         }
 

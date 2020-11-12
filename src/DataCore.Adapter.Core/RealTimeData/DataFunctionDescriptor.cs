@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -9,7 +11,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a data function that is supported when making a call for processed historical data.
     /// </summary>
-    public sealed class DataFunctionDescriptor {
+    public sealed class DataFunctionDescriptor : IEquatable<DataFunctionDescriptor> {
 
         /// <summary>
         /// The function ID.
@@ -43,6 +45,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         public IEnumerable<AdapterProperty> Properties { get; }
 
+        /// <summary>
+        /// Aliases that can also be used to identify this function.
+        /// </summary>
+        public IEnumerable<string> Aliases { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="DataFunctionDescriptor"/> object.
@@ -68,6 +75,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         /// <param name="properties">
         ///   Additional properties associated with the function.
+        /// </param>
+        /// <param name="aliases">
+        ///   Additional aliases that can be used to identify the function.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
@@ -78,7 +88,8 @@ namespace DataCore.Adapter.RealTimeData {
             string? description, 
             DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
             DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
-            IEnumerable<AdapterProperty>? properties = null
+            IEnumerable<AdapterProperty>? properties = null,
+            IEnumerable<string>? aliases = null
         ) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
@@ -86,6 +97,7 @@ namespace DataCore.Adapter.RealTimeData {
             SampleTime = sampleTime;
             Status = status;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
+            Aliases = aliases?.ToArray() ?? Array.Empty<string>();
         }
 
 
@@ -114,6 +126,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Additional properties associated with the function.
         /// </param>
+        /// <param name="aliases">
+        ///   Additional aliases that can be used to identify the function.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
@@ -123,10 +138,32 @@ namespace DataCore.Adapter.RealTimeData {
             string? description = null, 
             DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified, 
             DataFunctionStatusType status = DataFunctionStatusType.Unspecified, 
-            IEnumerable<AdapterProperty>? properties = null
+            IEnumerable<AdapterProperty>? properties = null,
+            IEnumerable<string>? aliases = null
         ) {
-            return new DataFunctionDescriptor(id, name ?? id, description, sampleTime, status, properties);
+            return new DataFunctionDescriptor(id, name ?? id, description, sampleTime, status, properties, aliases);
         }
 
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+            return Id.GetHashCode();
+        }
+
+
+        /// <inheritdoc/>
+        public override bool Equals(object? obj) {
+            return Equals(obj as DataFunctionDescriptor);
+        }
+
+
+        /// <inheritdoc/>
+        public bool Equals(DataFunctionDescriptor? other) {
+            if (other == null) {
+                return false;
+            }
+
+            return string.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

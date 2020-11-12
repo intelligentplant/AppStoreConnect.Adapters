@@ -190,6 +190,77 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(1, values.Count());
 
             var val = values.First();
+            Assert.AreEqual(functionId, val.DataFunction);
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = (double) GetType().GetMethod(expectedValueCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end });
+
+            var expectedSampleTime = string.IsNullOrWhiteSpace(expectedTimestampCalculator)
+                ? start
+                : ((DateTime?) GetType().GetMethod(expectedTimestampCalculator, BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { rawValues, start, end })) ?? start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+        }
+
+
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdCount, nameof(CalculateExpectedCountValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, nameof(CalculateExpectedRangeValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, nameof(CalculateExpectedVarianceValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
+        public async Task DefaultDataFunctionShouldCalculateValueWhenRequestedUsingName(
+            string functionId,
+            string expectedValueCalculator,
+            string expectedTimestampCalculator
+        ) {
+            var aggregationHelper = new AggregationHelper();
+            var func = aggregationHelper.GetSupportedDataFunctions().FirstOrDefault(x => x.IsMatch(functionId));
+            Assert.IsNotNull(func);
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { func.Name },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(func.Name, val.DataFunction);
             Assert.AreEqual(tag.Id, val.TagId);
             Assert.AreEqual(tag.Name, val.TagName);
 
@@ -1121,6 +1192,181 @@ namespace DataCore.Adapter.Tests {
             for (var i = 0; i < expectedResults.Length; i++) {
                 var sample = aggValues[i];
                 Assert.AreEqual(descriptor.Id, sample.DataFunction);
+
+                var expectedResult = expectedResults[i];
+
+                Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+            }
+        }
+
+
+        [TestMethod]
+        public async Task CustomDataFunctionShouldCalculateValuesWhenRequestedUsingName() {
+            var aggregationHelper = new AggregationHelper();
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null
+            );
+
+            var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
+                var val = !bucket.RawSamples.Any()
+                    ? 0
+                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+
+                return new[] {
+                    TagValueBuilder.Create()
+                        .WithUtcSampleTime(bucket.UtcBucketStart)
+                        .WithValue(val)
+                        .Build()
+                };
+            });
+
+            Assert.IsTrue(registered);
+            Assert.IsTrue(aggregationHelper.GetSupportedDataFunctions().Any(x => x.Id.Equals(descriptor.Id)));
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var now = DateTime.UtcNow;
+
+            var rawValues = new[] {
+                // Bucket 1
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
+
+                // Bucket 2: no values
+
+                // Bucket 3
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
+
+                // Bucket 4: no values
+            };
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var aggValues = (await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { descriptor.Name },
+                now.AddSeconds(-60),
+                now,
+                TimeSpan.FromSeconds(15),
+                rawData
+            ).ToEnumerable().TimeoutAfter(TimeSpan.FromSeconds(30))).ToArray();
+
+            var expectedResults = new ValueTuple<DateTime, double>[] {
+                (now.AddSeconds(-60), 3),
+                (now.AddSeconds(-45), 0),
+                (now.AddSeconds(-30), 3),
+                (now.AddSeconds(-15), 0),
+            };
+
+            Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
+
+            for (var i = 0; i < expectedResults.Length; i++) {
+                var sample = aggValues[i];
+                Assert.AreEqual(descriptor.Name, sample.DataFunction);
+
+                var expectedResult = expectedResults[i];
+
+                Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+            }
+        }
+
+
+        [TestMethod]
+        public async Task CustomDataFunctionShouldCalculateValuesWhenRequestedUsingAlias() {
+            const string alias = "TestAlias";
+
+            var aggregationHelper = new AggregationHelper();
+            var descriptor = new DataFunctionDescriptor(
+                TestContext.TestName,
+                "Test",
+                "A custom function",
+                DataFunctionSampleTimeType.StartTime,
+                DataFunctionStatusType.Custom,
+                null,
+                new [] {
+                    alias
+                }
+            );
+
+            var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
+                var val = !bucket.RawSamples.Any()
+                    ? 0
+                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+
+                return new[] {
+                    TagValueBuilder.Create()
+                        .WithUtcSampleTime(bucket.UtcBucketStart)
+                        .WithValue(val)
+                        .Build()
+                };
+            });
+
+            Assert.IsTrue(registered);
+            Assert.IsTrue(aggregationHelper.GetSupportedDataFunctions().Any(x => x.Id.Equals(descriptor.Id)));
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var now = DateTime.UtcNow;
+
+            var rawValues = new[] {
+                // Bucket 1
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
+
+                // Bucket 2: no values
+
+                // Bucket 3
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
+                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
+
+                // Bucket 4: no values
+            };
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var aggValues = (await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { alias },
+                now.AddSeconds(-60),
+                now,
+                TimeSpan.FromSeconds(15),
+                rawData
+            ).ToEnumerable().TimeoutAfter(TimeSpan.FromSeconds(30))).ToArray();
+
+            var expectedResults = new ValueTuple<DateTime, double>[] {
+                (now.AddSeconds(-60), 3),
+                (now.AddSeconds(-45), 0),
+                (now.AddSeconds(-30), 3),
+                (now.AddSeconds(-15), 0),
+            };
+
+            Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
+
+            for (var i = 0; i < expectedResults.Length; i++) {
+                var sample = aggValues[i];
+                Assert.AreEqual(alias, sample.DataFunction);
 
                 var expectedResult = expectedResults[i];
 

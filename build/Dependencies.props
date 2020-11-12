@@ -13,30 +13,30 @@
   <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>3.1.8</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.8</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>3.1.10</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.10</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>1.1.1</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>3.1.9</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.9</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.9</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.1.10</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.10</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.10</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
   <PropertyGroup>
     <GoogleProtobufVersion>3.13.0</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.31.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.31.0</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.31.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.31.0</GrpcToolsVersion>
+    <GrpcAspNetCoreServerVersion>2.33.1</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.33.1</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.33.1</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.33.1</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.3.0</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.7.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.3.1</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>16.8.0</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
     <MSTestTestAdapterVersion>2.1.2</MSTestTestAdapterVersion>
     <MSTestTestFrameworkVersion>2.1.2</MSTestTestFrameworkVersion>
@@ -45,11 +45,11 @@
   <!-- Other Packages -->
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
-    <CsvHelperVersion>15.0.5</CsvHelperVersion>
+    <CsvHelperVersion>15.0.10</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>4.0.1</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.7.0</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.7.0</NuGetVersioningVersion>
+    <NSwagAspNetCoreVersion>13.9.0</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>5.8.0</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>

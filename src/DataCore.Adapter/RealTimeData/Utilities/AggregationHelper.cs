@@ -5,7 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
+
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
@@ -698,6 +700,53 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ Aggregation using Data Function Names ]
 
         /// <summary>
+        /// Gets the aggregate calculators that map to the specified data function names or IDs.
+        /// </summary>
+        /// <param name="dataFunctions">
+        ///   The data functions for the request. These can specify the function ID, display name, 
+        ///   or an alias for a data function.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="IDictionary{TKey, TValue}"/> that maps from the item specified in 
+        ///   <paramref name="dataFunctions"/> to the correspoding <see cref="AggregateCalculator"/>. 
+        ///   No entries are added for items in <paramref name="dataFunctions"/> that cannot be 
+        ///   resolved.
+        /// </returns>
+        private IDictionary<string, AggregateCalculator> GetAggregateCalculatorsForRequest(IEnumerable<string> dataFunctions) {
+            var funcs = new Dictionary<string, AggregateCalculator>();
+
+            if (dataFunctions == null) {
+                return funcs;
+            }
+
+            foreach (var item in dataFunctions) {
+                if (string.IsNullOrWhiteSpace(item)) {
+                    continue;
+                }
+
+                // Try and get the data function descriptor from the default functions.
+                var dataFunc = s_defaultDataFunctions.Value.FirstOrDefault(x => x.IsMatch(item));
+                if (dataFunc == null) {
+                    // Not a default function; check the custom functions.
+                    dataFunc = _customAggregates.Values.FirstOrDefault(x => x.IsMatch(item));
+                }
+                if (dataFunc == null) {
+                    // Unknown data function.
+                    continue;
+                }
+
+                if (s_defaultAggregatorMap.TryGetValue(dataFunc.Id, out var func)) {
+                    funcs[item] = func;
+                }
+                else if (_customAggregatorMap.TryGetValue(dataFunc.Id, out func)) {
+                    funcs[item] = func;
+                }
+            }
+
+            return funcs;
+        }
+
+        /// <summary>
         /// Performs aggregation on raw tag values.
         /// </summary>
         /// <param name="tag">
@@ -754,22 +803,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 SingleWriter = true
             });
 
-            var funcs = new Dictionary<string, AggregateCalculator>();
-
-            if (dataFunctions != null) {
-                foreach (var item in dataFunctions) {
-                    if (string.IsNullOrWhiteSpace(item)) {
-                        continue;
-                    }
-
-                    if (s_defaultAggregatorMap.TryGetValue(item, out var func)) {
-                        funcs[item] = func;
-                    }
-                    else if (_customAggregatorMap.TryGetValue(item, out func)) {
-                        funcs[item] = func;
-                    }
-                }
-            }
+            var funcs = GetAggregateCalculatorsForRequest(dataFunctions);
 
             if (funcs.Count == 0) {
                 result.Writer.TryComplete();
@@ -922,22 +956,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 );
             }
 
-            var funcs = new Dictionary<string, AggregateCalculator>();
-
-            if (dataFunctions != null) {
-                foreach (var item in dataFunctions) {
-                    if (string.IsNullOrWhiteSpace(item)) {
-                        continue;
-                    }
-
-                    if (s_defaultAggregatorMap.TryGetValue(item, out var func)) {
-                        funcs[item] = func;
-                    }
-                    else if (_customAggregatorMap.TryGetValue(item, out func)) {
-                        funcs[item] = func;
-                    }
-                }
-            }
+            var funcs = GetAggregateCalculatorsForRequest(dataFunctions);
 
             if (funcs.Count == 0) {
                 // No aggregate functions specified; complete the channel and return.
@@ -1355,6 +1374,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             if (!_customAggregates.TryAdd(descriptor.Id, descriptor)) {
+                // Function has already been added.
                 return false;
             }
 

@@ -157,7 +157,10 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         protected override bool IsTopicMatch(TagValueQueryResult value, IEnumerable<TagIdentifier> topics) {
-            var tagIdentifier = new TagIdentifier(value!.TagId, value.TagName);
+            if (value == null) {
+                return false;
+            }
+            var tagIdentifier = new TagIdentifier(value.TagId, value.TagName);
 
             // If a custom delegate has been specified, defer to that.
             if (Options.IsTopicMatch != null) {
@@ -369,7 +372,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         protected override void OnSubscriptionCancelled(TagValueSubscriptionChannel subscription) {
             base.OnSubscriptionCancelled(subscription);
-            OnTagsRemovedFromSubscription(subscription!, subscription.Topics);
+            if (subscription != null) {
+                OnTagsRemovedFromSubscription(subscription, subscription.Topics);
+            }
         }
 
 

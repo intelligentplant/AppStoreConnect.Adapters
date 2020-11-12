@@ -23,6 +23,7 @@ namespace DataCore.Adapter.Json {
             DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified;
             DataFunctionStatusType status = DataFunctionStatusType.Unspecified;
             AdapterProperty[] properties = null!;
+            string[] aliases = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -35,13 +36,13 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.SampleTime), StringComparison.OrdinalIgnoreCase)) {
                     sampleTime = JsonSerializer.Deserialize<DataFunctionSampleTimeType>(ref reader, options);
@@ -50,14 +51,17 @@ namespace DataCore.Adapter.Json {
                     status = JsonSerializer.Deserialize<DataFunctionStatusType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Aliases), StringComparison.OrdinalIgnoreCase)) {
+                    aliases = JsonSerializer.Deserialize<string[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();
                 }
             }
 
-            return DataFunctionDescriptor.Create(id, name, description, sampleTime, status, properties);
+            return DataFunctionDescriptor.Create(id, name, description, sampleTime, status, properties, aliases);
         }
 
 
@@ -75,6 +79,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(DataFunctionDescriptor.SampleTime), value.SampleTime, options);
             WritePropertyValue(writer, nameof(DataFunctionDescriptor.Status), value.Status, options);
             WritePropertyValue(writer, nameof(DataFunctionDescriptor.Properties), value.Properties, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Aliases), value.Aliases, options);
             writer.WriteEndObject();
         }
 
