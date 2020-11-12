@@ -2043,7 +2043,8 @@ namespace DataCore.Adapter {
                 descriptor.Description,
                 descriptor.SampleTimeType.ToAdapterDataFunctionSampleTimeType(),
                 descriptor.StatusType.ToAdapterDataFunctionStatusType(),
-                descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray()
+                descriptor.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
+                descriptor.Aliases.ToArray()
             );
         }
 
@@ -2070,13 +2071,17 @@ namespace DataCore.Adapter {
                 StatusType = descriptor.Status.ToGrpcDataFunctionStatusType()
             };
 
-            if (descriptor.Properties != null && descriptor.Properties.Any()) {
+            if (descriptor.Properties != null && descriptor.Properties.Any()) { 
                 foreach (var prop in descriptor.Properties) {
                     if (prop == null) {
                         continue;
                     }
                     result.Properties.Add(prop.ToGrpcAdapterProperty());
                 }
+            }
+
+            if (descriptor.Aliases != null) {
+                result.Aliases.AddRange(descriptor.Aliases.Select(x => x ?? string.Empty));
             }
 
             return result;

@@ -379,6 +379,7 @@ message DataFunctionDescriptor {
     repeated AdapterProperty properties = 4; 
     DataFunctionSampleTime sample_time_type = 5;
     DataFunctionStatus status_type = 6;
+    repeated string aliases = 7;
 }
 
 
