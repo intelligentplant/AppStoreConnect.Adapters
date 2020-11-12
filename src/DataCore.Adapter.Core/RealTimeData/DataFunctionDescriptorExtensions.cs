@@ -34,15 +34,29 @@ namespace DataCore.Adapter.RealTimeData {
                 return false;
             }
 
-            if (string.Equals(idOrName, descriptor.Id, StringComparison.Ordinal)) {
-                return true;
+            return descriptor.GetIdentifiers().Any(x => string.Equals(idOrName, x, StringComparison.OrdinalIgnoreCase));
+        }
+
+
+        /// <summary>
+        /// Gets all identifiers for the data function descriptor (ID, name, and aliases).
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The data function descriptor.
+        /// </param>
+        /// <returns>
+        ///   A collection of identifiers for the descriptor.
+        /// </returns>
+        public static IEnumerable<string> GetIdentifiers(this DataFunctionDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
-            if (string.Equals(idOrName, descriptor.Name, StringComparison.Ordinal)) {
-                return true;
+            yield return descriptor.Id;
+            yield return descriptor.Name;
+            foreach (var alias in descriptor.Aliases) {
+                yield return alias;
             }
-
-            return descriptor.Aliases.Any(x => string.Equals(idOrName, x));
         }
 
     }
