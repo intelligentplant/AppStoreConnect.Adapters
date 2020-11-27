@@ -537,8 +537,14 @@ namespace DataCore.Adapter.Tests {
                 foreach (var tag in tags) {
                     Assert.IsNotNull(tag);
                     Assert.IsTrue(remainingTags.Remove(tag.Id) || remainingTags.Remove(tag.Name), $"Expected tags list does not contain ID '{tag.Id}' or name '{tag.Name}'.");
+                    if (tag.States.Any()) {
+                        Assert.IsTrue(tag.States.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.States)} collection.");
+                    }
                     if (tag.Properties.Any()) {
                         Assert.IsTrue(tag.Properties.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.Properties)} collection.");
+                    }
+                    if (tag.Labels.Any()) {
+                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null or white space entry in its {nameof(TagDefinition.Labels)} collection.");
                     }
                 }
 
@@ -586,6 +592,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
+                request.ResultFields = TagDefinitionFields.All;
                 var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
                 Assert.IsNotNull(channel);
 
@@ -595,9 +602,56 @@ namespace DataCore.Adapter.Tests {
 
                 foreach (var tag in tags) {
                     Assert.IsNotNull(tag);
+                    if (tag.States.Any()) {
+                        Assert.IsTrue(tag.States.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.States)} collection.");
+                    }
                     if (tag.Properties.Any()) {
                         Assert.IsTrue(tag.Properties.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.Properties)} collection.");
                     }
+                    if (tag.Labels.Any()) {
+                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null or white space entry in its {nameof(TagDefinition.Labels)} collection.");
+                    }
+                }
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ITagSearch.FindTags"/> returns results, that the results 
+        /// match the constraints specified in the request, and that the digital states, properties 
+        /// and labels for the results are not populated.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        [TestMethod]
+        public virtual Task FindTagsRequestShouldReturnBasicInformationOnly() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ITagSearch>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ITagSearch>();
+                    return;
+                }
+
+                var request = CreateFindTagsRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ITagSearch>(nameof(CreateFindTagsRequest));
+                    return;
+                }
+
+                request.ResultFields = TagDefinitionFields.BasicInformation;
+                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(channel);
+
+                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+
+                Assert.IsTrue(tags.Count() <= request.PageSize);
+
+                foreach (var tag in tags) {
+                    Assert.IsNotNull(tag);
+                    Assert.AreEqual(0, tag.States.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains digital states, but the search request specified that only basic information should be returned.");
+                    Assert.AreEqual(0, tag.Properties.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains properties, but the search request specified that only basic information should be returned.");
+                    Assert.AreEqual(0, tag.Labels.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains labels, but the request specified that only basic information should be returned.");
                 }
             });
         }
