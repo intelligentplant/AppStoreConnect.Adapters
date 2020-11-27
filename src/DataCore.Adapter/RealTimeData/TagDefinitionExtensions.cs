@@ -94,5 +94,48 @@ namespace DataCore.Adapter.RealTimeData {
             return tags.Where(x => x.MatchesFilter(filter)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(filter);
         }
 
+
+        /// <summary>
+        /// Creates a copy of the <see cref="TagDefinition"/>, optionally omitting some parts of 
+        /// the original definition from the copy
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="fields">
+        ///   The fields to include in the copy.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagDefinition"/> instance that is populated using the original 
+        ///   <paramref name="tag"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagDefinition Clone(this TagDefinition tag, TagDefinitionFields fields = TagDefinitionFields.All) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            if (fields == TagDefinitionFields.All) {
+                return TagDefinition.FromExisting(tag);
+            }
+
+            var builder = TagDefinitionBuilder.CreateFromExisting(tag);
+            if (!fields.HasFlag(TagDefinitionFields.DigitalStates)) {
+                builder.ClearDigitalStates();
+            }
+
+            if (!fields.HasFlag(TagDefinitionFields.Properties)) {
+                builder.ClearProperties();
+            }
+
+            if (!fields.HasFlag(TagDefinitionFields.Labels)) {
+                builder.ClearLabels();
+            }
+
+            return builder.Build();
+        }
+
     }
 }

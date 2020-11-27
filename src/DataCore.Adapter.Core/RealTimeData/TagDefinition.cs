@@ -142,8 +142,8 @@ namespace DataCore.Adapter.RealTimeData {
                 tag.Description,
                 tag.Units,
                 tag.DataType,
-                tag.States,
-                tag.Properties,
+                tag.States.Where(x => x != null).Select(x => new DigitalState(x.Name, x.Value)),
+                tag.Properties.Where(x => x != null).Select(x => new AdapterProperty(x.Name, x.Value, x.Description)),
                 tag.Labels
             );
         }

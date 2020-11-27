@@ -71,7 +71,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 Other = request.Other,
                 PageSize = request.PageSize,
                 Page = request.Page,
-                Properties = new Dictionary<string, string>(request.Properties)
+                Properties = new Dictionary<string, string>(request.Properties),
+                ResultFields = (TagDefinitionFields) request.ResultFields
             };
             Util.ValidateObject(adapterRequest);
 
