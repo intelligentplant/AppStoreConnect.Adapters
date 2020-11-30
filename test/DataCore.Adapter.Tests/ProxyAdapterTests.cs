@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Tests {
 
         protected override FindTagsRequest CreateFindTagsRequest(TestContext context) {
             return new FindTagsRequest() { 
-                Name = WebHostConfiguration.TestTagId
+                Name = "*"
             };
         }
 

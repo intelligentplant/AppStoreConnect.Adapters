@@ -159,7 +159,7 @@ namespace DataCore.Adapter.Csv {
         /// <summary>
         /// Parses a tag definition from a CSV header field.
         /// </summary>
-        /// <param name="item">
+        /// <param name="definition">
         ///   The CSV header field.
         /// </param>
         /// <param name="options">
@@ -168,23 +168,33 @@ namespace DataCore.Adapter.Csv {
         /// <returns>
         ///   The tag definition, or <see langword="null"/> if a tag could not be parsed.
         /// </returns>
-        private static TagDefinition ParseTagDefinition(string item, CsvAdapterOptions options) {
-            if (string.IsNullOrWhiteSpace(item)) {
+        private static TagDefinition ParseTagDefinition(string definition, CsvAdapterOptions options) {
+            if (string.IsNullOrWhiteSpace(definition)) {
                 return null!;
             }
 
-            if (!item.StartsWith("[", StringComparison.Ordinal) || !item.EndsWith("]", StringComparison.Ordinal)) { 
+            if (!definition.StartsWith("[", StringComparison.Ordinal) || !definition.EndsWith("]", StringComparison.Ordinal)) { 
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return TagDefinition.Create(item, item, null, null, Common.VariantType.Double, null, null, null);
+                return TagDefinition.Create(
+                    definition, 
+                    definition, 
+                    null, 
+                    null, 
+                    Common.VariantType.Double, 
+                    null, 
+                    new[] { new AdapterProperty(nameof(definition), definition) }, 
+                    new[] { "CSV" }
+                );
             }
 
-            item = item.TrimStart('[').TrimEnd(']');
+            var definitionOriginal = definition;
+            definition = definition.TrimStart('[').TrimEnd(']');
 
             // The tag configuration can be specified as a set of semi colon-delimited key=value pairs.
             var props = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var subItem in item.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)) {
+            foreach (var subItem in definition.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)) {
                 var m = s_tagFieldPropertyRegex.Match(subItem);
                 if (!m.Success) {
                     // No match; skip this sub-item.
@@ -233,8 +243,8 @@ namespace DataCore.Adapter.Csv {
                 states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null,
-                null,
-                null
+                new[] { new AdapterProperty(nameof(definition), definitionOriginal) },
+                new[] { "CSV" }
             );
         }
 
@@ -465,7 +475,7 @@ namespace DataCore.Adapter.Csv {
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
                 foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
-                    ch.TryWrite(TagDefinition.FromExisting(item));
+                    ch.TryWrite(item.Clone(request.ResultFields));
                 }
             }, true, BackgroundTaskService, cancellationToken);
 

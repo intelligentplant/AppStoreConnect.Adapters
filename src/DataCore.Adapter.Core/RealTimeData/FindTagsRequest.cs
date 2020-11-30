@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -32,6 +34,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// Additional filters on bespoke tag properties.
         /// </summary>
         public IDictionary<string, string>? Other { get; set; }
+
+        /// <summary>
+        /// The result fields to populate in the search results.
+        /// </summary>
+        [DefaultValue(TagDefinitionFields.All)]
+        public TagDefinitionFields ResultFields { get; set; } = TagDefinitionFields.All;
 
     }
 }

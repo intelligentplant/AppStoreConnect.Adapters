@@ -37,7 +37,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 Units = request.Units ?? string.Empty,
                 PageSize = request.PageSize,
                 Page = request.Page,
-                Label = request.Label ?? string.Empty
+                Label = request.Label ?? string.Empty,
+                ResultFields = (int) request.ResultFields
             };
             if (request.Other?.Count > 0) {
                 foreach (var item in request.Other) {
