@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="IntelligentPlant.BackgroundTasks" Version="$(IntelligentPlantBackgroundTasksVersion)" />
+    <PackageReference Include="System.Threading.Channels" Version="$(SystemThreadingChannelsVersion)" />
   </ItemGroup>
   
   <ItemGroup>
