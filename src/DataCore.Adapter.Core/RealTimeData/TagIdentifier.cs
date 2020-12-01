@@ -184,7 +184,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET46
             return _compareIdOnly
                 ? HashGenerator.Combine(obj?.Id?.ToUpperInvariant())
                 : HashGenerator.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());

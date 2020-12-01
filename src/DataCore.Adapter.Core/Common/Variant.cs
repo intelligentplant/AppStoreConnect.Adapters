@@ -345,7 +345,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET46
             return HashGenerator.Combine(Type, Value);
 #else
             return HashCode.Combine(Type, Value);
