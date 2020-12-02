@@ -171,9 +171,6 @@
   <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
     <value>The method used to calculate the quality status for the function.</value>
   </data>
-  <data name="DataFunction_Property_StatusCalculation_ValueGood" xml:space="preserve">
-    <value>Quality status is always "Good".</value>
-  </data>
   <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
     <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
   </data>
