@@ -18,6 +18,11 @@ namespace DataCore.Adapter.RealTimeData {
         public IEnumerable<DigitalState> States { get; }
 
         /// <summary>
+        /// The adapter features that can be used to read data from or write data to this tag.
+        /// </summary>
+        public IEnumerable<Uri> SupportedFeatures { get; }
+
+        /// <summary>
         /// Bespoke tag properties.
         /// </summary>
         public IEnumerable<AdapterProperty> Properties { get; }
@@ -50,6 +55,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
         ///   <see cref="VariantType.Int32"/>.
         /// </param>
+        /// <param name="supportedFeatures">
+        ///   The adapter features that can be used to read data from or write data to this tag.
+        /// </param>
         /// <param name="properties">
         ///   Additional tag properties.
         /// </param>
@@ -69,12 +77,14 @@ namespace DataCore.Adapter.RealTimeData {
             string? units, 
             VariantType dataType, 
             IEnumerable<DigitalState>? states, 
+            IEnumerable<Uri>? supportedFeatures,
             IEnumerable<AdapterProperty>? properties, 
             IEnumerable<string>? labels
         ) : base(id, name, description, units, dataType) {
             States = dataType != VariantType.Int32
                 ? Array.Empty<DigitalState>()
                 : states?.ToArray() ?? Array.Empty<DigitalState>();
+            SupportedFeatures = supportedFeatures?.Where(x => x != null)?.ToArray() ?? Array.Empty<Uri>();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
             Labels = labels?.ToArray() ?? Array.Empty<string>();
         }
@@ -102,6 +112,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
         ///   <see cref="VariantType.Int32"/>.
         /// </param>
+        /// <param name="supportedFeatures">
+        ///   The adapter features that can be used to read data from or write data to this tag.
+        /// </param>
         /// <param name="properties">
         ///   Additional tag properties.
         /// </param>
@@ -114,8 +127,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public static TagDefinition Create(string id, string name, string? description, string? units, VariantType dataType, IEnumerable<DigitalState>? states, IEnumerable<AdapterProperty>? properties, IEnumerable<string>? labels) {
-            return new TagDefinition(id, name, description, units, dataType, states, properties, labels);
+        public static TagDefinition Create(string id, string name, string? description, string? units, VariantType dataType, IEnumerable<DigitalState>? states, IEnumerable<Uri>? supportedFeatures, IEnumerable<AdapterProperty>? properties, IEnumerable<string>? labels) {
+            return new TagDefinition(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
         }
 
 
@@ -143,6 +156,7 @@ namespace DataCore.Adapter.RealTimeData {
                 tag.Units,
                 tag.DataType,
                 tag.States.Where(x => x != null).Select(x => new DigitalState(x.Name, x.Value)),
+                tag.SupportedFeatures,
                 tag.Properties.Where(x => x != null).Select(x => new AdapterProperty(x.Name, x.Value, x.Description)),
                 tag.Labels
             );

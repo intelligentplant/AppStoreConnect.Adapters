@@ -183,6 +183,7 @@ namespace DataCore.Adapter.Csv {
                     null, 
                     Common.VariantType.Double, 
                     null, 
+                    null,
                     new[] { new AdapterProperty(nameof(definition), definition) }, 
                     new[] { "CSV" }
                 );
@@ -243,6 +244,7 @@ namespace DataCore.Adapter.Csv {
                 states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null,
+                null,
                 new[] { new AdapterProperty(nameof(definition), definitionOriginal) },
                 new[] { "CSV" }
             );
