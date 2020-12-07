@@ -42,6 +42,11 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly List<DigitalState> _states = new List<DigitalState>();
 
         /// <summary>
+        /// The adapter features that can be used to read from or write to the tag.
+        /// </summary>
+        private readonly HashSet<Uri> _supportedFeatures = new HashSet<Uri>();
+
+        /// <summary>
         /// The bespoke tag properties.
         /// </summary>
         private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
@@ -72,6 +77,7 @@ namespace DataCore.Adapter.RealTimeData {
             WithUnits(existing.Units);
             WithDataType(existing.DataType);
             WithDigitalStates(existing.States);
+            WithSupportedFeatures(existing.SupportedFeatures);
             WithProperties(existing.Properties);
             WithLabels(existing.Labels);
         }
@@ -117,7 +123,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagDefinition"/> object.
         /// </returns>
         public TagDefinition Build() {
-            return new TagDefinition(_id!, _name!, _description, _units, _dataType, _states, _properties, _labels);
+            return new TagDefinition(_id!, _name!, _description, _units, _dataType, _states, _supportedFeatures, _properties, _labels);
         }
 
 
@@ -249,6 +255,108 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagDefinitionBuilder ClearDigitalStates() {
             _states.Clear();
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds supported features to the tag.
+        /// </summary>
+        /// <param name="uris">
+        ///   The feature URIs.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportedFeatures(params Uri[] uris) {
+            return WithSupportedFeatures((IEnumerable<Uri>) uris);
+        }
+
+
+        /// <summary>
+        /// Adds supported features to the tag.
+        /// </summary>
+        /// <param name="uris">
+        ///   The feature URIs.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<Uri> uris) {
+            if (uris != null) {
+                foreach (var uri in uris) {
+                    if (uri != null && (uri.IsStandardFeatureUri() || uri.IsExtensionFeatureUri())) {
+                        _supportedFeatures.Add(uri.EnsurePathHasTrailingSlash());
+                    }
+                }
+            }
+
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds supported features to the tag.
+        /// </summary>
+        /// <param name="uriStrings">
+        ///   The feature URIs.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportedFeatures(params string[] uriStrings) {
+            return WithSupportedFeatures((IEnumerable<string>) uriStrings);
+        }
+
+
+        /// <summary>
+        /// Adds supported features to the tag.
+        /// </summary>
+        /// <param name="uriStrings">
+        ///   The feature URIs.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<string> uriStrings) {
+            if (uriStrings != null) {
+                foreach (var uriString in uriStrings) {
+                    if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri)) {
+                        WithSupportedFeatures(uri);
+                    }
+                }
+            }
+
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds a supported feature to the tag.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportedFeature<TFeature>() where TFeature : IAdapterFeature {
+            foreach (var uri in typeof(TFeature).GetAdapterFeatureUris()) {
+                _supportedFeatures.Add(uri.EnsurePathHasTrailingSlash());
+            }
+
+            return this;
+        }
+
+
+        /// <summary>
+        /// Removes all supported features from the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder ClearSupportedFeatures() {
+            _supportedFeatures.Clear();
             return this;
         }
 

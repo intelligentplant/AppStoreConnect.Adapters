@@ -246,6 +246,7 @@ message TagDefinition {
     repeated DigitalState states = 6;
     repeated AdapterProperty properties = 7;
     repeated string labels = 8;
+    repeated string supported_features = 9;
 }
 
 

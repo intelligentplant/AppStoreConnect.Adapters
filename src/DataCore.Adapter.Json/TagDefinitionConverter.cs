@@ -23,6 +23,7 @@ namespace DataCore.Adapter.Json {
             string units = null!;
             VariantType dataType = VariantType.Unknown;
             DigitalState[] states = null!;
+            Uri[] supportedFeatures = null!;
             AdapterProperty[] properties = null!;
             string[] labels = null!;
 
@@ -54,6 +55,9 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(TagDefinition.States), StringComparison.OrdinalIgnoreCase)) {
                     states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(TagDefinition.SupportedFeatures), StringComparison.OrdinalIgnoreCase)) {
+                    supportedFeatures = JsonSerializer.Deserialize<Uri[]>(ref reader, options);
+                }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Properties), StringComparison.OrdinalIgnoreCase)) {
                     properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
                 }
@@ -65,7 +69,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return TagDefinition.Create(id, name, description, units, dataType, states, properties, labels);
+            return TagDefinition.Create(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
         }
 
 
@@ -83,6 +87,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(TagDefinition.Units), value.Units, options);
             WritePropertyValue(writer, nameof(TagDefinition.DataType), value.DataType, options);
             WritePropertyValue(writer, nameof(TagDefinition.States), value.States, options);
+            WritePropertyValue(writer, nameof(TagDefinition.SupportedFeatures), value.SupportedFeatures, options);
             WritePropertyValue(writer, nameof(TagDefinition.Properties), value.Properties, options);
             WritePropertyValue(writer, nameof(TagDefinition.Labels), value.Labels, options);
             writer.WriteEndObject();

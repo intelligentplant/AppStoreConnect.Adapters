@@ -223,15 +223,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Quality status is always &quot;Good&quot;..
-        /// </summary>
-        public static string DataFunction_Property_StatusCalculation_ValueGood {
-            get {
-                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGood", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality values were skipped, or &quot;Good&quot; otherwise..
         /// </summary>
         public static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped {

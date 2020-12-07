@@ -1540,6 +1540,7 @@ namespace DataCore.Adapter {
                 tagDefinition.Units,
                 tagDefinition.DataType.ToAdapterVariantType(),
                 tagDefinition.States.Select(x => x.ToAdapterDigitalState()).ToArray(),
+                tagDefinition.SupportedFeatures.Select(x => Uri.TryCreate(x, UriKind.Absolute, out var uri) ? uri : null).Where(x => x != null).ToArray()!,
                 tagDefinition.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
                 tagDefinition.Labels
             );
@@ -1574,6 +1575,15 @@ namespace DataCore.Adapter {
                         continue;
                     }
                     result.States.Add(item.ToGrpcDigitalState());
+                }
+            }
+
+            if (tag.SupportedFeatures != null) {
+                foreach (var item in tag.SupportedFeatures) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.SupportedFeatures.Add(item.ToString());
                 }
             }
 

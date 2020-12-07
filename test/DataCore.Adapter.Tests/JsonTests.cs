@@ -637,25 +637,25 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void TagDefinition_ShouldRoundTrip() {
             var options = GetOptions();
-            var expected = new TagDefinition(
-               "Id",
-               "Name",
-               "Description",
-               "Units",
-               VariantType.Int32,
-               new[] { 
-                   DigitalState.Create("State1", 100),
-                   DigitalState.Create("State2", 200)
-               },
-               new [] {
-                   AdapterProperty.Create("Prop1", 100),
-                   AdapterProperty.Create("Prop2", "Value")
-               },
-               new [] {
-                   "Label1",
-                   "Label2"
-               }
-            );
+            var expected = TagDefinitionBuilder
+                .Create()
+                .WithId("Id")
+                .WithName("Name")
+                .WithDescription("Description")
+                .WithUnits("Units")
+                .WithDataType(VariantType.Int32)
+                .WithDigitalStates(
+                    DigitalState.Create("State1", 100),
+                    DigitalState.Create("State2", 200)
+                )
+                .WithSupportedFeature<IReadSnapshotTagValues>()
+                .WithSupportedFeature<IReadRawTagValues>()
+                .WithProperties(
+                    AdapterProperty.Create("Prop1", 100),
+                    AdapterProperty.Create("Prop2", "Value")
+                )
+                .WithLabels("Label1", "Label2")
+                .Build();
 
             var json = JsonSerializer.Serialize(expected, options);
             var actual = JsonSerializer.Deserialize<TagDefinition>(json, options);
@@ -673,6 +673,14 @@ namespace DataCore.Adapter.Tests {
 
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
+            }
+
+            Assert.AreEqual(expected.SupportedFeatures.Count(), actual.SupportedFeatures.Count());
+            for (var i = 0; i < expected.SupportedFeatures.Count(); i++) {
+                var expectedValue = expected.SupportedFeatures.ElementAt(i);
+                var actualValue = actual.SupportedFeatures.ElementAt(i);
+
+                Assert.AreEqual(expectedValue, actualValue);
             }
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());

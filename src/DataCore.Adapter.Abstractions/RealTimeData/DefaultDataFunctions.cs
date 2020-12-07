@@ -81,14 +81,7 @@ namespace DataCore.Adapter.RealTimeData {
             AbstractionsResources.DataFunction_Interp_Name,
             AbstractionsResources.DataFunction_Interp_Description,
             DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new [] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation, 
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueWorstCase, 
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
+            DataFunctionStatusType.WorstCase
         );
 
         /// <summary>
@@ -217,14 +210,7 @@ namespace DataCore.Adapter.RealTimeData {
             AbstractionsResources.DataFunction_PercentGood_Name,
             AbstractionsResources.DataFunction_PercentGood_Description,
             DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
+            DataFunctionStatusType.AlwaysGood
         );
 
         /// <summary>
@@ -235,14 +221,7 @@ namespace DataCore.Adapter.RealTimeData {
             AbstractionsResources.DataFunction_PercentBad_Name,
             AbstractionsResources.DataFunction_PercentBad_Description,
             DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGood,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
+            DataFunctionStatusType.AlwaysGood
         );
 
 
