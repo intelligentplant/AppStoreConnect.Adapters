@@ -84,13 +84,40 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Creates a new <see cref="TagDefinitionBuilder"/> object.
+        /// Creates a new <see cref="TagDefinitionBuilder"/> object. You must call <see cref="WithId"/> 
+        /// and <see cref="WithName"/> to set the tag ID and name respectively before calling <see cref="Build"/>.
         /// </summary>
         /// <returns>
         ///   A new <see cref="TagDefinitionBuilder"/> object.
         /// </returns>
         public static TagDefinitionBuilder Create() {
             return new TagDefinitionBuilder();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagDefinitionBuilder"/> object that is configured to use the 
+        /// specified tag ID and tag name.
+        /// </summary>
+        /// <param name="id">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="name">
+        ///   The tag name.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagDefinitionBuilder"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagDefinitionBuilder Create(string id, string name) {
+            return new TagDefinitionBuilder()
+                .WithId(id)
+                .WithName(name);
         }
 
 
@@ -122,6 +149,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagDefinition"/> object.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   The tag ID has not yet been set.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   The tag name has not yet been set.
+        /// </exception>
         public TagDefinition Build() {
             return new TagDefinition(_id!, _name!, _description, _units, _dataType, _states, _supportedFeatures, _properties, _labels);
         }
@@ -136,8 +169,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
         public TagDefinitionBuilder WithId(string id) {
-            _id = id;
+            _id = id ?? throw new ArgumentNullException(nameof(id));
             return this;
         }
 
@@ -151,8 +187,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
         public TagDefinitionBuilder WithName(string name) {
-            _name = name;
+            _name = name ?? throw new ArgumentNullException(nameof(name));
             return this;
         }
 
