@@ -279,11 +279,14 @@ namespace DataCore.Adapter.WaveGenerator {
         /// <param name="options">
         ///   The wave generator options for the tag.
         /// </param>
+        /// <param name="fields">
+        ///   The fields to include in the generated tag definition.
+        /// </param>
         /// <returns>
         ///   A new <see cref="TagDefinition"/> object.
         /// </returns>
-        private static TagDefinition ToTagDefinition(string name, WaveGeneratorOptions options) {
-            return TagDefinitionBuilder
+        private static TagDefinition ToTagDefinition(string name, WaveGeneratorOptions options, TagDefinitionFields fields) {
+            var result = TagDefinitionBuilder
                 .Create(name, name)
                 .WithProperty(nameof(WaveGeneratorOptions.Type), options.Type.ToString())
                 .WithProperty(nameof(WaveGeneratorOptions.Period), options.Period)
@@ -291,6 +294,12 @@ namespace DataCore.Adapter.WaveGenerator {
                 .WithProperty(nameof(WaveGeneratorOptions.Phase), options.Phase)
                 .WithProperty(nameof(WaveGeneratorOptions.Offset), options.Offset)
                 .Build();
+
+            if (fields == TagDefinitionFields.All) {
+                return result;
+            }
+
+            return result.Clone(fields);
         }
 
 
@@ -512,7 +521,7 @@ namespace DataCore.Adapter.WaveGenerator {
                     if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
                         continue;
                     }
-                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!), ct).ConfigureAwait(false);
+                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
@@ -546,7 +555,7 @@ namespace DataCore.Adapter.WaveGenerator {
                 }
 
                 foreach (var item in selectedItems) {
-                    await ch.WriteAsync(ToTagDefinition(item.Key, item.Value), ct).ConfigureAwait(false);
+                    await ch.WriteAsync(ToTagDefinition(item.Key, item.Value, request.ResultFields), ct).ConfigureAwait(false);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
