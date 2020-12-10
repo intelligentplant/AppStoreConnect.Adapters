@@ -211,7 +211,7 @@ namespace DataCore.Adapter.Tests {
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
-                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() * amplitude, offsetFuncValues.First().Value.GetValueOrDefault<double>());
+                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() * amplitude, offsetFuncValues.First().Value.GetValueOrDefault<double>(), 1 * Math.Pow(10, -16));
             });
         }
 
