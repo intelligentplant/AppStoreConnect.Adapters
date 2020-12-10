@@ -261,7 +261,7 @@ namespace DataCore.Adapter.WaveGenerator {
                 return true;
             }
 
-            if (Options.EnableAdHocGenerators && TryGetWaveGeneratorOptions(name, out options)) {
+            if (Options.EnableAdHocGenerators && TryParseWaveGeneratorOptions(name, out options)) {
                 return true;
             }
 
@@ -320,11 +320,11 @@ namespace DataCore.Adapter.WaveGenerator {
 
             switch (options.Type) {
                 case WaveType.Sawtooth:
-                    return options.Offset + SawtoothWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
+                    return SawtoothWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
                 case WaveType.Square:
-                    return options.Offset + SquareWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
+                    return SquareWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
                 case WaveType.Triangle:
-                    return options.Offset + TriangleWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
+                    return TriangleWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
                 case WaveType.Sinusoid:
                 default:
                     return SinusoidWave(time, options.Period, options.Amplitude, options.Phase, options.Offset);
@@ -521,7 +521,8 @@ namespace DataCore.Adapter.WaveGenerator {
                     if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
                         continue;
                     }
-                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
+                    ch.TryWrite(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All));
+                    //await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
