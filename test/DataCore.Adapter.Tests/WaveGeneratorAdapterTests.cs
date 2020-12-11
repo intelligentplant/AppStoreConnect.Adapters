@@ -20,6 +20,9 @@ namespace DataCore.Adapter.Tests {
             nameof(WaveType.Triangle)
         };
 
+        // We'll allow some leeway when comparing expected floating point calculations to actual.
+        private static readonly double s_calculationDelta = Math.Pow(10, -10);
+
 
         protected override IServiceScope CreateServiceScope(TestContext context) {
             return AssemblyInitializer.ApplicationServices.CreateScope();
@@ -176,7 +179,7 @@ namespace DataCore.Adapter.Tests {
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
-                Assert.AreEqual(baseFuncValues.First().Value.Value, offsetFuncValues.First().Value.Value);
+                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>(), offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
             });
         }
 
@@ -211,7 +214,7 @@ namespace DataCore.Adapter.Tests {
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
-                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() * amplitude, offsetFuncValues.First().Value.GetValueOrDefault<double>(), 1 * Math.Pow(10, -16));
+                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() * amplitude, offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
             });
         }
 
@@ -246,7 +249,7 @@ namespace DataCore.Adapter.Tests {
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
-                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() + offset, offsetFuncValues.First().Value.GetValueOrDefault<double>());
+                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() + offset, offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
             });
         }
 
@@ -282,7 +285,7 @@ namespace DataCore.Adapter.Tests {
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
-                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>(), offsetFuncValues.First().Value.GetValueOrDefault<double>());
+                Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>(), offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
             });
         }
 
