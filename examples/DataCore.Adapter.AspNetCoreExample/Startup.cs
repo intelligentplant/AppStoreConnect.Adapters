@@ -43,6 +43,11 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
                 })
                 .AddAdapter<ExampleAdapter>()
+                .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() { 
+                    Name = "Wave Generator",
+                    Description = "Generates tag values using wave generator functions",
+                    EnableAdHocGenerators = true
+                }))
                 .AddAdapter(sp => {
                     var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
                         Name = "Sensor CSV",

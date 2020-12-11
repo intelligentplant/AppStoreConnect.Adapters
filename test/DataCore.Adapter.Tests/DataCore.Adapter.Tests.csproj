@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Proxy\DataCore.Adapter.Grpc.Proxy.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>

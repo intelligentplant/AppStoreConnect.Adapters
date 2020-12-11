@@ -432,6 +432,33 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Adds a bespoke property to the tag.
+        /// </summary>
+        /// <param name="name">
+        ///   The property name.
+        /// </param>
+        /// <param name="value">
+        ///   The property value.
+        /// </param>
+        /// <param name="description">
+        ///   The property description.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public TagDefinitionBuilder WithProperty(string name, object value, string? description = null) {
+            if (name == null) {
+                throw new ArgumentNullException(nameof(name));
+            }
+            _properties.Add(AdapterProperty.Create(name, value, description));
+            return this;
+        }
+
+
+        /// <summary>
         /// Removes all bespoke properties from the tag.
         /// </summary>
         /// <returns>
