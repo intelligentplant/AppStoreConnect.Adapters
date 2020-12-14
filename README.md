@@ -49,6 +49,7 @@ Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) f
 ## Adapter Implementations
 
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a library containing an adapter that uses CSV files to serve real-time and historical tag values.
+* `DataCore.Adapter.WaveGenerator` ([source](/src/DataCore.Adapter.WaveGenerator)) - an adapter that can generate sinusoid, sawtooth, triangle, and square waves.
 
 ## Testing
 

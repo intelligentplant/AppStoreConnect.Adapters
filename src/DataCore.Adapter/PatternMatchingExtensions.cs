@@ -97,7 +97,7 @@ namespace DataCore.Adapter {
             // * = 0+ characters (i.e. ".*" in regex-speak)
             // ? = 1 character (i.e. "." in regex-speak)
 
-#if NETSTANDARD
+#if NETSTANDARD2_1 == null
             pattern = Regex.Escape(pattern)
                 .Replace(@"\*", ".*")
                 .Replace(@"\?", ".");

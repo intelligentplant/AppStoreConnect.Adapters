@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net461</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.Proxy</PackageId>
     <Description>App Store Connect adapter proxy support library.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

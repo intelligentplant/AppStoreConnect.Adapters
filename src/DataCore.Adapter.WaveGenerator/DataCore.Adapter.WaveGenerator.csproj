@@ -1,19 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
-    <PackageId>$(PackagePrefix).Adapter.Csv</PackageId>
-    <Description>App Store Connect adapter that serves data from CSV files.</Description>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <PackageId>$(PackagePrefix).Adapter.WaveGenerator</PackageId>
+    <Description>App Store Connect adapter that generates simulated wave data.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="$(CsvHelperVersion)" />
+    <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <Compile Include="..\Shared\VendorInfo.cs" Link="VendorInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,10 +29,6 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Shared\VendorInfo.cs" Link="VendorInfo.cs" />
   </ItemGroup>
 
 </Project>

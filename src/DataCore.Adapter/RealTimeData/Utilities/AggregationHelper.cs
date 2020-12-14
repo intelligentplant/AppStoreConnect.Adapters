@@ -1326,9 +1326,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
+        /// Gets the descriptors for the default data functions supported by <see cref="AggregationHelper"/>.
+        /// </summary>
+        /// <returns>
+        ///   The default data function descriptors.
+        /// </returns>
+        public static IEnumerable<DataFunctionDescriptor> GetDefaultDataFunctions() {
+            return s_defaultDataFunctions.Value.ToArray();
+        }
+
+
+        /// <summary>
         /// Gets the descriptors for the data functions supported by the <see cref="AggregationHelper"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        ///   The supported data function descriptors.
+        /// </returns>
         public IEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions() {
             return s_defaultDataFunctions.Value.Concat(_customAggregates.Values).ToArray();
         }
