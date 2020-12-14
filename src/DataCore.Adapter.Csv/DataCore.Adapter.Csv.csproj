@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.Csv</PackageId>
     <Description>App Store Connect adapter that serves data from CSV files.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

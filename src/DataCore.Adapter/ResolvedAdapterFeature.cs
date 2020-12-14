@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_1 == null
             return HashGenerator.Combine(Adapter, _feature, IsFeatureAuthorized);
 #else
             return HashCode.Combine(Adapter, _feature, IsFeatureAuthorized);

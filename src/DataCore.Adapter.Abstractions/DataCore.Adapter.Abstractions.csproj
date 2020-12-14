@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Abstractions</PackageId>
     <Description>Base types for App Store Connect adapters.</Description>
@@ -9,8 +9,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <!-- IAsyncDisposable support for .NET Standard 2.0 -->
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
+    <!-- IAsyncDisposable support for .NET Standard 2.0 and .NET Framework 4.x -->
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftBclAsyncInterfacesVersion)" />
   </ItemGroup>
 
