@@ -5,13 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\DataCore.Adapter.Tests.WebHost\NullValueWrite.cs" Link="NullValueWrite.cs" />
-    <Compile Include="..\DataCore.Adapter.Tests.WebHost\PingPongExtension.cs" Link="PingPongExtension.cs" />
-    <Compile Include="..\DataCore.Adapter.Tests.WebHost\WebHostConfiguration.cs" Link="WebHostConfiguration.cs" />
-    <Compile Include="..\DataCore.Adapter.Tests.WebHost\WebHostStartup.cs" Link="WebHostStartup.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
@@ -20,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
@@ -33,31 +27,8 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <PackageReference Include="Microsoft.Extensions.Http" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
-    <ProjectReference Include="..\DataCore.Adapter.Tests.WebHost\DataCore.Adapter.Tests.WebHost.csproj">
-      <IncludeAssets>none</IncludeAssets>
-      <ExcludeAssets>all</ExcludeAssets>
-      <PrivateAssets>false</PrivateAssets>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\DataCore.Adapter.Tests.WebHost\bin\$(Configuration)\netcoreapp3.1\**" LinkBase="webhost">
-      <CopyToOutputDirectory>always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
 </Project>

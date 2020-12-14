@@ -85,15 +85,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Benchmarks
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Proxy", "src\DataCore.Adapter.Proxy\DataCore.Adapter.Proxy.csproj", "{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests.WebHost", "test\DataCore.Adapter.Tests.WebHost\DataCore.Adapter.Tests.WebHost.csproj", "{D50F25F4-A0B1-4897-99B2-9E091B3516E5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.DependencyInjection", "src\DataCore.Adapter.DependencyInjection\DataCore.Adapter.DependencyInjection.csproj", "{5CD15B99-02B0-4BBD-9033-5DF46520F77D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{5E4F5BAB-DAA5-47B0-862A-B6E4173F146C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests.Helpers", "src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj", "{7A247D52-A607-4810-B5DC-ACC3650CE5BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.WaveGenerator", "src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj", "{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.WaveGenerator", "src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj", "{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,10 +191,6 @@ Global
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D50F25F4-A0B1-4897-99B2-9E091B3516E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D50F25F4-A0B1-4897-99B2-9E091B3516E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D50F25F4-A0B1-4897-99B2-9E091B3516E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D50F25F4-A0B1-4897-99B2-9E091B3516E5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -241,7 +235,6 @@ Global
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5} = {1BF8C809-6F14-4C52-B172-D43A96295884}
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
-		{D50F25F4-A0B1-4897-99B2-9E091B3516E5} = {1BF8C809-6F14-4C52-B172-D43A96295884}
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{5E4F5BAB-DAA5-47B0-862A-B6E4173F146C} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{7A247D52-A607-4810-B5DC-ACC3650CE5BF} = {5E4F5BAB-DAA5-47B0-862A-B6E4173F146C}
