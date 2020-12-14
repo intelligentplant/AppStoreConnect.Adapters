@@ -521,8 +521,7 @@ namespace DataCore.Adapter.WaveGenerator {
                     if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
                         continue;
                     }
-                    ch.TryWrite(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All));
-                    //await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
+                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
