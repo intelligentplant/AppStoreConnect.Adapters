@@ -91,6 +91,16 @@ namespace DataCore.Adapter {
         public event Action<TValue>? Publish;
 
         /// <summary>
+        /// Raised whenever a subscription is added to the subscription manager.
+        /// </summary>
+        public event Action<TSubscription>? SubscriptionAdded;
+
+        /// <summary>
+        /// Raised whenever a subscription is cancelled.
+        /// </summary>
+        public event Action<TSubscription>? SubscriptionCancelled;
+
+        /// <summary>
         /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
@@ -128,7 +138,9 @@ namespace DataCore.Adapter {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        protected virtual void OnSubscriptionAdded(TSubscription subscription) { }
+        protected virtual void OnSubscriptionAdded(TSubscription subscription) {
+            SubscriptionAdded?.Invoke(subscription);
+        }
 
 
         /// <summary>
@@ -137,7 +149,9 @@ namespace DataCore.Adapter {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        protected virtual void OnSubscriptionCancelled(TSubscription subscription) { }
+        protected virtual void OnSubscriptionCancelled(TSubscription subscription) {
+            SubscriptionCancelled?.Invoke(subscription);
+        }
 
 
         /// <summary>
