@@ -97,12 +97,14 @@ namespace DataCore.Adapter.Events {
         /// <inheritdoc/>
         protected override void OnSubscriptionAdded(EventSubscriptionChannel subscription) {
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+            base.OnSubscriptionAdded(subscription);
         }
 
 
         /// <inheritdoc/>
         protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) { 
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
+            base.OnSubscriptionCancelled(subscription);
         }
 
 

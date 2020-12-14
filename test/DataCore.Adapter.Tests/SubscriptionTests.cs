@@ -16,6 +16,58 @@ namespace DataCore.Adapter.Tests {
     public class SubscriptionTests : TestsBase {
 
         [TestMethod]
+        public async Task SnapshotSubscriptionManagerShouldNotifyWhenSubscriptionIsAdded() {
+            var options = new SnapshotTagValuePushOptions() {
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+            };
+
+            using (var feature = new SnapshotTagValuePush(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tags = new[] { TestContext.TestName }
+                    },
+                    CancellationToken
+                );
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var success = await tcs.Task.WithCancellation(CancellationToken);
+                Assert.IsTrue(success);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task SnapshotSubscriptionManagerShouldNotifyWhenSubscriptionIsCancelled() {
+            var options = new SnapshotTagValuePushOptions() {
+                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+            };
+
+            using (var feature = new SnapshotTagValuePush(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tags = new[] { TestContext.TestName }
+                    },
+                    CancellationToken
+                );
+
+                Cancel();
+                var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                Assert.IsTrue(success);
+            }
+        }
+
+
+        [TestMethod]
         public async Task SnapshotSubscriptionShouldEmitValues() {
             var now = DateTime.UtcNow;
 
@@ -288,6 +340,50 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public async Task EventSubscriptionManagerShouldNotifyWhenSubscriptionIsAdded() {
+            var options = new EventMessagePushOptions();
+
+            using (var feature = new EventMessagePush(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageSubscriptionRequest(),
+                    CancellationToken
+                );
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var success = await tcs.Task.WithCancellation(CancellationToken);
+                Assert.IsTrue(success);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventSubscriptionManagerShouldNotifyWhenSubscriptionIsCancelled() {
+            var options = new EventMessagePushOptions();
+
+            using (var feature = new EventMessagePush(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageSubscriptionRequest(),
+                    CancellationToken
+                );
+
+                Cancel();
+                var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                Assert.IsTrue(success);
+            }
+        }
+
+
+        [TestMethod]
         public async Task EventSubscriptionShouldEmitValues() {
             var now = DateTime.UtcNow;
 
@@ -331,6 +427,50 @@ namespace DataCore.Adapter.Tests {
                     new CreateEventMessageSubscriptionRequest(),
                     CancellationToken
                 ));
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionManagerShouldNotifyWhenSubscriptionIsAdded() {
+            var options = new EventMessagePushWithTopicsOptions();
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest(),
+                    CancellationToken
+                );
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+                var success = await tcs.Task.WithCancellation(CancellationToken);
+                Assert.IsTrue(success);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task EventTopicSubscriptionManagerShouldNotifyWhenSubscriptionIsCancelled() {
+            var options = new EventMessagePushWithTopicsOptions();
+
+            using (var feature = new EventMessagePushWithTopics(options, null, null)) {
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
+
+                var subscription = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest(),
+                    CancellationToken
+                );
+
+                Cancel();
+                var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                Assert.IsTrue(success);
             }
         }
 
