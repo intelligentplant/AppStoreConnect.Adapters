@@ -182,6 +182,70 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a channel that can be used to return results to tag value queries.
         /// </summary>
+        /// <param name="fullMode">
+        ///   The action to take when a write is attempted on a full channel.
+        /// </param>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.TagValueQueryResult> CreateTagValueChannel(
+            BoundedChannelFullMode fullMode,
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateTagValueChannel<RealTimeData.TagValueQueryResult>(fullMode, capacity, singleReader, singleWriter);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to processed tag value queries.
+        /// </summary>
+        /// <param name="fullMode">
+        ///   The action to take when a write is attempted on a full channel.
+        /// </param>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.ProcessedTagValueQueryResult> CreateProcessedTagValueChannel(
+            BoundedChannelFullMode fullMode,
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateTagValueChannel<RealTimeData.ProcessedTagValueQueryResult>(fullMode, capacity, singleReader, singleWriter);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to tag value queries.
+        /// </summary>
         /// <typeparam name="T">
         ///   The result type.
         /// </typeparam>
@@ -207,6 +271,62 @@ namespace DataCore.Adapter {
             bool singleWriter = true
         ) where T : RealTimeData.TagValueQueryResult {
             return CreateChannel<T>(capacity, singleReader, singleWriter);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to tag value queries.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.TagValueQueryResult> CreateTagValueChannel(
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateTagValueChannel<RealTimeData.TagValueQueryResult>(capacity, singleReader, singleWriter);
+        }
+
+
+        /// <summary>
+        /// Creates a channel that can be used to return results to processed tag value queries.
+        /// </summary>
+        /// <param name="capacity">
+        ///   The capacity of the channel. An unbounded channel will be created if the capacity is 
+        ///   less than or equal to zero.
+        /// </param>
+        /// <param name="singleReader">
+        ///   Indicates if the channel should be optimised for a single reader.
+        /// </param>
+        /// <param name="singleWriter">
+        ///   Indicates if the channel should be optimised for a single writer.
+        /// </param>
+        /// <returns>
+        ///   The channel.
+        /// </returns>
+        /// <remarks>
+        ///   The default capacity of the created channel is set to <see cref="TagValueChannelCapacity"/>.
+        /// </remarks>
+        public static Channel<RealTimeData.ProcessedTagValueQueryResult> CreateProcessedTagValueChannel(
+            int capacity = TagValueChannelCapacity,
+            bool singleReader = true,
+            bool singleWriter = true
+        ) {
+            return CreateTagValueChannel<RealTimeData.ProcessedTagValueQueryResult>(capacity, singleReader, singleWriter);
         }
 
 

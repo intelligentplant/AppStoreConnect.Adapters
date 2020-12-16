@@ -47,7 +47,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             }
             HttpAdapterProxy.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>(-1);
+            var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var client = GetClient();

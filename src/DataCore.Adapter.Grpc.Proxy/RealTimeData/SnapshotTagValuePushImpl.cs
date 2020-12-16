@@ -93,7 +93,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             }, BackgroundTaskService, cancellationToken);
 
             // Stream the results.
-            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(0);
+            var result = ChannelExtensions.CreateTagValueChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 // Read tag values.
