@@ -304,7 +304,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
-        protected virtual void ValidateContext(IAdapterCallContext context) {
+        public virtual void ValidateContext(IAdapterCallContext context) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -326,7 +326,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        protected virtual void ValidateRequest<TRequest>(TRequest request) {
+        public virtual void ValidateRequest<TRequest>(TRequest request) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
