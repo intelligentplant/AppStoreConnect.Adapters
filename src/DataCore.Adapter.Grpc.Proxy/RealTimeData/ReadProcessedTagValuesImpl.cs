@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             var grpcResponse = client.ReadProcessedTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
 
-            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.ProcessedTagValueQueryResult>(-1);
+            var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 try {

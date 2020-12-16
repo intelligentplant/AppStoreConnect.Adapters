@@ -34,7 +34,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>(-1);
+            var result = ChannelExtensions.CreateTagValueChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await hubChannel.Forward(ch, ct).ConfigureAwait(false);

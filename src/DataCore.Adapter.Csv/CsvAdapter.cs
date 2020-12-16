@@ -543,7 +543,7 @@ namespace DataCore.Adapter.Csv {
             CheckStarted();
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
@@ -719,7 +719,7 @@ namespace DataCore.Adapter.Csv {
             CheckStarted();
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);

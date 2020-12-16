@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
             var grpcResponse = client.ReadTagValuesAtTimes(grpcRequest, GetCallOptions(context, cancellationToken));
 
-            var result = ChannelExtensions.CreateTagValueChannel<Adapter.RealTimeData.TagValueQueryResult>(-1);
+            var result = ChannelExtensions.CreateTagValueChannel(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 try {

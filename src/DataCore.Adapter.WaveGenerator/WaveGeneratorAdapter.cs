@@ -568,7 +568,7 @@ namespace DataCore.Adapter.WaveGenerator {
             ValidateContext(context);
             ValidateRequest(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
@@ -598,7 +598,7 @@ namespace DataCore.Adapter.WaveGenerator {
             ValidateContext(context);
             ValidateRequest(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var sampleInterval = GetSampleInterval();
@@ -651,7 +651,7 @@ namespace DataCore.Adapter.WaveGenerator {
             ValidateContext(context);
             ValidateRequest(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 foreach (var tag in request.Tags) {

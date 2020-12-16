@@ -135,7 +135,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
@@ -248,7 +248,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
+            var result = ChannelExtensions.CreateProcessedTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
@@ -296,7 +296,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+            var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
@@ -315,7 +315,7 @@ namespace DataCore.Adapter.RealTimeData {
                     // from the resulting channel into a master raw data channel, which is used 
                     // by the InterpolationHelper to calcukate the required values.
 
-                    var rawValuesChannel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>();
+                    var rawValuesChannel = ChannelExtensions.CreateTagValueChannel();
 
                     rawValuesChannel.Writer.RunBackgroundOperation(async (ch2, ct2) => {
                         foreach (var sampleTime in request.UtcSampleTimes) {
