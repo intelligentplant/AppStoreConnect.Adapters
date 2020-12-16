@@ -83,7 +83,7 @@ namespace DataCore.Adapter.RealTimeData {
         ) : base(
             new SnapshotTagValuePushOptions() {
                 MaxSubscriptionCount = maxConcurrentSubscriptions,
-                TagResolver = SnapshotTagValuePushOptions.CreateTagResolver(tagInfoFeature)
+                TagResolver = CreateTagResolver(tagInfoFeature)
             }, 
             backgroundTaskService,
             logger

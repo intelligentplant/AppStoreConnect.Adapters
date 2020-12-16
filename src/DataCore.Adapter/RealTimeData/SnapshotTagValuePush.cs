@@ -58,6 +58,71 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Creates a delegate compatible with <see cref="SnapshotTagValuePushOptions.TagResolver"/> using an 
+        /// <see cref="ITagInfo"/> feature.
+        /// </summary>
+        /// <param name="feature">
+        ///   The <see cref="ITagInfo"/> feature to use.
+        /// </param>
+        /// <returns>
+        ///   A new delegate.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(ITagInfo feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+
+            return async (context, tags, cancellationToken) => {
+                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                    Tags = tags?.ToArray()!
+                }, cancellationToken).ConfigureAwait(false);
+
+                return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a delegate compatible with <see cref="SnapshotTagValuePushOptions.TagResolver"/> using an 
+        /// <see cref="IAdapter"/> that implements the <see cref="ITagInfo"/> feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The <see cref="IAdapter"/> to use to resolve tags.
+        /// </param>
+        /// <returns>
+        ///   A new delegate.
+        /// </returns>
+        /// <remarks>
+        ///   The adapter's <see cref="ITagInfo"/> feature will be resolved every time the resulting 
+        ///   delegate is invoked. If the feature cannot be resolved, the delegate will return an 
+        ///   empty array.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(IAdapter adapter) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+
+            return async (context, tags, cancellationToken) => {
+                if (!adapter.TryGetFeature<ITagInfo>(out var feature)) {
+                    return Array.Empty<TagIdentifier>();
+                }
+
+                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                    Tags = tags?.ToArray()!
+                }, cancellationToken).ConfigureAwait(false);
+
+                return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
+            };
+        }
+
+
         /// <inheritdoc/>
         public async Task<ChannelReader<TagValueQueryResult>> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request, ChannelReader<TagValueSubscriptionUpdate> channel, CancellationToken cancellationToken) {
             if (IsDisposed) {
@@ -504,6 +569,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that will receive tag names or IDs and will return the matching 
         /// <see cref="TagIdentifier"/>.
         /// </summary>
+        /// <remarks>
+        ///   <see cref="SnapshotTagValuePush.CreateTagResolver(IAdapter)"/> or <see cref="SnapshotTagValuePush.CreateTagResolver(ITagInfo)"/> 
+        ///   can be used to generate a compatible delegate using an existing adapter or <see cref="ITagInfo"/> 
+        ///   implementation.
+        /// </remarks>
         public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>>? TagResolver { get; set; }
 
         /// <summary>
@@ -534,32 +604,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// </para>
         /// </remarks>
         public Func<TagIdentifier, TagIdentifier, bool>? IsTopicMatch { get; set; }
-
-
-        /// <summary>
-        /// Creates a delegate compatible with <see cref="TagResolver"/> using an 
-        /// <see cref="ITagInfo"/> feature.
-        /// </summary>
-        /// <param name="feature">
-        ///   The <see cref="ITagInfo"/> feature to use.
-        /// </param>
-        /// <returns>
-        ///   A new delegate.
-        /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Prevent error propagation when a channel closes unexpectedly")]
-        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(ITagInfo feature) {
-            if (feature == null) {
-                throw new ArgumentNullException(nameof(feature));
-            }
-
-            return async (context, tags, cancellationToken) => {
-                var ch = await feature.GetTags(context, new GetTagsRequest() {
-                    Tags = tags?.ToArray()!
-                }, cancellationToken).ConfigureAwait(false);
-
-                return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
-            };
-        }
 
     }
 
