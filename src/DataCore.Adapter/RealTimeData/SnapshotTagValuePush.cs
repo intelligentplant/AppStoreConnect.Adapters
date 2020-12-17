@@ -71,7 +71,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
-        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(ITagInfo feature) {
+        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolverFromFeature(ITagInfo feature) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -104,7 +104,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="adapter"/> is <see langword="null"/>.
         /// </exception>
-        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolver(IAdapter adapter) {
+        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>> CreateTagResolverFromAdapter(IAdapter adapter) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -570,9 +570,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// <see cref="TagIdentifier"/>.
         /// </summary>
         /// <remarks>
-        ///   <see cref="SnapshotTagValuePush.CreateTagResolver(IAdapter)"/> or <see cref="SnapshotTagValuePush.CreateTagResolver(ITagInfo)"/> 
-        ///   can be used to generate a compatible delegate using an existing adapter or <see cref="ITagInfo"/> 
-        ///   implementation.
+        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromAdapter(IAdapter)"/> or 
+        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromFeature(ITagInfo)"/> can be 
+        ///   used to generate a compatible delegate using an existing adapter or 
+        ///   <see cref="ITagInfo"/> implementation.
         /// </remarks>
         public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, ValueTask<IEnumerable<TagIdentifier>>>? TagResolver { get; set; }
 

@@ -166,7 +166,6 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(null, cancellationToken).ConfigureAwait(false);
@@ -176,11 +175,16 @@ namespace DataCore.Adapter.Http.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
-            if (Adapter.RealTimeData.PollingSnapshotTagValuePush.IsCompatible(this)) {
+            if (this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
                 // We are able to simulate tag value push functionality.
-                var simulatedPush = Adapter.RealTimeData.PollingSnapshotTagValuePush.ForAdapter(
-                    this, 
-                    _snapshotRefreshInterval
+                var simulatedPush = new Adapter.RealTimeData.PollingSnapshotTagValuePush(
+                    readSnapshot, 
+                    new Adapter.RealTimeData.PollingSnapshotTagValuePushOptions() { 
+                        PollingInterval = _snapshotRefreshInterval,
+                        TagResolver = Adapter.RealTimeData.SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+                    },
+                    BackgroundTaskService,
+                    Logger
                 );
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
