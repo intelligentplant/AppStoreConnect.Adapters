@@ -142,7 +142,7 @@ namespace DataCore.Adapter.Tests {
 
 
             public SnapshotSubscriptionManager(ITagInfo tagInfo) : base(new SnapshotTagValuePushOptions() {
-                TagResolver = CreateTagResolver(tagInfo)
+                TagResolver = CreateTagResolverFromFeature(tagInfo)
             }, null, null) { }
 
 

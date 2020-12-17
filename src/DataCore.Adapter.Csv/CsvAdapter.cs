@@ -106,9 +106,14 @@ namespace DataCore.Adapter.Csv {
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                var simulatedPush = PollingSnapshotTagValuePush.ForAdapter(
-                    this,
-                    TimeSpan.FromMilliseconds(snapshotPushUpdateInterval)
+                var simulatedPush = new PollingSnapshotTagValuePush(
+                    this.GetFeature<IReadSnapshotTagValues>(),
+                    new PollingSnapshotTagValuePushOptions() {
+                        PollingInterval = TimeSpan.FromMilliseconds(snapshotPushUpdateInterval),
+                        TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+                    },
+                    BackgroundTaskService,
+                    Logger
                 );
                 AddFeature(typeof(ISnapshotTagValuePush), simulatedPush);
             }

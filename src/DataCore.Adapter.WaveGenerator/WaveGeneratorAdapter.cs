@@ -88,7 +88,10 @@ namespace DataCore.Adapter.WaveGenerator {
             IBackgroundTaskService? backgroundTaskService = null, 
             ILogger<WaveGeneratorAdapter>? logger = null
         ) : base(id, options, backgroundTaskService, logger) {
-            AddFeatures(PollingSnapshotTagValuePush.ForAdapter(this, GetSampleInterval()));
+            AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
+                PollingInterval = GetSampleInterval(),
+                TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+            }, BackgroundTaskService, Logger));
             AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
         }
 
