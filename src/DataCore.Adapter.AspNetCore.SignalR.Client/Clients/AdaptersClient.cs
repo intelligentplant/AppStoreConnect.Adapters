@@ -44,16 +44,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will return information about the available adapters.
+        ///   A channel that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
+        public async Task<ChannelReader<AdapterDescriptor>> FindAdaptersAsync(
             FindAdaptersRequest request,
             CancellationToken cancellationToken = default
         ) {
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<IEnumerable<AdapterDescriptor>>(
+            return await connection.StreamAsChannelAsync<AdapterDescriptor>(
                 "FindAdapters", 
                 request,
                 cancellationToken
@@ -131,8 +131,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   lost, the channel will be closed.
         /// </param>
         /// <returns>
-        ///   A task that will return a channel that is used to stream the health check messages back 
-        ///   to the caller.
+        ///   A channel that is used to stream the health check messages back to the caller.
         /// </returns>
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.

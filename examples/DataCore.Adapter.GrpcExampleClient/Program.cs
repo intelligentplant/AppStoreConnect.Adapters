@@ -21,16 +21,22 @@ namespace DataCore.Adapter.GrpcExampleClient {
             Console.WriteLine($"{hostInfoResponse.HostInfo.VendorInfo.Name} ({hostInfoResponse.HostInfo.VendorInfo.Url})");
 
             var adaptersClient = new AdaptersService.AdaptersServiceClient(channel);
-            var adaptersResponse = await adaptersClient.FindAdaptersAsync(new FindAdaptersRequest());
+            var adaptersResponse = adaptersClient.FindAdapters(new FindAdaptersRequest());
+            var adapters = new List<AdapterDescriptor>();
+
             Console.WriteLine();
             Console.WriteLine("== Adapters ==");
-            foreach (var adapter in adaptersResponse.Adapters) {
+            while (await adaptersResponse.ResponseStream.MoveNext(default).ConfigureAwait(false)) {
+                var adapter = adaptersResponse.ResponseStream.Current.Adapter;
+                adapters.Add(adapter);
+
                 Console.WriteLine();
                 Console.WriteLine($"{adapter.Name} (ID: {adapter.Id})");
                 Console.WriteLine($"    Description: {adapter.Description}");
             }
+            
 
-            foreach (var adapter in adaptersResponse.Adapters) {
+            foreach (var adapter in adapters) {
 
                 var adapterId = adapter.Id;
 
