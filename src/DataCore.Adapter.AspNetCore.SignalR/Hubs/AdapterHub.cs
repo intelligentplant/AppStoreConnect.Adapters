@@ -77,13 +77,17 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="request">
         ///   The adapter search query.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
-        ///   The matching adapters.
+        ///   A channel reader that the subscriber can observe to receive the matching adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request) {
+        public async Task<ChannelReader<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapters = await AdapterAccessor.FindAdapters(adapterCallContext, request, true, Context.ConnectionAborted).ConfigureAwait(false);
-            return adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
+            var adapters = await AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false);
+
+            return adapters.Transform(x => AdapterDescriptor.FromExisting(x.Descriptor), BackgroundTaskService, cancellationToken);
         }
 
 

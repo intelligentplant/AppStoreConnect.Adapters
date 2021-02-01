@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -34,36 +35,33 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) {
             var adapterCallContext = new DefaultAdapterCallContext();
             var adapters = await _adapterAccessor.GetAllAdapters(adapterCallContext, cancellationToken).ConfigureAwait(false);
 
-            var healthChecks = adapters.Select(x => new {
-                Adapter = x,
-                HealthCheckResult = Task.Run(async () => { 
+            var healthChecks = new Dictionary<string, Adapter.Diagnostics.HealthCheckResult>(StringComparer.OrdinalIgnoreCase);
+
+            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (adapters.TryRead(out var item)) {
                     try {
-                        var feature = x.Features.Get<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck);
+                        var feature = item.GetFeature<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck);
                         if (feature == null) {
-                            return x.IsRunning 
-                                ? Adapter.Diagnostics.HealthCheckResult.Healthy(null) 
+                            healthChecks[item.Descriptor.Id] = item.IsRunning
+                                ? Adapter.Diagnostics.HealthCheckResult.Healthy(null)
                                 : Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, Resources.HealthChecks_AdapterNotRunning);
+                            continue;
                         }
-                        return await feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
+                        healthChecks[item.Descriptor.Id] = await feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception e) {
-                        return Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
+                        healthChecks[item.Descriptor.Id] = Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
                     }
-                }, cancellationToken)
-            }).ToArray();
+                }
+            }
 
-            await Task.WhenAll(healthChecks.Select(x => x.HealthCheckResult))
-                .WithCancellation(cancellationToken)
-                .ConfigureAwait(false);
+            var resultData = new ReadOnlyDictionary<string, object>(healthChecks.ToDictionary(x => x.Key, x => (object) x.Value));
 
-            var resultData = new ReadOnlyDictionary<string, object>(healthChecks.ToDictionary(x => x.Adapter.Descriptor.Id, x => (object) x.HealthCheckResult));
-
-            var aggregateStatus = Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(healthChecks.Select(x => x.HealthCheckResult.Result.Status));
+            var aggregateStatus = Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(healthChecks.Select(x => x.Value.Status));
             
             switch (aggregateStatus) {
                 case Adapter.Diagnostics.HealthStatus.Healthy:

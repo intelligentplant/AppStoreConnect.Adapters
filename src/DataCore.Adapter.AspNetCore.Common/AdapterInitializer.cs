@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,24 +52,25 @@ namespace DataCore.Adapter.AspNetCore {
         /// <returns>
         ///   A task that will start the registered adapters.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Adapter startup failure should not propagate")]
         public Task StartAsync(CancellationToken cancellationToken) {
             return Task.Run(async () => {
                 var adapters = await _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-                foreach (var adapter in adapters) {
-                    if (cancellationToken.IsCancellationRequested) {
-                        break;
-                    }
-                    if (!adapter.IsEnabled) {
-                        continue;
-                    }
+                while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (adapters.TryRead(out var adapter)) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
+                        }
+                        if (!adapter.IsEnabled) {
+                            continue;
+                        }
 
-                    try { 
-                        _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        try {
+                            _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                            await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception e) {
+                            _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        }
                     }
                 }
             }, cancellationToken);
@@ -87,18 +87,23 @@ namespace DataCore.Adapter.AspNetCore {
         /// <returns>
         ///   A task that will stop the registered adapters.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Adapter shutdown failure should not propagate")]
         public async Task StopAsync(CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-            await Task.WhenAll(adapters.Where(x => x.IsRunning).Select(async x => { 
-                try {
-                    _logger.LogDebug(Resources.Log_StoppingAdapter, x.Descriptor.Name, x.Descriptor.Id);
-                    await x.StopAsync(cancellationToken).ConfigureAwait(false);
+            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (adapters.TryRead(out var adapter)) {
+                    if (!adapter.IsRunning) {
+                        continue;
+                    }
+
+                    try {
+                        _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                    }
                 }
-                catch (Exception e) { 
-                    _logger.LogError(e, Resources.Log_AdapterStopError, x.Descriptor.Name, x.Descriptor.Id);
-                }
-            })).WithCancellation(cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }

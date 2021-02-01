@@ -101,8 +101,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
+            if (request.PageSize > 100) {
+                // Don't allow arbitrarily large queries!
+                request.PageSize = 100;
+            }
             var adapters = await _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken).ConfigureAwait(false);
-            var result = adapters.Select(x => AdapterDescriptor.FromExisting(x.Descriptor)).ToArray();
+
+            var result = new List<AdapterDescriptor>(request.PageSize);
+            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (adapters.TryRead(out var item)) {
+                    result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
+                }
+            }
+
             return Ok(result); // 200
         }
 

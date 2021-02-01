@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
@@ -177,13 +178,14 @@ namespace DataCore.Adapter.Tests {
             private readonly IAdapter _adapter;
 
 
-            public AdapterAccessorImpl(IAdapter adapter, IAdapterAuthorizationService authService) : base(authService) {
+            public AdapterAccessorImpl(IAdapter adapter, IAdapterAuthorizationService authService) : base(adapter.BackgroundTaskService, authService) {
                 _adapter = adapter;
             }
 
 
-            protected override Task<IEnumerable<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
-                return Task.FromResult<IEnumerable<IAdapter>>(new[] { _adapter });
+            protected override Task<ChannelReader<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
+                var channel = new[] { _adapter }.PublishToChannel();
+                return Task.FromResult(channel);
             }
         }
 

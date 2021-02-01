@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter {
 
@@ -21,15 +24,18 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="AspNetCoreAdapterAccessor"/> object.
         /// </summary>
+        /// <param name="backgroundTaskService">
+        ///   The background task service to use.
+        /// </param>
         /// <param name="authorizationService">
         ///   The authorization service that will be used to control access to adapters.
         /// </param>
         /// <param name="adapters">
         ///   The ASP.NET Core hosted services.
         /// </param>
-        public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
-            : base(authorizationService) {
-            _adapters = adapters?.ToArray() ?? Array.Empty<IAdapter>();
+        public AspNetCoreAdapterAccessor(IBackgroundTaskService backgroundTaskService, IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
+            : base(backgroundTaskService, authorizationService) {
+            _adapters = adapters?.OrderBy(x => x.Descriptor.Name, StringComparer.OrdinalIgnoreCase)?.ToArray() ?? Array.Empty<IAdapter>();
         }
 
 
@@ -42,8 +48,9 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The available adapters.
         /// </returns>
-        protected override Task<IEnumerable<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
-            return Task.FromResult<IEnumerable<IAdapter>>(_adapters);
+        protected override Task<ChannelReader<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
+            var channel = _adapters.PublishToChannel();
+            return Task.FromResult(channel);
         }
     }
 }

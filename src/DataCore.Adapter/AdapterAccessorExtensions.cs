@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter {
@@ -24,9 +23,9 @@ namespace DataCore.Adapter {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will return the available adapters.
+        ///   A channel that will return the available adapters.
         /// </returns>
-        public static async Task<IEnumerable<IAdapter>> GetAllAdapters(
+        public static Task<ChannelReader<IAdapter>> GetAllAdapters(
             this IAdapterAccessor adapterAccessor, 
             IAdapterCallContext context, 
             CancellationToken cancellationToken = default
@@ -34,28 +33,11 @@ namespace DataCore.Adapter {
             if (adapterAccessor == null) {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
-            
-            const int pageSize = 100;
-            var result = new List<IAdapter>(pageSize);
 
-            var page = 0;
-            var @continue = false;
-            var request = new Common.FindAdaptersRequest() { 
-                PageSize = pageSize
-            };
-
-            do {
-                @continue = false;
-                ++page;
-                request.Page = page;
-                var adapters = await adapterAccessor.FindAdapters(context, request, false, cancellationToken).ConfigureAwait(false);
-                if (adapters != null) {
-                    var countBefore = result.Count;
-                    result.AddRange(adapters);
-                    // If we received a full page of results, we will continue the loop.
-                    @continue = (result.Count - countBefore) == pageSize;
-                }
-            } while (@continue);
+            var result = adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
+                Page = 1,
+                PageSize = int.MaxValue
+            }, false, cancellationToken);
 
             return result;
 

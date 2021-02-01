@@ -31,12 +31,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         }
 
 
-
         /// <inheritdoc/>
-        public override async Task<FindAdaptersResponse> FindAdapters(FindAdaptersRequest request, ServerCallContext context) {
+        public override async Task FindAdapters(FindAdaptersRequest request, IServerStreamWriter<FindAdaptersResponse> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapters = await _adapterAccessor.FindAdapters(
-                adapterCallContext, 
+                adapterCallContext,
                 new Common.FindAdaptersRequest() {
                     Id = request.Id,
                     Name = request.Name,
@@ -49,10 +48,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 context.CancellationToken
             ).ConfigureAwait(false);
 
-            var result = new FindAdaptersResponse();
-            result.Adapters.AddRange(adapters.Select(x => x.Descriptor.ToGrpcAdapterDescriptor()));
-
-            return result;
+            while (await adapters.WaitToReadAsync(context.CancellationToken).ConfigureAwait(false)) {
+                while (adapters.TryRead(out var item)) {
+                    await responseStream.WriteAsync(new FindAdaptersResponse() { 
+                        Adapter = item.Descriptor.ToGrpcAdapterDescriptor()
+                    }).ConfigureAwait(false);
+                }
+            }
         }
 
 
