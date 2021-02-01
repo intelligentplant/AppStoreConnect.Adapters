@@ -86,7 +86,6 @@ namespace DataCore.Adapter {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Invalid options should not be propagated to the adapter")]
         protected AdapterBase(
             string id,
             IAdapterOptionsMonitor<TAdapterOptions> optionsMonitor, 
@@ -94,8 +93,7 @@ namespace DataCore.Adapter {
             ILogger? logger = null
         ) : base(
             id, 
-            optionsMonitor?.CurrentValue?.Name, 
-            optionsMonitor?.CurrentValue?.Description,
+            optionsMonitor?.CurrentValue,
             backgroundTaskService,
             logger
         ) {
@@ -163,7 +161,6 @@ namespace DataCore.Adapter {
         /// <param name="previousOptions">
         ///   The previous options.
         /// </param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exception is passed to associated TaskCompletionSource")]
         private void OnOptionsChangeInternal(TAdapterOptions newOptions, TAdapterOptions previousOptions) {
 
             // Check if we need to update the descriptor.
