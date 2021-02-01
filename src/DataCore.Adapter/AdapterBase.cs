@@ -41,6 +41,17 @@ namespace DataCore.Adapter {
         public const int MaxDescriptionLength = 500;
 
         /// <summary>
+        /// Indicates if the adapter is enabled. Do not use this field directly; use 
+        /// <see cref="IsEnabled"/> instead.
+        /// </summary>
+        /// <remarks>
+        ///   This field is only used to determine the enabled state if <see cref="IsEnabled"/> 
+        ///   has not been overridden. Therefore, you should always use <see cref="IsEnabled"/> 
+        ///   in case an derived class provides its own implementation (e.g. <see cref="AdapterBase{TAdapterOptions}"/>).
+        /// </remarks>
+        private readonly bool _isEnabled;
+
+        /// <summary>
         /// Indicates if the adapter is disposed.
         /// </summary>
         private bool _isDisposed;
@@ -65,7 +76,7 @@ namespace DataCore.Adapter {
         /// <see cref="IAdapter.StartAsync(CancellationToken)"/> will throw an 
         /// <see cref="InvalidOperationException"/>.
         /// </summary>
-        protected virtual bool IsEnabled { get { return true; } }
+        protected virtual bool IsEnabled { get { return _isEnabled; } }
 
         /// <summary>
         /// Indicates if the adapter has been started.
@@ -169,12 +180,8 @@ namespace DataCore.Adapter {
         ///   The adapter ID. If <see langword="null"/> or white space, a unique identifier will 
         ///   be generated.
         /// </param>
-        /// <param name="name">
-        ///   The adapter display name. If <see langword="null"/> or white space, the adapter ID 
-        ///   will also be used as the display name.
-        /// </param>
-        /// <param name="description">
-        ///   The adapter description.
+        /// <param name="options">
+        ///   The adapter options. Specify <see langword="null"/> to use default options.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations. 
@@ -187,38 +194,34 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is longer than <see cref="MaxIdLength"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="name"/> is longer than <see cref="MaxNameLength"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="description"/> is longer than <see cref="MaxDescriptionLength"/>.
+        /// <exception cref="ValidationException">
+        ///   <paramref name="options"/> is not valid.
         /// </exception>
         protected AdapterBase(
             string id, 
-            string? name = null, 
-            string? description = null, 
+            AdapterOptions? options = null, 
             IBackgroundTaskService? backgroundTaskService = null, 
             ILogger? logger = null
         ) {
+            if (options == null) {
+                options = new AdapterOptions();
+            }
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+
             if (string.IsNullOrWhiteSpace(id)) {
                 id = Guid.NewGuid().ToString();
-            }
-            if (string.IsNullOrWhiteSpace(name)) {
-                name = id;
             }
 
             if (id.Length > MaxIdLength) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, MaxIdLength), nameof(id));
             }
-            if (name!.Length > MaxNameLength) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterNameIsTooLong, MaxNameLength), nameof(name));
-            }
-            if (description != null && description.Length > MaxDescriptionLength) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, MaxDescriptionLength), nameof(description));
-            }
+
+            _isEnabled = options.IsEnabled;
 
             StopToken = _stopTokenSource.Token;
-            _descriptor = new AdapterDescriptor(id, name, description);
+            _descriptor = new AdapterDescriptor(id, string.IsNullOrWhiteSpace(options.Name) 
+                ? id 
+                : options.Name, options.Description);
             TypeDescriptor = this.CreateTypeDescriptor();
             BackgroundTaskService = new BackgroundTaskServiceWrapper(
                 backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
@@ -273,8 +276,21 @@ namespace DataCore.Adapter {
         ///   The new adapter description. Specify <see langword="null"/> to leave the description 
         ///   unchanged.
         /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is longer than <see cref="MaxNameLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="description"/> is longer than <see cref="MaxDescriptionLength"/>.
+        /// </exception>
         protected void UpdateDescriptor(string? name = null, string? description = null) {
             if (!string.IsNullOrWhiteSpace(name)) {
+                if (name.Length > MaxNameLength) {
+                    throw new ArgumentException(Resources.Error_AdapterNameIsTooLong, nameof(name));
+                }
+                if (description != null && description.Length > MaxDescriptionLength) {
+                    throw new ArgumentException(Resources.Error_AdapterDescriptionIsTooLong, nameof(description));
+                }
+
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
                         _descriptor.Id, 
@@ -284,6 +300,10 @@ namespace DataCore.Adapter {
                 }
             }
             else if (description != null) {
+                if (description.Length > MaxDescriptionLength) {
+                    throw new ArgumentException(Resources.Error_AdapterDescriptionIsTooLong, nameof(description));
+                }
+
                 lock (_descriptor) {
                     _descriptor = new AdapterDescriptor(
                         _descriptor.Id,
