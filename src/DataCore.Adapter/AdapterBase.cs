@@ -730,13 +730,11 @@ namespace DataCore.Adapter {
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                             await StartAsync(ctSource.Token).ConfigureAwait(false);
+                            IsRunning = true;
+                            await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
                         }
-                        IsRunning = true;
                     }
                     finally {
-                        if (!cancellationToken.IsCancellationRequested) {
-                            await _healthCheckManager.Init(cancellationToken).ConfigureAwait(false);
-                        }
                         IsStarting = false;
                     }
 
@@ -748,7 +746,11 @@ namespace DataCore.Adapter {
                 }
             }
             finally {
-                _startupLock.Release();
+                // If startup has been cancelled because the adapter is being disposed, releasing 
+                // the lock will throw an ObjectDisposedException.
+                if (!_isDisposed) {
+                    _startupLock.Release();
+                }
             }
         }
 
