@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return TagDefinition.Create(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
+            return new TagDefinition(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
         }
 
 

@@ -96,7 +96,7 @@ namespace DataCore.Adapter.Tests {
 
             var result = Channel.CreateUnbounded<TagDefinition>();
             foreach (var item in request.Tags) {
-                result.Writer.TryWrite(TagDefinition.Create(item, item, null, null, VariantType.Double, null, null, null, null));
+                result.Writer.TryWrite(new TagDefinition(item, item, null, null, VariantType.Double, null, null, null, null));
             }
             result.Writer.TryComplete();
             return Task.FromResult(result.Reader);

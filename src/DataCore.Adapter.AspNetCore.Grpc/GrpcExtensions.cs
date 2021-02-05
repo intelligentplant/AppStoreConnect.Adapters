@@ -1533,7 +1533,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(tagDefinition));
             }
 
-            return RealTimeData.TagDefinition.Create(
+            return new RealTimeData.TagDefinition(
                 tagDefinition.Id,
                 tagDefinition.Name,
                 tagDefinition.Description,

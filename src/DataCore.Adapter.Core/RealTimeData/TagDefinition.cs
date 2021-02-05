@@ -127,6 +127,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future version. Use the constructor directly or use TagDefinitionBuilder in DataCore.Adapter.dll.", false)]
         public static TagDefinition Create(string id, string name, string? description, string? units, VariantType dataType, IEnumerable<DigitalState>? states, IEnumerable<Uri>? supportedFeatures, IEnumerable<AdapterProperty>? properties, IEnumerable<string>? labels) {
             return new TagDefinition(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
         }
@@ -149,7 +150,7 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(tag));
             }
 
-            return Create(
+            return new TagDefinition(
                 tag.Id,
                 tag.Name,
                 tag.Description,
