@@ -110,8 +110,9 @@ namespace DataCore.Adapter.Http.Client {
                 throw new ArgumentNullException(nameof(callback));
             }
 
-            return new Jaahas.Http.HttpRequestTransformHandler(async (request, cancellationToken) => {
+            return new Jaahas.Http.HttpRequestPipelineHandler(async (request, next, cancellationToken) => {
                 await callback(request, request.GetStateProperty<RequestMetadata>(), cancellationToken).ConfigureAwait(false);
+                return await next(request, cancellationToken).ConfigureAwait(false);
             });
         }
 

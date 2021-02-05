@@ -264,7 +264,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithDigitalStates(IEnumerable<DigitalState> states) {
+        public TagDefinitionBuilder WithDigitalStates(IEnumerable<DigitalState>? states) {
             if (states != null) {
                 _states.AddRange(states.Where(x => x != null).Select(x => new DigitalState(x.Name, x.Value)));
             }
@@ -281,8 +281,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithDigitalStates(DigitalStateSet stateSet) {
-            return WithDigitalStates(stateSet?.States!);
+        public TagDefinitionBuilder WithDigitalStates(DigitalStateSet? stateSet) {
+            return WithDigitalStates(stateSet?.States);
         }
 
 
@@ -321,7 +321,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<Uri> uris) {
+        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<Uri>? uris) {
             if (uris != null) {
                 foreach (var uri in uris) {
                     if (uri != null && (uri.IsStandardFeatureUri() || uri.IsExtensionFeatureUri())) {
@@ -357,7 +357,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<string> uriStrings) {
+        public TagDefinitionBuilder WithSupportedFeatures(IEnumerable<string>? uriStrings) {
             if (uriStrings != null) {
                 foreach (var uriString in uriStrings) {
                     if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri)) {
@@ -423,7 +423,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
+        public TagDefinitionBuilder WithProperties(IEnumerable<AdapterProperty>? properties) {
             if (properties != null) {
                 _properties.AddRange(properties.Where(x => x != null).Select(x => new AdapterProperty(x.Name, x.Value, x.Description)));
             }
@@ -449,7 +449,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public TagDefinitionBuilder WithProperty(string name, object value, string? description = null) {
+        public TagDefinitionBuilder WithProperty(string name, object? value, string? description = null) {
             if (name == null) {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -493,7 +493,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithLabels(IEnumerable<string> labels) {
+        public TagDefinitionBuilder WithLabels(IEnumerable<string>? labels) {
             if (labels != null) {
                 _labels.AddRange(labels.Where(x => !string.IsNullOrWhiteSpace(x)));
             }

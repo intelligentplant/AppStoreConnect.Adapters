@@ -47,7 +47,7 @@
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>15.0.10</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>4.1.0</IntelligentPlantBackgroundTasksVersion>
-    <JaahasHttpRequestTransformerVersion>1.0.1</JaahasHttpRequestTransformerVersion>
+    <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.9.0</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.8.0</NuGetVersioningVersion>

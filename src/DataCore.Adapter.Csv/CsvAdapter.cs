@@ -178,20 +178,14 @@ namespace DataCore.Adapter.Csv {
                 return null!;
             }
 
-            if (!definition.StartsWith("[", StringComparison.Ordinal) || !definition.EndsWith("]", StringComparison.Ordinal)) { 
+            if (!definition.StartsWith("[", StringComparison.Ordinal) || !definition.EndsWith("]", StringComparison.Ordinal)) {
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return TagDefinition.Create(
-                    definition, 
-                    definition, 
-                    null, 
-                    null, 
-                    Common.VariantType.Double, 
-                    null, 
-                    null,
-                    new[] { new AdapterProperty(nameof(definition), definition) }, 
-                    new[] { "CSV" }
-                );
+                return TagDefinitionBuilder.Create(definition, definition)
+                    .WithDataType(VariantType.Double)
+                    .WithProperty(nameof(definition), definition)
+                    .WithLabels("CSV")
+                    .Build();
             }
 
             var definitionOriginal = definition;
@@ -232,27 +226,26 @@ namespace DataCore.Adapter.Csv {
                 }
             }
 
-            return TagDefinition.Create(
-                id ?? name!,
-                name ?? id!,
-                props.TryGetValue(nameof(description), out description!) 
-                    ? description 
-                    : string.Empty,
-                props.TryGetValue(nameof(units), out units!)
+            return TagDefinitionBuilder.Create()
+                .WithId(id ?? name!)
+                .WithName(name ?? id!)
+                .WithDescription(props.TryGetValue(nameof(description), out description!)
+                    ? description
+                    : string.Empty)
+                .WithUnits(props.TryGetValue(nameof(units), out units!)
                     ? units
-                    : string.Empty,
-                states.Count > 0
-                    ? Common.VariantType.Int32
-                    : props.TryGetValue(nameof(dataType), out dataType!) && Enum.TryParse<Common.VariantType>(dataType, out var dataTypeActual)
+                    : string.Empty)
+                .WithDataType(states.Count > 0
+                    ? VariantType.Int32
+                    : props.TryGetValue(nameof(dataType), out dataType!) && Enum.TryParse<VariantType>(dataType, out var dataTypeActual)
                         ? dataTypeActual
-                        : Common.VariantType.Double,
-                states.Count > 0
+                        : VariantType.Double)
+                .WithDigitalStates(states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
-                    : null,
-                null,
-                new[] { new AdapterProperty(nameof(definition), definitionOriginal) },
-                new[] { "CSV" }
-            );
+                    : null)
+                .WithProperty(nameof(definition), definitionOriginal)
+                .WithLabels("CSV")
+                .Build();
         }
 
 
