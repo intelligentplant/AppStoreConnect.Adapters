@@ -77,5 +77,41 @@ namespace DataCore.Adapter.WaveGenerator {
                 return ResourceManager.GetString("AdapterMetadata_DisplayName", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sawtooth wave with 1 hour period..
+        /// </summary>
+        public static string SawtoothWave_TagDescription {
+            get {
+                return ResourceManager.GetString("SawtoothWave_TagDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sinusoid wave with 1 hour period..
+        /// </summary>
+        public static string SinusoidWave_TagDescription {
+            get {
+                return ResourceManager.GetString("SinusoidWave_TagDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Square wave with 1 hour period..
+        /// </summary>
+        public static string SquareWave_TagDescription {
+            get {
+                return ResourceManager.GetString("SquareWave_TagDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Triangle wave with 1 hour period..
+        /// </summary>
+        public static string TriangleWave_TagDescription {
+            get {
+                return ResourceManager.GetString("TriangleWave_TagDescription", resourceCulture);
+            }
+        }
     }
 }
