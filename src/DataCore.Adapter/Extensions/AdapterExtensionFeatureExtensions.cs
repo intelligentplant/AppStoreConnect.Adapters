@@ -290,7 +290,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <paramref name="uriString"/> is not a valid absolute URI.
         /// </exception>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "Extension is overload for method that takes a Uri")]
         public static Task<FeatureDescriptor?> GetDescriptor(
@@ -312,7 +312,7 @@ namespace DataCore.Adapter.Extensions {
 
             uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
 
-            if (!uri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 
@@ -351,7 +351,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <paramref name="uriString"/> is not a valid absolute URI.
         /// </exception>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   <paramref name="uriString"/> is not a child path of <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "Extension is overload for method that takes a URI")]
         public static Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperations(
@@ -373,7 +373,7 @@ namespace DataCore.Adapter.Extensions {
 
             uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
 
-            if (!uri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 

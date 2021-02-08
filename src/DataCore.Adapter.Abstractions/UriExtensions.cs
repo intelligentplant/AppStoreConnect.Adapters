@@ -35,7 +35,7 @@ namespace DataCore.Adapter {
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the <paramref name="uri"/> is a subpath of 
-        ///   <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>, or 
+        ///   <see cref="WellKnownFeatures.Extensions.BaseUri"/>, or 
         ///   <see langword="false"/> otherwise.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -58,7 +58,7 @@ namespace DataCore.Adapter {
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the <paramref name="uriString"/> is a subpath of 
-        ///   <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>, or 
+        ///   <see cref="WellKnownFeatures.Extensions.BaseUri"/>, or 
         ///   <see langword="false"/> otherwise.
         /// </returns>
         /// <exception cref="ArgumentNullException">
@@ -72,7 +72,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
-            return uri.IsChildOf(WellKnownFeatures.UriCache[WellKnownFeatures.Extensions.ExtensionFeatureBasePath]);
+            return uri.IsChildOf(WellKnownFeatures.UriCache[WellKnownFeatures.Extensions.BaseUri]);
         }
 
 

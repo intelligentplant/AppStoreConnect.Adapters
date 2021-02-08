@@ -34,7 +34,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Base URI for extension features.
         /// </summary>
-        internal static Uri ExtensionUriBase { get; } = new Uri(WellKnownFeatures.Extensions.ExtensionFeatureBasePath);
+        internal static Uri ExtensionUriBase { get; } = new Uri(WellKnownFeatures.Extensions.BaseUri);
 
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
@@ -775,7 +775,7 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            if (!operationUri.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)) {
+            if (!operationUri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                 featureUri = null!;
                 error = Resources.Error_InvalidExtensionFeatureOperationUri;
                 return false;

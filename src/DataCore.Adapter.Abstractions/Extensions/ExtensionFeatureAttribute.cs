@@ -15,7 +15,7 @@ namespace DataCore.Adapter.Extensions {
         /// </summary>
         /// <param name="uriString">
         ///   The relative feature URI. The absolute feature URI will always be relative to 
-        ///   <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>. Note that the 
+        ///   <see cref="WellKnownFeatures.Extensions.BaseUri"/>. Note that the 
         ///   URI assigned to the <see cref="Uri"/> property will always have a trailing 
         ///   forwards slash (/) appended if required.
         /// </param>
@@ -27,14 +27,14 @@ namespace DataCore.Adapter.Extensions {
         /// </exception>
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is a relative URI that results in an absolute path that 
-        ///   is not a child path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   is not a child path of <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </exception>
         /// <remarks>
         ///   <paramref name="uriString"/> may be specified as an absolute URI if it is a child 
-        ///   path of <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>
+        ///   path of <see cref="WellKnownFeatures.Extensions.BaseUri"/>
         /// </remarks>
         public ExtensionFeatureAttribute(string uriString) 
-            : base(WellKnownFeatures.Extensions.ExtensionFeatureBasePath, uriString) { }
+            : base(WellKnownFeatures.Extensions.BaseUri, uriString) { }
 
     }
 

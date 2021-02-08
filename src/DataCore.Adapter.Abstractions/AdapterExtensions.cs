@@ -185,7 +185,7 @@ namespace DataCore.Adapter {
         ///   The adapter.
         /// </param>
         /// <param name="uri">
-        ///   The feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
@@ -216,7 +216,7 @@ namespace DataCore.Adapter {
         ///   The adapter.
         /// </param>
         /// <param name="uriString">
-        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <returns>
         ///   The implemented feature, or <see langword="null"/> if the adapter does not implement the 
@@ -439,7 +439,7 @@ namespace DataCore.Adapter {
         ///   The adapter.
         /// </param>
         /// <param name="uri">
-        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
@@ -476,7 +476,7 @@ namespace DataCore.Adapter {
         ///   The adapter.
         /// </param>
         /// <param name="uriString">
-        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
