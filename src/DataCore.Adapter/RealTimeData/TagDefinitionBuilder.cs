@@ -389,6 +389,76 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Adds supported features to the tag based on the features implemented by the specified 
+        /// adapter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        /// <remarks>
+        /// The following feature URIs will be added to the tag, if implemented by the <paramref name="adapter"/>:
+        ///   
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadAnnotations"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadPlotTagValues"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadRawTagValues"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadSnapshotTagValues"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.SnapshotTagValuePush"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.WriteAnnotations"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.WriteHistoricalTagValues"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="WellKnownFeatures.RealTimeData.WriteSnapshotTagValues"/></description>
+        ///   </item>
+        /// </list>
+        /// </remarks>
+        public TagDefinitionBuilder WithSupportedFeatures(IAdapter adapter) {
+            if (adapter != null) {
+                foreach (var featureUri in new[] { 
+                    WellKnownFeatures.RealTimeData.ReadAnnotations,
+                    WellKnownFeatures.RealTimeData.ReadPlotTagValues,
+                    WellKnownFeatures.RealTimeData.ReadProcessedTagValues,
+                    WellKnownFeatures.RealTimeData.ReadRawTagValues,
+                    WellKnownFeatures.RealTimeData.ReadSnapshotTagValues,
+                    WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes,
+                    WellKnownFeatures.RealTimeData.SnapshotTagValuePush,
+                    WellKnownFeatures.RealTimeData.WriteAnnotations,
+                    WellKnownFeatures.RealTimeData.WriteHistoricalTagValues,
+                    WellKnownFeatures.RealTimeData.WriteSnapshotTagValues
+                }) {
+                    if (adapter.HasFeature(featureUri)) {
+                        WithSupportedFeatures(featureUri);
+                    }
+                }
+            }
+
+            return this;
+        }
+
+
+        /// <summary>
         /// Removes all supported features from the tag.
         /// </summary>
         /// <returns>
@@ -453,7 +523,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (name == null) {
                 throw new ArgumentNullException(nameof(name));
             }
-            _properties.Add(AdapterProperty.Create(name, value, description));
+            _properties.Add(AdapterProperty.Create(name, value!, description));
             return this;
         }
 
