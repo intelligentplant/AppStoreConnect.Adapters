@@ -144,7 +144,7 @@ TaskTeardown(context => {
 Task("Clean")
     .WithCriteria<BuildState>((c, state) => state.Clean)
     .Does<BuildState>(state => {
-        foreach (var pattern in new [] { $"./src/**/bin/{state.Configuration}", "./artifacts/**" }) {
+        foreach (var pattern in new [] { $"./src/**/bin/{state.Configuration}", "./artifacts/**", "./TestResults/**" }) {
             BuildUtilities.WriteLogMessage(BuildSystem, $"Cleaning directories: {pattern}");
             CleanDirectories(pattern);
         }
