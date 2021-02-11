@@ -71,7 +71,7 @@ public static class BuildUtilities {
 
         // Set version numbers.
         settings.Properties["AssemblyVersion"] = new List<string> { state.AssemblyVersion };
-        settings.Properties["AssemblyFileVersion"] = new List<string> { state.AssemblyFileVersion };
+        settings.Properties["FileVersion"] = new List<string> { state.AssemblyFileVersion };
         settings.Properties["Version"] = new List<string> { state.PackageVersion };
         settings.Properties["InformationalVersion"] = new List<string> { state.InformationalVersion };
     }
