@@ -76,13 +76,13 @@ public static class BuildUtilities {
 
 
     // Imports test results into the build system.
-    public static void ImportTestResults(BuildSystem buildSystem, string testProvider, string resultsFile) {
-        if (string.IsNullOrWhiteSpace(resultsFile)) {
+    public static void ImportTestResults(BuildSystem buildSystem, string testProvider, FilePath resultsFile) {
+        if (resultsFile == null) {
             return;
         }
 
         if (buildSystem.IsRunningOnTeamCity) {
-            buildSystem.TeamCity.ImportData(testProvider, new FilePath(resultsFile));
+            buildSystem.TeamCity.ImportData(testProvider, resultsFile);
         }
     }
 

@@ -58,62 +58,68 @@ var target = Argument("target", "Test");
 
 // Constructs the build state object.
 Setup<BuildState>(context => {
-    var state = new BuildState() {
-        SolutionName = Argument("project", DefaultSolutionName),
-        Target = target,
-        Configuration = Argument("configuration", "Debug"),
-        ContinuousIntegrationBuild = HasArgument("ci") || !BuildSystem.IsLocalBuild,
-        Rebuild = HasArgument("rebuild"),
-        SignOutput = HasArgument("sign-output"),
-        Verbose = HasArgument("verbose")
-    };
+    try {
+        BuildUtilities.WriteTaskStartMessage(BuildSystem, "Setup");
+        var state = new BuildState() {
+            SolutionName = Argument("project", DefaultSolutionName),
+            Target = target,
+            Configuration = Argument("configuration", "Debug"),
+            ContinuousIntegrationBuild = HasArgument("ci") || !BuildSystem.IsLocalBuild,
+            Rebuild = HasArgument("rebuild"),
+            SignOutput = HasArgument("sign-output"),
+            Verbose = HasArgument("verbose")
+        };
 
-    // Get raw version numbers from JSON.
+        // Get raw version numbers from JSON.
 
-    var versionJson = ParseJsonFromFile("./build/version.json");
+        var versionJson = ParseJsonFromFile("./build/version.json");
 
-    var majorVersion = versionJson.Value<int>("Major");
-    var minorVersion = versionJson.Value<int>("Minor");
-    var patchVersion = versionJson.Value<int>("Patch");
-    var versionSuffix = versionJson.Value<string>("PreRelease");
+        var majorVersion = versionJson.Value<int>("Major");
+        var minorVersion = versionJson.Value<int>("Minor");
+        var patchVersion = versionJson.Value<int>("Patch");
+        var versionSuffix = versionJson.Value<string>("PreRelease");
 
-    // Compute version numbers.
+        // Compute version numbers.
 
-    var buildCounter = Argument("build-counter", 0);
-    var buildMetadata = Argument("build-metadata", state.ContinuousIntegrationBuild ? "" : "unofficial");
-    if (!string.IsNullOrEmpty(buildMetadata)) {
-        var buildMetadataValidator = new System.Text.RegularExpressions.Regex(@"^[0-9A-Aa-z-]+(\.[0-9A-Aa-z-]+)*$");
-        if (!buildMetadataValidator.Match(buildMetadata).Success) {
-            throw new Exception($"Build metadata '{buildMetadata}' is invalid. Metadata must consist of dot-delimited groups of ASCII alphanumerics and hyphens (i.e. [0-9A-Za-z-]). See https://semver.org/#spec-item-10 for details.");
+        var buildCounter = Argument("build-counter", 0);
+        var buildMetadata = Argument("build-metadata", state.ContinuousIntegrationBuild ? "" : "unofficial");
+        if (!string.IsNullOrEmpty(buildMetadata)) {
+            var buildMetadataValidator = new System.Text.RegularExpressions.Regex(@"^[0-9A-Aa-z-]+(\.[0-9A-Aa-z-]+)*$");
+            if (!buildMetadataValidator.Match(buildMetadata).Success) {
+                throw new Exception($"Build metadata '{buildMetadata}' is invalid. Metadata must consist of dot-delimited groups of ASCII alphanumerics and hyphens (i.e. [0-9A-Za-z-]). See https://semver.org/#spec-item-10 for details.");
+            }
         }
+        var branch = GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
+
+        state.AssemblyVersion = $"{majorVersion}.{minorVersion}.0.0";
+        state.AssemblyFileVersion = $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}";
+
+        state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix) 
+            ? $"{majorVersion}.{minorVersion}.{patchVersion}"
+            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
+
+        if (!string.IsNullOrEmpty(buildMetadata)) {
+            state.PackageVersion = string.Concat(state.PackageVersion, "+", buildMetadata);
+        }
+
+        state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
+            ? $"{majorVersion}.{minorVersion}.{patchVersion}+{branch}.{buildCounter}"
+            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}+{branch}.{buildCounter}";
+
+        state.InformationalVersion = string.IsNullOrWhiteSpace(buildMetadata)
+            ? state.BuildNumber
+            : $"{state.BuildNumber}#{buildMetadata}";
+
+        if (!string.Equals(state.Target, "Clean", StringComparison.OrdinalIgnoreCase)) {
+            BuildUtilities.SetBuildSystemBuildNumber(BuildSystem, state.BuildNumber);
+            BuildUtilities.WriteBuildStateToLog(BuildSystem, state);
+        }
+
+        return state;
     }
-    var branch = GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
-
-    state.AssemblyVersion = $"{majorVersion}.{minorVersion}.0.0";
-    state.AssemblyFileVersion = $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}";
-
-    state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix) 
-        ? $"{majorVersion}.{minorVersion}.{patchVersion}"
-        : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
-
-    if (!string.IsNullOrEmpty(buildMetadata)) {
-        state.PackageVersion = string.Concat(state.PackageVersion, "+", buildMetadata);
+    finally {
+        BuildUtilities.WriteTaskEndMessage(BuildSystem, "Setup");
     }
-
-    state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
-        ? $"{majorVersion}.{minorVersion}.{patchVersion}+{branch}.{buildCounter}"
-        : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}+{branch}.{buildCounter}";
-
-    state.InformationalVersion = string.IsNullOrWhiteSpace(buildMetadata)
-        ? state.BuildNumber
-        : $"{state.BuildNumber}#{buildMetadata}";
-
-    if (!string.Equals(state.Target, "Clean", StringComparison.OrdinalIgnoreCase)) {
-        BuildUtilities.SetBuildSystemBuildNumber(BuildSystem, state.BuildNumber);
-        BuildUtilities.WriteBuildStateToLog(BuildSystem, state);
-    }
-
-    return state;
 });
 
 
@@ -178,15 +184,15 @@ Task("Test")
             NoBuild = true
         };
 
-        var testResultsFile = BuildSystem.IsLocalBuild
-            ? ""
-            : $"./TestResults/TestResults-{DateTime.UtcNow:yyyyMMdd-HHmmss}.trx";
+        var testResultsFile = state.ContinuousIntegrationBuild
+            ? new FilePath($"./TestResults/TestResults-{DateTime.UtcNow:yyyyMMddHHmmss}.trx").MakeAbsolute(Context.Environment.WorkingDirectory)
+            : null;
 
-        if (!BuildSystem.IsLocalBuild) {
+        if (testResultsFile != null) {
             // We're using a build system; write the test results to a file so that they can be 
             // imported into the build system.
             testSettings.Loggers = new List<string> {
-                $"trx;LogFileName={testResultsFile}"
+                $"trx;LogFileName={testResultsFile.FullPath}"
             };
         }
 
