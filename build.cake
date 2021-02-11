@@ -103,8 +103,8 @@ Setup<BuildState>(context => {
         }
 
         state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
-            ? $"{majorVersion}.{minorVersion}.{patchVersion}+{branch}.{buildCounter}"
-            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}+{branch}.{buildCounter}";
+            ? $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}+{branch}"
+            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}+{branch}";
 
         state.InformationalVersion = string.IsNullOrWhiteSpace(buildMetadata)
             ? state.BuildNumber
