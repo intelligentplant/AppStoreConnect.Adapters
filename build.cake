@@ -80,7 +80,13 @@ Setup<BuildState>(context => {
     // Compute version numbers.
 
     var buildCounter = Argument("build-counter", 0);
-    var buildMetadata = Argument("build-metadata", "");
+    var buildMetadata = Argument("build-metadata", state.ContinuousIntegrationBuild ? "" : "unofficial");
+    if (!string.IsNullOrEmpty(buildMetadata)) {
+        var buildMetadataValidator = new System.Text.RegularExpressions.Regex(@"^[0-9A-Aa-z-]+(\.[0-9A-Aa-z-]+)*$");
+        if (!buildMetadataValidator.Match(buildMetadata).Success) {
+            throw new Exception($"Build metadata '{buildMetadata}' is invalid. Metadata must consist of dot-delimited groups of ASCII alphanumerics and hyphens (i.e. [0-9A-Za-z-]). See https://semver.org/#spec-item-10 for details.");
+        }
+    }
     var branch = GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
 
     state.AssemblyVersion = $"{majorVersion}.{minorVersion}.0.0";
@@ -89,6 +95,10 @@ Setup<BuildState>(context => {
     state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix) 
         ? $"{majorVersion}.{minorVersion}.{patchVersion}"
         : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
+
+    if (!string.IsNullOrEmpty(buildMetadata)) {
+        state.PackageVersion = string.Concat(state.PackageVersion, "+", buildMetadata);
+    }
 
     state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
         ? $"{majorVersion}.{minorVersion}.{patchVersion}+{branch}.{buildCounter}"
@@ -174,16 +184,15 @@ Task("Test")
 Task("Pack")
     .IsDependentOn("Test")
     .Does<BuildState>(state => {
-        var buildSettings = new DotNetCoreBuildSettings {
+        var buildSettings = new DotNetCorePackSettings {
             Configuration = state.Configuration,
             NoRestore = true,
+            NoBuild = true,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
         };
 
-        buildSettings.MSBuildSettings.Targets.Add("Pack");
-        buildSettings.MSBuildSettings.Properties["NoBuild"] = new List<string> { "true" };
         BuildUtilities.ApplyMSBuildProperties(buildSettings.MSBuildSettings, state);
-        DotNetCoreBuild(state.SolutionName, buildSettings);
+        DotNetCorePack(state.SolutionName, buildSettings);
     });
 
 
