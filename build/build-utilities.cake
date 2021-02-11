@@ -22,17 +22,19 @@ public static class BuildUtilities {
 
 
     // Writes a task started message.
-    public static void WriteTaskStartMessage(BuildSystem buildSystem, string name) {
+    public static void WriteTaskStartMessage(BuildSystem buildSystem, string description) {
         if (buildSystem.IsRunningOnTeamCity) {
-            buildSystem.TeamCity.WriteStartProgress(name);
+            buildSystem.TeamCity.WriteStartBuildBlock(description);
+            buildSystem.TeamCity.WriteStartProgress(description);
         }
     }
 
 
     // Writes a task completed message.
-    public static void WriteTaskEndMessage(BuildSystem buildSystem, string name) {
+    public static void WriteTaskEndMessage(BuildSystem buildSystem, string description) {
         if (buildSystem.IsRunningOnTeamCity) {
-            buildSystem.TeamCity.WriteEndProgress(name);
+            buildSystem.TeamCity.WriteEndProgress(description);
+            buildSystem.TeamCity.WriteEndBuildBlock(description);
         }
     }
 
@@ -70,6 +72,18 @@ public static class BuildUtilities {
         settings.Properties["AssemblyFileVersion"] = new List<string> { state.AssemblyFileVersion };
         settings.Properties["Version"] = new List<string> { state.PackageVersion };
         settings.Properties["InformationalVersion"] = new List<string> { state.InformationalVersion };
+    }
+
+
+    // Imports test results into the build system.
+    public static void ImportTestResults(BuildSystem buildSystem, string testProvider, string resultsFile) {
+        if (string.IsNullOrWhiteSpace(resultsFile)) {
+            return;
+        }
+
+        if (buildSystem.IsRunningOnTeamCity) {
+            buildSystem.TeamCity.ImportData(testProvider, new FilePath(resultsFile));
+        }
     }
 
 }

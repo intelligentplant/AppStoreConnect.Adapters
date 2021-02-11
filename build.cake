@@ -173,10 +173,25 @@ Task("Build")
 Task("Test")
     .IsDependentOn("Build")
     .Does<BuildState>(state => {
-        DotNetCoreTest(state.SolutionName, new DotNetCoreTestSettings {
+        var testSettings = new DotNetCoreTestSettings {
             Configuration = state.Configuration,
             NoBuild = true
-        });
+        };
+
+        var testResultsFile = BuildSystem.IsLocalBuild
+            ? ""
+            : $"./TestResults/TestResults-{DateTime.UtcNow:yyyyMMdd-HHmmss}.trx";
+
+        if (!BuildSystem.IsLocalBuild) {
+            // We're using a build system; write the test results to a file so that they can be 
+            // imported into the build system.
+            testSettings.Loggers = new List<string> {
+                $"trx;LogFileName={testResultsFile}"
+            };
+        }
+
+        DotNetCoreTest(state.SolutionName, testSettings);
+        BuildUtilities.ImportTestResults(BuildSystem, "mstest", testResultsFile);
     });
 
 
