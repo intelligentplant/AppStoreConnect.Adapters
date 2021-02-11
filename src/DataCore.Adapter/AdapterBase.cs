@@ -219,9 +219,13 @@ namespace DataCore.Adapter {
             _isEnabled = options.IsEnabled;
 
             StopToken = _stopTokenSource.Token;
-            _descriptor = new AdapterDescriptor(id, string.IsNullOrWhiteSpace(options.Name) 
-                ? id 
-                : options.Name, options.Description);
+            _descriptor = new AdapterDescriptor(
+                id, 
+                string.IsNullOrWhiteSpace(options.Name) 
+                    ? id 
+                    : options.Name!, 
+                options.Description
+            );
             TypeDescriptor = this.CreateTypeDescriptor();
             BackgroundTaskService = new BackgroundTaskServiceWrapper(
                 backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
@@ -284,7 +288,7 @@ namespace DataCore.Adapter {
         /// </exception>
         protected void UpdateDescriptor(string? name = null, string? description = null) {
             if (!string.IsNullOrWhiteSpace(name)) {
-                if (name.Length > MaxNameLength) {
+                if (name!.Length > MaxNameLength) {
                     throw new ArgumentException(Resources.Error_AdapterNameIsTooLong, nameof(name));
                 }
                 if (description != null && description.Length > MaxDescriptionLength) {
