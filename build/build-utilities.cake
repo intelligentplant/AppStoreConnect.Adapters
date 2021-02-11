@@ -2,10 +2,14 @@
 public static class BuildUtilities {
 
     // Informs the build system of the build number that is being used.
-    public static void SetBuildSystemBuildNumber(BuildSystem buildSystem, string buildNumber) {
+    public static void SetBuildSystemBuildNumber(BuildSystem buildSystem, BuildState buildState) {
         // Tell TeamCity the build number if required.
         if (buildSystem.IsRunningOnTeamCity) {
-            buildSystem.TeamCity.SetBuildNumber(buildNumber);
+            buildSystem.TeamCity.SetBuildNumber(buildState.BuildNumber);
+            buildSystem.TeamCity.SetParameter("system.AssemblyVersion", buildState.AssemblyVersion);
+            buildSystem.TeamCity.SetParameter("system.AssemblyFileVersion", buildState.AssemblyFileVersion);
+            buildSystem.TeamCity.SetParameter("system.InformationalVersion", buildState.InformationalVersion);
+            buildSystem.TeamCity.SetParameter("system.PackageVersion", buildState.PackageVersion);
         }
     }
 

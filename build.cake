@@ -111,7 +111,7 @@ Setup<BuildState>(context => {
             : $"{state.BuildNumber}#{buildMetadata}";
 
         if (!string.Equals(state.Target, "Clean", StringComparison.OrdinalIgnoreCase)) {
-            BuildUtilities.SetBuildSystemBuildNumber(BuildSystem, state.BuildNumber);
+            BuildUtilities.SetBuildSystemBuildNumber(BuildSystem, state);
             BuildUtilities.WriteBuildStateToLog(BuildSystem, state);
         }
 
