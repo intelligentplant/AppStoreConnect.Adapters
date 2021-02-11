@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -13,7 +12,6 @@ using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter {
 
-#pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1724 // Type names should not match namespaces
 
     /// <summary>
@@ -22,9 +20,9 @@ namespace DataCore.Adapter {
     public static class WellKnownFeatures {
 
         /// <summary>
-        /// Cached URI for <see cref="Extensions.ExtensionFeatureBasePath"/>.
+        /// Cached URI for <see cref="Extensions.BaseUri"/>.
         /// </summary>
-        internal static Uri ExtensionFeatureBasePath { get; } = new Uri(Extensions.ExtensionFeatureBasePath);
+        internal static Uri ExtensionFeatureBasePath { get; } = new Uri(Extensions.BaseUri);
 
         /// <summary>
         /// Holds cached versions of all well-known features as URIs.
@@ -63,10 +61,9 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Initialises <see cref="UriCache"/>
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Complex initialisation")]
         static WellKnownFeatures() {
             var keys = s_standardFeatureTypeLookup.Keys.Concat(new[] { 
-                Extensions.ExtensionFeatureBasePath
+                Extensions.BaseUri
             });
 
             UriCache = new ReadOnlyDictionary<string, Uri>(keys.ToDictionary(k => k, k => k.CreateUriWithTrailingSlash()));
@@ -89,7 +86,6 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "URI parsing")]
         public static Uri GetOrCreateFeatureUri(string uriString) {
             if (uriString == null) {
                 throw new ArgumentNullException(nameof(uriString));
@@ -166,14 +162,19 @@ namespace DataCore.Adapter {
         public static class AssetModel {
 
             /// <summary>
+            /// Base URI for asset model adapter features.
+            /// </summary>
+            public const string BaseUri = "asc:features/asset-model/";
+
+            /// <summary>
             /// URI for <see cref="IAssetModelBrowse"/>.
             /// </summary>
-            public const string AssetModelBrowse = "asc:features/asset-model/browse/";
+            public const string AssetModelBrowse = BaseUri + "browse/";
 
             /// <summary>
             /// URI for <see cref="IAssetModelSearch"/>.
             /// </summary>
-            public const string AssetModelSearch = "asc:features/asset-model/search/";
+            public const string AssetModelSearch = BaseUri + "search/";
 
         }
 
@@ -184,14 +185,19 @@ namespace DataCore.Adapter {
         public static class Diagnostics {
 
             /// <summary>
+            /// Base URI for diagnostics adapter features.
+            /// </summary>
+            public const string BaseUri = "asc:features/diagnostics/";
+
+            /// <summary>
             /// URI for <see cref="IConfigurationChanges"/>.
             /// </summary>
-            public const string ConfigurationChanges = "asc:features/diagnostics/configuration-changes/";
+            public const string ConfigurationChanges = BaseUri + "configuration-changes/";
 
             /// <summary>
             /// URI for <see cref="IHealthCheck"/>.
             /// </summary>
-            public const string HealthCheck = "asc:features/diagnostics/health-check/";
+            public const string HealthCheck = BaseUri + "health-check/";
 
         }
 
@@ -202,29 +208,34 @@ namespace DataCore.Adapter {
         public static class Events {
 
             /// <summary>
+            /// Base URI for alarm &amp; event adapter features.
+            /// </summary>
+            public const string BaseUri = "asc:features/events/";
+
+            /// <summary>
             /// URI for <see cref="IEventMessagePush"/>.
             /// </summary>
-            public const string EventMessagePush = "asc:features/events/push/";
+            public const string EventMessagePush = BaseUri + "push/";
 
             /// <summary>
             /// URI for <see cref="IEventMessagePushWithTopics"/>.
             /// </summary>
-            public const string EventMessagePushWithTopics = "asc:features/events/push/topics/";
+            public const string EventMessagePushWithTopics = BaseUri + "topics/";
 
             /// <summary>
             /// URI for <see cref="IReadEventMessagesForTimeRange"/>.
             /// </summary>
-            public const string ReadEventMessagesForTimeRange = "asc:features/events/read/time/";
+            public const string ReadEventMessagesForTimeRange = BaseUri + "read/time/";
 
             /// <summary>
             /// URI for <see cref="IReadEventMessagesUsingCursor"/>.
             /// </summary>
-            public const string ReadEventMessagesUsingCursor = "asc:features/events/read/cursor/";
+            public const string ReadEventMessagesUsingCursor = BaseUri + "read/cursor/";
 
             /// <summary>
             /// URI for <see cref="IWriteEventMessages"/>.
             /// </summary>
-            public const string WriteEventMessages = "asc:features/events/write/";
+            public const string WriteEventMessages = BaseUri + "write/";
 
         }
 
@@ -235,64 +246,69 @@ namespace DataCore.Adapter {
         public static class RealTimeData {
 
             /// <summary>
+            /// Base URI for real-time data adapter features.
+            /// </summary>
+            public const string BaseUri = "asc:features/real-time-data/";
+
+            /// <summary>
             /// URI for <see cref="IReadTagValueAnnotations"/>.
             /// </summary>
-            public const string ReadAnnotations = "asc:features/real-time-data/annotations/read/";
+            public const string ReadAnnotations = BaseUri + "annotations/read/";
 
             /// <summary>
             /// URI for <see cref="IReadPlotTagValues"/>.
             /// </summary>
-            public const string ReadPlotTagValues = "asc:features/real-time-data/values/read/plot/";
+            public const string ReadPlotTagValues = BaseUri + "values/read/plot/";
 
             /// <summary>
             /// URI for <see cref="IReadProcessedTagValues"/>.
             /// </summary>
-            public const string ReadProcessedTagValues = "asc:features/real-time-data/values/read/processed/";
+            public const string ReadProcessedTagValues = BaseUri + "values/read/processed/";
 
             /// <summary>
             /// URI for <see cref="IReadRawTagValues"/>.
             /// </summary>
-            public const string ReadRawTagValues = "asc:features/real-time-data/values/read/raw/";
+            public const string ReadRawTagValues = BaseUri + "values/read/raw/";
 
             /// <summary>
             /// URI for <see cref="IReadSnapshotTagValues"/>.
             /// </summary>
-            public const string ReadSnapshotTagValues = "asc:features/real-time-data/values/read/snapshot/";
+            public const string ReadSnapshotTagValues = BaseUri + "values/read/snapshot/";
 
             /// <summary>
             /// URI for <see cref="IReadTagValuesAtTimes"/>.
             /// </summary>
-            public const string ReadTagValuesAtTimes = "asc:features/real-time-data/values/read/at-times/";
+            public const string ReadTagValuesAtTimes = BaseUri + "values/read/at-times/";
 
             /// <summary>
             /// URI for <see cref="ISnapshotTagValuePush"/>.
             /// </summary>
-            public const string SnapshotTagValuePush = "asc:features/real-time-data/values/push/";
+            public const string SnapshotTagValuePush = BaseUri + "values/push/";
 
             /// <summary>
             /// URI for <see cref="ITagInfo"/>.
             /// </summary>
-            public const string TagInfo = "asc:features/real-time-data/tags/info/";
+            public const string TagInfo = BaseUri + "tags/info/";
 
             /// <summary>
             /// URI for <see cref="ITagSearch"/>.
             /// </summary>
-            public const string TagSearch = "asc:features/real-time-data/tags/search/";
+            public const string TagSearch = BaseUri + "tags/search/";
 
             /// <summary>
             /// URI for <see cref="IWriteTagValueAnnotations"/>.
             /// </summary>
-            public const string WriteAnnotations = "asc:features/real-time-data/annotations/write/";
+            public const string WriteAnnotations = BaseUri + "annotations/write/";
 
             /// <summary>
             /// URI for <see cref="IWriteHistoricalTagValues"/>.
             /// </summary>
-            public const string WriteHistoricalTagValues = "asc:features/real-time-data/values/write/history/";
+            public const string WriteHistoricalTagValues = BaseUri + "values/write/history/";
 
             /// <summary>
             /// URI for <see cref="IWriteSnapshotTagValues"/>.
             /// </summary>
-            public const string WriteSnapshotTagValues = "asc:features/real-time-data/values/write/snapshot/";
+            public const string WriteSnapshotTagValues = BaseUri + "values/write/snapshot/";
 
         }
 
@@ -305,13 +321,12 @@ namespace DataCore.Adapter {
             /// <summary>
             /// The root URI for all extension features (i.e. features extension <see cref="IAdapterExtensionFeature"/>).
             /// </summary>
-            public const string ExtensionFeatureBasePath = "asc:extensions/";
+            public const string BaseUri = "asc:extensions/";
 
         }
 
     }
 
-#pragma warning restore CA1034 // Nested types should not be visible
 #pragma warning restore CA1724 // Type names should not match namespaces
 
 }

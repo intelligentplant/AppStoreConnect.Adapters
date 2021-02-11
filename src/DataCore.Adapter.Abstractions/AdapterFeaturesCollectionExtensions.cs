@@ -203,7 +203,7 @@ namespace DataCore.Adapter {
         ///   The features collection.
         /// </param>
         /// <param name="uri">
-        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <returns>
         ///   The extension feature implementation, or <see langword="null"/> if no matching feature was found.
@@ -242,7 +242,7 @@ namespace DataCore.Adapter {
         ///   The features collection.
         /// </param>
         /// <param name="uriString">
-        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <returns>
         ///   The extension feature implementation, or <see langword="null"/> if no matching feature was found.
@@ -462,7 +462,7 @@ namespace DataCore.Adapter {
         ///   The features collection.
         /// </param>
         /// <param name="uri">
-        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The extension feature URI. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.
@@ -497,7 +497,7 @@ namespace DataCore.Adapter {
         ///   The features collection.
         /// </param>
         /// <param name="uriString">
-        ///   The extension feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.ExtensionFeatureBasePath"/>.
+        ///   The extension feature URI string. Can be relative to <see cref="WellKnownFeatures.Extensions.BaseUri"/>.
         /// </param>
         /// <param name="feature">
         ///   The implemented feature.

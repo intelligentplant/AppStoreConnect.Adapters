@@ -122,7 +122,7 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            _csvParseTask = new Lazy<Task<CsvDataSet>>(() => ReadCsvDataInternal(Options, StopToken), LazyThreadSafetyMode.ExecutionAndPublication);
+            _csvParseTask = new Lazy<Task<CsvDataSet>>(() => ReadCsvDataInternal(Options, this, StopToken), LazyThreadSafetyMode.ExecutionAndPublication);
             await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
         }
 
@@ -157,7 +157,7 @@ namespace DataCore.Adapter.Csv {
             }
             System.ComponentModel.DataAnnotations.Validator.ValidateObject(options, new System.ComponentModel.DataAnnotations.ValidationContext(options));
 
-            return await ReadCsvDataInternal(options, cancellationToken).ConfigureAwait(false);
+            return await ReadCsvDataInternal(options, null, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -170,10 +170,13 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The CSV adapter options.
         /// </param>
+        /// <param name="adapter">
+        ///   The adapter instance that the tag belongs to.
+        /// </param>
         /// <returns>
         ///   The tag definition, or <see langword="null"/> if a tag could not be parsed.
         /// </returns>
-        private static TagDefinition ParseTagDefinition(string definition, CsvAdapterOptions options) {
+        private static TagDefinition ParseTagDefinition(string definition, CsvAdapterOptions options, CsvAdapter? adapter) {
             if (string.IsNullOrWhiteSpace(definition)) {
                 return null!;
             }
@@ -243,6 +246,7 @@ namespace DataCore.Adapter.Csv {
                 .WithDigitalStates(states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null)
+                .WithSupportedFeatures(adapter!)
                 .WithProperty(nameof(definition), definitionOriginal)
                 .WithLabels("CSV")
                 .Build();
@@ -255,13 +259,16 @@ namespace DataCore.Adapter.Csv {
         /// <param name="options">
         ///   The CSV adapter options.
         /// </param>
+        /// <param name="adapter">
+        ///   The adapter instance that the data is being parsed by.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The parse result.
         /// </returns>
-        private static async Task<CsvDataSet> ReadCsvDataInternal(CsvAdapterOptions options, CancellationToken cancellationToken) {
+        private static async Task<CsvDataSet> ReadCsvDataInternal(CsvAdapterOptions options, CsvAdapter? adapter, CancellationToken cancellationToken) {
             var timeZone = string.IsNullOrWhiteSpace(options.TimeZone)
                 ? TimeZoneInfo.Local
                 : TimeZoneInfo.FindSystemTimeZoneById(options.TimeZone);
@@ -323,7 +330,7 @@ namespace DataCore.Adapter.Csv {
                     var fieldName = fields[i];
 
                     // Create tag definition for the field.
-                    var tag = ParseTagDefinition(fieldName, options);
+                    var tag = ParseTagDefinition(fieldName, options, adapter);
                     if (tag != null) {
                         tags[tag.Id] = tag;
                         columnIndexToTagMap[i] = tag;

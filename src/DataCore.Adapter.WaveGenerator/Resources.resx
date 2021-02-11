@@ -123,4 +123,16 @@
   <data name="AdapterMetadata_DisplayName" xml:space="preserve">
     <value>Wave Generator</value>
   </data>
+  <data name="SawtoothWave_TagDescription" xml:space="preserve">
+    <value>Sawtooth wave with 1 hour period.</value>
+  </data>
+  <data name="SinusoidWave_TagDescription" xml:space="preserve">
+    <value>Sinusoid wave with 1 hour period.</value>
+  </data>
+  <data name="SquareWave_TagDescription" xml:space="preserve">
+    <value>Square wave with 1 hour period.</value>
+  </data>
+  <data name="TriangleWave_TagDescription" xml:space="preserve">
+    <value>Triangle wave with 1 hour period.</value>
+  </data>
 </root>

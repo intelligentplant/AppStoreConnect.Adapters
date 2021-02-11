@@ -135,10 +135,10 @@ namespace DataCore.Adapter.WaveGenerator {
         /// Loads default tag definitions.
         /// </summary>
         private void LoadDefaultTagDefinitions() {
-            _tagDefinitions[nameof(WaveType.Sawtooth)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Sawtooth), Type = WaveType.Sawtooth };
-            _tagDefinitions[nameof(WaveType.Sinusoid)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Sinusoid), Type = WaveType.Sinusoid };
-            _tagDefinitions[nameof(WaveType.Square)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Square), Type = WaveType.Square };
-            _tagDefinitions[nameof(WaveType.Triangle)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Triangle), Type = WaveType.Triangle };
+            _tagDefinitions[nameof(WaveType.Sawtooth)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Sawtooth), Type = WaveType.Sawtooth, Description = Resources.SawtoothWave_TagDescription };
+            _tagDefinitions[nameof(WaveType.Sinusoid)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Sinusoid), Type = WaveType.Sinusoid, Description = Resources.SinusoidWave_TagDescription };
+            _tagDefinitions[nameof(WaveType.Square)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Square), Type = WaveType.Square, Description = Resources.SquareWave_TagDescription };
+            _tagDefinitions[nameof(WaveType.Triangle)] = new WaveGeneratorOptions() { Name = nameof(WaveType.Triangle), Type = WaveType.Triangle, Description = Resources.TriangleWave_TagDescription };
         }
 
 
@@ -288,9 +288,12 @@ namespace DataCore.Adapter.WaveGenerator {
         /// <returns>
         ///   A new <see cref="TagDefinition"/> object.
         /// </returns>
-        private static TagDefinition ToTagDefinition(string name, WaveGeneratorOptions options, TagDefinitionFields fields) {
+        private TagDefinition ToTagDefinition(string name, WaveGeneratorOptions options, TagDefinitionFields fields) {
             var result = TagDefinitionBuilder
                 .Create(name, name)
+                .WithDescription(options.Description)
+                .WithSupportedFeatures(this)
+                .WithDataType(VariantType.Double)
                 .WithProperty(nameof(WaveGeneratorOptions.Type), options.Type.ToString())
                 .WithProperty(nameof(WaveGeneratorOptions.Period), options.Period)
                 .WithProperty(nameof(WaveGeneratorOptions.Amplitude), options.Amplitude)

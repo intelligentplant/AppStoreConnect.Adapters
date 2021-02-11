@@ -13,6 +13,11 @@ namespace DataCore.Adapter.WaveGenerator {
         internal string? Name { get; set; }
 
         /// <summary>
+        /// The description for the generator.
+        /// </summary>
+        internal string? Description { get; set; }
+
+        /// <summary>
         /// The wave type.
         /// </summary>
         public WaveType Type { get; set; } = WaveType.Sinusoid;

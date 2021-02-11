@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Tests {
     )]
     internal class PingPongExtension : AdapterExtensionFeature, IHelloWorld {
 
-        public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + RelativeFeatureUri;
+        public const string FeatureUri = WellKnownFeatures.Extensions.BaseUri + RelativeFeatureUri;
 
         public const string RelativeFeatureUri = "unit-tests/ping-pong/";
 
@@ -134,7 +134,7 @@ namespace DataCore.Adapter.Tests {
 
     internal static class HelloWorldConstants {
 
-        public const string FeatureUri = WellKnownFeatures.Extensions.ExtensionFeatureBasePath + "unit-tests/hello-world/";
+        public const string FeatureUri = WellKnownFeatures.Extensions.BaseUri + "unit-tests/hello-world/";
 
     }
 

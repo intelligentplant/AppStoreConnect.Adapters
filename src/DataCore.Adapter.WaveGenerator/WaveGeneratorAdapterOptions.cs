@@ -17,7 +17,6 @@ namespace DataCore.Adapter.WaveGenerator {
         /// <summary>
         /// A map from tag name to the wave generator settings for that tag.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Setter required for easier deserialization")]
         public IDictionary<string, string>? Tags { get; set; }
 
 

@@ -2063,7 +2063,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task ExtensionFeaturesShouldReturnDescriptors() {
             return RunAdapterTest(async (adapter, context, ct) => {
-                var extensionUris = adapter.Features.Keys.Where(x => x.IsChildOf(WellKnownFeatures.Extensions.ExtensionFeatureBasePath)).ToArray();
+                var extensionUris = adapter.Features.Keys.Where(x => x.IsChildOf(WellKnownFeatures.Extensions.BaseUri)).ToArray();
                 if (extensionUris.Length == 0) {
                     Assert.Inconclusive("Adapter does not implement any extension features.");
                     return;

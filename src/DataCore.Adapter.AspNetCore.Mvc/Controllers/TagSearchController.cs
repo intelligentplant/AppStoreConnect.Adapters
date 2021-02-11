@@ -134,6 +134,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/find")]
+        [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -198,6 +199,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/find")]
+        [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {

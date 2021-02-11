@@ -130,7 +130,7 @@ namespace DataCore.Adapter.Tests {
                 var resolved = await accessor.GetAdapterAndFeature(
                     context, 
                     adapter.Descriptor.Id, 
-                    WellKnownFeatures.Extensions.ExtensionFeatureBasePath + ExtensionFeatureUri
+                    WellKnownFeatures.Extensions.BaseUri + ExtensionFeatureUri
                 );
 
                 Assert.IsTrue(resolved.IsAdapterResolved);
