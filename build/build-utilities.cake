@@ -25,7 +25,6 @@ public static class BuildUtilities {
     public static void WriteTaskStartMessage(BuildSystem buildSystem, string description) {
         if (buildSystem.IsRunningOnTeamCity) {
             buildSystem.TeamCity.WriteStartBuildBlock(description);
-            buildSystem.TeamCity.WriteStartProgress(description);
         }
     }
 
@@ -33,7 +32,6 @@ public static class BuildUtilities {
     // Writes a task completed message.
     public static void WriteTaskEndMessage(BuildSystem buildSystem, string description) {
         if (buildSystem.IsRunningOnTeamCity) {
-            buildSystem.TeamCity.WriteEndProgress(description);
             buildSystem.TeamCity.WriteEndBuildBlock(description);
         }
     }
