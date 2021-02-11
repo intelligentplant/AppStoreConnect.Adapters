@@ -53,11 +53,11 @@ namespace DataCore.Adapter.WaveGenerator {
         /// The definitions for properties included in tag definitions.
         /// </summary>
         private static readonly AdapterProperty[] s_tagPropertyDefinitions = { 
-            AdapterProperty.Create(nameof(WaveGeneratorOptions.Type), Variant.Null),
-            AdapterProperty.Create(nameof(WaveGeneratorOptions.Period), Variant.Null),
-            AdapterProperty.Create(nameof(WaveGeneratorOptions.Amplitude), Variant.Null),
-            AdapterProperty.Create(nameof(WaveGeneratorOptions.Phase), Variant.Null),
-            AdapterProperty.Create(nameof(WaveGeneratorOptions.Offset), Variant.Null)
+            AdapterProperty.Create(nameof(WaveGeneratorOptions.Type), Variant.Null, Resources.TagProperty_Type_Description),
+            AdapterProperty.Create(nameof(WaveGeneratorOptions.Period), Variant.Null, Resources.TagProperty_Period_Description),
+            AdapterProperty.Create(nameof(WaveGeneratorOptions.Amplitude), Variant.Null, Resources.TagProperty_Amplitude_Description),
+            AdapterProperty.Create(nameof(WaveGeneratorOptions.Phase), Variant.Null, Resources.TagProperty_Phase_Description),
+            AdapterProperty.Create(nameof(WaveGeneratorOptions.Offset), Variant.Null, Resources.TagProperty_Offset_Description)
         };
 
         /// <summary>
