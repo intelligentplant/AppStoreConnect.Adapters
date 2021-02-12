@@ -15,7 +15,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// <summary>
         /// The relative SignalR hub route.
         /// </summary>
-        public const string DefaultHubRoute = "/signalr/data-core/v1.0";
+        public const string DefaultHubRoute = "/signalr/app-store-connect/v1.0";
 
         /// <summary>
         /// Indicates if the client has been diposed.

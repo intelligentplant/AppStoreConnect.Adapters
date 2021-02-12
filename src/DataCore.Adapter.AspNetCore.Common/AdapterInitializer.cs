@@ -89,19 +89,27 @@ namespace DataCore.Adapter.AspNetCore {
         /// </returns>
         public async Task StopAsync(CancellationToken cancellationToken) {
             var adapters = await _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (adapters.TryRead(out var adapter)) {
-                    if (!adapter.IsRunning) {
-                        continue;
-                    }
 
-                    try {
-                        _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
+            try {
+                while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                    while (adapters.TryRead(out var adapter)) {
+                        if (!adapter.IsRunning) {
+                            continue;
+                        }
+
+                        try {
+                            _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                            await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception e) {
+                            _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        }
                     }
-                    catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                    }
+                }
+            }
+            catch (OperationCanceledException) {
+                if (!cancellationToken.IsCancellationRequested) {
+                    throw;
                 }
             }
         }

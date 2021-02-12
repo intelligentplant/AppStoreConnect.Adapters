@@ -315,7 +315,10 @@ namespace DataCore.Adapter.Csv {
             using (var reader = new StreamReader(stream))
             using (var csvParser = new CsvParser(reader, csvConfig)) {
                 // Read fields.
-                var fields = await csvParser.ReadAsync().ConfigureAwait(false);
+                if (!await csvParser.ReadAsync().ConfigureAwait(false)) {
+                    throw new InvalidOperationException("Unable to read CSV header.");
+                }
+                var fields = csvParser.Record;
                 result.RowsRead++;
 
                 if (timeStampColumnIndex > fields.Length) {
@@ -340,13 +343,16 @@ namespace DataCore.Adapter.Csv {
                 var timeStampFormat = options.TimeStampFormat;
                 var parseExact = !string.IsNullOrWhiteSpace(timeStampFormat);
 
-                string[] currentRow;
+                string[]? currentRow;
                 do {
                     if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
 
-                    currentRow = await csvParser.ReadAsync().ConfigureAwait(false);
+                    currentRow = await csvParser.ReadAsync().ConfigureAwait(false) 
+                        ? csvParser.Record 
+                        : null;
+
                     if (currentRow == null) {
                         // EOF
                         continue;

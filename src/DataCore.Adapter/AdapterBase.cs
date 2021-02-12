@@ -401,7 +401,13 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
-                var healthCheckName = string.Format(context.CultureInfo, Resources.HealthChecks_DisplayName_FeatureHealth, key);
+                var descriptor = feature.GetType().CreateFeatureDescriptor();
+
+                var healthCheckName = string.Format(
+                    context.CultureInfo, 
+                    Resources.HealthChecks_DisplayName_FeatureHealth,
+                    descriptor?.DisplayName ?? key.ToString()
+                );
                 var featureHealth = await healthCheck.CheckFeatureHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 
                 // Create new result that uses normalised name.
