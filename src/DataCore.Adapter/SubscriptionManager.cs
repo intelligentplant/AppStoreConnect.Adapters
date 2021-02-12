@@ -413,7 +413,6 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   A task that will complete when the cancellation token fires.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ensures recovery from errors occurring when publishing messages to subscribers")]
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 try {

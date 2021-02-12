@@ -104,7 +104,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private static async Task<ChannelReader<TOut>> StreamInternal<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
@@ -186,7 +185,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private static async Task<ChannelReader<TOut>> DuplexStreamInternal<TIn, TOut>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,

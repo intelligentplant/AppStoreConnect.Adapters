@@ -226,7 +226,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken) {
             var callOptions = new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
@@ -423,7 +422,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<Diagnostics.HealthCheckResult> CheckRemoteHealthAsync(
             IAdapterCallContext context, 
             CancellationToken cancellationToken

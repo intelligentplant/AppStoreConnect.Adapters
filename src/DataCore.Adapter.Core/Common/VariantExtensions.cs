@@ -188,7 +188,6 @@ namespace DataCore.Adapter.Common {
         ///   default value if the variant <see cref="Variant.Value"/> is not an instance of 
         ///   <typeparamref name="T"/>.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Default value is returned when type conversion fails")]
         public static T GetValueOrDefault<T>(this Variant variant, T defaultValue) {
             if (variant.Value is T val) {
                 return val;

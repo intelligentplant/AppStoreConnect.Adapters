@@ -113,7 +113,6 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A task that will complete when the cancellation token fires
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Recovery from errors occurring while publisging messages to subscribers")]
         private async Task PublishToHealthCheckSubscribers(CancellationToken cancellationToken) {
             while (await _recomputeHealthChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!_recomputeHealthChannel.Reader.TryRead(out var val) || !val) {
@@ -154,7 +153,6 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         public async Task<HealthCheckResult> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);

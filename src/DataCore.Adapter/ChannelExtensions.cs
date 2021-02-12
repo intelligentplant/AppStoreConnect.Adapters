@@ -584,7 +584,6 @@ namespace DataCore.Adapter {
         ///   A task that will read and republish items from the source channel until it completes 
         ///   or the <paramref name="cancellationToken"/> fires.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public static async Task Forward<T>(this ChannelReader<T> source, ChannelWriter<T> destination, CancellationToken cancellationToken = default) {
             if (source == null) {
                 throw new ArgumentNullException(nameof(source));

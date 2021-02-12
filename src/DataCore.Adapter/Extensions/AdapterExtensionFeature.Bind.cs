@@ -599,7 +599,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TIn, TOut>(
             Func<IAdapterCallContext, TIn, CancellationToken, Task<ChannelReader<TOut>>> handler,
             TIn inputParameterExample = default,
@@ -694,7 +693,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TIn, TOut>(
             Func<IAdapterCallContext, TIn, CancellationToken, ChannelReader<TOut>> handler,
             TIn inputParameterExample = default,
@@ -789,7 +787,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TIn, TOut>(
             Func<TIn, CancellationToken, Task<ChannelReader<TOut>>> handler,
             TIn inputParameterExample = default,
@@ -884,7 +881,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TIn, TOut>(
             Func<TIn, CancellationToken, ChannelReader<TOut>> handler,
             TIn inputParameterExample = default,
@@ -973,7 +969,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TOut>(
             Func<IAdapterCallContext, CancellationToken, Task<ChannelReader<TOut>>> handler,
             TOut returnParameterExample = default
@@ -1060,7 +1055,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TOut>(
             Func<IAdapterCallContext, CancellationToken, ChannelReader<TOut>> handler,
             TOut returnParameterExample = default
@@ -1147,7 +1141,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TOut>(
             Func<CancellationToken, Task<ChannelReader<TOut>>> handler,
             TOut returnParameterExample = default
@@ -1234,7 +1227,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindStream<TOut>(
             Func<CancellationToken, ChannelReader<TOut>> handler,
             TOut returnParameterExample = default
@@ -1327,7 +1319,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindDuplexStream<TIn, TOut>(
             Func<IAdapterCallContext, ChannelReader<TIn>, CancellationToken, Task<ChannelReader<TOut>>> handler,
             TIn inputParameterExample = default,
@@ -1439,7 +1430,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindDuplexStream<TIn, TOut>(
             Func<IAdapterCallContext, ChannelReader<TIn>, CancellationToken, ChannelReader<TOut>> handler,
             TIn inputParameterExample = default,
@@ -1551,7 +1541,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindDuplexStream<TIn, TOut>(
             Func<ChannelReader<TIn>, CancellationToken, Task<ChannelReader<TOut>>> handler,
             TIn inputParameterExample = default,
@@ -1663,7 +1652,6 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         protected bool BindDuplexStream<TIn, TOut>(
             Func<ChannelReader<TIn>, CancellationToken, ChannelReader<TOut>> handler,
             TIn inputParameterExample = default,
