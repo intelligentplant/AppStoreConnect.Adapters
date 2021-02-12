@@ -4,38 +4,39 @@
 
   <!-- CoreFX Packages -->
   <PropertyGroup>
-    <SystemComponentModelAnnotationsVersion>4.7.0</SystemComponentModelAnnotationsVersion>
-    <SystemTextJsonVersion>4.7.2</SystemTextJsonVersion>
-    <SystemThreadingChannelsVersion>4.7.1</SystemThreadingChannelsVersion>
+    <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
+    <SystemTextJsonVersion>5.0.1</SystemTextJsonVersion>
+    <SystemThreadingChannelsVersion>5.0.0</SystemThreadingChannelsVersion>
+    <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
   </PropertyGroup>
   
   <!-- ASP.NET Core/Microsoft Extension Packages -->
   <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>3.1.10</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>3.1.10</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>5.0.3</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
-    <MicrosoftBclAsyncInterfacesVersion>1.1.1</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>3.1.10</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>3.1.10</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>3.1.10</MicrosoftExtensionsLoggingAbstractionsVersion>
+    <MicrosoftBclAsyncInterfacesVersion>5.0.0</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>5.0.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>5.0.3</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
+    <MicrosoftExtensionsLoggingAbstractionsVersion>5.0.0</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
   <PropertyGroup>
-    <GoogleProtobufVersion>3.13.0</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.33.1</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.33.1</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.33.1</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.33.1</GrpcToolsVersion>
+    <GoogleProtobufVersion>3.14.0</GoogleProtobufVersion>
+    <GrpcAspNetCoreServerVersion>2.35.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.35.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.35.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.35.0</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.1</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>16.8.3</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
     <MSTestTestAdapterVersion>2.1.2</MSTestTestAdapterVersion>
@@ -45,11 +46,11 @@
   <!-- Other Packages -->
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
-    <CsvHelperVersion>15.0.10</CsvHelperVersion>
+    <CsvHelperVersion>22.1.2</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>4.1.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.9.0</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.8.0</NuGetVersioningVersion>
+    <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>
   </PropertyGroup>
 </Project>
