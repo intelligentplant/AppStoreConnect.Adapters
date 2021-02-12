@@ -215,7 +215,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Extension features should not prevent proxy initialisation")]
         private async Task Init(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(cancellationToken).ConfigureAwait(false);
@@ -329,7 +328,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<HealthCheckResult> CheckRemoteHealthAsync(
             CancellationToken cancellationToken
         ) {
@@ -367,7 +365,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
             if (!IsRunning) {

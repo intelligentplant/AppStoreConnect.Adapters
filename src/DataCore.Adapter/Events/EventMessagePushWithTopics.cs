@@ -369,7 +369,6 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A long-running task.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are written to associated TaskCompletionSource instances")]
         private async Task ProcessTopicSubscriptionChangesChannel(CancellationToken cancellationToken) {
             while (!cancellationToken.IsCancellationRequested) {
                 try {

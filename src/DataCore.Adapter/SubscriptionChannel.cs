@@ -245,7 +245,6 @@ namespace DataCore.Adapter {
         ///   A task that will run until the <paramref name="cancellationToken"/> requests 
         ///   cancellaion.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private async Task RunIngressLoop(CancellationToken cancellationToken) {
             try {
                 while (await _inChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -290,7 +289,6 @@ namespace DataCore.Adapter {
         ///   A task that will run until the <paramref name="cancellationToken"/> requests 
         ///   cancellaion.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         private async Task RunEgressLoop(CancellationToken cancellationToken) {
             try {
                 while (!cancellationToken.IsCancellationRequested) {

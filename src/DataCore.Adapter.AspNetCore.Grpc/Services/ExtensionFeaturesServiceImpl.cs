@@ -214,7 +214,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <returns>
         ///   A <see cref="Task"/> that will process the request.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Error is written to channel")]
         public override async Task InvokeDuplexStreamingExtension(IAsyncStreamReader<InvokeExtensionRequest> requestStream, IServerStreamWriter<InvokeExtensionResponse> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;

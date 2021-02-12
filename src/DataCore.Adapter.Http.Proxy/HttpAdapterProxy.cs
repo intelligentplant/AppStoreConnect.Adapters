@@ -270,7 +270,6 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A task that will return the health check result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Exceptions are reported as health check problems")]
         private async Task<HealthCheckResult> CheckRemoteHealthAsync(
             IAdapterCallContext context,
             CancellationToken cancellationToken

@@ -16,12 +16,12 @@ namespace DataCore.Adapter.Json {
                 ThrowInvalidJsonError();
             }
 
-            string displayName = default!;
+            string? displayName = default;
             HealthStatus status = default;
-            string description = default!;
-            string error = default!;
-            IDictionary<string, string> data = default!;
-            IEnumerable<HealthCheckResult> innerResults = null!;
+            string? description = default;
+            string? error = default;
+            IDictionary<string, string>? data = default;
+            IEnumerable<HealthCheckResult>? innerResults = null;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -63,6 +63,7 @@ namespace DataCore.Adapter.Json {
         public override void Write(Utf8JsonWriter writer, HealthCheckResult value, JsonSerializerOptions options) {
             writer.WriteStartObject();
 
+            WritePropertyValue(writer, nameof(HealthCheckResult.DisplayName), value.DisplayName, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Status), value.Status, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Description), value.Description, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Error), value.Error, options);

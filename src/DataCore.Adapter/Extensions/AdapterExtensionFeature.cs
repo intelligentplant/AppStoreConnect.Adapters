@@ -595,7 +595,6 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> instance.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Binding should not fail just because we can't create an instance of a parameter type using Activator.CreateInstance")]
         private static ExtensionFeatureOperationDescriptor CreateDescriptor<TIn, TOut>(
             ExtensionFeatureOperationType operationType,
             Uri operationId,
