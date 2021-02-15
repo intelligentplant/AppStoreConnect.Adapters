@@ -528,6 +528,7 @@ namespace DataCore.Adapter.Tests {
             var json = JsonSerializer.Serialize(expected, options);
             var actual = JsonSerializer.Deserialize<HealthCheckResult>(json, options);
 
+            Assert.AreEqual(expected.DisplayName, actual.DisplayName);
             Assert.AreEqual(expected.Status, actual.Status);
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Error, actual.Error);
@@ -543,6 +544,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedValue = expected.InnerResults.ElementAt(i);
                 var actualValue = actual.InnerResults.ElementAt(i);
 
+                Assert.AreEqual(expectedValue.DisplayName, actualValue.DisplayName);
                 Assert.AreEqual(expectedValue.Status, actualValue.Status);
                 Assert.AreEqual(expectedValue.Description, actualValue.Description);
                 Assert.AreEqual(expectedValue.Error, actualValue.Error);
