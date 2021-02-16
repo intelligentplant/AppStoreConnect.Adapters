@@ -38,31 +38,31 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(TagDefinition.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Units), StringComparison.OrdinalIgnoreCase)) {
-                    units = JsonSerializer.Deserialize<string>(ref reader, options);
+                    units = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.DataType), StringComparison.OrdinalIgnoreCase)) {
                     dataType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.States), StringComparison.OrdinalIgnoreCase)) {
-                    states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options);
+                    states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.SupportedFeatures), StringComparison.OrdinalIgnoreCase)) {
-                    supportedFeatures = JsonSerializer.Deserialize<Uri[]>(ref reader, options);
+                    supportedFeatures = JsonSerializer.Deserialize<Uri[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagDefinition.Labels), StringComparison.OrdinalIgnoreCase)) {
-                    labels = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                    labels = JsonSerializer.Deserialize<string[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

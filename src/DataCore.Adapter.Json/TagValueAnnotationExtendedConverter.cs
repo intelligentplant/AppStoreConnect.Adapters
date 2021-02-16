@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(TagValueAnnotationExtended.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotationExtended.AnnotationType), StringComparison.OrdinalIgnoreCase)) {
                     annotationType = JsonSerializer.Deserialize<AnnotationType>(ref reader, options);
@@ -48,13 +48,13 @@ namespace DataCore.Adapter.Json {
                     utcEndTime = JsonSerializer.Deserialize<DateTime?>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotationExtended.Value), StringComparison.OrdinalIgnoreCase)) {
-                    value = JsonSerializer.Deserialize<string>(ref reader, options);
+                    value = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotationExtended.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotationExtended.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

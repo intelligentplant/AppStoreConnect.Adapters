@@ -31,13 +31,13 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(DigitalStateSet.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(DigitalStateSet.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(DigitalStateSet.States), StringComparison.OrdinalIgnoreCase)) {
-                    states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options);
+                    states = JsonSerializer.Deserialize<DigitalState[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

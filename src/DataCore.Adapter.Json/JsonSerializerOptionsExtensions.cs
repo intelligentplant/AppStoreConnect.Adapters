@@ -20,7 +20,6 @@ namespace DataCore.Adapter.Json {
         /// <summary>
         /// Class initializer.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Initialisation is non-trivial")]
         static JsonSerializerOptionsExtensions() {
             // Find all concrete JsonConverter types in this assembly, instantiate them, and 
             // assign them to the s_converters array.

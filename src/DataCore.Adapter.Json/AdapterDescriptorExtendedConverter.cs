@@ -34,25 +34,25 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Features), StringComparison.OrdinalIgnoreCase)) {
-                    features = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                    features = JsonSerializer.Deserialize<string[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Extensions), StringComparison.OrdinalIgnoreCase)) {
-                    extensions = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                    extensions = JsonSerializer.Deserialize<string[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterDescriptorExtended.TypeDescriptor), StringComparison.OrdinalIgnoreCase)) {
-                    typeDescriptor = JsonSerializer.Deserialize<AdapterTypeDescriptor>(ref reader, options);
+                    typeDescriptor = JsonSerializer.Deserialize<AdapterTypeDescriptor>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

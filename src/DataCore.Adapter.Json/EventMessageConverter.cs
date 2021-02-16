@@ -36,10 +36,10 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(EventMessage.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.Topic), StringComparison.OrdinalIgnoreCase)) {
-                    topic = JsonSerializer.Deserialize<string>(ref reader, options);
+                    topic = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.UtcEventTime), StringComparison.OrdinalIgnoreCase)) {
                     utcEventTime = JsonSerializer.Deserialize<DateTime>(ref reader, options);
@@ -48,13 +48,13 @@ namespace DataCore.Adapter.Json {
                     priority = JsonSerializer.Deserialize<EventPriority>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.Category), StringComparison.OrdinalIgnoreCase)) {
-                    category = JsonSerializer.Deserialize<string>(ref reader, options);
+                    category = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.Message), StringComparison.OrdinalIgnoreCase)) {
-                    message = JsonSerializer.Deserialize<string>(ref reader, options);
+                    message = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(EventMessage.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

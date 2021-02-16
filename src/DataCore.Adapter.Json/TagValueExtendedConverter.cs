@@ -45,16 +45,16 @@ namespace DataCore.Adapter.Json {
                     status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Units), StringComparison.OrdinalIgnoreCase)) {
-                    units = JsonSerializer.Deserialize<string>(ref reader, options);
+                    units = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Notes), StringComparison.OrdinalIgnoreCase)) {
-                    notes = JsonSerializer.Deserialize<string>(ref reader, options);
+                    notes = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Error), StringComparison.OrdinalIgnoreCase)) {
-                    error = JsonSerializer.Deserialize<string>(ref reader, options);
+                    error = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

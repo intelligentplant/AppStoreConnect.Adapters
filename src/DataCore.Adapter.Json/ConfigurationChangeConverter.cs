@@ -35,19 +35,19 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(ConfigurationChange.ItemType), StringComparison.OrdinalIgnoreCase)) {
-                    itemType = JsonSerializer.Deserialize<string>(ref reader, options);
+                    itemType = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(ConfigurationChange.ItemId), StringComparison.OrdinalIgnoreCase)) {
-                    itemId = JsonSerializer.Deserialize<string>(ref reader, options);
+                    itemId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(ConfigurationChange.ItemName), StringComparison.OrdinalIgnoreCase)) {
-                    itemName = JsonSerializer.Deserialize<string>(ref reader, options);
+                    itemName = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(ConfigurationChange.ChangeType), StringComparison.OrdinalIgnoreCase)) {
                     changeType = JsonSerializer.Deserialize<ConfigurationChangeType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(ConfigurationChange.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<IEnumerable<AdapterProperty>>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<IEnumerable<AdapterProperty>>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

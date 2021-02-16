@@ -38,31 +38,31 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AssetModelNode.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.NodeType), StringComparison.OrdinalIgnoreCase)) {
                     nodeType = JsonSerializer.Deserialize<NodeType>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.NodeSubType), StringComparison.OrdinalIgnoreCase)) {
-                    nodeSubType = JsonSerializer.Deserialize<string>(ref reader, options);
+                    nodeSubType = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Parent), StringComparison.OrdinalIgnoreCase)) {
-                    parent = JsonSerializer.Deserialize<string>(ref reader, options);
+                    parent = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.HasChildren), StringComparison.OrdinalIgnoreCase)) {
                     hasChildren = JsonSerializer.Deserialize<bool>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.DataReference), StringComparison.OrdinalIgnoreCase)) {
-                    dataReference = JsonSerializer.Deserialize<DataReference>(ref reader, options);
+                    dataReference = JsonSerializer.Deserialize<DataReference>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AssetModelNode.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Json {
                     status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagValue.Units), StringComparison.OrdinalIgnoreCase)) {
-                    units = JsonSerializer.Deserialize<string>(ref reader, options);
+                    units = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

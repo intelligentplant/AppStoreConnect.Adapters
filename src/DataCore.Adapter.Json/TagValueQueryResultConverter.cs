@@ -31,13 +31,13 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(TagValueQueryResult.TagId), StringComparison.OrdinalIgnoreCase)) {
-                    tagId = JsonSerializer.Deserialize<string>(ref reader, options);
+                    tagId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueQueryResult.TagName), StringComparison.OrdinalIgnoreCase)) {
-                    tagName = JsonSerializer.Deserialize<string>(ref reader, options);
+                    tagName = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueQueryResult.Value), StringComparison.OrdinalIgnoreCase)) {
-                    value = JsonSerializer.Deserialize<TagValueExtended>(ref reader, options);
+                    value = JsonSerializer.Deserialize<TagValueExtended>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

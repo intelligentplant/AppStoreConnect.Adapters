@@ -32,19 +32,19 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.TagId), StringComparison.OrdinalIgnoreCase)) {
-                    tagId = JsonSerializer.Deserialize<string>(ref reader, options);
+                    tagId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.AnnotationId), StringComparison.OrdinalIgnoreCase)) {
-                    annotationId = JsonSerializer.Deserialize<string>(ref reader, options);
+                    annotationId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.Status), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<WriteStatus>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.Notes), StringComparison.OrdinalIgnoreCase)) {
-                    notes = JsonSerializer.Deserialize<string>(ref reader, options);
+                    notes = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();
