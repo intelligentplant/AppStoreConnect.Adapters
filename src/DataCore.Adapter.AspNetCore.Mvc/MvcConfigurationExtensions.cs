@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP3_1
+﻿#if NETSTANDARD2_0 == false
 using DataCore.Adapter.Json;
 #endif
 
