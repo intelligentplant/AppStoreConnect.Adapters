@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<Uri>(ref reader, options);
+                    id = JsonSerializer.Deserialize<Uri>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
                     name = JsonSerializer.Deserialize<string>(ref reader, options);

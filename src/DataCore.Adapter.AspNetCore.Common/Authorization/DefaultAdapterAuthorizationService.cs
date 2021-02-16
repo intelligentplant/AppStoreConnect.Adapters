@@ -44,9 +44,10 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
         ///   The ASP.NET Core authorization service.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="authorizationService"/> is <see langword="null"/>.
+        ///   <paramref name="useAuthorization"/> is <see langword="true"/> and <paramref name="authorizationService"/> 
+        ///   is <see langword="null"/>.
         /// </exception>
-        internal DefaultAdapterAuthorizationService(bool useAuthorization, IAuthorizationService authorizationService) {
+        internal DefaultAdapterAuthorizationService(bool useAuthorization, IAuthorizationService? authorizationService) {
             UseAuthorization = useAuthorization;
             if (useAuthorization) {
                 _authorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));

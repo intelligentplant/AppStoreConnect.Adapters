@@ -31,10 +31,10 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(DataReference.AdapterId), StringComparison.OrdinalIgnoreCase)) {
-                    adapterId = reader.GetString();
+                    adapterId = reader.GetString()!;
                 }
                 else if (string.Equals(propertyName, nameof(DataReference.Tag), StringComparison.OrdinalIgnoreCase)) {
-                    tag = JsonSerializer.Deserialize<TagIdentifier>(ref reader, options);
+                    tag = JsonSerializer.Deserialize<TagIdentifier>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

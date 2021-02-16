@@ -30,13 +30,13 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(AdapterProperty.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(AdapterProperty.Value), StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(AdapterProperty.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

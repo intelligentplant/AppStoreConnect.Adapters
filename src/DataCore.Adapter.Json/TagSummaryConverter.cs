@@ -34,16 +34,16 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(TagSummary.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<string>(ref reader, options);
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagSummary.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagSummary.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagSummary.Units), StringComparison.OrdinalIgnoreCase)) {
-                    units = JsonSerializer.Deserialize<string>(ref reader, options);
+                    units = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagSummary.DataType), StringComparison.OrdinalIgnoreCase)) {
                     dataType = JsonSerializer.Deserialize<VariantType>(ref reader, options);

@@ -317,7 +317,7 @@ namespace DataCore.Adapter {
                 case Grpc.VariantType.Object:
                     var serializerOptions = new System.Text.Json.JsonSerializerOptions();
                     serializerOptions.Converters.AddDataCoreAdapterConverters();
-                    value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions);
+                    value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions)!;
                     break;
                 case Grpc.VariantType.Sbyte:
                     value = (sbyte) bytes.FirstOrDefault();

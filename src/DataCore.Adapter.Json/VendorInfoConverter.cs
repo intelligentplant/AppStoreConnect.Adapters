@@ -30,10 +30,10 @@ namespace DataCore.Adapter.Json {
                 }
 
                 if (string.Equals(propertyName, nameof(VendorInfo.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(VendorInfo.Url), StringComparison.OrdinalIgnoreCase)) {
-                    url = JsonSerializer.Deserialize<string>(ref reader, options);
+                    url = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

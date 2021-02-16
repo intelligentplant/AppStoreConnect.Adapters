@@ -44,13 +44,13 @@ namespace DataCore.Adapter.Json {
                     utcEndTime = JsonSerializer.Deserialize<DateTime?>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotation.Value), StringComparison.OrdinalIgnoreCase)) {
-                    value = JsonSerializer.Deserialize<string>(ref reader, options);
+                    value = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotation.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueAnnotation.Properties), StringComparison.OrdinalIgnoreCase)) {
-                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options);
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();
