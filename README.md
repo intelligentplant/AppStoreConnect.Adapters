@@ -26,11 +26,11 @@ Some of the core projects in the repository are:
 
 The following projects provide support for hosting adapters in ASP.NET Core applications:
 
-* `DataCore.Adapter.AspNetCore.Common` ([source](/src/DataCore.Adapter.AspNetCore.Common)) - a library containing concrete implementations of various types to provide integration with ASP.NET Core 2.2 and 3.1 applications.
+* `DataCore.Adapter.AspNetCore.Common` ([source](/src/DataCore.Adapter.AspNetCore.Common)) - a library containing concrete implementations of various types to provide integration with ASP.NET Core 2.2, 3.1 and 5.0 applications.
 * `DataCore.Adapter.AspNetCore.HealthChecks` ([source](/src/DataCore.Adapter.AspNetCore.HealthChecks)) - allows adapter runtime states to be reported as ASP.NET Core [health checks](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks).
-* `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a library containing API controllers for use with with ASP.NET Core 2.2 and 3.1 applications.
-* `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2 and 3.1 applications.
-* `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.1 applications.
+* `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a library containing API controllers for use with with ASP.NET Core 2.2, 3.1 and 5.0 applications.
+* `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2, 3.1 and 5.0 applications.
+* `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.1 and 5.0 applications.
 
 ## Client Libraries and Proxies
 
@@ -67,7 +67,7 @@ Package versions are defined in a [common build properties file](/build/Dependen
 
 # ASP.NET Core Quick Start
 
-1. Create a new ASP.NET Core 3.1 project.
+1. Create a new ASP.NET Core project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
 3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that you can inherit from.
 4. If you want to apply authorization policies to the adapter or to individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class. More details are available [here](/src/DataCore.Adapter.AspNetCore.Common/README.md).
