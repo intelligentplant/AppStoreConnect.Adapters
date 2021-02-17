@@ -61,7 +61,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
                 return true;
             }
 
-            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
+            var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
             return result.Succeeded;
         }
 
@@ -72,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
                 return true;
             }
 
-            var result = await _authorizationService.AuthorizeAsync(context.User, adapter, new FeatureAuthorizationRequirement(featureUri)).ConfigureAwait(false);
+            var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(featureUri)).ConfigureAwait(false);
             return result.Succeeded;
         }
     }

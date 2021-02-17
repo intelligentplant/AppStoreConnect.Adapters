@@ -26,10 +26,13 @@ namespace DataCore.Adapter.Tests {
 
         internal static void AllowUntrustedCertificates(HttpMessageHandler handler) {
             // For unit test purposes, allow all SSL certificates.
+#if NETCOREAPP
             if (handler is SocketsHttpHandler socketsHandler) {
                 socketsHandler.SslOptions.RemoteCertificateValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+                return;
             }
-            else if (handler is HttpClientHandler clientHandler) {
+#endif
+            if (handler is HttpClientHandler clientHandler) {
                 clientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
             }
         }
@@ -49,11 +52,13 @@ namespace DataCore.Adapter.Tests {
             });
             services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName);
 
+#if NETCOREAPP
             services.AddTransient(sp => {
                 return GrpcNet.Client.GrpcChannel.ForAddress(DefaultUrl, new GrpcNet.Client.GrpcChannelOptions() {
                     HttpClient = sp.GetService<IHttpClientFactory>().CreateClient(HttpClientName)
                 });
             });
+#endif
         }
 
     }

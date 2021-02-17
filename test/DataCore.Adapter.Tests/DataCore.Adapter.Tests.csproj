@@ -1,37 +1,77 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
+    <Compile Remove="TestResults\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <None Remove="TestResults\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestTestAdapterVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestTestFrameworkVersion)" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <!-- Since we are using v5.0.x of the SignalR MessagePack library, we need to include a 
-         reference to v5.0.0 of System.Text.Encodings.Web when running on netcoreapp3.1 or the 
-         ASP.NET Core web server will throw a runtime error. -->
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
-  </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Proxy\DataCore.Adapter.Grpc.Proxy.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
+  </ItemGroup>
+
+  <!-- 
+  Some references depend on the target framework for the tests.
+  
+  For .NET Framework 4.8, we do not include any gRPC or SignalR-related projects. Hosting of gRPC 
+  services is only possible in ASP.NET Core 3.x and higher. Hosting of adapter SignalR hubs is 
+  possible in ASP.NET Cpre 2.x, but we do not test that here because the web server and the tests 
+  run in the same process, and references to newer versions of e.g. Microsoft.Extensions.Logging 
+  in the SignalR client library can cause us problems when running an ASP.NET Core 2.x web server, 
+  due to breaking changes between the 2.x versions of various libraries expected by ASP.NET Core 
+  and the latest versions referenced by the client or proxy adapter projects.
+  
+  -->
+  <Choose>
+    <!-- .NET Core 3.1/.NET 5.0 references -->
+    <When Condition=" '$(TargetFramework)' != 'net48' ">
+      <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+      </ItemGroup>
+      <ItemGroup>
+        <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
+      </ItemGroup>
+      <ItemGroup>
+        <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
+        <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
+        <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
+        <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Proxy\DataCore.Adapter.Grpc.Proxy.csproj" />
+      </ItemGroup>
+    </When>
+    <!-- .NET Framework 4.8 references -->
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore" Version="$(MicrosoftAspNetCoreVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="$(MicrosoftAspNetCoreVersion)" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  
+  <!-- 
+  Since we are using v5.0.x of the SignalR MessagePack library, we need to include a reference to 
+  v5.0.0 of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
+  will throw a runtime error. 
+  -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

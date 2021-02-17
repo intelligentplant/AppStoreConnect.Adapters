@@ -812,7 +812,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(json));
             }
 
-            return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
+            return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type)!;
         }
 
 

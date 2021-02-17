@@ -32,7 +32,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Additional items related to the call context.
         /// </summary>
-        IDictionary<object, object> Items { get; }
+        IDictionary<object, object?> Items { get; }
 
     }
 }

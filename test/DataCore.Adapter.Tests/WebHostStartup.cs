@@ -1,6 +1,4 @@
-﻿#if NETCOREAPP
-
-using System;
+﻿using System;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -67,7 +65,7 @@ namespace DataCore.Adapter.Tests {
 
                     // Add configuration change notifier.
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())    
+                        ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
                     );
 
                     // Add ping-pong extension
@@ -81,16 +79,21 @@ namespace DataCore.Adapter.Tests {
             // the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
             // above to register your handler.
 
+#if NETCOREAPP
             services.AddGrpc();
+#endif
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .SetCompatibilityVersion(CompatibilityVersion.Latest)
+#if NETCOREAPP
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.WriteIndented = true;
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
+#endif
                 .AddDataCoreAdapterMvc();
 
+#if NETCOREAPP
             services
                 .AddSignalR()
                 .AddDataCoreAdapterSignalR()
@@ -98,19 +101,26 @@ namespace DataCore.Adapter.Tests {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
                 .AddMessagePackProtocol();
+#endif
 
             services
                 .AddHealthChecks()
                 .AddAdapterHeathChecks();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
+#if NETCOREAPP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+#else
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env) {
+#endif
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
 
             app.UseRequestLocalization();
+
+#if NETCOREAPP
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
@@ -119,8 +129,10 @@ namespace DataCore.Adapter.Tests {
                 endpoints.MapDataCoreAdapterHubs();
                 endpoints.MapHealthChecks("/health");
             });
+#else
+            app.UseMvc();
+#endif
         }
+    
     }
 }
-
-#endif
