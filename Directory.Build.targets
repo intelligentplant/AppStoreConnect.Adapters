@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(IncludeDevelopmentPackages)' == 'true' ">
-    <!-- FxCop NuGet Package -->
+    <!-- .NET Analyzers NuGet Package -->
     <PackageReference Remove="Microsoft.CodeAnalysis.NetAnalyzers" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersVersion)">
       <PrivateAssets>all</PrivateAssets>
