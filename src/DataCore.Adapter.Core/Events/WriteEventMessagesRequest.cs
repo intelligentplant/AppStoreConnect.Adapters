@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<WriteEventMessageItem> Events { get; set; } = default!;
+        public WriteEventMessageItem[] Events { get; set; } = default!;
 
     }
 }

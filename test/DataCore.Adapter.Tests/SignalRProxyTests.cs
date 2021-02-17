@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if NETCOREAPP
+
+using System;
 
 using DataCore.Adapter.AspNetCore.SignalR.Proxy;
 
@@ -55,3 +57,5 @@ namespace DataCore.Adapter.Tests {
 
     }
 }
+
+#endif

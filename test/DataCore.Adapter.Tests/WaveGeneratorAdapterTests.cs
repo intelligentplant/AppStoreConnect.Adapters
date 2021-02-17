@@ -271,7 +271,13 @@ namespace DataCore.Adapter.Tests {
 
                 var baseFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { baseFunc },
-                    UtcSampleTimes = new[] { DateTime.UnixEpoch.AddSeconds(defaultPeriod) }
+                    UtcSampleTimes = new[] {
+#if NETCOREAPP
+                        DateTime.UnixEpoch.AddSeconds(defaultPeriod) 
+#else
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(defaultPeriod)
+#endif
+                    }
                 }, ct).ConfigureAwait(false);
 
                 var baseFuncValues = await baseFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
@@ -279,7 +285,13 @@ namespace DataCore.Adapter.Tests {
 
                 var offsetFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { offsetFunc },
-                    UtcSampleTimes = new[] { DateTime.UnixEpoch.AddSeconds(period) }
+                    UtcSampleTimes = new[] { 
+#if NETCOREAPP
+                        DateTime.UnixEpoch.AddSeconds(period) 
+#else
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(period)
+#endif
+                    }
                 }, ct).ConfigureAwait(false);
 
                 var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);

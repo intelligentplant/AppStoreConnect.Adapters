@@ -19,7 +19,6 @@
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
     <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(MicrosoftExtensionsLoggingAbstractionsVersion)" />
     <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
   </ItemGroup>
 

@@ -260,7 +260,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
 
         /// <inheritdoc/>
-        public override Task OnDisconnectedAsync(Exception exception) {
+        public override Task OnDisconnectedAsync(Exception? exception) {
             return base.OnDisconnectedAsync(exception);
         }
 

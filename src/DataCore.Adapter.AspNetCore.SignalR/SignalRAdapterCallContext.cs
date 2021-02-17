@@ -39,7 +39,7 @@ namespace DataCore.Adapter.AspNetCore {
         }
 
         /// <inheritdoc/>
-        public IDictionary<object, object> Items {
+        public IDictionary<object, object?> Items {
             get { return _hubCallerContext.Items; }
         }
 

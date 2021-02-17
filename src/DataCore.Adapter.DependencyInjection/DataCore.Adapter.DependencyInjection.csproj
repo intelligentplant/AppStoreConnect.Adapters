@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="$(IntelligentPlantBackgroundTasksVersion)" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
   </ItemGroup>
 
   <ItemGroup>

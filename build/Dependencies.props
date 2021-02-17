@@ -13,15 +13,11 @@
   <!-- ASP.NET Core/Microsoft Extension Packages -->
   <PropertyGroup>
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
-    <MicrosoftAspNetCoreMvcVersion>2.2.0</MicrosoftAspNetCoreMvcVersion>
     <MicrosoftAspNetCoreSignalRClientVersion>5.0.3</MicrosoftAspNetCoreSignalRClientVersion>
     <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>5.0.0</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>5.0.0</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDiagnosticsHealthChecksVersion>5.0.3</MicrosoftExtensionsDiagnosticsHealthChecksVersion>
-    <MicrosoftExtensionsLoggingAbstractionsVersion>5.0.0</MicrosoftExtensionsLoggingAbstractionsVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
@@ -47,9 +43,9 @@
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>22.1.2</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>4.1.0</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksVersion>4.2.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
-    <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>
   </PropertyGroup>
