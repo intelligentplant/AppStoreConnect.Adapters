@@ -24,7 +24,7 @@ namespace DataCore.Adapter {
         public CultureInfo CultureInfo { get; }
 
         /// <inheritdoc/>
-        public IDictionary<object, object> Items { get; }
+        public IDictionary<object, object?> Items { get; }
 
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace DataCore.Adapter {
             ConnectionId = connectionId ?? Guid.NewGuid().ToString();
             CorrelationId = correlationId ?? Guid.NewGuid().ToString();
             CultureInfo = cultureInfo ?? CultureInfo.CurrentCulture;
-            Items = new ConcurrentDictionary<object, object>();
+            Items = new ConcurrentDictionary<object, object?>();
         }
 
     }
