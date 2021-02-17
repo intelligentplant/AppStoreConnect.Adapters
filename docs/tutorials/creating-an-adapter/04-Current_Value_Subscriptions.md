@@ -31,21 +31,21 @@ public Adapter(
     backgroundTaskService, 
     logger
 ) {
-    AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
-        this, 
-        TimeSpan.FromSeconds(1)
-    ));
+    AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+        PollingInterval = TimeSpan.FromSeconds(1),
+        TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+    }, BackgroundTaskService, Logger));
 }
 ```
 
-Note that we don't add `ISnapshotTagValuePush` to the interface implementations for our adapter class. Instead, we use the `AddFeature<TFeature, TFeatureImpl>` method to register the `PollingSnapshotTagValuePush` object that we are delegating this feature to. We can use the static `PollingSnapshotTagValuePush.ForAdapter` method to create and wire up an instance of the class for us, specifying that we will update the current value of any subscribed tag every second.
+Note that we don't add `ISnapshotTagValuePush` to the interface implementations for our adapter class. Instead, we use the `AddFeatures` method to register the `PollingSnapshotTagValuePush` object that we are delegating this feature to. We use the static `SnapshotTagValuePush.CreateTagResolverFromAdapter` method to define a delegate that can resolve a tag ID or name to a tag definition, and specify that we will update the current value of any subscribed tag every second.
 
 That's it! We've done everything we need to do in order to enable snapshot tag value subscriptions on our adapter.
 
 
 ## Testing
 
-Modify the `Run` method in `Program.cs` as follows:
+Modify the `Run` method in `Runner.cs` as follows:
 
 ```csharp
 private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {
