@@ -45,7 +45,7 @@
     <CsvHelperVersion>22.1.2</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>4.2.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
-    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
+    <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>
   </PropertyGroup>
