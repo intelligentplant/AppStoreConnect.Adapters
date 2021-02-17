@@ -9,7 +9,7 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 In this tutorial, we will create a bare-bones adapter, using the [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) base class. In later chapters, we will extend our adapter to implement different features, and explore other base classes available to us.
 
-To get started, create a new .NET Core 3.1 console app project called `MyAdapter` using Visual Studio or `dotnet new`:
+To get started, create a new console app project called `MyAdapter` using Visual Studio or `dotnet new`:
 
 ```
 mkdir MyAdapter
@@ -17,7 +17,60 @@ cd MyAdapter
 dotnet new console -f netcoreapp3.1
 ```
 
-Next, we will add a package reference to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package.
+Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
+
+We will use the [.NET Generic Host](https://docs.microsoft.com/en-us/dotnet/core/extensions/generic-host) to run the example console applications in this tutorial. After you have added the above package references, replace the code in your `Program.cs` file with the following:
+
+```csharp
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace MyAdapter {
+    class Program {
+
+        public static async Task Main(params string[] args) {
+            await CreateHostBuilder(args).RunConsoleAsync().ConfigureAwait(false);
+        }
+
+
+        private static IHostBuilder CreateHostBuilder(string[] args) {
+            return Host.CreateDefaultBuilder(args).ConfigureServices(services => {
+                services.AddHostedService<Runner>();
+            });
+        }
+
+    }
+
+}
+```
+
+Next, add a new file to the project called `Runner.cs` and replace the code with the following:
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using DataCore.Adapter;
+using DataCore.Adapter.Diagnostics;
+
+using Microsoft.Extensions.Hosting;
+
+namespace MyAdapter {
+    internal class Runner : BackgroundService {
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
+            return Task.CompletedTask;
+        }
+
+    }
+}
+```
+
+The `Runner` class is a background service run by the .NET Generic Host that we will use to run our application logic.
 
 
 ### About Adapter Features
@@ -26,18 +79,27 @@ Adapters can define a set of features that expose different kinds of information
 
 Each feature is identifier via a URI. For example, the feature to request current measurement values has a URI of `asc:features/real-time-data/values/read/snapshot/`. Each feature is defined in C# using an interface; the interface definitions can be found [here](/src/DataCore.Adapter.Abstractions).
 
-To view a summary of each standard adapter feature, update the `Program.cs` file in your project as follows:
+To view a summary of each standard adapter feature, update the `Runner.cs` file in your project as follows:
 
 ```csharp
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
 using DataCore.Adapter;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+
+using Microsoft.Extensions.Hosting;
 
 namespace MyAdapter {
-    class Program {
+    internal class Runner : BackgroundService {
 
-        public static void Main() {
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
             PrintFeatureDescriptions();
+            return Task.CompletedTask;
         }
 
 
@@ -51,6 +113,7 @@ namespace MyAdapter {
                 Console.WriteLine();
             }
         }
+
     }
 }
 ```
@@ -171,9 +234,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
@@ -190,9 +256,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
@@ -209,11 +278,13 @@ namespace MyAdapter {
             IBackgroundTaskService backgroundTaskService = null,
             // Logging
             ILogger<Adapter> logger = null
-        ) : base(id, name, description, backgroundTaskService, logger) { }
+        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) { }
 
     }
 }
 ```
+
+Note that the base class requires us to pass it an instance of the `AdapterOptions` class, so we construct this parameter ourselves and set the `Name` and `Description` properties that will used by the base class.
 
 The `IBackgroundTaskService` type is defined in the [IntelligentPlant.BackgroundTasks](https://www.nuget.org/packages/IntelligentPlant.BackgroundTasks/) package, which is transitively referenced by the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) package.
 
@@ -258,18 +329,23 @@ Note that the `CheckHealthAsync` method accepts an [IAdapterCallContext](/src/Da
 
 ## Testing
 
-To test our adapter, replace the contents of the `Program.cs` file with the following:
+To test our adapter, replace the contents of the `Runner.cs` file with the following:
 
 ```csharp
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+
+using Microsoft.Extensions.Hosting;
 
 namespace MyAdapter {
-    class Program {
+    internal class Runner : BackgroundService {
 
         private const string AdapterId = "example";
 
@@ -278,15 +354,8 @@ namespace MyAdapter {
         private const string AdapterDescription = "Example adapter, built using the tutorial on GitHub";
 
 
-        public static async Task Main(params string[] args) {
-            using (var userCancelled = new CancellationTokenSource()) {
-                Console.CancelKeyPress += (sender, e) => userCancelled.Cancel();
-                try {
-                    Console.WriteLine("Press CTRL+C to quit");
-                    await Run(new DefaultAdapterCallContext(), userCancelled.Token);
-                }
-                catch (OperationCanceledException) { }
-            }
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
+            return Run(new DefaultAdapterCallContext(), stoppingToken);
         }
 
 
@@ -311,9 +380,9 @@ namespace MyAdapter {
                 var healthFeature = adapter.GetFeature<IHealthCheck>();
                 var health = await healthFeature.CheckHealthAsync(context, cancellationToken);
                 Console.WriteLine("  Health:");
-                Console.WriteLine($"    - <{health.Status.ToString()}> {health.Description}");
+                Console.WriteLine($"    - <{health.Status}> {health.Description}");
                 foreach (var item in health.InnerResults) {
-                    Console.WriteLine($"      - <{item.Status.ToString()}> {item.Description}");
+                    Console.WriteLine($"      - <{item.Status}> {item.Description}");
                 }
                 Console.WriteLine();
 
@@ -322,9 +391,10 @@ namespace MyAdapter {
 
     }
 }
+
 ```
 
-The `Run` method will display information about the adapter, including the implemented features. It will then call the `IHealthCheck.CheckHealthAsync` method and display the health check results. Note also that our `Main` method is configured to cancel the `CancellationToken` that is passed to the `Run` method when we press `CTRL+C`. This will come in useful later.
+The `Run` method will display information about the adapter, including the implemented features. It will then call the `IHealthCheck.CheckHealthAsync` method and display the health check results.
 
 When you run the program, you will see output like the following:
 

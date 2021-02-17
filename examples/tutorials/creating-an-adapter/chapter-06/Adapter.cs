@@ -31,10 +31,10 @@ namespace MyAdapter {
             backgroundTaskService, 
             logger
         ) {
-            AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
-                this, 
-                TimeSpan.FromSeconds(1)
-            ));
+            AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+                PollingInterval = TimeSpan.FromSeconds(1),
+                TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+            }, BackgroundTaskService, Logger));
 
             AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
         }
@@ -51,20 +51,13 @@ namespace MyAdapter {
                 ++i;
                 var tagId = i.ToString();
                 var tagName = string.Concat(waveType, "_Wave");
-                var tagProperties = new[] {
-                    CreateWaveTypeProperty(waveType)
-                };
 
-                var tag = new TagDefinition(
-                    tagId,
-                    tagName,
-                    $"A tag that returns a {waveType.ToLower()} wave value",
-                    null,
-                    VariantType.Double,
-                    null,
-                    tagProperties,
-                    null
-                );
+                var tag = TagDefinitionBuilder
+                    .Create(tagId, tagName)
+                    .WithDescription($"A tag that returns a {waveType.ToLower()} wave value")
+                    .WithDataType(VariantType.Double)
+                    .WithProperties(CreateWaveTypeProperty(waveType))
+                    .Build();
 
                 _tagsById[tag.Id] = tag;
                 _tagsByName[tag.Name] = tag;

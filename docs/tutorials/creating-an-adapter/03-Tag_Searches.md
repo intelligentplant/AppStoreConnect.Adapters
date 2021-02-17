@@ -39,20 +39,13 @@ private void CreateTags() {
         ++i;
         var tagId = i.ToString();
         var tagName = string.Concat(waveType, "_Wave");
-        var tagProperties = new[] {
-            CreateWaveTypeProperty(waveType)
-        };
 
-        var tag = new TagDefinition(
-            tagId,
-            tagName,
-            $"A tag that returns a {waveType.ToLower()} wave value",
-            null,
-            VariantType.Double,
-            null,
-            tagProperties,
-            null
-        );
+        var tag = TagDefinitionBuilder
+            .Create(tagId, tagName)
+            .WithDescription($"A tag that returns a {waveType.ToLower()} wave value")
+            .WithDataType(VariantType.Double)
+            .WithProperties(CreateWaveTypeProperty(waveType))
+            .Build();
 
         _tagsById[tag.Id] = tag;
         _tagsByName[tag.Name] = tag;
@@ -84,7 +77,7 @@ protected override Task StopAsync(CancellationToken cancellationToken) {
 
 The `CreateWaveTypeProperty` method creates a property for our tag definitions that describes the type of the wave function used by the tag. The `CreateTags` method populates our `_tagsById` and `_tagsByName` maps with 4 tag definitions, and the `DeleteTags` method removes all entries from these two maps.
 
-The `TagDefinition` can hold a variety of information about a tag in addition to the ID and name, including: a description, engineering units, data type, discrete tag states (if required), custom properties, and labels/categories. In our implementation above, we specify that our tags return `double` values.
+Tags are defined as `TagDefinition` objects. A `TagDefinition` can hold a variety of information about a tag in addition to the ID and name, including: a description, engineering units, data type, discrete tag states (if required), custom properties, and labels/categories. We use the `TagDefinitionBuilder` class to simplify the construction of our `TagDefinition` instances.
 
 Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another interface, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
 
@@ -268,7 +261,7 @@ As you can see, our implementation is almost identical to before, but now we try
 
 ## Testing
 
-Modify the `Run` method in `Program.cs` as follows:
+Modify the `Run` method in `Runner.cs` as follows:
 
 ```csharp
 private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {

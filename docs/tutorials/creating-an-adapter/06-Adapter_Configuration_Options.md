@@ -103,7 +103,7 @@ private TagValueQueryResult CalculateValueForTag(
 
 Note that, since we are working with options specific to the adapter instance, the method is no longer `static`.
 
-Next, in `Program.cs`, we'll modify the adapter creation as follows:
+Next, in `Runner.cs`, we'll modify the adapter creation as follows:
 
 ```csharp
 private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {

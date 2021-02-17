@@ -117,7 +117,7 @@ Note that we don't do any sort of checks on whether the tags specified in the re
 
 ## Testing
 
-Modify the `Run` method in `Program.cs` as follows:
+Modify the `Run` method in `Runner.cs` as follows:
 
 ```csharp
 private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {

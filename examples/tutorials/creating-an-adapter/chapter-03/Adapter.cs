@@ -26,7 +26,7 @@ namespace MyAdapter {
             string description = null,
             IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
-        ) : base(id, name, description, backgroundTaskService, logger) { }
+        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) { }
 
 
         private AdapterProperty CreateWaveTypeProperty(string waveType) {
@@ -40,20 +40,13 @@ namespace MyAdapter {
                 ++i;
                 var tagId = i.ToString();
                 var tagName = string.Concat(waveType, "_Wave");
-                var tagProperties = new[] {
-                    CreateWaveTypeProperty(waveType)
-                };
 
-                var tag = new TagDefinition(
-                    tagId,
-                    tagName,
-                    $"A tag that returns a {waveType.ToLower()} wave value",
-                    null,
-                    VariantType.Double,
-                    null,
-                    tagProperties,
-                    null
-                );
+                var tag = TagDefinitionBuilder
+                    .Create(tagId, tagName)
+                    .WithDescription($"A tag that returns a {waveType.ToLower()} wave value")
+                    .WithDataType(VariantType.Double)
+                    .WithProperties(CreateWaveTypeProperty(waveType))
+                    .Build();
 
                 _tagsById[tag.Id] = tag;
                 _tagsByName[tag.Name] = tag;
