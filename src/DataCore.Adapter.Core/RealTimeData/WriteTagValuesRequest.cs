@@ -14,7 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
-        public IEnumerable<WriteTagValueItem> Values { get; set; } = Array.Empty<WriteTagValueItem>();
+        public WriteTagValueItem[] Values { get; set; } = Array.Empty<WriteTagValueItem>();
 
     }
 }
