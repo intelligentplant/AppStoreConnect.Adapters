@@ -240,8 +240,6 @@ When writing an extension feature, methods can be annotated with an [ExtensionFe
 
 `AdapterBase<T>` and `AdapterBase` both define constructors that allow the options for the adapter to be supplied via an `IOptions<T>`, `IOptionsSnapshot<T>` or `IOptionsMonitor<T>` instance supplied by the configuration system of an ASP.NET Core application, or an application using the .NET Core Generic Host.
 
-When supplying an `IOptionsSnapshot<T>` or `IOptionsMonitor<T>`, the adapter ID will be used as the key when retrieving the options instance. If an entry is not defined, the default entry (i.e. the entry with a key defined by `Microsoft.Extensions.Options.Options.DefaultName`) will be used, if available.
-
 For example:
 
 ```json
