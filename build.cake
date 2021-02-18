@@ -126,11 +126,13 @@ Setup<BuildState>(context => {
 // Pre-task action.
 TaskSetup(context => {
     BuildUtilities.WriteTaskStartMessage(BuildSystem, context.Task.Name);
+    BuildUtilities.WriteLogMessage(BuildSystem, $"Running {context.Task.Name} task");
 });
 
 
 // Post task action.
 TaskTeardown(context => {
+    BuildUtilities.WriteLogMessage(BuildSystem, $"Completed {context.Task.Name} task");
     BuildUtilities.WriteTaskEndMessage(BuildSystem, context.Task.Name);
 });
 
