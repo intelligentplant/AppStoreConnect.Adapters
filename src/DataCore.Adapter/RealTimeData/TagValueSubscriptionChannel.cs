@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
+
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 

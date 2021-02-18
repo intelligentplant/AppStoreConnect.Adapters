@@ -12,6 +12,8 @@ using CsvHelper;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 

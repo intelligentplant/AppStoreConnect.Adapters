@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 

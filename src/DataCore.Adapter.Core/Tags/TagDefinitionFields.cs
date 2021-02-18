@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Indicates which parts of a <see cref="TagDefinition"/> to populate when returning the 

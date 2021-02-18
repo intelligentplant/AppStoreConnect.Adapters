@@ -104,7 +104,7 @@ namespace DataCore.Adapter {
                 node.HasDataReference
                     ? new AssetModel.DataReference(
                         node.DataReference.AdapterId, 
-                        new RealTimeData.TagIdentifier(
+                        new Tags.TagIdentifier(
                             node.DataReference.Tag.Id, 
                             node.DataReference.Tag.Name
                         )
@@ -1528,12 +1528,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapter tag definition.
         /// </returns>
-        public static RealTimeData.TagDefinition ToAdapterTagDefinition(this Grpc.TagDefinition tagDefinition) {
+        public static Tags.TagDefinition ToAdapterTagDefinition(this Grpc.TagDefinition tagDefinition) {
             if (tagDefinition == null) {
                 throw new ArgumentNullException(nameof(tagDefinition));
             }
 
-            return new RealTimeData.TagDefinition(
+            return new Tags.TagDefinition(
                 tagDefinition.Id,
                 tagDefinition.Name,
                 tagDefinition.Description,
@@ -1556,7 +1556,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The gRPC tag definition.
         /// </returns>
-        public static Grpc.TagDefinition ToGrpcTagDefinition(this RealTimeData.TagDefinition tag) {
+        public static Grpc.TagDefinition ToGrpcTagDefinition(this Tags.TagDefinition tag) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
@@ -1618,12 +1618,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapter digital state.
         /// </returns>
-        public static RealTimeData.DigitalState ToAdapterDigitalState(this Grpc.DigitalState state) {
+        public static Tags.DigitalState ToAdapterDigitalState(this Grpc.DigitalState state) {
             if (state == null) {
                 throw new ArgumentNullException(nameof(state));
             }
 
-            return RealTimeData.DigitalState.Create(state.Name, state.Value);
+            return Tags.DigitalState.Create(state.Name, state.Value);
         }
 
 
@@ -1636,7 +1636,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The gRPC digital state.
         /// </returns>
-        public static Grpc.DigitalState ToGrpcDigitalState(this RealTimeData.DigitalState state) {
+        public static Grpc.DigitalState ToGrpcDigitalState(this Tags.DigitalState state) {
             if (state == null) {
                 throw new ArgumentNullException(nameof(state));
             }
@@ -1657,12 +1657,12 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The adapter digital state set.
         /// </returns>
-        public static RealTimeData.DigitalStateSet ToAdapterDigitalStateSet(this Grpc.DigitalStateSet set) {
+        public static Tags.DigitalStateSet ToAdapterDigitalStateSet(this Grpc.DigitalStateSet set) {
             if (set == null) {
                 throw new ArgumentNullException(nameof(set));
             }
 
-            return RealTimeData.DigitalStateSet.Create(set.Id, set.Name, set.States.Select(x => x.ToAdapterDigitalState()));
+            return Tags.DigitalStateSet.Create(set.Id, set.Name, set.States.Select(x => x.ToAdapterDigitalState()));
         }
 
 
@@ -1675,7 +1675,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The gRPC digital state set.
         /// </returns>
-        public static Grpc.DigitalStateSet ToGrpcDigitalStateSet(this RealTimeData.DigitalStateSet set) {
+        public static Grpc.DigitalStateSet ToGrpcDigitalStateSet(this Tags.DigitalStateSet set) {
             if (set == null) {
                 throw new ArgumentNullException(nameof(set));
             }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
@@ -10,7 +9,6 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Extensions for <see cref="IAdapter"/> and <see cref="AdapterDescriptorExtended"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "String parameter might not always be a URI")]
     public static class AdapterExtensions {
 
         /// <summary>

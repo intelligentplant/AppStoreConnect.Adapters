@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 using DataCore.Adapter.WaveGenerator;
 
 using Microsoft.Extensions.DependencyInjection;

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes a tag search query.

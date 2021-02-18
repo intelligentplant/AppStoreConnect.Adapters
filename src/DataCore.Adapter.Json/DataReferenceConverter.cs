@@ -2,7 +2,7 @@
 using System.Text.Json;
 
 using DataCore.Adapter.AssetModel;
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Json {
 

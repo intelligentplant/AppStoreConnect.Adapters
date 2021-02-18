@@ -5,7 +5,7 @@ using System.Linq;
 
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes a request to get tag definitions by tag ID or name.

@@ -5,6 +5,8 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData.Utilities;
+using DataCore.Adapter.Tags;
+
 using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData {

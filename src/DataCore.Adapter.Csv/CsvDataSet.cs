@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Csv {
 
