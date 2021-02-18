@@ -16,7 +16,7 @@ namespace MyAdapter {
             string description,
             IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
-        ) : base(id, name, description, backgroundTaskService, logger) {
+        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) {
             AddExtensionFeatures(new PingPongExtension(backgroundTaskService));
         }
 
