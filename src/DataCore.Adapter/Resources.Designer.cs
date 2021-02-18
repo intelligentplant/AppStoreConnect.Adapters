@@ -79,6 +79,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify an adapter ID..
+        /// </summary>
+        internal static string Error_AdapterIdIsRequired {
+            get {
+                return ResourceManager.GetString("Error_AdapterIdIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum adapter ID length is {0}..
         /// </summary>
         internal static string Error_AdapterIdIsTooLong {
@@ -192,6 +201,15 @@ namespace DataCore.Adapter {
         internal static string Error_InvalidExtensionFeatureOperationUri {
             get {
                 return ResourceManager.GetString("Error_InvalidExtensionFeatureOperationUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to locate options for adapter ID &apos;{0}&apos; from the supplied IOptions&lt;T&gt; or IOptionsMonitor&lt;T&gt;..
+        /// </summary>
+        internal static string Error_NoOptionsFoundForAdapter {
+            get {
+                return ResourceManager.GetString("Error_NoOptionsFoundForAdapter", resourceCulture);
             }
         }
         

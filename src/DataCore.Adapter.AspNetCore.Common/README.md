@@ -69,3 +69,111 @@ services
     .AddAdapter<MyAdapter>()
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
+
+If your adapter constructor accepts an `IOptions<T>`, `IOptionsSnapshot<T>`, or `IOptionsMonitor<T>` parameter containing the adapter options, you can configure the adapter from the application's configuration settings (via your application's `appsettings.json` file for example):
+
+```json
+// appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "EndpointDefaults": {
+      "Protocols": "Http1AndHttp2"
+    }
+  },
+  "CsvAdapter": {
+    "my-csv": {
+      "Name": "Sample Data",
+      "Description": "CSV adapter with dummy data",
+      "IsDataLoopingAllowed": true,
+      "CsvFile": "SampleData.csv"
+    }
+  }
+}
+```
+
+```csharp
+public class Startup {
+
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration) {
+        Configuration = configuration;
+    }
+
+    public void ConfigureServices(IServiceCollection services) {
+        // Other configuration removed for brevity.
+
+        // Bind CSV adapter options against the application configuration.
+        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:my-csv"));
+
+        services
+            .AddDataCoreAdapterAspNetCoreServices()
+            .AddHostInfo(HostInfo.Create(
+                "My Host",
+                "A brief description of the hosting application",
+                "0.9.0-alpha", // SemVer v2
+                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
+                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
+            ))
+            // Create adapter using an IOptions<T> to supply options.
+            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
+                sp, 
+                "my-csv", // Adapter ID 
+                sp.GetRequiredService<IOptions<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+            ))
+            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
+    }
+
+    // Remaining code removed for brevity.
+
+}
+```
+
+Note that, when using `IOptionsSnapshot<T>` or `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
+
+```csharp
+public class Startup {
+
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration) {
+        Configuration = configuration;
+    }
+
+    public void ConfigureServices(IServiceCollection services) {
+        // Other configuration removed for brevity.
+
+        // Bind named CSV adapter options against the application configuration.
+        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
+            "my-csv", // Key for this set of options
+            Configuration.GetSection("CsvAdapter:my-csv")
+        );
+
+        services
+            .AddDataCoreAdapterAspNetCoreServices()
+            .AddHostInfo(HostInfo.Create(
+                "My Host",
+                "A brief description of the hosting application",
+                "0.9.0-alpha", // SemVer v2
+                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
+                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
+            ))
+            // Create adapter using an IOptionsSnapshot<T> to supply named options.
+            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
+                sp, 
+                "my-csv", // Adapter ID; also used as the named options key   
+                sp.GetRequiredService<IOptionsSnapshot<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+            ))
+            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
+    }
+
+    // Remaining code removed for brevity.
+
+}
+```

@@ -237,7 +237,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             continue;
                         }
 
-                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, Extensions.AdapterExtensionFeatureImpl>(
+                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, SignalRAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
