@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -37,7 +39,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.GetTagPropertiesRequest() {
+            var adapterRequest = new Adapter.Tags.GetTagPropertiesRequest() {
                 PageSize = request.PageSize,
                 Page = request.Page,
                 Properties = new Dictionary<string, string>(request.Properties)
@@ -63,7 +65,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.FindTagsRequest() {
+            var adapterRequest = new Adapter.Tags.FindTagsRequest() {
                 Name = request.Name,
                 Description = request.Description,
                 Units = request.Units,
@@ -95,7 +97,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var adapterRequest = new Adapter.RealTimeData.GetTagsRequest() {
+            var adapterRequest = new Adapter.Tags.GetTagsRequest() {
                 Tags = request.Tags.ToArray(),
                 Properties = new Dictionary<string, string>(request.Properties)
             };

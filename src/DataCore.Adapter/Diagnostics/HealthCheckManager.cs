@@ -15,7 +15,7 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Default <see cref="IHealthCheck"/> implementation.
     /// </summary>
-    internal class HealthCheckManager : IBackgroundTaskServiceProvider, IHealthCheck, IDisposable {
+    internal class HealthCheckManager<TAdapterOptions> : IBackgroundTaskServiceProvider, IHealthCheck, IDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -25,7 +25,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The owning adapter.
         /// </summary>
-        private readonly AdapterBase _adapter;
+        private readonly AdapterBase<TAdapterOptions> _adapter;
 
         /// <summary>
         /// The most recent health check that was performed.
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Diagnostics {
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
-        /// A channel that is used to inform the <see cref="HealthCheckManager"/> that it should 
+        /// A channel that is used to inform the <see cref="HealthCheckManager{TAdapterOptions}"/> that it should 
         /// recompute the adapter health status.
         /// </summary>
         private readonly Channel<bool> _recomputeHealthChannel = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) {
@@ -63,24 +63,24 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <summary>
-        /// Creates a new <see cref="HealthCheckManager"/> object.
+        /// Creates a new <see cref="HealthCheckManager{TAdapterOptions}"/> object.
         /// </summary>
         /// <param name="adapter">
         ///   The owning adapter.
         /// </param>
-        internal HealthCheckManager(AdapterBase adapter) {
+        internal HealthCheckManager(AdapterBase<TAdapterOptions> adapter) {
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
         }
 
 
         /// <summary>
-        /// Initialises the <see cref="HealthCheckManager"/>.
+        /// Initialises the <see cref="HealthCheckManager{TAdapterOptions}"/>.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task"/> that will initialise the <see cref="HealthCheckManager"/> and 
+        ///   A <see cref="Task"/> that will initialise the <see cref="HealthCheckManager{TAdapterOptions}"/> and 
         ///   get the initial health status.
         /// </returns>
         internal async Task Init(CancellationToken cancellationToken) {
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <summary>
-        /// Tells the <see cref="HealthCheckManager"/> that the health status of the adapter should 
+        /// Tells the <see cref="HealthCheckManager{TAdapterOptions}"/> that the health status of the adapter should 
         /// be recalculated.
         /// </summary>
         internal void RecalculateHealthStatus() {

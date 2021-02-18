@@ -123,6 +123,9 @@
   <data name="Error_AdapterDescriptionIsTooLong" xml:space="preserve">
     <value>Maximum adapter description length is {0}.</value>
   </data>
+  <data name="Error_AdapterIdIsRequired" xml:space="preserve">
+    <value>You must specify an adapter ID.</value>
+  </data>
   <data name="Error_AdapterIdIsTooLong" xml:space="preserve">
     <value>Maximum adapter ID length is {0}.</value>
   </data>
@@ -164,6 +167,10 @@
   </data>
   <data name="Error_InvalidExtensionFeatureOperationUri" xml:space="preserve">
     <value>The specified URI is not a valid extension feature operation URI.</value>
+  </data>
+  <data name="Error_NoOptionsFoundForAdapter" xml:space="preserve">
+    <value>Unable to locate options for adapter ID '{0}' from the supplied IOptions&lt;T&gt; or IOptionsMonitor&lt;T&gt;.</value>
+    <comment>{0} - adapter ID</comment>
   </data>
   <data name="Error_NotAFeatureImplementation" xml:space="preserve">
     <value>Object does not implement feature '{0}'.</value>

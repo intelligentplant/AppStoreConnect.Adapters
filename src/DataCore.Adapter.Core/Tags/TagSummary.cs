@@ -2,7 +2,7 @@
 
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes summary information about a tag.

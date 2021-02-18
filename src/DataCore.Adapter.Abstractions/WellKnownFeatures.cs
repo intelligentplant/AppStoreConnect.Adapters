@@ -9,6 +9,7 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter {
 
@@ -49,11 +50,11 @@ namespace DataCore.Adapter {
             [RealTimeData.ReadSnapshotTagValues] = typeof(IReadSnapshotTagValues),
             [RealTimeData.ReadTagValuesAtTimes] = typeof(IReadTagValuesAtTimes),
             [RealTimeData.SnapshotTagValuePush] = typeof(ISnapshotTagValuePush),
-            [RealTimeData.TagInfo] = typeof(ITagInfo),
-            [RealTimeData.TagSearch] = typeof(ITagSearch),
             [RealTimeData.WriteAnnotations] = typeof(IWriteTagValueAnnotations),
             [RealTimeData.WriteHistoricalTagValues] = typeof(IWriteHistoricalTagValues),
-            [RealTimeData.WriteSnapshotTagValues] = typeof(IWriteSnapshotTagValues)
+            [RealTimeData.WriteSnapshotTagValues] = typeof(IWriteSnapshotTagValues),
+            [Tags.TagInfo] = typeof(ITagInfo),
+            [Tags.TagSearch] = typeof(ITagSearch),
         });
 
 
@@ -286,16 +287,6 @@ namespace DataCore.Adapter {
             public const string SnapshotTagValuePush = BaseUri + "values/push/";
 
             /// <summary>
-            /// URI for <see cref="ITagInfo"/>.
-            /// </summary>
-            public const string TagInfo = BaseUri + "tags/info/";
-
-            /// <summary>
-            /// URI for <see cref="ITagSearch"/>.
-            /// </summary>
-            public const string TagSearch = BaseUri + "tags/search/";
-
-            /// <summary>
             /// URI for <see cref="IWriteTagValueAnnotations"/>.
             /// </summary>
             public const string WriteAnnotations = BaseUri + "annotations/write/";
@@ -309,6 +300,29 @@ namespace DataCore.Adapter {
             /// URI for <see cref="IWriteSnapshotTagValues"/>.
             /// </summary>
             public const string WriteSnapshotTagValues = BaseUri + "values/write/snapshot/";
+
+        }
+
+
+        /// <summary>
+        /// Defines URIs for well-known tag-related adapter features.
+        /// </summary>
+        public static class Tags {
+
+            /// <summary>
+            /// Base URI for tag-related adapter features.
+            /// </summary>
+            public const string BaseUri = "asc:features/tags/";
+
+            /// <summary>
+            /// URI for <see cref="ITagInfo"/>.
+            /// </summary>
+            public const string TagInfo = BaseUri + "info/";
+
+            /// <summary>
+            /// URI for <see cref="ITagSearch"/>.
+            /// </summary>
+            public const string TagSearch = BaseUri + "search/";
 
         }
 

@@ -14,7 +14,7 @@ To get started, create a new console app project called `MyAdapter` using Visual
 ```
 mkdir MyAdapter
 cd MyAdapter
-dotnet new console -f netcoreapp3.1
+dotnet new console
 ```
 
 Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
@@ -91,6 +91,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.Hosting;
 
@@ -196,16 +197,6 @@ If you compile and run the program, you will see output similar to the following
   URI: asc:features/real-time-data/values/push/
   Description: Allows subscribers to receive snapshot tag value updates from an adapter in real-time.
 
-[Tag Information]
-  Type: DataCore.Adapter.RealTimeData.ITagInfo
-  URI: asc:features/real-time-data/tags/info/
-  Description: Allows retrieval of an adapter's tag definitions using the tag's ID or name.
-
-[Tag Search]
-  Type: DataCore.Adapter.RealTimeData.ITagSearch
-  URI: asc:features/real-time-data/tags/search/
-  Description: Allows an adapter's tag definitions to be searched.
-
 [Write Historical Tag Values]
   Type: DataCore.Adapter.RealTimeData.IWriteHistoricalTagValues
   URI: asc:features/real-time-data/values/write/history/
@@ -220,6 +211,16 @@ If you compile and run the program, you will see output similar to the following
   Type: DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations
   URI: asc:features/real-time-data/annotations/write/
   Description: Allows tag value annotations on an adapter to be created, updated, and deleted.
+
+[Tag Information]
+  Type: DataCore.Adapter.RealTimeData.ITagInfo
+  URI: asc:features/tags/info/
+  Description: Allows retrieval of an adapter's tag definitions using the tag's ID or name.
+
+[Tag Search]
+  Type: DataCore.Adapter.RealTimeData.ITagSearch
+  URI: asc:features/tags/search/
+  Description: Allows an adapter's tag definitions to be searched.
 ```
 
 > Note: adapters are not required to implement every standard feature! You can pick and choose which of the features are appropriate for your adapter.

@@ -9,7 +9,7 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 An important feature when writing an adapter is the ability to provide configuration settings from an external source (e.g. a configuration file). Adapters will typically require some sort of connection settings, credentials, feature switches, and so on. We can easily modify our adapter to meet these requirements by making a few simple changes.
 
-Up until now, we have used the `AdapterBase` as the base class for our adapter. In addition to this class, the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package also provides us with a second base class option, [AdapterBase&lt;TOptions&gt;](/src/DataCore.Adapter/AdapterBaseT.cs). `AdapterBase<TOptions>` extends `AdapterBase`, but uses a strongly-typed options class derived from [AdapterOptions](/src/DataCore.Adapter/AdapterOptions.cs) to provide configuration settings to the adapter.
+Up until now, we have used the `AdapterBase` as the base class for our adapter. In addition to this class, the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package also provides us with a second base class option, [AdapterBase&lt;TOptions&gt;](/src/DataCore.Adapter/AdapterBaseT.cs). `AdapterBase<TOptions>` is the superclass of `AdapterBase`, and uses a strongly-typed options class derived from [AdapterOptions](/src/DataCore.Adapter/AdapterOptions.cs) to provide configuration settings to the adapter.
 
 Firstly, we will create our options class. Create a new file called `MyOptions.cs` and add the following code to it:
 

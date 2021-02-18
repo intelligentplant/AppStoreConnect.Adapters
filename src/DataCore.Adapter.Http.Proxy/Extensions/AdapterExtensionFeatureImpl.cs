@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
     /// <summary>
     /// Allows communication with remote <see cref="IAdapterExtensionFeature"/> implementations.
     /// </summary>
-    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<HttpAdapterProxy> {
+    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<HttpAdapterProxy, HttpAdapterProxyOptions> {
 
         /// <summary>
         /// Creates a new <see cref="AdapterExtensionFeatureImpl"/> object.

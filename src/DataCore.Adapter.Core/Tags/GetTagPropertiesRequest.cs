@@ -1,6 +1,6 @@
 ﻿using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes a request to retrieve tag property definitions.

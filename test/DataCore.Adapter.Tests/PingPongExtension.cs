@@ -32,9 +32,6 @@ namespace DataCore.Adapter.Tests {
         public const string RelativeFeatureUri = "unit-tests/ping-pong/";
 
 
-        internal PingPongExtension(AdapterBase adapter) : this(adapter.BackgroundTaskService) { }
-
-
         internal PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
             BindInvoke<PingMessage, PongMessage>(Ping);
             BindStream<PingMessage, PongMessage>(Ping);

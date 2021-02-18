@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Extensions for <see cref="TagDefinition"/>.

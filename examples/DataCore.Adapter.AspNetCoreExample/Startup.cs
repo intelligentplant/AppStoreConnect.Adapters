@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
@@ -41,6 +42,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 )
                 .AddServices(svc => {
                     svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
+                    // Bind CSV adapter options against the application configuration.
+                    svc.Configure<Csv.CsvAdapterOptions>("sensor-csv", Configuration.GetSection("CsvAdapter:sensor-csv"));
                 })
                 .AddAdapter<ExampleAdapter>()
                 .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() { 
@@ -49,12 +52,12 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     EnableAdHocGenerators = true
                 }))
                 .AddAdapter(sp => {
-                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, "sensor-csv", new Csv.CsvAdapterOptions() {
-                        Name = "Sensor CSV",
-                        Description = "CSV adapter with dummy sensor data",
-                        IsDataLoopingAllowed = true,
-                        CsvFile = "DummySensorData.csv"
-                    });
+                    // Create CSV adapter.
+                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
+                        sp, 
+                        "sensor-csv", 
+                        sp.GetRequiredService<IOptionsMonitor<Csv.CsvAdapterOptions>>()
+                    );
 
                     // Add in-memory event message management
                     adapter.AddStandardFeatures(

@@ -8,6 +8,8 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Json;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {

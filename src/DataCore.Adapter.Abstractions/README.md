@@ -10,7 +10,7 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Abstr
 
 # Implementing an Adapter
 
-All adapters implement the [IAdapter](./IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](./IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](./IAdapterFeature.cs). The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that your adapter can inherit from with methods for registering and unregistering adapter features dynamically.
+All adapters implement the [IAdapter](./IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](./IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](./IAdapterFeature.cs). The [AdapterBase<T>](/src/DataCore.Adapter/AdapterBaseT.cs) and The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes in the [DataCore.Adapter](/src/DataCore.Adapter) project provide abstract base classes that your adapter can inherit from with methods for registering and unregistering adapter features dynamically.
 
 Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData` namespace defines interfaces for features related to real-time process data (searching for available tags, requesting snapshot tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
 
@@ -26,6 +26,9 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IAssetModelSearch](./AssetModel/IAssetModelSearch.cs)
 - Diagnostics:
     - [IHealthCheck](./Diagostics/IHealthCheck.cs)
+- Tags:
+    - [ITagInfo](./Tags/ITagInfo.cs)
+    - [ITagSearch](./Tags/ITagSearch.cs)
 - Events:
     - [IEventMessagePush](./Events/IEventMessagePush.cs)
     - [IEventMessagePushWithTopics](./Events/IEventMessagePushWithTopics.cs)
@@ -40,8 +43,6 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IReadTagValueAnnotations](./RealTimeData/IReadTagValueAnnotations.cs)
     - [IReadTagValuesAtTimes](./RealTimeData/IReadTagValuesAtTimes.cs)
     - [ISnapshotTagValuePush](./RealTimeData/ISnapshotTagValuePush.cs)
-    - [ITagInfo](./RealTimeData/ITagInfo.cs)
-    - [ITagSearch](./RealTimeData/ITagSearch.cs)
     - [IWriteHistoricalTagValues](./RealTimeData/IWriteHistoricalTagValues.cs)
     - [IWriteSnapshotTagValues](./RealTimeData/IWriteSnapshotTagValues.cs)
     - [IWriteTagValueAnnotations](./RealTimeData/IWriteTagValueAnnotations.cs)

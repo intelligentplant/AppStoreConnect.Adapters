@@ -12,7 +12,7 @@ namespace DataCore.Adapter {
         /// The adapter name. If <see langword="null"/> or white space, the adapter ID will be 
         /// used as the name.
         /// </summary>
-        [MaxLength(AdapterBase.MaxNameLength)]
+        [MaxLength(AdapterConstants.MaxNameLength)]
         [Display(
             ResourceType = typeof(AdapterOptionsResources), 
             Name = nameof(AdapterOptionsResources.AdapterOptions_Name_DisplayName),
@@ -24,7 +24,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The adapter description.
         /// </summary>
-        [MaxLength(AdapterBase.MaxDescriptionLength)]
+        [MaxLength(AdapterConstants.MaxDescriptionLength)]
         [Display(
             ResourceType = typeof(AdapterOptionsResources),
             Name = nameof(AdapterOptionsResources.AdapterOptions_Description_DisplayName),

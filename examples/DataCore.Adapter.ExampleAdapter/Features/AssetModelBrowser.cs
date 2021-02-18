@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Example.Features {
         }
 
 
-        internal async Task Init(string adapterId, RealTimeData.ITagSearch tagSearch, CancellationToken cancellationToken) {
+        internal async Task Init(string adapterId, Tags.ITagSearch tagSearch, CancellationToken cancellationToken) {
             using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(ExampleAdapter), AssetModelJson))
             using (var reader = new System.IO.StreamReader(stream)) {
                 var json = reader.ReadToEnd();
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Example.Features {
 
                 var dataReferences = nodeDefinitions.Where(x => !string.IsNullOrWhiteSpace(x.DataReference)).Select(x => x.DataReference).ToArray();
 
-                var dataReferencesChannel = await tagSearch.GetTags(null, new RealTimeData.GetTagsRequest() { 
+                var dataReferencesChannel = await tagSearch.GetTags(null, new Tags.GetTagsRequest() { 
                     Tags = dataReferences
                 }, cancellationToken).ConfigureAwait(false);
 

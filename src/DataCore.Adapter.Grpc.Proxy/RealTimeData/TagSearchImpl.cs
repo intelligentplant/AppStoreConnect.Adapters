@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<Adapter.RealTimeData.TagDefinition>> FindTags(IAdapterCallContext context, Adapter.RealTimeData.FindTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Tags.TagDefinition>> FindTags(IAdapterCallContext context, Adapter.Tags.FindTagsRequest request, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -74,7 +74,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<Adapter.RealTimeData.TagDefinition>> GetTags(IAdapterCallContext context, Adapter.RealTimeData.GetTagsRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Adapter.Tags.TagDefinition>> GetTags(IAdapterCallContext context, Adapter.Tags.GetTagsRequest request, CancellationToken cancellationToken) {
             GrpcAdapterProxy.ValidateObject(request); 
             
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
@@ -106,7 +106,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<Common.AdapterProperty>> GetTagProperties(IAdapterCallContext context, Adapter.RealTimeData.GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public Task<ChannelReader<Common.AdapterProperty>> GetTagProperties(IAdapterCallContext context, Adapter.Tags.GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             GrpcAdapterProxy.ValidateObject(request); 
             
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();

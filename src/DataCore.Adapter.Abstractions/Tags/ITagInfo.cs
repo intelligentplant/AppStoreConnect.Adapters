@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Feature for requesting information about tags.
     /// </summary>
     [AdapterFeature(
-        WellKnownFeatures.RealTimeData.TagInfo,
+        WellKnownFeatures.Tags.TagInfo,
         ResourceType = typeof(AbstractionsResources),
         Name = nameof(AbstractionsResources.DisplayName_TagInfo),
         Description = nameof(AbstractionsResources.Description_TagInfo)

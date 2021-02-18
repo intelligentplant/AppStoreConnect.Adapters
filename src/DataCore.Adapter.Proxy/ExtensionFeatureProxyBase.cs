@@ -16,7 +16,10 @@ namespace DataCore.Adapter.Proxy {
     /// <typeparam name="TProxy">
     ///   The adapter proxy type.
     /// </typeparam>
-    public abstract class ExtensionFeatureProxyBase<TProxy> : AdapterExtensionFeature where TProxy : AdapterBase, IAdapterProxy {
+    /// <typeparam name="TAdapterOptions">
+    ///   The adapter proxy's options type.
+    /// </typeparam>
+    public abstract class ExtensionFeatureProxyBase<TProxy, TAdapterOptions> : AdapterExtensionFeature where TProxy : AdapterBase<TAdapterOptions>, IAdapterProxy where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Lazy-loaded feature URI for this instance.
@@ -30,7 +33,7 @@ namespace DataCore.Adapter.Proxy {
 
 
         /// <summary>
-        /// Creates a new <see cref="ExtensionFeatureProxyBase{TProxy}"/> object.
+        /// Creates a new <see cref="ExtensionFeatureProxyBase{TProxy,TAdapterOptions}"/> object.
         /// </summary>
         /// <param name="proxy">
         ///   The proxy adapter instance that owns the feature implementation.

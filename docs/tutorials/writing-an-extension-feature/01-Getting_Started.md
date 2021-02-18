@@ -24,7 +24,68 @@ Extension features must meet the following criteria:
 
 The `IAdapterExtensionFeature` defines a number of methods that allow a caller to retrieve metadata about the extension and its available operations, and to call the operations. The [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class helps to simplify a lot of these tasks, and allows extension authors a way of writing strongly-typed methods that can in turn be invoked via the standard methods defined on `IAdapterExtensionFeature`.
 
-To get started, create a new .NET Core 3.1 console app in Visual Studio or from the command line using the `dotnet new` command.
+To get started, create a new console app in Visual Studio or from the command line using the `dotnet new` command:
+
+```
+mkdir MyAdapter
+cd MyAdapter
+dotnet new console
+```
+
+Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
+
+We will use the [.NET Generic Host](https://docs.microsoft.com/en-us/dotnet/core/extensions/generic-host) to run the example console applications in this tutorial. After you have added the above package references, replace the code in your `Program.cs` file with the following:
+
+```csharp
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace MyAdapter {
+    class Program {
+
+        public static async Task Main(params string[] args) {
+            await CreateHostBuilder(args).RunConsoleAsync().ConfigureAwait(false);
+        }
+
+
+        private static IHostBuilder CreateHostBuilder(string[] args) {
+            return Host.CreateDefaultBuilder(args).ConfigureServices(services => {
+                services.AddHostedService<Runner>();
+            });
+        }
+
+    }
+
+}
+```
+
+Next, add a new file to the project called `Runner.cs` and replace the code with the following:
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using DataCore.Adapter;
+using DataCore.Adapter.Diagnostics;
+
+using Microsoft.Extensions.Hosting;
+
+namespace MyAdapter {
+    internal class Runner : BackgroundService {
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
+            return Task.CompletedTask;
+        }
+
+    }
+}
+```
+
+The `Runner` class is a background service run by the .NET Generic Host that we will use to run our application logic.
 
 
 ### Creating the Adapter
@@ -52,7 +113,7 @@ namespace MyAdapter {
             string description,
             IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
-        ) : base(id, name, description, backgroundTaskService, logger) { }
+        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) { }
 
         protected override Task StartAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
@@ -66,18 +127,21 @@ namespace MyAdapter {
 }
 ```
 
-As you can see, this is a very bare-bones adapter, which does nothing other than inheriting from the `AdapterBase` base class. Next, replace the code in your `Program.cs` file with the following:
+As you can see, this is a very bare-bones adapter, which does nothing other than inheriting from the `AdapterBase` base class. Next, replace the code in your `Runner.cs` file with the following:
 
 ```csharp
 using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
 using DataCore.Adapter.Extensions;
 
+using Microsoft.Extensions.Hosting;
+
 namespace MyAdapter {
-    class Program {
+    internal class Runner : BackgroundService {
 
         private const string AdapterId = "example";
 
@@ -86,20 +150,14 @@ namespace MyAdapter {
         private const string AdapterDescription = "Example adapter with an extension feature, built using the tutorial on GitHub";
 
 
-        static async Task Main(string[] args) {
-            using (var userCancelled = new CancellationTokenSource()) {
-                Console.CancelKeyPress += (sender, e) => userCancelled.Cancel();
-                try {
-                    Console.WriteLine("Press CTRL+C to quit");
-                    await Run(new DefaultAdapterCallContext(), userCancelled.Token);
-                }
-                catch (OperationCanceledException) { }
-            }
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) {
+            return Run(new DefaultAdapterCallContext(), stoppingToken);
         }
 
 
         private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {
-            using (IAdapter adapter = new Adapter(AdapterId, AdapterDisplayName, AdapterDescription)) {
+            await using (IAdapter adapter = new Adapter(AdapterId, AdapterDisplayName, AdapterDescription)) {
+
                 await adapter.StartAsync(cancellationToken);
 
                 var adapterDescriptor = adapter.CreateExtendedAdapterDescriptor();
@@ -221,7 +279,7 @@ public Adapter(
     string description,
     IBackgroundTaskService backgroundTaskService = null,
     ILogger<Adapter> logger = null
-) : base(id, name, description, backgroundTaskService, logger) {
+) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) {
     AddExtensionFeatures(new PingPongExtension(backgroundTaskService));
 }
 ```
