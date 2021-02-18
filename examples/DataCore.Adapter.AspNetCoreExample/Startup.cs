@@ -56,7 +56,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
                         sp, 
                         "sensor-csv", 
-                        sp.GetRequiredService<IOptionsMonitor<Csv.CsvAdapterOptions>>()
+                        sp.GetRequiredService<IOptionsSnapshot<Csv.CsvAdapterOptions>>()
                     );
 
                     // Add in-memory event message management
