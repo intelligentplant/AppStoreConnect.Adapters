@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text.Json;
-using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Json {
 

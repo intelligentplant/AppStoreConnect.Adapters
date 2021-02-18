@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Extension methods for <see cref="TagDefinition"/>.

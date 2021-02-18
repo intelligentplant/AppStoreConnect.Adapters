@@ -4,7 +4,7 @@ using System.Linq;
 
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Helper class for constructing <see cref="TagDefinition"/> objects using a fluent interface.

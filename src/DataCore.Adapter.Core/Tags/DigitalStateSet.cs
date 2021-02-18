@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes a collection of discrete states.

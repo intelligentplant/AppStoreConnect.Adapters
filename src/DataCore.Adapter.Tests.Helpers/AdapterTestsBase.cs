@@ -12,6 +12,7 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

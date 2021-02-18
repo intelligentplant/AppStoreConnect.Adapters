@@ -4,6 +4,7 @@ using System.Linq;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.AssetModel {
 

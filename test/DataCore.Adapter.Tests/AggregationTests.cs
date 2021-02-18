@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.RealTimeData.Utilities;
+using DataCore.Adapter.Tags;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {

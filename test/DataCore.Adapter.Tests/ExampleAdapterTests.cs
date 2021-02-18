@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

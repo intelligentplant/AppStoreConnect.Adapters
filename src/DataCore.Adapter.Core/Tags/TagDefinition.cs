@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using DataCore.Adapter.Common;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Describes a tag definition.

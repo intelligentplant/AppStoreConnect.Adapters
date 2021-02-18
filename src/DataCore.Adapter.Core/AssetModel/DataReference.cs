@@ -1,6 +1,6 @@
 ﻿using System;
 
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.AssetModel {
 

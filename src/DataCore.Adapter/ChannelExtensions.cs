@@ -107,12 +107,12 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.TagDefinition> CreateTagDefinitionChannel(
+        public static Channel<Tags.TagDefinition> CreateTagDefinitionChannel(
             int capacity = TagDefinitionChannelCapacity,
             bool singleReader = true,
             bool singleWriter = true
         ) {
-            return CreateChannel<RealTimeData.TagDefinition>(capacity, singleReader, singleWriter);
+            return CreateChannel<Tags.TagDefinition>(capacity, singleReader, singleWriter);
         }
 
 
@@ -135,12 +135,12 @@ namespace DataCore.Adapter {
         /// <remarks>
         ///   The default capacity of the created channel is set to <see cref="TagDefinitionChannelCapacity"/>.
         /// </remarks>
-        public static Channel<RealTimeData.TagIdentifier> CreateTagIdentifierChannel(
+        public static Channel<Tags.TagIdentifier> CreateTagIdentifierChannel(
             int capacity = TagDefinitionChannelCapacity,
             bool singleReader = true,
             bool singleWriter = true
         ) {
-            return CreateChannel<RealTimeData.TagIdentifier>(capacity, singleReader, singleWriter);
+            return CreateChannel<Tags.TagIdentifier>(capacity, singleReader, singleWriter);
         }
 
 

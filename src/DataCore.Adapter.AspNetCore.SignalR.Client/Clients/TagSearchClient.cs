@@ -2,8 +2,10 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {

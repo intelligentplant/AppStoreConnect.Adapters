@@ -2,13 +2,13 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace DataCore.Adapter.RealTimeData {
+namespace DataCore.Adapter.Tags {
 
     /// <summary>
     /// Feature for performing tag searches on an adapter.
     /// </summary>
     [AdapterFeature(
-        WellKnownFeatures.RealTimeData.TagSearch,
+        WellKnownFeatures.Tags.TagSearch,
         ResourceType = typeof(AbstractionsResources),
         Name = nameof(AbstractionsResources.DisplayName_TagSearch),
         Description = nameof(AbstractionsResources.Description_TagSearch)

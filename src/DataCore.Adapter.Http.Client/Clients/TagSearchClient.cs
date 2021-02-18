@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 

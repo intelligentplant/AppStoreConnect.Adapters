@@ -26,6 +26,9 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IAssetModelSearch](./AssetModel/IAssetModelSearch.cs)
 - Diagnostics:
     - [IHealthCheck](./Diagostics/IHealthCheck.cs)
+- Tags:
+    - [ITagInfo](./Tags/ITagInfo.cs)
+    - [ITagSearch](./Tags/ITagSearch.cs)
 - Events:
     - [IEventMessagePush](./Events/IEventMessagePush.cs)
     - [IEventMessagePushWithTopics](./Events/IEventMessagePushWithTopics.cs)
@@ -40,8 +43,6 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IReadTagValueAnnotations](./RealTimeData/IReadTagValueAnnotations.cs)
     - [IReadTagValuesAtTimes](./RealTimeData/IReadTagValuesAtTimes.cs)
     - [ISnapshotTagValuePush](./RealTimeData/ISnapshotTagValuePush.cs)
-    - [ITagInfo](./RealTimeData/ITagInfo.cs)
-    - [ITagSearch](./RealTimeData/ITagSearch.cs)
     - [IWriteHistoricalTagValues](./RealTimeData/IWriteHistoricalTagValues.cs)
     - [IWriteSnapshotTagValues](./RealTimeData/IWriteSnapshotTagValues.cs)
     - [IWriteTagValueAnnotations](./RealTimeData/IWriteTagValueAnnotations.cs)

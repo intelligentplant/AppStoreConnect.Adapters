@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Example {
             var startup = DateTime.UtcNow;
             await base.StartAsync(cancellationToken).ConfigureAwait(false);
             var adapter = (IAdapter) this;
-            await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<RealTimeData.ITagSearch>(), cancellationToken).ConfigureAwait(false);
+            await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<Tags.ITagSearch>(), cancellationToken).ConfigureAwait(false);
 
             _ = Task.Run(async () => {
                 try {

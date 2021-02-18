@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +9,7 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

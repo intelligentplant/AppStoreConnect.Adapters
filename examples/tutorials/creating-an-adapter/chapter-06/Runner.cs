@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.Hosting;
 
