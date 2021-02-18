@@ -70,7 +70,7 @@ services
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
 
-If your adapter constructor accepts an `IOptions<T>`, `IOptionsSnapshot<T>`, or `IOptionsMonitor<T>` parameter containing the adapter options, you can configure the adapter from the application's configuration settings (via your application's `appsettings.json` file for example):
+If your adapter constructor accepts an `IOptions<T>` or `IOptionsMonitor<T>` parameter containing the adapter options, you can configure the adapter from the application's configuration settings (via your application's `appsettings.json` file for example):
 
 ```json
 // appsettings.json
@@ -135,7 +135,7 @@ public class Startup {
 }
 ```
 
-Note that, when using `IOptionsSnapshot<T>` or `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
+Note that, when using `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
 
 ```csharp
 public class Startup {
@@ -164,11 +164,11 @@ public class Startup {
                 VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                 AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
             ))
-            // Create adapter using an IOptionsSnapshot<T> to supply named options.
+            // Create adapter using an IOptionsMonitor<T> to supply named options.
             .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
                 sp, 
                 "my-csv", // Adapter ID; also used as the named options key   
-                sp.GetRequiredService<IOptionsSnapshot<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+                sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
             ))
             .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
     }

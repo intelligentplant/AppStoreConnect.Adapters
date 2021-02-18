@@ -43,7 +43,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 .AddServices(svc => {
                     svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
                     // Bind CSV adapter options against the application configuration.
-                    svc.Configure<Csv.CsvAdapterOptions>("sensor-csv", Configuration.GetSection("CsvAdapter:sensor-csv"));
+                    svc.Configure<Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:sensor-csv"));
                 })
                 .AddAdapter<ExampleAdapter>()
                 .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() { 
@@ -56,7 +56,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
                         sp, 
                         "sensor-csv", 
-                        sp.GetRequiredService<IOptionsMonitor<Csv.CsvAdapterOptions>>()
+                        sp.GetRequiredService<IOptions<Csv.CsvAdapterOptions>>()
                     );
 
                     // Add in-memory event message management

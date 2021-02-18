@@ -2,7 +2,7 @@
 
 Contains base classes and utility classes for implementing an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs).
 
-Extend from [AdapterBase](./AdapterBase.cs) for easy implementation or [AdapterBase<T>](./AdapterBaseT.cs) if you need to supply configurable options to your adapter.
+Extend from [AdapterBase](./AdapterBase.cs) for easy implementation or [AdapterBase&lt;T&gt;](./AdapterBaseT.cs) if you need to supply configurable options to your adapter.
 
 
 # Installation
@@ -12,7 +12,7 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](http
 
 # Creating an Adapter
 
-Extend [AdapterBase<T>](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
+Extend [AdapterBase&lt;T&gt;](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
 
 
 ## Working with Channels
@@ -238,9 +238,7 @@ When writing an extension feature, methods can be annotated with an [ExtensionFe
 
 # Providing Adapter Options From Configuration
 
-`AdapterBase<T>` and `AdapterBase` both define constructors that allow the options for the adapter to be supplied via an `IOptions<T>`, `IOptionsSnapshot<T>` or `IOptionsMonitor<T>` instance supplied by the configuration system of an ASP.NET Core application, or an application using the .NET Core Generic Host.
-
-When supplying an `IOptionsSnapshot<T>` or `IOptionsMonitor<T>`, the adapter ID will be used as the key when retrieving the options instance. If an entry is not defined, the default entry (i.e. the entry with a key defined by `Microsoft.Extensions.Options.Options.DefaultName`) will be used, if available.
+`AdapterBase<T>` and `AdapterBase` both define constructors that allow the options for the adapter to be supplied via an `IOptions<T>` or `IOptionsMonitor<T>` instance supplied by the configuration system of an ASP.NET Core application, or an application using the .NET Core Generic Host.
 
 For example:
 
@@ -307,7 +305,7 @@ public class Startup {
 }
 ```
 
-Note that, when using `IOptionsSnapshot<T>` or `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
+Note that, when using `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
 
 ```csharp
 public class Startup {
@@ -336,11 +334,11 @@ public class Startup {
                 VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                 AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
             ))
-            // Create adapter using an IOptionsSnapshot<T> to supply named options.
+            // Create adapter using an IOptionsMonitor<T> to supply named options.
             .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
                 sp, 
                 "my-csv", // Adapter ID; also used as the named options key   
-                sp.GetRequiredService<IOptionsSnapshot<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+                sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
             ))
             .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
     }

@@ -21,6 +21,41 @@ namespace DataCore.Adapter {
         /// <param name="id">
         ///   The adapter ID.
         /// </param>
+        /// <param name="name">
+        ///   The adapter display name.
+        /// </param>
+        /// <param name="description">
+        ///   The adapter description.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        ///  <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is longer than <see cref="AdapterConstants.MaxIdLength"/>.
+        /// </exception>
+        /// <param name="logger">
+        ///   The logger for the adapter. Can be <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ValidationException">
+        ///   The <paramref name="name"/> is longer than <see cref="AdapterConstants.MaxNameLength"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   The <paramref name="description"/> is longer than <see cref="AdapterConstants.MaxDescriptionLength"/>.
+        /// </exception>
+        protected AdapterBase(string id, string? name, string? description, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
+            : this(id, Microsoft.Extensions.Options.Options.Create(new AdapterOptions() { Name = name, Description = description }), backgroundTaskService, logger) { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterBase"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
         /// <param name="options">
         ///   The adapter options.
         /// </param>
@@ -81,47 +116,6 @@ namespace DataCore.Adapter {
         /// </exception>
         protected AdapterBase(string id, IOptions<AdapterOptions> options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
             : base(id, options, backgroundTaskService, logger) { }
-
-
-        /// <summary>
-        /// Creates a new <see cref="AdapterBase{TAdapterOptions}"/> object that receives its 
-        /// configuration from an <see cref="IOptionsSnapshot{TOptions}"/>.
-        /// </summary>
-        /// <param name="id">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="optionsSnapshot">
-        ///   The snapshot for the adapter's options type. The <see cref="IOptionsSnapshot{TOptions}"/> 
-        ///   key used is the supplied <paramref name="id"/>.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
-        ///   operations. Specify <see langword="null"/> to use the default implementation.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is longer than <see cref="AdapterConstants.MaxIdLength"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="optionsSnapshot"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="optionsSnapshot"/> does not contain an entry that can be used with this adapter.
-        /// </exception>
-        /// <exception cref="ValidationException">
-        ///   The options retrieved from <paramref name="optionsSnapshot"/> are not valid.
-        /// </exception>
-        protected AdapterBase(
-            string id,
-            IOptionsSnapshot<AdapterOptions> optionsSnapshot,
-            IBackgroundTaskService? backgroundTaskService = null,
-            ILogger? logger = null
-        ) : base(id, optionsSnapshot, backgroundTaskService, logger) { }
 
 
         /// <summary>

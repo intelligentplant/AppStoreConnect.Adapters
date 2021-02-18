@@ -54,29 +54,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public void AdapterNameAndDescriptionShouldBeSetFromNamedOptionsSnapshot() {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
-            var provider = configuration.Providers.OfType<MemoryConfigurationProvider>().First();
-
-            var id = Guid.NewGuid().ToString();
-            var name = TestContext.TestName;
-            var description = TestContext.FullyQualifiedTestClassName;
-
-            provider.Set(nameof(AdapterOptions.Name), name);
-            provider.Set(nameof(AdapterOptions.Description), description);
-
-            var serviceProvider = ConfigureServiceProvider(id, configuration);
-
-            using (var adapter = new OptionsMonitorAdapter(
-                id,
-                serviceProvider.GetRequiredService<IOptionsSnapshot<OptionsMonitorAdapterOptions>>())
-            ) {
-                Assert.AreEqual(name, adapter.Descriptor.Name);
-                Assert.AreEqual(description, adapter.Descriptor.Description);
-            }
-        }
-
 
         [TestMethod]
         public void AdapterNameAndDescriptionShouldBeSetFromNamedOptionsMonitor() {
