@@ -67,7 +67,7 @@ If you compile and run the program, you will notice that the streaming method is
           - Description: Responds to a ping message with a pong message
 ```
 
-Our next step is to subscribe to the stream. Replace the code to call the original operation in `Program.cs` with the following:
+Our next step is to subscribe to the stream. Replace the code to call the original operation in `Runner.cs` with the following:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");

@@ -67,7 +67,7 @@ In order to call our `Ping` method via a call to `Invoke`, we need to create a `
 
 > [JSON.NET](https://www.newtonsoft.com/json) is used to serialize and deserialize inputs and outputs for extension operation calls. You must ensure that your request and response types can be serialized using the default settings defined by that library.
 
-Add the following code to the end of the `using` block in the `Run` method in `Program.cs`:
+Add the following code to the end of the `using` block in the `Run` method in `Runner.cs`:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");

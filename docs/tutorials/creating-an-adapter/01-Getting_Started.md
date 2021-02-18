@@ -14,7 +14,7 @@ To get started, create a new console app project called `MyAdapter` using Visual
 ```
 mkdir MyAdapter
 cd MyAdapter
-dotnet new console -f netcoreapp3.1
+dotnet new console
 ```
 
 Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
