@@ -32,26 +32,30 @@ The following projects provide support for hosting adapters in ASP.NET Core appl
 * `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2, 3.1 and 5.0 applications.
 * `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.1 and 5.0 applications.
 
-## Client Libraries and Proxies
+## Client Libraries
 
-There are also projects that allow the creation of proxy adapters, and their corresponding client libraries:
+There are also projects that define client libraries capable of communicating with the ASP.NET Core endpoints described above:
 
 * `DataCore.Adapter.AspNetCore.SignalR.Client` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Client)) - a strongly-typed client for querying remote adapters via ASP.NET Core SignalR.
-* `DataCore.Adapter.AspNetCore.SignalR.Proxy` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the strongly-typed SignalR client.
 * `DataCore.Adapter.Grpc.Client` ([source](/src/DataCore.Adapter.Grpc.Client)) - a strongly-typed client for querying remote adapters via gRPC.
-* `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
 * `DataCore.Adapter.Http.Client` ([source](/src/DataCore.Adapter.Http.Client)) - a strongly-typed client for querying remote adapters via the HTTP API.
-* `DataCore.Adapter.Http.Proxy` ([source](/src/DataCore.Adapter.Http.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the HTTP client.
-* `DataCore.Adapter.Proxy` ([source](/src/DataCore.Adapter.Proxy)) - shared types used in proxy implementation.
 
 Additionally, the [OpenAPI](https://swagger.io/) [swagger.json](/swagger.json) file can be used to create clients for the HTTP API, or imported into tools like [Postman](https://www.getpostman.com/) in order to test API calls.
 
 ## Adapter Implementations
 
+The repository contains the following adapter implementations:
+
 * `DataCore.Adapter.Csv` ([source](/src/DataCore.Adapter.Csv)) - a library containing an adapter that uses CSV files to serve real-time and historical tag values.
 * `DataCore.Adapter.WaveGenerator` ([source](/src/DataCore.Adapter.WaveGenerator)) - an adapter that can generate sinusoid, sawtooth, triangle, and square waves.
+* `DataCore.Adapter.AspNetCore.SignalR.Proxy` ([source](/src/DataCore.Adapter.AspNetCore.SignalR.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the strongly-typed SignalR client.
+* `DataCore.Adapter.Grpc.Proxy` ([source](/src/DataCore.Adapter.Grpc.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the gRPC client.
+* `DataCore.Adapter.Http.Proxy` ([source](/src/DataCore.Adapter.Http.Proxy)) - allows the creation of local proxy adapters that communicate with remote adapters using the HTTP client.
+* `DataCore.Adapter.Proxy` ([source](/src/DataCore.Adapter.Proxy)) - shared types used in proxy implementation.
 
 ## Testing
+
+The following libraries are available to assist with unit testing adapter implementations:
 
 * `DataCore.Adapter.Tests.Helpers` ([source](/src/DataCore.Adapter.Tests.Helpers)) - base classes that provide MSTest unit tests for standard adapter features.
 
@@ -69,7 +73,7 @@ Package versions are defined in a [common build properties file](/build/Dependen
 
 1. Create a new ASP.NET Core project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
-3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) class provides an abstract base class that you can inherit from.
+3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase<T>](/src/DataCore.Adapter/AdapterBaseT.cs) and [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes provides abstract base classes that you can inherit from.
 4. If you want to apply authorization policies to the adapter or to individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class. More details are available [here](/src/DataCore.Adapter.AspNetCore.Common/README.md).
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 

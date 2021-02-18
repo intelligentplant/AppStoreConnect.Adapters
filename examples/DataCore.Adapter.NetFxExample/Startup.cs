@@ -27,7 +27,11 @@ namespace DataCore.Adapter.NetFxExample {
             // Add the adapter API controllers to the MVC registration.
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-                .AddDataCoreAdapterMvc();
+                .AddDataCoreAdapterMvc()
+                .AddJsonOptions(options => {
+                    options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
 
             services
                 .AddSignalR()

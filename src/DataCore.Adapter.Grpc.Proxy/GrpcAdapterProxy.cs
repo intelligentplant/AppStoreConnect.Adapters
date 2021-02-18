@@ -267,7 +267,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                             continue;
                         }
 
-                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<GrpcAdapterProxy, Extensions.AdapterExtensionFeatureImpl>(
+                        impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<GrpcAdapterProxy, GrpcAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );

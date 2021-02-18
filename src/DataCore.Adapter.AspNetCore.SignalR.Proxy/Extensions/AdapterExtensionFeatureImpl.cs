@@ -14,7 +14,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
     /// <summary>
     /// Allows communication with remote <see cref="IAdapterExtensionFeature"/> implementations.
     /// </summary>
-    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<SignalRAdapterProxy> {
+    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<SignalRAdapterProxy, SignalRAdapterProxyOptions> {
 
         /// <summary>
         /// Creates a new <see cref="AdapterExtensionFeatureImpl"/> object.

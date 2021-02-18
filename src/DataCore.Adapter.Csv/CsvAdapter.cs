@@ -94,7 +94,37 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, IAdapterOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptions<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+            : base(id, options, backgroundTaskService, logger) {
+            AddFeatures();
+        }
+
+
+
+        /// <summary>
+        /// Creates a new <see cref="CsvAdapter"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
+        ///   automatically.
+        /// </param>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger for the adapter.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="options"/> fails validation.
+        /// </exception>
+        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptionsSnapshot<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
             : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }

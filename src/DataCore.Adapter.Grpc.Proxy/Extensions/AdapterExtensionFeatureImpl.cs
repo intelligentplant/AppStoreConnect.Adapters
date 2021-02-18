@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
     /// <summary>
     /// Allows communication with remote <see cref="IAdapterExtensionFeature"/> implementations.
     /// </summary>
-    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<GrpcAdapterProxy> {
+    public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<GrpcAdapterProxy, GrpcAdapterProxyOptions> {
 
         /// <summary>
         /// Creates a new <see cref="AdapterExtensionFeatureImpl"/> object.

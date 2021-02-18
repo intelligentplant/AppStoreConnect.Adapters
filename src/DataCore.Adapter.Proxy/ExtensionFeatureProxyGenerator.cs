@@ -93,6 +93,9 @@ namespace DataCore.Adapter.Proxy {
         /// <typeparam name="TProxy">
         ///   The type of the proxy adapter.
         /// </typeparam>
+        /// <typeparam name="TAdapterOptions">
+        ///   The options type for the <typeparamref name="TProxy"/>.
+        /// </typeparam>
         /// <typeparam name="TImpl">
         ///   The <see cref="ExtensionFeatureFactory{TProxy}"/> implementation to derive the proxy 
         ///   feature from.
@@ -116,10 +119,10 @@ namespace DataCore.Adapter.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="featureUri"/> is not an absolute URI.
         /// </exception>
-        public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TProxy, TImpl>(
+        public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TProxy, TAdapterOptions, TImpl>(
             TProxy proxy,
             Uri featureUri
-        ) where TProxy : AdapterBase, IAdapterProxy where TImpl : ExtensionFeatureProxyBase<TProxy> {
+        ) where TProxy : AdapterBase<TAdapterOptions>, IAdapterProxy where TAdapterOptions : AdapterOptions, new() where TImpl : ExtensionFeatureProxyBase<TProxy, TAdapterOptions> {
             if (proxy == null) {
                 throw new ArgumentNullException(nameof(proxy));
             }
