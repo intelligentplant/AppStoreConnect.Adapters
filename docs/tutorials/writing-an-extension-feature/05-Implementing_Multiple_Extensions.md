@@ -108,7 +108,7 @@ Note that our new `BindInvoke` calls also include example values for the input a
           - Description: Converts a temperature from Fahrenheit to Celsius
 ```
 
-Our final step is to test the execution of our new operations. Replace any existing code in `Program.cs` for calling extension operations with the following:
+Our final step is to test the execution of our new operations. Replace any existing code in `Runner.cs` for calling extension operations with the following:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/temperature-converter/");

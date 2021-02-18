@@ -73,7 +73,7 @@ Compiling and running the program at this point will show the new operation in o
           - Description: Responds to a ping message with a pong message every second until the call is cancelled
 ```
 
-To test the new method, we will create a `Channel<PingMessage>` that we will write to at a random interval, and then read the corresponding pong messages from our subscription channel. Replace the code for calling the streaming operation in `Program.cs` with the following:
+To test the new method, we will create a `Channel<PingMessage>` that we will write to at a random interval, and then read the corresponding pong messages from our subscription channel. Replace the code for calling the streaming operation in `Runner.cs` with the following:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
