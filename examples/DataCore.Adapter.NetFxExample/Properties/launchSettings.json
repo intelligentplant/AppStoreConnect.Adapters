@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "api/data-core/v1.0/host-info",
+      "launchUrl": "api/app-store-connect/v1.0/host-info",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -19,7 +19,7 @@
     "DataCore.Adapter.NetFxExample": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/data-core/v1.0/host-info",
+      "launchUrl": "api/app-store-connect/v1.0/host-info",
       "applicationUrl": "https://localhost:5001;http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
