@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <summary>
         /// Additional items related to the request.
         /// </summary>
-        public IDictionary<object, object> Items { get; }
+        public IDictionary<object, object?> Items { get; }
 
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Http.Client {
             ClaimsPrincipal? principal = null, 
             string? correlationId = null, 
             IDictionary<string, string>? headers = null, 
-            IDictionary<object, object>? items = null
+            IDictionary<object, object?>? items = null
         ) {
             Principal = principal;
             CorrelationId = correlationId;
@@ -57,8 +57,8 @@ namespace DataCore.Adapter.Http.Client {
                 ? new Dictionary<string, string>()
                 : new Dictionary<string, string>(headers);
             Items = items == null
-                ? new Dictionary<object, object>()
-                : new Dictionary<object, object>(items);
+                ? new Dictionary<object, object?>()
+                : new Dictionary<object, object?>(items);
         }
 
     }
