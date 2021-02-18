@@ -158,6 +158,11 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
+        /// <remarks>
+        ///   Note to implementers: override the <see cref="AdapterBase{TAdapterOptions}.OnOptionsChange"/> 
+        ///   method on your adapter implementation to receive notifications of options changes 
+        ///   received from the <paramref name="optionsMonitor"/>.
+        /// </remarks>
         protected AdapterBase(string id, IOptionsMonitor<AdapterOptions> optionsMonitor, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
             : base(id, optionsMonitor, backgroundTaskService, logger) { }
 

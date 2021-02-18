@@ -361,6 +361,11 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
         /// </exception>
+        /// <remarks>
+        ///   Note to implementers: override the <see cref="OnOptionsChange"/> method on your 
+        ///   adapter implementation to receive notifications of options changes received from the 
+        ///   <paramref name="optionsMonitor"/>.
+        /// </remarks>
         protected AdapterBase(
             string id,
             IOptionsMonitor<TAdapterOptions> optionsMonitor, 
@@ -967,12 +972,16 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Override this method in a subclass to receive notifications when the adapter's options 
-        /// have changed.
+        /// Override this method to receive notifications when the adapter's options have changed.
         /// </summary>
         /// <param name="options">
         ///   The updated options.
         /// </param>
+        /// <remarks>
+        ///   Note to implementers: this method is not called unless the adapter has been created 
+        ///   using an <see cref="IOptionsMonitor{TOptions}"/> instance to supply the adapter 
+        ///   options.
+        /// </remarks>
         protected virtual void OnOptionsChange(TAdapterOptions options) {
             // Do nothing.
         }
