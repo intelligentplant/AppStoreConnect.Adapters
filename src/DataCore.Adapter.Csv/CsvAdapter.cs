@@ -126,7 +126,7 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptionsSnapshot<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
             : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }

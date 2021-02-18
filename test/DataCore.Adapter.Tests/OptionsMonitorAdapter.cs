@@ -17,10 +17,6 @@ namespace DataCore.Adapter.Tests {
             : base(id, options) { }
 
 
-        public OptionsMonitorAdapter(string id, IOptionsSnapshot<OptionsMonitorAdapterOptions> options)
-            : base(id, options) { }
-
-
         public OptionsMonitorAdapter(string id, IOptionsMonitor<OptionsMonitorAdapterOptions> options)
             : base(id, options) { }
 
