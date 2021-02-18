@@ -9,6 +9,7 @@ using DataCore.Adapter;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
