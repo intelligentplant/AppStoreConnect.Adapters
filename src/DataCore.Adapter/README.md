@@ -2,7 +2,7 @@
 
 Contains base classes and utility classes for implementing an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs).
 
-Extend from [AdapterBase](./AdapterBase.cs) for easy implementation or [AdapterBase<T>](./AdapterBaseT.cs) if you need to supply configurable options to your adapter.
+Extend from [AdapterBase](./AdapterBase.cs) for easy implementation or [AdapterBase&lt;T&gt;](./AdapterBaseT.cs) if you need to supply configurable options to your adapter.
 
 
 # Installation
@@ -12,7 +12,7 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](http
 
 # Creating an Adapter
 
-Extend [AdapterBase<T>](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
+Extend [AdapterBase&lt;T&gt;](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
 
 
 ## Working with Channels
