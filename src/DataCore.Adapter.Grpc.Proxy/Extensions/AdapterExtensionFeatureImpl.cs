@@ -33,6 +33,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
             var response = client.GetDescriptorAsync(new GetExtensionDescriptorRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
@@ -51,6 +53,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
             var response = client.GetOperationsAsync(new GetExtensionOperationsRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
@@ -65,6 +69,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override async Task<string> InvokeInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
             var response = client.InvokeExtensionAsync(new InvokeExtensionRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
@@ -79,6 +85,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override Task<ChannelReader<string>> StreamInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+            Proxy.ValidateInvocation(context);
+
             var result = Channel.CreateUnbounded<string>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -100,6 +108,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override Task<ChannelReader<string>> DuplexStreamInternal(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
+            Proxy.ValidateInvocation(context, channel);
+
             var result = Channel.CreateUnbounded<string>();
 
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();

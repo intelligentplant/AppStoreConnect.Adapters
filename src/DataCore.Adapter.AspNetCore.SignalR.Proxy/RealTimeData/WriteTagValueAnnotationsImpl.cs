@@ -20,36 +20,24 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, CreateAnnotationRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context, request);
 
-            SignalRAdapterProxy.ValidateObject(request); 
-            
             var client = GetClient();
             return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, UpdateAnnotationRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context, request);
 
-            SignalRAdapterProxy.ValidateObject(request); 
-            
             var client = GetClient();
             return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
         public async Task<WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, DeleteAnnotationRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context, request);
 
-            SignalRAdapterProxy.ValidateObject(request); 
-            
             var client = GetClient();
             return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }

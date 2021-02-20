@@ -23,11 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            GrpcAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadSnapshotTagValuesRequest() {

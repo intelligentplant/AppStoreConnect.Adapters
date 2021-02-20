@@ -32,6 +32,8 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             Uri? featureUri, 
             CancellationToken cancellationToken
         ) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.GetClient();
             return client.Extensions.GetDescriptorAsync(
                 Proxy.RemoteDescriptor.Id,
@@ -48,6 +50,8 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.GetClient();
             return client.Extensions.GetOperationsAsync(
                 Proxy.RemoteDescriptor.Id, 
@@ -60,6 +64,8 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override Task<string> InvokeInternal(IAdapterCallContext context, Uri operationId, string argument, CancellationToken cancellationToken) {
+            Proxy.ValidateInvocation(context);
+
             var client = Proxy.GetClient();
             return client.Extensions.InvokeExtensionAsync(
                 Proxy.RemoteDescriptor.Id, 

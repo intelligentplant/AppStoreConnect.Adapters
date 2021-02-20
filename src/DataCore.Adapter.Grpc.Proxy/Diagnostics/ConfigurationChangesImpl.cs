@@ -26,11 +26,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
             ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            GrpcAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var result = ChannelExtensions.CreateChannel<Adapter.Diagnostics.ConfigurationChange>(0);
 

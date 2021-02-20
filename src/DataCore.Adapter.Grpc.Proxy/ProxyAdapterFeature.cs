@@ -27,34 +27,33 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// The proxy that the feature instance belongs to.
         /// </summary>
-        private readonly GrpcAdapterProxy _proxy;
+        protected GrpcAdapterProxy Proxy { get; }
 
         /// <summary>
         /// Gets the logger for the proxy.
         /// </summary>
         protected ILogger Logger {
-            get { return _proxy.Logger; }
+            get { return Proxy.Logger; }
         }
 
         /// <summary>
         /// The adapter ID for the remote adapter.
         /// </summary>
         protected string AdapterId {
-            get { return _proxy.RemoteDescriptor?.Id!; }
+            get { return Proxy.RemoteDescriptor?.Id!; }
         }
 
         /// <summary>
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService {
-            get { return _proxy.BackgroundTaskService; }
+            get { return Proxy.BackgroundTaskService; }
         }
 
 
         /// <summary>
         /// Static constructor.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Initialisation is non-trivial")]
         static ProxyAdapterFeature() {
             _featureImplementations = new ConcurrentDictionary<Type, Type>();
 
@@ -118,7 +117,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The proxy that owns the feature instance.
         /// </param>
         protected ProxyAdapterFeature(GrpcAdapterProxy proxy) {
-            _proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
         }
 
 
@@ -132,7 +131,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new gRPC client instance.
         /// </returns>
         protected internal TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
-            return _proxy.CreateClient<TClient>();
+            return Proxy.CreateClient<TClient>();
         }
 
 
@@ -150,7 +149,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new <see cref="GrpcCore.CallOptions"/> object.
         /// </returns>
         protected internal GrpcCore.CallOptions GetCallOptions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return _proxy.GetCallOptions(context, cancellationToken);
+            return Proxy.GetCallOptions(context, cancellationToken);
         }
 
     }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Tags;
+
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
@@ -65,6 +67,26 @@ namespace DataCore.Adapter.RealTimeData {
         /// </exception>
         public static TagValueQueryResult Create(string tagId, string tagName, TagValueExtended value) {
             return new TagValueQueryResult(tagId, tagName, value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueQueryResult"/> object.
+        /// </summary>
+        /// <param name="tagIdentifier">
+        ///   The tag identifier.
+        /// </param>
+        /// <param name="value">
+        ///   The tag value.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagIdentifier"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="value"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagValueQueryResult Create(TagIdentifier tagIdentifier, TagValueExtended value) {
+            return new TagValueQueryResult(tagIdentifier?.Id!, tagIdentifier?.Name!, value);
         }
 
     }

@@ -24,12 +24,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context, request);
 
-            SignalRAdapterProxy.ValidateObject(request); 
-            
             var client = GetClient();
             var hubChannel = await client.TagSearch.FindTagsAsync(
                 AdapterId, 
@@ -49,12 +45,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context, request);
 
-            SignalRAdapterProxy.ValidateObject(request); 
-            
             var client = GetClient();
             var hubChannel = await client.TagSearch.GetTagsAsync(
                 AdapterId, 
@@ -74,12 +66,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            
-            SignalRAdapterProxy.ValidateObject(request); 
-            
+            Proxy.ValidateInvocation(context, request);
+
             var client = GetClient();
             var hubChannel = await client.TagSearch.GetTagPropertiesAsync(
                 AdapterId, 

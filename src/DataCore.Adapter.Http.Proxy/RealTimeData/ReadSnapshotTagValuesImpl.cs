@@ -22,10 +22,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            HttpAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var result = ChannelExtensions.CreateTagValueChannel(-1);
 
