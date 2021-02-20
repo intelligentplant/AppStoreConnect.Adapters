@@ -24,12 +24,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
         /// <inheritdoc />
         public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, channel);
 
             var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
 

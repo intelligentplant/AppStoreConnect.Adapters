@@ -29,15 +29,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events {
             ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            SignalRAdapterProxy.ValidateObject(request);
-
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, request, channel);
 
             return GetClient().Events.CreateEventMessageTopicChannelAsync(
                 AdapterId, 

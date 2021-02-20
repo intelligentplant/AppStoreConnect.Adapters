@@ -27,11 +27,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData {
             ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            SignalRAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
             return client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, cancellationToken);

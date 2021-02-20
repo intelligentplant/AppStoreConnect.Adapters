@@ -22,9 +22,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context);
             var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -42,10 +40,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            HttpAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
 
