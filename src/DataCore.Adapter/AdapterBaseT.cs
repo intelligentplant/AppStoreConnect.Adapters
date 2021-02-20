@@ -530,49 +530,22 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Validates a request object passed to an adapter feature method.
+        /// Validates a parameter passed to an adapter feature method.
         /// </summary>
-        /// <typeparam name="TRequest">
-        ///   The request type.
-        /// </typeparam>
-        /// <param name="request">
+        /// <param name="parameter">
         ///   The request object for the invocation.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="request"/> is <see langword="null"/>.
+        ///   <paramref name="parameter"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ValidationException">
-        ///   <paramref name="request"/> fails validation.
+        ///   <paramref name="parameter"/> fails validation.
         /// </exception>
-        protected virtual void ValidateRequest(object request) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+        protected virtual void ValidateInvocationParameter(object parameter) {
+            if (parameter == null) {
+                throw new ArgumentNullException(nameof(parameter));
             }
-            Validator.ValidateObject(request, new ValidationContext(request), true);
-        }
-
-
-        /// <summary>
-        /// Validates the invocation of an adapter feature method that does not use a request 
-        /// object.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="context"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ObjectDisposedException">
-        ///   The adapter has been disposed.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        ///   The adapter is not running.
-        /// </exception>
-        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object)"/>
-        public void ValidateInvocation(IAdapterCallContext context) {
-            CheckDisposed();
-            CheckStarted();
-            ValidateContext(context);
+            Validator.ValidateObject(parameter, new ValidationContext(parameter), true);
         }
 
 
@@ -600,10 +573,15 @@ namespace DataCore.Adapter {
         /// <exception cref="InvalidOperationException">
         ///   The adapter is not running.
         /// </exception>
-        public void ValidateInvocation(IAdapterCallContext context, params object[] invocationParameters) {
-            ValidateInvocation(context);
+        /// <remarks>
+        ///   Override this method to perform any additional invocation checks required by your adapter.
+        /// </remarks>
+        public virtual void ValidateInvocation(IAdapterCallContext context, params object[] invocationParameters) {
+            CheckDisposed();
+            CheckStarted();
+            ValidateContext(context);
             foreach (var item in invocationParameters) {
-                ValidateRequest(item);
+                ValidateInvocationParameter(item);
             }
         }
 
