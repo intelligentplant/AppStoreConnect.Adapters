@@ -18,10 +18,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            HttpAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
 
@@ -40,7 +37,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            HttpAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
             return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);

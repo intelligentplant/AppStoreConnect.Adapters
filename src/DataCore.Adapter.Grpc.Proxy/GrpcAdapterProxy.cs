@@ -323,35 +323,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 try {
                     await _channel.ShutdownAsync().ConfigureAwait(false);
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     Logger.LogError(e, Resources.Log_ChannelShutdownError);
                 }
             }
-        }
-
-
-        /// <summary>
-        /// Validates an object. This should be called on all adapter request objects prior to 
-        /// invoking a remote endpoint.
-        /// </summary>
-        /// <param name="o">
-        ///   The object.
-        /// </param>
-        /// <param name="canBeNull">
-        ///   When <see langword="true"/>, validation will succeed if <paramref name="o"/> is 
-        ///   <see langword="null"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="o"/> is <see langword="null"/> and <paramref name="canBeNull"/> is 
-        ///   <see langword="false"/>.
-        /// </exception>
-        /// <exception cref="ValidationException">
-        ///   <paramref name="o"/> fails validation.
-        /// </exception>
-        public static void ValidateObject(object o, bool canBeNull = false) {
-            ValidationExtensions.ValidateObject(o, canBeNull);
         }
 
 
@@ -373,9 +348,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             if (!string.IsNullOrWhiteSpace(context?.CorrelationId)) {
                 // We have a correlation ID for the context; use it on the outgoing call as 
                 // well.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 headers.Add("Request-Id", context.CorrelationId);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
             }
 
             return new GrpcCore.CallOptions(

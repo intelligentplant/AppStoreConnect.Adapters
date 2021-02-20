@@ -22,12 +22,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, channel);
 
             var client = GetClient();
             var hubChannel = await client.TagValues.WriteHistoricalTagValuesAsync(

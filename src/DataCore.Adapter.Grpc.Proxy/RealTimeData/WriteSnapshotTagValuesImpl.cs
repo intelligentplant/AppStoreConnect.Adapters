@@ -23,12 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<Adapter.RealTimeData.WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, channel);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcStream = client.WriteSnapshotTagValues(GetCallOptions(context, cancellationToken));

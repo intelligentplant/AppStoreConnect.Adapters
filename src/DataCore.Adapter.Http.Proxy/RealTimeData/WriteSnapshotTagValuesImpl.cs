@@ -23,12 +23,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
         /// <inheritdoc />
         public Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, channel);
 
             var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
