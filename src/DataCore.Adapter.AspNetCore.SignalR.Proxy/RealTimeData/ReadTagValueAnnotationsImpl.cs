@@ -19,11 +19,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            SignalRAdapterProxy.ValidateObject(request); 
-            
+            Proxy.ValidateInvocation(context, request);
+
             var client = GetClient();
             var hubChannel = await client.TagValueAnnotations.ReadAnnotationsAsync(
                 AdapterId, 
@@ -42,8 +39,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            SignalRAdapterProxy.ValidateObject(request); 
-            
+            Proxy.ValidateInvocation(context, request);
+
             var client = GetClient();
             return await client.TagValueAnnotations.ReadAnnotationAsync(
                 AdapterId, 

@@ -522,7 +522,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
-        public virtual void ValidateContext(IAdapterCallContext context) {
+        protected virtual void ValidateContext(IAdapterCallContext context) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -536,7 +536,7 @@ namespace DataCore.Adapter {
         ///   The request type.
         /// </typeparam>
         /// <param name="request">
-        ///   The request object.
+        ///   The request object for the invocation.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="request"/> is <see langword="null"/>.
@@ -544,11 +544,67 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public virtual void ValidateRequest<TRequest>(TRequest request) {
+        protected virtual void ValidateRequest(object request) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
+        }
+
+
+        /// <summary>
+        /// Validates the invocation of an adapter feature method that does not use a request 
+        /// object.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   The adapter has been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The adapter is not running.
+        /// </exception>
+        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object)"/>
+        public void ValidateInvocation(IAdapterCallContext context) {
+            CheckDisposed();
+            CheckStarted();
+            ValidateContext(context);
+        }
+
+
+        /// <summary>
+        /// Validates the invocation of an adapter feature method.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the invocation.
+        /// </param>
+        /// <param name="invocationParameters">
+        ///   The invocation parameters to validate (such as request DTOs).
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   Any item in <paramref name="invocationParameters"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   Any item in <paramref name="invocationParameters"/> fails validation.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   The adapter has been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The adapter is not running.
+        /// </exception>
+        public void ValidateInvocation(IAdapterCallContext context, params object[] invocationParameters) {
+            ValidateInvocation(context);
+            foreach (var item in invocationParameters) {
+                ValidateRequest(item);
+            }
         }
 
 

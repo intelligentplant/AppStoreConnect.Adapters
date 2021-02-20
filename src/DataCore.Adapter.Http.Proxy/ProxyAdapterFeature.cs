@@ -26,27 +26,27 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// The proxy that the feature instance belongs to.
         /// </summary>
-        private readonly HttpAdapterProxy _proxy;
+        protected HttpAdapterProxy Proxy { get; }
 
         /// <summary>
         /// Gets the proxy's logger.
         /// </summary>
         protected ILogger Logger {
-            get { return _proxy.Logger; }
+            get { return Proxy.Logger; }
         }
 
         /// <summary>
         /// The adapter ID for the remote adapter.
         /// </summary>
         protected string AdapterId {
-            get { return _proxy.RemoteDescriptor?.Id!; }
+            get { return Proxy.RemoteDescriptor?.Id!; }
         }
 
         /// <summary>
         /// Gets the <see cref="IBackgroundTaskService"/> for the proxy.
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService {
-            get { return _proxy.BackgroundTaskService; }
+            get { return Proxy.BackgroundTaskService; }
         }
 
 
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The proxy that owns the feature instance.
         /// </param>
         protected ProxyAdapterFeature(HttpAdapterProxy proxy) {
-            _proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
         }
 
 
@@ -129,7 +129,7 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   A <see cref="AdapterHttpClient"/> object.
         /// </returns>
         protected internal AdapterHttpClient GetClient() {
-            return _proxy.GetClient();
+            return Proxy.GetClient();
         }
 
     }

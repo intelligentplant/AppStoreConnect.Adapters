@@ -509,18 +509,14 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             return Task.FromResult(s_tagPropertyDefinitions.PublishToChannel());
         }
 
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => { 
@@ -538,9 +534,7 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             var result = ChannelExtensions.CreateTagDefinitionChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -572,9 +566,7 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -602,9 +594,7 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
@@ -655,9 +645,7 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
-            ValidateContext(context);
-            ValidateRequest(request);
-
+            ValidateInvocation(context, request);
             var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {

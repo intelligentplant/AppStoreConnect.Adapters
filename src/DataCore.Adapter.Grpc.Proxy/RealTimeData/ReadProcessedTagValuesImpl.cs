@@ -23,9 +23,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.RealTimeData.DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
+            Proxy.ValidateInvocation(context);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new GetSupportedDataFunctionsRequest() {
@@ -56,11 +54,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public Task<ChannelReader<Adapter.RealTimeData.ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            GrpcAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadProcessedTagValuesRequest() {

@@ -30,15 +30,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
             ChannelReader<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            GrpcAdapterProxy.ValidateObject(request);
-
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
+            Proxy.ValidateInvocation(context, request, channel);
 
             var client = CreateClient<EventsService.EventsServiceClient>();
             var grpcStream = client.CreateEventTopicPushChannel(GetCallOptions(context, cancellationToken));

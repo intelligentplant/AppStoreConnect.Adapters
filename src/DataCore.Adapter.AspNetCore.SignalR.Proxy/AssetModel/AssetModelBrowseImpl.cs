@@ -22,10 +22,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            SignalRAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
             var hubChannel = await client.AssetModel.BrowseAssetModelNodesAsync(
@@ -45,10 +42,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
         /// <inheritdoc />
         public async Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            SignalRAdapterProxy.ValidateObject(request);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
             var hubChannel = await client.AssetModel.GetAssetModelNodesAsync(
