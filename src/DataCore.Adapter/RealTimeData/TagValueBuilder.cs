@@ -50,7 +50,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="TagValueBuilder"/> object.
         /// </summary>
-        private TagValueBuilder() { }
+        public TagValueBuilder() { }
 
 
         /// <summary>
@@ -60,7 +60,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        private TagValueBuilder(TagValueExtended existing) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public TagValueBuilder(TagValueExtended existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
+            }
             _utcSampleTime = existing.UtcSampleTime;
             _value = existing.Value;
             _status = existing.Status;

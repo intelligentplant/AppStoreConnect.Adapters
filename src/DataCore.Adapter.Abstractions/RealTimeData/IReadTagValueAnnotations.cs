@@ -51,7 +51,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The requested annotation.
         /// </returns>
-        Task<TagValueAnnotationExtended> ReadAnnotation(
+        Task<TagValueAnnotationExtended?> ReadAnnotation(
             IAdapterCallContext context, 
             ReadAnnotationRequest request, 
             CancellationToken cancellationToken
