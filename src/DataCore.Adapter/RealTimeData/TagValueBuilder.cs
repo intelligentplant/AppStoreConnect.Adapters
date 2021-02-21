@@ -67,15 +67,13 @@ namespace DataCore.Adapter.RealTimeData {
             if (existing == null) {
                 throw new ArgumentNullException(nameof(existing));
             }
-            _utcSampleTime = existing.UtcSampleTime;
-            _value = existing.Value;
-            _status = existing.Status;
-            _units = existing.Units;
-            _notes = existing.Notes;
-            _error = existing.Error;
-            if (existing.Properties != null) {
-                _properties.AddRange(existing.Properties.Where(x => x != null));
-            }
+
+            WithUtcSampleTime(existing.UtcSampleTime);
+            WithValue(existing.Value);
+            WithStatus(existing.Status);
+            WithNotes(existing.Notes);
+            WithError(existing.Error);
+            WithProperties(existing.Properties);
         }
 
 
