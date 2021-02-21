@@ -39,6 +39,11 @@ namespace DataCore.Adapter {
         private bool _isDisposedCommon;
 
         /// <summary>
+        /// Specifies if the adapter is currently running.
+        /// </summary>
+        private bool _isRunning;
+
+        /// <summary>
         /// Logging.
         /// </summary>
         protected internal ILogger Logger { get; }
@@ -104,7 +109,7 @@ namespace DataCore.Adapter {
         public bool IsEnabled { get { return Options.IsEnabled; } }
 
         /// <inheritdoc/>
-        public bool IsRunning { get; private set; }
+        public bool IsRunning => _isRunning && !_isDisposed;
 
         /// <inheritdoc/>
         public AdapterDescriptor Descriptor { get; private set; }
@@ -908,6 +913,14 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   A task that represents the stop operation.
         /// </returns>
+        /// <remarks>
+        ///   The <see cref="StopAsync"/> method is intended to allow the same adapter to be 
+        ///   started and stopped multiple times. Therefore, only resources that are created 
+        ///   when <see cref="StartAsync"/> is called should be disposed when <see cref="StopAsync"/> 
+        ///   is called. The <see cref="Dispose(bool)"/> and <see cref="DisposeAsyncCore"/> 
+        ///   methods should be used to dispose of all resources, including those created by 
+        ///   calls to <see cref="StartAsync"/>.
+        /// </remarks>
         protected abstract Task StopAsync(CancellationToken cancellationToken);
 
 
@@ -985,7 +998,7 @@ namespace DataCore.Adapter {
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
                             await StartAsync(ctSource.Token).ConfigureAwait(false);
-                            IsRunning = true;
+                            _isRunning = true;
                             await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
                         }
                     }
@@ -1031,7 +1044,7 @@ namespace DataCore.Adapter {
             }
             finally {
                 _stopTokenSource = new CancellationTokenSource();
-                IsRunning = false;
+                _isRunning = false;
             }
         }
 
@@ -1091,6 +1104,14 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> if the adapter is being disposed synchronously, or <see langword="false"/> 
         ///   if it is being disposed asynchronously, or finalized.
         /// </param>
+        /// <remarks>
+        ///   Override both this method and <see cref="DisposeAsyncCore"/> if your adapter requires 
+        ///   a separate asynchronous resource cleanup implementation. When calling <see cref="DisposeAsync"/>, 
+        ///   both <see cref="DisposeAsyncCore"/> and <see cref="Dispose(bool)"/> will be called. 
+        ///   The call to <see cref="Dispose(bool)"/> will be passed <see langword="false"/> when 
+        ///   the object is being disposed asynchronously.
+        /// </remarks>
+        /// <seealso cref="DisposeAsyncCore"/>
         protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
@@ -1118,6 +1139,7 @@ namespace DataCore.Adapter {
         ///   The call to <see cref="Dispose(bool)"/> will be passed <see langword="false"/> when 
         ///   the object is being disposed asynchronously.
         /// </remarks>
+        /// <seealso cref="Dispose(bool)"/>
         protected virtual async ValueTask DisposeAsyncCore() {
             DisposeCommon();
             await _features.DisposeAsync().ConfigureAwait(false);
