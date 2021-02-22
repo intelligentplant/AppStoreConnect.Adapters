@@ -61,6 +61,14 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   A <see cref="Task"/> that represents the stop operation.
         /// </returns>
+        /// <remarks>
+        ///   The <see cref="StopAsync"/> method is intended to allow the same adapter to be 
+        ///   started and stopped multiple times. Therefore, only resources that are created 
+        ///   when <see cref="StartAsync"/> is called should be disposed when <see cref="StopAsync"/> 
+        ///   is called. The <see cref="IDisposable.Dispose"/> and <see cref="IAsyncDisposable.DisposeAsync"/> 
+        ///   methods should be used to dispose of all resources, including those created by 
+        ///   calls to <see cref="StartAsync"/>.
+        /// </remarks>
         Task StopAsync(CancellationToken cancellationToken);
 
     }

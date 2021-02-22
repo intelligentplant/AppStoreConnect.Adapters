@@ -58,9 +58,35 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
-        /// Creates a new <see cref="TagDefinitionBuilder"/> object.
+        /// Creates a new <see cref="TagDefinitionBuilder"/> object. You must call <see cref="WithId"/> 
+        /// and <see cref="WithName"/> to set the tag ID and name respectively before calling <see cref="Build"/>.
         /// </summary>
-        private TagDefinitionBuilder() { }
+        public TagDefinitionBuilder() { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagDefinitionBuilder"/> object that is configured to use the 
+        /// specified tag ID and tag name.
+        /// </summary>
+        /// <param name="id">
+        ///   The tag ID.
+        /// </param>
+        /// <param name="name">
+        ///   The tag name.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagDefinitionBuilder"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public TagDefinitionBuilder (string id, string name) {
+            WithId(id);
+            WithName(name);
+        }
 
 
         /// <summary>
@@ -70,7 +96,14 @@ namespace DataCore.Adapter.Tags {
         /// <param name="existing">
         ///   The existing tag definition.
         /// </param>
-        private TagDefinitionBuilder(TagDefinition existing) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public TagDefinitionBuilder(TagDefinition existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
+            }
+
             WithId(existing.Id);
             WithName(existing.Name);
             WithDescription(existing.Description);
