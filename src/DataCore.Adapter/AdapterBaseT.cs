@@ -519,6 +519,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// <strong>[INFRASTRUCTURE METHOD]</strong> 
         /// Validates the <see cref="IAdapterCallContext"/> passed to an adapter feature method.
         /// </summary>
         /// <param name="context">
@@ -527,6 +528,22 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   This method is not intended to be called directly from your adapter implementation; 
+        ///   you should call <see cref="ValidateInvocation(IAdapterCallContext, object[])"/> 
+        ///   instead when validating a call to your adapter.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Override this method to customise the validation of <see cref="IAdapterCallContext"/> 
+        ///   objects passed into your adapter. The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/>
+        ///   is to ensure that the <paramref name="context"/> is not <see langword="null"/>.
+        /// </para>
+        /// 
+        /// </remarks>
+        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
         protected virtual void ValidateContext(IAdapterCallContext context) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
@@ -535,6 +552,7 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// <strong>[INFRASTRUCTURE METHOD]</strong> 
         /// Validates a parameter passed to an adapter feature method.
         /// </summary>
         /// <param name="parameter">
@@ -546,6 +564,24 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   <paramref name="parameter"/> fails validation.
         /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   This method is not intended to be called directly from your adapter implementation; 
+        ///   you should call <see cref="ValidateInvocation(IAdapterCallContext, object[])"/> 
+        ///   instead when validating a call to your adapter.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Override this method to customise the validation of parameters passed to an adapter 
+        ///   feature invocation. The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/>
+        ///   is to ensure that the <paramref name="parameter"/> is not <see langword="null"/>, and 
+        ///   to validate the <paramref name="parameter"/> by calling 
+        ///   <see cref="Validator.ValidateObject(object, ValidationContext, bool)"/>.
+        /// </para>
+        /// 
+        /// </remarks>
+        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
         protected virtual void ValidateInvocationParameter(object parameter) {
             if (parameter == null) {
                 throw new ArgumentNullException(nameof(parameter));
@@ -579,7 +615,25 @@ namespace DataCore.Adapter {
         ///   The adapter is not running.
         /// </exception>
         /// <remarks>
-        ///   Override this method to perform any additional invocation checks required by your adapter.
+        /// 
+        /// <para>
+        ///   Call this method at the start of every adapter feature implementation method to 
+        ///   validate the feature method's parameters.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Override this method to perform any additional invocation checks required by your 
+        ///   adapter.  
+        /// </para>
+        /// 
+        /// <para>
+        ///   The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/> is to ensure that 
+        ///   the adapter has not been disposed and that it is currently running, and to validate 
+        ///   the <paramref name="context"/> and <paramref name="invocationParameters"/> by calling 
+        ///   <see cref="ValidateContext(IAdapterCallContext)"/> and <see cref="ValidateInvocationParameter(object)"/> 
+        ///   respectively.
+        /// </para>
+        /// 
         /// </remarks>
         public virtual void ValidateInvocation(IAdapterCallContext context, params object[] invocationParameters) {
             CheckDisposed();
