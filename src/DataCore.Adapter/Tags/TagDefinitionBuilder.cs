@@ -44,7 +44,7 @@ namespace DataCore.Adapter.Tags {
         /// <summary>
         /// The adapter features that can be used to read from or write to the tag.
         /// </summary>
-        private readonly HashSet<Uri> _supportedFeatures = new HashSet<Uri>();
+        private readonly HashSet<Uri> _supportedFeatures = new HashSet<Uri>(new UriComparer());
 
         /// <summary>
         /// The bespoke tag properties.
@@ -409,12 +409,21 @@ namespace DataCore.Adapter.Tags {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
+        /// <param name="hash">
+        ///   The hash to add to the URI of the feature type. For example, if the <see cref="RealTimeData.IReadProcessedTagValues"/> 
+        ///   feature is available on the adapter, but the tag only supports a subset of the 
+        ///   available data functions, you can add the feature once for each supported data 
+        ///   function and specify the ID of the data function as the hash each time.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithSupportedFeature<TFeature>() where TFeature : IAdapterFeature {
+        public TagDefinitionBuilder WithSupportedFeature<TFeature>(string? hash = null) where TFeature : IAdapterFeature {
             foreach (var uri in typeof(TFeature).GetAdapterFeatureUris()) {
-                _supportedFeatures.Add(uri.EnsurePathHasTrailingSlash());
+                var featureUri = string.IsNullOrWhiteSpace(hash)
+                    ? uri.EnsurePathHasTrailingSlash()
+                    : new Uri(string.Concat(uri.ToString(), "#", hash)).EnsurePathHasTrailingSlash();
+                _supportedFeatures.Add(featureUri);
             }
 
             return this;
@@ -613,6 +622,34 @@ namespace DataCore.Adapter.Tags {
         public TagDefinitionBuilder ClearLabels() {
             _labels.Clear();
             return this;
+        }
+
+
+        /// <summary>
+        /// <see cref="IEqualityComparer{T}"/> for <see cref="Uri"/> objects that checks for 
+        /// equality on the full URI, including parts such as the hash. This is to allow the 
+        /// same adapter feature URI to be added multiple times with a different hash (see 
+        /// <see cref="WithSupportedFeature{TFeature}(string?)"/>).
+        /// </summary>
+        private class UriComparer : EqualityComparer<Uri> {
+
+            /// <inheritdoc/>
+            public override bool Equals(Uri x, Uri y) {
+                if (x == null && y == null) {
+                    return true;
+                }
+                if (x == null || y == null) {
+                    return false;
+                }
+
+                return string.Equals(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
+            }
+
+            /// <inheritdoc/>
+            public override int GetHashCode(Uri obj) {
+                return obj?.GetHashCode() ?? 0;
+            }
+
         }
 
     }
