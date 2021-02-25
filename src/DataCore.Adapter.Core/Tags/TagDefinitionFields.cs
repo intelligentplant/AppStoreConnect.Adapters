@@ -30,9 +30,14 @@ namespace DataCore.Adapter.Tags {
         Labels = 4,
 
         /// <summary>
+        /// Supported features.
+        /// </summary>
+        SupportedFeatures = 8,
+
+        /// <summary>
         /// All available information.
         /// </summary>
-        All = BasicInformation | DigitalStates | Properties | Labels
+        All = BasicInformation | DigitalStates | Properties | Labels | SupportedFeatures
 
     }
 }
