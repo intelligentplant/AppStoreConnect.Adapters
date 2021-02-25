@@ -979,6 +979,33 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Called once the adapter has started.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will be run once the adapter has started.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   <see cref="OnStartedAsync(CancellationToken)"/> is run in the background using the 
+        ///   adapter's <see cref="BackgroundTaskService"/>. The <paramref name="cancellationToken"/> 
+        ///   will request cancellation when the adapter is stopped.
+        /// </para>
+        /// 
+        /// <para>
+        ///   The method can return a long-running task that runs until the adapter is stopped.
+        /// </para>
+        /// 
+        /// </remarks>
+        protected virtual Task OnStartedAsync(CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+
+
+        /// <summary>
         /// Performs an adapter health check.
         /// </summary>
         /// <param name="context">
@@ -1074,6 +1101,8 @@ namespace DataCore.Adapter {
                     _startupLock.Release();
                 }
             }
+
+            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync);
         }
 
 
