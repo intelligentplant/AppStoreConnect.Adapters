@@ -665,6 +665,74 @@ namespace DataCore.Adapter.Tests {
             });
         }
 
+
+        /// <summary>
+        /// Verifies that <see cref="ITagSearch.FindTags"/> returns results, and that the results 
+        /// define supported tag read/write features if these features are implemented by the 
+        /// adapter.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        [TestMethod]
+        public virtual Task FindTagsRequestShouldReturnResultsWithCorrectSupportedFeatures() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ITagSearch>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ITagSearch>();
+                    return;
+                }
+
+                var request = CreateFindTagsRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ITagSearch>(nameof(CreateFindTagsRequest));
+                    return;
+                }
+
+                var supportedFeatures = new List<Uri>();
+
+                foreach (var type in new[] { 
+                    typeof(IReadSnapshotTagValues),
+                    typeof(ISnapshotTagValuePush),
+                    typeof(IReadRawTagValues),
+                    typeof(IReadPlotTagValues),
+                    typeof(IReadProcessedTagValues),
+                    typeof(IReadTagValuesAtTimes),
+                    typeof(IReadTagValueAnnotations),
+                    typeof(IWriteSnapshotTagValues),
+                    typeof(IWriteHistoricalTagValues),
+                    typeof(IWriteTagValueAnnotations)
+                }) {
+                    var featureUri = type.GetAdapterFeatureUri();
+                    if (adapter.HasFeature(featureUri!)) {
+                        supportedFeatures.Add(featureUri!);
+                    }
+                }
+
+                request.ResultFields = TagDefinitionFields.All;
+                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
+
+                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+
+                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
+
+                foreach (var tag in tags) {
+                    Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
+                    if (tag.SupportedFeatures.Any()) {
+                        Assert.IsTrue(tag.SupportedFeatures.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.SupportedFeatures)}"));
+                    }
+
+                    if (supportedFeatures.Count > 0) {
+                        Assert.IsTrue(tag.SupportedFeatures.Any(), FormatMessage(Resources.AdapterFeaturesIndicateThatTagsShouldDefineSupportedFeatures, string.Join(", ", supportedFeatures), nameof(TagDefinitionBuilder)));
+                    }
+                    else {
+                        Assert.IsFalse(tag.SupportedFeatures.Any(), FormatMessage(Resources.AdapterFeaturesIndicateThatTagsShouldNotDefineSupportedFeatures));
+                    }
+                }
+            });
+        }
+
         #endregion
 
         #region [ IReadSnapshotTagValues ]
