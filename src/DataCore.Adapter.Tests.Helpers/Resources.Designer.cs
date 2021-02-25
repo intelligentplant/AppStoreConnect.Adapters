@@ -88,6 +88,24 @@ namespace DataCore.Adapter.Tests {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The adapter&apos;s feature set indicates that one or more of the following feature URIs should be present in the tag&apos;s set of supported features: {0}. Use the {1} class to build tag definitions that include details of supported features..
+        /// </summary>
+        internal static string AdapterFeaturesIndicateThatTagsShouldDefineSupportedFeatures {
+            get {
+                return ResourceManager.GetString("AdapterFeaturesIndicateThatTagsShouldDefineSupportedFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The adapter&apos;s feature set indicates that tags are not expected to have any entries in their supported features collection..
+        /// </summary>
+        internal static string AdapterFeaturesIndicateThatTagsShouldNotDefineSupportedFeatures {
+            get {
+                return ResourceManager.GetString("AdapterFeaturesIndicateThatTagsShouldNotDefineSupportedFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapters should not return default({0}) as a health check result..
         /// </summary>
         internal static string AdapterShouldNotReturnDefaultHealthCheckResult {

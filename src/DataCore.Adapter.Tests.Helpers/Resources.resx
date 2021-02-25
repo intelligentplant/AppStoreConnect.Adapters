@@ -127,6 +127,14 @@
   <data name="AdapterDoesNotImplementAnyExtensionFeatures" xml:space="preserve">
     <value>Adapter does not implement any extension features.</value>
   </data>
+  <data name="AdapterFeaturesIndicateThatTagsShouldDefineSupportedFeatures" xml:space="preserve">
+    <value>The adapter's feature set indicates that one or more of the following feature URIs should be present in the tag's set of supported features: {0}. Use the {1} class to build tag definitions that include details of supported features.</value>
+    <comment>{0} - expected features
+{1} - TagDefinitionBuilder type name</comment>
+  </data>
+  <data name="AdapterFeaturesIndicateThatTagsShouldNotDefineSupportedFeatures" xml:space="preserve">
+    <value>The adapter's feature set indicates that tags are not expected to have any entries in their supported features collection.</value>
+  </data>
   <data name="AdapterShouldNotReturnDefaultHealthCheckResult" xml:space="preserve">
     <value>Adapters should not return default({0}) as a health check result.</value>
     <comment>{0} - HealthCheckResult type name</comment>
