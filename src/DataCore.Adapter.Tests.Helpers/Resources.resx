@@ -1,0 +1,306 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AdapterCreationDelegateReturnedNull" xml:space="preserve">
+    <value>Adapter creation delegate returned null.</value>
+  </data>
+  <data name="AdapterDoesNotImplementAnyAggregates" xml:space="preserve">
+    <value>Adapters implementing {0} should define at least one data function that can be called.</value>
+    <comment>{0} - IReadProcessedTagValues feature name</comment>
+  </data>
+  <data name="AdapterDoesNotImplementAnyExtensionFeatures" xml:space="preserve">
+    <value>Adapter does not implement any extension features.</value>
+  </data>
+  <data name="AdapterShouldNotReturnDefaultHealthCheckResult" xml:space="preserve">
+    <value>Adapters should not return default({0}) as a health check result.</value>
+    <comment>{0} - HealthCheckResult type name</comment>
+  </data>
+  <data name="AdaptersShouldNotReturnNullProperties" xml:space="preserve">
+    <value>Adapters should not return null properties.</value>
+  </data>
+  <data name="AnnotationCannotEndBeforeItHasStarted" xml:space="preserve">
+    <value>Annotation cannot end before it has started: '{0}' @ {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z</value>
+    <comment>{0} - tag name
+{1} - annotation time</comment>
+  </data>
+  <data name="AnnotationMustEndAtOrAfterQueryStartTime" xml:space="preserve">
+    <value>Annotations starting before the request start time must end after the request start time to be included in the query results: '{0}' @ {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z</value>
+    <comment>{0} - tag name
+{1} - annotation time</comment>
+  </data>
+  <data name="AnnotationStartedAfterQueryEndTime" xml:space="preserve">
+    <value>Annotation started after the query end time: '{0}' @ {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z</value>
+    <comment>{0} - tag name
+{1} - annotation time</comment>
+  </data>
+  <data name="AnnotationTimeRangeDoesNotOverlapWithQueryTimeRange" xml:space="preserve">
+    <value>Annotation time range does not overlap with query time range: '{0}' @ {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z</value>
+    <comment>{0} - tag name
+{1} - annotation time</comment>
+  </data>
+  <data name="ChannelContainedNullItem" xml:space="preserve">
+    <value>A null {0} item was emitted by the channel.</value>
+    <comment>{0} - item type</comment>
+  </data>
+  <data name="CollectionItemShouldNotBeNull" xml:space="preserve">
+    <value>Items in the {0} collection should not be null.</value>
+    <comment>{0} - collection that contained a null item</comment>
+  </data>
+  <data name="ExpectedItemsWereNotReceived" xml:space="preserve">
+    <value>Values for the following expected items were not received: {0}</value>
+    <comment>{0} - expected items</comment>
+  </data>
+  <data name="FeatureDescriptorIsNull" xml:space="preserve">
+    <value>The descriptor returned for feature URI '{0}' was null.</value>
+    <comment>{0} - feature ID</comment>
+  </data>
+  <data name="FeatureDescriptorUriMismatch" xml:space="preserve">
+    <value>The descriptor for feature URI '{0}' was requested, but the result has feature URI '{1}'.</value>
+    <comment>{0} - expected
+{1} - actual</comment>
+  </data>
+  <data name="FeatureNotImplemented" xml:space="preserve">
+    <value>Feature not implemented: {0}</value>
+    <comment>{0} - feature name</comment>
+  </data>
+  <data name="HealthCheckStatusDoesNotMatchAggregatedChildStatus" xml:space="preserve">
+    <value>The status of a health check result returned by the adapter does not match the aggregate status of the child health check results it contains.</value>
+  </data>
+  <data name="IncorrectAnnotationIdReturned" xml:space="preserve">
+    <value>Incorrect annotation ID returned.</value>
+  </data>
+  <data name="InsideBoundedRawQueryReturnedValuesAfterEndTime" xml:space="preserve">
+    <value>At least one tag value was after the request end time. This is not allowed when the boundary type for the query is {0}.</value>
+    <comment>{0} - boundary type</comment>
+  </data>
+  <data name="InsideBoundedRawQueryReturnedValuesBeforeStartTime" xml:space="preserve">
+    <value>At least one tag value was before the request start time. This is not allowed when the boundary type for the query is {0}.</value>
+    <comment>{0} - boundary type</comment>
+  </data>
+  <data name="ItemCountIsGreaterThanPageSize" xml:space="preserve">
+    <value>The page size for the request was {0}, but {1} items were returned.</value>
+    <comment>{0} - page size
+{1} - item count</comment>
+  </data>
+  <data name="MethodReturnedNullResult" xml:space="preserve">
+    <value>The result of the {0} method was null.</value>
+    <comment>{0} - method name</comment>
+  </data>
+  <data name="MissingTestInput" xml:space="preserve">
+    <value>Adapter implements {0}, but the '{1}' method used to generate input data for test '{2}' returned a value that indicates that the test should be skipped. Override {1} in your test class to return a non-null value if you wish to run this test.</value>
+    <comment>{0} - feature name
+{1} - method name
+{2} - test name</comment>
+  </data>
+  <data name="NotEnoughResultsReturned" xml:space="preserve">
+    <value>Expected at least {0} {1} items, but only {2} items were received.</value>
+    <comment>{0} - expected count
+{1} - item type
+{2} - actual count</comment>
+  </data>
+  <data name="OneOrMoreOperationDescriptorsAreNull" xml:space="preserve">
+    <value>One or more operation descriptors for feature URI '{0}' were null.</value>
+    <comment>{0} - feature ID</comment>
+  </data>
+  <data name="OutsideBoundedRawQueryReturnedTooManyValuesAfterEndTime" xml:space="preserve">
+    <value>More than one tag value after the query end time was returned. When the boundary type for the query is {0}, a single value after the query end time is allowed.</value>
+    <comment>{0} - boundary type</comment>
+  </data>
+  <data name="OutsideBoundedRawQueryReturnedTooManyValuesBeforeStartTime" xml:space="preserve">
+    <value>More than one tag value before the query start time was returned. When the boundary type for the query is {0}, a single value before the query start time is allowed.</value>
+    <comment>{0} - boundary type</comment>
+  </data>
+  <data name="QueryDidNotReturnAnyResults" xml:space="preserve">
+    <value>The {0} query did not return any results.</value>
+    <comment>{0} - query type</comment>
+  </data>
+  <data name="QueryReturnedResultAfterEndTime" xml:space="preserve">
+    <value>The query end time was {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z, but a result was received with timestamp {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z.</value>
+    <comment>{0} - start time
+{1} - sample time</comment>
+  </data>
+  <data name="QueryReturnedResultBeforeStartTime" xml:space="preserve">
+    <value>The query start time was {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z, but a result was received with timestamp {1:dd-MMM-yyyy HH:mm:ss.fffffff}Z.</value>
+    <comment>{0} - start time
+{1} - sample time</comment>
+  </data>
+  <data name="TagSearchDidNotReturnRequestedResultFields" xml:space="preserve">
+    <value>Tag '{0}' (ID: '{1}') contains entries in its {2} collection, but the search request specified that only basic information should be returned.</value>
+    <comment>{0} - tag name
+{1} - tag ID
+{2} - collection name</comment>
+  </data>
+  <data name="TimestampWasReceivedMultipleTimes" xml:space="preserve">
+    <value>Sample time {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z was not found in the expected sample times list. This indicates that multiple values were received with this timestamp for tag '{1}'.</value>
+    <comment>{0} - timestamp
+{1} - tag name</comment>
+  </data>
+  <data name="TooManyResultsReturnedForTag" xml:space="preserve">
+    <value>Expected a maximum of {0} results to be returned for tag '{1}', but {2} results were returned.</value>
+    <comment>{1} - limit
+{2} - tag name
+{3} - actual count</comment>
+  </data>
+  <data name="UnableToResolveExtensionFeature" xml:space="preserve">
+    <value>Unable to resolve extension feature: {0}</value>
+    <comment>{0} - feature ID</comment>
+  </data>
+  <data name="UnexpectedDataFunction" xml:space="preserve">
+    <value>Data function '{0}' is unexpected.</value>
+    <comment>{0} - data function</comment>
+  </data>
+  <data name="UnexpectedItemCount" xml:space="preserve">
+    <value>Expected {0} items, but {1} items were received.</value>
+    <comment>{0} - expected
+{1} - actual</comment>
+  </data>
+  <data name="UnexpectedItemReceived" xml:space="preserve">
+    <value>An unexpected {0} item was received: {1}</value>
+    <comment>{0} - unexpected item type
+{1} - unexpected item</comment>
+  </data>
+  <data name="UnexpectedTagValueReceived" xml:space="preserve">
+    <value>A value was received for a tag that was not specified in the query: '{0}' (ID: '{1}')</value>
+    <comment>{0} - tag name
+{1} - tag ID</comment>
+  </data>
+  <data name="UnexpectedTimestamp" xml:space="preserve">
+    <value>An item with timestamp {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z was not expected.</value>
+    <comment>{0} - timestamp</comment>
+  </data>
+  <data name="UnexpectedWriteResultCorrelationIdReturned" xml:space="preserve">
+    <value>Write result returned an unknown correlation ID: {0}</value>
+    <comment>{0} - correlation ID</comment>
+  </data>
+  <data name="ValueShouldNotBeNull" xml:space="preserve">
+    <value>A null {0} value was received.</value>
+    <comment>{0} - item that was null</comment>
+  </data>
+  <data name="ValuesWereNotReceivedForExpectedTimestamps" xml:space="preserve">
+    <value>Values were not received for the following timestamps for tag '{0}': {1}</value>
+    <comment>{0} - tag name
+{1} - timestamps</comment>
+  </data>
+  <data name="WriteResultCorrelationIdExpected" xml:space="preserve">
+    <value>Write result correlation ID should not be null because a correlation ID was specified on all values that were written.</value>
+  </data>
+  <data name="WriteStatusIndicatesFailure" xml:space="preserve">
+    <value>Write status indicates failure.</value>
+  </data>
+</root>

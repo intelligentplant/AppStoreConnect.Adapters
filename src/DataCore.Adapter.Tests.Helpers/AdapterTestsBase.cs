@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Tests {
             using (var scope = CreateServiceScope(TestContext)) {
                 var adapter = CreateAdapter(TestContext, scope.ServiceProvider);
                 if (adapter == null) {
-                    Assert.Inconclusive("Adapter creation delegate returned null.");
+                    Assert.Inconclusive(Resources.AdapterCreationDelegateReturnedNull);
                     return;
                 }
 
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.Tests {
         ///   The missing feature.
         /// </typeparam>
         protected void AssertFeatureNotImplemented<TFeature>() {
-            Assert.Inconclusive($"Feature not implemented: {typeof(TFeature).Name}");
+            Assert.Inconclusive(FormatMessage(Resources.FeatureNotImplemented, typeof(TFeature).Name));
         }
 
 
@@ -132,7 +132,7 @@ namespace DataCore.Adapter.Tests {
         ///   The missing feature name.
         /// </param>
         protected void AssertFeatureNotImplemented(string feature) {
-            Assert.Inconclusive($"Feature not implemented: {feature}");
+            Assert.Inconclusive(FormatMessage(Resources.FeatureNotImplemented, feature));
         }
 
 
@@ -147,7 +147,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Inconclusive($"Adapter implements {typeof(TFeature).Name}, but the '{methodName}' method used to generate input data for test '{TestContext.TestName}' returned a value that indicates that the test should be skipped. Override {methodName} in your test class to return a non-null value if you wish to run this test.");
+            Assert.Inconclusive(FormatMessage(Resources.MissingTestInput, typeof(TFeature).Name, methodName, TestContext.TestName));
         }
 
 
@@ -190,7 +190,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task AdapterBackgroundTaskServiceShouldNotBeNull() {
             return RunAdapterTest((adapter, context, ct) => {
-                Assert.IsNotNull(adapter.BackgroundTaskService);
+                Assert.IsNotNull(adapter.BackgroundTaskService, FormatMessage(Resources.ValueShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.BackgroundTaskService)}"));
                 return Task.CompletedTask;
             });
         }
@@ -206,7 +206,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task AdapterDescriptorShouldNotBeNull() {
             return RunAdapterTest((adapter, context, ct) => {
-                Assert.IsNotNull(adapter.Descriptor);
+                Assert.IsNotNull(adapter.Descriptor, FormatMessage(Resources.ValueShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.Descriptor)}"));
                 return Task.CompletedTask;
             });
         }
@@ -222,7 +222,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task AdapterFeaturesShouldNotBeNull() {
             return RunAdapterTest((adapter, context, ct) => {
-                Assert.IsNotNull(adapter.Features);
+                Assert.IsNotNull(adapter.Features, FormatMessage(Resources.ValueShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.Features)}"));
                 return Task.CompletedTask;
             });
         }
@@ -239,9 +239,9 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task AdapterPropertiesShouldNotBeNull() {
             return RunAdapterTest((adapter, context, ct) => {
-                Assert.IsNotNull(adapter.Properties);
+                Assert.IsNotNull(adapter.Properties, FormatMessage(Resources.ValueShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.Properties)}"));
                 if (adapter.Properties.Any()) {
-                    Assert.IsTrue(adapter.Properties.All(x => x != null), $"{nameof(IAdapter)}.{nameof(IAdapter.Properties)} entries should not be null.");
+                    Assert.IsTrue(adapter.Properties.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.Properties)}"));
                 }
                 return Task.CompletedTask;
             });
@@ -258,7 +258,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public Task AdapterTypeDescriptorShouldNotBeNull() {
             return RunAdapterTest((adapter, context, ct) => {
-                Assert.IsNotNull(adapter.TypeDescriptor);
+                Assert.IsNotNull(adapter.TypeDescriptor, FormatMessage(Resources.ValueShouldNotBeNull, $"{nameof(IAdapter)}.{nameof(IAdapter.TypeDescriptor)}"));
                 return Task.CompletedTask;
             });
         }
@@ -332,7 +332,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IConfigurationChanges)}.{nameof(IConfigurationChanges.Subscribe)}"));
 
                 // Pause briefly to allow the subscription change to take effect, since the change 
                 // will be processed asynchronously to us making the initial request.
@@ -349,12 +349,12 @@ namespace DataCore.Adapter.Tests {
 
                 while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
                     while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value);
+                        Assert.IsNotNull(value, FormatMessage(Resources.ChannelContainedNullItem, nameof(ConfigurationChange)));
                         if (allItemTypes.Contains(value.ItemType)) {
                             remainingTypes.Remove(value.ItemType);
                         }
                         else {
-                            Assert.Fail($"Expected item types list does not contain '{value.ItemType}'.");
+                            Assert.Fail(FormatMessage(Resources.UnexpectedItemReceived, nameof(ConfigurationChange), value.ItemType));
                         }
                     }
 
@@ -363,7 +363,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTypes.Count, $"Values were not received for the following item types: {string.Join(", ", remainingTypes)}");
+                Assert.AreEqual(0, remainingTypes.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
             });
         }
 
@@ -379,6 +379,8 @@ namespace DataCore.Adapter.Tests {
         ///   The health check result.
         /// </param>
         private void VerifyHealthCheckResult(HealthCheckResult health) {
+            Assert.AreNotEqual(default, health, FormatMessage(Resources.AdapterShouldNotReturnDefaultHealthCheckResult, nameof(HealthCheckResult)));
+
             if (health.InnerResults != null && health.InnerResults.Any()) {
                 foreach (var item in health.InnerResults) {
                     VerifyHealthCheckResult(item);
@@ -386,7 +388,7 @@ namespace DataCore.Adapter.Tests {
 
                 // If there are any inner results, ensure that the overall status matches the 
                 // aggregate status of the inner results.
-                Assert.AreEqual(health.Status, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.Status)));
+                Assert.AreEqual(health.Status, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.Status)), Resources.HealthCheckStatusDoesNotMatchAggregatedChildStatus);
             }
         }
 
@@ -407,7 +409,6 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var health = await feature.CheckHealthAsync(context, ct).ConfigureAwait(false);
-                Assert.AreNotEqual(default, health, $"Adapter should not return default({nameof(HealthCheckResult)}) as their health status.");
                 VerifyHealthCheckResult(health);
             });
         }
@@ -430,7 +431,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var subscription = await feature.Subscribe(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IHealthCheck)}.{nameof(IHealthCheck.Subscribe)}"));
 
                 var health = await subscription.ReadAsync(ct).ConfigureAwait(false);
                 VerifyHealthCheckResult(health);
@@ -493,13 +494,13 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.GetTagProperties(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTagProperties)}"));
 
                 var props = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(props.Count() <= request.PageSize, $"Response contained {props.Count()} items, but the request page size was {request.PageSize}.");
+                Assert.IsTrue(props.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, props.Count(), request.PageSize));
 
                 if (props.Any()) {
-                    Assert.IsTrue(props.All(x => x != null), "Adapters must not return null tag properties.");
+                    Assert.IsTrue(props.All(x => x != null), Resources.AdaptersShouldNotReturnNullProperties);
                 }
             });
         }
@@ -527,29 +528,32 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.GetTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTags)}"));
 
                 var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
-                Assert.AreEqual(request.Tags.Count(), tags.Count());
+                Assert.AreEqual(request.Tags.Count(), tags.Count(), FormatMessage(Resources.UnexpectedItemCount, request.Tags.Count(), tags.Count()));
 
                 var remainingTags = new HashSet<string>(request.Tags);
 
                 foreach (var tag in tags) {
-                    Assert.IsNotNull(tag);
-                    Assert.IsTrue(remainingTags.Remove(tag.Id) || remainingTags.Remove(tag.Name), $"Expected tags list does not contain ID '{tag.Id}' or name '{tag.Name}'.");
+                    Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
+                    Assert.IsTrue(remainingTags.Remove(tag.Id) || remainingTags.Remove(tag.Name), FormatMessage(Resources.UnexpectedItemReceived, nameof(TagDefinition), $"'{tag.Name}' (ID: '{tag.Id}')"));
                     if (tag.States.Any()) {
-                        Assert.IsTrue(tag.States.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.States)} collection.");
+                        Assert.IsTrue(tag.States.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' ({tag.Id}) {nameof(TagDefinition.States)}"));
+                    }
+                    if (tag.SupportedFeatures.Any()) {
+                        Assert.IsTrue(tag.SupportedFeatures.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.SupportedFeatures)}"));
                     }
                     if (tag.Properties.Any()) {
-                        Assert.IsTrue(tag.Properties.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.Properties)} collection.");
+                        Assert.IsTrue(tag.Properties.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.Properties)}"));
                     }
                     if (tag.Labels.Any()) {
-                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null or white space entry in its {nameof(TagDefinition.Labels)} collection.");
+                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.Labels)}"));
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Definitions were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -595,22 +599,25 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.All;
                 var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
 
                 var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
-                Assert.IsTrue(tags.Count() <= request.PageSize);
+                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
-                    Assert.IsNotNull(tag);
+                    Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
                     if (tag.States.Any()) {
-                        Assert.IsTrue(tag.States.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.States)} collection.");
+                        Assert.IsTrue(tag.States.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.States)}"));
+                    }
+                    if (tag.SupportedFeatures.Any()) {
+                        Assert.IsTrue(tag.SupportedFeatures.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.SupportedFeatures)}"));
                     }
                     if (tag.Properties.Any()) {
-                        Assert.IsTrue(tag.Properties.All(x => x != null), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null entry in its {nameof(TagDefinition.Properties)} collection.");
+                        Assert.IsTrue(tag.Properties.All(x => x != null), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.Properties)}"));
                     }
                     if (tag.Labels.Any()) {
-                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains a null or white space entry in its {nameof(TagDefinition.Labels)} collection.");
+                        Assert.IsTrue(tag.Labels.All(x => !string.IsNullOrWhiteSpace(x)), FormatMessage(Resources.CollectionItemShouldNotBeNull, $"'{tag.Name}' (ID: '{tag.Id}') {nameof(TagDefinition.Labels)}"));
                     }
                 }
             });
@@ -642,17 +649,18 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.BasicInformation;
                 var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
 
                 var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
-                Assert.IsTrue(tags.Count() <= request.PageSize);
+                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
-                    Assert.IsNotNull(tag);
-                    Assert.AreEqual(0, tag.States.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains digital states, but the search request specified that only basic information should be returned.");
-                    Assert.AreEqual(0, tag.Properties.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains properties, but the search request specified that only basic information should be returned.");
-                    Assert.AreEqual(0, tag.Labels.Count(), $"Tag '{tag.Name}' (ID: '{tag.Id}') contains labels, but the request specified that only basic information should be returned.");
+                    Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
+                    Assert.AreEqual(0, tag.States.Count(), FormatMessage(Resources.TagSearchDidNotReturnRequestedResultFields, tag.Name, tag.Id, nameof(TagDefinition.States)));
+                    Assert.AreEqual(0, tag.SupportedFeatures.Count(), FormatMessage(Resources.TagSearchDidNotReturnRequestedResultFields, tag.Name, tag.Id, nameof(TagDefinition.SupportedFeatures)));
+                    Assert.AreEqual(0, tag.Properties.Count(), FormatMessage(Resources.TagSearchDidNotReturnRequestedResultFields, tag.Name, tag.Id, nameof(TagDefinition.Properties)));
+                    Assert.AreEqual(0, tag.Labels.Count(), FormatMessage(Resources.TagSearchDidNotReturnRequestedResultFields, tag.Name, tag.Id, nameof(TagDefinition.Labels)));
                 }
             });
         }
@@ -698,19 +706,19 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadSnapshotTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadSnapshotTagValues)}.{nameof(IReadSnapshotTagValues.ReadSnapshotTagValues)}"));
                 var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                Assert.AreEqual(remainingTags.Count, values.Count());
+                Assert.AreEqual(remainingTags.Count, values.Count(), FormatMessage(Resources.UnexpectedItemCount, remainingTags.Count, values.Count()));
 
                 foreach (var value in values) {
-                    Assert.IsNotNull(value);
-                    Assert.IsTrue(remainingTags.Remove(value.TagId) || remainingTags.Remove(value.TagName), $"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
+                    Assert.IsTrue(remainingTags.Remove(value.TagId) || remainingTags.Remove(value.TagName), FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -778,7 +786,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
 
                 // Pause briefly to allow the subscription change to take effect, since the change 
                 // will be processed asynchronously to us making the initial request.
@@ -795,7 +803,7 @@ namespace DataCore.Adapter.Tests {
 
                 while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
                     while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value);
+                        Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
                         if (allTags.Contains(value.TagId)) {
                             remainingTags.Remove(value.TagId);
                         }
@@ -803,7 +811,7 @@ namespace DataCore.Adapter.Tests {
                             remainingTags.Remove(value.TagName);
                         }
                         else {
-                            Assert.Fail($"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                         }
                     }
 
@@ -812,7 +820,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -847,7 +855,7 @@ namespace DataCore.Adapter.Tests {
                     Properties = request.Properties 
                 }, channel.Reader, ct).ConfigureAwait(false);
 
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
 
                 // Now add the tags to the subscription.
 
@@ -871,7 +879,7 @@ namespace DataCore.Adapter.Tests {
 
                 while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
                     while (subscription.TryRead(out var val)) {
-                        Assert.IsNotNull(val);
+                        Assert.IsNotNull(val, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
                         if (allTags.Contains(val.TagId)) {
                             remainingTags.Remove(val.TagId);
                         }
@@ -879,7 +887,7 @@ namespace DataCore.Adapter.Tests {
                             remainingTags.Remove(val.TagName);
                         }
                         else {
-                            Assert.Fail($"Expected tags list does not contain ID '{val.TagId}' or name '{val.TagName}'.");
+                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, val.TagName, val.TagId));
                         }
                     }
 
@@ -888,7 +896,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -935,16 +943,16 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadRawTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadRawTagValues)}.{nameof(IReadRawTagValues.ReadRawTagValues)}"));
                 var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                Assert.IsTrue(values.Any());
+                Assert.IsTrue(values.Any(), FormatMessage(Resources.QueryDidNotReturnAnyResults, nameof(IReadRawTagValues.ReadRawTagValues)));
 
                 foreach (var value in values) {
-                    Assert.IsNotNull(value);
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
 
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
@@ -953,26 +961,26 @@ namespace DataCore.Adapter.Tests {
                         remainingTags.Remove(value.TagName);
                     }
                     else {
-                        Assert.Fail($"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 foreach (var valuesForTag in values.ToLookup(x => x.TagId)) {
                     if (request.BoundaryType == RawDataBoundaryType.Inside) {
-                        Assert.IsTrue(valuesForTag.All(x => x.Value.UtcSampleTime >= request.UtcStartTime));
-                        Assert.IsTrue(valuesForTag.All(x => x.Value.UtcSampleTime <= request.UtcEndTime));
+                        Assert.IsTrue(valuesForTag.All(x => x.Value.UtcSampleTime >= request.UtcStartTime), FormatMessage(Resources.InsideBoundedRawQueryReturnedValuesBeforeStartTime, RawDataBoundaryType.Inside));
+                        Assert.IsTrue(valuesForTag.All(x => x.Value.UtcSampleTime <= request.UtcEndTime), FormatMessage(Resources.InsideBoundedRawQueryReturnedValuesAfterEndTime, RawDataBoundaryType.Inside));
                     }
                     else {
                         // Allow zero or one values earlier than the query start time.
-                        Assert.AreEqual(0, valuesForTag.Count(x => x.Value.UtcSampleTime < request.UtcStartTime), 1);
+                        Assert.AreEqual(0, valuesForTag.Count(x => x.Value.UtcSampleTime < request.UtcStartTime), 1, FormatMessage(Resources.OutsideBoundedRawQueryReturnedTooManyValuesBeforeStartTime, RawDataBoundaryType.Outside));
                         // Allow zero or one values later than the query end time.
-                        Assert.AreEqual(0, valuesForTag.Count(x => x.Value.UtcSampleTime > request.UtcEndTime), 1);
+                        Assert.AreEqual(0, valuesForTag.Count(x => x.Value.UtcSampleTime > request.UtcEndTime), 1, FormatMessage(Resources.OutsideBoundedRawQueryReturnedTooManyValuesAfterEndTime, RawDataBoundaryType.Outside));
                     }
 
                     if (request.SampleCount > 0) {
-                        Assert.IsTrue(valuesForTag.Count() <= request.SampleCount, $"Expected a maximum of {request.SampleCount} samples for tag '{valuesForTag.Key}', but {valuesForTag.Count()} samples were received.");
+                        Assert.IsTrue(valuesForTag.Count() <= request.SampleCount, FormatMessage(Resources.TooManyResultsReturnedForTag, request.SampleCount, valuesForTag.Key, valuesForTag.Count()));
                     }
                 }
             });
@@ -1021,16 +1029,16 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadPlotTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadPlotTagValues)}.{nameof(IReadPlotTagValues.ReadPlotTagValues)}"));
                 var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                Assert.IsTrue(values.Any());
+                Assert.IsTrue(values.Any(), FormatMessage(Resources.QueryDidNotReturnAnyResults, nameof(IReadPlotTagValues.ReadPlotTagValues)));
 
                 foreach (var value in values) {
-                    Assert.IsNotNull(value);
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
 
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
@@ -1039,14 +1047,14 @@ namespace DataCore.Adapter.Tests {
                         remainingTags.Remove(value.TagName);
                     }
                     else {
-                        Assert.Fail($"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
 
-                    Assert.IsTrue(value.Value.UtcSampleTime >= request.UtcStartTime, $"Request start time was {request.UtcStartTime}, but sample time was {value.Value.UtcSampleTime}.");
-                    Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, $"Request end time was {request.UtcEndTime}, but sample time was {value.Value.UtcSampleTime}.");
+                    Assert.IsTrue(value.Value.UtcSampleTime >= request.UtcStartTime, FormatMessage(Resources.QueryReturnedResultBeforeStartTime, request.UtcStartTime, value.Value.UtcSampleTime));
+                    Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1086,10 +1094,11 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.GetSupportedDataFunctions(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.GetSupportedDataFunctions)}"));
                 var dataFunctions = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
-                Assert.IsTrue(dataFunctions.Any(), $"Adapters implementing {nameof(IReadProcessedTagValues)} should define at least one data function that can be called.");
+                Assert.IsTrue(dataFunctions.Any(), FormatMessage(Resources.AdapterDoesNotImplementAnyAggregates, nameof(IReadProcessedTagValues)));
+                Assert.IsTrue(dataFunctions.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(DataFunctionDescriptor)));
             });
         }
 
@@ -1118,19 +1127,19 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadProcessedTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.ReadProcessedTagValues)}"));
                 var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
                 var dataFunctions = new List<string>(request.DataFunctions);
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                Assert.IsTrue(values.Any());
+                Assert.IsTrue(values.Any(), FormatMessage(Resources.QueryDidNotReturnAnyResults, nameof(IReadProcessedTagValues.ReadProcessedTagValues)));
 
                 foreach (var value in values) {
-                    Assert.IsNotNull(value);
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(ProcessedTagValueQueryResult)));
 
-                    Assert.IsTrue(dataFunctions.Contains(value.DataFunction), $"Data function '{value.DataFunction}' is unexpected.");
+                    Assert.IsTrue(dataFunctions.Contains(value.DataFunction), FormatMessage(Resources.UnexpectedDataFunction, value.DataFunction));
 
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
@@ -1139,14 +1148,14 @@ namespace DataCore.Adapter.Tests {
                         remainingTags.Remove(value.TagName);
                     }
                     else {
-                        Assert.Fail($"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
 
-                    Assert.IsTrue(value.Value.UtcSampleTime >= request.UtcStartTime, $"Request start time was {request.UtcStartTime}, but sample time was {value.Value.UtcSampleTime}.");
-                    Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, $"Request end time was {request.UtcEndTime}, but sample time was {value.Value.UtcSampleTime}.");
+                    Assert.IsTrue(value.Value.UtcSampleTime >= request.UtcStartTime, FormatMessage(Resources.QueryReturnedResultBeforeStartTime, request.UtcStartTime, value.Value.UtcSampleTime));
+                    Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1193,17 +1202,17 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadTagValuesAtTimes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValuesAtTimes)}.{nameof(IReadTagValuesAtTimes.ReadTagValuesAtTimes)}"));
                 var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
 
                 var allTimestamps = new HashSet<DateTime>(request.UtcSampleTimes);
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                Assert.IsTrue(values.Any());
+                Assert.IsTrue(values.Any(), FormatMessage(Resources.QueryDidNotReturnAnyResults, nameof(IReadTagValuesAtTimes.ReadTagValuesAtTimes)));
 
                 foreach (var value in values) {
-                    Assert.IsNotNull(value);
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
 
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
@@ -1212,20 +1221,20 @@ namespace DataCore.Adapter.Tests {
                         remainingTags.Remove(value.TagName);
                     }
                     else {
-                        Assert.Fail($"Expected tags list does not contain ID '{value.TagId}' or name '{value.TagName}'.");
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
 
-                    Assert.IsTrue(allTimestamps.Contains(value.Value.UtcSampleTime), $"Sample time {value.Value.UtcSampleTime} was not found in the expected sample times list.");
+                    Assert.IsTrue(allTimestamps.Contains(value.Value.UtcSampleTime), FormatMessage(Resources.UnexpectedTimestamp, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Values were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 foreach (var valuesForTag in values.ToLookup(x => x.TagId)) {
                     var remainingTimestamps = new HashSet<DateTime>(request.UtcSampleTimes);
                     foreach (var value in valuesForTag) {
-                        Assert.IsTrue(remainingTimestamps.Remove(value.Value.UtcSampleTime), $"Sample time {value.Value.UtcSampleTime} was not found in the expected sample times list. This indicates that multiple values were received with this timestamp for tag '{value.TagName}'.");
+                        Assert.IsTrue(remainingTimestamps.Remove(value.Value.UtcSampleTime), FormatMessage(Resources.TimestampWasReceivedMultipleTimes, value.Value.UtcSampleTime, value.TagName));
                     }
-                    Assert.AreEqual(0, remainingTimestamps.Count, $"Values were not received for the following timestamps for tag '{valuesForTag.Key}': {string.Join(", ", remainingTimestamps)}");
+                    Assert.AreEqual(0, remainingTimestamps.Count, FormatMessage(Resources.ValuesWereNotReceivedForExpectedTimestamps, valuesForTag.Key, string.Join(", ", remainingTimestamps.Select(x => x.ToString("dd-MMM-yyyy HH:mm:ss.fffffffZ")))));
                 }
             });
         }
@@ -1288,16 +1297,16 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadAnnotations(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValueAnnotations)}.{nameof(IReadTagValueAnnotations.ReadAnnotations)}"));
 
                 var annotations = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(annotations.Any());
+                Assert.IsTrue(annotations.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(TagValueAnnotation), 0));
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
                 foreach (var annotation in annotations) {
-                    Assert.IsNotNull(annotation);
+                    Assert.IsNotNull(annotation, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueAnnotation)));
 
                     if (allTags.Contains(annotation.TagId)) {
                         remainingTags.Remove(annotation.TagId);
@@ -1306,7 +1315,7 @@ namespace DataCore.Adapter.Tests {
                         remainingTags.Remove(annotation.TagName);
                     }
                     else {
-                        Assert.Fail($"Expected tags list does not contain ID '{annotation.TagId}' or name '{annotation.TagName}'.");
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, annotation.TagName, annotation.TagId));
                     }
 
                     if (annotation.Annotation.AnnotationType == AnnotationType.TimeRange) {
@@ -1315,21 +1324,21 @@ namespace DataCore.Adapter.Tests {
                             // Annotation has completed.
                             Assert.IsTrue(
                                 annotation.Annotation.UtcStartTime <= annotation.Annotation.UtcEndTime.Value, 
-                                $"Annotation cannot end before it has started: '{annotation.TagName}' @ {annotation.Annotation.UtcStartTime}"
+                                FormatMessage(Resources.AnnotationCannotEndBeforeItHasStarted, annotation.TagName, annotation.Annotation.UtcStartTime)
                             );
 
                             if (annotation.Annotation.UtcStartTime < request.UtcStartTime) {
                                 // Annotation started before request start time; it must end at or after the request start time.
                                 Assert.IsTrue(
                                     annotation.Annotation.UtcEndTime.Value >= request.UtcStartTime, 
-                                    $"Annotations starting before the request start time must end after the request start time to be returned in the query: '{annotation.TagName}' @ {annotation.Annotation.UtcStartTime}"
+                                    FormatMessage(Resources.AnnotationMustEndAtOrAfterQueryStartTime, annotation.TagName, annotation.Annotation.UtcStartTime)
                                 );
                             }
                             else {
                                 // Annotation started after the request start time; it must also start at or before the query end time.
                                 Assert.IsTrue(
-                                    annotation.Annotation.UtcStartTime <= request.UtcEndTime, 
-                                    $"Annotation time range does not overlap with the query time range: '{annotation.TagName}' @ {annotation.Annotation.UtcStartTime}"
+                                    annotation.Annotation.UtcStartTime <= request.UtcEndTime,
+                                    FormatMessage(Resources.AnnotationTimeRangeDoesNotOverlapWithQueryTimeRange, annotation.TagName, annotation.Annotation.UtcStartTime)
                                 );
                             }
                         }
@@ -1337,22 +1346,22 @@ namespace DataCore.Adapter.Tests {
                             // The annotation is ongoing. It must have started at or before the request end time.
                             Assert.IsTrue(
                                 annotation.Annotation.UtcStartTime <= request.UtcEndTime,
-                                $"Annotation started after the query end time: '{annotation.TagName}' @ {annotation.Annotation.UtcStartTime}"
+                                FormatMessage(Resources.AnnotationStartedAfterQueryEndTime, annotation.TagName, annotation.Annotation.UtcStartTime)
                             );
                         }
                     }
                     else {
                         // Instantaneous
-                        Assert.IsTrue(annotation.Annotation.UtcStartTime >= request.UtcStartTime);
-                        Assert.IsTrue(annotation.Annotation.UtcStartTime <= request.UtcEndTime);
+                        Assert.IsTrue(annotation.Annotation.UtcStartTime >= request.UtcStartTime, FormatMessage(Resources.QueryReturnedResultBeforeStartTime, request.UtcStartTime, annotation.Annotation.UtcStartTime));
+                        Assert.IsTrue(annotation.Annotation.UtcStartTime <= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, annotation.Annotation.UtcStartTime));
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, $"Annotations were not received for the following tags: {string.Join(", ", remainingTags)}");
+                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 if (request.AnnotationCount > 0) {
                     foreach (var valuesForTag in annotations.ToLookup(x => x.TagId)) {
-                        Assert.IsTrue(valuesForTag.Count() <= request.AnnotationCount, $"Expected a maximum of {request.AnnotationCount} annotations for tag '{valuesForTag.Key}', but {valuesForTag.Count()} annotations were received.");
+                        Assert.IsTrue(valuesForTag.Count() <= request.AnnotationCount, FormatMessage(Resources.TooManyResultsReturnedForTag, request.AnnotationCount, valuesForTag.Key, valuesForTag.Count()));
                     }
                 }
             });
@@ -1383,8 +1392,8 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var annotation = await feature.ReadAnnotation(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(annotation);
-                Assert.AreEqual(request.AnnotationId, annotation.Id);
+                Assert.IsNotNull(annotation, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValueAnnotations)}.{nameof(IReadTagValueAnnotations.ReadAnnotation)}"));
+                Assert.AreEqual(request.AnnotationId, annotation!.Id, Resources.IncorrectAnnotationIdReturned);
             });
         }
 
@@ -1438,21 +1447,21 @@ namespace DataCore.Adapter.Tests {
                 inChannel.Writer.TryComplete();
 
                 var channel = await feature.WriteSnapshotTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteSnapshotTagValues)}.{nameof(IWriteSnapshotTagValues.WriteSnapshotTagValues)}"));
 
                 var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.AreEqual(writeItems.Count(), writeResults.Count(), "Incorrect number of write results received.");
+                Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
 
                 foreach (var writeResult in writeResults) {
-                    Assert.IsNotNull(writeResult, "Null write result was returned.");
-                    Assert.IsNotNull(writeResult.CorrelationId, "Write result correlation ID should not be null because a correlation ID was specified on all values that were written.");
-                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), $"Write result returned an unknown correlation ID: {writeResult.CorrelationId}");
-                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, "Write status indicates failure.");
+                    Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
+                    Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
+                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
+                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, $"Write results were not returned for the following correlation IDs: {string.Join(", ", expectedCorrelationIds)}");
+                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -1506,21 +1515,21 @@ namespace DataCore.Adapter.Tests {
                 inChannel.Writer.TryComplete();
 
                 var channel = await feature.WriteHistoricalTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteHistoricalTagValues)}.{nameof(IWriteHistoricalTagValues.WriteHistoricalTagValues)}"));
 
                 var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.AreEqual(writeItems.Count(), writeResults.Count(), "Incorrect number of write results received.");
+                Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
 
                 foreach (var writeResult in writeResults) {
-                    Assert.IsNotNull(writeResult, "Null write result was returned.");
-                    Assert.IsNotNull(writeResult.CorrelationId, "Write result correlation ID should not be null because a correlation ID was specified on all values that were written.");
-                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), $"Write result returned an unknown correlation ID: {writeResult.CorrelationId}");
-                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, "Write status indicates failure.");
+                    Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
+                    Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
+                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
+                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, $"Write results were not returned for the following correlation IDs: {string.Join(", ", expectedCorrelationIds)}");
+                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -1591,7 +1600,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePush)}.{nameof(IEventMessagePush.Subscribe)}"));
 
                 var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
                 if (!testEventEmitted) {
@@ -1600,7 +1609,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1647,7 +1656,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePushWithTopics)}.{nameof(IEventMessagePushWithTopics.Subscribe)}"));
 
                 // Pause briefly to allow the subscription change to take effect, since the change 
                 // will be processed asynchronously to us making the initial request.
@@ -1660,7 +1669,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1691,7 +1700,7 @@ namespace DataCore.Adapter.Tests {
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
 
                 var subscription = await feature.Subscribe(context, new CreateEventMessageTopicSubscriptionRequest() { SubscriptionType = request.SubscriptionType, Properties = request.Properties }, channel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription);
+                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePushWithTopics)}.{nameof(IEventMessagePushWithTopics.Subscribe)}"));
 
                 // Now add the topics to the subscription.
 
@@ -1711,7 +1720,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1758,15 +1767,15 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadEventMessagesForTimeRange(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, $"{nameof(IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange)} should not return null.");
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesForTimeRange)}.{nameof(IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange)}"));
 
                 var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(events.Count() <= request.PageSize, $"{events.Count()} events were returned, but the page size is {request.PageSize}.");
+                Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {
-                    Assert.IsNotNull(evt, "Null event messages should not be returned.");
-                    Assert.IsTrue(evt.UtcEventTime >= request.UtcStartTime, "Event time is earlier than query start time.");
-                    Assert.IsTrue(evt.UtcEventTime <= request.UtcEndTime, "Event time is later than query end time.");
+                    Assert.IsNotNull(evt, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
+                    Assert.IsTrue(evt.UtcEventTime <= request.UtcStartTime, FormatMessage(Resources.QueryReturnedResultBeforeStartTime, request.UtcEndTime, evt.UtcEventTime));
+                    Assert.IsTrue(evt.UtcEventTime >= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, evt.UtcEventTime));
                 }
             });
         }
@@ -1814,10 +1823,14 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.ReadEventMessagesUsingCursor(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, $"{nameof(IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor)} should not return null.");
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesUsingCursor)}.{nameof(IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor)}"));
 
                 var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(events.Count() <= request.PageSize, $"{events.Count()} events were returned, but the page size is {request.PageSize}.");
+                Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
+
+                foreach (var evt in events) {
+                    Assert.IsNotNull(evt, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessageWithCursorPosition)));
+                }
             });
         }
 
@@ -1871,21 +1884,21 @@ namespace DataCore.Adapter.Tests {
                 inChannel.Writer.TryComplete();
 
                 var channel = await feature.WriteEventMessages(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel);
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteEventMessages)}.{nameof(IWriteEventMessages.WriteEventMessages)}"));
 
                 var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.AreEqual(writeItems.Count(), writeResults.Count(), "Incorrect number of write results received.");
+                Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
 
                 foreach (var writeResult in writeResults) {
-                    Assert.IsNotNull(writeResult, "Null write result was returned.");
-                    Assert.IsNotNull(writeResult.CorrelationId, "Write result correlation ID should not be null because a correlation ID was specified on all items that were written.");
-                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), $"Write result returned an unknown correlation ID: {writeResult.CorrelationId}");
-                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, "Write status indicates failure.");
+                    Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
+                    Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
+                    Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
+                    Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, $"Write results were not returned for the following correlation IDs: {string.Join(", ", expectedCorrelationIds)}");
+                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -1946,13 +1959,13 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.BrowseAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, $"{nameof(IAssetModelBrowse.BrowseAssetModelNodes)} should not return null.");
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.BrowseAssetModelNodes)}"));
 
                 var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(nodes.Any(), "Request should return one or more nodes.");
-                Assert.IsTrue(nodes.All(x => x != null), "Null nodes should not be returned.");
+                Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
+                Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
-                Assert.IsTrue(nodes.Count() <= request.PageSize, $"{nodes.Count()} nodes were returned, but the page size is {request.PageSize}.");
+                Assert.IsTrue(nodes.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
             });
         }
 
@@ -1980,21 +1993,19 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.GetAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, $"{nameof(IAssetModelBrowse.GetAssetModelNodes)} should not return null.");
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.GetAssetModelNodes)}"));
 
                 var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(nodes.Any(), "Request should return one or more nodes.");
+                Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
 
-                var allNodeIds = new HashSet<string>(request.Nodes);
                 var remainingNodeIds = new HashSet<string>(request.Nodes);
 
                 foreach (var node in nodes) {
-                    Assert.IsNotNull(node, "Null nodes should not be returned.");
-                    Assert.IsTrue(allNodeIds.Contains(node.Id), $"Received node with ID '{node.Id}', but this node was not requested.");
-                    Assert.IsTrue(remainingNodeIds.Remove(node.Id), $"Expected nodes list does not contain ID '{node.Id}'.");
+                    Assert.IsNotNull(node, FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
+                    Assert.IsTrue(remainingNodeIds.Remove(node.Id), FormatMessage(Resources.UnexpectedItemReceived, nameof(AssetModelNode), node.Id));
                 }
 
-                Assert.AreEqual(0, remainingNodeIds.Count, $"Nodes were not received for the following node IDs: {string.Join(", ", remainingNodeIds)}");
+                Assert.AreEqual(0, remainingNodeIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingNodeIds)));
             });
         }
 
@@ -2040,13 +2051,13 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = await feature.FindAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, $"{nameof(IAssetModelSearch.FindAssetModelNodes)} should not return null.");
+                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelSearch)}.{nameof(IAssetModelSearch.FindAssetModelNodes)}"));
 
                 var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-                Assert.IsTrue(nodes.Any(), "Request should return one or more nodes.");
-                Assert.IsTrue(nodes.All(x => x != null), "Null nodes should not be returned.");
+                Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
+                Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
-                Assert.IsTrue(nodes.Count() <= request.PageSize, $"{nodes.Count()} nodes were returned, but the page size is {request.PageSize}.");
+                Assert.IsTrue(nodes.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
             });
         }
 
@@ -2066,22 +2077,22 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest(async (adapter, context, ct) => {
                 var extensionUris = adapter.Features.Keys.Where(x => x.IsChildOf(WellKnownFeatures.Extensions.BaseUri)).ToArray();
                 if (extensionUris.Length == 0) {
-                    Assert.Inconclusive("Adapter does not implement any extension features.");
+                    Assert.Inconclusive(Resources.AdapterDoesNotImplementAnyExtensionFeatures);
                     return;
                 }
 
                 foreach (var extensionUri in extensionUris) {
                     var feature = adapter.GetExtensionFeature(extensionUri);
-                    Assert.IsNotNull(feature, $"Unable to resolve extension feature: {extensionUri}");
+                    Assert.IsNotNull(feature, FormatMessage(Resources.UnableToResolveExtensionFeature, extensionUri));
 
                     var descriptor = await feature.GetDescriptor(context, extensionUri, ct).ConfigureAwait(false);
-                    Assert.IsNotNull(descriptor, $"Feature descriptor for {extensionUri} was null.");
-                    Assert.AreEqual(extensionUri, descriptor!.Uri, "Descriptor URI mismatch.");
+                    Assert.IsNotNull(descriptor, FormatMessage(Resources.FeatureDescriptorIsNull, extensionUri));
+                    Assert.AreEqual(extensionUri, descriptor!.Uri, FormatMessage(Resources.FeatureDescriptorUriMismatch, extensionUri, descriptor!.Uri));
 
                     var operations = await feature.GetOperations(context, extensionUri, ct).ConfigureAwait(false);
-                    Assert.IsNotNull(operations, $"{nameof(IAdapterExtensionFeature.GetOperations)} for feature {extensionUri} returned null.");
+                    Assert.IsNotNull(operations, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAdapterExtensionFeature)}.{nameof(IAdapterExtensionFeature)} ({extensionUri})"));
                     if (operations.Any()) {
-                        Assert.IsTrue(operations.All(x => x != null), $"One or more operations for feature {extensionUri} were null.");
+                        Assert.IsTrue(operations.All(x => x != null), FormatMessage(Resources.OneOrMoreOperationDescriptorsAreNull, extensionUri));
                     }
                 }
             });

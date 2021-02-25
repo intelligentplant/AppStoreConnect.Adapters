@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -65,6 +66,24 @@ namespace DataCore.Adapter.Tests {
         /// </param>
         public void CancelAfter(TimeSpan delay) {
             _cancellationTokenSource?.CancelAfter(delay);
+        }
+
+
+        /// <summary>
+        /// Shorthand for calling <see cref="string.Format(IFormatProvider, string, object[])"/> 
+        /// using the current culture.
+        /// </summary>
+        /// <param name="format">
+        ///   A composite format string.
+        /// </param>
+        /// <param name="args">
+        ///   An array that contains objects to format.
+        /// </param>
+        /// <returns>
+        ///   The formatted string.
+        /// </returns>
+        public string FormatMessage(string format, params object[] args) {
+            return string.Format(CultureInfo.CurrentCulture, format, args);
         }
 
     }
