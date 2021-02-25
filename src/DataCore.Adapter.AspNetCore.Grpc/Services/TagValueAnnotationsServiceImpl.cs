@@ -74,7 +74,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             var result = await adapter.Feature.ReadAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-            return result.ToGrpcTagValueAnnotation();
+            return result!.ToGrpcTagValueAnnotation();
         }
 
 

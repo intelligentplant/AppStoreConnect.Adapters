@@ -61,7 +61,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public async Task<TagValueAnnotationExtended> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<TagValueAnnotationExtended?> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();

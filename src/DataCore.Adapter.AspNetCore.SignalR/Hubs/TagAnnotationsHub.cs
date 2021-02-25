@@ -24,7 +24,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching annotation.
         /// </returns>
-        public async Task<TagValueAnnotationExtended> ReadAnnotation(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<TagValueAnnotationExtended?> ReadAnnotation(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
