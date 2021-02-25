@@ -126,6 +126,10 @@ namespace DataCore.Adapter.Tags {
                 builder.ClearDigitalStates();
             }
 
+            if (!fields.HasFlag(TagDefinitionFields.SupportedFeatures)) {
+                builder.ClearSupportedFeatures();
+            }
+
             if (!fields.HasFlag(TagDefinitionFields.Properties)) {
                 builder.ClearProperties();
             }
