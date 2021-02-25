@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Example.Features {
 
                 var dataReferences = nodeDefinitions.Where(x => !string.IsNullOrWhiteSpace(x.DataReference)).Select(x => x.DataReference).ToArray();
 
-                var dataReferencesChannel = await tagSearch.GetTags(null, new Tags.GetTagsRequest() { 
+                var dataReferencesChannel = await tagSearch.GetTags(new DefaultAdapterCallContext(), new Tags.GetTagsRequest() { 
                     Tags = dataReferences
                 }, cancellationToken).ConfigureAwait(false);
 
@@ -51,7 +51,7 @@ namespace DataCore.Adapter.Example.Features {
                             ? null
                             : new DataReference(
                                 adapterId, 
-                                tags.First(t => t.Id.Equals(x.DataReference, StringComparison.Ordinal) || t.Name.Equals(x.DataReference, StringComparison.Ordinal))
+                                tags.First(t => t.Id.Equals(x.DataReference, StringComparison.Ordinal) || t.Name.Equals(x.DataReference, StringComparison.Ordinal)).Name
                             )
                         )
                         .Build()

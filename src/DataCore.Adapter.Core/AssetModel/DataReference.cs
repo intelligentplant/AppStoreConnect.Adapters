@@ -1,7 +1,5 @@
 ﻿using System;
 
-using DataCore.Adapter.Tags;
-
 namespace DataCore.Adapter.AssetModel {
 
     /// <summary>
@@ -16,9 +14,9 @@ namespace DataCore.Adapter.AssetModel {
         public string AdapterId { get; }
 
         /// <summary>
-        /// The tag identifier for the reference.
+        /// The tag name or ID for the reference.
         /// </summary>
-        public TagIdentifier Tag { get; }
+        public string Tag { get; }
 
 
         /// <summary>
@@ -28,9 +26,9 @@ namespace DataCore.Adapter.AssetModel {
         ///   The adapter ID for the data reference.
         /// </param>
         /// <param name="tag">
-        ///   The tag identifier for the data reference.
+        ///   The tag name or ID for the data reference.
         /// </param>
-        public DataReference(string adapterId, TagIdentifier tag) {
+        public DataReference(string adapterId, string tag) {
             AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
             Tag = tag ?? throw new ArgumentNullException(nameof(tag));
         }

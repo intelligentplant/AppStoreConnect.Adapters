@@ -162,7 +162,7 @@ enum AssetModelNodeType {
 
 message AssetModelDataReference {
     string adapter_id = 1;
-    TagIdentifier tag = 2;
+    string tag_name_or_id = 3;
 }
 
 
