@@ -42,7 +42,7 @@ const string DefaultSolutionName = "./DataCore.Adapter.sln";
 
 #addin nuget:?package=Cake.Git&version=1.0.0
 #addin nuget:?package=Cake.Json&version=5.2.0
-#addin nuget:?package=Newtonsoft.Json&version=11.0.2
+#addin nuget:?package=Newtonsoft.Json&version=12.0.3
 
 #load "build/build-state.cake"
 #load "build/build-utilities.cake"
