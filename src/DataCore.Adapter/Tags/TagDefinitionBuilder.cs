@@ -409,24 +409,162 @@ namespace DataCore.Adapter.Tags {
         /// <typeparam name="TFeature">
         ///   The feature type.
         /// </typeparam>
-        /// <param name="hash">
-        ///   The hash to add to the URI of the feature type. For example, if the <see cref="RealTimeData.IReadProcessedTagValues"/> 
+        /// <param name="hashFragment">
+        ///   The hash fragment to add to the URI of the feature type. For example, if the <see cref="RealTimeData.IReadProcessedTagValues"/> 
         ///   feature is available on the adapter, but the tag only supports a subset of the 
         ///   available data functions, you can add the feature once for each supported data 
-        ///   function and specify the ID of the data function as the hash each time.
+        ///   function and specify the ID of the data function as the hash fragment each time.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
         /// </returns>
-        public TagDefinitionBuilder WithSupportedFeature<TFeature>(string? hash = null) where TFeature : IAdapterFeature {
+        public TagDefinitionBuilder WithSupportedFeature<TFeature>(string? hashFragment = null) where TFeature : IAdapterFeature {
             foreach (var uri in typeof(TFeature).GetAdapterFeatureUris()) {
-                var featureUri = string.IsNullOrWhiteSpace(hash)
+                var featureUri = string.IsNullOrWhiteSpace(hashFragment)
                     ? uri.EnsurePathHasTrailingSlash()
-                    : new Uri(string.Concat(uri.ToString(), "#", hash)).EnsurePathHasTrailingSlash();
+                    : new Uri(string.Concat(uri.ToString(), "#", Uri.EscapeDataString(hashFragment))).EnsurePathHasTrailingSlash();
                 _supportedFeatures.Add(featureUri);
             }
 
             return this;
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadAnnotations"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadAnnotations() {
+            return WithSupportedFeature<RealTimeData.IReadTagValueAnnotations>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadPlotTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadPlotValues() {
+            return WithSupportedFeature<RealTimeData.IReadPlotTagValues>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <param name="dataFunctions">
+        ///   The data functions supported by the tag. In addition to adding <see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/> 
+        ///   to the supported features for the tag, an additional entry will be added for each 
+        ///   item in the <paramref name="dataFunctions"/> that appends the data function ID to 
+        ///   the base <see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/> URI as a 
+        ///   hash fragment.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadProcessedValues(params RealTimeData.DataFunctionDescriptor[] dataFunctions) {
+            WithSupportedFeature<RealTimeData.IReadProcessedTagValues>();
+
+            if (dataFunctions.Length > 0) {
+                foreach (var dataFunction in dataFunctions) {
+                    if (dataFunction == null) {
+                        continue;
+                    }
+                    WithSupportedFeature<RealTimeData.IReadProcessedTagValues>(dataFunction.Id);
+                }
+            }
+
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadRawTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadRawValues() {
+            return WithSupportedFeature<RealTimeData.IReadRawTagValues>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadSnapshotTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadSnapshotValues() {
+            return WithSupportedFeature<RealTimeData.IReadSnapshotTagValues>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsReadValuesAtTimes() {
+            return WithSupportedFeature<RealTimeData.IReadTagValuesAtTimes>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.SnapshotTagValuePush"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsSnapshotValuePush() {
+            return WithSupportedFeature<RealTimeData.ISnapshotTagValuePush>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.WriteAnnotations"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsWriteAnnotations() {
+            return WithSupportedFeature<RealTimeData.IWriteTagValueAnnotations>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.WriteHistoricalTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsWriteHistoricalValues() {
+            return WithSupportedFeature<RealTimeData.IWriteHistoricalTagValues>();
+        }
+
+
+        /// <summary>
+        /// Adds <see cref="WellKnownFeatures.RealTimeData.WriteSnapshotTagValues"/> to the supported 
+        /// features for the tag.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagDefinitionBuilder"/>.
+        /// </returns>
+        public TagDefinitionBuilder WithSupportsWriteSnapshotValues() {
+            return WithSupportedFeature<RealTimeData.IWriteSnapshotTagValues>();
         }
 
 
@@ -436,6 +574,14 @@ namespace DataCore.Adapter.Tags {
         /// </summary>
         /// <param name="adapter">
         ///   The adapter.
+        /// </param>
+        /// <param name="dataFunctions">
+        ///   The data functions that can be used with the tag, if the <paramref name="adapter"/> 
+        ///   supports the <see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/> 
+        ///   feature. Each specified data function will result in an additional entry in the 
+        ///   supported features list for the tag, with the function ID appended to the 
+        ///   <see cref="WellKnownFeatures.RealTimeData.ReadProcessedTagValues"/> URI as the hash 
+        ///   fragment.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagDefinitionBuilder"/>.
@@ -476,23 +622,34 @@ namespace DataCore.Adapter.Tags {
         ///   </item>
         /// </list>
         /// </remarks>
-        public TagDefinitionBuilder WithSupportedFeatures(IAdapter adapter) {
+        public TagDefinitionBuilder WithSupportedFeatures(IAdapter adapter, params RealTimeData.DataFunctionDescriptor[] dataFunctions) {
             if (adapter != null) {
-                foreach (var featureUri in new[] { 
-                    WellKnownFeatures.RealTimeData.ReadAnnotations,
-                    WellKnownFeatures.RealTimeData.ReadPlotTagValues,
-                    WellKnownFeatures.RealTimeData.ReadProcessedTagValues,
-                    WellKnownFeatures.RealTimeData.ReadRawTagValues,
-                    WellKnownFeatures.RealTimeData.ReadSnapshotTagValues,
-                    WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes,
-                    WellKnownFeatures.RealTimeData.SnapshotTagValuePush,
-                    WellKnownFeatures.RealTimeData.WriteAnnotations,
-                    WellKnownFeatures.RealTimeData.WriteHistoricalTagValues,
-                    WellKnownFeatures.RealTimeData.WriteSnapshotTagValues
-                }) {
-                    if (adapter.HasFeature(featureUri)) {
-                        WithSupportedFeatures(featureUri);
-                    }
+                if (adapter.HasFeature<RealTimeData.IReadTagValueAnnotations>()) {
+                    WithSupportsReadAnnotations();
+                }
+                if (adapter.HasFeature<RealTimeData.IReadPlotTagValues>()) {
+                    WithSupportsReadPlotValues();
+                }
+                if (adapter.HasFeature<RealTimeData.IReadProcessedTagValues>()) {
+                    WithSupportsReadProcessedValues(dataFunctions);
+                }
+                if (adapter.HasFeature<RealTimeData.IReadRawTagValues>()) {
+                    WithSupportsReadRawValues();
+                }
+                if (adapter.HasFeature<RealTimeData.IReadSnapshotTagValues>()) {
+                    WithSupportsReadSnapshotValues();
+                }
+                if (adapter.HasFeature<RealTimeData.ISnapshotTagValuePush>()) {
+                    WithSupportsSnapshotValuePush();
+                }
+                if (adapter.HasFeature<RealTimeData.IWriteTagValueAnnotations>()) {
+                    WithSupportsWriteAnnotations();
+                }
+                if (adapter.HasFeature<RealTimeData.IWriteHistoricalTagValues>()) {
+                    WithSupportsWriteHistoricalValues();
+                }
+                if (adapter.HasFeature<RealTimeData.IWriteSnapshotTagValues>()) {
+                    WithSupportsWriteSnapshotValues();
                 }
             }
 

@@ -652,10 +652,9 @@ namespace DataCore.Adapter.Tests {
                     DigitalState.Create("State1", 100),
                     DigitalState.Create("State2", 200)
                 )
-                .WithSupportedFeature<IReadSnapshotTagValues>()
-                .WithSupportedFeature<IReadRawTagValues>()
-                .WithSupportedFeature<IReadProcessedTagValues>(DefaultDataFunctions.Average.Id)
-                .WithSupportedFeature<IReadProcessedTagValues>(DefaultDataFunctions.Interpolate.Id)
+                .WithSupportsReadSnapshotValues()
+                .WithSupportsReadRawValues()
+                .WithSupportsReadProcessedValues(DefaultDataFunctions.Average, DefaultDataFunctions.Interpolate)
                 .WithProperties(
                     AdapterProperty.Create("Prop1", 100),
                     AdapterProperty.Create("Prop2", "Value")
