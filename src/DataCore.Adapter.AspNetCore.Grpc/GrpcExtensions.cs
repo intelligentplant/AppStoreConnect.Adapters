@@ -104,10 +104,7 @@ namespace DataCore.Adapter {
                 node.HasDataReference
                     ? new AssetModel.DataReference(
                         node.DataReference.AdapterId, 
-                        new Tags.TagIdentifier(
-                            node.DataReference.Tag.Id, 
-                            node.DataReference.Tag.Name
-                        )
+                        node.DataReference.TagNameOrId
                     )
                     : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
@@ -140,10 +137,7 @@ namespace DataCore.Adapter {
                 HasDataReference = node.DataReference != null,
                 DataReference = new Grpc.AssetModelDataReference() {
                     AdapterId = node.DataReference?.AdapterId ?? string.Empty,
-                    Tag = new Grpc.TagIdentifier() {
-                        Id = node.DataReference?.Tag?.Id ?? string.Empty,
-                        Name = node.DataReference?.Tag?.Name ?? string.Empty
-                    }
+                    TagNameOrId = node.DataReference?.Tag ?? string.Empty
                 }
             };
 

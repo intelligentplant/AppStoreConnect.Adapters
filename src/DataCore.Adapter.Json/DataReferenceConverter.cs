@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string adapterId = null!;
-            TagIdentifier tag = null!;
+            string tag = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -34,7 +34,7 @@ namespace DataCore.Adapter.Json {
                     adapterId = reader.GetString()!;
                 }
                 else if (string.Equals(propertyName, nameof(DataReference.Tag), StringComparison.OrdinalIgnoreCase)) {
-                    tag = JsonSerializer.Deserialize<TagIdentifier>(ref reader, options)!;
+                    tag = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else {
                     reader.Skip();

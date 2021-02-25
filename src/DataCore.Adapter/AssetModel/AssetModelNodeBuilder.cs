@@ -263,7 +263,7 @@ namespace DataCore.Adapter.AssetModel {
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
         public AssetModelNodeBuilder WithDataReference(string adapterId, TagSummary tag) {
-            _dataReference = new DataReference(adapterId, tag);
+            _dataReference = new DataReference(adapterId, tag?.Name!);
             return this;
         }
 
@@ -274,11 +274,8 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="adapterId">
         ///   The adapter ID for the data reference.
         /// </param>
-        /// <param name="tagId">
-        ///   The tag ID for the data reference.
-        /// </param>
-        /// <param name="tagName">
-        ///   The tag display name.
+        /// <param name="tag">
+        ///   The tag ID or name for the data reference.
         /// </param>
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
@@ -287,17 +284,13 @@ namespace DataCore.Adapter.AssetModel {
         ///   <paramref name="adapterId"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagId"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagName"/> is <see langword="null"/>.
+        ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
         public AssetModelNodeBuilder WithDataReference(
             string adapterId, 
-            string tagId, 
-            string tagName
+            string tag
         ) {
-            _dataReference = new DataReference(adapterId, new TagIdentifier(tagId, tagName));
+            _dataReference = new DataReference(adapterId, tag);
             return this;
         }
 
