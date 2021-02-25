@@ -293,7 +293,7 @@ namespace DataCore.Adapter.WaveGenerator {
             var result = TagDefinitionBuilder
                 .Create(name, name)
                 .WithDescription(options.Description)
-                .WithSupportedFeatures(this)
+                .WithSupportedFeatures(this, ReadHistoricalTagValues.GetDefaultDataFunctions())
                 .WithDataType(VariantType.Double)
                 .WithProperty(nameof(WaveGeneratorOptions.Type), options.Type.ToString())
                 .WithProperty(nameof(WaveGeneratorOptions.Period), options.Period)

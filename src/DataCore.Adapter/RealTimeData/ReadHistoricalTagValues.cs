@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Channels;
@@ -237,6 +238,17 @@ namespace DataCore.Adapter.RealTimeData {
         /// <inheritdoc/>
         public Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
             return Task.FromResult(_aggregationHelper.GetSupportedDataFunctions().PublishToChannel());
+        }
+
+
+        /// <summary>
+        /// Gets descriptors for the default data functions supported by <see cref="ReadHistoricalTagValues"/>.
+        /// </summary>
+        /// <returns>
+        ///   The default data function descriptors.
+        /// </returns>
+        public static IEnumerable<DataFunctionDescriptor> GetDefaultDataFunctions() {
+            return AggregationHelper.GetDefaultDataFunctions();
         }
 
 

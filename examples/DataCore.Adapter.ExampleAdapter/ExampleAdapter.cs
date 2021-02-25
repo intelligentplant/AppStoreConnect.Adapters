@@ -52,30 +52,24 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        protected override async Task StartAsync(CancellationToken cancellationToken) {
+        /// <inheritdoc/>
+        protected override async Task OnStartedAsync(CancellationToken cancellationToken) {
             var startup = DateTime.UtcNow;
-            await base.StartAsync(cancellationToken).ConfigureAwait(false);
-            var adapter = (IAdapter) this;
-            await _assetModelBrowser.Init(adapter.Descriptor.Id, adapter.Features.Get<Tags.ITagSearch>(), cancellationToken).ConfigureAwait(false);
+            await _assetModelBrowser.Init(Descriptor.Id, Features.Get<Tags.ITagSearch>(), cancellationToken).ConfigureAwait(false);
 
-            _ = Task.Run(async () => {
-                try {
-                    while (!StopToken.IsCancellationRequested) {
-                        var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
-                        await evtManager.WriteEventMessages(
-                            EventMessageBuilder
-                                .Create()
-                                .WithPriority(EventPriority.Low)
-                                .WithCategory("System Messages")
-                                .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
-                                .Build()
-                        ).ConfigureAwait(false);
+            while (!cancellationToken.IsCancellationRequested) {
+                var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
+                await evtManager.WriteEventMessages(
+                    EventMessageBuilder
+                        .Create()
+                        .WithPriority(EventPriority.Low)
+                        .WithCategory("System Messages")
+                        .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")
+                        .Build()
+                ).ConfigureAwait(false);
 
-                        await Task.Delay(TimeSpan.FromSeconds(60), StopToken).ConfigureAwait(false);
-                    }
-                }
-                catch { }
-            });
+                await Task.Delay(TimeSpan.FromSeconds(60), StopToken).ConfigureAwait(false);
+            }
         }
 
 
