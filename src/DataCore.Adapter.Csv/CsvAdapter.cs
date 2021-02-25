@@ -278,7 +278,7 @@ namespace DataCore.Adapter.Csv {
                 .WithDigitalStates(states.Count > 0
                     ? states.Select(x => DigitalState.Create(x.Key, x.Value))
                     : null)
-                .WithSupportedFeatures(adapter!)
+                .WithSupportedFeatures(adapter!, RealTimeData.Utilities.AggregationHelper.GetDefaultDataFunctions())
                 .WithProperty(nameof(definition), definitionOriginal)
                 .WithLabels("CSV")
                 .Build();
