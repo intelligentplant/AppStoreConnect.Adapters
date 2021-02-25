@@ -348,7 +348,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             if (!string.IsNullOrWhiteSpace(context?.CorrelationId)) {
                 // We have a correlation ID for the context; use it on the outgoing call as 
                 // well.
-                headers.Add("Request-Id", context.CorrelationId);
+                headers.Add("Request-Id", context!.CorrelationId);
             }
 
             return new GrpcCore.CallOptions(
