@@ -1751,9 +1751,10 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(tagValue));
             }
 
-            return RealTimeData.TagValueExtended.Create(
+            return new RealTimeData.TagValueExtended(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.Value.ToAdapterVariant(),
+                tagValue.AdditionalValues.Select(x => x.ToAdapterVariant()),
                 tagValue.Status.ToAdapterTagValueStatus(),
                 tagValue.Units,
                 tagValue.Notes,
@@ -1785,6 +1786,12 @@ namespace DataCore.Adapter {
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
             };
+
+            if (tagValue.AdditionalValues != null) {
+                foreach (var item in tagValue.AdditionalValues) {
+                    result.AdditionalValues.Add(item.ToGrpcVariant());
+                }
+            }
 
             if (tagValue.Properties != null) {
                 foreach (var item in tagValue.Properties) {
@@ -2149,9 +2156,10 @@ namespace DataCore.Adapter {
             return new RealTimeData.WriteTagValueItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 TagId = writeRequest.TagId,
-                Value = RealTimeData.TagValue.Create(
+                Value = new RealTimeData.TagValue (
                     writeRequest.UtcSampleTime.ToDateTime(),
                     writeRequest.Value.ToAdapterVariant(),
+                    null,
                     writeRequest.Status.ToAdapterTagValueStatus(),
                     writeRequest.Units
                 )

@@ -129,8 +129,7 @@ namespace DataCore.Adapter.Tests {
                     TagValueQueryResult.Create(
                         TestContext.TestName,
                         TestContext.TestName,
-                        TagValueBuilder
-                            .Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(now.AddSeconds(-5))
                             .WithValue(100)
                             .Build()
@@ -140,8 +139,7 @@ namespace DataCore.Adapter.Tests {
                     TagValueQueryResult.Create(
                         TestContext.TestName,
                         TestContext.TestName,
-                        TagValueBuilder
-                            .Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(now.AddSeconds(-1))
                             .WithValue(99)
                             .Build()

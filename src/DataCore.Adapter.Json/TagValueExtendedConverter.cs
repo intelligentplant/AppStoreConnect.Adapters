@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Json {
 
             DateTime utcSampleTime = default;
             Variant value = Variant.Null;
+            Variant[]? additionalValues = null;
             TagValueStatus status = TagValueStatus.Uncertain;
             string units = null!;
             string notes = null!;
@@ -41,6 +42,9 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Value), StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(TagValueExtended.AdditionalValues), StringComparison.OrdinalIgnoreCase)) {
+                    additionalValues = JsonSerializer.Deserialize<Variant[]>(ref reader, options);
+                }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Status), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
                 }
@@ -61,7 +65,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return TagValueExtended.Create(utcSampleTime, value, status, units, notes, error, properties);
+            return new TagValueExtended(utcSampleTime, value, additionalValues, status, units, notes, error, properties);
         }
 
 
@@ -75,6 +79,7 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(TagValueExtended.UtcSampleTime), value.UtcSampleTime, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Value), value.Value, options);
+            WritePropertyValue(writer, nameof(TagValueExtended.AdditionalValues), value.AdditionalValues, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Status), value.Status, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Units), value.Units, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Notes), value.Notes, options);

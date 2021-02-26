@@ -22,6 +22,12 @@ namespace DataCore.Adapter.RealTimeData {
         private Variant _value = Variant.Null;
 
         /// <summary>
+        /// Additional values (e.g. the name of a digital state if <see cref="_value"/> represents 
+        /// the state's value).
+        /// </summary>
+        private readonly List<Variant> _additionalValues = new List<Variant>();
+
+        /// <summary>
         /// The quality status.
         /// </summary>
         private TagValueStatus _status = TagValueStatus.Good;
@@ -70,6 +76,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             WithUtcSampleTime(existing.UtcSampleTime);
             WithValue(existing.Value);
+            WithAdditionalValues(existing.AdditionalValues);
             WithStatus(existing.Status);
             WithNotes(existing.Notes);
             WithError(existing.Error);
@@ -83,6 +90,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagValueBuilder"/> object.
         /// </returns>
+        [Obsolete("Use TagValueBuilder() constructor", false)]
         public static TagValueBuilder Create() {
             return new TagValueBuilder();
         }
@@ -101,6 +109,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("Use TagValueBuilder(TagValueExtended) constructor", false)]
         public static TagValueBuilder CreateFromExisting(TagValueExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -117,7 +126,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public TagValueExtended Build() {
-            return TagValueExtended.Create(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
+            return new TagValueExtended(_utcSampleTime, _value, _additionalValues, _status, _units, _notes, _error, _properties);
         }
 
 
@@ -163,6 +172,67 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithValue<T>(T value) {
             _value = Variant.FromValue(value);
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds secondary values.
+        /// </summary>
+        /// <param name="values">
+        ///   The additional values.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        /// <remarks>
+        ///   Secondary values can be used when e.g. the primary value is the name of a digital 
+        ///   state, but you also want to provide the state's numeric value.
+        /// </remarks>
+        public TagValueBuilder WithAdditionalValues(params Variant[] values) {
+            return WithAdditionalValues((IEnumerable<Variant>) values);
+        }
+
+
+        /// <summary>
+        /// Adds secondary values.
+        /// </summary>
+        /// <param name="values">
+        ///   The additional values.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        /// <remarks>
+        ///   Secondary values can be used when e.g. the primary value is the name of a digital 
+        ///   state, but you also want to provide the state's numeric value.
+        /// </remarks>
+        public TagValueBuilder WithAdditionalValues(IEnumerable<Variant> values) {
+            if (values != null) {
+                _additionalValues.AddRange(values);
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds a secondary value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The additional value.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        /// <remarks>
+        ///   Secondary values can be used when e.g. the primary value is the name of a digital 
+        ///   state, but you also want to provide the state's numeric value.
+        /// </remarks>
+        public TagValueBuilder WithAdditionalValue<T>(T value) {
+            _additionalValues.Add(Variant.FromValue(value));
             return this;
         }
 

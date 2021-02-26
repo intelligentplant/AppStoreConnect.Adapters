@@ -318,7 +318,8 @@ message TagValue {
     string units = 4;
     string notes = 5;
     string error = 6;
-    repeated AdapterProperty properties = 7; 
+    repeated AdapterProperty properties = 7;
+    repeated Variant additional_values = 8;
 }
 
 

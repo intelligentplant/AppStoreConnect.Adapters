@@ -193,7 +193,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var numericValue = CalculateAverage(goodQualitySamples);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
@@ -241,7 +241,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .First();
 
             return new[] {
-                TagValueBuilder.CreateFromExisting(minValue)
+                new TagValueBuilder(minValue)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
@@ -286,7 +286,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .First();
 
             return new[] {
-                TagValueBuilder.CreateFromExisting(maxValue)
+                new TagValueBuilder(maxValue)
                     .WithStatus(status)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
@@ -322,7 +322,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 0) {
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(0d)
                         .WithStatus(status)
@@ -333,7 +333,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(goodQualitySamples.Length)
                     .WithStatus(status)
@@ -386,7 +386,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var numericValue = Math.Abs(maxValue.Value.GetValueOrDefault(double.NaN) - minValue.Value.GetValueOrDefault(double.NaN));
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
@@ -435,7 +435,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var numericValue = firstValue.Value.GetValueOrDefault(double.NaN) - lastValue.Value.GetValueOrDefault(double.NaN);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(numericValue)
                     .WithStatus(status)
@@ -466,7 +466,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket bucket) {
             if (bucket.RawSampleCount == 0) {
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(0d)
                         .WithUnits("%")
@@ -480,7 +480,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var percentGoodCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue((double) percentGoodCount / bucket.RawSampleCount * 100)
                     .WithUnits("%")
@@ -511,7 +511,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket bucket) {
             if (bucket.RawSampleCount == 0) {
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(0d)
                         .WithUnits("%")
@@ -525,7 +525,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var percentBadCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
                     .WithUnits("%")
@@ -594,7 +594,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (goodQualitySamples.Length == 1) {
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(0d)
                         .WithStatus(status)
@@ -610,7 +610,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var variance = CalculateVariance(goodQualitySamples, out var avg);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(variance)
                     .WithStatus(status)
@@ -657,7 +657,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             
             if (goodQualitySamples.Length == 1) {
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(0d)
                         .WithStatus(status)
@@ -679,7 +679,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var upperBound = avg + (sigma * stdDev);
 
             return new[] {
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(stdDev)
                     .WithStatus(status)
@@ -1315,7 +1315,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The tag value.
         /// </returns>
         private static TagValueExtended CreateErrorTagValue(TagValueBucket bucket, DateTime sampleTime, string error) {
-            return TagValueBuilder.Create()
+            return new TagValueBuilder()
                 .WithUtcSampleTime(sampleTime)
                 .WithValue(Resources.TagValue_ProcessedValue_Error)
                 .WithStatus(TagValueStatus.Bad)

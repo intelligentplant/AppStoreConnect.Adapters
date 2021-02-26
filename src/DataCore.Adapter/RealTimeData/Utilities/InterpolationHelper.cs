@@ -96,7 +96,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             ) {
                 return valueBefore == null 
                     ? null 
-                    : TagValueBuilder.CreateFromExisting(valueBefore)
+                    : new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(
                             valueBefore.Status == TagValueStatus.Good && !forceUncertainStatus 
@@ -116,7 +116,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 ? TagValueStatus.Good
                 : TagValueStatus.Uncertain;
 
-            return TagValueBuilder.Create()
+            return new TagValueBuilder()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithValue(nextNumericValue)
                 .WithStatus(nextStatusValue)
@@ -185,8 +185,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         ? TagValueStatus.Uncertain 
                         : valueBefore.Status;
 
-                    return TagValueBuilder
-                        .CreateFromExisting(valueBefore)
+                    return new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(status)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
@@ -197,8 +196,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         ? TagValueStatus.Uncertain
                         : valueAfter.Status;
 
-                    return TagValueBuilder
-                        .CreateFromExisting(valueAfter)
+                    return new TagValueBuilder(valueAfter)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(status)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
@@ -353,8 +351,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var exactValue = values.FirstOrDefault(x => x != null && x.UtcSampleTime == utcSampleTime);
             if (exactValue != null) {
-                return TagValueBuilder
-                    .CreateFromExisting(exactValue)
+                return new TagValueBuilder(exactValue)
                     .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                     .Build();
             }

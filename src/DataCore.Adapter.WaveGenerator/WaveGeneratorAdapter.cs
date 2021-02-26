@@ -578,8 +578,7 @@ namespace DataCore.Adapter.WaveGenerator {
 
                     var tagId = tagOptions?.Name ?? tag;
 
-                    var val = TagValueBuilder
-                        .Create()
+                    var val = new TagValueBuilder()
                         .WithUtcSampleTime(sampleTime)
                         .WithValue(CalculateValue(sampleTime, tagOptions!))
                         .Build();
@@ -624,8 +623,7 @@ namespace DataCore.Adapter.WaveGenerator {
                             continue;
                         }
 
-                        var val = TagValueBuilder
-                            .Create()
+                        var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();
@@ -657,8 +655,7 @@ namespace DataCore.Adapter.WaveGenerator {
                     var tagId = tagOptions?.Name ?? tag;
 
                     foreach (var sampleTime in request.UtcSampleTimes) {
-                        var val = TagValueBuilder
-                            .Create()
+                        var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();

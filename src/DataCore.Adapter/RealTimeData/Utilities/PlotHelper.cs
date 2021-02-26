@@ -466,8 +466,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 resultsChannel.TryWrite(TagValueQueryResult.Create(
                     tag.Id, 
                     tag.Name, 
-                    TagValueBuilder
-                        .CreateFromExisting(value)
+                    new TagValueBuilder(value)
                         .WithBucketProperties(bucket)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build()

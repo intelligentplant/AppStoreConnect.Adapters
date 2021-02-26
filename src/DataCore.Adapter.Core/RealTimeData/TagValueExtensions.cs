@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -50,6 +52,30 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(value));
             }
             return value.Value.GetValueOrDefault<T>(defaultValue);
+        }
+
+
+        /// <summary>
+        /// Gets a collection containing both the <see cref="TagValue.Value"/> and <see cref="TagValue.AdditionalValues"/> 
+        /// defined on the <see cref="TagValue"/>.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <returns>
+        ///   An enumerable of <see cref="Variant"/> instances representing all of the values of 
+        ///   the <see cref="TagValue"/>.
+        /// </returns>
+        public static IEnumerable<Variant> GetAllValues(this TagValue value) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            yield return value.Value;
+
+            foreach (var item in value.AdditionalValues) {
+                yield return item;
+            }
         }
 
     }

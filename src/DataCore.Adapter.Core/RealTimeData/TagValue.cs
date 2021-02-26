@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -14,9 +17,18 @@ namespace DataCore.Adapter.RealTimeData {
         public DateTime UtcSampleTime { get; }
 
         /// <summary>
-        /// The tag value.
+        /// The primary tag value.
         /// </summary>
+        /// <seealso cref="AdditionalValues"/>
         public Variant Value { get; }
+
+        /// <summary>
+        /// Additional tag values. For example, if the value represents a digital state, it is 
+        /// possible to supply both the numeric and text values of the state in a single 
+        /// <see cref="TagValue"/> instance.
+        /// </summary>
+        /// <seealso cref="Value"/>
+        public IEnumerable<Variant> AdditionalValues { get; }
 
         /// <summary>
         /// The quality status for the value.
@@ -38,15 +50,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The tag value.
         /// </param>
+        /// <param name="additionalValues">
+        ///   Additional tag values e.g. if <paramref name="value"/> is the value of a digital 
+        ///   state, the name of the state can be specified by passing in an additional value.
+        /// </param>
         /// <param name="status">
         ///   The quality status for the value.
         /// </param>
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
+        public TagValue(DateTime utcSampleTime, Variant value, IEnumerable<Variant>? additionalValues, TagValueStatus status, string? units) {
             UtcSampleTime = utcSampleTime;
             Value = value;
+            AdditionalValues = additionalValues?.ToArray() ?? Array.Empty<Variant>();
             Status = status;
             Units = units;
         }
@@ -67,8 +84,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
+        [Obsolete("Use constructor directly.", true)]
         public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            return new TagValue(utcSampleTime, value, status, units);
+            return new TagValue(utcSampleTime, value, null, status, units);
         }
 
 
