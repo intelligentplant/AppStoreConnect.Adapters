@@ -90,9 +90,13 @@ namespace DataCore.Adapter.Common {
         ///   When a value is provided, the <see cref="Type"/> of the resulting variant is set to 
         ///   this value instead of being inferred from the <paramref name="value"/>.
         /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is a <see cref="Variant"/>, it will be returned 
+        ///   unmodified.
+        /// </remarks>
         public static Variant FromValue(object? value, VariantType? typeOverride = null) {
             if (value is Variant v) {
-                return new Variant(v.Value, v.Type);
+                return v;
             }
 
             return new Variant(
