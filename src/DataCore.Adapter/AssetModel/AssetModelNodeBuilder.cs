@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// Creates a new <see cref="AssetModelNodeBuilder"/> object.
         /// </summary>
-        private AssetModelNodeBuilder() { }
+        public AssetModelNodeBuilder() { }
 
 
         /// <summary>
@@ -72,18 +72,22 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="existing">
         ///   The existing node definition.
         /// </param>
-        private AssetModelNodeBuilder(AssetModelNode existing) {
-            _id = existing.Id;
-            _name = existing.Name;
-            _nodeType = existing.NodeType;
-            _nodeSubType = existing.NodeSubType;
-            _description = existing.Description;
-            _parentId = existing.Parent;
-            _hasChildren = existing.HasChildren;
-            _dataReference = existing.DataReference;
-            if (existing.Properties != null) {
-                _properties.AddRange(existing.Properties.Where(x => x != null));
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeBuilder(AssetModelNode existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
             }
+
+            WithId(existing.Id);
+            WithName(existing.Name);
+            WithNodeType(existing.NodeType, existing.NodeSubType);
+            WithDescription(existing.Description);
+            WithParent(existing.Parent);
+            WithChildren(existing.HasChildren);
+            WithDataReference(existing.DataReference);
+            WithProperties(existing.Properties);
         }
 
 
@@ -193,7 +197,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        public AssetModelNodeBuilder WithDescription(string description) {
+        public AssetModelNodeBuilder WithDescription(string? description) {
             _description = description;
             return this;
         }
@@ -208,7 +212,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        public AssetModelNodeBuilder WithParent(string parentId) {
+        public AssetModelNodeBuilder WithParent(string? parentId) {
             _parentId = parentId;
             return this;
         }
@@ -238,7 +242,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        public AssetModelNodeBuilder WithDataReference(DataReference dataReference) {
+        public AssetModelNodeBuilder WithDataReference(DataReference? dataReference) {
             _dataReference = dataReference;
             return this;
         }
