@@ -24,9 +24,15 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="items"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
         public static IEnumerable<T> SelectPage<T>(this IOrderedEnumerable<T> items, Common.IPageableAdapterRequest request) {
             if (items == null) {
                 throw new ArgumentNullException(nameof(items));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
             }
 
             if (request == null) {

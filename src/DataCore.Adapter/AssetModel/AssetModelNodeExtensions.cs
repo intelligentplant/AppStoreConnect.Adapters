@@ -22,8 +22,15 @@ namespace DataCore.Adapter.AssetModel {
         ///   <see langword="true"/> if the node matches the filter, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool MatchesFilter(this AssetModelNode node, FindAssetModelNodesRequest filter) {
-            if (node == null || filter == null) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="node"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool MatchesFilter(this AssetModelNode node, FindAssetModelNodesRequest? filter) {
+            if (node == null) {
+                throw new ArgumentNullException(nameof(node));
+            }
+            
+            if (filter == null) {
                 return false;
             }
 
@@ -55,6 +62,9 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The matching nodes.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="nodes"/> is <see langword="null"/>.
+        /// </exception>
         public static IEnumerable<AssetModelNode> ApplyFilter(this IEnumerable<AssetModelNode> nodes, FindAssetModelNodesRequest? filter) {
             if (nodes == null) {
                 throw new ArgumentNullException(nameof(nodes));
