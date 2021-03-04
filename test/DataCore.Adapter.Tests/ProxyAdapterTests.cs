@@ -159,7 +159,7 @@ namespace DataCore.Adapter.Tests {
                 values.Add(new WriteTagValueItem() {
                     CorrelationId = Guid.NewGuid().ToString(),
                     TagId = context.TestName,
-                    Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    Value = new TagValueBuilder().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
                 });
             }
             return values;
@@ -173,7 +173,7 @@ namespace DataCore.Adapter.Tests {
                 values.Add(new WriteTagValueItem() {
                     CorrelationId = Guid.NewGuid().ToString(),
                     TagId = context.TestName,
-                    Value = TagValueBuilder.Create().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
+                    Value = new TagValueBuilder().WithUtcSampleTime(now.AddDays(-1).AddMinutes(-1 * (5 - i))).WithValue(i).Build()
                 });
             }
             return values;

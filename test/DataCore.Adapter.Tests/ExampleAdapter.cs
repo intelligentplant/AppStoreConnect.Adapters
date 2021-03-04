@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Tests {
             var result = request.Tags.Select(t => new TagValueQueryResult(
                 t,
                 t,
-                TagValueBuilder.Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(DateTime.MinValue)
                     .WithValue(0)
                     .Build()
@@ -153,7 +153,7 @@ namespace DataCore.Adapter.Tests {
                     ValueReceived(new TagValueQueryResult(
                         tag.Id,
                         tag.Name,
-                        TagValueBuilder.Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(DateTime.MinValue)
                             .WithValue(0)
                             .Build()

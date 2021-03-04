@@ -313,12 +313,13 @@ enum TagValueStatus {
 
 message TagValue {
     google.protobuf.Timestamp utc_sample_time = 1;
-    Variant value = 2;
+    // Ordinal 2 is no longer in use.
     TagValueStatus status = 3;
     string units = 4;
     string notes = 5;
     string error = 6;
-    repeated AdapterProperty properties = 7; 
+    repeated AdapterProperty properties = 7;
+    repeated Variant values = 8;
 }
 
 
@@ -387,10 +388,8 @@ message DataFunctionDescriptor {
 message WriteTagValueItem {
     string correlation_id = 1;
     string tag_id = 2;
-    google.protobuf.Timestamp utc_sample_time = 3;
-    Variant value = 4;
-    TagValueStatus status = 5;
-    string units = 6;
+    // Ordinals 3-6 are not longer in use.
+    TagValue value = 7;
 }
 
 

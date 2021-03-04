@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes the base set of properties for a tag value.
+    /// Describes the base set of properties for a tag value sample.
     /// </summary>
     public class TagValue : IFormattable {
 
@@ -14,9 +17,12 @@ namespace DataCore.Adapter.RealTimeData {
         public DateTime UtcSampleTime { get; }
 
         /// <summary>
-        /// The tag value.
+        /// The values for the sample. In the majority of cases, this collection will contain a 
+        /// single item. However, multiple items are allowed to account for situations where the 
+        /// sample represents a digital state, and both the numerical and text values of the state 
+        /// are being returned.
         /// </summary>
-        public Variant Value { get; }
+        public IEnumerable<Variant> Values { get; }
 
         /// <summary>
         /// The quality status for the value.
@@ -35,8 +41,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="utcSampleTime">
         ///   The UTC sample time.
         /// </param>
-        /// <param name="value">
-        ///   The tag value.
+        /// <param name="values">
+        ///   The values for the sample. In the majority of cases, this collection will contain a 
+        ///   single item. However, multiple items are allowed to account for situations where the 
+        ///   sample represents a digital state, and both the numerical and text values of the state 
+        ///   are being returned.
         /// </param>
         /// <param name="status">
         ///   The quality status for the value.
@@ -44,9 +53,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
+        public TagValue(DateTime utcSampleTime, IEnumerable<Variant>? values, TagValueStatus status, string? units) {
             UtcSampleTime = utcSampleTime;
-            Value = value;
+            Values = values?.ToArray() ?? Array.Empty<Variant>();
+            if (!Values.Any()) {
+                throw new ArgumentException(SharedResources.Error_AtLeastOneValueIsRequired, nameof(values));
+            }
             Status = status;
             Units = units;
         }
@@ -67,8 +79,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
+        [Obsolete("Use constructor directly.", true)]
         public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            return new TagValue(utcSampleTime, value, status, units);
+            return new TagValue(utcSampleTime, new[] { value }, status, units);
         }
 
 
@@ -94,7 +107,8 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public string ToString(string? format, IFormatProvider? formatProvider) {
-            var formattedValue = Value.ToString(format ?? Variant.GetDefaultFormat(Value.Type), formatProvider);
+            var val = Values.First();
+            var formattedValue = val.ToString(format ?? Variant.GetDefaultFormat(val.Type), formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
             var formattedStatus = Status == TagValueStatus.Good
                 ? SharedResources.TagValueStatus_Good
