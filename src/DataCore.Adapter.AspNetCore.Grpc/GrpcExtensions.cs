@@ -1751,9 +1751,9 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(tagValue));
             }
 
-            return RealTimeData.TagValueExtended.Create(
+            return new RealTimeData.TagValueExtended(
                 tagValue.UtcSampleTime.ToDateTime(),
-                tagValue.Value.ToAdapterVariant(),
+                tagValue.Values.Select(x => x.ToAdapterVariant()),
                 tagValue.Status.ToAdapterTagValueStatus(),
                 tagValue.Units,
                 tagValue.Notes,
@@ -1783,8 +1783,13 @@ namespace DataCore.Adapter {
                 Status = tagValue.Status.ToGrpcTagValueStatus(),
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
-                Value = tagValue.Value.ToGrpcVariant()
             };
+
+            if (tagValue.Values != null) {
+                foreach (var item in tagValue.Values) {
+                    result.Values.Add(item.ToGrpcVariant());
+                }
+            }
 
             if (tagValue.Properties != null) {
                 foreach (var item in tagValue.Properties) {
@@ -1792,6 +1797,38 @@ namespace DataCore.Adapter {
                         continue;
                     }
                     result.Properties.Add(item.ToGrpcAdapterProperty());
+                }
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="tagValue">
+        ///   The adapter tag value.
+        /// </param>
+        /// <returns>
+        ///   The gRPC tag value.
+        /// </returns>
+        public static Grpc.TagValue ToGrpcTagValue(this RealTimeData.TagValue tagValue) {
+            if (tagValue == null) {
+                throw new ArgumentNullException(nameof(tagValue));
+            }
+
+            var result = new Grpc.TagValue() {
+                Error = string.Empty,
+                Notes = string.Empty,
+                Status = tagValue.Status.ToGrpcTagValueStatus(),
+                Units = tagValue.Units ?? string.Empty,
+                UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
+            };
+
+            if (tagValue.Values != null) {
+                foreach (var item in tagValue.Values) {
+                    result.Values.Add(item.ToGrpcVariant());
                 }
             }
 
@@ -2149,12 +2186,7 @@ namespace DataCore.Adapter {
             return new RealTimeData.WriteTagValueItem() {
                 CorrelationId = writeRequest.CorrelationId,
                 TagId = writeRequest.TagId,
-                Value = RealTimeData.TagValue.Create(
-                    writeRequest.UtcSampleTime.ToDateTime(),
-                    writeRequest.Value.ToAdapterVariant(),
-                    writeRequest.Status.ToAdapterTagValueStatus(),
-                    writeRequest.Units
-                )
+                Value = writeRequest.Value.ToAdapterTagValue()
             };
         }
 
@@ -2176,10 +2208,7 @@ namespace DataCore.Adapter {
             return new Grpc.WriteTagValueItem() {
                 CorrelationId = item.CorrelationId ?? string.Empty,
                 TagId = item.TagId ?? string.Empty,
-                UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(item.Value.UtcSampleTime),
-                Value = item.Value.Value.ToGrpcVariant(),
-                Status = item.Value.Status.ToGrpcTagValueStatus(),
-                Units = item.Value.Units ?? string.Empty
+                Value = item.Value.ToGrpcTagValue()
             };
         }
 

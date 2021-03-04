@@ -18,7 +18,8 @@ namespace DataCore.Adapter.Json {
             }
 
             DateTime utcSampleTime = default;
-            Variant value = Variant.Null;
+            Variant? value = null;
+            Variant[] values = null!;
             TagValueStatus status = TagValueStatus.Uncertain;
             string units = null!;
             string notes = null!;
@@ -38,8 +39,12 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(TagValueExtended.UtcSampleTime), StringComparison.OrdinalIgnoreCase)) {
                     utcSampleTime = JsonSerializer.Deserialize<DateTime>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(TagValueExtended.Value), StringComparison.OrdinalIgnoreCase)) {
+                // Allow a "Value" property with a single value for backwards compatibility.
+                else if (string.Equals(propertyName, "Value", StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(TagValueExtended.Values), StringComparison.OrdinalIgnoreCase)) {
+                    values = JsonSerializer.Deserialize<Variant[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Status), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
@@ -61,7 +66,9 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return TagValueExtended.Create(utcSampleTime, value, status, units, notes, error, properties);
+            return value == null 
+                ? new TagValueExtended(utcSampleTime, values, status, units, notes, error, properties)
+                : new TagValueExtended(utcSampleTime, new[] { value.Value }, status, units, notes, error, properties);
         }
 
 
@@ -74,7 +81,7 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(TagValueExtended.UtcSampleTime), value.UtcSampleTime, options);
-            WritePropertyValue(writer, nameof(TagValueExtended.Value), value.Value, options);
+            WritePropertyValue(writer, nameof(TagValueExtended.Values), value.Values, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Status), value.Status, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Units), value.Units, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Notes), value.Notes, options);

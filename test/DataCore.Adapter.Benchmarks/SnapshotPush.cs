@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Benchmarks {
                             new TagValueQueryResult(
                                 tag.Id,
                                 tag.Name,
-                                TagValueBuilder.Create().WithValue(i).Build()
+                                new TagValueBuilder().WithValue(i).Build()
                             ),
                             ct
                         );
@@ -59,7 +59,7 @@ namespace DataCore.Adapter.Benchmarks {
                     new TagValueQueryResult(
                         tag.Id,
                         tag.Name,
-                        TagValueBuilder.Create().WithValue(i).Build()
+                        new TagValueBuilder().WithValue(i).Build()
                     ),
                     cancellationToken
                 );

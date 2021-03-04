@@ -449,8 +449,7 @@ namespace DataCore.Adapter.Csv {
 
                         valuesForTag.Add(
                             sampleTime,
-                            TagValueBuilder
-                                .Create()
+                            new TagValueBuilder()
                                 .WithUtcSampleTime(sampleTime)
                                 .WithValue(double.TryParse(unparsedValue, NumberStyles.Any, csvConfig.CultureInfo, out var numericValue) ? (object) numericValue : unparsedValue)
                                 .WithStatus(TagValueStatus.Good)
@@ -740,7 +739,7 @@ namespace DataCore.Adapter.Csv {
                 var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime.Add(offset) <= now);
 
                 if (snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, TagValueBuilder.CreateFromExisting(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build()));
+                    resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, new TagValueBuilder(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build()));
                 }
             }
 
@@ -973,7 +972,7 @@ namespace DataCore.Adapter.Csv {
                         // sample, to prevent us from creating unnecessary instances of DataCoreTagValue.
                         var sample = offset.Equals(TimeSpan.Zero)
                             ? unmodifiedSample
-                            : TagValueBuilder.CreateFromExisting(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
+                            : new TagValueBuilder(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
 
                         if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
                             writer.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, sample));

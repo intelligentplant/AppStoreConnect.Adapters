@@ -85,7 +85,7 @@ namespace DataCore.Adapter.Tests {
                     CancellationToken
                 );
 
-                var val = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
 
                 CancelAfter(TimeSpan.FromSeconds(1));
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Tests {
                     CancellationToken
                 );
 
-                var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
 
                 channel.Writer.TryWrite(new TagValueSubscriptionUpdate() { 
@@ -126,7 +126,7 @@ namespace DataCore.Adapter.Tests {
                     Tags = new [] { TestContext.TestName }
                 });
 
-                var val2 = TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
+                var val2 = new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
 
                 CancelAfter(TimeSpan.FromSeconds(1));
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.Tests {
                     CancellationToken
                 );
 
-                var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
 
                 channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
@@ -182,7 +182,7 @@ namespace DataCore.Adapter.Tests {
 
                 await Task.Delay(1000, CancellationToken);
 
-                var val2 = TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
+                var val2 = new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
 
                 CancelAfter(TimeSpan.FromSeconds(1));
@@ -233,7 +233,7 @@ namespace DataCore.Adapter.Tests {
                     try {
                         while (!CancellationToken.IsCancellationRequested) {
                             await Task.Delay(50, CancellationToken).ConfigureAwait(false);
-                            var val = TagValueBuilder.Create().WithValue(DateTime.UtcNow.Ticks).Build();
+                            var val = new TagValueBuilder().WithValue(DateTime.UtcNow.Ticks).Build();
                             await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
                         }
                     }
@@ -307,17 +307,17 @@ namespace DataCore.Adapter.Tests {
                 );
 
                 // We should receive this value due to our IsTopicMatch delegate
-                var val1 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId1 = TestContext.TestName + "/SubTag";
                 Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId1, tagId1, val1)), "Sub-tag value write failed.");
 
                 // We should not receive this value
-                var val2 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val2 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId2 = "Should_Not_Match";
                 Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId2, tagId2, val2)), "Non-matching value write failed.");
 
                 // We should receive this value because it is an exact match for the tag we subscribed to.
-                var val3 = TagValueBuilder.Create().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
+                var val3 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 var tagId3 = TestContext.TestName;
                 Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId3, tagId3, val3)), "Exact match value write failed.");
 
