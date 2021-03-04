@@ -6,6 +6,7 @@
     <PackageId>$(PackagePrefix).Adapter.Core</PackageId>
     <Description>Base types for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

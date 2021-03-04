@@ -173,9 +173,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -243,9 +243,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -308,9 +308,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -371,9 +371,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -429,9 +429,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -488,9 +488,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -601,9 +601,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -650,9 +650,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -703,10 +703,10 @@ namespace DataCore.Adapter.Tests {
             // good value.
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -753,9 +753,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -806,10 +806,10 @@ namespace DataCore.Adapter.Tests {
             // good value.
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -856,9 +856,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -905,9 +905,9 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-51)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-51)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -955,8 +955,8 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -1133,10 +1133,10 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] { 
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(val)
                         .Build()
@@ -1158,16 +1158,16 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 // Bucket 1
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
 
                 // Bucket 2: no values
 
                 // Bucket 3
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
 
                 // Bucket 4: no values
             };
@@ -1198,7 +1198,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
@@ -1218,10 +1218,10 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(val)
                         .Build()
@@ -1243,16 +1243,16 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 // Bucket 1
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
 
                 // Bucket 2: no values
 
                 // Bucket 3
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
 
                 // Bucket 4: no values
             };
@@ -1283,7 +1283,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
@@ -1308,10 +1308,10 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] {
-                    TagValueBuilder.Create()
+                    new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
                         .WithValue(val)
                         .Build()
@@ -1333,16 +1333,16 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 // Bucket 1
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-57)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-50)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-46)).WithValue(1).Build(),
 
                 // Bucket 2: no values
 
                 // Bucket 3
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-30)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-20)).WithValue(1).Build(),
+                new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(-16)).WithValue(1).Build()
 
                 // Bucket 4: no values
             };
@@ -1373,7 +1373,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
@@ -1404,24 +1404,24 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 // Bucket 1: 0-20s
-                TagValueBuilder.Create().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
+                new TagValueBuilder().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
                 // Bucket 2: 20-40s
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(21)).WithValue(1.883).Build(), // earliest + min
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(27)).WithValue(77.765).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(39)).WithValue(77.766).Build(), // latest + max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(21)).WithValue(1.883).Build(), // earliest + min
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(27)).WithValue(77.765).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(39)).WithValue(77.766).Build(), // latest + max
                 // Bucket 3: 40-60s
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();
@@ -1454,21 +1454,21 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 // Bucket 1: 0-20s
-                TagValueBuilder.Create().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
+                new TagValueBuilder().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
                 // Bucket 2: 20-40s
                 // Bucket 3: 40-60s
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
-                TagValueBuilder.Create().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(58)).WithValue(44.444).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(59)).WithValue(0.556).Build(), // latest + min
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();

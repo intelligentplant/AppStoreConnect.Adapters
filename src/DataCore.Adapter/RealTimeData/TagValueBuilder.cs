@@ -17,9 +17,9 @@ namespace DataCore.Adapter.RealTimeData {
         private DateTime _utcSampleTime = DateTime.UtcNow;
 
         /// <summary>
-        /// The value.
+        /// The values for the sample.
         /// </summary>
-        private Variant _value = Variant.Null;
+        private readonly List<Variant> _values = new List<Variant>();
 
         /// <summary>
         /// The quality status.
@@ -69,7 +69,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             WithUtcSampleTime(existing.UtcSampleTime);
-            WithValue(existing.Value);
+            WithValues(existing.Values);
             WithStatus(existing.Status);
             WithNotes(existing.Notes);
             WithError(existing.Error);
@@ -83,6 +83,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagValueBuilder"/> object.
         /// </returns>
+        [Obsolete("Use TagValueBuilder() constructor", false)]
         public static TagValueBuilder Create() {
             return new TagValueBuilder();
         }
@@ -101,6 +102,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("Use TagValueBuilder(TagValueExtended) constructor", false)]
         public static TagValueBuilder CreateFromExisting(TagValueExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -117,7 +119,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public TagValueExtended Build() {
-            return TagValueExtended.Create(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
+            return new TagValueExtended(_utcSampleTime, _values, _status, _units, _notes, _error, _properties);
         }
 
 
@@ -138,7 +140,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Updates the value.
+        /// Adds a value to the sample.
         /// </summary>
         /// <param name="value">
         ///   The value.
@@ -147,14 +149,16 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
         public TagValueBuilder WithValue(Variant value) {
-            _value = value;
-            return this;
+            return WithValues(value);
         }
 
 
         /// <summary>
-        /// Updates the value.
+        /// Adds a value to the sample.
         /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
         /// <param name="value">
         ///   The value.
         /// </param>
@@ -162,7 +166,49 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
         public TagValueBuilder WithValue<T>(T value) {
-            _value = Variant.FromValue(value);
+            return WithValue(Variant.FromValue(value));
+        }
+
+
+        /// <summary>
+        /// Adds multiple values to the sample.
+        /// </summary>
+        /// <param name="values">
+        ///   The values.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        public TagValueBuilder WithValues(params Variant[] values) {
+            return WithValues((IEnumerable<Variant>) values);
+        }
+
+
+        /// <summary>
+        /// Adds multiple values to the sample.
+        /// </summary>
+        /// <param name="values">
+        ///   The values.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        public TagValueBuilder WithValues(IEnumerable<Variant> values) {
+            if (values != null) {
+                _values.AddRange(values);
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Removes all value from the sample.
+        /// </summary>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        public TagValueBuilder ClearValues() {
+            _values.Clear();
             return this;
         }
 

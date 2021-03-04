@@ -76,6 +76,49 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="true"/> if the variant's <see cref="Variant.Type"/> indicates that 
         ///   its value is numeric, or <see langword="false"/> otherwise.
         /// </returns>
+        /// <remarks>
+        /// 
+        /// The following types are considered to be numeric:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Boolean"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Byte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int64"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.SByte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt64"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// All other types are considered to be non-numeric.
+        /// 
+        /// </remarks>
         public static bool IsNumericType(this Variant variant) {
             return variant.Type.IsNumericType();
         }
@@ -91,6 +134,49 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="true"/> if the variant's <see cref="Variant.Type"/> indicates that 
         ///   its value is numeric, or <see langword="false"/> otherwise.
         /// </returns>
+        /// <remarks>
+        /// 
+        /// The following types are considered to be numeric:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Boolean"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Byte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int64"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.SByte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt64"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// All other types are considered to be non-numeric.
+        /// 
+        /// </remarks>
         public static bool IsNumericType(this VariantType variantType) {
             switch (variantType) {
                 case VariantType.Boolean:
@@ -151,6 +237,43 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
+        /// Tries to convert the value of the variant to the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type to convert the variant value to.
+        /// </typeparam>
+        /// <param name="variant">
+        ///   The <see cref="Variant"/>.
+        /// </param>
+        /// <param name="value">
+        ///   The converted value.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the conversion was successful, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryGetValue<T>(this Variant variant, out T? value) {
+            if (variant.Value is T val) {
+                value = val;
+                return true;
+            }
+
+            if (variant.Value is IConvertible convertible) {
+                try {
+                    value = (T) Convert.ChangeType(convertible, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                    return true;
+                }
+                catch {
+                    // Do nothing - we just don't want any exceptions to propagate.
+                }
+            }
+
+            value = default;
+            return false;
+        }
+
+
+        /// <summary>
         /// Gets the variant value cast to the specified type.
         /// </summary>
         /// <typeparam name="T">
@@ -164,8 +287,27 @@ namespace DataCore.Adapter.Common {
         ///   value of <typeparamref name="T"/> if the <see cref="Variant.Value"/> is not an
         ///   instance of <typeparamref name="T"/>.
         /// </returns>
-        public static T GetValueOrDefault<T>(this Variant variant) {
-            return GetValueOrDefault<T>(variant, default!);
+        public static T? GetValueOrDefault<T>(this Variant variant) {
+            return GetValueOrDefault<T>(variant, default);
+        }
+
+
+        /// <summary>
+        /// Gets the variant value cast to the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the variant value.
+        /// </typeparam>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   The variant value cast to an instance of <typeparamref name="T"/>, or the default 
+        ///   value of <typeparamref name="T"/> if the <see cref="Variant.Value"/> is not an
+        ///   instance of <typeparamref name="T"/>.
+        /// </returns>
+        public static T? GetValueOrDefault<T>(this IEnumerable<Variant> variant) {
+            return GetValueOrDefault<T>(variant, default);
         }
 
 
@@ -188,17 +330,44 @@ namespace DataCore.Adapter.Common {
         ///   default value if the variant <see cref="Variant.Value"/> is not an instance of 
         ///   <typeparamref name="T"/>.
         /// </returns>
-        public static T GetValueOrDefault<T>(this Variant variant, T defaultValue) {
+        public static T? GetValueOrDefault<T>(this Variant variant, T? defaultValue) {
             if (variant.Value is T val) {
                 return val;
             }
 
-            if (variant.Value is IConvertible convertible) {
-                try {
-                    return (T) Convert.ChangeType(convertible, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
-                }
-                catch {
-                    return defaultValue;
+            return variant.TryGetValue(out val)
+                ? val
+                : defaultValue;
+        }
+
+
+        /// <summary>
+        /// Gets the first value in the collection that can be cast to the specified type, or 
+        /// returns a default value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value to return.
+        /// </typeparam>
+        /// <param name="variants">
+        ///   The variant collection.
+        /// </param>
+        /// <param name="defaultValue">
+        ///   The default value to return if none of the values can be converted to 
+        ///   <typeparamref name="T"/>.
+        /// </param>
+        /// <returns>
+        ///   The first variant value that can be cast to an instance of <typeparamref name="T"/>, 
+        ///   or the provided default value if the no such conversion can be performed on any of 
+        ///   the variants in the collection.
+        /// </returns>
+        public static T? GetValueOrDefault<T>(this IEnumerable<Variant> variants, T? defaultValue) {
+            if (variants == null || !variants.Any()) {
+                return defaultValue;
+            }
+
+            foreach (var value in variants) {
+                if (value.TryGetValue<T>(out var val)) {
+                    return val;
                 }
             }
 

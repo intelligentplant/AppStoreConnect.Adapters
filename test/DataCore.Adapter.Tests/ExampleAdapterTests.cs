@@ -129,8 +129,7 @@ namespace DataCore.Adapter.Tests {
                     TagValueQueryResult.Create(
                         TestContext.TestName,
                         TestContext.TestName,
-                        TagValueBuilder
-                            .Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(now.AddSeconds(-5))
                             .WithValue(100)
                             .Build()
@@ -140,8 +139,7 @@ namespace DataCore.Adapter.Tests {
                     TagValueQueryResult.Create(
                         TestContext.TestName,
                         TestContext.TestName,
-                        TagValueBuilder
-                            .Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(now.AddSeconds(-1))
                             .WithValue(99)
                             .Build()
@@ -160,7 +158,7 @@ namespace DataCore.Adapter.Tests {
                     var value = await subscription.ReadAsync(ctSource.Token).ConfigureAwait(false);
                     ctSource.Token.ThrowIfCancellationRequested();
                     Assert.AreEqual(now.AddSeconds(-5), value.Value.UtcSampleTime);
-                    Assert.AreEqual(100, value.Value.Value.GetValueOrDefault<int>());
+                    Assert.AreEqual(100, value.Value.GetValueOrDefault<int>());
                 }
 
                 // Read second value written above.
@@ -168,7 +166,7 @@ namespace DataCore.Adapter.Tests {
                     var value = await subscription.ReadAsync(ctSource.Token).ConfigureAwait(false);
                     ctSource.Token.ThrowIfCancellationRequested();
                     Assert.AreEqual(now.AddSeconds(-1), value.Value.UtcSampleTime);
-                    Assert.AreEqual(99, value.Value.Value.GetValueOrDefault<int>());
+                    Assert.AreEqual(99, value.Value.GetValueOrDefault<int>());
                 }
             });
         }
