@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using DataCore.Adapter.Common;
 
@@ -33,12 +32,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="utcSampleTime">
         ///   The UTC sample time.
         /// </param>
-        /// <param name="value">
-        ///   The tag value.
-        /// </param>
-        /// <param name="additionalValues">
-        ///   Additional tag values e.g. if <paramref name="value"/> is the value of a digital 
-        ///   state, the name of the state can be specified by passing in an additional value.
+        /// <param name="values">
+        ///   The values for the sample. In the majority of cases, this collection will contain a 
+        ///   single item. However, multiple items are allowed to account for situations where the 
+        ///   sample represents a digital state, and both the numerical and text values of the state 
+        ///   are being returned.
         /// </param>
         /// <param name="status">
         ///   The quality status for the value.
@@ -57,14 +55,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         public TagValueExtended(
             DateTime utcSampleTime, 
-            Variant value, 
-            IEnumerable<Variant>? additionalValues,
+            IEnumerable<Variant> values,
             TagValueStatus status, 
             string? units, 
             string? notes, 
             string? error, 
             IEnumerable<AdapterProperty>? properties
-        ) : base(utcSampleTime, value, additionalValues, status, units) {
+        ) : base(utcSampleTime, values, status, units) {
             Notes = notes;
             Error = error;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
@@ -101,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         [Obsolete("Use constructor directly", true)]
         public static TagValueExtended Create(DateTime utcSampleTime, Variant value, IEnumerable<Variant>? additionalValues, TagValueStatus status, string? units, string? notes, string? error, IEnumerable<AdapterProperty>? properties) {
-            return new TagValueExtended(utcSampleTime, value, additionalValues, status, units, notes, error, properties);
+            return new TagValueExtended(utcSampleTime, new[] { value }, status, units, notes, error, properties);
         }
 
     }

@@ -17,8 +17,8 @@ namespace DataCore.Adapter.Json {
             }
 
             DateTime utcSampleTime = default;
-            Variant value = Variant.Null;
-            Variant[]? additionalValues = null;
+            Variant? value = null; 
+            Variant[] values = null!;
             TagValueStatus status = TagValueStatus.Uncertain;
             string units = null!;
 
@@ -35,11 +35,12 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(TagValue.UtcSampleTime), StringComparison.OrdinalIgnoreCase)) {
                     utcSampleTime = JsonSerializer.Deserialize<DateTime>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(TagValue.Value), StringComparison.OrdinalIgnoreCase)) {
+                // Allow a "Value" property with a single value for backwards compatibility.
+                else if (string.Equals(propertyName, "Value", StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(TagValue.AdditionalValues), StringComparison.OrdinalIgnoreCase)) {
-                    additionalValues = JsonSerializer.Deserialize<Variant[]>(ref reader, options);
+                else if (string.Equals(propertyName, nameof(TagValue.Values), StringComparison.OrdinalIgnoreCase)) {
+                    values = JsonSerializer.Deserialize<Variant[]>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValue.Status), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
@@ -52,7 +53,9 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new TagValue(utcSampleTime, value, additionalValues, status, units);
+            return value == null 
+                ? new TagValue(utcSampleTime, values, status, units)
+                : new TagValue(utcSampleTime, new[] { value.Value }, status, units);
         }
 
 
@@ -65,8 +68,7 @@ namespace DataCore.Adapter.Json {
 
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(TagValue.UtcSampleTime), value.UtcSampleTime, options);
-            WritePropertyValue(writer, nameof(TagValue.Value), value.Value, options);
-            WritePropertyValue(writer, nameof(TagValue.AdditionalValues), value.AdditionalValues, options);
+            WritePropertyValue(writer, nameof(TagValue.Values), value.Values, options);
             WritePropertyValue(writer, nameof(TagValue.Status), value.Status, options);
             WritePropertyValue(writer, nameof(TagValue.Units), value.Units, options);
             writer.WriteEndObject();

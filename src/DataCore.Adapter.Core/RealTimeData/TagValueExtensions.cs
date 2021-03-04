@@ -11,71 +11,180 @@ namespace DataCore.Adapter.RealTimeData {
     public static class TagValueExtensions {
 
         /// <summary>
-        /// Casts the <see cref="TagValue.Value"/> to the specified type.
+        /// Gets all values in the <see cref="TagValue"/> that have a numeric type.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="TagValue.Values"/> entries that have a numeric type.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// The following value types are considered to be numeric:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Boolean"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Byte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int64"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.SByte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt64"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// All other types are considered to be non-numeric.
+        /// 
+        /// </remarks>
+        public static IEnumerable<Variant> GetNumericValues(this TagValue value) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            foreach (var val in value.Values) {
+                if (val.IsNumericType()) {
+                    yield return val;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all values in the <see cref="TagValue"/> that do not have a numeric type.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="TagValue.Values"/> entries that do not have a numeric type.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// The following value types are considered to be numeric:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Boolean"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Byte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Int64"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.SByte"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt16"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt32"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.UInt64"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// All other types are considered to be non-numeric.
+        /// 
+        /// </remarks>
+        public static IEnumerable<Variant> GetNonNumericValues(this TagValue value) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            foreach (var val in value.Values) {
+                if (!val.IsNumericType()) {
+                    yield return val;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the first value in the <see cref="TagValue"/> that can be cast to the specified 
+        /// type, or returns a default value.
         /// </summary>
         /// <typeparam name="T">
-        ///   The type to cast the <see cref="TagValue.Value"/> to.
+        ///   The type of the value to return.
         /// </typeparam>
         /// <param name="value">
         ///   The <see cref="TagValue"/>.
         /// </param>
         /// <returns>
-        ///   The value of the <see cref="TagValue"/> cast to <typeparamref name="T"/>, or the 
-        ///   default value of <typeparamref name="T"/> if the cast was unsuccessful.
+        ///   The first tag value that can be cast to an instance of <typeparamref name="T"/>, 
+        ///   or the provided default value if the no such conversion can be performed on any of 
+        ///   the values in the <see cref="TagValue"/>.
         /// </returns>
-        public static T GetValueOrDefault<T>(this TagValue value) {
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
-            return value.GetValueOrDefault<T>(default!);
+        public static T? GetValueOrDefault<T>(this TagValue value) {
+            return value.GetValueOrDefault(default(T));
         }
 
 
         /// <summary>
-        /// Casts the <see cref="TagValue.Value"/> to the specified type.
+        /// Gets the first value in the <see cref="TagValue"/> that can be cast to the specified 
+        /// type, or returns a default value.
         /// </summary>
         /// <typeparam name="T">
-        ///   The type to cast the <see cref="TagValue.Value"/> to.
+        ///   The type of the value to return.
         /// </typeparam>
         /// <param name="value">
         ///   The <see cref="TagValue"/>.
         /// </param>
         /// <param name="defaultValue">
-        ///   The default value to return if the cast was unsuccessful.
+        ///   The default value to return if none of the values can be converted to 
+        ///   <typeparamref name="T"/>.
         /// </param>
         /// <returns>
-        ///   The value of the <see cref="TagValue"/> cast to <typeparamref name="T"/>, or the 
-        ///   <paramref name="defaultValue"/> if the cast was unsuccessful.
+        ///   The first tag value that can be cast to an instance of <typeparamref name="T"/>, 
+        ///   or the provided default value if the no such conversion can be performed on any of 
+        ///   the values in the <see cref="TagValue"/>.
         /// </returns>
-        public static T GetValueOrDefault<T>(this TagValue value, T defaultValue) {
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
-            return value.Value.GetValueOrDefault<T>(defaultValue);
-        }
-
-
-        /// <summary>
-        /// Gets a collection containing both the <see cref="TagValue.Value"/> and <see cref="TagValue.AdditionalValues"/> 
-        /// defined on the <see cref="TagValue"/>.
-        /// </summary>
-        /// <param name="value">
-        ///   The <see cref="TagValue"/>.
-        /// </param>
-        /// <returns>
-        ///   An enumerable of <see cref="Variant"/> instances representing all of the values of 
-        ///   the <see cref="TagValue"/>.
-        /// </returns>
-        public static IEnumerable<Variant> GetAllValues(this TagValue value) {
+        public static T? GetValueOrDefault<T>(this TagValue value, T? defaultValue) {
             if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            yield return value.Value;
-
-            foreach (var item in value.AdditionalValues) {
-                yield return item;
-            }
+            return value.Values.GetValueOrDefault(defaultValue);
         }
 
     }

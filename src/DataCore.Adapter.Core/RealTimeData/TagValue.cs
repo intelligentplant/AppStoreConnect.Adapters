@@ -7,7 +7,7 @@ using DataCore.Adapter.Common;
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes the base set of properties for a tag value.
+    /// Describes the base set of properties for a tag value sample.
     /// </summary>
     public class TagValue : IFormattable {
 
@@ -17,18 +17,12 @@ namespace DataCore.Adapter.RealTimeData {
         public DateTime UtcSampleTime { get; }
 
         /// <summary>
-        /// The primary tag value.
+        /// The values for the sample. In the majority of cases, this collection will contain a 
+        /// single item. However, multiple items are allowed to account for situations where the 
+        /// sample represents a digital state, and both the numerical and text values of the state 
+        /// are being returned.
         /// </summary>
-        /// <seealso cref="AdditionalValues"/>
-        public Variant Value { get; }
-
-        /// <summary>
-        /// Additional tag values. For example, if the value represents a digital state, it is 
-        /// possible to supply both the numeric and text values of the state in a single 
-        /// <see cref="TagValue"/> instance.
-        /// </summary>
-        /// <seealso cref="Value"/>
-        public IEnumerable<Variant> AdditionalValues { get; }
+        public IEnumerable<Variant> Values { get; }
 
         /// <summary>
         /// The quality status for the value.
@@ -47,12 +41,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="utcSampleTime">
         ///   The UTC sample time.
         /// </param>
-        /// <param name="value">
-        ///   The tag value.
-        /// </param>
-        /// <param name="additionalValues">
-        ///   Additional tag values e.g. if <paramref name="value"/> is the value of a digital 
-        ///   state, the name of the state can be specified by passing in an additional value.
+        /// <param name="values">
+        ///   The values for the sample. In the majority of cases, this collection will contain a 
+        ///   single item. However, multiple items are allowed to account for situations where the 
+        ///   sample represents a digital state, and both the numerical and text values of the state 
+        ///   are being returned.
         /// </param>
         /// <param name="status">
         ///   The quality status for the value.
@@ -60,10 +53,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public TagValue(DateTime utcSampleTime, Variant value, IEnumerable<Variant>? additionalValues, TagValueStatus status, string? units) {
+        public TagValue(DateTime utcSampleTime, IEnumerable<Variant>? values, TagValueStatus status, string? units) {
             UtcSampleTime = utcSampleTime;
-            Value = value;
-            AdditionalValues = additionalValues?.ToArray() ?? Array.Empty<Variant>();
+            Values = values?.ToArray() ?? Array.Empty<Variant>();
+            if (!Values.Any()) {
+                throw new ArgumentException(SharedResources.Error_AtLeastOneValueIsRequired, nameof(values));
+            }
             Status = status;
             Units = units;
         }
@@ -86,7 +81,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         [Obsolete("Use constructor directly.", true)]
         public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            return new TagValue(utcSampleTime, value, null, status, units);
+            return new TagValue(utcSampleTime, new[] { value }, status, units);
         }
 
 
@@ -112,7 +107,8 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public string ToString(string? format, IFormatProvider? formatProvider) {
-            var formattedValue = Value.ToString(format ?? Variant.GetDefaultFormat(Value.Type), formatProvider);
+            var val = Values.First();
+            var formattedValue = val.ToString(format ?? Variant.GetDefaultFormat(val.Type), formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
             var formattedStatus = Status == TagValueStatus.Good
                 ? SharedResources.TagValueStatus_Good

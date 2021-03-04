@@ -158,7 +158,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The average values.
         /// </returns>
         private static double CalculateAverage(IEnumerable<TagValue> values) {
-            return values.Average(x => x.Value.GetValueOrDefault(double.NaN));
+            return values.Average(x => x.GetValueOrDefault(double.NaN));
         }
 
 
@@ -237,7 +237,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 : TagValueStatus.Good;
 
             var minValue = goodQualitySamples
-                .OrderBy(x => x.Value.GetValueOrDefault(double.NaN))
+                .OrderBy(x => x.GetValueOrDefault(double.NaN))
                 .First();
 
             return new[] {
@@ -282,7 +282,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 : TagValueStatus.Good;
 
             var maxValue = goodQualitySamples
-                .OrderByDescending(x => x.Value.GetValueOrDefault(double.NaN))
+                .OrderByDescending(x => x.GetValueOrDefault(double.NaN))
                 .First();
 
             return new[] {
@@ -380,10 +380,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     ? TagValueStatus.Uncertain
                     : TagValueStatus.Good;
 
-            var orderedSamples = goodQualitySamples.OrderBy(x => x.Value.GetValueOrDefault(double.NaN));
+            var orderedSamples = goodQualitySamples.OrderBy(x => x.GetValueOrDefault(double.NaN));
             var minValue = orderedSamples.First();
             var maxValue = orderedSamples.Last();
-            var numericValue = Math.Abs(maxValue.Value.GetValueOrDefault(double.NaN) - minValue.Value.GetValueOrDefault(double.NaN));
+            var numericValue = Math.Abs(maxValue.GetValueOrDefault(double.NaN) - minValue.GetValueOrDefault(double.NaN));
 
             return new[] {
                 new TagValueBuilder()
@@ -432,7 +432,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var firstValue = goodQualitySamples.First();
             var lastValue = goodQualitySamples.Last();
-            var numericValue = firstValue.Value.GetValueOrDefault(double.NaN) - lastValue.Value.GetValueOrDefault(double.NaN);
+            var numericValue = firstValue.GetValueOrDefault(double.NaN) - lastValue.GetValueOrDefault(double.NaN);
 
             return new[] {
                 new TagValueBuilder()

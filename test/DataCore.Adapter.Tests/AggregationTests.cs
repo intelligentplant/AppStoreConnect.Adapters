@@ -1133,7 +1133,7 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] { 
                     new TagValueBuilder()
@@ -1198,7 +1198,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
@@ -1218,7 +1218,7 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] {
                     new TagValueBuilder()
@@ -1283,7 +1283,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 
@@ -1308,7 +1308,7 @@ namespace DataCore.Adapter.Tests {
             var registered = aggregationHelper.RegisterDataFunction(descriptor, (tag, bucket) => {
                 var val = !bucket.RawSamples.Any()
                     ? 0
-                    : bucket.RawSamples.Sum(x => x.Value.GetValueOrDefault(0f));
+                    : bucket.RawSamples.Sum(x => x.GetValueOrDefault(0f));
 
                 return new[] {
                     new TagValueBuilder()
@@ -1373,7 +1373,7 @@ namespace DataCore.Adapter.Tests {
                 var expectedResult = expectedResults[i];
 
                 Assert.AreEqual(expectedResult.Item1, sample.Value.UtcSampleTime, $"Iteration: {i}");
-                Assert.AreEqual(expectedResult.Item2, sample.Value.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
+                Assert.AreEqual(expectedResult.Item2, sample.Value.GetValueOrDefault<double>(), $"Iteration: {i}");
             }
         }
 

@@ -85,8 +85,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // If either value is not numeric, we'll just return the earlier value with the requested 
             // sample time. This is to allow "interpolation" of state-based values.
 
-            var y0 = valueBefore?.Value.GetValueOrDefault(double.NaN) ?? double.NaN;
-            var y1 = valueAfter?.Value.GetValueOrDefault(double.NaN) ?? double.NaN;
+            var y0 = valueBefore?.GetValueOrDefault(double.NaN) ?? double.NaN;
+            var y1 = valueAfter?.GetValueOrDefault(double.NaN) ?? double.NaN;
 
             if ( 
                 double.IsNaN(y0) || 

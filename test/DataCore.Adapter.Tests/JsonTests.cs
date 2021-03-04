@@ -601,8 +601,7 @@ namespace DataCore.Adapter.Tests {
                "Name",
                new TagValueExtended(
                    DateTime.UtcNow, 
-                   Variant.FromValue(100),
-                   new[] { Variant.FromValue("OPEN") },
+                   new[] { Variant.FromValue(100), Variant.FromValue("OPEN") },
                    TagValueStatus.Good, 
                    "Units", 
                    "Notes", 
@@ -622,15 +621,14 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.TagName, actual.TagName);
             Assert.AreEqual(expected.DataFunction, actual.DataFunction);
             Assert.AreEqual(expected.Value.UtcSampleTime, actual.Value.UtcSampleTime);
-            Assert.AreEqual(expected.Value.Value, actual.Value.Value);
             Assert.AreEqual(expected.Value.Status, actual.Value.Status);
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
 
-            Assert.AreEqual(expected.Value.AdditionalValues.Count(), actual.Value.AdditionalValues.Count());
-            for (var i = 0; i < expected.Value.AdditionalValues.Count(); i++) {
-                var expectedValue = expected.Value.AdditionalValues.ElementAt(i);
-                var actualValue = actual.Value.AdditionalValues.ElementAt(i);
+            Assert.AreEqual(expected.Value.Values.Count(), actual.Value.Values.Count());
+            for (var i = 0; i < expected.Value.Values.Count(); i++) {
+                var expectedValue = expected.Value.Values.ElementAt(i);
+                var actualValue = actual.Value.Values.ElementAt(i);
 
                 Assert.AreEqual(expectedValue, actualValue);
             }
@@ -1018,8 +1016,7 @@ namespace DataCore.Adapter.Tests {
             var expected =
             new TagValue(
                 DateTime.UtcNow,
-                Variant.FromValue(100),
-                new[] { Variant.FromValue("OPEN") },
+                new[] { Variant.FromValue(100), Variant.FromValue("OPEN") },
                 TagValueStatus.Good,
                 "Units"
             );
@@ -1028,14 +1025,13 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<TagValue>(json, options);
 
             Assert.AreEqual(expected.UtcSampleTime, actual.UtcSampleTime);
-            Assert.AreEqual(expected.Value, actual.Value);
             Assert.AreEqual(expected.Status, actual.Status);
             Assert.AreEqual(expected.Units, actual.Units);
 
-            Assert.AreEqual(expected.AdditionalValues.Count(), actual.AdditionalValues.Count());
-            for (var i = 0; i < expected.AdditionalValues.Count(); i++) {
-                var expectedValue = expected.AdditionalValues.ElementAt(i);
-                var actualValue = actual.AdditionalValues.ElementAt(i);
+            Assert.AreEqual(expected.Values.Count(), actual.Values.Count());
+            for (var i = 0; i < expected.Values.Count(); i++) {
+                var expectedValue = expected.Values.ElementAt(i);
+                var actualValue = actual.Values.ElementAt(i);
 
                 Assert.AreEqual(expectedValue, actualValue);
             }
@@ -1048,8 +1044,7 @@ namespace DataCore.Adapter.Tests {
             var expected =
             new TagValueExtended(
                 DateTime.UtcNow,
-                Variant.FromValue(100),
-                new[] { Variant.FromValue("OPEN") },
+                new[] { Variant.FromValue(100),Variant.FromValue("OPEN") },
                 TagValueStatus.Good,
                 "Units",
                 "Notes",
@@ -1064,15 +1059,14 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<TagValueExtended>(json, options);
 
             Assert.AreEqual(expected.UtcSampleTime, actual.UtcSampleTime);
-            Assert.AreEqual(expected.Value, actual.Value);
             Assert.AreEqual(expected.Status, actual.Status);
             Assert.AreEqual(expected.Units, actual.Units);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
-            Assert.AreEqual(expected.AdditionalValues.Count(), actual.AdditionalValues.Count());
-            for (var i = 0; i < expected.AdditionalValues.Count(); i++) {
-                var expectedValue = expected.AdditionalValues.ElementAt(i);
-                var actualValue = actual.AdditionalValues.ElementAt(i);
+            Assert.AreEqual(expected.Values.Count(), actual.Values.Count());
+            for (var i = 0; i < expected.Values.Count(); i++) {
+                var expectedValue = expected.Values.ElementAt(i);
+                var actualValue = actual.Values.ElementAt(i);
 
                 Assert.AreEqual(expectedValue, actualValue);
             }
@@ -1096,8 +1090,7 @@ namespace DataCore.Adapter.Tests {
                "Name",
                new TagValueExtended(
                    DateTime.UtcNow,
-                   Variant.FromValue(100),
-                   new[] { Variant.FromValue("OPEN") },
+                   new[] { Variant.FromValue(100),Variant.FromValue("OPEN") },
                    TagValueStatus.Good,
                    "Units",
                    "Notes",
@@ -1115,15 +1108,14 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.TagId, actual.TagId);
             Assert.AreEqual(expected.TagName, actual.TagName);
             Assert.AreEqual(expected.Value.UtcSampleTime, actual.Value.UtcSampleTime);
-            Assert.AreEqual(expected.Value.Value, actual.Value.Value);
             Assert.AreEqual(expected.Value.Status, actual.Value.Status);
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
 
-            Assert.AreEqual(expected.Value.AdditionalValues.Count(), actual.Value.AdditionalValues.Count());
-            for (var i = 0; i < expected.Value.AdditionalValues.Count(); i++) {
-                var expectedValue = expected.Value.AdditionalValues.ElementAt(i);
-                var actualValue = actual.Value.AdditionalValues.ElementAt(i);
+            Assert.AreEqual(expected.Value.Values.Count(), actual.Value.Values.Count());
+            for (var i = 0; i < expected.Value.Values.Count(); i++) {
+                var expectedValue = expected.Value.Values.ElementAt(i);
+                var actualValue = actual.Value.Values.ElementAt(i);
 
                 Assert.AreEqual(expectedValue, actualValue);
             }

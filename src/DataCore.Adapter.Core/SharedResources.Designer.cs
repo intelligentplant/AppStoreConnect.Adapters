@@ -70,6 +70,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify one or more values..
+        /// </summary>
+        public static string Error_AtLeastOneValueIsRequired {
+            get {
+                return ResourceManager.GetString("Error_AtLeastOneValueIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a content type..
         /// </summary>
         public static string Error_ContentTypeIsRequired {

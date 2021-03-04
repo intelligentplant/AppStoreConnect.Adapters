@@ -416,7 +416,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var significantValues = new HashSet<TagValueExtended>();
 
             if (tag.DataType.IsNumericType()) {
-                var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.Value.GetValueOrDefault(double.NaN));
+                var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.GetValueOrDefault(double.NaN));
 
                 significantValues.Add(bucket.RawSamples.First());
                 significantValues.Add(bucket.RawSamples.Last());
@@ -438,11 +438,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             else {
                 // The tag is not numeric, so we have to add each text value change or quality status 
                 // change in the bucket.
-                var currentState = lastValuePreviousBucket?.Value.GetValueOrDefault<string>();
+                var currentState = lastValuePreviousBucket?.GetValueOrDefault<string>();
                 var currentQuality = lastValuePreviousBucket?.Status;
 
                 foreach (var item in bucket.RawSamples) {
-                    var tVal = item.Value.GetValueOrDefault<string>();
+                    var tVal = item.GetValueOrDefault<string>();
                     if (currentState != null && 
                         string.Equals(currentState, tVal, StringComparison.Ordinal) && 
                         currentQuality == item.Status) {

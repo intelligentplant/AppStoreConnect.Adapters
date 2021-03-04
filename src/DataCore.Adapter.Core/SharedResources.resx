@@ -120,6 +120,9 @@
   <data name="Error_AbsoluteUriRequired" xml:space="preserve">
     <value>An absolute URI is required.</value>
   </data>
+  <data name="Error_AtLeastOneValueIsRequired" xml:space="preserve">
+    <value>You must specify one or more values.</value>
+  </data>
   <data name="Error_ContentTypeIsRequired" xml:space="preserve">
     <value>You must specify a content type.</value>
   </data>
