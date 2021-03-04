@@ -28,8 +28,6 @@ namespace DataCore.Adapter.Tags {
                 return false;
             }
 
-#pragma warning disable CS8604 // Possible null reference argument.
-
             if (!string.IsNullOrWhiteSpace(filter.Name)) {
                 if (!tag.Name.Like(filter.Name)) {
                     return false;
@@ -64,7 +62,6 @@ namespace DataCore.Adapter.Tags {
                     }
                 }
             }
-#pragma warning restore CS8604 // Possible null reference argument.
 
             return true;
         }
