@@ -23,12 +23,16 @@ namespace DataCore.Adapter.Tags {
         ///   <see langword="true"/> if the tag matches the filter, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool MatchesFilter(this TagDefinition tag, FindTagsRequest filter) {
-            if (tag == null || filter == null) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool MatchesFilter(this TagDefinition tag, FindTagsRequest? filter) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+            if (filter == null) {
                 return false;
             }
-
-#pragma warning disable CS8604 // Possible null reference argument.
 
             if (!string.IsNullOrWhiteSpace(filter.Name)) {
                 if (!tag.Name.Like(filter.Name)) {
@@ -64,7 +68,6 @@ namespace DataCore.Adapter.Tags {
                     }
                 }
             }
-#pragma warning restore CS8604 // Possible null reference argument.
 
             return true;
         }
@@ -82,6 +85,9 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   The matching tags.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tags"/> is <see langword="null"/>.
+        /// </exception>
         public static IEnumerable<TagDefinition> ApplyFilter(this IEnumerable<TagDefinition> tags, FindTagsRequest? filter) {
             if (tags == null) {
                 throw new ArgumentNullException(nameof(tags));
