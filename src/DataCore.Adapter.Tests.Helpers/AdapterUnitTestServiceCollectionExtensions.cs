@@ -2,10 +2,7 @@
 
 using DataCore.Adapter.DependencyInjection;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace DataCore.Adapter.Tests {
+namespace Microsoft.Extensions.DependencyInjection {
 
     /// <summary>
     /// <see cref="IServiceCollection"/> extensions.
@@ -13,7 +10,7 @@ namespace DataCore.Adapter.Tests {
     public static class ServiceCollectionExtensions {
 
         /// <summary>
-        /// Adds default App Store Connect adapter services.
+        /// Adds default App Store Connect adapter services for use in unit tests.
         /// </summary>
         /// <param name="services">
         ///   The <see cref="IServiceCollection"/>.
