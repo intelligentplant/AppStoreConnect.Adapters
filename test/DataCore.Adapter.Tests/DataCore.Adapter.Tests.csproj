@@ -60,7 +60,6 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore" Version="$(MicrosoftAspNetCoreVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="$(MicrosoftAspNetCoreVersion)" />
       </ItemGroup>
     </Otherwise>
   </Choose>

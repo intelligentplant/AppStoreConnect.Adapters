@@ -12,12 +12,21 @@
   
   <!-- ASP.NET Core/Microsoft Extension Packages -->
   <PropertyGroup>
+    <!-- 
+      Microsoft.AspNetCore metapackage is referenced by .NET Framework 4.8 unit tests. 
+    -->
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
     <MicrosoftAspNetCoreSignalRClientVersion>5.0.3</MicrosoftAspNetCoreSignalRClientVersion>
     <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>5.0.0</MicrosoftBclAsyncInterfacesVersion>
+    <!-- 
+      Microsoft.Extensions.Hosting and Microsoft.Extensions.Http are referenced by the 
+      DataCore.Adapter.Tests.Helpers project for .NET Standard 2.0 targeting. 
+    -->
+    <MicrosoftExtensionsHostingVersion>2.2.0</MicrosoftExtensionsHostingVersion>
+    <MicrosoftExtensionsHttpVersion>2.2.0</MicrosoftExtensionsHttpVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->

@@ -89,7 +89,7 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public static AdapterProperty Create(string name, object value, string? description = null) {
-            return new AdapterProperty(name, value is Variant v ? v : Variant.FromValue(value), description);
+            return new AdapterProperty(name, Variant.FromValue(value), description);
         }
 
 
