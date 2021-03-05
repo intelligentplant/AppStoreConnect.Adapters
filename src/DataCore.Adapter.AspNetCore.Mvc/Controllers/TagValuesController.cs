@@ -41,6 +41,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </summary>
         public const int MaxSamplesPerWriteRequest = 5000;
 
+        /// <summary>
+        /// Default query time range to use in a historical query if a start or end time is not 
+        /// specified on a route that accepts the time range as query string parameters.
+        /// </summary>
+        public static TimeSpan DefaultHistoricalQueryDuration { get; } = TimeSpan.FromHours(1);
+
+        /// <summary>
+        /// Default number of samples or intervals to request in a historical query if this is not 
+        /// specified on a route that accepts this value as a query string parameter.
+        /// </summary>
+        public const int DefaultSampleOrIntervalCount = 100;
+
 
         /// <summary>
         /// Creates a new <see cref="TagValuesController"/> object.
@@ -145,6 +157,67 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="tag">
+        ///   The tag IDs or names to poll.
+        /// </param>
+        /// <param name="start">
+        ///   The UTC start time for the query.
+        /// </param>
+        /// <param name="end">
+        ///   The UTC end time for the query.
+        /// </param>
+        /// <param name="count">
+        ///   The maximum number of samples to retrieve per tag.
+        /// </param>
+        /// <param name="boundary">
+        ///   The boundary type for the query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the raw values for the requested tags.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/raw")]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        public Task<IActionResult> ReadRawValues(
+            string adapterId, 
+            [FromQuery] string[] tag = null!, 
+            DateTime? start = null, 
+            DateTime? end = null, 
+            int count = DefaultSampleOrIntervalCount, 
+            RawDataBoundaryType boundary = RawDataBoundaryType.Inside, 
+            CancellationToken cancellationToken = default
+        ) {
+            var now = DateTime.UtcNow;
+            if (start == null && end == null) {
+                end = now;
+                start = now.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (start == null) {
+                start = end!.Value.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (end == null) {
+                end = start.Value.Add(DefaultHistoricalQueryDuration);
+            }
+
+            return ReadRawValues(adapterId, new ReadRawTagValuesRequest() {
+                Tags = tag ?? Array.Empty<string>(),
+                UtcStartTime = Util.ConvertToUniversalTime(start.Value),
+                UtcEndTime = Util.ConvertToUniversalTime(end.Value),
+                SampleCount = count,
+                BoundaryType = boundary
+            }, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Requests raw (archived) tag values.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
         /// <param name="request">
         ///   The raw data request.
         /// </param>
@@ -194,6 +267,67 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             catch (SecurityException) {
                 return Forbid(); // 403
             }
+        }
+
+
+        /// <summary>
+        /// Requests plot (vizualization-friendly) tag values.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag IDs or names to poll.
+        /// </param>
+        /// <param name="start">
+        ///   The UTC start time for the query.
+        /// </param>
+        /// <param name="end">
+        ///   The UTC end time for the query.
+        /// </param>
+        /// <param name="count">
+        ///   The number of intervals for the query (typically the pixel width of the chart that 
+        ///   the data will be displayed on).
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the plot values for the requested tags.
+        /// </returns>
+        /// <remarks>
+        ///   Plot data is intended to provide visualization-friendly data sets for display in e.g. 
+        ///   charts.
+        /// </remarks>
+        [HttpGet]
+        [Route("{adapterId}/plot")]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        public Task<IActionResult> ReadPlotValues(
+            string adapterId, 
+            [FromQuery] string[] tag = null!, 
+            DateTime? start = null,
+            DateTime? end = null,
+            int count = DefaultSampleOrIntervalCount,
+            CancellationToken cancellationToken = default
+        ) {
+            var now = DateTime.UtcNow;
+            if (start == null && end == null) {
+                end = now;
+                start = now.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (start == null) {
+                start = end!.Value.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (end == null) {
+                end = start.Value.Add(DefaultHistoricalQueryDuration);
+            }
+
+            return ReadPlotValues(adapterId, new ReadPlotTagValuesRequest() {
+                Tags = tag ?? Array.Empty<string>(),
+                UtcStartTime = Util.ConvertToUniversalTime(start.Value),
+                UtcEndTime = Util.ConvertToUniversalTime(end.Value),
+                Intervals = count
+            }, cancellationToken);
         }
 
 
@@ -265,6 +399,40 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="tag">
+        ///   The tag IDs or names to poll.
+        /// </param>
+        /// <param name="time">
+        ///   The UTC sample times to request values at.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the values for the requested tags at the requested times.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/values-at-times")]
+        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        public Task<IActionResult> ReadValuesAtTimes(
+            string adapterId, 
+            [FromQuery] string[] tag = null!,
+            [FromQuery] DateTime[] time = null!,
+            CancellationToken cancellationToken = default
+        ) {
+            return ReadValuesAtTimes(adapterId, new ReadTagValuesAtTimesRequest() { 
+                Tags = tag ?? Array.Empty<string>(),
+                UtcSampleTimes = time?.Select(Util.ConvertToUniversalTime)?.ToArray() ?? Array.Empty<DateTime>()
+            }, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Requests tag values at specific timestamps.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
         /// <param name="request">
         ///   The values-at-times data request.
         /// </param>
@@ -313,6 +481,81 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             catch (SecurityException) {
                 return Forbid(); // 403
             }
+        }
+
+
+        /// <summary>
+        /// Requests processed (aggregated) tag values.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="tag">
+        ///   The tag IDs or names to poll.
+        /// </param>
+        /// <param name="start">
+        ///   The UTC start time for the query.
+        /// </param>
+        /// <param name="end">
+        ///   The UTC end time for the query.
+        /// </param>
+        /// <param name="count">
+        ///   The number of samples to request per tag. The sample interval for the query will be 
+        ///   derived from this value.
+        /// </param>
+        /// <param name="function">
+        ///   The data function IDs for the query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the aggregated values for the requested tags and data 
+        ///   functions.
+        /// </returns>
+        /// <remarks>
+        ///   Processed data queries are used to request aggregated values for tags. The functions 
+        ///   supported vary by data source. The <see cref="DefaultDataFunctions"/> class defines
+        ///   constants for commonly-supported aggregate functions.
+        /// </remarks>
+        /// <seealso cref="DefaultDataFunctions"/>
+        [HttpGet]
+        [Route("{adapterId}/processed")]
+        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
+        public Task<IActionResult> ReadProcessedValues(
+            string adapterId,
+            [FromQuery] string[] tag = null!,
+            DateTime? start = null,
+            DateTime? end = null,
+            int count = DefaultSampleOrIntervalCount,
+            [FromQuery] string[] function = null!,
+            CancellationToken cancellationToken = default
+        ) {
+            var now = DateTime.UtcNow;
+            if (start == null && end == null) {
+                end = now;
+                start = now.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (start == null) {
+                start = end!.Value.Subtract(DefaultHistoricalQueryDuration);
+            }
+            else if (end == null) {
+                end = start.Value.Add(DefaultHistoricalQueryDuration);
+            }
+
+            if (count < 1) {
+                count = 1;
+            }
+
+            var interval = TimeSpan.FromSeconds((end.Value - start.Value).TotalSeconds / count);
+
+            return ReadProcessedValues(adapterId, new ReadProcessedTagValuesRequest() {
+                Tags = tag ?? Array.Empty<string>(),
+                UtcStartTime = Util.ConvertToUniversalTime(start.Value),
+                UtcEndTime = Util.ConvertToUniversalTime(end.Value),
+                SampleInterval = interval,
+                DataFunctions = function ?? Array.Empty<string>()
+            }, cancellationToken);
         }
 
 

@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.7.0.0 (NJsonSchema v10.1.24.0 (Newtonsoft.Json v10.0.0.0))",
+  "x-generator": "NSwag v13.10.2.0 (NJsonSchema v10.3.4.0 (Newtonsoft.Json v10.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
@@ -1336,6 +1336,142 @@
         }
       }
     },
+    "/api/app-store-connect/v1.0/tags/{adapterId}": {
+      "post": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Performs a tag search on an adapter.",
+        "operationId": "TagSearch_FindTags2",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The search filter.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindTagsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of TagDefinition objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TagSearch"
+        ],
+        "summary": "Performs a tag search on an adapter.",
+        "operationId": "TagSearch_FindTags3",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID.",
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The tag name filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "The tag description filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "units",
+            "in": "query",
+            "description": "The tag units filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 5
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The results page to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain a collection of TagDefinition objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/app-store-connect/v1.0/tags/{adapterId}/get-by-id": {
       "post": {
         "tags": [
@@ -1537,6 +1673,103 @@
       }
     },
     "/api/app-store-connect/v1.0/tag-values/{adapterId}/raw": {
+      "get": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests raw (archived) tag values.",
+        "operationId": "TagValues_ReadRawValuesAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The tag IDs or names to poll.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 2
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "The UTC start time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "The UTC end time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The maximum number of samples to retrieve per tag.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            },
+            "x-position": 5
+          },
+          {
+            "name": "boundary",
+            "in": "query",
+            "description": "The boundary type for the query.",
+            "schema": {
+              "default": "Inside",
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RawDataBoundaryType"
+                }
+              ]
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the raw values for the requested tags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "TagValues"
@@ -1587,6 +1820,90 @@
       }
     },
     "/api/app-store-connect/v1.0/tag-values/{adapterId}/plot": {
+      "get": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests plot (vizualization-friendly) tag values.",
+        "description": "Plot data is intended to provide visualization-friendly data sets for display in e.g. charts.",
+        "operationId": "TagValues_ReadPlotValuesAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The tag IDs or names to poll.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 2
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "The UTC start time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "The UTC end time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The number of intervals for the query (typically the pixel width of the chart that the data will be displayed on).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the plot values for the requested tags.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "TagValues"
@@ -1638,6 +1955,72 @@
       }
     },
     "/api/app-store-connect/v1.0/tag-values/{adapterId}/values-at-times": {
+      "get": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests tag values at specific timestamps.",
+        "operationId": "TagValues_ReadValuesAtTimesAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The tag IDs or names to poll.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 2
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The UTC sample times to request values at.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the values for the requested tags at the requested times.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "TagValues"
@@ -1688,6 +2071,105 @@
       }
     },
     "/api/app-store-connect/v1.0/tag-values/{adapterId}/processed": {
+      "get": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests processed (aggregated) tag values.",
+        "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
+        "operationId": "TagValues_ReadProcessedValuesAll",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The tag IDs or names to poll.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 2
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "The UTC start time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "The UTC end time for the query.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The number of samples to request per tag. The sample interval for the query will be derived from this value.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            },
+            "x-position": 5
+          },
+          {
+            "name": "function",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "description": "The data function IDs for the query.",
+            "schema": {
+              "type": "array",
+              "nullable": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the aggregated values for the requested tags and data functions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessedTagValueQueryResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "TagValues"
@@ -2331,33 +2813,8 @@
             "description": "The adapter ID for the reference."
           },
           "tag": {
-            "description": "The tag identifier for the reference.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/TagIdentifier"
-              }
-            ]
-          }
-        }
-      },
-      "TagIdentifier": {
-        "type": "object",
-        "description": "Defines basic information for identifying a real-time data tag.",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "name"
-        ],
-        "properties": {
-          "id": {
             "type": "string",
-            "description": "The unique identifier for the tag.",
-            "minLength": 1
-          },
-          "name": {
-            "type": "string",
-            "description": "The tag name.",
-            "minLength": 1
+            "description": "The tag name or ID for the reference."
           }
         }
       },
@@ -3088,6 +3545,14 @@
                   "$ref": "#/components/schemas/DigitalState"
                 }
               },
+              "supportedFeatures": {
+                "type": "array",
+                "description": "The adapter features that can be used to read data from or write data to this tag.",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
               "properties": {
                 "type": "array",
                 "description": "Bespoke tag properties.",
@@ -3158,6 +3623,27 @@
           }
         ]
       },
+      "TagIdentifier": {
+        "type": "object",
+        "description": "Defines basic information for identifying a real-time data tag.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the tag.",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "The tag name.",
+            "minLength": 1
+          }
+        }
+      },
       "FindTagsRequest": {
         "allOf": [
           {
@@ -3195,9 +3681,39 @@
                 "additionalProperties": {
                   "type": "string"
                 }
+              },
+              "resultFields": {
+                "description": "The result fields to populate in the search results.",
+                "default": "All",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TagDefinitionFields"
+                  }
+                ]
               }
             }
           }
+        ]
+      },
+      "TagDefinitionFields": {
+        "type": "string",
+        "description": "Indicates which parts of a TagDefinition to populate when returning the \nresults of a FindTagsRequest.",
+        "x-enumFlags": true,
+        "x-enumNames": [
+          "BasicInformation",
+          "DigitalStates",
+          "Properties",
+          "Labels",
+          "SupportedFeatures",
+          "All"
+        ],
+        "enum": [
+          "BasicInformation",
+          "DigitalStates",
+          "Properties",
+          "Labels",
+          "SupportedFeatures",
+          "All"
         ]
       },
       "GetTagsRequest": {
@@ -3283,7 +3799,7 @@
       },
       "TagValue": {
         "type": "object",
-        "description": "Describes the base set of properties for a tag value.",
+        "description": "Describes the base set of properties for a tag value sample.",
         "additionalProperties": false,
         "properties": {
           "utcSampleTime": {
@@ -3291,13 +3807,12 @@
             "description": "The UTC sample time for the value.",
             "format": "date-time"
           },
-          "value": {
-            "description": "The tag value.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Variant"
-              }
-            ]
+          "values": {
+            "type": "array",
+            "description": "The values for the sample. In the majority of cases, this collection will contain a \nsingle item. However, multiple items are allowed to account for situations where the \nsample represents a digital state, and both the numerical and text values of the state \nare being returned.",
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            }
           },
           "status": {
             "description": "The quality status for the value.",
@@ -3340,6 +3855,18 @@
           }
         ]
       },
+      "RawDataBoundaryType": {
+        "type": "string",
+        "description": "Describes a boundary type used when making a raw data query.",
+        "x-enumNames": [
+          "Inside",
+          "Outside"
+        ],
+        "enum": [
+          "Inside",
+          "Outside"
+        ]
+      },
       "ReadRawTagValuesRequest": {
         "allOf": [
           {
@@ -3371,18 +3898,6 @@
               }
             }
           }
-        ]
-      },
-      "RawDataBoundaryType": {
-        "type": "string",
-        "description": "Describes a boundary type used when making a raw data query.",
-        "x-enumNames": [
-          "Inside",
-          "Outside"
-        ],
-        "enum": [
-          "Inside",
-          "Outside"
         ]
       },
       "ReadPlotTagValuesRequest": {
@@ -3535,6 +4050,13 @@
             "items": {
               "$ref": "#/components/schemas/AdapterProperty"
             }
+          },
+          "aliases": {
+            "type": "array",
+            "description": "Aliases that can also be used to identify this function.",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3563,13 +4085,19 @@
           "Unspecified",
           "PercentValues",
           "PercentTime",
-          "Custom"
+          "Custom",
+          "Raw",
+          "AlwaysGood",
+          "WorstCase"
         ],
         "enum": [
           "Unspecified",
           "PercentValues",
           "PercentTime",
-          "Custom"
+          "Custom",
+          "Raw",
+          "AlwaysGood",
+          "WorstCase"
         ]
       },
       "WriteTagValueResult": {
