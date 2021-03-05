@@ -445,17 +445,40 @@ namespace DataCore.Adapter.Csv {
                         }
 
                         var tag = item.Value;
+                        var isDigitalTag = tag.IsDigitalStateTag();
                         var valuesForTag = values.GetOrAdd(tag.Id, key => new SortedList<DateTime, TagValueExtended>());
 
-                        valuesForTag.Add(
-                            sampleTime,
-                            new TagValueBuilder()
-                                .WithUtcSampleTime(sampleTime)
-                                .WithValue(double.TryParse(unparsedValue, NumberStyles.Any, csvConfig.CultureInfo, out var numericValue) ? (object) numericValue : unparsedValue)
-                                .WithStatus(TagValueStatus.Good)
-                                .WithUnits(tag.Units)
-                                .Build()
-                        );
+                        var hasNumericValue = double.TryParse(unparsedValue, NumberStyles.Any, csvConfig.CultureInfo, out var numericValue);
+
+                        // If the parsed value is numeric, we will pass that as the value of the 
+                        // sample, casting it to an int if this is a digital tag (since digital 
+                        // state values must be integers). Otherwise, we will pass the unparsed 
+                        // string value as the value of the sample.
+                        var primaryValue = hasNumericValue
+                            ? isDigitalTag
+                                ? (int) Math.Truncate(numericValue)
+                                // Explicitly cast to object, so that the truncated numeric value 
+                                // above is not implicitly recast from int back to double; we want  
+                                // the Variant that contains the value to infer the correct  
+                                // underlying type for the value.
+                                : (object) numericValue
+                            : unparsedValue;
+
+                        var builder = new TagValueBuilder()
+                            .WithUtcSampleTime(sampleTime)
+                            .WithValue(primaryValue)
+                            .WithStatus(TagValueStatus.Good)
+                            .WithUnits(tag.Units);
+
+                        if (hasNumericValue && isDigitalTag) {
+                            // This is a digital tag; we'll add the digital state name as a secondary value.
+                            var state = tag.States.FirstOrDefault(x => x.Value == numericValue);
+                            if (state != null) {
+                                builder.WithValue(state.Name);
+                            }
+                        }
+
+                        valuesForTag.Add(sampleTime, builder.Build());
                     }
                 } while (currentRow != null && !cancellationToken.IsCancellationRequested);
             }
