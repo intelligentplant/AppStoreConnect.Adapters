@@ -341,9 +341,14 @@ namespace DataCore.Adapter.Common {
                 return s;
             }
 
-            return (format != null && Value is IFormattable formattable)
-                ? formattable.ToString(format, formatProvider)
-                : Value?.ToString()!;
+            try {
+                return (format != null && Value is IFormattable formattable)
+                    ? formattable.ToString(format, formatProvider)
+                    : Value?.ToString()!;
+            }
+            catch {
+                return Value?.ToString()!;
+            }
         }
 
 
