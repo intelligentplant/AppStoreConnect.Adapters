@@ -107,8 +107,25 @@ namespace DataCore.Adapter.RealTimeData {
 
         /// <inheritdoc/>
         public string ToString(string? format, IFormatProvider? formatProvider) {
-            var val = Values.First();
-            var formattedValue = val.ToString(format ?? Variant.GetDefaultFormat(val.Type), formatProvider);
+            // If a format has been specified, we'll assume that it applies to values of the same 
+            // type as the first value.
+            var firstVal = Values.First();
+
+            // Our formatted value will be a CSV string containing all of the values for the sample.
+            var valueCount = 0;
+            var formattedValue = string.Join(", ", Values.Select(x => {
+                ++valueCount;
+                var fmt = x.Type == firstVal.Type
+                    ? format
+                    : null;
+                return x.ToString(fmt, formatProvider);
+            }));
+
+            if (valueCount > 1) {
+                // If there are multiple values, we will enclose them in parentheses.
+                formattedValue = string.Concat("(", formattedValue, ")");
+            }
+
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
             var formattedStatus = Status == TagValueStatus.Good
                 ? SharedResources.TagValueStatus_Good
