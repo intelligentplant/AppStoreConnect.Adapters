@@ -74,6 +74,37 @@ namespace DataCore.Adapter.Tests {
             return new Uri(value, UriKind.Absolute);
         }
 
+
+        [TestMethod]
+        public void VariantShouldDetectArray() {
+            var arr = new string[,] {
+                { "Intelligent", "Plant", "Limited" },
+                { "Industrial", "App", "Store" }
+            };
+
+            var variant = new Variant(arr);
+            Assert.AreEqual(VariantType.String, variant.Type);
+            Assert.IsNotNull(variant.ArrayDimensions);
+            Assert.AreEqual(arr.Rank, variant.ArrayDimensions!.Length);
+
+            for (var i = 0; i < arr.Rank; i++) {
+                var length = arr.GetLength(i);
+                Assert.AreEqual(length, variant.ArrayDimensions[i]);
+            }
+        }
+
+
+        [TestMethod]
+        public void VariantShouldNotAllowUnsupportedValueType() {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Variant(new System.Drawing.Point(500, 300)));
+        }
+
+
+        [TestMethod]
+        public void VariantShouldNotAllowUnsupportedArrayType() {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Variant(new[] { new System.Drawing.Point(500, 300) }));
+        }
+
     }
 
 }
