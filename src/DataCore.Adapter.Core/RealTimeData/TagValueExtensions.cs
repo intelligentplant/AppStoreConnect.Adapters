@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using DataCore.Adapter.Common;
 
@@ -117,6 +118,35 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return value.Value.GetValueOrDefault(defaultValue);
+        }
+
+
+        /// <summary>
+        /// Tries to get the display value for the <see cref="TagValueExtended"/>.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValueExtended"/>.
+        /// </param>
+        /// <param name="displayValue">
+        ///   The display value for the sample.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <paramref name="value"/> defines a display value, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        ///   Display values are defined via a <see cref="WellKnownProperties.TagValue.DisplayValue"/> 
+        ///   entry in the <see cref="TagValueExtended.Properties"/> collection.
+        /// </remarks>
+        public static bool TryGetDisplayValue(this TagValueExtended value, out string? displayValue) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            var prop = value.Properties.FirstOrDefault(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
+            displayValue = prop?.Value.GetValueOrDefault<string>();
+
+            return displayValue != null;
         }
 
     }
