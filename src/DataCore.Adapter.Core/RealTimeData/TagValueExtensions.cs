@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using DataCore.Adapter.Common;
 
@@ -11,13 +12,14 @@ namespace DataCore.Adapter.RealTimeData {
     public static class TagValueExtensions {
 
         /// <summary>
-        /// Gets all values in the <see cref="TagValue"/> that have a numeric type.
+        /// Tests if the <see cref="TagValue.Value"/> of a <see cref="TagValue"/> has a numeric type.
         /// </summary>
         /// <param name="value">
         ///   The <see cref="TagValue"/>.
         /// </param>
         /// <returns>
-        ///   The <see cref="TagValue.Values"/> entries that have a numeric type.
+        ///   <see langword="true"/> if the <see cref="TagValue.Value"/> has a numeric type, or <see langword="false"/> 
+        ///   otherwise.
         /// </returns>
         /// <remarks>
         /// 
@@ -62,81 +64,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// All other types are considered to be non-numeric.
         /// 
         /// </remarks>
-        public static IEnumerable<Variant> GetNumericValues(this TagValue value) {
+        public static bool IsNumericType(this TagValue value) {
             if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            foreach (var val in value.Values) {
-                if (val.IsNumericType()) {
-                    yield return val;
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Gets all values in the <see cref="TagValue"/> that do not have a numeric type.
-        /// </summary>
-        /// <param name="value">
-        ///   The <see cref="TagValue"/>.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="TagValue.Values"/> entries that do not have a numeric type.
-        /// </returns>
-        /// <remarks>
-        /// 
-        /// The following value types are considered to be numeric:
-        /// 
-        /// <list type="bullet">
-        ///   <item>
-        ///     <description><see cref="VariantType.Boolean"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Byte"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Double"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Float"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Int16"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Int32"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.Int64"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.SByte"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.UInt16"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.UInt32"/></description>
-        ///   </item>
-        ///   <item>
-        ///     <description><see cref="VariantType.UInt64"/></description>
-        ///   </item>
-        /// </list>
-        /// 
-        /// All other types are considered to be non-numeric.
-        /// 
-        /// </remarks>
-        public static IEnumerable<Variant> GetNonNumericValues(this TagValue value) {
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            foreach (var val in value.Values) {
-                if (!val.IsNumericType()) {
-                    yield return val;
-                }
-            }
+            return value.Value.IsNumericType();
         }
 
 
@@ -184,7 +117,36 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            return value.Values.GetValueOrDefault(defaultValue);
+            return value.Value.GetValueOrDefault(defaultValue);
+        }
+
+
+        /// <summary>
+        /// Tries to get the display value for the <see cref="TagValueExtended"/>.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValueExtended"/>.
+        /// </param>
+        /// <param name="displayValue">
+        ///   The display value for the sample.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <paramref name="value"/> defines a display value, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        ///   Display values are defined via a <see cref="WellKnownProperties.TagValue.DisplayValue"/> 
+        ///   entry in the <see cref="TagValueExtended.Properties"/> collection.
+        /// </remarks>
+        public static bool TryGetDisplayValue(this TagValueExtended value, out string? displayValue) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            var prop = value.Properties.FirstOrDefault(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
+            displayValue = prop?.Value.GetValueOrDefault<string>();
+
+            return displayValue != null;
         }
 
     }
