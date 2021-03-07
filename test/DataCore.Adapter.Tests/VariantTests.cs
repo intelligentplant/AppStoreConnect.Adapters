@@ -22,7 +22,6 @@ namespace DataCore.Adapter.Tests {
         [DataRow(VariantType.Int64, "-9223372036854775808", -9223372036854775808)]
         [DataRow(VariantType.Int64, "9223372036854775807", 9223372036854775807)]
         [DataRow(VariantType.Null, null, null)]
-        [DataRow(VariantType.Object, "test", "test")]
         [DataRow(VariantType.SByte, "-128", (sbyte) -128)]
         [DataRow(VariantType.SByte, "127", (sbyte) 127)]
         [DataRow(VariantType.String, "test", "test")]

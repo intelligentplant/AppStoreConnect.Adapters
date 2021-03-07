@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Json {
             }
 
             VariantType? valueType = null;
+            int[]? arrayDimensions = null;
             JsonElement valueElement = default;
 
             var startDepth = reader.CurrentDepth;
@@ -37,6 +38,9 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(Variant.Type), StringComparison.OrdinalIgnoreCase)) {
                     valueType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(Variant.ArrayDimensions), StringComparison.OrdinalIgnoreCase)) {
+                    arrayDimensions = JsonSerializer.Deserialize<int[]?>(ref reader, options);
+                }
                 else if (string.Equals(propertyName, nameof(Variant.Value), StringComparison.OrdinalIgnoreCase)) {
                     valueElement = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
                 }
@@ -49,42 +53,74 @@ namespace DataCore.Adapter.Json {
                 return Variant.Null;
             }
 
+            var isArray = arrayDimensions?.Length > 0;
+
             switch (valueType) {
                 case VariantType.Boolean:
-                    return Variant.FromValue(valueElement.GetBoolean());
+                    return isArray 
+                        ? new Variant(ReadArray<bool>(valueElement, arrayDimensions!, options)) 
+                        : valueElement.GetBoolean();
                 case VariantType.Byte:
-                    return Variant.FromValue(valueElement.GetByte());
+                    return isArray
+                        ? new Variant(ReadArray<byte>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetByte();
                 case VariantType.DateTime:
-                    return Variant.FromValue(valueElement.GetDateTime());
+                    return isArray
+                        ? new Variant(ReadArray<DateTime>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetDateTime();
                 case VariantType.Double:
-                    return Variant.FromValue(valueElement.GetDouble());
+                    return isArray
+                        ? new Variant(ReadArray<double>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetDouble();
                 case VariantType.Float:
-                    return Variant.FromValue(valueElement.GetSingle());
+                    return isArray
+                        ? new Variant(ReadArray<float>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetSingle();
                 case VariantType.Int16:
-                    return Variant.FromValue(valueElement.GetInt16());
+                    return isArray
+                        ? new Variant(ReadArray<short>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt16();
                 case VariantType.Int32:
-                    return Variant.FromValue(valueElement.GetInt32());
+                    return isArray
+                        ? new Variant(ReadArray<int>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt32();
                 case VariantType.Int64:
-                    return Variant.FromValue(valueElement.GetInt64());
-                case VariantType.Object:
-                    return Variant.FromValue(valueElement.Clone(), VariantType.Object);
+                    return isArray
+                        ? new Variant(ReadArray<long>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt64();
                 case VariantType.SByte:
-                    return Variant.FromValue(valueElement.GetSByte());
+                    return isArray
+                        ? new Variant(ReadArray<sbyte>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetSByte();
                 case VariantType.String:
-                    return Variant.FromValue(valueElement.GetString());
+                    return isArray
+                        ? new Variant(ReadArray<string>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetString();
                 case VariantType.TimeSpan:
-                    return Variant.FromValue(TimeSpan.TryParse(valueElement.GetString(), out var ts) ? ts : default);
+                    return isArray
+                        ? new Variant(ReadArray<TimeSpan>(valueElement, arrayDimensions!, options))
+                        : TimeSpan.TryParse(valueElement.GetString(), out var ts) 
+                            ? ts 
+                            : default;
                 case VariantType.UInt16:
-                    return Variant.FromValue(valueElement.GetUInt16());
+                    return isArray
+                        ? new Variant(ReadArray<ushort>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt16();
                 case VariantType.UInt32:
-                    return Variant.FromValue(valueElement.GetUInt32());
+                    return isArray
+                        ? new Variant(ReadArray<uint>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt32();
                 case VariantType.UInt64:
-                    return Variant.FromValue(valueElement.GetUInt64());
+                    return isArray
+                        ? new Variant(ReadArray<ulong>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt64();
                 case VariantType.Url:
-                    return Variant.FromValue(new Uri(valueElement.GetString(), UriKind.Absolute));
+                    return isArray
+                        ? new Variant(ReadArray<Uri>(valueElement, arrayDimensions!, options))
+                        : new Uri(valueElement.GetString(), UriKind.Absolute);
                 case VariantType.Unknown:
                 default:
-                    return Variant.FromValue(valueElement.Clone(), VariantType.Unknown);
+                    return Variant.Null;
             }
         }
 
@@ -95,120 +131,217 @@ namespace DataCore.Adapter.Json {
                 return;
             }
 
-            if (value.Type == VariantType.Null) {
-                WriteNullValue(writer, options);
-                return;
-            }
-
-            switch (value.Type) {
-                case VariantType.Boolean:
-                    WriteValue<bool>(writer, value, options);
-                    break;
-                case VariantType.Byte:
-                    WriteValue<byte>(writer, value, options);
-                    break;
-                case VariantType.DateTime:
-                    WriteValue<DateTime>(writer, value, options);
-                    break;
-                case VariantType.Double:
-                    WriteValue<double>(writer, value, options);
-                    break;
-                case VariantType.Float:
-                    WriteValue<float>(writer, value, options);
-                    break;
-                case VariantType.Int16:
-                    WriteValue<short>(writer, value, options);
-                    break;
-                case VariantType.Int32:
-                    WriteValue<int>(writer, value, options);
-                    break;
-                case VariantType.Int64:
-                    WriteValue<long>(writer, value, options);
-                    break;
-                case VariantType.Object:
-                    WriteValue<object>(writer, value, options);
-                    break;
-                case VariantType.SByte:
-                    WriteValue<sbyte>(writer, value, options);
-                    break;
-                case VariantType.String:
-                    WriteValue<string>(writer, value, options);
-                    break;
-                case VariantType.TimeSpan:
-                    WriteValue<TimeSpan>(writer, value, options);
-                    break;
-                case VariantType.UInt16:
-                    WriteValue<ushort>(writer, value, options);
-                    break;
-                case VariantType.UInt32:
-                    WriteValue<uint>(writer, value, options);
-                    break;
-                case VariantType.UInt64:
-                    WriteValue<ulong>(writer, value, options);
-                    break;
-                case VariantType.Url:
-                    WriteValue<Uri>(writer, value, options);
-                    break;
-                case VariantType.Unknown:
-                default:
-                    WriteValue<object>(writer, value, options);
-                    break;
-
-            }
-
-        }
-
-
-        /// <summary>
-        /// Writes a "null" variant value.
-        /// </summary>
-        /// <param name="writer">
-        ///   The JSON writer.
-        /// </param>
-        /// <param name="options">
-        ///   The serializer options.
-        /// </param>
-        private void WriteNullValue(Utf8JsonWriter writer, JsonSerializerOptions options) {
-            writer.WriteStartObject();
-            writer.WriteString(ConvertPropertyName(nameof(Variant.Type), options), VariantType.Null.ToString());
-            writer.WriteNull(ConvertPropertyName(nameof(Variant.Value), options));
-            writer.WriteEndObject();
-        }
-
-
-        /// <summary>
-        /// Writes a variant value of the specified type.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="writer">
-        ///   The JSON writer.
-        /// </param>
-        /// <param name="value">
-        ///   The value to write.
-        /// </param>
-        /// <param name="options">
-        ///   The serializer options.
-        /// </param>
-        private void WriteValue<T>(Utf8JsonWriter writer, Variant value, JsonSerializerOptions options) {
             writer.WriteStartObject();
 
-            writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Type), options));
-            JsonSerializer.Serialize(writer, value.Type, typeof(VariantType), options);
-
-            writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
-            if (typeof(T) == typeof(object)) {
-                JsonSerializer.Serialize(writer, value.Value, typeof(T), options);
-            }
-            else if (typeof(T) == typeof(TimeSpan)) {
-                JsonSerializer.Serialize(writer, value.Value?.ToString(), typeof(string), options);
+            WritePropertyValue(writer, nameof(Variant.Type), value.Type, options);
+            if (value.Value is Array arr) {
+                writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
+                WriteArray(writer, arr, options);
             }
             else {
-                JsonSerializer.Serialize(writer, value.GetValueOrDefault<T>(), options);
+                WritePropertyValue(writer, nameof(Variant.Value), value.Value, options);
             }
-            writer.WriteEndObject();
+            WritePropertyValue(writer, nameof(Variant.ArrayDimensions), value.ArrayDimensions, options);
 
+            writer.WriteEndObject();
         }
+
+
+        /// <summary>
+        /// Reads an N-dimensional array from the specified JSON string.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The array element type.
+        /// </typeparam>
+        /// <param name="json">
+        ///   The JSON string.
+        /// </param>
+        /// <param name="dimensions">
+        ///   The array dimensions.
+        /// </param>
+        /// <param name="options">
+        ///   Serialization options.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="Array"/> instance containing the deserialized array contents.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="json"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="dimensions"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="dimensions"/> does not contain at least one dimension length.
+        /// </exception>
+        public static Array ReadArray<T>(string json, int[] dimensions, JsonSerializerOptions? options = null) {
+            if (json == null) {
+                throw new ArgumentNullException(nameof(json));
+            }
+            if (dimensions?.Length == 0) {
+                throw new ArgumentOutOfRangeException(nameof(dimensions), dimensions, Resources.Error_ArrayDimensionsMustBeSpecified);
+            }
+
+            var el = JsonSerializer.Deserialize<JsonElement>(json, options);
+            if (el.ValueKind != JsonValueKind.Array) {
+                throw new JsonException(Resources.Error_NotAJsonArray);
+            }
+
+            return ReadArray<T>(el, dimensions!, options!);
+        }
+
+
+        /// <summary>
+        /// Reads an N-dimensional array from the specified <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The array element type.
+        /// </typeparam>
+        /// <param name="element">
+        ///   The <see cref="JsonElement"/> containing the array.
+        /// </param>
+        /// <param name="dimensions">
+        ///   The array dimensions.
+        /// </param>
+        /// <param name="options">
+        ///   Serialization options.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="Array"/> that was read from the <see cref="JsonElement"/>.
+        /// </returns>
+        private static Array ReadArray<T>(JsonElement element, int[] dimensions, JsonSerializerOptions? options) {
+            var result = Array.CreateInstance(typeof(T), dimensions);
+
+            ReadArray<T>(element, result, 0, new int[dimensions.Length], options);
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Reads an N-dimensional array from the specified <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The array element type.
+        /// </typeparam>
+        /// <param name="element">
+        ///   The <see cref="JsonElement"/> containing the array.
+        /// </param>
+        /// <param name="array">
+        ///   The <see cref="Array"/> instance to assign values to.
+        /// </param>
+        /// <param name="dimension">
+        ///   The current array dimension that is being processed.
+        /// </param>
+        /// <param name="indices">
+        ///   The indices for the array item that will be set when the next array item is read 
+        ///   from the JSON <paramref name="element"/>.
+        /// </param>
+        /// <param name="options">
+        ///   Serialization options.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="Array"/> that was read from the <see cref="JsonElement"/>.
+        /// </returns>
+        private static void ReadArray<T>(JsonElement element, Array array, int dimension, int[] indices, JsonSerializerOptions? options) {
+            var i = 0;
+            foreach (var el in element.EnumerateArray()) {
+                indices[dimension] = i;
+                if (dimension + 1 == array.Rank) {
+                    var val = JsonSerializer.Deserialize(el.GetRawText(), typeof(T), options);
+                    array.SetValue(val, indices);
+                }
+                else {
+                    ReadArray<T>(el, array, dimension + 1, indices, options);
+                }
+                ++i;
+            }
+        }
+
+
+        /// <summary>
+        /// Serializes an N-dimensional array to JSON.
+        /// </summary>
+        /// <param name="array">
+        ///   The array.
+        /// </param>
+        /// <param name="options">
+        ///   JSON serialization options.
+        /// </param>
+        /// <returns>
+        ///   The serialized array.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="array"/> is <see langword="null"/>.
+        /// </exception>
+        public static byte[] WriteArray(Array array, JsonSerializerOptions? options = null) {
+            if (array == null) {
+                throw new ArgumentNullException(nameof(array));
+            }
+
+            using (var ms = new System.IO.MemoryStream())
+            using (var writer = new Utf8JsonWriter(ms)) {
+                WriteArray(writer, array, options);
+                writer.Flush();
+                return ms.ToArray();
+            }
+        }
+
+
+        /// <summary>
+        /// Writes an N-dimensional array to the specified <see cref="Utf8JsonWriter"/>.
+        /// </summary>
+        /// <param name="writer">
+        ///   The JSON writer.
+        /// </param>
+        /// <param name="array">
+        ///   The array.
+        /// </param>
+        /// <param name="options">
+        ///   Serialization options.
+        /// </param>
+        private static void WriteArray(Utf8JsonWriter writer, Array array, JsonSerializerOptions? options) {
+            WriteArray(writer, array, 0, new int[array.Rank], options);
+        }
+
+
+        /// <summary>
+        /// Writes an N-dimensional array to the specified <see cref="Utf8JsonWriter"/>.
+        /// </summary>
+        /// <param name="writer">
+        ///   The JSON writer.
+        /// </param>
+        /// <param name="array">
+        ///   The array.
+        /// </param>
+        /// <param name="dimension">
+        ///   The current array dimension that is being processed.
+        /// </param>
+        /// <param name="indices">
+        ///   The indices for the next array item to be written. An item will only be written 
+        /// </param>
+        /// <param name="options">
+        ///   Serialization options.
+        /// </param>
+        private static void WriteArray(Utf8JsonWriter writer, Array array, int dimension, int[] indices, JsonSerializerOptions? options) {
+            var length = array.GetLength(dimension);
+
+            writer.WriteStartArray();
+
+            for (var i = 0; i < length; i++) {
+                indices[dimension] = i;
+
+                if (dimension + 1 == array.Rank) {
+                    var val = array.GetValue(indices);
+                    JsonSerializer.Serialize(writer, val, array.GetType().GetElementType(), options);
+                }
+                else {
+                    WriteArray(writer, array, dimension + 1, indices, options);
+                }
+            }
+
+            writer.WriteEndArray();
+        }
+
     }
 }

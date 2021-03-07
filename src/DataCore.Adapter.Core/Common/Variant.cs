@@ -1,12 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes a variant value.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Not required at this time")]
     public struct Variant : IEquatable<Variant>, IFormattable {
+
+        /// <summary>
+        /// Maps from type to variant type.
+        /// </summary>
+        public static IReadOnlyDictionary<Type, VariantType> VariantTypeMap { get; } = new System.Collections.ObjectModel.ReadOnlyDictionary<Type, VariantType>(new Dictionary<Type, VariantType>() {
+            { typeof(bool), VariantType.Boolean },
+            { typeof(byte), VariantType.Byte },
+            { typeof(DateTime), VariantType.DateTime },
+            { typeof(double), VariantType.Double },
+            { typeof(float), VariantType.Float },
+            { typeof(short), VariantType.Int16 },
+            { typeof(int), VariantType.Int32 },
+            { typeof(long), VariantType.Int64 },
+            { typeof(sbyte), VariantType.SByte },
+            { typeof(string), VariantType.String },
+            { typeof(TimeSpan), VariantType.TimeSpan },
+            { typeof(ushort), VariantType.UInt16 },
+            { typeof(uint), VariantType.UInt32 },
+            { typeof(ulong), VariantType.UInt64 },
+            { typeof(Uri), VariantType.Url }
+        });
 
         /// <summary>
         /// Default string format to use for date-time variant values (ISO 8601-1:2019 extended profile).
@@ -31,7 +52,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Null variant.
         /// </summary>
-        public static Variant Null { get; } = FromValue(null);
+        public static Variant Null { get; } = new Variant(null, VariantType.Null, null);
 
         /// <summary>
         /// The <see cref="VariantType"/> flags to use when trying to parse a value when a 
@@ -61,6 +82,13 @@ namespace DataCore.Adapter.Common {
         /// </summary>
         public VariantType Type { get; }
 
+        /// <summary>
+        /// If <see cref="Value"/> is an array, <see cref="ArrayDimensions"/> defines the 
+        /// dimensions of the array. For all other values, this property will be 
+        /// <see langword="null"/>.
+        /// </summary>
+        public int[]? ArrayDimensions { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="Variant"/> object. It is preferable to call <see cref="FromValue"/> 
@@ -73,10 +101,132 @@ namespace DataCore.Adapter.Common {
         /// <param name="type">
         ///   The variant type.
         /// </param>
-        public Variant(object? value, VariantType type) {
+        /// <param name="arrayDimensions">
+        ///   The array dimensions of the value, if it is an array.
+        /// </param>
+        internal Variant(object? value, VariantType type, int[]? arrayDimensions) {
             Value = value;
             Type = type;
+            ArrayDimensions = arrayDimensions;
         }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> object from the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="value"/> is not a supported type. See <see cref="VariantTypeMap"/> 
+        ///   for supported types.
+        /// </exception>
+        public Variant(object? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            if (value is Variant v) {
+                Value = v.Value;
+                Type = v.Type;
+                ArrayDimensions = v.ArrayDimensions;
+                return;
+            }
+
+            VariantType variantType;
+            int[]? arrayDimensions = null;
+
+            if (value is Array a) {
+                GetArraySettings(a, out variantType, out arrayDimensions);
+            }
+            else {
+                var valueType = value.GetType();
+                if (!VariantTypeMap.TryGetValue(valueType, out variantType)) {
+                    throw new ArgumentOutOfRangeException(nameof(value), valueType, SharedResources.Error_TypeIsUnsupported);
+                }
+            }
+
+            Value = value;
+            Type = variantType;
+            ArrayDimensions = arrayDimensions;
+        }
+
+
+        
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> object from the specified array.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="value"/> is not a supported type. See 
+        ///   <see cref="VariantTypeMap"/> for supported types.
+        /// </exception>
+        public Variant(Array? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            GetArraySettings(value!, out var variantType, out var arrayDimensions);
+
+            Value = value;
+            Type = variantType;
+            ArrayDimensions = arrayDimensions;
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="VariantType"/> and array dimensions for the specified array.
+        /// </summary>
+        /// <param name="value">
+        ///   The array.
+        /// </param>
+        /// <param name="variantType">
+        ///   The <see cref="VariantType"/> for the array's element type.
+        /// </param>
+        /// <param name="arrayDimensions">
+        ///   The dimensions of the array.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="value"/> is not a supported type. See 
+        ///   <see cref="VariantTypeMap"/> for supported types.
+        /// </exception>
+        private static void GetArraySettings(Array value, out VariantType variantType, out int[] arrayDimensions) {
+            Type? elemType = value.GetType().GetElementType();
+            if (elemType == null || !VariantTypeMap.TryGetValue(elemType, out variantType)) {
+                throw new ArgumentOutOfRangeException(nameof(value), elemType, SharedResources.Error_ArrayElementTypeIsUnsupported);
+            }
+
+            arrayDimensions = new int[value.Rank];
+            for (int i = 0; i < value.Rank; i++) {
+                arrayDimensions[i] = value.GetLength(i);
+            }
+        }
+
+
+        /// <summary>
+        /// Tests if the specified variant has a type of <see cref="VariantType.Null"/> or a 
+        /// <see langword="null"/> value.
+        /// </summary>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant type is <see cref="VariantType.Null"/> or the 
+        ///   variant value is <see langword="null"/>, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool IsNull(Variant variant) {
+            return variant.Type == VariantType.Null || variant.Value == null;
+        }
+
 
 
         /// <summary>
@@ -86,27 +236,24 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value.
         /// </param>
-        /// <param name="typeOverride">
-        ///   When a value is provided, the <see cref="Type"/> of the resulting variant is set to 
-        ///   this value instead of being inferred from the <paramref name="value"/>.
-        /// </param>
         /// <remarks>
         ///   If <paramref name="value"/> is a <see cref="Variant"/>, it will be returned 
         ///   unmodified.
         /// </remarks>
-        public static Variant FromValue(object? value, VariantType? typeOverride = null) {
+        public static Variant FromValue(object? value) {
+            if (value == null) {
+                return Null;
+            }
+
             if (value is Variant v) {
                 return v;
             }
 
-            return new Variant(
-                value,
-                typeOverride.HasValue
-                    ? typeOverride.Value
-                    : value == null
-                        ? VariantType.Null
-                        : value.GetType().GetVariantType()
-            );
+            if (value is Array a) {
+                return new Variant(a);
+            }
+
+            return new Variant(value);
         }
 
 
@@ -186,9 +333,6 @@ namespace DataCore.Adapter.Common {
                         return true;
                     }
                     break;
-                case VariantType.Object:
-                    variant = FromValue(s, VariantType.Object);
-                    return true;
                 case VariantType.SByte:
                     if (sbyte.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var sbyteResult)) {
                         variant = FromValue(sbyteResult);
@@ -341,6 +485,10 @@ namespace DataCore.Adapter.Common {
                 return s;
             }
 
+            if (Value is Array a) {
+                return a.ToString();
+            }
+
             try {
                 return (format != null && Value is IFormattable formattable)
                     ? formattable.ToString(format, formatProvider)
@@ -396,12 +544,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator bool(Variant val) => val.Value == null ? default : (bool) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(bool[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator bool[]?(Variant val) => (bool[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(sbyte val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator sbyte(Variant val) => val.Value == null ? default : (sbyte) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(sbyte[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator sbyte[]?(Variant val) => (sbyte[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -410,12 +570,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator byte(Variant val) => val.Value == null ? default : (byte) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(byte[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator byte[]?(Variant val) => (byte[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(short val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator short(Variant val) => val.Value == null ? default : (short) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(short[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator short[]?(Variant val) => (short[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -424,12 +596,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator ushort(Variant val) => val.Value == null ? default : (ushort) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(ushort[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ushort[]?(Variant val) => (ushort[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(int val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator int(Variant val) => val.Value == null ? default : (int) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(int[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator int[]?(Variant val) => (int[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -438,12 +622,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator uint(Variant val) => val.Value == null ? default : (uint) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(uint[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator uint[]?(Variant val) => (uint[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(long val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator long(Variant val) => val.Value == null ? default : (long) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(long[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator long[]?(Variant val) => (long[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -452,12 +648,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator ulong(Variant val) => val.Value == null ? default : (ulong) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(ulong[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ulong[]?(Variant val) => (ulong[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(float val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator float(Variant val) => val.Value == null ? default : (float) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(float[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator float[]?(Variant val) => (float[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -466,12 +674,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator double(Variant val) => val.Value == null ? default : (double) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(double[]? val) => FromValue(val);
 
         /// <inheritdoc/>
-        public static implicit operator Variant(string val) => FromValue(val);
+        public static explicit operator double[]?(Variant val) => (double[]?) val.Value;
+
 
         /// <inheritdoc/>
-        public static explicit operator string(Variant val) => (string) val.Value!;
+        public static implicit operator Variant(string? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator string?(Variant val) => (string?) val.Value!;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(string[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator string[]?(Variant val) => (string[]?) val.Value;
 
 
         /// <inheritdoc/>
@@ -480,6 +700,12 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator Uri(Variant val) => (Uri) val.Value!;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(Uri[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator Uri[]?(Variant val) => (Uri[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(DateTime val) => FromValue(val);
@@ -487,12 +713,24 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public static explicit operator DateTime(Variant val) => val.Value == null ? default : (DateTime) val.Value;
 
+        /// <inheritdoc/>
+        public static implicit operator Variant(DateTime[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator DateTime[]?(Variant val) => (DateTime[]?) val.Value;
+
 
         /// <inheritdoc/>
         public static implicit operator Variant(TimeSpan val) => FromValue(val);
 
         /// <inheritdoc/>
         public static explicit operator TimeSpan(Variant val) => val.Value == null ? default : (TimeSpan) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(TimeSpan[]? val) => FromValue(val);
+
+        /// <inheritdoc/>
+        public static explicit operator TimeSpan[]?(Variant val) => (TimeSpan[]?) val.Value;
 
     }
 
