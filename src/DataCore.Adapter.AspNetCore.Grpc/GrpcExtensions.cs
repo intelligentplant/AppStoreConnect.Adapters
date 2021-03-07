@@ -1753,7 +1753,7 @@ namespace DataCore.Adapter {
 
             return new RealTimeData.TagValueExtended(
                 tagValue.UtcSampleTime.ToDateTime(),
-                tagValue.Values.Select(x => x.ToAdapterVariant()),
+                tagValue.Value.ToAdapterVariant(),
                 tagValue.Status.ToAdapterTagValueStatus(),
                 tagValue.Units,
                 tagValue.Notes,
@@ -1783,13 +1783,8 @@ namespace DataCore.Adapter {
                 Status = tagValue.Status.ToGrpcTagValueStatus(),
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
+                Value = tagValue.Value.ToGrpcVariant()
             };
-
-            if (tagValue.Values != null) {
-                foreach (var item in tagValue.Values) {
-                    result.Values.Add(item.ToGrpcVariant());
-                }
-            }
 
             if (tagValue.Properties != null) {
                 foreach (var item in tagValue.Properties) {
@@ -1824,13 +1819,8 @@ namespace DataCore.Adapter {
                 Status = tagValue.Status.ToGrpcTagValueStatus(),
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
+                Value = tagValue.Value.ToGrpcVariant()
             };
-
-            if (tagValue.Values != null) {
-                foreach (var item in tagValue.Values) {
-                    result.Values.Add(item.ToGrpcVariant());
-                }
-            }
 
             return result;
         }

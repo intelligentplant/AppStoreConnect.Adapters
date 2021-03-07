@@ -464,19 +464,20 @@ namespace DataCore.Adapter.Csv {
                                 : (object) numericValue
                             : unparsedValue;
 
-                        var builder = new TagValueBuilder()
-                            .WithUtcSampleTime(sampleTime)
-                            .WithValue(primaryValue)
-                            .WithStatus(TagValueStatus.Good)
-                            .WithUnits(tag.Units);
-
+                        string? displayValue = null;
                         if (hasNumericValue && isDigitalTag) {
                             // This is a digital tag; we'll add the digital state name as a secondary value.
                             var state = tag.States.FirstOrDefault(x => x.Value == numericValue);
                             if (state != null) {
-                                builder.WithValue(state.Name);
+                                displayValue = state.Name;
                             }
                         }
+
+                        var builder = new TagValueBuilder()
+                            .WithUtcSampleTime(sampleTime)
+                            .WithValue(primaryValue, displayValue)
+                            .WithStatus(TagValueStatus.Good)
+                            .WithUnits(tag.Units);
 
                         valuesForTag.Add(sampleTime, builder.Build());
                     }

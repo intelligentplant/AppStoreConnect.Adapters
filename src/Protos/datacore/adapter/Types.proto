@@ -313,13 +313,12 @@ enum TagValueStatus {
 
 message TagValue {
     google.protobuf.Timestamp utc_sample_time = 1;
-    // Ordinal 2 is no longer in use.
+    Variant value = 2;
     TagValueStatus status = 3;
     string units = 4;
     string notes = 5;
     string error = 6;
     repeated AdapterProperty properties = 7;
-    repeated Variant values = 8;
 }
 
 
