@@ -17,9 +17,9 @@ namespace DataCore.Adapter.RealTimeData {
         private DateTime _utcSampleTime = DateTime.UtcNow;
 
         /// <summary>
-        /// The values for the sample.
+        /// The value for the sample.
         /// </summary>
-        private readonly List<Variant> _values = new List<Variant>();
+        private Variant _value = Variant.Null;
 
         /// <summary>
         /// The quality status.
@@ -69,7 +69,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             WithUtcSampleTime(existing.UtcSampleTime);
-            WithValues(existing.Values);
+            WithValue(existing.Value);
             WithStatus(existing.Status);
             WithNotes(existing.Notes);
             WithError(existing.Error);
@@ -119,7 +119,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public TagValueExtended Build() {
-            return new TagValueExtended(_utcSampleTime, _values, _status, _units, _notes, _error, _properties);
+            return new TagValueExtended(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
         }
 
 
@@ -145,11 +145,20 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The value.
         /// </param>
+        /// <param name="displayValue">
+        ///   The display value for the sample. Specifying a display value adds a 
+        ///   <see cref="WellKnownProperties.TagValue.DisplayValue"/> property to the sample.
+        /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithValue(Variant value) {
-            return WithValues(value);
+        public TagValueBuilder WithValue(Variant value, string? displayValue = null) {
+            _value = value;
+            var existingDisplayValue = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
+            if (displayValue != null) {
+                return WithProperty(WellKnownProperties.TagValue.DisplayValue, displayValue);
+            }
+            return this;
         }
 
 
@@ -162,54 +171,15 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="value">
         ///   The value.
         /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithValue<T>(T value) {
-            return WithValue(Variant.FromValue(value));
-        }
-
-
-        /// <summary>
-        /// Adds multiple values to the sample.
-        /// </summary>
-        /// <param name="values">
-        ///   The values.
+        /// <param name="displayValue">
+        ///   The display value for the sample. Specifying a display value adds a 
+        ///   <see cref="WellKnownProperties.TagValue.DisplayValue"/> property to the sample.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithValues(params Variant[] values) {
-            return WithValues((IEnumerable<Variant>) values);
-        }
-
-
-        /// <summary>
-        /// Adds multiple values to the sample.
-        /// </summary>
-        /// <param name="values">
-        ///   The values.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithValues(IEnumerable<Variant> values) {
-            if (values != null) {
-                _values.AddRange(values);
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Removes all value from the sample.
-        /// </summary>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder ClearValues() {
-            _values.Clear();
-            return this;
+        public TagValueBuilder WithValue<T>(T value, string? displayValue = null) {
+            return WithValue(Variant.FromValue(value), displayValue);
         }
 
 

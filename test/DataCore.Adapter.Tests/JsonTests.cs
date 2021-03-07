@@ -601,14 +601,15 @@ namespace DataCore.Adapter.Tests {
                "Name",
                new TagValueExtended(
                    DateTime.UtcNow, 
-                   new[] { Variant.FromValue(100), Variant.FromValue("OPEN") },
+                   Variant.FromValue(100),
                    TagValueStatus.Good, 
                    "Units", 
                    "Notes", 
                    "Error",
                    new[] {
                         AdapterProperty.Create("Prop1", 100),
-                        AdapterProperty.Create("Prop2", "Value")
+                        AdapterProperty.Create("Prop2", "Value"),
+                        AdapterProperty.Create(WellKnownProperties.TagValue.DisplayValue, "OPEN")
                    }
                 ),
                "DataFunction"
@@ -624,14 +625,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Value.Status, actual.Value.Status);
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
-
-            Assert.AreEqual(expected.Value.Values.Count(), actual.Value.Values.Count());
-            for (var i = 0; i < expected.Value.Values.Count(); i++) {
-                var expectedValue = expected.Value.Values.ElementAt(i);
-                var actualValue = actual.Value.Values.ElementAt(i);
-
-                Assert.AreEqual(expectedValue, actualValue);
-            }
+            Assert.AreEqual(expected.Value.Value, actual.Value.Value);
 
             Assert.AreEqual(expected.Value.Properties.Count(), actual.Value.Properties.Count());
             for (var i = 0; i < expected.Value.Properties.Count(); i++) {
@@ -1016,7 +1010,7 @@ namespace DataCore.Adapter.Tests {
             var expected =
             new TagValue(
                 DateTime.UtcNow,
-                new[] { Variant.FromValue(100), Variant.FromValue("OPEN") },
+                Variant.FromValue(100),
                 TagValueStatus.Good,
                 "Units"
             );
@@ -1028,13 +1022,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Status, actual.Status);
             Assert.AreEqual(expected.Units, actual.Units);
 
-            Assert.AreEqual(expected.Values.Count(), actual.Values.Count());
-            for (var i = 0; i < expected.Values.Count(); i++) {
-                var expectedValue = expected.Values.ElementAt(i);
-                var actualValue = actual.Values.ElementAt(i);
-
-                Assert.AreEqual(expectedValue, actualValue);
-            }
+            Assert.AreEqual(expected.Value, actual.Value);
         }
 
 
@@ -1044,14 +1032,15 @@ namespace DataCore.Adapter.Tests {
             var expected =
             new TagValueExtended(
                 DateTime.UtcNow,
-                new[] { Variant.FromValue(100),Variant.FromValue("OPEN") },
+                Variant.FromValue(100),
                 TagValueStatus.Good,
                 "Units",
                 "Notes",
                 "Error",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
-                    AdapterProperty.Create("Prop2", "Value")
+                    AdapterProperty.Create("Prop2", "Value"),
+                    AdapterProperty.Create(WellKnownProperties.TagValue.DisplayValue, "OPEN")
                 }
             );
 
@@ -1063,13 +1052,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Units, actual.Units);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
-            Assert.AreEqual(expected.Values.Count(), actual.Values.Count());
-            for (var i = 0; i < expected.Values.Count(); i++) {
-                var expectedValue = expected.Values.ElementAt(i);
-                var actualValue = actual.Values.ElementAt(i);
-
-                Assert.AreEqual(expectedValue, actualValue);
-            }
+            Assert.AreEqual(expected.Value, actual.Value);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
             for (var i = 0; i < expected.Properties.Count(); i++) {
@@ -1090,14 +1073,15 @@ namespace DataCore.Adapter.Tests {
                "Name",
                new TagValueExtended(
                    DateTime.UtcNow,
-                   new[] { Variant.FromValue(100),Variant.FromValue("OPEN") },
+                   Variant.FromValue(100),
                    TagValueStatus.Good,
                    "Units",
                    "Notes",
                    "Error",
                    new[] {
                         AdapterProperty.Create("Prop1", 100),
-                        AdapterProperty.Create("Prop2", "Value")
+                        AdapterProperty.Create("Prop2", "Value"),
+                        AdapterProperty.Create(WellKnownProperties.TagValue.DisplayValue, "OPEN")
                    }
                 )
             );
@@ -1112,13 +1096,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
 
-            Assert.AreEqual(expected.Value.Values.Count(), actual.Value.Values.Count());
-            for (var i = 0; i < expected.Value.Values.Count(); i++) {
-                var expectedValue = expected.Value.Values.ElementAt(i);
-                var actualValue = actual.Value.Values.ElementAt(i);
-
-                Assert.AreEqual(expectedValue, actualValue);
-            }
+            Assert.AreEqual(expected.Value.Value, actual.Value.Value);
 
             Assert.AreEqual(expected.Value.Properties.Count(), actual.Value.Properties.Count());
             for (var i = 0; i < expected.Value.Properties.Count(); i++) {
