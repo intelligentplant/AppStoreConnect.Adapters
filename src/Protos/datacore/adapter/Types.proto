@@ -34,6 +34,7 @@ enum VariantType {
 message Variant {
     VariantType type = 1;
     bytes value = 2;
+    repeated int32 array_dimensions = 3;
 }
 
 

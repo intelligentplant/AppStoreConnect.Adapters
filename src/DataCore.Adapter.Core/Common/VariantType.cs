@@ -9,92 +9,92 @@
         /// <summary>
         /// Unknown value type.
         /// </summary>
-        Unknown,
+        Unknown = 0,
 
         /// <summary>
         /// No value.
         /// </summary>
-        Null,
+        Null = 1,
 
-        /// <summary>
-        /// Custom object.
-        /// </summary>
-        Object,
+        ///// <summary>
+        ///// Custom object.
+        ///// </summary>
+        //Object = 2,
 
         /// <summary>
         /// Boolean.
         /// </summary>
-        Boolean,
+        Boolean = 3,
 
         /// <summary>
         /// Signed byte.
         /// </summary>
-        SByte,
+        SByte = 4,
 
         /// <summary>
         /// Unsigned byte.
         /// </summary>
-        Byte,
+        Byte = 5,
 
         /// <summary>
         /// Signed 16-bit integer.
         /// </summary>
-        Int16,
+        Int16 = 6,
 
         /// <summary>
         /// Unsigned 16-bit integer.
         /// </summary>
-        UInt16,
+        UInt16 = 7,
 
         /// <summary>
         /// Signed 32-bit integer.
         /// </summary>
-        Int32,
+        Int32 = 8,
 
         /// <summary>
         /// Unsigned 32-bit integer.
         /// </summary>
-        UInt32,
+        UInt32 = 9,
 
         /// <summary>
         /// Signed 64-bit integer.
         /// </summary>
-        Int64,
+        Int64 = 10,
 
         /// <summary>
         /// Unsigned 64-bit integer.
         /// </summary>
-        UInt64,
+        UInt64 = 11,
 
         /// <summary>
         /// Single precision floating point number.
         /// </summary>
-        Float,
+        Float = 12,
 
         /// <summary>
         /// Double precision floating point number.
         /// </summary>
-        Double,
+        Double = 13,
 
         /// <summary>
         /// String.
         /// </summary>
-        String,
+        String = 14,
 
         /// <summary>
         /// Timestamp.
         /// </summary>
-        DateTime,
+        DateTime = 15,
 
         /// <summary>
         /// Time span.
         /// </summary>
-        TimeSpan,
+        TimeSpan = 16,
 
         /// <summary>
         /// URL
         /// </summary>
-        Url
+        Url = 17
 
     }
 

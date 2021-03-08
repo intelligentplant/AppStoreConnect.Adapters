@@ -32,29 +32,46 @@ namespace DataCore.Adapter.Tests {
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
             Assert.AreEqual(variant.Type, deserialized.Type);
 
-            var actualVal = (deserialized.Type == VariantType.Object || deserialized.Type == VariantType.Unknown) && deserialized.Value is JsonElement jsonElement
+            var actualVal = (deserialized.Type == VariantType.Unknown) && deserialized.Value is JsonElement jsonElement
                 ? JsonSerializer.Deserialize<T>(jsonElement.GetRawText(), options)
                 : deserialized.Value;
 
-            Assert.AreEqual(variant.Value, actualVal);
+            if (variant.IsArray()) {
+                Assert.IsTrue(((Array) variant.Value).Cast<object>().SequenceEqual(((Array) actualVal).Cast<object>()));
+            }
+            else {
+                Assert.AreEqual(variant.Value, actualVal);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        public void Variant_BooleanShouldRoundTrip(bool value) {
+        [DataRow(true, false)]
+        public void Variant_BooleanShouldRoundTrip(params bool[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(byte.MinValue)]
         [DataRow(byte.MaxValue)]
-        public void Variant_ByteShouldRoundTrip(byte value) {
+        [DataRow(byte.MinValue, byte.MaxValue)]
+        public void Variant_ByteShouldRoundTrip(params byte[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
@@ -69,54 +86,90 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(double.MinValue)]
         [DataRow(double.MaxValue)]
-        public void Variant_DoubleShouldRoundTrip(double val) {
+        [DataRow(double.MinValue, double.MaxValue)]
+        public void Variant_DoubleShouldRoundTrip(params double[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(val, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(float.MinValue)]
         [DataRow(float.MaxValue)]
-        public void Variant_FloatShouldRoundTrip(float val) {
+        [DataRow(float.MinValue, float.MaxValue)]
+        public void Variant_FloatShouldRoundTrip(params float[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(val, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(short.MinValue)]
         [DataRow(short.MaxValue)]
-        public void Variant_Int16ShouldRoundTrip(short value) {
+        [DataRow(short.MinValue, short.MaxValue)]
+        public void Variant_Int16ShouldRoundTrip(params short[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(int.MinValue)]
         [DataRow(int.MaxValue)]
-        public void Variant_Int32ShouldRoundTrip(int value) {
+        [DataRow(int.MinValue, int.MaxValue)]
+        public void Variant_Int32ShouldRoundTrip(params int[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(long.MinValue)]
         [DataRow(long.MaxValue)]
-        public void Variant_Int64ShouldRoundTrip(long value) {
+        [DataRow(long.MinValue, long.MaxValue)]
+        public void Variant_Int64ShouldRoundTrip(params long[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(sbyte.MinValue)]
         [DataRow(sbyte.MaxValue)]
-        public void Variant_SByteShouldRoundTrip(sbyte value) {
+        [DataRow(sbyte.MinValue, sbyte.MaxValue)]
+        public void Variant_SByteShouldRoundTrip(params sbyte[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
@@ -128,9 +181,15 @@ namespace DataCore.Adapter.Tests {
         [DataRow("テスト")] // "test" in Japanese
         [DataRow("測試")] // "test" in Chinese
         [DataRow("اختبار")] // "test" in Arabic
-        public void Variant_StringShouldRoundTrip(string value) {
+        [DataRow("", " ", "TEST", "контрольная работа", "テスト", "測試", "اختبار")]
+        public void Variant_StringShouldRoundTrip(params string[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
@@ -144,46 +203,86 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(ushort.MinValue)]
         [DataRow(ushort.MaxValue)]
-        public void Variant_UInt16ShouldRoundTrip(ushort value) {
+        [DataRow(ushort.MinValue, ushort.MaxValue)]
+        public void Variant_UInt16ShouldRoundTrip(params ushort[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(uint.MinValue)]
         [DataRow(uint.MaxValue)]
-        public void Variant_UInt32ShouldRoundTrip(uint value) {
+        [DataRow(uint.MinValue, uint.MaxValue)]
+        public void Variant_UInt32ShouldRoundTrip(params uint[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow(ulong.MinValue)]
         [DataRow(ulong.MaxValue)]
-        public void Variant_UInt64ShouldRoundTrip(ulong value) {
+        [DataRow(ulong.MinValue, ulong.MaxValue)]
+        public void Variant_UInt64ShouldRoundTrip(params ulong[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(value, options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(values[0], options);
+            }
+            else {
+                VariantRoundTripTest(values, options);
+            }
         }
 
 
         [DataTestMethod]
         [DataRow("https://appstore.intelligentplant.com")]
         [DataRow("https://github.com/intelligentplant/AppStoreConnect.Adapters")]
-        public void Variant_UrlShouldRoundTrip(string value) {
+        [DataRow("https://appstore.intelligentplant.com", "https://github.com/intelligentplant/AppStoreConnect.Adapters")]
+        public void Variant_UrlShouldRoundTrip(params string[] values) {
             var options = GetOptions();
-            VariantRoundTripTest(new Uri(value, UriKind.Absolute), options);
+            if (values.Length == 1) {
+                VariantRoundTripTest(new Uri(values[0], UriKind.Absolute), options);
+            }
+            else {
+                VariantRoundTripTest(values.Select(x => new Uri(x, UriKind.Absolute)).ToArray(), options);
+            }
         }
 
 
         [TestMethod]
-        public void Variant_CustomClassShouldRoundTrip() {
-            var options = GetOptions();
-            VariantRoundTripTest(new VariantTestClass() {
-                TestName = TestContext.TestName, 
-                UtcTimestamp = DateTime.UtcNow
-            }, options);
+        public void Variant_MultidimensionalArrayShouldRoundTrip() {
+            var arr3d = new int[,,] { 
+                { 
+                    { 1, 2, 3 }, 
+                    { 4, 5, 6 } 
+                }, 
+                { 
+                    { 7, 8, 9 }, 
+                    { 10, 11, 12 } 
+                }, 
+                { 
+                    { 13, 14, 15 }, 
+                    { 16, 17, 18 } 
+                }, 
+                { 
+                    { 19, 20, 21 }, 
+                    { 22, 23, 24 } 
+                } 
+            };
+
+            VariantRoundTripTest(arr3d, GetOptions());
+
         }
 
 
@@ -221,7 +320,7 @@ namespace DataCore.Adapter.Tests {
                     "Extension2"
                 },
                 new [] {
-                    new AdapterProperty("Property1", new Variant(100, VariantType.Int32))
+                    new AdapterProperty("Property1", 100)
                 },
                 new AdapterTypeDescriptor(
                     new Uri("asc:unit-tests/json-tests/" + TestContext.TestName), 
@@ -277,7 +376,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new AdapterProperty(
                 "Name",
-                new Variant("Value", VariantType.String)
+                "Value"
             );
 
             var json = JsonSerializer.Serialize(expected, options);

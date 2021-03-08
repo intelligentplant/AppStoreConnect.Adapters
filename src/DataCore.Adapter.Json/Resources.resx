@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Error_ArrayDimensionsMustBeSpecified" xml:space="preserve">
+    <value>You must specify the length of at least one array dimension.</value>
+  </data>
   <data name="Error_InvalidJsonStructure" xml:space="preserve">
     <value>The specified JSON cannot be converted to an instance of {0}.</value>
     <comment>{0} - type name</comment>
@@ -127,5 +130,8 @@
   <data name="Error_NoJsonConverter" xml:space="preserve">
     <value>No JSON converter is available for type {0}.</value>
     <comment>{0} - type name</comment>
+  </data>
+  <data name="Error_NotAJsonArray" xml:space="preserve">
+    <value>Arrays can only be deserialized from JSON array elements.</value>
   </data>
 </root>
