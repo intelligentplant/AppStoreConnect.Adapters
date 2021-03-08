@@ -9,6 +9,30 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class VariantTests : TestsBase {
 
+        [DataTestMethod]
+        [DataRow(typeof(bool), typeof(bool[]), typeof(bool[,]), typeof(bool[,,]))]
+        [DataRow(typeof(byte), typeof(byte[]), typeof(byte[,]), typeof(byte[,,]))]
+        [DataRow(typeof(DateTime), typeof(DateTime[]), typeof(DateTime[,]), typeof(DateTime[,,]))]
+        [DataRow(typeof(double), typeof(double[]), typeof(double[,]), typeof(double[,,]))]
+        [DataRow(typeof(float), typeof(float[]), typeof(float[,]), typeof(float[,,]))]
+        [DataRow(typeof(short), typeof(short[]), typeof(short[,]), typeof(short[,,]))]
+        [DataRow(typeof(int), typeof(int[]), typeof(int[,]), typeof(int[,,]))]
+        [DataRow(typeof(long), typeof(long[]), typeof(long[,]), typeof(int[,,]))]
+        [DataRow(typeof(sbyte), typeof(sbyte[]), typeof(sbyte[,]), typeof(sbyte[,,]))]
+        [DataRow(typeof(string), typeof(string[]), typeof(string[,]), typeof(string[,,]))]
+        [DataRow(typeof(string), typeof(string[]), typeof(string[,]), typeof(string[,,]))]
+        [DataRow(typeof(TimeSpan), typeof(TimeSpan[]), typeof(TimeSpan[,]), typeof(TimeSpan[,,]))]
+        [DataRow(typeof(ushort), typeof(ushort[]), typeof(ushort[,]), typeof(ushort[,,]))]
+        [DataRow(typeof(uint), typeof(uint[]), typeof(uint[,]), typeof(uint[,,]))]
+        [DataRow(typeof(ulong), typeof(ulong[]), typeof(ulong[,]), typeof(ulong[,,]))]
+        [DataRow(typeof(Uri), typeof(Uri[]), typeof(Uri[,]), typeof(Uri[,,]))]
+        public void VariantTypeShouldBeSupported(params Type[] types) {
+            foreach (var type in types) {
+                Assert.IsTrue(Variant.IsSupportedValueType(type), $"Type should be supported: {type.Name}");
+            }
+        }
+
+
         private static void ValidateVariant(Variant variant, VariantType expectedType, object expectedValue, int[] expectedArrayDimensions) {
             Assert.AreEqual(expectedType, variant.Type);
             if (expectedValue is Array arr) {

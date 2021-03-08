@@ -147,7 +147,7 @@ namespace DataCore.Adapter.Common {
             }
             else {
                 var valueType = value.GetType();
-                if (!VariantTypeMap.TryGetValue(valueType, out variantType)) {
+                if (!TryGetVariantType(valueType, out variantType)) {
                     throw new ArgumentOutOfRangeException(nameof(value), valueType, SharedResources.Error_TypeIsUnsupported);
                 }
             }
@@ -220,14 +220,68 @@ namespace DataCore.Adapter.Common {
         /// </exception>
         private static void GetArraySettings(Array value, out VariantType variantType, out int[] arrayDimensions) {
             Type? elemType = value.GetType().GetElementType();
-            if (elemType == null || !VariantTypeMap.TryGetValue(elemType, out variantType)) {
+            if (elemType == null || !TryGetVariantType(elemType, out variantType)) {
                 throw new ArgumentOutOfRangeException(nameof(value), elemType, SharedResources.Error_ArrayElementTypeIsUnsupported);
             }
 
             arrayDimensions = new int[value.Rank];
-            for (int i = 0; i < value.Rank; i++) {
+            for (var i = 0; i < value.Rank; i++) {
                 arrayDimensions[i] = value.GetLength(i);
             }
+        }
+
+
+        /// <summary>
+        /// Tries to get the <see cref="VariantType"/> for the specified <see cref="Type"/>.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <param name="variantType">
+        ///   The <see cref="VariantType"/> that the <paramref name="type"/> maps to.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if <paramref name="type"/> has an equivalent <see cref="VariantType"/>, 
+        ///   or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool TryGetVariantType(Type type, out VariantType variantType) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type.IsArray) {
+                var elementType = type.GetElementType();
+                if (elementType == null) {
+                    variantType = VariantType.Unknown;
+                    return false;
+                }
+                return VariantTypeMap.TryGetValue(elementType, out variantType);
+            }
+
+            return VariantTypeMap.TryGetValue(type, out variantType);
+        }
+
+
+        /// <summary>
+        /// Tests if an instance of the specified <see cref="Type"/> can be specified as the value 
+        /// of a <see cref="Variant"/> instance.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if an instance of the <paramref name="type"/> can be specified 
+        ///   as the value of a <see cref="Variant"/> instance, or <see langword="false"/> 
+        ///   otherwise.         
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        public static bool IsSupportedValueType(Type type) {
+            return TryGetVariantType(type, out var _);
         }
 
 
