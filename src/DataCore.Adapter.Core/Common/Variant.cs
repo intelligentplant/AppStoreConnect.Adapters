@@ -203,6 +203,583 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(bool value) {
+            Value = value;
+            Type = VariantType.Boolean;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(bool[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Boolean;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(byte value) {
+            Value = value;
+            Type = VariantType.Byte;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(byte[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Byte;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(DateTime value) {
+            Value = value;
+            Type = VariantType.DateTime;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(DateTime[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.DateTime;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(double value) {
+            Value = value;
+            Type = VariantType.Double;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(double[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Double;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(float value) {
+            Value = value;
+            Type = VariantType.Float;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(float[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Float;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(int value) {
+            Value = value;
+            Type = VariantType.Int32;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(int[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Int32;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(long value) {
+            Value = value;
+            Type = VariantType.Int64;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(long[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Int64;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(sbyte value) {
+            Value = value;
+            Type = VariantType.SByte;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(sbyte[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.SByte;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(short value) {
+            Value = value;
+            Type = VariantType.Int16;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(short[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Int16;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(string? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.String;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(string[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.String;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(TimeSpan value) {
+            Value = value;
+            Type = VariantType.TimeSpan;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(TimeSpan[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.TimeSpan;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(uint value) {
+            Value = value;
+            Type = VariantType.UInt32;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(uint[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.UInt32;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(ulong value) {
+            Value = value;
+            Type = VariantType.UInt64;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(ulong[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.UInt64;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(ushort value) {
+            Value = value;
+            Type = VariantType.UInt16;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(ushort[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.UInt16;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(Uri? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Url;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(Uri[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Url;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
         /// Gets the <see cref="VariantType"/> and array dimensions for the specified array.
         /// </summary>
         /// <param name="value">
@@ -224,11 +801,27 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentOutOfRangeException(nameof(value), elemType, SharedResources.Error_ArrayElementTypeIsUnsupported);
             }
 
-            arrayDimensions = new int[value.Rank];
+            arrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Gets the dimensions of the specified array.
+        /// </summary>
+        /// <param name="value">
+        ///   The array.
+        /// </param>
+        /// <returns>
+        ///   The array dimensions.
+        /// </returns>
+        private static int[] GetArrayDimensions(Array value) {
+            var arrayDimensions = new int[value.Rank];
             for (var i = 0; i < value.Rank; i++) {
                 arrayDimensions[i] = value.GetLength(i);
             }
-        }
+
+            return arrayDimensions;
+        } 
 
 
         /// <summary>
@@ -459,195 +1052,195 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(bool val) => FromValue(val);
+        public static implicit operator Variant(bool val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator bool(Variant val) => val.Value == null ? default : (bool) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(bool[]? val) => FromValue(val);
+        public static implicit operator Variant(bool[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator bool[]?(Variant val) => (bool[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(sbyte val) => FromValue(val);
+        public static implicit operator Variant(sbyte val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator sbyte(Variant val) => val.Value == null ? default : (sbyte) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(sbyte[]? val) => FromValue(val);
+        public static implicit operator Variant(sbyte[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator sbyte[]?(Variant val) => (sbyte[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(byte val) => FromValue(val);
+        public static implicit operator Variant(byte val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator byte(Variant val) => val.Value == null ? default : (byte) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(byte[]? val) => FromValue(val);
+        public static implicit operator Variant(byte[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator byte[]?(Variant val) => (byte[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(short val) => FromValue(val);
+        public static implicit operator Variant(short val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator short(Variant val) => val.Value == null ? default : (short) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(short[]? val) => FromValue(val);
+        public static implicit operator Variant(short[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator short[]?(Variant val) => (short[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(ushort val) => FromValue(val);
+        public static implicit operator Variant(ushort val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator ushort(Variant val) => val.Value == null ? default : (ushort) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(ushort[]? val) => FromValue(val);
+        public static implicit operator Variant(ushort[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator ushort[]?(Variant val) => (ushort[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(int val) => FromValue(val);
+        public static implicit operator Variant(int val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator int(Variant val) => val.Value == null ? default : (int) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(int[]? val) => FromValue(val);
+        public static implicit operator Variant(int[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator int[]?(Variant val) => (int[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(uint val) => FromValue(val);
+        public static implicit operator Variant(uint val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator uint(Variant val) => val.Value == null ? default : (uint) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(uint[]? val) => FromValue(val);
+        public static implicit operator Variant(uint[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator uint[]?(Variant val) => (uint[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(long val) => FromValue(val);
+        public static implicit operator Variant(long val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator long(Variant val) => val.Value == null ? default : (long) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(long[]? val) => FromValue(val);
+        public static implicit operator Variant(long[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator long[]?(Variant val) => (long[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(ulong val) => FromValue(val);
+        public static implicit operator Variant(ulong val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator ulong(Variant val) => val.Value == null ? default : (ulong) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(ulong[]? val) => FromValue(val);
+        public static implicit operator Variant(ulong[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator ulong[]?(Variant val) => (ulong[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(float val) => FromValue(val);
+        public static implicit operator Variant(float val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator float(Variant val) => val.Value == null ? default : (float) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(float[]? val) => FromValue(val);
+        public static implicit operator Variant(float[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator float[]?(Variant val) => (float[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(double val) => FromValue(val);
+        public static implicit operator Variant(double val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator double(Variant val) => val.Value == null ? default : (double) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(double[]? val) => FromValue(val);
+        public static implicit operator Variant(double[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator double[]?(Variant val) => (double[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(string? val) => FromValue(val);
+        public static implicit operator Variant(string? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator string?(Variant val) => (string?) val.Value!;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(string[]? val) => FromValue(val);
+        public static implicit operator Variant(string[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator string[]?(Variant val) => (string[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(Uri val) => FromValue(val);
+        public static implicit operator Variant(Uri val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator Uri(Variant val) => (Uri) val.Value!;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(Uri[]? val) => FromValue(val);
+        public static implicit operator Variant(Uri[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator Uri[]?(Variant val) => (Uri[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(DateTime val) => FromValue(val);
+        public static implicit operator Variant(DateTime val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator DateTime(Variant val) => val.Value == null ? default : (DateTime) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(DateTime[]? val) => FromValue(val);
+        public static implicit operator Variant(DateTime[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator DateTime[]?(Variant val) => (DateTime[]?) val.Value;
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(TimeSpan val) => FromValue(val);
+        public static implicit operator Variant(TimeSpan val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator TimeSpan(Variant val) => val.Value == null ? default : (TimeSpan) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(TimeSpan[]? val) => FromValue(val);
+        public static implicit operator Variant(TimeSpan[]? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator TimeSpan[]?(Variant val) => (TimeSpan[]?) val.Value;
