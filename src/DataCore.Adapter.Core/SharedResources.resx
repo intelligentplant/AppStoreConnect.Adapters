@@ -120,8 +120,8 @@
   <data name="Error_AbsoluteUriRequired" xml:space="preserve">
     <value>An absolute URI is required.</value>
   </data>
-  <data name="Error_AtLeastOneValueIsRequired" xml:space="preserve">
-    <value>You must specify one or more values.</value>
+  <data name="Error_ArrayElementTypeIsUnsupported" xml:space="preserve">
+    <value>Array element type is unsupported.</value>
   </data>
   <data name="Error_ContentTypeIsRequired" xml:space="preserve">
     <value>You must specify a content type.</value>
@@ -185,6 +185,9 @@
   </data>
   <data name="Error_TypeIsRequired" xml:space="preserve">
     <value>You must specify a type.</value>
+  </data>
+  <data name="Error_TypeIsUnsupported" xml:space="preserve">
+    <value>Type is unsupported.</value>
   </data>
   <data name="HostInfo_Unspecified_Description" xml:space="preserve">
     <value>Host information has not been provided.</value>

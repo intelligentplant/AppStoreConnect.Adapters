@@ -6,6 +6,7 @@
 // ##################################################################################################
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -20,6 +21,56 @@ namespace DataCore.Adapter {
     /// vice versa.
     /// </summary>
     public static class GrpcExtensions {
+
+        #region [ Helpers ]
+
+        /// <summary>
+        /// Gets JSON serializaton options.
+        /// </summary>
+        /// <returns>
+        ///   JSON serialization options.
+        /// </returns>
+        private static System.Text.Json.JsonSerializerOptions GetJsonSerializerOptions() {
+            var result = new System.Text.Json.JsonSerializerOptions();
+            result.Converters.AddDataCoreAdapterConverters();
+            return result;
+        }
+
+
+        /// <summary>
+        /// Reads an N-dimensional array from the specified JSON bytes.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The array element type.
+        /// </typeparam>
+        /// <param name="bytes">
+        ///   The JSON bytes.
+        /// </param>
+        /// <param name="dimensions">
+        ///   The array dimensions.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="Array"/> object that was deserialized from the JSON bytes.
+        /// </returns>
+        private static Array ReadJsonArray<T>(byte[] bytes, IEnumerable<int> dimensions) {
+            return VariantConverter.ReadArray<T>(System.Text.Encoding.UTF8.GetString(bytes), dimensions.ToArray(), GetJsonSerializerOptions());
+        }
+
+
+        /// <summary>
+        /// Serializes an N-dimensional array to JSON.
+        /// </summary>
+        /// <param name="array">
+        ///   The array.
+        /// </param>
+        /// <returns>
+        ///   The serialized JSON bytes.
+        /// </returns>
+        private static byte[] WriteJsonArray(Array array) {
+            return VariantConverter.WriteArray(array);
+        }
+
+        #endregion
 
         #region [ Asset Model ]
 
@@ -186,8 +237,6 @@ namespace DataCore.Adapter {
                     return Common.VariantType.Int64;
                 case Grpc.VariantType.Null:
                     return Common.VariantType.Null;
-                case Grpc.VariantType.Object:
-                    return Common.VariantType.Object;
                 case Grpc.VariantType.Sbyte:
                     return Common.VariantType.SByte;
                 case Grpc.VariantType.String:
@@ -238,8 +287,6 @@ namespace DataCore.Adapter {
                     return Grpc.VariantType.Int64;
                 case Common.VariantType.Null:
                     return Grpc.VariantType.Null;
-                case Common.VariantType.Object:
-                    return Grpc.VariantType.Object;
                 case Common.VariantType.SByte:
                     return Grpc.VariantType.Sbyte;
                 case Common.VariantType.String:
@@ -276,67 +323,93 @@ namespace DataCore.Adapter {
             }
 
             var bytes = variant.Value.ToByteArray();
+            var isArray = variant.ArrayDimensions.Count > 0;
             object value;
 
             switch (variant.Type) {
                 case Grpc.VariantType.Boolean:
-                    value = BitConverter.ToBoolean(bytes, 0);
+                    value = isArray 
+                        ? (object) ReadJsonArray<bool>(bytes, variant.ArrayDimensions) 
+                        : BitConverter.ToBoolean(bytes, 0);
                     break;
                 case Grpc.VariantType.Byte:
-                    value = bytes.FirstOrDefault();
+                    value = isArray
+                        ? (object) ReadJsonArray<byte>(bytes, variant.ArrayDimensions)
+                        : bytes.FirstOrDefault();
                     break;
                 case Grpc.VariantType.Datetime:
-                    value = DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt)
-                        ? dt
-                        : default;
+                    value = isArray
+                        ? (object) ReadJsonArray<DateTime>(bytes, variant.ArrayDimensions)
+                        : DateTime.TryParse(System.Text.Encoding.UTF8.GetString(bytes), null, DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt)
+                            ? dt
+                            : default;
                     break;
                 case Grpc.VariantType.Double:
-                    value = BitConverter.ToDouble(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<double>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToDouble(bytes, 0);
                     break;
                 case Grpc.VariantType.Float:
-                    value = BitConverter.ToSingle(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<float>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToSingle(bytes, 0);
                     break;
                 case Grpc.VariantType.Int16:
-                    value = BitConverter.ToInt16(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<short>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToInt16(bytes, 0);
                     break;
                 case Grpc.VariantType.Int32:
-                    value = BitConverter.ToInt32(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<int>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToInt32(bytes, 0);
                     break;
                 case Grpc.VariantType.Int64:
-                    value = BitConverter.ToInt64(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<long>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToInt64(bytes, 0);
                     break;
                 case Grpc.VariantType.Null:
                     value = null!;
                     break;
-                case Grpc.VariantType.Object:
-                    var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-                    serializerOptions.Converters.AddDataCoreAdapterConverters();
-                    value = System.Text.Json.JsonSerializer.Deserialize(System.Text.Encoding.UTF8.GetString(bytes), typeof(object), serializerOptions)!;
-                    break;
                 case Grpc.VariantType.Sbyte:
-                    value = (sbyte) bytes.FirstOrDefault();
+                    value = isArray
+                        ? (object) ReadJsonArray<sbyte>(bytes, variant.ArrayDimensions)
+                        : (sbyte) bytes.FirstOrDefault();
                     break;
                 case Grpc.VariantType.String:
-                    value = System.Text.Encoding.UTF8.GetString(bytes);
+                    value = isArray
+                        ? (object) ReadJsonArray<string>(bytes, variant.ArrayDimensions)
+                        : System.Text.Encoding.UTF8.GetString(bytes);
                     break;
                 case Grpc.VariantType.Timespan:
-                    value = TimeSpan.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var ts)
-                        ? ts
-                        : default;
+                    value = isArray
+                        ? (object) ReadJsonArray<TimeSpan>(bytes, variant.ArrayDimensions)
+                        : TimeSpan.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var ts)
+                            ? ts
+                            : default;
                     break;
                 case Grpc.VariantType.Uint16:
-                    value = BitConverter.ToUInt16(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<ushort>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToUInt16(bytes, 0);
                     break;
                 case Grpc.VariantType.Uint32:
-                    value = BitConverter.ToUInt32(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<uint>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToUInt32(bytes, 0);
                     break;
                 case Grpc.VariantType.Uint64:
-                    value = BitConverter.ToUInt64(bytes, 0);
+                    value = isArray
+                        ? (object) ReadJsonArray<ulong>(bytes, variant.ArrayDimensions)
+                        : BitConverter.ToUInt64(bytes, 0);
                     break;
                 case Grpc.VariantType.Url:
-                    value = Uri.TryCreate(System.Text.Encoding.UTF8.GetString(bytes), UriKind.Absolute, out var url)
-                        ? url
-                        : default!;
+                    value = isArray
+                        ? (object) ReadJsonArray<Uri>(bytes, variant.ArrayDimensions)
+                        : Uri.TryCreate(System.Text.Encoding.UTF8.GetString(bytes), UriKind.RelativeOrAbsolute, out var url)
+                            ? url
+                            : default!;
                     break;
                 case Grpc.VariantType.Unknown:
                 default:
@@ -344,10 +417,7 @@ namespace DataCore.Adapter {
                     break;
             }
 
-            return Common.Variant.FromValue(
-                value,
-                variant.Type.ToAdapterVariantType()
-            );
+            return Common.Variant.FromValue(value);
         }
 
 
@@ -368,76 +438,82 @@ namespace DataCore.Adapter {
                 };
             }
 
+            var isArray = variant.ArrayDimensions?.Length > 0;
+
             byte[] bytes;
 
-            switch (variant.Type) {
-                case Common.VariantType.Boolean:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<bool>());
-                    break;
-                case Common.VariantType.Byte:
-                    bytes = new[] { variant.GetValueOrDefault<byte>() };
-                    break;
-                case Common.VariantType.DateTime:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture));
-                    break;
-                case Common.VariantType.Double:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<double>());
-                    break;
-                case Common.VariantType.Float:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<float>());
-                    break;
-                case Common.VariantType.Int16:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<short>());
-                    break;
-                case Common.VariantType.Int32:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<int>());
-                    break;
-                case Common.VariantType.Int64:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<long>());
-                    break;
-                case Common.VariantType.Null:
-                    bytes = Array.Empty<byte>();
-                    break;
-                case Common.VariantType.Object:
-                    var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-                    serializerOptions.Converters.AddDataCoreAdapterConverters();
-                    bytes = System.Text.Encoding.UTF8.GetBytes(
-                        System.Text.Json.JsonSerializer.Serialize(variant.Value, variant.Value?.GetType() ?? typeof(object), serializerOptions)
-                    );
-                    break;
-                case Common.VariantType.SByte:
-                    bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };
-                    break;
-                case Common.VariantType.String:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault(string.Empty));
-                    break;
-                case Common.VariantType.TimeSpan:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<TimeSpan>().ToString());
-                    break;
-                case Common.VariantType.UInt16:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ushort>());
-                    break;
-                case Common.VariantType.UInt32:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<uint>());
-                    break;
-                case Common.VariantType.UInt64:
-                    bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ulong>());
-                    break;
-                case Common.VariantType.Url:
-                    bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<Uri>()?.ToString() ?? string.Empty);
-                    break;
-                case Common.VariantType.Unknown:
-                default:
-                    bytes = Array.Empty<byte>();
-                    break;
+            if (isArray) {
+                bytes = WriteJsonArray((Array) variant.Value);
+            }
+            else {
+                switch (variant.Type) {
+                    case Common.VariantType.Boolean:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<bool>());
+                        break;
+                    case Common.VariantType.Byte:
+                        bytes = new[] { variant.GetValueOrDefault<byte>() };
+                        break;
+                    case Common.VariantType.DateTime:
+                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<DateTime>().ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture));
+                        break;
+                    case Common.VariantType.Double:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<double>());
+                        break;
+                    case Common.VariantType.Float:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<float>());
+                        break;
+                    case Common.VariantType.Int16:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<short>());
+                        break;
+                    case Common.VariantType.Int32:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<int>());
+                        break;
+                    case Common.VariantType.Int64:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<long>());
+                        break;
+                    case Common.VariantType.Null:
+                        bytes = Array.Empty<byte>();
+                        break;
+                    case Common.VariantType.SByte:
+                        bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };
+                        break;
+                    case Common.VariantType.String:
+                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault(string.Empty));
+                        break;
+                    case Common.VariantType.TimeSpan:
+                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<TimeSpan>().ToString());
+                        break;
+                    case Common.VariantType.UInt16:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ushort>());
+                        break;
+                    case Common.VariantType.UInt32:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<uint>());
+                        break;
+                    case Common.VariantType.UInt64:
+                        bytes = BitConverter.GetBytes(variant.GetValueOrDefault<ulong>());
+                        break;
+                    case Common.VariantType.Url:
+                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<Uri>()?.ToString() ?? string.Empty);
+                        break;
+                    case Common.VariantType.Unknown:
+                    default:
+                        bytes = Array.Empty<byte>();
+                        break;
+                }
             }
 
-            return new Grpc.Variant() {
+            var result = new Grpc.Variant() {
                 Value = bytes.Length > 0
                     ? Google.Protobuf.ByteString.CopyFrom(bytes)
                     : Google.Protobuf.ByteString.Empty,
                 Type = variant.Type.ToGrpcVariantType()
             };
+
+            if (isArray) {
+                result.ArrayDimensions.AddRange(variant.ArrayDimensions!);
+            }
+
+            return result;
         }
 
 

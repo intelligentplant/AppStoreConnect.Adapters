@@ -70,11 +70,11 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You must specify one or more values..
+        ///   Looks up a localized string similar to Array element type is unsupported..
         /// </summary>
-        public static string Error_AtLeastOneValueIsRequired {
+        public static string Error_ArrayElementTypeIsUnsupported {
             get {
-                return ResourceManager.GetString("Error_AtLeastOneValueIsRequired", resourceCulture);
+                return ResourceManager.GetString("Error_ArrayElementTypeIsUnsupported", resourceCulture);
             }
         }
         
@@ -264,6 +264,15 @@ namespace DataCore.Adapter {
         public static string Error_TypeIsRequired {
             get {
                 return ResourceManager.GetString("Error_TypeIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type is unsupported..
+        /// </summary>
+        public static string Error_TypeIsUnsupported {
+            get {
+                return ResourceManager.GetString("Error_TypeIsUnsupported", resourceCulture);
             }
         }
         

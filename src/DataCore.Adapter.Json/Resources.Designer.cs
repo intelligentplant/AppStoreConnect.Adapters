@@ -61,6 +61,15 @@ namespace DataCore.Adapter.Json {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify the length of at least one array dimension..
+        /// </summary>
+        internal static string Error_ArrayDimensionsMustBeSpecified {
+            get {
+                return ResourceManager.GetString("Error_ArrayDimensionsMustBeSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified JSON cannot be converted to an instance of {0}..
         /// </summary>
         internal static string Error_InvalidJsonStructure {
@@ -84,6 +93,15 @@ namespace DataCore.Adapter.Json {
         internal static string Error_NoJsonConverter {
             get {
                 return ResourceManager.GetString("Error_NoJsonConverter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Arrays can only be deserialized from JSON array elements..
+        /// </summary>
+        internal static string Error_NotAJsonArray {
+            get {
+                return ResourceManager.GetString("Error_NotAJsonArray", resourceCulture);
             }
         }
     }

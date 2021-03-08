@@ -10,27 +10,6 @@ namespace DataCore.Adapter.Common {
     /// </summary>
     public static class VariantExtensions {
 
-        /// <summary>
-        /// Maps from type to variant type.
-        /// </summary>
-        private static readonly Dictionary<Type, VariantType> s_variantTypeMap = new Dictionary<Type, VariantType>() {
-            { typeof(bool), VariantType.Boolean },
-            { typeof(byte), VariantType.Byte },
-            { typeof(DateTime), VariantType.DateTime },
-            { typeof(double), VariantType.Double },
-            { typeof(float), VariantType.Float },
-            { typeof(short), VariantType.Int16 },
-            { typeof(int), VariantType.Int32 },
-            { typeof(long), VariantType.Int64 },
-            { typeof(sbyte), VariantType.SByte },
-            { typeof(string), VariantType.String },
-            { typeof(TimeSpan), VariantType.TimeSpan },
-            { typeof(ushort), VariantType.UInt16 },
-            { typeof(uint), VariantType.UInt32 },
-            { typeof(ulong), VariantType.UInt64 },
-            { typeof(Uri), VariantType.Url }
-        };
-
 
         /// <summary>
         /// Tests if a variant contains a null value.
@@ -211,13 +190,11 @@ namespace DataCore.Adapter.Common {
                 return VariantType.Unknown;
             }
 
-            if (s_variantTypeMap.TryGetValue(type, out var variantType)) {
+            if (Variant.VariantTypeMap.TryGetValue(type, out var variantType)) {
                 return variantType;
             }
 
-            return type.IsValueType
-                ? VariantType.Unknown
-                : VariantType.Object;
+            return VariantType.Unknown;
         }
 
 
@@ -231,7 +208,7 @@ namespace DataCore.Adapter.Common {
         ///   The CLR type to for the variant type.
         /// </returns>
         public static Type GetClrType(this VariantType type) {
-            var item = s_variantTypeMap.FirstOrDefault(x => x.Value == type).Key;
+            var item = Variant.VariantTypeMap.FirstOrDefault(x => x.Value == type).Key;
             return item ?? typeof(object);
         }
 
@@ -372,6 +349,21 @@ namespace DataCore.Adapter.Common {
             }
 
             return defaultValue;
+        }
+
+
+        /// <summary>
+        /// Tests if this <see cref="Variant"/> value contains an array.
+        /// </summary>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant is an array, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool IsArray(this Variant variant) {
+            return variant.Value is Array;
         }
 
     }
