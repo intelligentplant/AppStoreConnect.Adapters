@@ -6,27 +6,27 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Describes a variant value.
     /// </summary>
-    public struct Variant : IEquatable<Variant>, IFormattable {
+    public partial struct Variant : IEquatable<Variant>, IFormattable {
 
         /// <summary>
         /// Maps from type to variant type.
         /// </summary>
         public static IReadOnlyDictionary<Type, VariantType> VariantTypeMap { get; } = new System.Collections.ObjectModel.ReadOnlyDictionary<Type, VariantType>(new Dictionary<Type, VariantType>() {
-            { typeof(bool), VariantType.Boolean },
-            { typeof(byte), VariantType.Byte },
-            { typeof(DateTime), VariantType.DateTime },
-            { typeof(double), VariantType.Double },
-            { typeof(float), VariantType.Float },
-            { typeof(short), VariantType.Int16 },
-            { typeof(int), VariantType.Int32 },
-            { typeof(long), VariantType.Int64 },
-            { typeof(sbyte), VariantType.SByte },
-            { typeof(string), VariantType.String },
-            { typeof(TimeSpan), VariantType.TimeSpan },
-            { typeof(ushort), VariantType.UInt16 },
-            { typeof(uint), VariantType.UInt32 },
-            { typeof(ulong), VariantType.UInt64 },
-            { typeof(Uri), VariantType.Url }
+            [typeof(bool)] = VariantType.Boolean,
+            [typeof(byte)] = VariantType.Byte,
+            [typeof(DateTime)] = VariantType.DateTime,
+            [typeof(double)] = VariantType.Double,
+            [typeof(float)] = VariantType.Float,
+            [typeof(short)] = VariantType.Int16,
+            [typeof(int)] = VariantType.Int32,
+            [typeof(long)] = VariantType.Int64,
+            [typeof(sbyte)] = VariantType.SByte,
+            [typeof(string)] = VariantType.String,
+            [typeof(TimeSpan)] = VariantType.TimeSpan,
+            [typeof(ushort)] = VariantType.UInt16,
+            [typeof(uint)] = VariantType.UInt32,
+            [typeof(ulong)] = VariantType.UInt64,
+            [typeof(Uri)] = VariantType.Url
         });
 
         /// <summary>
@@ -1037,213 +1037,6 @@ namespace DataCore.Adapter.Common {
         public bool Equals(Variant other) {
             return other.Type == Type && Equals(other.Value, Value);
         }
-
-
-        /// <inheritdoc/>
-        public static bool operator ==(Variant left, Variant right) {
-            return left.Equals(right);
-        }
-
-
-        /// <inheritdoc/>
-        public static bool operator !=(Variant left, Variant right) {
-            return !left.Equals(right);
-        }
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(bool val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator bool(Variant val) => val.Value == null ? default : (bool) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(bool[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator bool[]?(Variant val) => (bool[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(sbyte val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator sbyte(Variant val) => val.Value == null ? default : (sbyte) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(sbyte[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator sbyte[]?(Variant val) => (sbyte[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(byte val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator byte(Variant val) => val.Value == null ? default : (byte) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(byte[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator byte[]?(Variant val) => (byte[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(short val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator short(Variant val) => val.Value == null ? default : (short) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(short[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator short[]?(Variant val) => (short[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(ushort val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator ushort(Variant val) => val.Value == null ? default : (ushort) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(ushort[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator ushort[]?(Variant val) => (ushort[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(int val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator int(Variant val) => val.Value == null ? default : (int) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(int[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator int[]?(Variant val) => (int[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(uint val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator uint(Variant val) => val.Value == null ? default : (uint) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(uint[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator uint[]?(Variant val) => (uint[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(long val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator long(Variant val) => val.Value == null ? default : (long) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(long[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator long[]?(Variant val) => (long[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(ulong val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator ulong(Variant val) => val.Value == null ? default : (ulong) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(ulong[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator ulong[]?(Variant val) => (ulong[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(float val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator float(Variant val) => val.Value == null ? default : (float) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(float[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator float[]?(Variant val) => (float[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(double val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator double(Variant val) => val.Value == null ? default : (double) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(double[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator double[]?(Variant val) => (double[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(string? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator string?(Variant val) => (string?) val.Value!;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(string[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator string[]?(Variant val) => (string[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(Uri val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator Uri(Variant val) => (Uri) val.Value!;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(Uri[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator Uri[]?(Variant val) => (Uri[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(DateTime val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator DateTime(Variant val) => val.Value == null ? default : (DateTime) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(DateTime[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator DateTime[]?(Variant val) => (DateTime[]?) val.Value;
-
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(TimeSpan val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator TimeSpan(Variant val) => val.Value == null ? default : (TimeSpan) val.Value;
-
-        /// <inheritdoc/>
-        public static implicit operator Variant(TimeSpan[]? val) => new Variant(val);
-
-        /// <inheritdoc/>
-        public static explicit operator TimeSpan[]?(Variant val) => (TimeSpan[]?) val.Value;
 
     }
 
