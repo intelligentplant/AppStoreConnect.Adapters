@@ -140,7 +140,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Adds a value to the sample.
+        /// Sets the value for the sample.
         /// </summary>
         /// <param name="value">
         ///   The value.
@@ -163,7 +163,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Adds a value to the sample.
+        /// Sets the value for the sample.
         /// </summary>
         /// <typeparam name="T">
         ///   The value type.
