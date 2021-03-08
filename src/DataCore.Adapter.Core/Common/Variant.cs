@@ -55,24 +55,6 @@ namespace DataCore.Adapter.Common {
         public static Variant Null { get; } = new Variant(null, VariantType.Null, null);
 
         /// <summary>
-        /// The <see cref="VariantType"/> flags to use when trying to parse a value when a 
-        /// value of <see cref="VariantType.Unknown"/> is specified.
-        /// </summary>
-        private static readonly VariantType[] s_tryParseUnknownVariantTypes = {
-            VariantType.Boolean,
-            VariantType.Int32,
-            VariantType.Int64,
-            VariantType.UInt32,
-            VariantType.UInt64,
-            VariantType.Double,
-            VariantType.DateTime,
-            VariantType.TimeSpan,
-            VariantType.Url,
-            // String comes last as it is our final fallback.
-            VariantType.String
-        };
-
-        /// <summary>
         /// The value.
         /// </summary>
         public object? Value { get; }
@@ -121,11 +103,32 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="value"/> is not a supported type. See <see cref="VariantTypeMap"/> 
         ///   for supported types.
         /// </exception>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   If <paramref name="value"/> is a <see cref="Variant"/>, the new <see cref="Variant"/> 
+        ///   will be a copy of the existing <paramref name="value"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   For any other type, the type of <paramref name="value"/> must have an entry in the 
+        ///   <see cref="VariantTypeMap"/> mapping. If <paramref name="value"/> is an <see cref="Array"/> 
+        ///   type, the element type of the array must have an entry in the <see cref="VariantTypeMap"/> 
+        ///   mapping.
+        /// </para>
+        /// 
+        /// </remarks>
+        /// <seealso cref="VariantTypeMap"/>
         public Variant(object? value) {
             if (value == null) {
-                Value = null;
-                Type = VariantType.Null;
-                ArrayDimensions = null;
+                Value = Null.Value;
+                Type = Null.Type;
+                ArrayDimensions = Null.ArrayDimensions;
                 return;
             }
 
@@ -155,7 +158,7 @@ namespace DataCore.Adapter.Common {
         }
 
 
-        
+
 
         /// <summary>
         /// Creates a new <see cref="Variant"/> object from the specified array.
@@ -167,6 +170,22 @@ namespace DataCore.Adapter.Common {
         ///   The element type of <paramref name="value"/> is not a supported type. See 
         ///   <see cref="VariantTypeMap"/> for supported types.
         /// </exception>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   For any other type, the type of <paramref name="value"/> must have an entry in the 
+        ///   <see cref="VariantTypeMap"/> mapping. If <paramref name="value"/> is an <see cref="Array"/> 
+        ///   type, the element type of the array must have an entry in the <see cref="VariantTypeMap"/> 
+        ///   mapping.
+        /// </para>
+        /// 
+        /// </remarks>
+        /// <seealso cref="VariantTypeMap"/>
         public Variant(Array? value) {
             if (value == null) {
                 Value = null;
@@ -254,159 +273,6 @@ namespace DataCore.Adapter.Common {
             }
 
             return new Variant(value);
-        }
-
-
-        /// <summary>
-        /// Tries to parse the specified string into a <see cref="Variant"/>, using the provided 
-        /// <paramref name="type"/> hint to identify the target value type.
-        /// </summary>
-        /// <param name="s">
-        ///   The string.
-        /// </param>
-        /// <param name="type">
-        ///   The value type for the variant. Specify <see cref="VariantType.Unknown"/> to try and 
-        ///   detect the value type automatically.
-        /// </param>
-        /// <param name="provider">
-        ///   The format provider to use. Can be <see langword="null"/>.
-        /// </param>
-        /// <param name="variant">
-        ///   The parsed <see cref="Variant"/> instance.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the string was successfully parsed, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        public static bool TryParse(string s, VariantType type, IFormatProvider? provider, out Variant variant) {
-            if (s == null) {
-                variant = Null;
-                return type == VariantType.Null;
-            }
-
-            switch (type) {
-                case VariantType.Boolean:
-                    if (bool.TryParse(s, out var boolResult)) {
-                        variant = FromValue(boolResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Byte:
-                    if (byte.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var byteResult)) {
-                        variant = FromValue(byteResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.DateTime:
-                    if (DateTime.TryParse(s, provider, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var dateResult)) {
-                        variant = FromValue(dateResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Double:
-                    if (double.TryParse(s, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, provider, out var doubleResult)) {
-                        variant = FromValue(doubleResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Float:
-                    if (float.TryParse(s, System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowThousands, provider, out var floatResult)) {
-                        variant = FromValue(floatResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Int16:
-                    if (short.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var shortResult)) {
-                        variant = FromValue(shortResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Int32:
-                    if (int.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var intResult)) {
-                        variant = FromValue(intResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Int64:
-                    if (long.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var longResult)) {
-                        variant = FromValue(longResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.SByte:
-                    if (sbyte.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var sbyteResult)) {
-                        variant = FromValue(sbyteResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.String:
-                    variant = FromValue(s);
-                    return true;
-                case VariantType.TimeSpan:
-                    if (TimeSpan.TryParse(s, provider, out var timeSpanResult)) {
-                        variant = FromValue(timeSpanResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.UInt16:
-                    if (ushort.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var ushortResult)) {
-                        variant = FromValue(ushortResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.UInt32:
-                    if (uint.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var uintResult)) {
-                        variant = FromValue(uintResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.UInt64:
-                    if (ulong.TryParse(s, System.Globalization.NumberStyles.Integer, provider, out var ulongResult)) {
-                        variant = FromValue(ulongResult);
-                        return true;
-                    }
-                    break;
-                case VariantType.Unknown:
-                    foreach (var vType in s_tryParseUnknownVariantTypes) {
-                        if (TryParse(s, vType, provider, out var v)) {
-                            variant = v;
-                            return true;
-                        }
-                    }
-                    break;
-                case VariantType.Url:
-                    if (Uri.TryCreate(s, UriKind.Absolute, out var url)) {
-                        variant = FromValue(url);
-                        return true;
-                    }
-                    break;
-            }
-
-            variant = Null;
-            return false;
-        }
-
-
-        /// <summary>
-        /// Tries to parse the specified string into a <see cref="Variant"/>, using the provided 
-        /// <paramref name="type"/> hint to identify the target value type.
-        /// </summary>
-        /// <param name="s">
-        ///   The string.
-        /// </param>
-        /// <param name="type">
-        ///   The value type for the variant. Specify <see cref="VariantType.Unknown"/> to try and 
-        ///   detect the value type automatically.
-        /// </param>
-        /// <param name="variant">
-        ///   The parsed <see cref="Variant"/> instance.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the string was successfully parsed, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        public static bool TryParse(string s, VariantType type, out Variant variant) {
-            return TryParse(s, type, null, out variant);
         }
 
 
@@ -512,7 +378,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override bool Equals(object? obj) {
-            if (!(obj is Variant v)) {
+            if (obj is not Variant v) {
                 return false;
             }
 
