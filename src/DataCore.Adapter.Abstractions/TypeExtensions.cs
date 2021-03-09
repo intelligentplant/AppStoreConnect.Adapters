@@ -299,7 +299,7 @@ namespace DataCore.Adapter {
         ///   otherwise.
         /// </returns>
         public static bool HasAdapterFeatureUri(this Type type, string uriString) {
-            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+            if (!uriString.TryCreateUriWithTrailingSlash(out var uri)) {
                 return false;
             }
             return type.HasAdapterFeatureUri(uri!);
