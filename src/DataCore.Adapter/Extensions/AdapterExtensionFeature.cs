@@ -112,7 +112,7 @@ namespace DataCore.Adapter.Extensions {
                 context, 
                 featureUri == null 
                     ? null 
-                    : UriExtensions.EnsurePathHasTrailingSlash(featureUri), 
+                    : featureUri.EnsurePathHasTrailingSlash(), 
                 cancellationToken
             );
         }
@@ -128,7 +128,7 @@ namespace DataCore.Adapter.Extensions {
                 context,
                 featureUri == null
                     ? null
-                    : UriExtensions.EnsurePathHasTrailingSlash(featureUri),
+                    : featureUri.EnsurePathHasTrailingSlash(),
                 cancellationToken
             );
         }
@@ -251,7 +251,7 @@ namespace DataCore.Adapter.Extensions {
                         return true;
                     }
 
-                    return UriExtensions.IsChildOf(x.OperationId, featureUri);
+                    return x.OperationId.IsChildOf(featureUri);
                 })
                 .ToArray();
 
@@ -733,12 +733,12 @@ namespace DataCore.Adapter.Extensions {
         ///   The operation URI.
         /// </returns>
         private static Uri GetOperationUri(Uri featureUri, string unqualifiedName, ExtensionFeatureOperationType operationType) {
-            return UriExtensions.EnsurePathHasTrailingSlash(new Uri(
+            return new Uri(
                 featureUri,
                 unqualifiedName.EndsWith("/", StringComparison.Ordinal)
                     ? string.Concat(unqualifiedName, operationType.ToString())
                     : string.Concat(unqualifiedName, "/", operationType.ToString())
-            ));
+            ).EnsurePathHasTrailingSlash();
         }
 
 
