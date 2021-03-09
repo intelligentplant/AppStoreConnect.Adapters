@@ -70,6 +70,15 @@ namespace DataCore.Adapter.Json {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to JSON-encoded extension objects must have a content type of &apos;application/json&apos;..
+        /// </summary>
+        internal static string Error_InvalidExtensionObjectContentType {
+            get {
+                return ResourceManager.GetString("Error_InvalidExtensionObjectContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified JSON cannot be converted to an instance of {0}..
         /// </summary>
         internal static string Error_InvalidJsonStructure {

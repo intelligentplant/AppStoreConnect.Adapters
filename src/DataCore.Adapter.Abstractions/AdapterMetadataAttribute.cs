@@ -85,7 +85,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(uriString));
             }
 
-            if (!UriExtensions.TryCreateUriWithTrailingSlash(uriString, out var uri)) {
+            if (!uriString.TryCreateUriWithTrailingSlash(out var uri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
             }
 

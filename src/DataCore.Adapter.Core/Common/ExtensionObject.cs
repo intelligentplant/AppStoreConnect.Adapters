@@ -36,8 +36,26 @@ namespace DataCore.Adapter.Common {
         /// <param name="encodedBody">
         ///   The encoded object value.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="typeId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="typeId"/> is not an absolute URI.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoding"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encodedBody"/> is <see langword="null"/>.
+        /// </exception>
         public ExtensionObject(Uri typeId, string encoding, byte[] encodedBody) {
-            TypeId = typeId ?? throw new ArgumentNullException(nameof(typeId));
+            if (typeId == null) {
+                throw new ArgumentNullException(nameof(typeId));
+            }
+            if (!typeId.IsAbsoluteUri) {
+                throw new ArgumentOutOfRangeException(nameof(typeId), typeId, SharedResources.Error_AbsoluteUriRequired);
+            }
+            TypeId = typeId.EnsurePathHasTrailingSlash();
             Encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
             EncodedBody = encodedBody ?? throw new ArgumentNullException(nameof(encodedBody));
         }
