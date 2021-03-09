@@ -38,6 +38,40 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Deserializes the specified JSON bytes.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The target type.
+        /// </typeparam>
+        /// <param name="bytes">
+        ///   The JSON bytes.
+        /// </param>
+        /// <returns>
+        ///   The deserialized object.
+        /// </returns>
+        private static T? ReadJsonValue<T>(byte[] bytes) {
+            return System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Encoding.UTF8.GetString(bytes), GetJsonSerializerOptions());
+        }
+
+
+        /// <summary>
+        /// Serializes the specified value to JSON.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <returns>
+        ///   The serialized value.
+        /// </returns>
+        private static byte[] WriteJsonValue<T>(T value) {
+            return System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(value, GetJsonSerializerOptions()));
+        }
+
+
+        /// <summary>
         /// Reads an N-dimensional array from the specified JSON bytes.
         /// </summary>
         /// <typeparam name="T">
@@ -237,6 +271,8 @@ namespace DataCore.Adapter {
                     return Common.VariantType.Int64;
                 case Grpc.VariantType.Null:
                     return Common.VariantType.Null;
+                case Grpc.VariantType.Object:
+                    return VariantType.ExtensionObject;
                 case Grpc.VariantType.Sbyte:
                     return Common.VariantType.SByte;
                 case Grpc.VariantType.String:
@@ -287,6 +323,8 @@ namespace DataCore.Adapter {
                     return Grpc.VariantType.Int64;
                 case Common.VariantType.Null:
                     return Grpc.VariantType.Null;
+                case Common.VariantType.ExtensionObject:
+                    return Grpc.VariantType.Object;
                 case Common.VariantType.SByte:
                     return Grpc.VariantType.Sbyte;
                 case Common.VariantType.String:
@@ -322,7 +360,8 @@ namespace DataCore.Adapter {
                 return Common.Variant.Null;
             }
 
-            var bytes = variant.Value.ToByteArray();
+            var bytes = variant.Value.ToByteArray(); 
+
             var isArray = variant.ArrayDimensions.Count > 0;
             object value;
 
@@ -371,6 +410,11 @@ namespace DataCore.Adapter {
                     break;
                 case Grpc.VariantType.Null:
                     value = null!;
+                    break;
+                case Grpc.VariantType.Object:
+                    value = isArray
+                        ? (object) ReadJsonArray<ExtensionObject>(bytes, variant.ArrayDimensions)
+                        : ReadJsonValue<ExtensionObject>(bytes)!;
                     break;
                 case Grpc.VariantType.Sbyte:
                     value = isArray
@@ -473,6 +517,9 @@ namespace DataCore.Adapter {
                         break;
                     case Common.VariantType.Null:
                         bytes = Array.Empty<byte>();
+                        break;
+                    case Common.VariantType.ExtensionObject:
+                        bytes = WriteJsonValue(variant.GetValueOrDefault<ExtensionObject>());
                         break;
                     case Common.VariantType.SByte:
                         bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };

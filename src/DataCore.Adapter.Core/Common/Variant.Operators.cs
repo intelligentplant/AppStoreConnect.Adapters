@@ -163,7 +163,7 @@ namespace DataCore.Adapter.Common {
         public static implicit operator Variant(string? val) => new Variant(val);
 
         /// <inheritdoc/>
-        public static explicit operator string?(Variant val) => (string?) val.Value!;
+        public static explicit operator string?(Variant val) => (string?) val.Value;
 
         /// <inheritdoc/>
         public static implicit operator Variant(string[]? val) => new Variant(val);
@@ -176,7 +176,7 @@ namespace DataCore.Adapter.Common {
         public static implicit operator Variant(Uri val) => new Variant(val);
 
         /// <inheritdoc/>
-        public static explicit operator Uri(Variant val) => (Uri) val.Value!;
+        public static explicit operator Uri?(Variant val) => (Uri) val.Value!;
 
         /// <inheritdoc/>
         public static implicit operator Variant(Uri[]? val) => new Variant(val);
@@ -209,6 +209,19 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public static explicit operator TimeSpan[]?(Variant val) => (TimeSpan[]?) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(ExtensionObject val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ExtensionObject?(Variant val) => (ExtensionObject?) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(ExtensionObject[]? val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ExtensionObject[]?(Variant val) => (ExtensionObject[]?) val.Value;
 
     }
 

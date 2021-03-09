@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Common {
             [typeof(byte)] = VariantType.Byte,
             [typeof(DateTime)] = VariantType.DateTime,
             [typeof(double)] = VariantType.Double,
+            [typeof(ExtensionObject)] = VariantType.ExtensionObject,
             [typeof(float)] = VariantType.Float,
             [typeof(short)] = VariantType.Int16,
             [typeof(int)] = VariantType.Int32,
@@ -775,6 +776,50 @@ namespace DataCore.Adapter.Common {
 
             Value = value;
             Type = VariantType.Url;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(ExtensionObject? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.ExtensionObject;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(ExtensionObject[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.ExtensionObject;
             ArrayDimensions = GetArrayDimensions(value);
         }
 

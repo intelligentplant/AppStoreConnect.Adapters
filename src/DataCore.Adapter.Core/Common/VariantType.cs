@@ -16,10 +16,10 @@
         /// </summary>
         Null = 1,
 
-        ///// <summary>
-        ///// Custom object.
-        ///// </summary>
-        //Object = 2,
+        /// <summary>
+        /// Custom object.
+        /// </summary>
+        ExtensionObject = 2,
 
         /// <summary>
         /// Boolean.
