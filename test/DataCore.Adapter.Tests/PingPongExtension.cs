@@ -226,7 +226,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    [DataTypeId(PingPongExtension.FeatureUri + "types/ping")]
+    [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
     internal class PingMessage {
 
         public Guid CorrelationId { get; set; }
@@ -236,7 +236,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    [DataTypeId(PingPongExtension.FeatureUri + "types/pong")]
+    [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
     internal class PongMessage {
 
         public Guid CorrelationId { get; set; }

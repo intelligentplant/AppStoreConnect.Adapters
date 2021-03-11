@@ -696,8 +696,8 @@ namespace DataCore.Adapter.Extensions {
             return new Uri(
                 featureUri,
                 unqualifiedName.EndsWith("/", StringComparison.Ordinal)
-                    ? string.Concat(unqualifiedName, operationType.ToString())
-                    : string.Concat(unqualifiedName, "/", operationType.ToString())
+                    ? string.Concat(operationType.ToString().ToLowerInvariant(), "/", unqualifiedName)
+                    : string.Concat(operationType.ToString().ToLowerInvariant(), "/", unqualifiedName, "/")
             ).EnsurePathHasTrailingSlash();
         }
 

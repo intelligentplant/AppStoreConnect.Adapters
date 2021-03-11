@@ -449,10 +449,10 @@ namespace DataCore.Adapter.Tests {
                 var op = operations.First();
                 Assert.AreEqual(ExtensionFeatureOperationType.Invoke, op.OperationType);
                 var expectedOpId = new Uri(string.Concat(
-                    HelloWorldConstants.FeatureUri, 
-                    nameof(IHelloWorld.Greet),
+                    HelloWorldConstants.FeatureUri,
+                    ExtensionFeatureOperationType.Invoke.ToString().ToLowerInvariant(),
                     "/",
-                    ExtensionFeatureOperationType.Invoke.ToString(),
+                    nameof(IHelloWorld.Greet),
                     "/"
                 ));
                 Assert.AreEqual(expectedOpId, op.OperationId);
@@ -482,9 +482,9 @@ namespace DataCore.Adapter.Tests {
 
                 var operationId = new Uri(string.Concat(
                     PingPongExtension.FeatureUri,
-                    nameof(IAdapterExtensionFeature.GetOperations),
+                    ExtensionFeatureOperationType.Invoke.ToString().ToLowerInvariant(),
                     "/",
-                    ExtensionFeatureOperationType.Invoke.ToString(),
+                    nameof(IAdapterExtensionFeature.GetOperations),
                     "/"
                 ));
 
@@ -518,9 +518,9 @@ namespace DataCore.Adapter.Tests {
 
                 var operationId = new Uri(string.Concat(
                     HelloWorldConstants.FeatureUri,
+                    ExtensionFeatureOperationType.Invoke.ToString().ToLowerInvariant(),
+                    "/", 
                     nameof(IAdapterExtensionFeature.GetOperations),
-                    "/",
-                    ExtensionFeatureOperationType.Invoke.ToString(),
                     "/"
                 ));
 
