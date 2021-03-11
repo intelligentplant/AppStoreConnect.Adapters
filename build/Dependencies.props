@@ -5,6 +5,7 @@
   <!-- CoreFX Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
+    <SystemNetHttpJsonVersion>5.0.0</SystemNetHttpJsonVersion>
     <SystemTextJsonVersion>5.0.1</SystemTextJsonVersion>
     <SystemThreadingChannelsVersion>5.0.0</SystemThreadingChannelsVersion>
     <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
@@ -54,7 +55,7 @@
     <CsvHelperVersion>22.1.2</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>4.2.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
-    <NewtonsoftJsonVersion>10.0.3</NewtonsoftJsonVersion>
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>
   </PropertyGroup>
