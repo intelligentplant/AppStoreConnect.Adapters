@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,7 +85,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<FeatureDescriptor>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<FeatureDescriptor>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -132,7 +133,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<ExtensionFeatureOperationDescriptor>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<ExtensionFeatureOperationDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -143,11 +144,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationUri">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The request.
         /// </param>
         /// <param name="metadata">
         ///   The metadata to associate with the outgoing request.
@@ -162,30 +160,29 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationUri"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<string> InvokeExtensionAsync(
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<InvocationResponse> InvokeExtensionAsync(
             string adapterId,
-            Uri operationUri,
-            string argument,
+            InvocationRequest request,
             RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationUri == null) {
-                throw new ArgumentNullException(nameof(operationUri));
-            }
+            AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke?id={Uri.EscapeDataString(operationUri.ToString())}";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke";
 
-            using (var formData = new FormUrlEncodedContent(new Dictionary<string, string>() { [nameof(argument)] = argument }))
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, formData, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<InvocationResponse>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Common {
             [typeof(byte)] = VariantType.Byte,
             [typeof(DateTime)] = VariantType.DateTime,
             [typeof(double)] = VariantType.Double,
-            [typeof(ExtensionObject)] = VariantType.ExtensionObject,
+            [typeof(EncodedObject)] = VariantType.ExtensionObject,
             [typeof(float)] = VariantType.Float,
             [typeof(short)] = VariantType.Int16,
             [typeof(int)] = VariantType.Int32,
@@ -786,7 +786,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value.
         /// </param>
-        public Variant(ExtensionObject? value) {
+        public Variant(EncodedObject? value) {
             if (value == null) {
                 Value = null;
                 Type = VariantType.Null;
@@ -810,7 +810,7 @@ namespace DataCore.Adapter.Common {
         ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
         ///   will be equal to <see cref="Null"/>.
         /// </remarks>
-        public Variant(ExtensionObject[]? value) {
+        public Variant(EncodedObject[]? value) {
             if (value == null) {
                 Value = null;
                 Type = VariantType.Null;

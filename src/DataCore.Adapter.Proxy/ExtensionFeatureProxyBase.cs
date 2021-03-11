@@ -38,10 +38,14 @@ namespace DataCore.Adapter.Proxy {
         /// <param name="proxy">
         ///   The proxy adapter instance that owns the feature implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when encoding or decoding 
+        ///   extension objects.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="proxy"/> is <see langword="null"/>.
         /// </exception>
-        protected ExtensionFeatureProxyBase(TProxy proxy) : base(proxy?.BackgroundTaskService) {
+        protected ExtensionFeatureProxyBase(TProxy proxy, IEnumerable<IObjectEncoder> encoders) : base(proxy?.BackgroundTaskService, encoders) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
             _featureUri = new Lazy<Uri?>(() => {
                 return GetType()

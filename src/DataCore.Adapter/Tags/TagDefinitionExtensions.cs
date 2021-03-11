@@ -35,19 +35,19 @@ namespace DataCore.Adapter.Tags {
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Name)) {
-                if (!tag.Name.Like(filter.Name)) {
+                if (!tag.Name.Like(filter.Name!)) {
                     return false;
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Description)) {
-                if (!tag.Description.Like(filter.Description)) {
+                if (!tag.Description.Like(filter.Description!)) {
                     return false;
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Units)) {
-                if (!tag.Units.Like(filter.Units)) {
+                if (!tag.Units.Like(filter.Units!)) {
                     return false;
                 }
             }
@@ -63,7 +63,7 @@ namespace DataCore.Adapter.Tags {
                         return false;
                     }
 
-                    if (!Convert.ToString(prop.Value, CultureInfo.InvariantCulture).Like(item.Value)) {
+                    if (!Convert.ToString(prop.Value, CultureInfo.InvariantCulture).Like(item.Value!)) {
                         return false;
                     }
                 }

@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.Proxy;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy {
@@ -67,6 +69,12 @@ namespace DataCore.Adapter.Http.Proxy {
             get { return base.Logger; }
         }
 
+        /// <summary>
+        /// The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        /// extension objects.
+        /// </summary>
+        internal IEnumerable<IObjectEncoder> Encoders { get; }
+
         /// <inheritdoc/>
         public HostInfo RemoteHostInfo {
             get {
@@ -123,6 +131,10 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        ///   extension objects.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the proxy.
         /// </param>
@@ -130,7 +142,8 @@ namespace DataCore.Adapter.Http.Proxy {
             string id,
             AdapterHttpClient client, 
             HttpAdapterProxyOptions options, 
-            IBackgroundTaskService? taskScheduler, 
+            IBackgroundTaskService? taskScheduler,
+            IEnumerable<IObjectEncoder> encoders,
             ILogger<HttpAdapterProxy>? logger
         ) : base(
             id,
@@ -138,6 +151,7 @@ namespace DataCore.Adapter.Http.Proxy {
             taskScheduler, 
             logger
         ) {
+            Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));

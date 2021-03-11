@@ -101,26 +101,20 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <returns>
         ///   The operation result.
         /// </returns>
-        public async Task<string> InvokeExtension(
+        public async Task<InvocationResponse> InvokeExtension(
             string adapterId, 
-            Uri operationId, 
-            string argument
+            InvocationRequest request
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            if (operationId == null || !operationId.IsAbsoluteUri) {
-                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
-            }
+            ValidateObject(request);
 
-            operationId = operationId.EnsurePathHasTrailingSlash();
+            var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -135,8 +129,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 #pragma warning disable CS8603 // Possible null reference return.
             return await resolved.Feature.Invoke(
                 adapterCallContext, 
-                operationId, 
-                argument, 
+                request, 
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 #pragma warning restore CS8603 // Possible null reference return.
@@ -149,11 +142,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -161,18 +151,15 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<string>> InvokeStreamingExtension(
+        public async Task<ChannelReader<InvocationResponse>> InvokeStreamingExtension(
             string adapterId,
-            Uri operationId,
-            string argument,
+            InvocationRequest request,
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            if (operationId == null || !operationId.IsAbsoluteUri) {
-                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
-            }
+            ValidateObject(request);
 
-            operationId = operationId.EnsurePathHasTrailingSlash();
+            var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -187,8 +174,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 #pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
             return await resolved.Feature.Stream(
                 adapterCallContext,
-                operationId,
-                argument,
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
@@ -202,8 +188,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI of the operation to invoke.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="channel">
         ///   The input channel for the operation.
@@ -214,18 +200,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<string>> InvokeDuplexStreamingExtension(
+        public async Task<ChannelReader<InvocationResponse>> InvokeDuplexStreamingExtension(
             string adapterId,
-            Uri operationId,
-            ChannelReader<string> channel,
+            InvocationRequest request,
+            ChannelReader<InvocationStreamItem> channel,
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            if (operationId == null || !operationId.IsAbsoluteUri) {
-                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
-            }
+            ValidateObject(request);
 
-            operationId = operationId.EnsurePathHasTrailingSlash();
+            var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -240,7 +224,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 #pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
             return await resolved.Feature.DuplexStream(
                 adapterCallContext,
-                operationId,
+                request,
                 channel!,
                 cancellationToken
             ).ConfigureAwait(false);
@@ -255,26 +239,20 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationId">
+        /// <param name="request">
         ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="value">
-        ///   The input value for the operation.
         /// </param>
         /// <returns>
         ///   The operation result.
         /// </returns>
-        public async Task<string> InvokeDuplexStreamingExtension(
+        public async Task<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
-            Uri operationId,
-            string value
+            InvocationRequest request
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            if (operationId == null || !operationId.IsAbsoluteUri) {
-                throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, operationId), nameof(operationId));
-            }
+            ValidateObject(request);
 
-            operationId = operationId.EnsurePathHasTrailingSlash();
+            var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
                 throw new ArgumentException(error, nameof(operationId));
             }
@@ -289,11 +267,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
                 var cancellationToken = ctSource.Token;
                 try {
-                    var inChannel = Channel.CreateUnbounded<string>();
-                    inChannel.Writer.TryWrite(value);
+                    var inChannel = Channel.CreateUnbounded<InvocationStreamItem>();
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await resolved.Feature.DuplexStream(adapterCallContext, operationId, inChannel, cancellationToken).ConfigureAwait(false);
+                    var outChannel = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel, cancellationToken).ConfigureAwait(false);
                     return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
                 }
                 finally {

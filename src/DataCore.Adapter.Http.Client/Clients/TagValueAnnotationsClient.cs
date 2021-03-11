@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -86,7 +87,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<TagValueAnnotationExtended>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<TagValueAnnotationExtended>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -131,11 +132,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<TagValueAnnotationQueryResult>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<TagValueAnnotationQueryResult>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -182,11 +183,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/create";
 #pragma warning restore CA1062 // Validate arguments of public methods
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<WriteTagValueAnnotationResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -233,11 +234,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 #pragma warning restore CA1062 // Validate arguments of public methods
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<WriteTagValueAnnotationResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -288,7 +289,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<WriteTagValueAnnotationResult>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<WriteTagValueAnnotationResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

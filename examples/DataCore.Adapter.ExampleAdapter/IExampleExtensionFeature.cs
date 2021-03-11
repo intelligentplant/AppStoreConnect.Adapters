@@ -1,5 +1,6 @@
 ﻿using System;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Example {
@@ -14,20 +15,14 @@ namespace DataCore.Adapter.Example {
     )]
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
-        [ExtensionFeatureOperation(
-            Name = "Ping",
-            Description = "Performs a ping operation on the adapter.",
-            InputParameterDescription = "The ping message.",
-            OutputParameterDescription = "The pong message."
-        )]
         PongMessage Ping(
-            IAdapterCallContext context,
             PingMessage ping
         );
 
     }
 
 
+    [DataTypeId(WellKnownFeatures.Extensions.BaseUri + "example/ping-pong/types/ping")]
     public class PingMessage {
 
         public Guid CorrelationId { get; set; } = Guid.NewGuid();
@@ -35,6 +30,7 @@ namespace DataCore.Adapter.Example {
     }
 
 
+    [DataTypeId(WellKnownFeatures.Extensions.BaseUri + "example/ping-pong/types/pong")]
     public class PongMessage {
 
         public Guid CorrelationId { get; set; } = Guid.NewGuid();

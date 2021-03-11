@@ -29,6 +29,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             var builder = new DefaultAdapterConfigurationBuilder(services);
             builder.AddDefaultBackgroundTaskService();
+            builder.Services.AddTransient<DataCore.Adapter.Common.IObjectEncoder, DataCore.Adapter.Json.JsonObjectEncoder>();
 
             return builder;
         }

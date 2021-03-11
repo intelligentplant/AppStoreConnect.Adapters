@@ -35,13 +35,13 @@ namespace DataCore.Adapter.AssetModel {
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Name)) {
-                if (!node.Name.Like(filter.Name)) {
+                if (!node.Name.Like(filter.Name!)) {
                     return false;
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Description)) {
-                if (!node.Description.Like(filter.Description)) {
+                if (!node.Description.Like(filter.Description!)) {
                     return false;
                 }
             }

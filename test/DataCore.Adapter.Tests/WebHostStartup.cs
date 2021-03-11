@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Tests {
                     );
 
                     // Add ping-pong extension
-                    adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService));
+                    adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
 
                     return adapter;
                 });

@@ -68,6 +68,10 @@ namespace DataCore.Adapter.Json {
                     return isArray
                         ? new Variant(ReadArray<DateTime>(valueElement, arrayDimensions!, options))
                         : valueElement.GetDateTime();
+                case VariantType.ExtensionObject:
+                    return isArray
+                        ? new Variant(ReadArray<EncodedObject>(valueElement, arrayDimensions!, options))
+                        : JsonSerializer.Deserialize<EncodedObject>(valueElement.GetRawText(), options)!;
                 case VariantType.Double:
                     return isArray
                         ? new Variant(ReadArray<double>(valueElement, arrayDimensions!, options))

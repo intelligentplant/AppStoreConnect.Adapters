@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
@@ -461,6 +462,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongExtensionShouldReturnAvailableOperationsViaInvoke() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
                     Assert.Inconclusive("Invoke operation not available.");
@@ -485,7 +488,11 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<IEnumerable<ExtensionFeatureOperationDescriptor>>(context, operationId, ct);
+                var invokeResult = await feature.Invoke(context, new InvocationRequest() { 
+                    OperationId = operationId
+                }, ct).ConfigureAwait(false);
+
+                var operationsFromInvoke = invokeResult.Results.Select(x => encoder.Decode<ExtensionFeatureOperationDescriptor>(x)).ToArray();
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -498,6 +505,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task HelloWorldExtensionShouldReturnAvailableOperationsViaInvoke() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
             return RunAdapterTest(async (adapter, context, ct) => {
                 var feature = adapter.Features.Get(HelloWorldConstants.FeatureUri) as IAdapterExtensionFeature;
                 if (feature == null) {
@@ -515,7 +524,11 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<IEnumerable<ExtensionFeatureOperationDescriptor>>(context, operationId, ct);
+                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
+                    OperationId = operationId
+                }, ct).ConfigureAwait(false);
+
+                var operationsFromInvoke = invokeResult.Results.Select(x => encoder.Decode<ExtensionFeatureOperationDescriptor>(x)).ToArray();
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -528,6 +541,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongInvokeMethodShouldReturnCorrectValue() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
                     Assert.Inconclusive("Invoke operation not available.");
@@ -551,12 +566,12 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(
-                    context,
-                    operationId,
-                    pingMessage,
-                    ct
-                );
+                var invokeResult = await feature.Invoke(context, new InvocationRequest() { 
+                    OperationId = operationId,
+                    Arguments = new [] { encoder.Encode(pingMessage) }
+                }, ct).ConfigureAwait(false);
+
+                var pongMessage = encoder.Decode<PongMessage>(invokeResult.Results[0]);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
@@ -566,6 +581,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongStreamMethodShouldReturnCorrectValue() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
                     Assert.Inconclusive("Stream operation not available.");
@@ -589,14 +606,13 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var reader = await feature.Stream<PingMessage, PongMessage>(
-                    context,
-                    operationId,
-                    pingMessage,
-                    ct
-                );
+                var reader = await feature.Stream(context, new InvocationRequest() {
+                    OperationId = operationId,
+                    Arguments = new [] { encoder.Encode(pingMessage) }
+                }, ct).ConfigureAwait(false);
 
-                var pongMessage = await reader.ReadAsync(ct);
+                var streamResult = await reader.ReadAsync(ct).ConfigureAwait(false);
+                var pongMessage = encoder.Decode<PongMessage>(streamResult.Results[0]);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
@@ -609,6 +625,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongDuplexStreamMethodShouldReturnCorrectValue() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
                     Assert.Inconclusive("DuplexStream operation not available.");
@@ -635,17 +653,23 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var reader = await feature.DuplexStream<PingMessage, PongMessage>(
+                var reader = await feature.DuplexStream(
                     context,
-                    operationId,
-                    pingMessages.PublishToChannel(),
+                    new InvocationRequest() { 
+                        OperationId = operationId
+                    },
+                    pingMessages.Select(x => new InvocationStreamItem() {
+                        Arguments = new [] { encoder.Encode(x) }
+                    }).PublishToChannel(),
                     ct
                 );
 
                 var messagesRead = 0;
 
                 while (await reader.WaitToReadAsync(ct)) {
-                    while (reader.TryRead(out var pongMessage)) {
+                    while (reader.TryRead(out var streamResult)) {
+                        var pongMessage = encoder.Decode<PongMessage>(streamResult.Results[0]);
+
                         ++messagesRead;
                         if (messagesRead > pingMessages.Count) {
                             Assert.Fail("Incorrect number of pong messages received.");

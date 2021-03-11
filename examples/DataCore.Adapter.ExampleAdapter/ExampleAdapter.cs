@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
 
@@ -29,10 +31,14 @@ namespace DataCore.Adapter.Example {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IExtensionObjectEncoder"/> instances that can be used when encoding 
+        ///   or decoding <see cref="EncodedObject"/> instances.
+        /// </param>
         /// <param name="logger">
         ///   The adapter logger.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, ILogger<ExampleAdapter> logger) : base(
+        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders, ILogger<ExampleAdapter> logger) : base(
             "wind-power",
             new Csv.CsvAdapterOptions() {
                 Name = "Wind Power Energy Company",
@@ -48,7 +54,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
             AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
-            AddExtensionFeatures(new ExampleExtensionImpl(this));
+            AddExtensionFeatures(new ExampleExtensionImpl(this, encoders));
         }
 
 
@@ -75,12 +81,35 @@ namespace DataCore.Adapter.Example {
 
         private class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.BackgroundTaskService) {
-                BindInvoke<PingMessage, PongMessage>(Ping);
+            public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
+                BindInvoke<IExampleExtensionFeature>(
+                    (ctx, req, ct) => {
+                        var ping = Decode<PingMessage>(req.Arguments[0]);
+                        var pong = Ping(ping);
+
+                        return Task.FromResult(new InvocationResponse() { 
+                            Results = new [] { Encode(pong) }
+                        });
+                    }, 
+                    "Ping",
+                    "Responds to a ping message with a pong message",
+                    new[] {
+                        new ExtensionFeatureOperationParameterDescriptor() {
+                            TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                            Description = "The ping message"
+                        }
+                    },
+                    new[] {
+                        new ExtensionFeatureOperationParameterDescriptor() {
+                            TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                            Description = "The resulting pong message"
+                        }
+                    }
+                );
             }
 
 
-            public PongMessage Ping(IAdapterCallContext context, PingMessage ping) {
+            public PongMessage Ping(PingMessage ping) {
                 return new PongMessage() { 
                     CorrelationId = ping.CorrelationId
                 };

@@ -48,7 +48,9 @@ namespace DataCore.Adapter.Json {
             }
 
             foreach (var item in s_converters) {
-                converters.Add(item);
+                if (!converters.Contains(item)) {
+                    converters.Add(item);
+                }
             }
             
         }

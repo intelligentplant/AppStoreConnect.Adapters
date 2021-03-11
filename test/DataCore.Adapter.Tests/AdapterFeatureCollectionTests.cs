@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUri() {
             var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!));
+            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
 
             Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.FeatureUri)));
             Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.FeatureUri), out var f));
@@ -53,7 +53,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUri() {
             var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!));
+            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
 
             Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative)));
             Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative), out var f));
@@ -64,7 +64,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUriString() {
             var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!));
+            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
 
             Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.FeatureUri));
             Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.FeatureUri, out var f));
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUriString() {
             var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!));
+            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
 
             Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.RelativeFeatureUri));
             Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.RelativeFeatureUri, out var f));

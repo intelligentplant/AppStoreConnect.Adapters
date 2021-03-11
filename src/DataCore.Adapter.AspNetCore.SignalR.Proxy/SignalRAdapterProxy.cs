@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.AspNetCore.SignalR.Client;
@@ -32,6 +33,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         internal new ILogger Logger {
             get { return base.Logger; }
         }
+
+        /// <summary>
+        /// The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        /// extension objects.
+        /// </summary>
+        internal IEnumerable<IObjectEncoder> Encoders { get; }
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -116,13 +123,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        ///   extension objects.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the proxy.
         /// </param>
         public SignalRAdapterProxy(
             string id,
             SignalRAdapterProxyOptions options, 
-            IBackgroundTaskService? backgroundTaskService, 
+            IBackgroundTaskService? backgroundTaskService,
+            IEnumerable<IObjectEncoder> encoders,
             ILogger<SignalRAdapterProxy>? logger
         ) : base(
             id,
@@ -130,6 +142,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             backgroundTaskService, 
             logger
         ) {
+            Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;

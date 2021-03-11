@@ -86,22 +86,18 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
-        /// </param>
-        /// <param name="json">
-        ///   The JSON-serialized operation argument.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The JSON-serialized result of the operation.
+        ///   The result of the operation.
         /// </returns>
-        Task<string> Invoke(
+        Task<InvocationResponse> Invoke(
             IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+            InvocationRequest request, 
             CancellationToken cancellationToken
         );
 
@@ -112,22 +108,18 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
-        /// </param>
-        /// <param name="json">
-        ///   The JSON-serialized operation argument.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will stream the JSON-serialized results of the operation.
+        ///   A channel that will stream the results of the operation.
         /// </returns>
-        Task<ChannelReader<string>> Stream(
+        Task<ChannelReader<InvocationResponse>> Stream(
             IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+            InvocationRequest request,
             CancellationToken cancellationToken
         );
 
@@ -138,22 +130,22 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="channel">
-        ///   A channel that will stream the JSON-serialized inputs for the operation.
+        ///   A channel that will stream the inputs for the operation.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will stream the JSON-serialized results of the operation.
+        ///   A channel that will stream the results of the operation.
         /// </returns>
-        Task<ChannelReader<string>> DuplexStream(
-            IAdapterCallContext context, 
-            Uri operationId, 
-            ChannelReader<string> channel, 
+        Task<ChannelReader<InvocationResponse>> DuplexStream(
+            IAdapterCallContext context,
+            InvocationRequest request, 
+            ChannelReader<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         );
     

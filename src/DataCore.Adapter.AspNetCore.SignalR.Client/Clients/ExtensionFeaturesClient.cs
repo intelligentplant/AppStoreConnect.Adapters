@@ -128,11 +128,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationUri">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -144,27 +141,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationUri"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<string> InvokeExtensionAsync(
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<InvocationResponse> InvokeExtensionAsync(
             string adapterId,
-            Uri operationUri,
-            string argument,
+            InvocationRequest request,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationUri == null) {
-                throw new ArgumentNullException(nameof(operationUri));
-            }
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.InvokeAsync<string>(
+            return await connection.InvokeAsync<InvocationResponse>(
                 "InvokeExtension",
                 adapterId,
-                operationUri,
-                argument,
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -176,11 +172,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationUri">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -192,27 +185,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationUri"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<ChannelReader<string>> InvokeStreamingExtensionAsync(
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<ChannelReader<InvocationResponse>> InvokeStreamingExtensionAsync(
             string adapterId,
-            Uri operationUri,
-            string argument,
+            InvocationRequest request,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationUri == null) {
-                throw new ArgumentNullException(nameof(operationUri));
-            }
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<string>(
+            return await connection.StreamAsChannelAsync<InvocationResponse>(
                 "InvokeStreamingExtension",
                 adapterId,
-                operationUri,
-                argument,
+                request,
                 cancellationToken
             ).ConfigureAwait(false);
         }
@@ -224,8 +216,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="operationUri">
-        ///   The URI of the operation to invoke.
+        /// <param name="request">
+        ///   The request.
         /// </param>
         /// <param name="channel">
         ///   The input channel for the operation.
@@ -240,23 +232,24 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationUri"/> is <see langword="null"/>.
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<ChannelReader<string>> InvokeDuplexStreamingExtensionAsync(
+        public async Task<ChannelReader<InvocationResponse>> InvokeDuplexStreamingExtensionAsync(
             string adapterId,
-            Uri operationUri,
-            ChannelReader<string> channel,
+            InvocationRequest request,
+            ChannelReader<InvocationStreamItem> channel,
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
-            if (operationUri == null) {
-                throw new ArgumentNullException(nameof(operationUri));
-            }
+            AdapterSignalRClient.ValidateObject(request);
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
@@ -264,10 +257,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<string>(
+                return await connection.StreamAsChannelAsync<InvocationResponse>(
                     "InvokeDuplexStreamingExtension",
                     adapterId,
-                    operationUri,
+                    request,
                     channel,
                     cancellationToken
                 ).ConfigureAwait(false);
@@ -275,7 +268,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
             // we will read the channel ourselves and make an invocation call for every value.
-            var result = Channel.CreateUnbounded<string>();
+            var result = Channel.CreateUnbounded<InvocationResponse>();
 
             _ = Task.Run(async () => {
                 try {
@@ -288,11 +281,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                                 continue;
                             }
 
-                            var writeResult = await connection.InvokeAsync<string>(
+                            var writeResult = await connection.InvokeAsync<InvocationResponse>(
                                 "InvokeDuplexStreamingExtension",
                                 adapterId,
-                                operationUri,
-                                val,
+                                new InvocationRequest() { 
+                                    OperationId = request.OperationId,
+                                    Properties = request.Properties,
+                                    Arguments = val.Arguments
+                                },
                                 cancellationToken
                             ).ConfigureAwait(false);
 
