@@ -3,9 +3,14 @@
 namespace DataCore.Adapter.Common {
 
     /// <summary>
-    /// Encodes and decodes <see cref="EncodedObject"/> instances.
+    /// Encodes and decodes object data for use in <see cref="EncodedObject"/> instances.
     /// </summary>
     public interface IObjectEncoder {
+
+        /// <summary>
+        /// The encoding type used by the encoder.
+        /// </summary>
+        string EncodingType { get; }
 
         /// <summary>
         /// Tests if the <see cref="IObjectEncoder"/> can encode the specified 
@@ -22,14 +27,13 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
-        /// Tests if the <see cref="IObjectEncoder"/> can decode an <see cref="EncodedObject"/> 
-        /// to the specified type.
+        /// Tests if the <see cref="IObjectEncoder"/> can decode to the specified type.
         /// </summary>
         /// <param name="type">
         ///   The target type.
         /// </param>
         /// <param name="encoding">
-        ///   The encoding of the <see cref="EncodedObject"/>.
+        ///   The encoding used in the encoded object data.
         /// </param>
         /// <returns>
         ///   <see langword="true"/> if the encoder can decode the specified type, or 
@@ -39,33 +43,33 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
-        /// Encodes an object instance to an <see cref="EncodedObject"/>.
+        /// Encodes an object instance
         /// </summary>
-        /// <param name="typeId">
-        ///   The type ID for the encoded object.
+        /// <param name="type">
+        ///   The type of the opject to be encoded.
         /// </param>
         /// <param name="value">
         ///   The value to be encoded.
         /// </param>
         /// <returns>
-        ///   The encoded object.
+        ///   The encoded object data.
         /// </returns>
-        EncodedObject Encode(Uri typeId, object? value);
+        byte[]? Encode(Type type, object? value);
 
 
         /// <summary>
-        /// Decodes an <see cref="EncodedObject"/> to an instance of the specified type.
+        /// Decodes encoded data to an instance of the specified type.
         /// </summary>
         /// <param name="type">
         ///   The target type.
         /// </param>
-        /// <param name="extensionObject">
-        ///   The extension object.
+        /// <param name="encoded">
+        ///   The encoded object data.
         /// </param>
         /// <returns>
         ///   The decoded object.
         /// </returns>
-        object? Decode(Type type, EncodedObject? extensionObject);
+        object? Decode(Type type, byte[]? encoded);
 
     }
 }

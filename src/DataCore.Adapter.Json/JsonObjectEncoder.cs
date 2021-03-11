@@ -31,13 +31,22 @@ namespace DataCore.Adapter.Json {
 
 
         /// <inheritdoc/>
-        protected override byte[] Encode(object value, Type type) {
+        protected override byte[] Encode(object? value, Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
             return JsonSerializer.SerializeToUtf8Bytes(value, type, _options);
         }
 
 
         /// <inheritdoc/>
-        protected override object? Decode(byte[] encodedData, Type type) {
+        protected override object? Decode(byte[]? encodedData, Type type) {
+            if (encodedData == null) {
+                throw new ArgumentNullException(nameof(encodedData));
+            }
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
             return JsonSerializer.Deserialize(encodedData, type, _options);
         }
 

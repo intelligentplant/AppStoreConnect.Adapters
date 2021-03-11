@@ -39,21 +39,20 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        EncodedObject IObjectEncoder.Encode(Uri typeId, object? value) {
-            if (typeId == null) {
-                throw new ArgumentNullException(nameof(typeId));
+        byte[]? IObjectEncoder.Encode(Type type, object? value) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
             }
             
             if (value == null) {
-                return new EncodedObject(typeId, EncodingType, Convert.ToBase64String(Array.Empty<byte>()));
+                return Array.Empty<byte>();
             }
 
-            var type = value.GetType();
             if (!CanEncode(type)) {
                 throw new ArgumentOutOfRangeException(nameof(value), value, SharedResources.Error_CannotEncodeType);
             }
 
-            return new EncodedObject(typeId, EncodingType, Convert.ToBase64String(Encode(value, type)));
+            return Encode(value, type);
         }
 
 
@@ -69,7 +68,7 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The encoded object.
         /// </returns>
-        protected abstract byte[] Encode(object value, Type type);
+        protected abstract byte[]? Encode(object? value, Type type);
 
 
         /// <inheritdoc/>
@@ -95,25 +94,21 @@ namespace DataCore.Adapter.Common {
         ///   <see langword="false"/> otherwise.
         /// </returns>
         protected virtual bool CanDecode(Type type) {
-            return true;
+            return type != null;
         }
 
 
         /// <inheritdoc/>
-        object? IObjectEncoder.Decode(Type type, EncodedObject? extensionObject) {
+        object? IObjectEncoder.Decode(Type type, byte[]? encodedData) {
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (extensionObject == null) {
+            if (encodedData == null) {
                 return null;
             }
 
-            if (!((IObjectEncoder) this).CanDecode(type, extensionObject.Encoding)) {
-                throw new ArgumentOutOfRangeException(nameof(type), type, SharedResources.Error_CannotDecodeType);
-            }
-
-            return Decode(Convert.FromBase64String(extensionObject!.EncodedBody), type);
+            return Decode(encodedData, type);
         }
 
 
@@ -129,7 +124,7 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The decoded object.
         /// </returns>
-        protected abstract object? Decode(byte[] encodedData, Type type);
+        protected abstract object? Decode(byte[]? encodedData, Type type);
 
     }
 }
