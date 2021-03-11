@@ -7,7 +7,7 @@ namespace DataCore.Adapter.Common {
     /// Defines the identifier for a type when the type is encoded in an <see cref="EncodedObject"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
-    public sealed class DataTypeIdAttribute : Attribute {
+    public class DataTypeIdAttribute : Attribute {
 
         /// <summary>
         /// The ID for the type.
