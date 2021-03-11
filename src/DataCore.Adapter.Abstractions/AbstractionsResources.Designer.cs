@@ -727,6 +727,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve method &apos;{0}&apos; on type &apos;{1}&apos;..
+        /// </summary>
+        public static string Error_UnableToResolveMethod {
+            get {
+                return ResourceManager.GetString("Error_UnableToResolveMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot retrieve property &apos;{0}&apos; because localization failed.  Type &apos;{1}&apos; is not public or does not contain a public static string property with the name &apos;{2}&apos;..
         /// </summary>
         public static string LocalizableString_LocalizationFailed {

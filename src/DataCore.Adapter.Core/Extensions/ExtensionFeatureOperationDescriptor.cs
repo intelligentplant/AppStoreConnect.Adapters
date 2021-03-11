@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Extensions {
         public ExtensionFeatureOperationType OperationType { get; set; }
 
         /// <summary>
-        /// The display name.
+        /// The name for the operation.
         /// </summary>
         public string Name { get; set; } = default!;
 

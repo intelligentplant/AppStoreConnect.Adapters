@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Example {
         }
 
 
-        private class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
+        internal class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
             public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
                 BindInvoke<IExampleExtensionFeature>(
@@ -91,20 +91,7 @@ namespace DataCore.Adapter.Example {
                             Results = new [] { Encode(pong) }
                         });
                     }, 
-                    "Ping",
-                    "Responds to a ping message with a pong message",
-                    new[] {
-                        new ExtensionFeatureOperationParameterDescriptor() {
-                            TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                            Description = "The ping message"
-                        }
-                    },
-                    new[] {
-                        new ExtensionFeatureOperationParameterDescriptor() {
-                            TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                            Description = "The resulting pong message"
-                        }
-                    }
+                    descriptorProvider: MethodInfoUtil.GetMethodInfo<PingMessage, PongMessage>(Ping)
                 );
             }
 
@@ -116,6 +103,24 @@ namespace DataCore.Adapter.Example {
             }
 
             
+            internal static ExtensionFeatureOperationDescriptorPartial GetPingDescriptor() {
+                return new ExtensionFeatureOperationDescriptorPartial() {
+                    Name = "Ping",
+                    Description = "Responds to a ping message with a pong message",
+                    Inputs = new[] {
+                        new ExtensionFeatureOperationParameterDescriptor() {
+                            TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                            Description = "The ping message"
+                        }
+                    },
+                    Outputs = new[] {
+                        new ExtensionFeatureOperationParameterDescriptor() {
+                            TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                            Description = "The resulting pong message"
+                        }
+                    }
+                };
+            }
 
         }
 

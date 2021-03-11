@@ -15,6 +15,7 @@ namespace DataCore.Adapter.Example {
     )]
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
+        [ExtensionFeatureOperation(typeof(ExampleAdapter.ExampleExtensionImpl), nameof(ExampleAdapter.ExampleExtensionImpl.GetPingDescriptor))]
         PongMessage Ping(
             PingMessage ping
         );
