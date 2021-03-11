@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -60,12 +62,15 @@ namespace MyAdapter {
                 var correlationId = Guid.NewGuid().ToString();
                 var now = DateTime.UtcNow;
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-                var pongMessage = await extensionFeature.Invoke<PingMessage, PongMessage>(
+                var response = await extensionFeature.Invoke(
                     context,
-                    new Uri("asc:extensions/tutorial/ping-pong/Ping/Invoke/"),
-                    pingMessage,
+                    new InvocationRequest() { 
+                        OperationId = new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
+                        Arguments = new [] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
+                    },
                     cancellationToken
                 );
+                var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
 
                 Console.WriteLine();
                 Console.WriteLine($"[INVOKE] Ping: {correlationId} @ {now:HH:mm:ss} UTC");

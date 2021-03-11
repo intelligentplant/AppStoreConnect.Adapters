@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Example {
     }
 
 
-    [DataTypeId(WellKnownFeatures.Extensions.BaseUri + "example/ping-pong/types/ping")]
+    [ExtensionFeatureDataType(typeof(IExampleExtensionFeature), "ping-message")]
     public class PingMessage {
 
         public Guid CorrelationId { get; set; } = Guid.NewGuid();
@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Example {
     }
 
 
-    [DataTypeId(WellKnownFeatures.Extensions.BaseUri + "example/ping-pong/types/pong")]
+    [ExtensionFeatureDataType(typeof(IExampleExtensionFeature), "pong-message")]
     public class PongMessage {
 
         public Guid CorrelationId { get; set; } = Guid.NewGuid();

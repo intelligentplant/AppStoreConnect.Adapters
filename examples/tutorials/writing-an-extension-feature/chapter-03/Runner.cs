@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -58,17 +60,22 @@ namespace MyAdapter {
 
                 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
                 var correlationId = Guid.NewGuid().ToString();
-                var pingMessage = new PingMessage() { CorrelationId = correlationId };
-                var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
+                var now = DateTime.UtcNow;
+                var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
+                var channel = await extensionFeature.Stream(
                     context,
-                    new Uri("asc:extensions/tutorial/ping-pong/Ping/Stream/"),
-                    pingMessage,
+                    new InvocationRequest() {
+                        OperationId = new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
+                        Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
+                    },
                     cancellationToken
                 );
 
                 Console.WriteLine();
-                Console.WriteLine($"[STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
-                await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
+                Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
+
+                await foreach (var response in channel.ReadAllAsync(cancellationToken)) {
+                    var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
                     Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
                 }
 

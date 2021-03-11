@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -60,22 +62,28 @@ namespace MyAdapter {
                 Console.WriteLine();
 
                 var degC = 40d;
-                var degF = await extensionFeature.Invoke<double, double>(
+                var response = await extensionFeature.Invoke(
                     context,
-                    new Uri("asc:extensions/tutorial/temperature-converter/CtoF/Invoke/"),
-                    degC,
+                    new InvocationRequest() { 
+                        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
+                        Arguments = new [] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degC) }
+                    },
                     cancellationToken
                 );
+                var degF = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
                 Console.WriteLine($"{degC:0.#} Celsius is {degF:0.#} Fahrenheit");
 
                 degF = 60d;
-                degC = await extensionFeature.Invoke<double, double>(
+                response = await extensionFeature.Invoke(
                     context,
-                    new Uri("asc:extensions/tutorial/temperature-converter/FtoC/Invoke/"),
-                    degF,
+                    new InvocationRequest() {
+                        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
+                        Arguments = new[] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degF) }
+                    },
                     cancellationToken
                 );
+                degC = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
                 Console.WriteLine($"{degF:0.#} Fahrenheit is {degC:0.#} Celsius");
             }

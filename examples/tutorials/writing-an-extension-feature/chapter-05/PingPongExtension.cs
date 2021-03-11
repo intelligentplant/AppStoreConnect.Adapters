@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
@@ -21,22 +23,193 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-            BindInvoke<PingMessage, PongMessage>(Ping);
-            BindStream<PingMessage, PongMessage>(Ping);
-            BindDuplexStream<PingMessage, PongMessage>(Ping);
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+            BindInvoke<PingPongExtension>(
+                // Handler
+                (ctx, req, ct) => {
+                    var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
+                    var pongMessage = Ping(pingMessage);
+                    return Task.FromResult(new InvocationResponse() {
+                        Results = new[] { Encode(pongMessage) }
+                    });
+                },
+                // Operation name
+                nameof(Ping),
+                // Description
+                "Responds to a ping message with a pong message",
+                // Input parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                // Output parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 1,
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The pong message"
+                    }
+                }
+            );
+
+            BindStream<PingPongExtension>(
+                // Handler
+                (ctx, req, ct) => {
+                    // The handler delegate requires that we return a Task<ChannelReader<InvocationResponse>>.
+                    var outChannel = Channel.CreateUnbounded<InvocationResponse>();
+
+                    var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
+
+                    // Start a background task that will write results into our channel whenever 
+                    // we receive a new input.
+                    outChannel.Writer.RunBackgroundOperation(async (ch, ct2) => {
+                        while (!ct2.IsCancellationRequested) {
+                            // Every second, we will return a new PongMessage
+                            await Task.Delay(1000, ct2);
+
+                            var pongMessage = Ping(pingMessage);
+                            await ch.WriteAsync(new InvocationResponse() {
+                                Results = new[] { Encode(pongMessage) }
+                            }, ct2);
+                        }
+                    }, true, backgroundTaskService, ct);
+
+                    // Return the reader portion of the channel.
+                    return Task.FromResult(outChannel.Reader);
+                },
+                // Operation name
+                nameof(Ping),
+                // Description
+                "Responds to a ping message with a stream of pong messages",
+                // Input parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                // Output parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 1,
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The pong message"
+                    }
+                }
+            );
+
+            BindDuplexStream<PingPongExtension>(
+                // Handler
+                (ctx, req, inChannel, ct) => {
+                    // The handler delegate requires that we return a Task<ChannelReader<InvocationResponse>>.
+                    var outChannel = Channel.CreateUnbounded<InvocationResponse>();
+
+                    // Start a background task that will write results into our channel whenever 
+                    // we receive a new input.
+                    outChannel.Writer.RunBackgroundOperation(async (ch, ct2) => {
+                        // First, we process the ping message in the original request.
+                        var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
+                        var pongMessage = Ping(pingMessage);
+                        await ch.WriteAsync(new InvocationResponse() {
+                            Results = new[] { Encode(pongMessage) }
+                        }, ct2);
+
+                        // Now, we process the additional ping messages that are streamed into the 
+                        // inChannel.
+                        await foreach (var update in inChannel.ReadAllAsync(ct2)) {
+                            pingMessage = Decode<PingMessage>(update.Arguments.FirstOrDefault());
+                            pongMessage = Ping(pingMessage);
+                            await ch.WriteAsync(new InvocationResponse() {
+                                Results = new[] { Encode(pongMessage) }
+                            }, ct2);
+                        }
+                    }, true, backgroundTaskService, ct);
+
+                    // Return the reader portion of the channel.
+                    return Task.FromResult(outChannel.Reader);
+                },
+                // Operation name
+                nameof(Ping),
+                // Description
+                "Responds to each ping message in the incoming stream with a pong message",
+                // Input parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                // Output parameter descriptions
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 1,
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The pong message"
+                    }
+                }
+            );
 
             // ITemperatureConverter bindings
-            BindInvoke<double, double>(CtoF, 24, 75.2);
-            BindInvoke<double, double>(FtoC, 100, 37.8);
+
+            BindInvoke<ITemperatureConverter>(
+                (ctx, req, ct) => {
+                    var inTemp = Decode<double>(req.Arguments.FirstOrDefault());
+                    var outTemp = CtoF(inTemp);
+                    return Task.FromResult(new InvocationResponse() { 
+                        Results = new[] { Encode(outTemp) }
+                    });
+                },
+                nameof(CtoF),
+                "Converts a temperature in Celsius to Fahrenheit",
+                new [] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<double>(),
+                        Description = "The temperature in Celsius."
+                    }
+                },
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<double>(),
+                        Description = "The temperature in Fahrenheit."
+                    }
+                }
+            );
+
+            BindInvoke<ITemperatureConverter>(
+                (ctx, req, ct) => {
+                    var inTemp = Decode<double>(req.Arguments.FirstOrDefault());
+                    var outTemp = FtoC(inTemp);
+                    return Task.FromResult(new InvocationResponse() {
+                        Results = new[] { Encode(outTemp) }
+                    });
+                },
+                nameof(FtoC),
+                "Converts a temperature in Fahrenheit to Celsius",
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<double>(),
+                        Description = "The temperature in Fahrenheit."
+                    }
+                },
+                new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<double>(),
+                        Description = "The temperature in Celsius."
+                    }
+                }
+            );
         }
 
 
-        [ExtensionFeatureOperation(
-            Description = "Responds to a ping message with a pong message",
-            InputParameterDescription = "The ping message",
-            OutputParameterDescription = "The pong message"
-        )]
         public PongMessage Ping(PingMessage message) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
@@ -47,58 +220,6 @@ namespace MyAdapter {
             };
         }
 
-
-        [ExtensionFeatureOperation(
-            Description = "Responds to a ping message with a pong message every second until the call is cancelled",
-            InputParameterDescription = "The ping message",
-            OutputParameterDescription = "The pong message"
-        )]
-        public ChannelReader<PongMessage> Ping(PingMessage message, CancellationToken cancellationToken) {
-            if (message == null) {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            var result = Channel.CreateUnbounded<PongMessage>();
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                while (!ct.IsCancellationRequested) {
-                    await Task.Delay(1000, ct).ConfigureAwait(false);
-                    ch.TryWrite(new PongMessage() {
-                        CorrelationId = message.CorrelationId
-                    });
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
-        }
-
-
-        [ExtensionFeatureOperation(
-            Description = "Responds to each ping message in an incoming stream with a pong message",
-            InputParameterDescription = "The ping message",
-            OutputParameterDescription = "The pong message"
-        )]
-        public ChannelReader<PongMessage> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
-            if (messages == null) {
-                throw new ArgumentNullException(nameof(messages));
-            }
-
-            var result = Channel.CreateUnbounded<PongMessage>();
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                while (await messages.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (messages.TryRead(out var message)) {
-                        if (message == null) {
-                            continue;
-                        }
-
-                        ch.TryWrite(new PongMessage() {
-                            CorrelationId = message.CorrelationId
-                        });
-                    }
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
-        }
 
         public double CtoF(double degC) {
             return (degC * 1.8) + 32;

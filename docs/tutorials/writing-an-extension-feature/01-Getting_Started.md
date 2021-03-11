@@ -32,7 +32,7 @@ cd MyAdapter
 dotnet new console
 ```
 
-Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
+Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/), [IntelligentPlant.AppStoreConnect.Adapter.Json](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Json/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
 
 We will use the [.NET Generic Host](https://docs.microsoft.com/en-us/dotnet/core/extensions/generic-host) to run the example console applications in this tutorial. After you have added the above package references, replace the code in your `Program.cs` file with the following:
 
@@ -70,6 +70,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 
 using Microsoft.Extensions.Hosting;
@@ -131,11 +132,13 @@ As you can see, this is a very bare-bones adapter, which does nothing other than
 
 ```csharp
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -216,13 +219,19 @@ At present, we don't see anything under the `Extensions` section of the program 
 Our extension feature will be a ping-pong service, allowing callers to send a ping message to the adapter and receive a pong message in response. First, we will define our `PingMessage` and `PongMessage` types. Create a new class file called `Models.cs` and replace the content with the following:
 
 ```csharp
+using System;
+
+using DataCore.Adapter.Extensions;
+
 namespace MyAdapter {
 
+    [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
     public class PingMessage {
         public string CorrelationId { get; set; }
         public DateTime UtcTime { get; set; } = DateTime.UtcNow;
     }
 
+    [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
     public class PongMessage {
         public string CorrelationId { get; set; }
         public DateTime UtcTime { get; set; } = DateTime.UtcNow;
@@ -231,19 +240,21 @@ namespace MyAdapter {
 }
 ```
 
-Our models allow a caller to specify a correlation ID for a ping message, and receive a pong message that contains a matching correlation ID.
+Our models allow a caller to specify a correlation ID for a ping message, and receive a pong message that contains a matching correlation ID. We also use the `[ExtensionFeatureDataType]` attribute to annotate our messages. This annotation is used when decoding and encoding messages received and returned by our extension. Don't worry about any compiler errors related to `PingPongExtension` being undefined; we will create the missing type below.
 
 Next, we will create the extension itself. Create a new class file, `PingPongExtension.cs`, and replace the code with the following:
 
 ```csharp
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
@@ -259,8 +270,8 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService) 
-            : base(backgroundTaskService) { }
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) 
+            : base(backgroundTaskService, encoders) { }
 
     }
 }
@@ -270,7 +281,9 @@ Let's look at some points of interest in the above code:
 
 Our class inherits from [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs), which takes care of the [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs) implementation for us. It is annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which is used to specify some additional metadata about the extension. This metadata is used to build the `FeatureDescriptor` returned by a call to the `IAdapterExtensionFeature` interface's `GetDescriptor` method. The metadata includes a URI that is used to identify the extension. We have specified a relative URI, which will be made absolute using the base path defined by `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` ([see here](/src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs)). It is also possible to specify an absolute URI, as long as it is a child path of the `WellKnownFeatures.Extensions.ExtensionFeatureBasePath`.
 
-Update the constructor for our adapter as follows so that it registers our extension feature:
+In the constructor for our feature, we receive an array of [IObjectEncoder](/src/DataCore.Adapter.Core/Common/IObjectEncoder.cs) objects. `IObjectEncoder` is a service that can encode and decode data contained in custom [EncodedObject](/src/DataCore.Adapter.Core/Common/EncodedObject.cs) objects that are received and returned by extension features.
+
+Update the constructor for our adapter as follows so that it registers our extension feature and uses the default [JsonObjectEncoder](/src/DataCore.Adapter.Json/JsonObjectEncoder.cs) `IObjectEncoder` implementation to encode and decode custom object data to/from JSON:
 
 ```csharp
 public Adapter(
@@ -280,7 +293,7 @@ public Adapter(
     IBackgroundTaskService backgroundTaskService = null,
     ILogger<Adapter> logger = null
 ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) {
-    AddExtensionFeatures(new PingPongExtension(backgroundTaskService));
+    AddExtensionFeatures(new PingPongExtension(backgroundTaskService, DataCore.Adapter.Json.JsonObjectEncoder.Default);
 }
 ```
 
