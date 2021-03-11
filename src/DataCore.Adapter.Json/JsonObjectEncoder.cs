@@ -10,6 +10,12 @@ namespace DataCore.Adapter.Json {
     /// </summary>
     public class JsonObjectEncoder : ObjectEncoder {
 
+        /// <summary>
+        /// Default <see cref="JsonObjectEncoder"/> instance. You can use this instance if you do 
+        /// not need to modify default <see cref="JsonSerializerOptions"/> settings.
+        /// </summary>
+        public static JsonObjectEncoder Default { get; } = new JsonObjectEncoder();
+
         /// <inheritdoc/>
         public override string EncodingType => "json";
 
@@ -26,7 +32,8 @@ namespace DataCore.Adapter.Json {
         ///   The options to use in conversion to/from JSON.
         /// </param>
         public JsonObjectEncoder(JsonSerializerOptions? options = null) {
-            _options = options;
+            _options = options ?? new JsonSerializerOptions();
+            _options.Converters.AddDataCoreAdapterConverters();
         }
 
 
