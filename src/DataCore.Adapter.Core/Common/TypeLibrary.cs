@@ -157,6 +157,10 @@ namespace DataCore.Adapter.Common {
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
+            if (type == typeof(EncodedObject)) {
+                // Don't allow an EncodedObject to directly contain another EncodedObject!
+                return false;
+            }
 
             if (type.Assembly == typeof(TypeLibrary).Assembly) {
                 // Types from this assembly get an auto-generated ID.
@@ -301,6 +305,11 @@ namespace DataCore.Adapter.Common {
             }
 
             typeId = GetTypeIdFromDataTypeIdAttribute(type);
+            if (typeId != null) {
+                // Register this type ID for faster lookup in the future.
+                TryAdd(type, typeId);
+            }
+
             return typeId != null;
         }
 
