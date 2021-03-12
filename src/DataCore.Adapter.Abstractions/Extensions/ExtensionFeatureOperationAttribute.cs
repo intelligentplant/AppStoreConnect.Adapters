@@ -107,7 +107,9 @@ namespace DataCore.Adapter.Extensions {
                 attr = interfaceMethod.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
             }
 
-            return attr?.CreateDescriptor();
+            return attr?.CreateDescriptor() ?? new ExtensionFeatureOperationDescriptorPartial() { 
+                Name = methodInfo.Name
+            };
         }
 
     }
