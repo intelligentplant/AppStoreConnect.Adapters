@@ -32,26 +32,6 @@ namespace DataCore.Adapter.Common {
         /// Class initializer.
         /// </summary>
         static TypeLibrary() {
-            // Add built-in types.
-            foreach (var type in new[] {
-                typeof(bool),
-                typeof(byte),
-                typeof(DateTime),
-                typeof(double),
-                typeof(float),
-                typeof(int),
-                typeof(long),
-                typeof(sbyte),
-                typeof(short),
-                typeof(TimeSpan),
-                typeof(uint),
-                typeof(ulong),
-                typeof(ushort),
-                typeof(Uri)
-            }) {
-                TryAdd(type, new Uri(string.Concat(BaseUri, type.Name, "/")));
-            }
-
             // Automatically register types in this assembly.
             AddTypes(typeof(TypeLibrary).Assembly);
         }
@@ -103,6 +83,11 @@ namespace DataCore.Adapter.Common {
             }
             if (!typeId.IsAbsoluteUri) {
                 throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(typeId));
+            }
+
+            if (Variant.TryGetVariantType(type, out var _)) {
+                // This type can be converted directly to Variant; no need to register it.
+                return false;
             }
 
             typeId = typeId.EnsurePathHasTrailingSlash();
