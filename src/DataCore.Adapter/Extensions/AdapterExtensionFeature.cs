@@ -151,6 +151,12 @@ namespace DataCore.Adapter.Extensions {
                 return default;
             }
 
+            if (typeof(T) == typeof(EncodedObject)) {
+                // Special case for EncodedObject; return the value directly (via some casting 
+                // jiggery pokery to keep the compiler happy).
+                return (T) ((object) value);
+            }
+
             var encoder = _encoders.FirstOrDefault(x => x.CanDecode(typeof(T), value.Encoding));
             if (encoder == null) {
                 return default;

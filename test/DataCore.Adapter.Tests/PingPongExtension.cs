@@ -36,175 +36,77 @@ namespace DataCore.Adapter.Tests {
 
 
         internal PingPongExtension(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders) : base(backgroundTaskService, encoders) {
-            BindInvoke<PingPongExtension>( 
-                PingInvoke,
-                "Ping",
-                "Returns a pong message that matches the correlation ID of the specified ping message",
-                new [] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                new [] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
-            );
+            BindInvoke<PingPongExtension, PingMessage, PongMessage>(PingInvoke);
+            BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
+            BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
 
-            BindStream<PingPongExtension>(
-                PingStream,
-                "Ping",
-                "Streams a pong message that matches the correlation ID of the specified ping message",
-                new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
-            );
-
-            BindDuplexStream<PingPongExtension>(
-                PingDuplexStream,
-                "Ping",
-                "Streams pong messages that match the correlation IDs of the input stream ping messages",
-                new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
-            );
-
-            BindInvoke<IHelloWorld>(
-                Greet,
-                "Greet",
-                "Returns a greeting.",
-                null,
-                new [] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        TypeId = TypeLibrary.GetTypeId<string>(),
-                        Description = "The greeting"
-                    }
-                }
-            );
+            BindInvoke<IHelloWorld>(Greet);
         }
 
 
-        public Task<InvocationResponse> PingInvoke(
+        [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
+        public Task<PongMessage> PingInvoke(
             IAdapterCallContext context, 
-            InvocationRequest message, 
+            PingMessage ping, 
             CancellationToken cancellationToken
         ) {
-            if (message == null) {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            var ping = Decode<PingMessage>(message.Arguments.FirstOrDefault());
             if (ping == null) {
-                return Task.FromResult(new InvocationResponse());
+                throw new ArgumentNullException(nameof(ping));
             }
 
-            return Task.FromResult(new InvocationResponse() { 
-                Results = new [] {
-                    Encode(new PongMessage() {
-                        CorrelationId = ping.CorrelationId,
-                        UtcServerTime = DateTime.UtcNow
-                    })
-                }
+            return Task.FromResult(new PongMessage() {
+                CorrelationId = ping.CorrelationId,
+                UtcServerTime = DateTime.UtcNow
             });
         }
 
 
-        public Task<ChannelReader<InvocationResponse>> PingStream(
+        [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
+        public Task<ChannelReader<PongMessage>> PingStream(
             IAdapterCallContext context,
-            InvocationRequest message,
+            PingMessage ping,
             CancellationToken cancellationToken
         ) {
-            if (message == null) {
-                throw new ArgumentNullException(nameof(message));
+            if (ping == null) {
+                throw new ArgumentNullException(nameof(ping));
             }
 
-            var ping = Decode<PingMessage>(message.Arguments.FirstOrDefault());
-
-            var result = Channel.CreateUnbounded<InvocationResponse>();
+            var result = Channel.CreateUnbounded<PongMessage>();
 
             result.Writer.RunBackgroundOperation((ch, ct) => {
-                if (ping != null) {
-                    result.Writer.TryWrite(new InvocationResponse() {
-                        Results = new [] {
-                            Encode(new PongMessage() {
-                                CorrelationId = ping.CorrelationId,
-                                UtcServerTime = DateTime.UtcNow
-                            })
-                        }
-                    });
-                }
+                ch.TryWrite(new PongMessage() {
+                    CorrelationId = ping.CorrelationId,
+                    UtcServerTime = DateTime.UtcNow
+                });
             }, true, BackgroundTaskService, cancellationToken);
 
             return Task.FromResult(result.Reader);
         }
 
 
-        public Task<ChannelReader<InvocationResponse>> PingDuplexStream(
+        [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
+        public Task<ChannelReader<PongMessage>> PingDuplexStream(
             IAdapterCallContext context,
-            InvocationRequest message,
-            ChannelReader<InvocationStreamItem> channel,
+            ChannelReader<PingMessage> channel,
             CancellationToken cancellationToken
         ) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var ping = Decode<PingMessage>(message.Arguments.FirstOrDefault());
-
-            var result = Channel.CreateUnbounded<InvocationResponse>();
+            var result = Channel.CreateUnbounded<PongMessage>();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                if (ping != null) {
-                    result.Writer.TryWrite(new InvocationResponse() {
-                        Results = new [] {
-                            Encode(new PongMessage() {
-                                CorrelationId = ping.CorrelationId,
-                                UtcServerTime = DateTime.UtcNow
-                            })
-                        }
-                    });
-                }
-
-                while (await channel.WaitToReadAsync(ct)) {
-                    while (channel.TryRead(out var message)) {
-                        if (message == null) {
-                            continue;
-                        }
-
-                        ping = Decode<PingMessage>(message.Arguments.FirstOrDefault());
-
-                        if (ping != null) {
-                            result.Writer.TryWrite(new InvocationResponse() {
-                                Results = new [] {
-                                    Encode(new PongMessage() {
-                                        CorrelationId = ping.CorrelationId,
-                                        UtcServerTime = DateTime.UtcNow
-                                    })
-                                }
-                            });
-                        }
+                while (!ct.IsCancellationRequested) {
+                    var ping = await channel.ReadAsync(ct).ConfigureAwait(false);
+                    if (ping == null) {
+                        continue;
                     }
+
+                    await ch.WriteAsync(new PongMessage() {
+                        CorrelationId = ping.CorrelationId,
+                        UtcServerTime = DateTime.UtcNow
+                    }, ct).ConfigureAwait(false);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
@@ -223,6 +125,75 @@ namespace DataCore.Adapter.Tests {
                 }
             });
         }
+
+
+        internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
+            return new ExtensionFeatureOperationDescriptorPartial() {
+                Name = "Ping",
+                Description = "Returns a pong message that matches the correlation ID of the specified ping message",
+                Inputs = new [] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                Outputs = new [] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The resulting pong message"
+                    }
+                }
+            };
+        }
+
+
+        internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
+            return new ExtensionFeatureOperationDescriptorPartial() {
+                Name = "Ping",
+                Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
+                Inputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                Outputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The resulting pong message"
+                    }
+                }
+            };
+        }
+
+
+        internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
+            return new ExtensionFeatureOperationDescriptorPartial() {
+                Name = "Ping",
+                Description = "Returns a pong message every time a ping message is received",
+                Inputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                Outputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The resulting pong message"
+                    }
+                }
+            };
+        }
+
+
+        internal static ExtensionFeatureOperationDescriptorPartial GetGreetDescriptor() {
+            return new ExtensionFeatureOperationDescriptorPartial() {
+                Name = "Greet",
+                Description = "Returns a greeting when invoked"
+            };
+        }
+
     }
 
 
@@ -256,6 +227,7 @@ namespace DataCore.Adapter.Tests {
     [ExtensionFeature(HelloWorldConstants.FeatureUri)]
     internal interface IHelloWorld : IAdapterExtensionFeature {
 
+        [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(PingPongExtension.GetGreetDescriptor))]
         Task<InvocationResponse> Greet(IAdapterCallContext context, InvocationRequest message, CancellationToken cancellationToken);
 
     }

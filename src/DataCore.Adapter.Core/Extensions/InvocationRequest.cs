@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Extensions {
         /// The encoded invocation arguments.
         /// </summary>
         [Required]
-        public EncodedObject[] Arguments { get; set; } = Array.Empty<EncodedObject>();
+        public EncodedObject?[] Arguments { get; set; } = Array.Empty<EncodedObject>();
 
     }
 
