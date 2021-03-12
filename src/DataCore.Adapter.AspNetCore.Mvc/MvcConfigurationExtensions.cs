@@ -1,4 +1,6 @@
-﻿#if NETSTANDARD2_0 == false
+﻿#if NETSTANDARD2_0
+using DataCore.Adapter.NewtonsoftJson;
+#else
 using DataCore.Adapter.Json;
 #endif
 
@@ -26,7 +28,9 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
-#if NETSTANDARD2_0 == false
+#if NETSTANDARD2_0
+            builder.AddJsonOptions(options => options.SerializerSettings.Converters.AddDataCoreAdapterConverters());
+#else
             builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.AddDataCoreAdapterConverters());
 #endif
 

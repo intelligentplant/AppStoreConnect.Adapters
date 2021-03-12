@@ -1,7 +1,9 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Hubs;
 
-#if NETSTANDARD2_0 == false
+#if NETSTANDARD2_0
+using DataCore.Adapter.NewtonsoftJson;
+#else
 using DataCore.Adapter.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -42,7 +44,9 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
 #if NETSTANDARD2_0
-            return builder;
+            return builder.AddJsonProtocol(options => {
+                options.PayloadSerializerSettings.Converters.AddDataCoreAdapterConverters();
+            });
 #else
             return builder.AddJsonProtocol(options => {
                 options.PayloadSerializerOptions.Converters.AddDataCoreAdapterConverters();
