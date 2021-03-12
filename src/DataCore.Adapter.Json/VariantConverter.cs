@@ -244,9 +244,6 @@ namespace DataCore.Adapter.Json {
         /// <param name="options">
         ///   Serialization options.
         /// </param>
-        /// <returns>
-        ///   The <see cref="Array"/> that was read from the <see cref="JsonElement"/>.
-        /// </returns>
         private static void ReadArray<T>(JsonElement element, Array array, int dimension, int[] indices, JsonSerializerOptions? options) {
             var i = 0;
             foreach (var el in element.EnumerateArray()) {
