@@ -144,11 +144,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             try {
                 var result = await adapter.Feature.Invoke(adapterCallContext, new Extensions.InvocationRequest() { 
                     OperationId = operationId!,
-                    Arguments = request.Arguments.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
                 }, cancellationToken).ConfigureAwait(false);
 
                 var response = new InvokeExtensionResponse();
-                response.Results.AddRange(result.Results.Select(x => x.ToGrpcEncodedObject()));
+                response.Results.AddRange(result.Results.Select(x => x.ToGrpcVariant()));
 
                 return response;
             }
@@ -191,13 +191,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             try {
                 var result = await adapter.Feature.Stream(adapterCallContext, new Extensions.InvocationRequest() { 
                     OperationId = operationId!,
-                    Arguments = request.Arguments.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
                 }, cancellationToken).ConfigureAwait(false);
                 while (!cancellationToken.IsCancellationRequested) {
                     var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = new InvokeExtensionResponse();
-                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcEncodedObject()));
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
 
                     await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }
@@ -258,7 +258,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                 var result = await adapter.Feature.DuplexStream(adapterCallContext, new Extensions.InvocationRequest() { 
                     OperationId = operationId!,
-                    Arguments = request.Arguments.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
                 }, inputChannel, cancellationToken).ConfigureAwait(false);
 
                 // Run a background operation to process the remaining request stream items.
@@ -266,7 +266,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     try {
                         while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
                             await inputChannel.Writer.WriteAsync(new InvocationStreamItem() { 
-                                Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                                Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
                             }, ct).ConfigureAwait(false);
                         }
                     }
@@ -283,7 +283,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                     var response = new InvokeExtensionResponse();
-                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcEncodedObject()));
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
 
                     await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }

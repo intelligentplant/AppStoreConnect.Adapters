@@ -35,10 +35,10 @@ message GetExtensionOperationsResponse {
 message InvokeExtensionRequest {
     string adapter_id = 1;
     string operation_id = 2;
-    repeated EncodedObject arguments = 3;
+    repeated Variant arguments = 3;
 }
 
 
 message InvokeExtensionResponse {
-    repeated EncodedObject results = 1;
+    repeated Variant results = 1;
 }

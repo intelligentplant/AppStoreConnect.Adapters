@@ -78,14 +78,14 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             };
 
             foreach (var item in request.Arguments) {
-                req.Arguments.Add(item.ToGrpcEncodedObject());
+                req.Arguments.Add(item.ToGrpcVariant());
             }
 
             var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, cancellationToken));
 
             var result = await response.ResponseAsync.ConfigureAwait(false);
             return new Adapter.Extensions.InvocationResponse() { 
-                Results = result.Results.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                Results = result.Results.Select(x => x.ToAdapterVariant()).ToArray()
             };
         }
 
@@ -105,14 +105,14 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 };
 
                 foreach (var item in request.Arguments) {
-                    req.Arguments.Add(item.ToGrpcEncodedObject());
+                    req.Arguments.Add(item.ToGrpcVariant());
                 }
 
                 var response = client.InvokeStreamingExtension(req, Proxy.GetCallOptions(context, cancellationToken));
 
                 while (await response.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                     await result.Writer.WriteAsync(new Adapter.Extensions.InvocationResponse() { 
-                        Results = response.ResponseStream.Current.Results.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                        Results = response.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
                     }, ct).ConfigureAwait(false);
                 }
             }, true, Proxy.BackgroundTaskService, cancellationToken);
@@ -136,7 +136,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             };
 
             foreach (var item in request.Arguments) {
-                req.Arguments.Add(item.ToGrpcEncodedObject());
+                req.Arguments.Add(item.ToGrpcVariant());
             }
 
             await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
@@ -152,7 +152,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                         };
 
                         foreach (var item in val.Arguments) {
-                            req.Arguments.Add(item.ToGrpcEncodedObject());
+                            req.Arguments.Add(item.ToGrpcVariant());
                         }
 
                         await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
@@ -166,7 +166,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 while (await stream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
                     await result.Writer.WriteAsync(new Adapter.Extensions.InvocationResponse() {
-                        Results = stream.ResponseStream.Current.Results.Select(x => x.ToAdapterEncodedObject()).ToArray()
+                        Results = stream.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
                     }, ct).ConfigureAwait(false);
                 }
             }, true, Proxy.BackgroundTaskService, cancellationToken);

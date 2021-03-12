@@ -40,6 +40,9 @@ namespace DataCore.Adapter.Tests {
             BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
             BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
 
+            BindInvoke<PingPongExtension, PingMessage[], PongMessage[]>(PingArray1D);
+            BindInvoke<PingPongExtension, PingMessage[,], PongMessage[,]>(PingArray2D);
+
             BindInvoke<IHelloWorld>(Greet);
         }
 
@@ -114,14 +117,50 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        public PongMessage[] PingArray1D(IAdapterCallContext context, PingMessage[] messages) {
+            var result = new PongMessage[messages.Length];
+
+            for (var i = 0; i < messages.Length; i++) {
+                var ping = messages[i];
+                var pong = new PongMessage() {
+                    CorrelationId = ping.CorrelationId,
+                    UtcServerTime = DateTime.UtcNow
+                };
+                result[i] = pong;
+            }
+
+            return result;
+        }
+
+
+        public PongMessage[,] PingArray2D(IAdapterCallContext context, PingMessage[,] messages) {
+            var len0 = messages.GetLength(0);
+            var len1 = messages.GetLength(1);
+            var result = new PongMessage[len0, len1];
+
+            for (var i = 0; i < len0; i++) {
+                for (var j = 0; j < len1; j++) {
+                    var ping = messages[i, j];
+                    var pong = new PongMessage() {
+                        CorrelationId = ping.CorrelationId,
+                        UtcServerTime = DateTime.UtcNow
+                    };
+                    result[i, j] = pong;
+                }
+            }
+
+            return result;
+        }
+
+
         public Task<InvocationResponse> Greet(
             IAdapterCallContext context,
             InvocationRequest message,
             CancellationToken cancellationToken
         ) {
             return Task.FromResult(new InvocationResponse() { 
-                Results = new [] {
-                    Encode("Hello, world!")
+                Results = new Variant[] {
+                    ConvertToVariant("Hello, world!")
                 }
             });
         }
@@ -133,12 +172,14 @@ namespace DataCore.Adapter.Tests {
                 Description = "Returns a pong message that matches the correlation ID of the specified ping message",
                 Inputs = new [] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                         Description = "The ping message"
                     }
                 },
                 Outputs = new [] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                         Description = "The resulting pong message"
                     }
@@ -153,12 +194,14 @@ namespace DataCore.Adapter.Tests {
                 Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
                 Inputs = new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                         Description = "The ping message"
                     }
                 },
                 Outputs = new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                         Description = "The resulting pong message"
                     }
@@ -173,12 +216,14 @@ namespace DataCore.Adapter.Tests {
                 Description = "Returns a pong message every time a ping message is received",
                 Inputs = new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                         Description = "The ping message"
                     }
                 },
                 Outputs = new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                         Description = "The resulting pong message"
                     }

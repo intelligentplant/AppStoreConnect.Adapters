@@ -556,7 +556,7 @@ namespace DataCore.Adapter.Tests {
 
                 var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, ct).ConfigureAwait(false);
 
-                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke)?.OperationId;
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.Name.Contains(nameof(PingPongExtension.PingInvoke)))?.OperationId;
                 if (operationId == null) {
                     Assert.Fail("Invoke operation should be available.");
                 }
@@ -568,7 +568,7 @@ namespace DataCore.Adapter.Tests {
 
                 var invokeResult = await feature.Invoke(context, new InvocationRequest() { 
                     OperationId = operationId,
-                    Arguments = new [] { encoder.Encode(pingMessage) }
+                    Arguments = new Variant[] { encoder.Encode(pingMessage) }
                 }, ct).ConfigureAwait(false);
 
                 var pongMessage = encoder.Decode<PongMessage>(invokeResult.Results[0]);
@@ -608,7 +608,7 @@ namespace DataCore.Adapter.Tests {
 
                 var reader = await feature.Stream(context, new InvocationRequest() {
                     OperationId = operationId,
-                    Arguments = new [] { encoder.Encode(pingMessage) }
+                    Arguments = new Variant[] { encoder.Encode(pingMessage) }
                 }, ct).ConfigureAwait(false);
 
                 var streamResult = await reader.ReadAsync(ct).ConfigureAwait(false);
@@ -659,7 +659,7 @@ namespace DataCore.Adapter.Tests {
                         OperationId = operationId
                     },
                     pingMessages.Select(x => new InvocationStreamItem() {
-                        Arguments = new [] { encoder.Encode(x) }
+                        Arguments = new Variant[] { encoder.Encode(x) }
                     }).PublishToChannel(),
                     ct
                 );
@@ -683,6 +683,147 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 Assert.AreEqual(pingMessages.Count, messagesRead, "Incorrect number of pong messages received.");
+            });
+        }
+
+
+        [TestMethod]
+        public Task PingPongArray1DInvokeMethodShouldReturnCorrectValue() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
+            return RunAdapterTest(async (adapter, context, ct) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
+                    Assert.Inconclusive("Invoke operation not available.");
+                }
+
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, ct).ConfigureAwait(false);
+
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.Name.Contains(nameof(PingPongExtension.PingArray1D)))?.OperationId;
+                if (operationId == null) {
+                    Assert.Fail("Invoke operation should be available.");
+                }
+
+                var pingMessages = new[] {
+                    new PingMessage() {
+                        CorrelationId = Guid.NewGuid(),
+                        UtcClientTime = DateTime.UtcNow
+                    },
+                    new PingMessage() {
+                        CorrelationId = Guid.NewGuid(),
+                        UtcClientTime = DateTime.UtcNow
+                    },
+                    new PingMessage() {
+                        CorrelationId = Guid.NewGuid(),
+                        UtcClientTime = DateTime.UtcNow
+                    }
+                };
+
+                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
+                    OperationId = operationId,
+                    Arguments = new Variant[] { 
+                        encoder.Encode(pingMessages)
+                    }
+                }, ct).ConfigureAwait(false);
+
+                var pongMessages = encoder.Decode<PongMessage[]>(invokeResult.Results[0]);
+
+                Assert.AreEqual(pingMessages.Length, pongMessages.Length);
+
+                for (var i = 0; i < pingMessages.Length; i++) {
+                    var ping = pingMessages[i];
+                    var pong = pongMessages[i];
+                    Assert.IsNotNull(pong);
+                    Assert.AreEqual(ping.CorrelationId, pong.CorrelationId);
+                }
+            });
+        }
+
+
+        [TestMethod]
+        public Task PingPongArray2DInvokeMethodShouldReturnCorrectValue() {
+            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
+
+            return RunAdapterTest(async (adapter, context, ct) => {
+                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
+                    Assert.Inconclusive("Invoke operation not available.");
+                }
+
+                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
+                if (feature == null) {
+                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
+                    return;
+                }
+
+                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, ct).ConfigureAwait(false);
+
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.Name.Contains(nameof(PingPongExtension.PingArray2D)))?.OperationId;
+                if (operationId == null) {
+                    Assert.Fail("Invoke operation should be available.");
+                }
+
+                var pingMessages = new[,] {
+                    {
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        },
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        },
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        }
+                    },
+                    {
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        },
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        },
+                        new PingMessage() {
+                            CorrelationId = Guid.NewGuid(),
+                            UtcClientTime = DateTime.UtcNow
+                        }
+                    }
+                };
+
+                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
+                    OperationId = operationId,
+                    Arguments = new Variant[] {
+                        new Variant(encoder.Encode(pingMessages))
+                    }
+                }, ct).ConfigureAwait(false);
+
+                var pongMessages = encoder.Decode<PongMessage[,]>(invokeResult.Results[0]);
+
+                Assert.AreEqual(pingMessages.Rank, pongMessages.Rank);
+
+                for (var i = 0; i < pingMessages.Rank; i++) {
+                    Assert.AreEqual(pingMessages.GetLength(i), pongMessages.GetLength(i));
+                }
+
+                var len0 = pingMessages.GetLength(0);
+                var len1 = pingMessages.GetLength(1);
+
+                for (var i = 0; i < len0; i++) {
+                    for (var j = 0; j < len1; j++) {
+                        var ping = pingMessages[i, j];
+                        var pong = pongMessages[i, j];
+                        Assert.IsNotNull(pong);
+                        Assert.AreEqual(ping.CorrelationId, pong.CorrelationId);
+                    }
+                }
             });
         }
 

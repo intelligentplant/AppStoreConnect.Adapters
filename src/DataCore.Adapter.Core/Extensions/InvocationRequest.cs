@@ -17,10 +17,10 @@ namespace DataCore.Adapter.Extensions {
         public Uri OperationId { get; set; } = default!;
 
         /// <summary>
-        /// The encoded invocation arguments.
+        /// The invocation arguments.
         /// </summary>
         [Required]
-        public EncodedObject?[] Arguments { get; set; } = Array.Empty<EncodedObject>();
+        public Variant[] Arguments { get; set; } = Array.Empty<Variant>();
 
     }
 

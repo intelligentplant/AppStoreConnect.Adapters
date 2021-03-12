@@ -1620,6 +1620,8 @@ namespace DataCore.Adapter {
 
             return new Extensions.ExtensionFeatureOperationParameterDescriptor() {
                 Ordinal = descriptor.Ordinal,
+                VariantType = descriptor.VariantType.ToAdapterVariantType(),
+                ArrayRank = descriptor.ArrayRank,
                 TypeId = Uri.TryCreate(descriptor.TypeId, UriKind.Absolute, out var uri) ? uri : null,
                 Description = descriptor.Description
             };
@@ -1645,6 +1647,8 @@ namespace DataCore.Adapter {
 
             return new Grpc.ExtensionFeatureOperationParameterDescriptor() {
                 Ordinal = descriptor.Ordinal,
+                VariantType = descriptor.VariantType.ToGrpcVariantType(),
+                ArrayRank = descriptor.ArrayRank,
                 TypeId = descriptor.TypeId?.ToString() ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty
             };

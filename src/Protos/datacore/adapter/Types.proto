@@ -435,6 +435,8 @@ enum ExtensionFeatureOperationType {
 
 message ExtensionFeatureOperationParameterDescriptor {
     int32 ordinal = 1;
-    string type_id = 2;
-    string description = 3;
+    VariantType variant_type = 2;
+    int32 array_rank = 3;
+    string type_id = 4;
+    string description = 5;
 }

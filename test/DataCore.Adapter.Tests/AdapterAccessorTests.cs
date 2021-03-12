@@ -164,7 +164,7 @@ namespace DataCore.Adapter.Tests {
             public TestExtension() : base(null, Array.Empty<Common.IObjectEncoder>()) {
                 BindInvoke<TestExtension>((ctx, req, ct) => {
                     return Task.FromResult(new InvocationResponse() { 
-                        Results = new [] { Encode(GetCurrentTime()) }
+                        Results = new Common.Variant[] { ConvertToVariant(GetCurrentTime()) }
                     });
                 }, nameof(GetCurrentTime));
             }

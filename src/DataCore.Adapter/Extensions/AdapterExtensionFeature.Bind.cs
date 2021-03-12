@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.Extensions {
     public partial class AdapterExtensionFeature {
 
@@ -299,7 +301,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant [] { 
+                        Variant.TryGetVariantType(typeof(T), out var _) 
+                            ? Variant.FromValue(output) 
+                            : ConvertToVariant(output) 
+                    }
                 };
             }, partialDescriptor);
         }
@@ -398,7 +404,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -493,7 +503,7 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
                 var output = await handler.Invoke(ctx, input1, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -501,7 +511,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T2), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -596,7 +610,7 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
                 var output = handler.Invoke(ctx, input1);
 
                 if (output is InvocationResponse ir) {
@@ -604,7 +618,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T2), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -702,8 +720,8 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
                 var output = await handler.Invoke(ctx, input1, input2, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -711,7 +729,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T3), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -809,8 +831,8 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
                 var output = handler.Invoke(ctx, input1, input2);
 
                 if (output is InvocationResponse ir) {
@@ -818,7 +840,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T3), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -919,9 +945,9 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
                 var output = await handler.Invoke(ctx, input1, input2, input3, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -929,7 +955,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T4), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -1030,9 +1060,9 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
                 var output = handler.Invoke(ctx, input1, input2, input3);
 
                 if (output is InvocationResponse ir) {
@@ -1040,7 +1070,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T4), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -1144,10 +1178,10 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
                 var output = await handler.Invoke(ctx, input1, input2, input3, input4, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -1155,7 +1189,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T5), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -1259,10 +1297,10 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
                 var output = handler.Invoke(ctx, input1, input2, input3, input4);
 
                 if (output is InvocationResponse ir) {
@@ -1270,7 +1308,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T5), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -1377,11 +1419,11 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
                 var output = await handler.Invoke(ctx, input1, input2, input3, input4, input5, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -1389,7 +1431,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T6), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -1496,11 +1542,11 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
                 var output = handler.Invoke(ctx, input1, input2, input3, input4, input5);
 
                 if (output is InvocationResponse ir) {
@@ -1508,7 +1554,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T6), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -1618,12 +1668,12 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
                 var output = await handler.Invoke(ctx, input1, input2, input3, input4, input5, input6, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -1631,7 +1681,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T7), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -1741,12 +1795,12 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
                 var output = handler.Invoke(ctx, input1, input2, input3, input4, input5, input6);
 
                 if (output is InvocationResponse ir) {
@@ -1754,7 +1808,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T7), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -1867,13 +1925,13 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
-                var input7 = Decode<T7>(req.Arguments.ElementAtOrDefault(6));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input7 = ConvertFromVariant<T7>(req.Arguments.ElementAtOrDefault(6));
                 var output = await handler.Invoke(ctx, input1, input2, input3, input4, input5, input6, input7, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -1881,7 +1939,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T8), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -1994,13 +2056,13 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
-                var input7 = Decode<T7>(req.Arguments.ElementAtOrDefault(6));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input7 = ConvertFromVariant<T7>(req.Arguments.ElementAtOrDefault(6));
                 var output = handler.Invoke(ctx, input1, input2, input3, input4, input5, input6, input7);
 
                 if (output is InvocationResponse ir) {
@@ -2008,7 +2070,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T8), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -2124,14 +2190,14 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
-                var input7 = Decode<T7>(req.Arguments.ElementAtOrDefault(6));
-                var input8 = Decode<T8>(req.Arguments.ElementAtOrDefault(7));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input7 = ConvertFromVariant<T7>(req.Arguments.ElementAtOrDefault(6));
+                var input8 = ConvertFromVariant<T8>(req.Arguments.ElementAtOrDefault(7));
                 var output = await handler.Invoke(ctx, input1, input2, input3, input4, input5, input6, input7, input8, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -2139,7 +2205,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T9), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 };
             }, partialDescriptor);
         }
@@ -2255,14 +2325,14 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindInvoke<TFeature>((ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
-                var input2 = Decode<T2>(req.Arguments.ElementAtOrDefault(1));
-                var input3 = Decode<T3>(req.Arguments.ElementAtOrDefault(2));
-                var input4 = Decode<T4>(req.Arguments.ElementAtOrDefault(3));
-                var input5 = Decode<T5>(req.Arguments.ElementAtOrDefault(4));
-                var input6 = Decode<T6>(req.Arguments.ElementAtOrDefault(5));
-                var input7 = Decode<T7>(req.Arguments.ElementAtOrDefault(6));
-                var input8 = Decode<T8>(req.Arguments.ElementAtOrDefault(7));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input2 = ConvertFromVariant<T2>(req.Arguments.ElementAtOrDefault(1));
+                var input3 = ConvertFromVariant<T3>(req.Arguments.ElementAtOrDefault(2));
+                var input4 = ConvertFromVariant<T4>(req.Arguments.ElementAtOrDefault(3));
+                var input5 = ConvertFromVariant<T5>(req.Arguments.ElementAtOrDefault(4));
+                var input6 = ConvertFromVariant<T6>(req.Arguments.ElementAtOrDefault(5));
+                var input7 = ConvertFromVariant<T7>(req.Arguments.ElementAtOrDefault(6));
+                var input8 = ConvertFromVariant<T8>(req.Arguments.ElementAtOrDefault(7));
                 var output = handler.Invoke(ctx, input1, input2, input3, input4, input5, input6, input7, input8);
 
                 if (output is InvocationResponse ir) {
@@ -2270,7 +2340,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return Task.FromResult(new InvocationResponse() {
-                    Results = new[] { Encode(output) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T9), out var _)
+                            ? Variant.FromValue(output)
+                            : ConvertToVariant(output)
+                    }
                 });
             }, partialDescriptor);
         }
@@ -2494,7 +2568,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return output.Transform(x => new InvocationResponse() {
-                    Results = new[] { Encode(x) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T), out var _)
+                            ? Variant.FromValue(x)
+                            : ConvertToVariant(x)
+                    }
                 }, BackgroundTaskService, ct); ;
             }, partialDescriptor);
         }
@@ -2589,7 +2667,7 @@ namespace DataCore.Adapter.Extensions {
             );
 
             return BindStream<TFeature>(async (ctx, req, ct) => {
-                var input1 = Decode<T1>(req.Arguments.ElementAtOrDefault(0));
+                var input1 = ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
                 var output = await handler.Invoke(ctx, input1, ct).ConfigureAwait(false);
 
                 if (output is ChannelReader<InvocationResponse> ir) {
@@ -2597,7 +2675,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return output.Transform(x => new InvocationResponse() {
-                    Results = new[] { Encode(x) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T2), out var _)
+                            ? Variant.FromValue(x)
+                            : ConvertToVariant(x)
+                    }
                 }, BackgroundTaskService, ct);;
             }, partialDescriptor);
         }
@@ -2820,13 +2902,13 @@ namespace DataCore.Adapter.Extensions {
                 var input = Channel.CreateUnbounded<T1?>();
 
                 // Write first input from request.
-                await input.Writer.WriteAsync(Decode<T1>(req.Arguments?.ElementAtOrDefault(0)), ct).ConfigureAwait(false);
+                await input.Writer.WriteAsync(ConvertFromVariant<T1>(req.Arguments?.ElementAtOrDefault(0) ?? Variant.Null), ct).ConfigureAwait(false);
 
                 // Run background task to write subsequent inputs received from the input channel.
                 input.Writer.RunBackgroundOperation(async (ch2, ct2) => { 
                     while (!ct2.IsCancellationRequested) {
                         var update = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                        await ch2.WriteAsync(Decode<T1>(update.Arguments?.ElementAtOrDefault(0)), ct2).ConfigureAwait(false);
+                        await ch2.WriteAsync(ConvertFromVariant<T1>(update.Arguments?.ElementAtOrDefault(0) ?? Variant.Null), ct2).ConfigureAwait(false);
                     }
                 }, true, BackgroundTaskService, ct);
 
@@ -2837,7 +2919,11 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 return output.Transform(x => new InvocationResponse() {
-                    Results = new[] { Encode(x) }
+                    Results = new Variant[] {
+                        Variant.TryGetVariantType(typeof(T2), out var _)
+                            ? Variant.FromValue(x)
+                            : ConvertToVariant(x)
+                    }
                 }, BackgroundTaskService, ct); ;
             }, partialDescriptor);
         }

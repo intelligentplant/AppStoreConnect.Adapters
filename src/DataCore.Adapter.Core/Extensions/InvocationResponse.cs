@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Extensions {
         /// The invocation results.
         /// </summary>
         [Required]
-        public EncodedObject?[] Results { get; set; } = Array.Empty<EncodedObject>();
+        public Variant[] Results { get; set; } = Array.Empty<Variant>();
 
     }
 }

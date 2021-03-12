@@ -90,8 +90,8 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() { 
-                        Results = new[] {
-                            Encode(desc)!
+                        Results = new Variant[] {
+                            ConvertToVariant(desc)!
                         }
                     };
                 };
@@ -105,7 +105,7 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() { 
-                        Results = ops.Select(x => Encode(x)!).ToArray()
+                        Results = ops.Select(x => ConvertToVariant(x)!).ToArray()
                     };
                 };
             }
@@ -113,82 +113,71 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
-        /// Encodes the specified value as an <see cref="EncodedObject"/>.
+        /// Converts the specified value to a <see cref="Common.Variant"/>.
         /// </summary>
         /// <typeparam name="T">
-        ///   The type of the object to encode.
+        ///   The type of the object to convert.
         /// </typeparam>
         /// <param name="value">
-        ///   The object to encode.
+        ///   The value to convert.
         /// </param>
         /// <returns>
-        ///   The encoded object.
+        ///   The converted.
         /// </returns>
-        protected EncodedObject? Encode<T>(T? value) {
-            var encoder = _encoders.FirstOrDefault(x => x.CanEncode(typeof(T)));
-            if (encoder == null) {
-                return null;
+        protected Variant ConvertToVariant<T>(T? value) {
+            var targetType = typeof(T);
+            if (targetType == typeof(Variant) || Variant.TryGetVariantType(targetType, out var _)) {
+                return Variant.FromValue(value);
             }
 
-            return encoder.Encode(value);
+            if (targetType.IsArray) {
+                var elementType = targetType.GetElementType();
+                if (elementType == typeof(Variant) || Variant.TryGetVariantType(elementType, out var _)) {
+                    return Variant.FromValue(value);
+                }
+
+                var encoder = _encoders.FirstOrDefault(x => x.CanEncode(elementType));
+                if (encoder == null) {
+                    return Variant.Null;
+                }
+
+                return new Variant(encoder.Encode((Array?) (object?) value));
+            }
+            else {
+                var encoder = _encoders.FirstOrDefault(x => x.CanEncode(typeof(T)));
+                if (encoder == null) {
+                    return Variant.Null;
+                }
+
+                return new Variant(EncodedObject.Create(value, encoder));
+            }
         }
 
 
         /// <summary>
-        /// Decodes the specified <see cref="EncodedObject"/>.
+        /// Converts the specified <see cref="Common.Variant"/> to an instance of <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">
-        ///   The type to decode the <see cref="EncodedObject"/> to.
+        ///   The type to convert the <see cref="Common.Variant"/> to.
         /// </typeparam>
         /// <param name="value">
-        ///   The object to encode.
+        ///   The object to convert.
         /// </param>
         /// <returns>
-        ///   The encoded object.
+        ///   The converted value.
         /// </returns>
-        protected T? Decode<T>(EncodedObject? value) {
-            if (value == null) {
-                return default;
+        protected T? ConvertFromVariant<T>(Variant value) {
+            var targetType = typeof(T);
+            IObjectEncoder? encoder;
+
+            if (targetType.IsArray) {
+                var elementType = targetType.GetElementType();
+                encoder = _encoders.FirstOrDefault(x => x.CanDecode(elementType));
+            }
+            else {
+                encoder = _encoders.FirstOrDefault(x => x.CanDecode(typeof(T)));
             }
 
-            if (typeof(T) == typeof(EncodedObject)) {
-                // Special case for EncodedObject; return the value directly (via some casting 
-                // jiggery pokery to keep the compiler happy).
-                return (T) ((object) value);
-            }
-
-            var encoder = _encoders.FirstOrDefault(x => x.CanDecode(typeof(T), value.Encoding));
-            if (encoder == null) {
-                return default;
-            }
-
-            return encoder.Decode<T>(value);
-        }
-
-
-        /// <summary>
-        /// Decodes the specified <see cref="EncodedObject"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The type to decode the <see cref="EncodedObject"/> to.
-        /// </typeparam>
-        /// <param name="value">
-        ///   The object to decode.
-        /// </param>
-        /// <returns>
-        ///   The encoded object.
-        /// </returns>
-        protected T? Decode<T>(Variant value) {
-            if (value.Type != VariantType.ExtensionObject) {
-                return default;
-            }
-
-            var extensionObject = (EncodedObject?) value;
-            if (extensionObject == null) {
-                return default;
-            }
-
-            var encoder = _encoders.FirstOrDefault(x => x.CanDecode(typeof(T), extensionObject.Encoding));
             if (encoder == null) {
                 return default;
             }
@@ -394,7 +383,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Encode{T}"/> method to 
+        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
         ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
@@ -438,7 +427,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Encode{T}"/> method to 
+        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
         ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
@@ -487,7 +476,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="Encode{T}"/> method to 
+        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
         ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
