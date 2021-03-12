@@ -173,10 +173,10 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(Uri val) => new Variant(val);
+        public static implicit operator Variant(Uri? val) => new Variant(val);
 
         /// <inheritdoc/>
-        public static explicit operator Uri?(Variant val) => (Uri) val.Value!;
+        public static explicit operator Uri?(Variant val) => (Uri?) val.Value;
 
         /// <inheritdoc/>
         public static implicit operator Variant(Uri[]? val) => new Variant(val);
@@ -212,7 +212,7 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(EncodedObject val) => new Variant(val);
+        public static implicit operator Variant(EncodedObject? val) => new Variant(val);
 
         /// <inheritdoc/>
         public static explicit operator EncodedObject?(Variant val) => (EncodedObject?) val.Value;
