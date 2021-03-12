@@ -47,15 +47,6 @@ namespace DataCore.Adapter.Tests {
 
     }
 
-
-    [TestClass]
-    public class SignalRProxyMessagePackTests : SignalRProxyTests {
-
-        protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
-            return builder.AddMessagePackProtocol();
-        }
-
-    }
 }
 
 #endif

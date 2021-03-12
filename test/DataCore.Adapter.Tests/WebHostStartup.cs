@@ -99,8 +99,7 @@ namespace DataCore.Adapter.Tests {
                 .AddDataCoreAdapterSignalR()
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                })
-                .AddMessagePackProtocol();
+                });
 #endif
 
             services
