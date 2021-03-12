@@ -72,11 +72,8 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        bool IObjectEncoder.CanDecode(Type type, string encoding) {
+        bool IObjectEncoder.CanDecode(Type type) {
             if (type == null) {
-                return false;
-            }
-            if (!string.Equals(encoding, EncodingType, StringComparison.OrdinalIgnoreCase)) {
                 return false;
             }
             return CanDecode(type);

@@ -32,14 +32,11 @@ namespace DataCore.Adapter.Common {
         /// <param name="type">
         ///   The target type.
         /// </param>
-        /// <param name="encoding">
-        ///   The encoding used in the encoded object data.
-        /// </param>
         /// <returns>
         ///   <see langword="true"/> if the encoder can decode the specified type, or 
         ///   <see langword="false"/> otherwise.
         /// </returns>
-        bool CanDecode(Type type, string encoding);
+        bool CanDecode(Type type);
 
 
         /// <summary>
