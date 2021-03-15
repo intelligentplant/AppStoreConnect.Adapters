@@ -123,6 +123,12 @@
   <data name="Error_ArrayElementTypeIsUnsupported" xml:space="preserve">
     <value>Array element type is unsupported.</value>
   </data>
+  <data name="Error_CannotConvertAnArrayVariantToANonArrayType" xml:space="preserve">
+    <value>Cannot convert an array variant to a non-array type.</value>
+  </data>
+  <data name="Error_CannotConvertANonArrayVariantToAnArrayType" xml:space="preserve">
+    <value>Cannot convert a non-array variant to an array type.</value>
+  </data>
   <data name="Error_CannotDecodeType" xml:space="preserve">
     <value>The specified type cannot be decoded by this encoder.</value>
   </data>
@@ -185,6 +191,11 @@
   </data>
   <data name="Error_SampleIntervalMustBeGreaterThanZero" xml:space="preserve">
     <value>Sample interval must be greater than zero.</value>
+  </data>
+  <data name="Error_SourceAndDestinationArraysHaveDifferentRanks" xml:space="preserve">
+    <value>Cannot convert an array with rank {0} to an array with rank {1}.</value>
+    <comment>{0} - source array rank
+{1} - destination array rank</comment>
   </data>
   <data name="Error_StartTimeCannotBeGreaterThanEndTime" xml:space="preserve">
     <value>Start time cannot be greater than end time.</value>

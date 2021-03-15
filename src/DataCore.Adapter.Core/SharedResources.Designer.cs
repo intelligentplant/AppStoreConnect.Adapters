@@ -79,6 +79,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot convert an array variant to a non-array type..
+        /// </summary>
+        public static string Error_CannotConvertAnArrayVariantToANonArrayType {
+            get {
+                return ResourceManager.GetString("Error_CannotConvertAnArrayVariantToANonArrayType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot convert a non-array variant to an array type..
+        /// </summary>
+        public static string Error_CannotConvertANonArrayVariantToAnArrayType {
+            get {
+                return ResourceManager.GetString("Error_CannotConvertANonArrayVariantToAnArrayType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified type cannot be decoded by this encoder..
         /// </summary>
         public static string Error_CannotDecodeType {
@@ -255,6 +273,15 @@ namespace DataCore.Adapter {
         public static string Error_SampleIntervalMustBeGreaterThanZero {
             get {
                 return ResourceManager.GetString("Error_SampleIntervalMustBeGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot convert an array with rank {0} to an array with rank {1}..
+        /// </summary>
+        public static string Error_SourceAndDestinationArraysHaveDifferentRanks {
+            get {
+                return ResourceManager.GetString("Error_SourceAndDestinationArraysHaveDifferentRanks", resourceCulture);
             }
         }
         
