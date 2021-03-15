@@ -234,7 +234,6 @@ namespace DataCore.Adapter.Tests {
 
         internal static ExtensionFeatureOperationDescriptorPartial GetGreetDescriptor() {
             return new ExtensionFeatureOperationDescriptorPartial() {
-                Name = "Greet",
                 Description = "Returns a greeting when invoked"
             };
         }
