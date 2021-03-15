@@ -1259,13 +1259,13 @@ namespace DataCore.Adapter.Common {
 
             if (targetType.IsArray) {
                 if (!variant.IsArray()) {
-                    throw new ArgumentException("Cannot convert a non-array variant to an array type.", nameof(variant));
+                    throw new ArgumentException(SharedResources.Error_CannotConvertANonArrayVariantToAnArrayType, nameof(variant));
                 }
 
                 var targetArrayRank = targetType.GetArrayRank();
 
                 if (targetArrayRank != variant.ArrayDimensions?.Length) {
-                    throw new ArgumentException($"Cannot convert an array with rank {variant.ArrayDimensions?.Length ?? 0} to an array with rank {targetArrayRank}.", nameof(variant));
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_SourceAndDestinationArraysHaveDifferentRanks, variant.ArrayDimensions?.Length ?? 0, targetArrayRank), nameof(variant));
                 }
 
                 var elementType = targetType.GetElementType();
@@ -1276,7 +1276,7 @@ namespace DataCore.Adapter.Common {
             }
 
             if (variant.IsArray()) {
-                throw new ArgumentException("Cannot convert an array variant to a non-array type.", nameof(variant));
+                throw new ArgumentException(SharedResources.Error_CannotConvertAnArrayVariantToANonArrayType, nameof(variant));
             }
 
             var extensionObject = (EncodedObject) variant!;
