@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using DataCore.Adapter.Common;
@@ -14,6 +15,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(typeof(byte), typeof(byte[]), typeof(byte[,]), typeof(byte[,,]))]
         [DataRow(typeof(DateTime), typeof(DateTime[]), typeof(DateTime[,]), typeof(DateTime[,,]))]
         [DataRow(typeof(double), typeof(double[]), typeof(double[,]), typeof(double[,,]))]
+        [DataRow(typeof(ExtensionObject), typeof(ExtensionObject[]), typeof(ExtensionObject[,]), typeof(ExtensionObject[,,]))]
         [DataRow(typeof(float), typeof(float[]), typeof(float[,]), typeof(float[,,]))]
         [DataRow(typeof(short), typeof(short[]), typeof(short[,]), typeof(short[,,]))]
         [DataRow(typeof(int), typeof(int[]), typeof(int[,]), typeof(int[,,]))]
@@ -562,6 +564,58 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromExtensionObject() {
+            var value = Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() { 
+                ["Intelligent"] = "Plant"
+            });
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.ExtensionObject, value, null);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromExtensionObjectArray() {
+            var value = new[] {
+                Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                    ["Intelligent"] = "Plant"
+                }),
+                Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                    ["Industrial"] = "App Store"
+                })
+            };
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.ExtensionObject, value, new[] { value.Length });
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToExtensionObject() {
+            var value = Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                ["Intelligent"] = "Plant"
+            });
+            Variant variant = value;
+            var actualValue = (ExtensionObject) variant;
+            Assert.AreEqual(value, actualValue);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToExtensionObjectArray() {
+            var value = new[] {
+                Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                    ["Intelligent"] = "Plant"
+                }),
+                Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                    ["Industrial"] = "App Store"
+                })
+            };
+            Variant variant = value;
+            var actualValue = (ExtensionObject[]) variant;
+            Assert.IsTrue(value.SequenceEqual(actualValue));
+        }
+
+
         [DataTestMethod]
         [DataRow(VariantType.Boolean, true)]
         [DataRow(VariantType.Boolean, false)]
@@ -612,6 +666,16 @@ namespace DataCore.Adapter.Tests {
             object value = new Uri("https://appstore.intelligentplant.com");
             var variant = new Variant(value);
             ValidateVariant(variant, VariantType.Url, value, null);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowCreationFromExtensionObjectAsObject() {
+            object value = Json.ExtensionObjectConverter.CreateExtensionObject(new Uri("asc:types/test"), new Dictionary<string, string>() {
+                ["Intelligent"] = "Plant"
+            });
+            var variant = new Variant(value);
+            ValidateVariant(variant, VariantType.ExtensionObject, value, null);
         }
 
 

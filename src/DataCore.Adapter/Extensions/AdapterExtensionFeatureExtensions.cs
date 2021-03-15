@@ -308,7 +308,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
             }
 
-            uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
+            uri = uri.EnsurePathHasTrailingSlash();
 
             if (!uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));
@@ -369,7 +369,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentException(SharedResources.Error_AbsoluteUriRequired, nameof(uriString));
             }
 
-            uri = UriExtensions.EnsurePathHasTrailingSlash(uri);
+            uri = uri.EnsurePathHasTrailingSlash();
 
             if (!uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                 throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(uriString));

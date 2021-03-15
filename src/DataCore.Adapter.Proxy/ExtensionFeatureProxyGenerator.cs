@@ -130,7 +130,7 @@ namespace DataCore.Adapter.Proxy {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            featureUri = UriExtensions.EnsurePathHasTrailingSlash(featureUri);
+            featureUri = featureUri.EnsurePathHasTrailingSlash();
             var featureType = s_featureInterfaceLookup.GetOrAdd(featureUri, BuildExtensionFeatureType);
 
             return (IAdapterExtensionFeature) s_proxyGenerator.CreateClassProxy(
