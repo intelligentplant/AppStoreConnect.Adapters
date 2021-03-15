@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,11 +64,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ) {
             AdapterHttpClient.ValidateObject(request);
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterDescriptor>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<AdapterDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -105,7 +106,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<AdapterDescriptorExtended>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<AdapterDescriptorExtended>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -142,7 +143,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<HealthCheckResult>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<HealthCheckResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

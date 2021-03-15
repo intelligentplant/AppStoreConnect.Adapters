@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -58,20 +60,21 @@ namespace MyAdapter {
 
                 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
                 var correlationId = Guid.NewGuid().ToString();
-                var pingMessage = new PingMessage() { CorrelationId = correlationId };
+                var now = DateTime.UtcNow;
+                var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
                 var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
                     context,
-                    new Uri("asc:extensions/tutorial/ping-pong/Ping/Stream/"),
+                    new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
                     pingMessage,
                     cancellationToken
                 );
 
                 Console.WriteLine();
-                Console.WriteLine($"[STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
+                Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
+
                 await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
                     Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
                 }
-
             }
         }
 

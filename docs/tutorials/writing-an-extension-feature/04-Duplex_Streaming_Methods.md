@@ -9,45 +9,56 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](03-Streaming_Methods.md), we implemented a server-to-client streaming operation that allowed us to asynchronously push values to a caller until they cancelled their subscription. In this chapter, we will implement a bidirectional (or duplex) streaming operation, allowing a caller to stream values to the extension feature and also allowing the feature to stream values back to the caller. Just as a streaming response uses a `ChannelReader<T>` to return results to the caller, a `ChannelReader<T>` is also used to stream inputs to the operation.
 
-Our first step is to add the duplex streaming method to our `PingPongExtension` class:
+First, we will add a method to our `PingPongExtension` class that will process duplex streaming requests:
 
 ```csharp
-[ExtensionFeatureOperation(
-    Description = "Responds to each ping message in an incoming stream with a pong message",
-    InputParameterDescription = "The ping message",
-    OutputParameterDescription = "The pong message"
-)]
-public ChannelReader<PongMessage> Ping(ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
+public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
     if (messages == null) {
         throw new ArgumentNullException(nameof(messages));
     }
 
     var result = Channel.CreateUnbounded<PongMessage>();
-    result.Writer.RunBackgroundOperation(async (ch, ct) => {
-        while (await messages.WaitToReadAsync(ct).ConfigureAwait(false)) {
-            while (messages.TryRead(out var message)) {
-                if (message == null) {
-                    continue;
-                }
 
-                ch.TryWrite(new PongMessage() {
-                    CorrelationId = message.CorrelationId
-                });
+    result.Writer.RunBackgroundOperation(async (ch, ct) => {
+        await foreach (var pingMessage in messages.ReadAllAsync(ct)) {
+            if (pingMessage == null) {
+                continue;
             }
+            var pongMessage = Ping(context, pingMessage);
+            await ch.WriteAsync(pongMessage, ct);
         }
     }, true, BackgroundTaskService, cancellationToken);
 
-    return result.Reader;
+    return Task.FromResult(result.Reader);
 }
 ```
 
-In our background operation above, we simply wait for ping messages to be written to the incoming stream, and then write a corresponding pong message to the output stream. Next, we use the `BindDuplexStream` method in our constructor to register the new method with our extension:
+To register our new operation, we will call the `BindDuplexStream` method in our `PingPongExtension` constructor:
 
 ```csharp
 public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-    BindInvoke<PingMessage, PongMessage>(Ping);
-    BindStream<PingMessage, PongMessage>(Ping);
-    BindDuplexStream<PingMessage, PongMessage>(Ping);
+    // -- Existing BindInvoke and BindStream calls removed for brevity --
+
+    BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(
+        Ping,
+        description: "Responds to each ping message in the incoming stream with a pong message",
+        inputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                Description = "The ping message"
+            }
+        },
+        outputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                Description = "The pong message"
+            }
+        }
+    );
 }
 ```
 
@@ -65,23 +76,26 @@ Compiling and running the program at this point will show the new operation in o
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/DuplexStream/)
-          - Description: Responds to each ping message in an incoming stream with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
+        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
+          - Description: Responds to a ping message with a stream of pong messages
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
           - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Stream/)
-          - Description: Responds to a ping message with a pong message every second until the call is cancelled
+        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
+          - Description: Responds to each ping message in the incoming stream with a pong message
 ```
 
-To test the new method, we will create a `Channel<PingMessage>` that we will write to at a random interval, and then read the corresponding pong messages from our subscription channel. Replace the code for calling the streaming operation in `Runner.cs` with the following:
+To test the new method, we will create a `Channel<InvocationStreamItem>` that we will write a ping message to at a random interval, and then read the corresponding pong messages from our subscription channel. Replace the code for calling the streaming operation in `Runner.cs` with the following:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
+var correlationId = Guid.NewGuid().ToString();
+var now = DateTime.UtcNow;
+var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
 var pingMessageStream = Channel.CreateUnbounded<PingMessage>();
 
 var pongMessageStream = await extensionFeature.DuplexStream<PingMessage, PongMessage>(
     context,
-    new Uri("asc:extensions/tutorial/ping-pong/Ping/DuplexStream/"),
+    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
     pingMessageStream,
     cancellationToken
 );
@@ -91,12 +105,13 @@ Console.WriteLine();
 pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
     var rnd = new Random();
     while (!ct.IsCancellationRequested) {
-        // Delay for up to 5 seconds.
-        var delay = TimeSpan.FromMilliseconds(5000 * rnd.NextDouble());
+        // Delay for up to 2 seconds.
+        var delay = TimeSpan.FromMilliseconds(2000 * rnd.NextDouble());
         if (delay > TimeSpan.Zero) {
             await Task.Delay(delay, ct);
         }
         var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
+
         Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
         await ch.WriteAsync(pingMessage, ct);
     }
@@ -121,23 +136,25 @@ Compile and run the program. You will see output similar to the following:
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
+        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
+          - Description: Responds to a ping message with a stream of pong messages
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
           - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/DuplexStream/)
-          - Description: Responds to each ping message in an incoming stream with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Stream/)
-          - Description: Responds to a ping message with a pong message every second until the call is cancelled
+        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
+          - Description: Responds to each ping message in the incoming stream with a pong message
 
-[DUPLEX STREAM] Ping: 28290dfa-7616-4d03-8859-856928467dcf @ 09:38:36 UTC
-[DUPLEX STREAM] Pong: 28290dfa-7616-4d03-8859-856928467dcf @ 09:38:36 UTC
-[DUPLEX STREAM] Ping: f80ef849-d587-4384-bf14-da2375685b5c @ 09:38:39 UTC
-[DUPLEX STREAM] Pong: f80ef849-d587-4384-bf14-da2375685b5c @ 09:38:39 UTC
-[DUPLEX STREAM] Ping: f34d7845-5318-4c01-80e6-f148e7823f66 @ 09:38:39 UTC
-[DUPLEX STREAM] Pong: f34d7845-5318-4c01-80e6-f148e7823f66 @ 09:38:39 UTC
-[DUPLEX STREAM] Ping: 1331cd01-c5a8-4d55-98d3-fb3a9a18d769 @ 09:38:40 UTC
-[DUPLEX STREAM] Pong: 1331cd01-c5a8-4d55-98d3-fb3a9a18d769 @ 09:38:40 UTC
-[DUPLEX STREAM] Ping: b893e37d-7a21-49c5-b60b-af72e69133ca @ 09:38:43 UTC
-[DUPLEX STREAM] Pong: b893e37d-7a21-49c5-b60b-af72e69133ca @ 09:38:43 UTC
+[DUPLEX STREAM] Ping: 76640863-e5a5-474a-9593-671ba698a90f @ 12:27:35 UTC
+[DUPLEX STREAM] Pong: 76640863-e5a5-474a-9593-671ba698a90f @ 12:27:35 UTC
+[DUPLEX STREAM] Ping: 3e5ac4b7-6fab-4c5a-9c85-9a7dcd0a4cf4 @ 12:27:36 UTC
+[DUPLEX STREAM] Pong: 3e5ac4b7-6fab-4c5a-9c85-9a7dcd0a4cf4 @ 12:27:36 UTC
+[DUPLEX STREAM] Ping: c8f1d50d-2d3c-4d5c-a554-a08b53622a7d @ 12:27:37 UTC
+[DUPLEX STREAM] Pong: c8f1d50d-2d3c-4d5c-a554-a08b53622a7d @ 12:27:37 UTC
+[DUPLEX STREAM] Ping: 899d9e86-168a-494f-9a51-9b43cd57d12b @ 12:27:38 UTC
+[DUPLEX STREAM] Pong: 899d9e86-168a-494f-9a51-9b43cd57d12b @ 12:27:38 UTC
+[DUPLEX STREAM] Ping: 623147a2-5537-4e71-a00f-6e9f370a1026 @ 12:27:39 UTC
+[DUPLEX STREAM] Pong: 623147a2-5537-4e71-a00f-6e9f370a1026 @ 12:27:39 UTC
+[DUPLEX STREAM] Ping: 806efd9c-cd45-4648-94b6-03f17aeb8ae5 @ 12:27:40 UTC
+[DUPLEX STREAM] Pong: 806efd9c-cd45-4648-94b6-03f17aeb8ae5 @ 12:27:40 UTC
 ```
 
 

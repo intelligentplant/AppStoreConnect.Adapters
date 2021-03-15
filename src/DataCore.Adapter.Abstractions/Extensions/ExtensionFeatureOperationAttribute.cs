@@ -1,143 +1,130 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 
 namespace DataCore.Adapter.Extensions {
 
     /// <summary>
-    /// Describes an extension feature operation.
+    /// Use the <see cref="ExtensionFeatureOperationAttribute"/> to define metadata associated 
+    /// with an extension feature method. This metadata can be used when constructing an 
+    /// <see cref="ExtensionFeatureOperationDescriptor"/> associated with the method.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class ExtensionFeatureOperationAttribute : Attribute {
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public class ExtensionFeatureOperationAttribute : Attribute {
 
         /// <summary>
-        /// The localised display name.
+        /// A factory method that can be used to retrieve metadata to use in an operation descriptor.
         /// </summary>
-        private readonly LocalizableString _name = new LocalizableString(nameof(Name));
-
-        /// <summary>
-        /// The localised description.
-        /// </summary>
-        private readonly LocalizableString _description = new LocalizableString(nameof(Description));
-
-        /// <summary>
-        /// The localised input parameter description.
-        /// </summary>
-        private readonly LocalizableString _inputParamDescription = new LocalizableString(nameof(InputParameterDescription));
-
-        /// <summary>
-        /// The localised output parameter description.
-        /// </summary>
-        private readonly LocalizableString _outputParamDescription = new LocalizableString(nameof(OutputParameterDescription));
-
-        /// <summary>
-        /// The resource type used to retrieved localised values for the display name, description,
-        /// input parameter description, and output parameter description.
-        /// </summary>
-        private Type? _resourceType;
+        PartialOperationDescriptorFactory _factory;
 
 
         /// <summary>
-        /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
+        /// Creates a new <see cref="ExtensionFeatureOperationAttribute"/> that will create a 
+        /// <see cref="PartialOperationDescriptorFactory"/> to retrieve operation metadata using 
+        /// the supplied type and method name.
         /// </summary>
-        public Type? ResourceType {
-            get => _resourceType;
-            set {
-                if (_resourceType != value) {
-                    _resourceType = value;
-
-                    _name.ResourceType = value;
-                    _description.ResourceType = value;
-                }
+        /// <param name="providerType">
+        ///   The type defining the <see cref="PartialOperationDescriptorFactory"/> delegate.
+        /// </param>
+        /// <param name="methodName">
+        ///   The name of the method to use. The method must be <see langword="static"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="providerType"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="methodName"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   A <see langword="static"/> method with the supplied method name cannot be found, or 
+        ///   the method does not match the required <see cref="PartialOperationDescriptorFactory"/> 
+        ///   delegate signature.
+        /// </exception>
+        public ExtensionFeatureOperationAttribute(Type providerType, string methodName) {
+            if (providerType == null) {
+                throw new ArgumentNullException(nameof(providerType));
             }
-        }
+            if (string.IsNullOrWhiteSpace(methodName)) {
+                throw new ArgumentException(SharedResources.Error_NameIsRequired, nameof(methodName));
+            }
 
-        /// <summary>
-        /// The display name for the operation.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
-        public string? Name {
-            get => _name.Value;
-            set => _name.Value = value;
-        }
+            var factory = providerType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).FirstOrDefault(x => {
+                if (!string.Equals(x.Name, methodName, StringComparison.Ordinal)) {
+                    return false;
+                }
 
-        /// <summary>
-        /// The description for the operation.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
-        public string? Description {
-            get => _description.Value;
-            set => _description.Value = value;
-        }
+                if (x.ReturnType != typeof(ExtensionFeatureOperationDescriptorPartial)) {
+                    return false;
+                }
 
+                if (x.GetParameters().Any()) {
+                    return false;
+                }
 
-        /// <summary>
-        /// The description for the input parameter.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
-        public string? InputParameterDescription {
-            get => _inputParamDescription.Value;
-            set => _inputParamDescription.Value = value;
+                return true;
+            });
+
+            if (factory == null) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveMethod, methodName, providerType.FullName), nameof(providerType));
+            }
+
+            _factory = (PartialOperationDescriptorFactory) factory.CreateDelegate(typeof(PartialOperationDescriptorFactory), null);
         }
 
 
         /// <summary>
-        /// The description for the output parameter.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
-        public string? OutputParameterDescription {
-            get => _outputParamDescription.Value;
-            set => _outputParamDescription.Value = value;
-        }
-
-
-        /// <summary>
-        /// Gets the display name for the operation. This can be either a literal string 
-        /// specified by the <see cref="Name"/> property, or a localised string found when 
-        /// <see cref="ResourceType"/> is specified and <see cref="Name"/> represents a resource 
-        /// key within the resource type.
+        /// Creates a new <see cref="ExtensionFeatureOperationDescriptorPartial"/> using the 
+        /// attribute's <see cref="PartialOperationDescriptorFactory"/> delegate.
         /// </summary>
         /// <returns>
-        ///   The display name for the operation.
+        ///   A new <see cref="ExtensionFeatureOperationDescriptorPartial"/> object.
         /// </returns>
-        public string? GetName() => _name.GetLocalizableValue();
+        public ExtensionFeatureOperationDescriptorPartial CreateDescriptor() {
+            return _factory.Invoke();
+        }
 
 
         /// <summary>
-        /// Gets the description for the operation. This can be either a literal string 
-        /// specified by the <see cref="Description"/> property, or a localised string found when 
-        /// <see cref="ResourceType"/> is specified and <see cref="Description"/> represents a 
-        /// resource key within the resource type.
+        /// Creates an operation descriptor for the specified <see cref="MethodInfo"/>.
         /// </summary>
+        /// <param name="methodInfo">
+        ///   The method. If the method has been annotated with an <see cref="ExtensionFeatureOperationAttribute"/>, 
+        ///   the attribute will be used to populate the operation descriptor metadata.
+        /// </param>
         /// <returns>
-        ///   The description for the operation.
+        ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object, or <see langword="null"/> 
+        ///   if <paramref name="methodInfo"/> is <see langword="null"/> or has not been annotated 
+        ///   with <see cref="ExtensionFeatureOperationAttribute"/>.
         /// </returns>
-        public string? GetDescription() => _description.GetLocalizableValue();
+        public static ExtensionFeatureOperationDescriptorPartial? CreateDescriptor(MethodInfo? methodInfo) {
+            if (methodInfo == null) {
+                return null;
+            }
 
+            var attr = methodInfo.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
+            if (attr == null && MethodInfoUtil.TryGetInterfaceMethodDeclaration(methodInfo, out var interfaceMethod)) {
+                attr = interfaceMethod.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
+            }
 
-        /// <summary>
-        /// Gets the input parameter description for the operation. This can be either a literal 
-        /// string specified by the <see cref="InputParameterDescription"/> property, or a 
-        /// localised string found when <see cref="ResourceType"/> is specified and 
-        /// <see cref="InputParameterDescription"/> represents a resource key within the resource 
-        /// type.
-        /// </summary>
-        /// <returns>
-        ///   The input parameter description for the operation.
-        /// </returns>
-        public string? GetInputParameterDescription() => _inputParamDescription.GetLocalizableValue();
+            var result = attr?.CreateDescriptor() ?? new ExtensionFeatureOperationDescriptorPartial();
 
+            if (string.IsNullOrWhiteSpace(result.Name)) {
+                result.Name = methodInfo.Name;
+            }
 
-        /// <summary>
-        /// Gets the input parameter description for the operation. This can be either a literal 
-        /// string specified by the <see cref="OutputParameterDescription"/> property, or a 
-        /// localised string found when <see cref="ResourceType"/> is specified and 
-        /// <see cref="OutputParameterDescription"/> represents a resource key within the resource 
-        /// type.
-        /// </summary>
-        /// <returns>
-        ///   The output parameter description for the operation.
-        /// </returns>
-        public string? GetOutputParameterDescription() => _outputParamDescription.GetLocalizableValue();
+            return result;
+        }
 
     }
+
+
+    /// <summary>
+    /// Delegate that can return a partial descriptor for an extension feature operation.
+    /// </summary>
+    /// <returns>
+    ///   A new <see cref="ExtensionFeatureOperationDescriptorPartial"/> instance.
+    /// </returns>
+    public delegate ExtensionFeatureOperationDescriptorPartial PartialOperationDescriptorFactory();
+
 }

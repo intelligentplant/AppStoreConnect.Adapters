@@ -79,6 +79,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified type cannot be decoded by this encoder..
+        /// </summary>
+        public static string Error_CannotDecodeType {
+            get {
+                return ResourceManager.GetString("Error_CannotDecodeType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified type cannot be encoded by this encoder..
+        /// </summary>
+        public static string Error_CannotEncodeType {
+            get {
+                return ResourceManager.GetString("Error_CannotEncodeType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a content type..
         /// </summary>
         public static string Error_ContentTypeIsRequired {
@@ -111,6 +129,15 @@ namespace DataCore.Adapter {
         public static string Error_DuplicateTagWriteCollectionsAreNotAllowed {
             get {
                 return ResourceManager.GetString("Error_DuplicateTagWriteCollectionsAreNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The encoded object uses encoding type &apos;{0}&apos;, but this encoder supports encoding type &apos;{1}&apos;..
+        /// </summary>
+        public static string Error_EncodedObjectHasWrongEncoding {
+            get {
+                return ResourceManager.GetString("Error_EncodedObjectHasWrongEncoding", resourceCulture);
             }
         }
         
@@ -205,6 +232,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The collection does not contain an encoder that can decode extension objects with a content type of &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_NoValidDecodersFound {
+            get {
+                return ResourceManager.GetString("Error_NoValidDecodersFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A relative URI is required..
         /// </summary>
         public static string Error_RelativeUriRequired {
@@ -255,6 +291,15 @@ namespace DataCore.Adapter {
         public static string Error_TagSearchRequiresAtLeastOneFilter {
             get {
                 return ResourceManager.GetString("Error_TagSearchRequiresAtLeastOneFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type does not define a {0} attribute..
+        /// </summary>
+        public static string Error_TypeIdIsUndefined {
+            get {
+                return ResourceManager.GetString("Error_TypeIdIsUndefined", resourceCulture);
             }
         }
         

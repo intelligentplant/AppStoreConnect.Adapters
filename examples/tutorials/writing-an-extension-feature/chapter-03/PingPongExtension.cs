@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
@@ -21,18 +23,50 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-            BindInvoke<PingMessage, PongMessage>(Ping);
-            BindStream<PingMessage, PongMessage>(Ping);
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+            BindInvoke<PingPongExtension, PingMessage, PongMessage>(
+                Ping,
+                description: "Responds to a ping message with a pong message",
+                inputParameters: new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = VariantType.ExtensionObject,
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                outputParameters: new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = VariantType.ExtensionObject,
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The pong message"
+                    }
+                }
+            );
+
+            BindStream<PingPongExtension, PingMessage, PongMessage>(
+                Ping,
+                description: "Responds to a ping message with a stream of pong messages",
+                inputParameters: new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                        Description = "The ping message"
+                    }
+                },
+                outputParameters: new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                        Description = "The pong message"
+                    }
+                }
+            );
         }
 
 
-        [ExtensionFeatureOperation(
-            Description = "Responds to a ping message with a pong message",
-            InputParameterDescription = "The ping message",
-            OutputParameterDescription = "The pong message"
-        )]
-        public PongMessage Ping(PingMessage message) {
+        public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
@@ -43,27 +77,24 @@ namespace MyAdapter {
         }
 
 
-        [ExtensionFeatureOperation(
-            Description = "Responds to a ping message with a pong message every second until the call is cancelled",
-            InputParameterDescription = "The ping message",
-            OutputParameterDescription = "The pong message"
-        )]
-        public ChannelReader<PongMessage> Ping(PingMessage message, CancellationToken cancellationToken) {
+        public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, PingMessage message, CancellationToken cancellationToken) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
 
             var result = Channel.CreateUnbounded<PongMessage>();
-            result.Writer.RunBackgroundOperation(async (ch, ct) => { 
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 while (!ct.IsCancellationRequested) {
-                    await Task.Delay(1000, ct).ConfigureAwait(false);
-                    ch.TryWrite(new PongMessage() {
-                        CorrelationId = message.CorrelationId
-                    });
+                    // Every second, we will return a new PongMessage
+                    await Task.Delay(1000, ct);
+
+                    var pongMessage = Ping(context, message);
+                    await ch.WriteAsync(pongMessage, ct);
                 }
             }, true, BackgroundTaskService, cancellationToken);
 
-            return result.Reader;
+            return Task.FromResult(result.Reader);
         }
 
     }

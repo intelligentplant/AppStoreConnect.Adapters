@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Extensions {
         public ExtensionFeatureOperationType OperationType { get; set; }
 
         /// <summary>
-        /// The display name.
+        /// The name for the operation.
         /// </summary>
         public string Name { get; set; } = default!;
 
@@ -28,14 +28,14 @@ namespace DataCore.Adapter.Extensions {
         public string? Description { get; set; }
 
         /// <summary>
-        /// The input parameter descriptor for the operation.
+        /// The input parameter descriptors for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor Input { get; set; } = default!;
+        public ExtensionFeatureOperationParameterDescriptor[] Inputs { get; set; } = Array.Empty<ExtensionFeatureOperationParameterDescriptor>();
 
         /// <summary>
-        /// The output parameter descriptor for the operation.
+        /// The output parameter descriptors for the operation.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor Output { get; set; } = default!;
+        public ExtensionFeatureOperationParameterDescriptor[] Outputs { get; set; } = Array.Empty<ExtensionFeatureOperationParameterDescriptor>();
 
     }
 
@@ -59,24 +59,6 @@ namespace DataCore.Adapter.Extensions {
         /// A streamed request-streamed response operation.
         /// </summary>
         DuplexStream
-
-    }
-
-
-    /// <summary>
-    /// Describes an input or output parameter on an <see cref="ExtensionFeatureOperationDescriptor"/>.
-    /// </summary>
-    public class ExtensionFeatureOperationParameterDescriptor {
-
-        /// <summary>
-        /// A description of the parameter value.
-        /// </summary>
-        public string? Description { get; set; }
-
-        /// <summary>
-        /// An example value.
-        /// </summary>
-        public string? ExampleValue { get; set; }
 
     }
 

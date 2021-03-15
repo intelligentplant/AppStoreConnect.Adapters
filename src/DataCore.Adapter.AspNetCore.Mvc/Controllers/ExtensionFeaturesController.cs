@@ -54,6 +54,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}")]
+        [ProducesResponseType(typeof(IEnumerable<string>), 200)]
         public async Task<IActionResult> GetAvailableExtensions(string adapterId, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, true, cancellationToken).ConfigureAwait(false);
@@ -83,6 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/descriptor")]
+        [ProducesResponseType(typeof(FeatureDescriptor), 200)]
         public async Task<IActionResult> GetDescriptor(
             string adapterId, 
             [FromQuery] Uri id, 
@@ -137,6 +139,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/operations")]
+        [ProducesResponseType(typeof(IEnumerable<ExtensionFeatureOperationDescriptor>), 200)]
         public async Task<IActionResult> GetAvailableOperations(
             string adapterId, 
             [FromQuery] Uri id, 
@@ -180,34 +183,27 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The adapter to query.
         /// </param>
-        /// <param name="id">
-        ///   The URI of the operation to invoke.
-        /// </param>
-        /// <param name="argument">
-        ///   The argument for the operation.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   Successful responses contain a string describing the result of the operation. 
-        ///   Callers are responsible for correctly parsing or inferring meaning from this result.
+        ///   Successful responses contain an <see cref="InvocationResponse"/> describing the 
+        ///   operation result.
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/operations/invoke")]
+        [ProducesResponseType(typeof(InvocationResponse), 200)]
         public async Task<IActionResult> InvokeExtension(
             string adapterId, 
-            [FromQuery] Uri id, 
-            [FromForm]
-            string? argument = null, 
+            InvocationRequest request,
             CancellationToken cancellationToken = default
         ) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            if (id == null || !id.IsAbsoluteUri) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, id)); // 400
-            }
 
-            id = id.EnsurePathHasTrailingSlash();
+            var id = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(id, out var featureUri, out var error)) {
                 return BadRequest(error); // 400
             }
@@ -224,13 +220,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             try {
-                var result = new ContentResult() {
-                    Content = await resolvedFeature.Feature.Invoke(callContext, id, argument ?? string.Empty, cancellationToken).ConfigureAwait(false),
-                    ContentType = "application/json",
-                    StatusCode = 200
-                };
-
-                return result; // 200
+                var result = await resolvedFeature.Feature.Invoke(callContext, request, cancellationToken).ConfigureAwait(false);
+                return Ok(result); // 200
             }
             catch (ArgumentException e) {
                 return BadRequest(e.Message); // 400

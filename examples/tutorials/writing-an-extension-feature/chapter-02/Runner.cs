@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -62,7 +64,7 @@ namespace MyAdapter {
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
                 var pongMessage = await extensionFeature.Invoke<PingMessage, PongMessage>(
                     context,
-                    new Uri("asc:extensions/tutorial/ping-pong/Ping/Invoke/"),
+                    new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
                     pingMessage,
                     cancellationToken
                 );

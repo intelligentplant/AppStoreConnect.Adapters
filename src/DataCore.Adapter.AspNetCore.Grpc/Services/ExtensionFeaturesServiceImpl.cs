@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Channels;
@@ -141,10 +142,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.Invoke(adapterCallContext, operationId!, request.Argument, cancellationToken).ConfigureAwait(false);
-                return new InvokeExtensionResponse() {
-                    Result = result ?? string.Empty
-                };
+                var result = await adapter.Feature.Invoke(adapterCallContext, new Extensions.InvocationRequest() { 
+                    OperationId = operationId!,
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                }, cancellationToken).ConfigureAwait(false);
+
+                var response = new InvokeExtensionResponse();
+                response.Results.AddRange(result.Results.Select(x => x.ToGrpcVariant()));
+
+                return response;
             }
             catch (SecurityException) {
                 throw Util.CreatePermissionDeniedException();
@@ -183,12 +189,17 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var result = await adapter.Feature.Stream(adapterCallContext, operationId!, request.Argument, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.Stream(adapterCallContext, new Extensions.InvocationRequest() { 
+                    OperationId = operationId!,
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                }, cancellationToken).ConfigureAwait(false);
                 while (!cancellationToken.IsCancellationRequested) {
                     var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    await responseStream.WriteAsync(new InvokeExtensionResponse() {
-                        Result = val ?? string.Empty
-                    }).ConfigureAwait(false);
+
+                    var response = new InvokeExtensionResponse();
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
+
+                    await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
@@ -240,19 +251,23 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
 
             try {
-                var inputChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions() { 
+                var inputChannel = Channel.CreateUnbounded<InvocationStreamItem>(new UnboundedChannelOptions() { 
                     SingleReader = true,
                     SingleWriter = true
                 });
-                inputChannel.Writer.TryWrite(request.Argument);
 
-                var result = await adapter.Feature.DuplexStream(adapterCallContext, operationId!, inputChannel, cancellationToken).ConfigureAwait(false);
+                var result = await adapter.Feature.DuplexStream(adapterCallContext, new Extensions.InvocationRequest() { 
+                    OperationId = operationId!,
+                    Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                }, inputChannel, cancellationToken).ConfigureAwait(false);
 
                 // Run a background operation to process the remaining request stream items.
                 _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
                     try {
                         while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
-                            await inputChannel.Writer.WriteAsync(requestStream.Current.Argument, ct).ConfigureAwait(false);
+                            await inputChannel.Writer.WriteAsync(new InvocationStreamItem() { 
+                                Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                            }, ct).ConfigureAwait(false);
                         }
                     }
                     catch (OperationCanceledException) { }
@@ -266,9 +281,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 
                 while (!cancellationToken.IsCancellationRequested) {
                     var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    await responseStream.WriteAsync(new InvokeExtensionResponse() {
-                        Result = val ?? string.Empty
-                    }).ConfigureAwait(false);
+
+                    var response = new InvokeExtensionResponse();
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
+
+                    await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }

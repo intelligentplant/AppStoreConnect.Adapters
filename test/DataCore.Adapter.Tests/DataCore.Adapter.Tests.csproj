@@ -32,7 +32,7 @@
   
   For .NET Framework 4.8, we do not include any gRPC or SignalR-related projects. Hosting of gRPC 
   services is only possible in ASP.NET Core 3.x and higher. Hosting of adapter SignalR hubs is 
-  possible in ASP.NET Cpre 2.x, but we do not test that here because the web server and the tests 
+  possible in ASP.NET Core 2.x, but we do not test that here because the web server and the tests 
   run in the same process, and references to newer versions of e.g. Microsoft.Extensions.Logging 
   in the SignalR client library can cause us problems when running an ASP.NET Core 2.x web server, 
   due to breaking changes between the 2.x versions of various libraries expected by ASP.NET Core 
@@ -47,7 +47,6 @@
       </ItemGroup>
       <ItemGroup>
         <PackageReference Include="Grpc.Tools" Version="$(GrpcToolsVersion)" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
       </ItemGroup>
       <ItemGroup>
         <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
@@ -60,6 +59,9 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore" Version="$(MicrosoftAspNetCoreVersion)" />
+      </ItemGroup>
+      <ItemGroup>
+        <ProjectReference Include="..\..\src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj" />
       </ItemGroup>
     </Otherwise>
   </Choose>

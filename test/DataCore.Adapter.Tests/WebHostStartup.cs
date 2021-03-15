@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Tests {
                     );
 
                     // Add ping-pong extension
-                    adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService));
+                    adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
 
                     return adapter;
                 });
@@ -99,8 +99,7 @@ namespace DataCore.Adapter.Tests {
                 .AddDataCoreAdapterSignalR()
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                })
-                .AddMessagePackProtocol();
+                });
 #endif
 
             services

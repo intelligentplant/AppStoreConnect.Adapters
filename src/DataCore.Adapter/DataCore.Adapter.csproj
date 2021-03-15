@@ -6,17 +6,16 @@
     <PackageId>$(PackagePrefix).Adapter</PackageId>
     <Description>Base implementations and utility classes for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(MicrosoftAspNetCoreVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>

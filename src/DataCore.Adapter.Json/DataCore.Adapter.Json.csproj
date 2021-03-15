@@ -6,8 +6,6 @@
     <PackageId>$(PackagePrefix).Adapter.Json</PackageId>
     <Description>System.Text.Json extensions for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

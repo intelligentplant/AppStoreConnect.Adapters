@@ -9,15 +9,10 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](01-Getting_Started.md), we created and registered an extension feature on our adapter, but the extension had a major flaw - there were no operations on the feature for us to call! In this chapter, we will add a simple request-response method to our extension feature, and bind it so that it gets registered as a discoverable operation.
 
-Our operation will allow a caller to specify a `PingMessage` object and receive a corresponding `PongMessage` object in return. Add the following method into our `PingPongExtension` class:
+Our operation will allow a caller to specify a `PingMessage` object and receive a corresponding `PongMessage` object in return. Update the  `PingPongExtension` as follows:
 
 ```csharp
-[ExtensionFeatureOperation(
-    Description = "Responds to a ping message with a pong message",
-    InputParameterDescription = "The ping message",
-    OutputParameterDescription = "The pong message"
-)]
-public PongMessage Ping(PingMessage message) {
+public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
     if (message == null) {
         throw new ArgumentNullException(nameof(message));
     }
@@ -28,15 +23,21 @@ public PongMessage Ping(PingMessage message) {
 }
 ```
 
-Note that we annotate the method with an [ExtensionFeatureOperationAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureOperationAttribute.cs) attribute. This is optional, but we include it so that the descriptor that is generated for the operation provides richer information. Next, update the `PingPongExtension` constructor as follows:
+Note that we have specified a parameter of type `IAdapterCallContext`. All extension operations receive a parameter of this type, which can be used to identify the calling user and authorize the call.
+
+Next, update the `PingPongExtension` constructor as follows:
 
 ```csharp
-public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-    BindInvoke<PingMessage, PongMessage>(Ping);
+public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+    BindInvoke<PingPongExtension, PingMessage, PongMessage>(Ping);
 }
 ```
 
-The constructor now makes a call to the `BindInvoke<TIn, TOut>` method to tell the base class that it should register our `Ping` method as an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. The `ExtensionFeatureOperationAttribute` annotation on the `Ping` method is used by the base class when constructing a descriptor for the operation. Compile and run the program again and we will see output similar to the following:
+The constructor now makes a call to the `BindInvoke` method to tell the base class that it should register an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. Here, we are calling the `BindInvoke<TFeature, TIn, TOut>` overload of the method, which allows us to tell the binding method that we expect the operation to receive a single input parameter of type `PingMessage` and return a result of type `PongMessage`.
+
+Normally, the delegate signature for an invocable method is `Func<IAdapterCallContext, InvocationRequest, InvocationResponse Task<InvocationResponse>>`. However, the various `BindInvoke` methods inherited from the `AdapterExtensionFeature` base class allow registration of methods that have different signatures, covnerting to and from the specified input and output types.
+
+Compile and run the program and we will see the following output:
 
 ```
 [example]
@@ -50,11 +51,56 @@ The constructor now makes a call to the `BindInvoke<TIn, TOut>` method to tell t
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
-          - Description: Responds to a ping message with a pong message
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
+          - Description:
 ```
 
-Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. The `/Invoke/` section at the end of the URI indicates that the operation can be invoked via the `Invoke` method on the `IAdapterExtensionFeature` interface. The [ExtensionFeatureOperationDescriptor](/src/DataCore.Adapter.Core/Extensions/ExtensionFeatureOperationDescriptor.cs) object for the operation also includes an `OperationType` property that explicitly specifies how the operation is called, so that we don't have to infer this from the URI. 
+Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. The `/invoke/` section towards the end of the URI indicates that the operation can be invoked via the `Invoke` method on the `IAdapterExtensionFeature` interface. However, we do not have a description. That is because the binding system does not have a way of assigning all of the metadata it needs to the binding. The simplest way to assign operation metadata is by specifying additional optional parameters when calling the `BindInvoke` method. Replace the `BindInvoke` call as follows:
+
+```csharp
+public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+    BindInvoke<PingPongExtension, PingMessage, PongMessage>(
+        Ping,
+        description: "Responds to a ping message with a pong message",
+        inputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                Description = "The ping message"
+            }
+        },
+        outputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                Description = "The pong message"
+            }
+        }
+    );
+}
+```
+
+We have added metadata that describes the operation, as well as the input and output parameters for the operation. When describing the input and output parameters, note that we have specified that the method accepts and returns an extension object, and have specified the `TypeId` for the parameters. When calling operations on extension features, the inputs and outputs in the underlying request and response messages are specified using the `Variant` type. `Variant` can automatically convert to or from a number of simple types (such as `double`, `string`, `bool`, and so on), but can also accept an `EncodedObject` as its value, which contains serialized data that must be deserialized by the recipient. `PingMessage` and `PongMessage` are custom types that are not directly recognised as valid `Variant` values, so our parameter metadata provides a hint to consumers about the structure of the serialized data so that they can encode or decode the required inputs and outputs. 
+
+Compile and run the program again and we will see the following output:
+
+```
+[example]
+  Name: Example Adapter
+  Description: Example adapter with an extension feature, built using the tutorial on GitHub
+  Properties:
+  Features:
+    - asc:features/diagnostics/health-check/
+  Extensions:
+    - asc:extensions/tutorial/ping-pong/
+      - Name: Ping Pong
+      - Description: Example extension feature.
+      - Operations:
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
+          - Description: Responds to a ping message with a pong message
+```
 
 The next step is for us to try invoking the operation.
 
@@ -63,9 +109,9 @@ The next step is for us to try invoking the operation.
 
 When working with an in-process adapter, it is of course possible to retrieve the extension feature from the adapter's feature collection, and then cast it to the correct type and directly call a method on the extension feature type. However, this is not possible when trying to call an extension operation on an adapter that is running in an external process or on a remote server. This is where the methods defined on the `IAdapterExtensionFeature` interface come to the rescue.
 
-In order to call our `Ping` method via a call to `Invoke`, we need to create a `PingMessage` instance, serialize this object to JSON, pass this to the `Invoke` method, receive a JSON-serialized response back, and then deserialize this response into a `PongMessage` instance. Fortunately, the [AdapterExtensionFeatureExtensions](/src/DataCore.Adapter/Extensions/AdapterExtensionFeatureExtensions.cs) class contains extension methods for `IAdapterExtensionFeature` that take care of the serialization and deserialization for us.
+In order to call our `Ping` method via a call to `Invoke`, we need pass in an `InvocationRequest` object that contains our encoded `PingMessage`, and then process the resulting `InvocationResponse` object to extract the `PongMessage` result.
 
-> [JSON.NET](https://www.newtonsoft.com/json) is used to serialize and deserialize inputs and outputs for extension operation calls. You must ensure that your request and response types can be serialized using the default settings defined by that library.
+Fortunately, we can use extension methods for the `IAdapterExtensionFeature` type to perform the encoding and decoding for us.
 
 Add the following code to the end of the `using` block in the `Run` method in `Runner.cs`:
 
@@ -76,7 +122,7 @@ var now = DateTime.UtcNow;
 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
 var pongMessage = await extensionFeature.Invoke<PingMessage, PongMessage>(
     context,
-    new Uri("asc:extensions/tutorial/ping-pong/Ping/Invoke/"),
+    new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
     pingMessage,
     cancellationToken
 );
@@ -100,27 +146,11 @@ Compile and run the program again and the output will be similar to the followin
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
           - Description: Responds to a ping message with a pong message
 
-[INVOKE] Ping: 780745b1-d437-490c-b349-a3f2f270806a @ 08:17:46 UTC
-[INVOKE] Pong: 780745b1-d437-490c-b349-a3f2f270806a @ 08:17:46 UTC
-```
-
-This shows how easy it is to call an extension feature operation. If you do not have a strongly-typed definition for either the request or response type for the operation (for example, if you are using a proxy adapter to communicate with an adapter on a remote server), you can also use an extension method that uses anonymous types instead, e.g.
-
-```csharp
-var pongMessageAnonymous = await extensionFeature.InvokeWithAnonymousResultType(
-    context,
-    new Uri("asc:extensions/tutorial/ping-pong/Ping/Invoke/"),
-    new { CorrelationId = correlationId, UtcTime = now }, // Anonymous TIn type
-    new { CorrelationId = string.Empty, UtcTime = DateTime.MinValue }, // Anonymous TOut type
-    cancellationToken
-);
-
-Console.WriteLine();
-Console.WriteLine($"[INVOKE] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
-Console.WriteLine($"[INVOKE] Pong: {pongMessageAnonymous.CorrelationId} @ {pongMessageAnonymous.UtcTime:HH:mm:ss} UTC");
+[INVOKE] Ping: 55be298d-17f5-49ca-9a42-fb14c53cfb85 @ 11:25:11 UTC
+[INVOKE] Pong: 55be298d-17f5-49ca-9a42-fb14c53cfb85 @ 11:25:11 UTC
 ```
 
 

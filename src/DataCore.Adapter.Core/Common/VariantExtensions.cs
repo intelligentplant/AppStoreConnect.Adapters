@@ -312,7 +312,7 @@ namespace DataCore.Adapter.Common {
                 return val;
             }
 
-            return variant.TryGetValue(out val)
+            return variant.TryGetValue(out val!)
                 ? val
                 : defaultValue;
         }

@@ -161,12 +161,16 @@ namespace DataCore.Adapter.Tests {
         [ExtensionFeature(ExtensionFeatureUri)]
         private class TestExtension : AdapterExtensionFeature {
 
-            public TestExtension() : base(null) {
-                BindInvoke(GetCurrentTime);
+            public TestExtension() : base(null, Array.Empty<Common.IObjectEncoder>()) {
+                BindInvoke<TestExtension>((ctx, req, ct) => {
+                    return Task.FromResult(new InvocationResponse() { 
+                        Results = new Common.Variant[] { this.ConvertToVariant(GetCurrentTime()) }
+                    });
+                }, nameof(GetCurrentTime));
             }
 
 
-            public DateTime GetCurrentTime(IAdapterCallContext context) {
+            public DateTime GetCurrentTime() {
                 return DateTime.UtcNow;
             }
 

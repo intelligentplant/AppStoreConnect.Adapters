@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using DataCore.Adapter.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 using DataCore.Adapter.Proxy;
+using System.Linq;
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -35,6 +36,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
         internal new ILogger Logger {
             get { return base.Logger; }
         }
+
+        /// <summary>
+        /// The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        /// extension objects.
+        /// </summary>
+        internal IEnumerable<IObjectEncoder> Encoders { get; }
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -125,6 +132,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        ///   extension objects.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the proxy.
         /// </param>
@@ -139,6 +150,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             GrpcNet.Client.GrpcChannel channel, 
             GrpcAdapterProxyOptions options, 
             IBackgroundTaskService? taskScheduler, 
+            IEnumerable<IObjectEncoder> encoders,
             ILogger<GrpcAdapterProxy>? logger
         ) : base(
             id,
@@ -146,6 +158,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             taskScheduler, 
             logger
         ) {
+            Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
@@ -172,6 +185,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
+        ///   extension objects.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the proxy.
         /// </param>
@@ -186,6 +203,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             GrpcCore.Channel channel, 
             GrpcAdapterProxyOptions options, 
             IBackgroundTaskService taskScheduler, 
+            IEnumerable<IObjectEncoder> encoders,
             ILogger<GrpcAdapterProxy> logger
         ) : base(
             id,
@@ -193,6 +211,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
             taskScheduler, 
             logger
         ) {
+            Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _getCallCredentials = Options?.GetCallCredentials;

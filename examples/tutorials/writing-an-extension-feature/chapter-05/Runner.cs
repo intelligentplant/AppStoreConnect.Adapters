@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.Extensions.Hosting;
@@ -62,7 +64,7 @@ namespace MyAdapter {
                 var degC = 40d;
                 var degF = await extensionFeature.Invoke<double, double>(
                     context,
-                    new Uri("asc:extensions/tutorial/temperature-converter/CtoF/Invoke/"),
+                    new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
                     degC,
                     cancellationToken
                 );
@@ -72,7 +74,7 @@ namespace MyAdapter {
                 degF = 60d;
                 degC = await extensionFeature.Invoke<double, double>(
                     context,
-                    new Uri("asc:extensions/tutorial/temperature-converter/FtoC/Invoke/"),
+                    new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
                     degF,
                     cancellationToken
                 );

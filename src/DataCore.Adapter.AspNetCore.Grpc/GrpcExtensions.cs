@@ -413,8 +413,8 @@ namespace DataCore.Adapter {
                     break;
                 case Grpc.VariantType.Object:
                     value = isArray
-                        ? (object) ReadJsonArray<ExtensionObject>(bytes, variant.ArrayDimensions)
-                        : ReadJsonValue<ExtensionObject>(bytes)!;
+                        ? (object) ReadJsonArray<EncodedObject>(bytes, variant.ArrayDimensions)
+                        : ReadJsonValue<EncodedObject>(bytes)!;
                     break;
                 case Grpc.VariantType.Sbyte:
                     value = isArray
@@ -519,13 +519,13 @@ namespace DataCore.Adapter {
                         bytes = Array.Empty<byte>();
                         break;
                     case Common.VariantType.ExtensionObject:
-                        bytes = WriteJsonValue(variant.GetValueOrDefault<ExtensionObject>());
+                        bytes = WriteJsonValue(variant.GetValueOrDefault<EncodedObject>());
                         break;
                     case Common.VariantType.SByte:
                         bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };
                         break;
                     case Common.VariantType.String:
-                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault(string.Empty));
+                        bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault(string.Empty)!);
                         break;
                     case Common.VariantType.TimeSpan:
                         bytes = System.Text.Encoding.UTF8.GetBytes(variant.GetValueOrDefault<TimeSpan>().ToString());
@@ -1028,6 +1028,46 @@ namespace DataCore.Adapter {
             return result;
         }
 
+
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="obj">
+        ///   The <see cref="EncodedObject"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Grpc.EncodedObject"/>.
+        /// </returns>
+        public static Grpc.EncodedObject ToGrpcEncodedObject(this EncodedObject obj) {
+            if (obj == null) {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            return new Grpc.EncodedObject() { 
+                TypeId = obj.TypeId.ToString(),
+                Encoding = obj.Encoding,
+                EncodedBody = Google.Protobuf.ByteString.CopyFrom(obj.ToByteArray())
+            };
+        }
+
+
+        /// <summary>
+        /// Converts the object to its adapter equivalent.
+        /// </summary>
+        /// <param name="obj">
+        ///   The <see cref="Grpc.EncodedObject"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="EncodedObject"/>.
+        /// </returns>
+        public static EncodedObject ToAdapterEncodedObject(this Grpc.EncodedObject obj) {
+            if (obj == null) {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            return EncodedObject.Create(new Uri(obj.TypeId), obj.Encoding, obj.EncodedBody.ToByteArray());
+        }
+
         #endregion
 
         #region [ Diagnostics ]
@@ -1515,8 +1555,8 @@ namespace DataCore.Adapter {
                 OperationType = descriptor.OperationType.ToAdapterExtensionFeatureOperationType(),
                 Name = descriptor.Name,
                 Description = descriptor.Description,
-                Input = descriptor.Input.ToAdapterExtensionFeatureParameterDescriptor(),
-                Output = descriptor.Output.ToAdapterExtensionFeatureParameterDescriptor()
+                Inputs = descriptor.Inputs.Select(x => x.ToAdapterExtensionFeatureParameterDescriptor()).ToArray(),
+                Outputs = descriptor.Outputs.Select(x => x.ToAdapterExtensionFeatureParameterDescriptor()).ToArray()
             };
         }
 
@@ -1535,14 +1575,32 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return new Grpc.ExtensionFeatureOperationDescriptor() {
+            var result = new Grpc.ExtensionFeatureOperationDescriptor() {
                 OperationId = descriptor.OperationId?.ToString() ?? string.Empty,
                 OperationType = descriptor.OperationType.ToGrpcExtensionFeatureOperationType(),
                 Name = descriptor.Name ?? string.Empty,
-                Description = descriptor.Description ?? string.Empty,
-                Input = descriptor.Input.ToGrpcExtensionFeatureParameterDescriptor(),
-                Output = descriptor.Output.ToGrpcExtensionFeatureParameterDescriptor()
+                Description = descriptor.Description ?? string.Empty
             };
+
+            if (descriptor.Inputs != null) {
+                foreach (var item in descriptor.Inputs) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Inputs.Add(item.ToGrpcExtensionFeatureParameterDescriptor());
+                }
+            }
+
+            if (descriptor.Outputs != null) {
+                foreach (var item in descriptor.Outputs) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.Outputs.Add(item.ToGrpcExtensionFeatureParameterDescriptor());
+                }
+            }
+
+            return result;
         }
 
 
@@ -1561,8 +1619,11 @@ namespace DataCore.Adapter {
             }
 
             return new Extensions.ExtensionFeatureOperationParameterDescriptor() {
-                Description = descriptor.Description,
-                ExampleValue = descriptor.ExampleValue
+                Ordinal = descriptor.Ordinal,
+                VariantType = descriptor.VariantType.ToAdapterVariantType(),
+                ArrayRank = descriptor.ArrayRank,
+                TypeId = Uri.TryCreate(descriptor.TypeId, UriKind.Absolute, out var uri) ? uri : null,
+                Description = descriptor.Description
             };
         }
 
@@ -1579,14 +1640,17 @@ namespace DataCore.Adapter {
         public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 
-                    Description = string.Empty,
-                    ExampleValue = string.Empty
+                    TypeId = string.Empty,
+                    Description = string.Empty
                 };
             }
 
             return new Grpc.ExtensionFeatureOperationParameterDescriptor() {
-                Description = descriptor.Description ?? string.Empty,
-                ExampleValue = descriptor.ExampleValue ?? string.Empty
+                Ordinal = descriptor.Ordinal,
+                VariantType = descriptor.VariantType.ToGrpcVariantType(),
+                ArrayRank = descriptor.ArrayRank,
+                TypeId = descriptor.TypeId?.ToString() ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty
             };
         }
 

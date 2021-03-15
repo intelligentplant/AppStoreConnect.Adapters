@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -81,11 +82,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/find";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<TagDefinition>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -130,11 +131,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/get-by-id";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<TagDefinition>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<TagDefinition>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
@@ -179,11 +180,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/properties";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsAsync<IEnumerable<AdapterProperty>>(cancellationToken).ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<AdapterProperty>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

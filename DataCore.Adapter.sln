@@ -19,6 +19,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{004EC5B0-7D4E-4382-A139-A9BD049D99C4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{92FD0A48-0AE7-44A6-86BC-C4E47E014C17}"
+	ProjectSection(SolutionItems) = preProject
+		examples\Directory.Build.props = examples\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Abstractions", "src\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj", "{CE3C7621-5106-465A-864C-B0312BFC76B3}"
 EndProject
@@ -33,6 +36,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests", "test\DataCore.Adapter.Tests\DataCore.Adapter.Tests.csproj", "{67504392-4D6A-4BA3-B59F-3D8D72D93EAC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1BF8C809-6F14-4C52-B172-D43A96295884}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Client", "src\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj", "{F971C9D2-5948-4680-BA30-C5E31B1FF8D4}"
 EndProject
@@ -92,6 +98,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Tests.Helpers", "src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj", "{7A247D52-A607-4810-B5DC-ACC3650CE5BF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.WaveGenerator", "src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj", "{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Json.Newtonsoft", "src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj", "{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -203,6 +211,10 @@ Global
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -239,6 +251,7 @@ Global
 		{5E4F5BAB-DAA5-47B0-862A-B6E4173F146C} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{7A247D52-A607-4810-B5DC-ACC3650CE5BF} = {5E4F5BAB-DAA5-47B0-862A-B6E4173F146C}
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
+		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

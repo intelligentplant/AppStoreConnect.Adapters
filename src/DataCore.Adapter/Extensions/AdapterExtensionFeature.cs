@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
@@ -23,11 +22,6 @@ namespace DataCore.Adapter.Extensions {
     /// <see cref="BindStream"/>, and <see cref="BindDuplexStream"/> overloads in your 
     /// class constructor to register available operations.
     /// </summary>
-    /// <remarks>
-    ///   Extension features are expected to receive and send JSON-encoded values. Use the 
-    ///   <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> methods to deserialize input values 
-    ///   from and serialize output values to JSON.
-    /// </remarks>
     public abstract partial class AdapterExtensionFeature : IAdapterExtensionFeature, IBackgroundTaskServiceProvider {
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
@@ -41,6 +35,11 @@ namespace DataCore.Adapter.Extensions {
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
+        /// <summary>
+        /// The <see cref="IObjectEncoder"/> instances to use when encoding or decoding <see cref="EncodedObject"/> 
+        /// instances.
+        /// </summary>
+        public IEnumerable<IObjectEncoder> Encoders { get; }
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
@@ -52,17 +51,17 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Handlers for invocation methods created by a call to one of the <see cref="BindInvoke"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<string>>> _boundInvokeMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<string>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<InvocationResponse>>> _boundInvokeMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<InvocationResponse>>>();
 
         /// <summary>
         /// Handlers for streaming methods created by a call to one of the <see cref="BindStream"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<ChannelReader<string>>>> _boundStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, string, CancellationToken, Task<ChannelReader<string>>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>>> _boundStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>>>();
 
         /// <summary>
         /// Handlers for duplex streaming methods created by a call to one of the <see cref="BindDuplexStream"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, ChannelReader<string>, CancellationToken, Task<ChannelReader<string>>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, ChannelReader<string>, CancellationToken, Task<ChannelReader<string>>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>>>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
 
@@ -73,8 +72,13 @@ namespace DataCore.Adapter.Extensions {
         ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService) {
+        /// <param name="encoders">
+        ///   The <see cref="IObjectEncoder"/> instances to use when encoding or decoding 
+        ///   <see cref="EncodedObject"/> instances.
+        /// </param>
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService, IEnumerable<IObjectEncoder> encoders) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            Encoders = encoders?.ToArray() ?? Array.Empty<IObjectEncoder>();
 
             foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
                 // Create auto-binding for GetDescriptor method
@@ -83,9 +87,13 @@ namespace DataCore.Adapter.Extensions {
                     nameof(IAdapterExtensionFeature.GetDescriptor),
                     ExtensionFeatureOperationType.Invoke
                 );
-                _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
+                _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
-                    return SerializeObject(desc);
+                    return new InvocationResponse() { 
+                        Results = new Variant[] {
+                            this.ConvertToVariant(desc)!
+                        }
+                    };
                 };
 
                 // Create auto-binding for GetOperations method
@@ -96,7 +104,11 @@ namespace DataCore.Adapter.Extensions {
                 );
                 _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
-                    return SerializeObject(ops);
+                    return new InvocationResponse() { 
+                        Results = new[] {
+                            this.ConvertToVariant(ops.ToArray())
+                        }
+                    };
                 };
             }
         }
@@ -135,39 +147,54 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        public Task<string> Invoke(
-            IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+        public Task<InvocationResponse> Invoke(
+            IAdapterCallContext context,
+            InvocationRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
-            return InvokeInternal(context, operationId, json, cancellationToken);
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+
+            return InvokeInternal(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<string>> Stream(
-            IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+        public Task<ChannelReader<InvocationResponse>> Stream(
+            IAdapterCallContext context,
+            InvocationRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
-            return StreamInternal(context, operationId, json, cancellationToken);
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+
+            return StreamInternal(context, request, cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<string>> DuplexStream(IAdapterCallContext context, Uri operationId, ChannelReader<string> channel, CancellationToken cancellationToken) {
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
+        public Task<ChannelReader<InvocationResponse>> DuplexStream(IAdapterCallContext context, InvocationRequest request, ChannelReader<InvocationStreamItem> channel, CancellationToken cancellationToken) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
-            return DuplexStreamInternal(context, operationId, channel, cancellationToken);
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
+            return DuplexStreamInternal(context, request, channel, cancellationToken);
         }
 
 
@@ -267,17 +294,14 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
-        /// </param>
-        /// <param name="json">
-        ///   The JSON-serialized operation argument.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The JSON-serialized result of the operation.
+        ///   The result of the operation.
         /// </returns>
         /// <remarks>
         /// 
@@ -287,22 +311,22 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
-        ///   methods to deserialize input values and serialize output values from/to JSON.
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<string> InvokeInternal(
+        protected virtual Task<InvocationResponse> InvokeInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+            InvocationRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (_boundInvokeMethods.TryGetValue(operationId, out var handler)) {
-                return handler(context, json, cancellationToken);
+            if (_boundInvokeMethods.TryGetValue(request.OperationId, out var handler)) {
+                return handler(context, request, cancellationToken);
             }
-            throw new MissingMethodException(operationId?.ToString());
+            throw new MissingMethodException(request.OperationId?.ToString());
         }
 
 
@@ -313,18 +337,15 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
-        /// </param>
-        /// <param name="json">
-        ///   The JSON-serialized operation argument.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the JSON-serialized results of the operation.
+        ///   will stream the results of the operation.
         /// </returns>
         /// <remarks>
         /// 
@@ -334,22 +355,22 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
-        ///   methods to deserialize input values and serialize output values from/to JSON.
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<string>> StreamInternal(
+        protected virtual Task<ChannelReader<InvocationResponse>> StreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
-            Uri operationId, 
-            string json, 
+            InvocationRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (_boundStreamMethods.TryGetValue(operationId, out var handler)) {
-                return handler(context, json, cancellationToken);
+            if (_boundStreamMethods.TryGetValue(request.OperationId, out var handler)) {
+                return handler(context, request, cancellationToken);
             }
-            throw new MissingMethodException(operationId?.ToString());
+            throw new MissingMethodException(request.OperationId?.ToString());
         }
 
 
@@ -361,18 +382,18 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
-        /// <param name="operationId">
-        ///   The URI for the operation.
+        /// <param name="request">
+        ///   The invocation request.
         /// </param>
         /// <param name="channel">
-        ///   A channel that will stream the JSON-serialized inputs for the operation.
+        ///   A channel that will stream additional inputs for the operation.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will stream the JSON-serialized results of the operation.
+        ///   will stream the results of the operation.
         /// </returns>
         /// <remarks>
         /// 
@@ -383,22 +404,23 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="DeserializeObject"/> and <see cref="SerializeObject"/> 
-        ///   methods to deserialize input values and serialize output values from/to JSON.
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<string>> DuplexStreamInternal(
+        protected virtual Task<ChannelReader<InvocationResponse>> DuplexStreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
-            Uri operationId, 
-            ChannelReader<string> channel, 
+            InvocationRequest request, 
+            ChannelReader<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         ) {
-            if (_boundDuplexStreamMethods.TryGetValue(operationId, out var handler)) {
-                return handler(context, channel, cancellationToken);
+            if (_boundDuplexStreamMethods.TryGetValue(request.OperationId, out var handler)) {
+                return handler(context, request, channel, cancellationToken);
             }
-            throw new MissingMethodException(operationId?.ToString());
+            throw new MissingMethodException(request.OperationId?.ToString());
         }
 
 
@@ -462,192 +484,53 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
-        /// Tries to extract details about an extension feature operation from a <see cref="MethodInfo"/> 
-        /// that represents the implementation of a method declared in an extension feature 
-        /// interface.
+        /// Creates an <see cref="ExtensionFeatureOperationDescriptor"/> for a feature operation.
         /// </summary>
-        /// <param name="method">
-        ///   The method implementation.
-        /// </param>
-        /// <param name="operationType">
-        ///   The operation type for the method.
-        /// </param>
-        /// <param name="operationId">
-        ///   The operation ID for the method.
-        /// </param>
-        /// <param name="displayName">
-        ///   The display name for the method.
-        /// </param>
-        /// <param name="description">
-        ///   The description for the method.
-        /// </param>
-        /// <param name="inputParameterDescription">
-        ///   The description for the method's input parameter.
-        /// </param>
-        /// <param name="outputParameterDescription">
-        ///   The description for the method's output parameter.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the operation details could be extracted from the 
-        ///   <paramref name="method"/>, or <see langword="false"/> otherwise.
-        /// </returns>
-        private static bool TryGetOperationDetailsFromMemberInfo(
-            MethodInfo method, 
-            ExtensionFeatureOperationType operationType,
-            out Uri operationId, 
-            out string displayName,
-            out string description,
-            out string inputParameterDescription,
-            out string outputParameterDescription
-        ) {
-            operationId = null!;
-            displayName = null!;
-            description = null!;
-            inputParameterDescription = null!;
-            outputParameterDescription = null!;
-
-            if (method == null) {
-                return false;
-            }
-
-            MethodInfo methodDeclaration;
-            Type extensionFeatureType;
-
-            if (TryGetInterfaceMethodDeclaration(method, out methodDeclaration)) {
-                // We found the method declaration on an extension feature interface. We'll use 
-                // this interface definition and the associated method declaration to retrieve 
-                // metadata required to create the extension feature operation descriptor.
-                extensionFeatureType = methodDeclaration.ReflectedType!;
-            }
-            else if (method.ReflectedType!.IsExtensionAdapterFeature()) {
-                // The reflected type for the method is an extension feature, so we will look 
-                // directly on the method and its reflected type for metadata required to create 
-                // the extension feature operation descriptor.
-                methodDeclaration = method;
-                extensionFeatureType = method.ReflectedType!;
-            }
-            else {
-                // We are unable to determine the extension feature that this method is associated 
-                // with, so we can't create a descriptor for it.
-                methodDeclaration = null!;
-                extensionFeatureType = null!;
-            }
-
-            if (methodDeclaration == null || extensionFeatureType == null) {
-                return false;
-            }
-
-            operationId = GetOperationUri(extensionFeatureType, methodDeclaration.Name, operationType);
-            var attr = methodDeclaration.GetCustomAttribute<ExtensionFeatureOperationAttribute>();
-
-            displayName = attr?.GetName()!;
-            description = attr?.GetDescription()!;
-            inputParameterDescription = attr?.GetInputParameterDescription()!;
-            outputParameterDescription = attr?.GetOutputParameterDescription()!;
-
-            if (string.IsNullOrWhiteSpace(displayName)) {
-                displayName = methodDeclaration.Name;
-            }
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Creates an <see cref="ExtensionFeatureOperationDescriptor"/> for an operation.
-        /// </summary>
-        /// <typeparam name="TIn">
-        ///   The operation's input parameter type.
-        /// </typeparam>
-        /// <typeparam name="TOut">
-        ///   The operation's output parameter type.
+        /// <typeparam name="TFeature">
+        ///   The extension feature type. This must be a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   that is annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </typeparam>
         /// <param name="operationType">
         ///   The operation type.
         /// </param>
-        /// <param name="operationId">
-        ///   The operation ID.
-        /// </param>
         /// <param name="name">
-        ///   The operation's display name.
+        ///   The operation name.
         /// </param>
         /// <param name="description">
         ///   The operation description.
         /// </param>
-        /// <param name="hasInputParameter">
-        ///   Indicates if the operation uses an input parameter.
+        /// <param name="inputParameters">
+        ///   The input parameters for the operation.
         /// </param>
-        /// <param name="inputParameterDescription">
-        ///   The description for the input parameter.
-        /// </param>
-        /// <param name="inputParameterExample">
-        ///   An example value for the input parameter.
-        /// </param>
-        /// <param name="hasReturnParameter">
-        ///   Indicates if the operation has a return parameter.
-        /// </param>
-        /// <param name="returnParameterDescription">
-        ///   The description for the return parameter.
-        /// </param>
-        /// <param name="returnParameterExample">
-        ///   An example value for the return parameter.
+        /// <param name="outputParameters">
+        ///   The output parameters for the operation.
         /// </param>
         /// <returns>
-        ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> instance.
+        ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
         /// </returns>
-        private static ExtensionFeatureOperationDescriptor CreateDescriptor<TIn, TOut>(
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <typeparamref name="TFeature"/> is not a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
+        /// </exception>
+        protected static ExtensionFeatureOperationDescriptor CreateOperationDescriptor<TFeature>(
             ExtensionFeatureOperationType operationType,
-            Uri operationId,
             string name,
-            string description,
-            bool hasInputParameter,
-            string inputParameterDescription,
-            TIn inputParameterExample,
-            bool hasReturnParameter,
-            string returnParameterDescription,
-            TOut returnParameterExample
+            string? description,
+            IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters,
+            IEnumerable<ExtensionFeatureOperationParameterDescriptor>? outputParameters
         ) {
-            if (hasInputParameter && !typeof(TIn).IsValueType && Equals(inputParameterExample, null)) {
-                try {
-                    inputParameterExample = Activator.CreateInstance<TIn>();
-                }
-                catch {
-                    // Swallow the exception; this value is for display purposes only so we don't 
-                    // want to make the binding fail!
-                }
-            }
-
-            if (hasReturnParameter && !typeof(TOut).IsValueType && Equals(returnParameterExample, null)) {
-                try {
-                    returnParameterExample = Activator.CreateInstance<TOut>();
-                }
-                catch {
-                    // Swallow the exception; this value is for display purposes only so we don't 
-                    // want to make the binding fail!
-                }
-            }
-
-            return new ExtensionFeatureOperationDescriptor() {
-                OperationType = operationType,
+            var featureType = typeof(TFeature);
+            var operationId = GetOperationUri(featureType, name, operationType);
+            return new ExtensionFeatureOperationDescriptor() { 
                 OperationId = operationId,
+                OperationType = operationType,
                 Name = name,
-                Description = description ?? "<UNKNOWN>",
-                Input = new ExtensionFeatureOperationParameterDescriptor() {
-                    Description = !hasInputParameter 
-                        ? "<NOT USED>" 
-                        : inputParameterDescription ?? "<UNKNOWN>",
-                    ExampleValue = !hasInputParameter 
-                        ? SerializeObject(new object()) 
-                        : SerializeObject(inputParameterExample!, true) ?? "<UNKNOWN>"
-                },
-                Output = new ExtensionFeatureOperationParameterDescriptor() {
-                    Description = !hasReturnParameter
-                        ? "<NOT USED>"
-                        : returnParameterDescription ?? "<UNKNOWN>",
-                    ExampleValue = !hasReturnParameter
-                        ? SerializeObject(new object())
-                        : SerializeObject(returnParameterExample!, true) ?? "<UNKNOWN>"
-                },
+                Description = description,
+                Inputs = inputParameters?.ToArray() ?? Array.Empty<ExtensionFeatureOperationParameterDescriptor>(),
+                Outputs = outputParameters?.ToArray() ?? Array.Empty<ExtensionFeatureOperationParameterDescriptor>()
             };
         }
 
@@ -656,8 +539,8 @@ namespace DataCore.Adapter.Extensions {
         /// Gets the operation URI for the specified unqualified extension operation name.
         /// </summary>
         /// <typeparam name="TFeature">
-        ///   The extension feature type. This must be an interface derived from 
-        ///   <see cref="IAdapterExtensionFeature"/> that is annotated with <see cref="AdapterFeatureAttribute"/>.
+        ///   The extension feature type. This must be a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   that is annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </typeparam>
         /// <param name="unqualifiedName">
         ///   The unqualified operation name.
@@ -684,7 +567,7 @@ namespace DataCore.Adapter.Extensions {
         /// Gets the operation URI for the specified unqualified extension operation name.
         /// </summary>
         /// <param name="featureType">
-        ///   The extension feature type. This must be an interface derived from 
+        ///   The extension feature type. This must be an type derived from 
         ///   <see cref="IAdapterExtensionFeature"/> that is annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </param>
         /// <param name="unqualifiedName">
@@ -697,7 +580,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The operation URI.
         /// </returns>
         /// <exception cref="ArgumentException">
-        ///   <paramref name="featureType"/> is not an interface derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   <paramref name="featureType"/> is not a type derived from <see cref="IAdapterExtensionFeature"/> 
         ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </exception>
         /// <exception cref="ArgumentException">
@@ -736,8 +619,8 @@ namespace DataCore.Adapter.Extensions {
             return new Uri(
                 featureUri,
                 unqualifiedName.EndsWith("/", StringComparison.Ordinal)
-                    ? string.Concat(unqualifiedName, operationType.ToString())
-                    : string.Concat(unqualifiedName, "/", operationType.ToString())
+                    ? string.Concat(operationType.ToString().ToLowerInvariant(), "/", unqualifiedName)
+                    : string.Concat(operationType.ToString().ToLowerInvariant(), "/", unqualifiedName, "/")
             ).EnsurePathHasTrailingSlash();
         }
 
@@ -783,115 +666,6 @@ namespace DataCore.Adapter.Extensions {
             // Operation URIs are in the format <feature_uri>/<operation_type>/<operation_name>
             featureUri = new Uri(operationUri, "../../");
             return true;
-        }
-
-
-        /// <summary>
-        /// Deserializes a value from JSON.
-        /// </summary>
-        /// <param name="type">
-        ///   The value type.
-        /// </param>
-        /// <param name="json">
-        ///   The JSON string.
-        /// </param>
-        /// <returns>
-        ///   The deserialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="type"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="json"/> is <see langword="null"/>.
-        /// </exception>
-        public static object DeserializeObject(Type type, string json) {
-            if (type == null) {
-                throw new ArgumentNullException(nameof(type));
-            }
-            if (json == null) {
-                throw new ArgumentNullException(nameof(json));
-            }
-
-            return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type)!;
-        }
-
-
-        /// <summary>
-        /// Deserializes a value from JSON.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="json">
-        ///   The JSON string.
-        /// </param>
-        /// <returns>
-        ///   The deserialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="json"/> is <see langword="null"/>.
-        /// </exception>
-        public static T DeserializeObject<T>(string json) {
-            if (json == null) {
-                throw new ArgumentNullException(nameof(json));
-            }
-
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
-        }
-
-
-        /// <summary>
-        /// Deserializes a value from JSON to an anonymous type.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="json">
-        ///   The JSON string.
-        /// </param>
-        /// <param name="definition">
-        ///   An instance of the anonymous type to deserialize the JSON to.
-        /// </param>
-        /// <returns>
-        ///   The deserialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="json"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="definition"/> is <see langword="null"/>.
-        /// </exception>
-        public static T DeserializeAnonymousType<T>(string json, T definition) {
-            if (json == null) {
-                throw new ArgumentNullException(nameof(json));
-            }
-            if (definition == null) {
-                throw new ArgumentNullException(nameof(definition));
-            }
-
-            return Newtonsoft.Json.JsonConvert.DeserializeAnonymousType(json, definition);
-        }
-
-
-        /// <summary>
-        /// Serializes a value to JSON.
-        /// </summary>
-        /// <param name="value">
-        ///   The value.
-        /// </param>
-        /// <param name="indented">
-        ///   When <see langword="true"/>, indented JSON formatting will be used.
-        /// </param>
-        /// <returns>
-        ///   The serialized value.
-        /// </returns>
-        public static string SerializeObject(object? value, bool indented = false) {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(
-                value, 
-                indented 
-                    ? Newtonsoft.Json.Formatting.Indented 
-                    : Newtonsoft.Json.Formatting.None
-            );
         }
 
     }

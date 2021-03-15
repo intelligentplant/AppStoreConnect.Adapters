@@ -8,6 +8,7 @@
   <ItemGroup>
     <!-- Package versions are defined in Directory.Build.props. -->
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="$(AdapterPackageVersion)" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.Json" Version="$(AdapterPackageVersion)" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsHostingVersion)" />
   </ItemGroup>
 

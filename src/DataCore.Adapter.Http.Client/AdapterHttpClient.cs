@@ -2,9 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using DataCore.Adapter.Http.Client.Clients;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Http.Client {
 
@@ -17,6 +19,11 @@ namespace DataCore.Adapter.Http.Client {
         /// The HTTP client for the <see cref="AdapterHttpClient"/>.
         /// </summary>
         public HttpClient HttpClient { get; }
+
+        /// <summary>
+        /// JSON serializer options.
+        /// </summary>
+        internal JsonSerializerOptions JsonSerializerOptions { get; }
 
         /// <summary>
         /// The App Store Connect adapters toolkit version to use.
@@ -76,6 +83,11 @@ namespace DataCore.Adapter.Http.Client {
         /// </param>
         public AdapterHttpClient(HttpClient httpClient) {
             HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            JsonSerializerOptions = new JsonSerializerOptions() {
+                PropertyNameCaseInsensitive = true
+            };
+            JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            JsonSerializerOptions.Converters.AddDataCoreAdapterConverters();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
@@ -235,6 +247,9 @@ namespace DataCore.Adapter.Http.Client {
         /// <param name="metadata">
         ///   The request metadata.
         /// </param>
+        /// <param name="options">
+        ///   The JSON serializer options to use.
+        /// </param>
         /// <returns>
         ///   A new <see cref="HttpRequestMessage"/> object.
         /// </returns>
@@ -248,12 +263,11 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             Uri url, 
             TContent content, 
-            RequestMetadata? metadata
+            RequestMetadata? metadata,
+            JsonSerializerOptions? options
         ) {
             var result = CreateHttpRequestMessage(method, url, metadata);
-            result.Content = content is HttpContent httpContent
-                ? httpContent
-                : new ObjectContent(typeof(TContent), content, new System.Net.Http.Formatting.JsonMediaTypeFormatter());
+            result.Content = System.Net.Http.Json.JsonContent.Create(content, options: options);
 
             return result;
         }
@@ -277,6 +291,9 @@ namespace DataCore.Adapter.Http.Client {
         /// <param name="metadata">
         ///   The request metadata.
         /// </param>
+        /// <param name="options">
+        ///   The JSON serializer options to use.
+        /// </param>
         /// <returns>
         ///   A new <see cref="HttpRequestMessage"/> object.
         /// </returns>
@@ -290,13 +307,15 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             string url, 
             TContent content, 
-            RequestMetadata? metadata
+            RequestMetadata? metadata,
+            JsonSerializerOptions? options
         ) {
             return CreateHttpRequestMessage(
                 method,
                 new Uri(url ?? throw new ArgumentNullException(nameof(url)), UriKind.RelativeOrAbsolute),
                 content,
-                metadata
+                metadata,
+                options
             );
         }
 

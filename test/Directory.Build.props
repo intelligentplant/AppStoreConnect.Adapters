@@ -7,6 +7,7 @@
   <Import Project="$(ParentProject)" Condition=" '$(ParentProject)' != '' " /> 
   
   <PropertyGroup>
+    <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <IsSignable>false</IsSignable>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>

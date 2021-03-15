@@ -9,41 +9,58 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](02-Extension_Methods.md), we created a simple request-response operation for our extension feature. In this chapter, we will demonstrate another operation type: streaming methods. Streaming methods allow a caller to create a subscription on our feature and receive a stream of result objects back (using a `ChannelReader<T>` object). We keep on streaming results until either the feature decides to end the stream, or the caller cancels the subscription. This approach is also used in most standard adapter features.
 
-To start, we will create the streaming method on our `PingPongExtension` class:
+First, we will add a method to our `PingPongExtension` class that will process streaming requests:
 
 ```csharp
-[ExtensionFeatureOperation(
-    Description = "Responds to a ping message with a pong message every second until the call is cancelled",
-    InputParameterDescription = "The ping message",
-    OutputParameterDescription = "The pong message"
-)]
-public ChannelReader<PongMessage> Ping(PingMessage message, CancellationToken cancellationToken) {
+public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, PingMessage message, CancellationToken cancellationToken) {
     if (message == null) {
         throw new ArgumentNullException(nameof(message));
     }
 
     var result = Channel.CreateUnbounded<PongMessage>();
-    result.Writer.RunBackgroundOperation(async (ch, ct) => { 
+
+    result.Writer.RunBackgroundOperation(async (ch, ct) => {
         while (!ct.IsCancellationRequested) {
-            await Task.Delay(1000, ct).ConfigureAwait(false);
-            ch.TryWrite(new PongMessage() {
-                CorrelationId = message.CorrelationId
-            });
+            // Every second, we will return a new PongMessage
+            await Task.Delay(1000, ct);
+
+            var pongMessage = Ping(context, message);
+            await ch.WriteAsync(pongMessage, ct);
         }
     }, true, BackgroundTaskService, cancellationToken);
 
-    return result.Reader;
+    return Task.FromResult(result.Reader);
 }
 ```
 
-Note the use of the `RunBackgroundOperation` extension method on the writer for the result channel. This allows us to kick off a background task that will run until the caller cancels their subscription, and ensures that the writer for the result channel is completed when the background task is cancelled.
+Note that the method uses the `RunBackgroundOperation` extension method to periodically write pong messages into the result channel in a background task.
 
-To register this new `Ping` overload, we call the `BindStream` method in our `PingPongExtension` constructor:
+To register our new operation, we will call the `BindStream` method in our `PingPongExtension` constructor:
 
 ```csharp
 public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-    BindInvoke<PingMessage, PongMessage>(Ping);
-    BindStream<PingMessage, PongMessage>(Ping);
+    // -- Existing BindInvoke call removed for brevity --
+    
+    BindStream<PingPongExtension, PingMessage, PongMessage>(
+        Ping,
+        description: "Responds to a ping message with a stream of pong messages",
+        inputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                Description = "The ping message"
+            }
+        },
+        outputParameters: new[] {
+            new ExtensionFeatureOperationParameterDescriptor() {
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
+                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                Description = "The pong message"
+            }
+        }
+    );
 }
 ```
 
@@ -61,10 +78,10 @@ If you compile and run the program, you will notice that the streaming method is
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Stream/)
-          - Description: Responds to a ping message with a pong message every second until the call is cancelled
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
           - Description: Responds to a ping message with a pong message
+        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
+          - Description: Responds to a ping message with a stream of pong messages
 ```
 
 Our next step is to subscribe to the stream. Replace the code to call the original operation in `Runner.cs` with the following:
@@ -72,16 +89,18 @@ Our next step is to subscribe to the stream. Replace the code to call the origin
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
 var correlationId = Guid.NewGuid().ToString();
-var pingMessage = new PingMessage() { CorrelationId = correlationId };
+var now = DateTime.UtcNow;
+var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
 var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
     context,
-    new Uri("asc:extensions/tutorial/ping-pong/Ping/Stream/"),
+    new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
     pingMessage,
     cancellationToken
 );
 
 Console.WriteLine();
-Console.WriteLine($"[STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
+Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
+
 await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
     Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
 }
@@ -101,16 +120,17 @@ When you compile and run the program again, you will see a pong message displaye
       - Name: Ping Pong
       - Description: Example extension feature.
       - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Stream/)
-          - Description: Responds to a ping message with a pong message every second until the call is cancelled
-        - Ping (asc:extensions/tutorial/ping-pong/Ping/Invoke/)
+        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
           - Description: Responds to a ping message with a pong message
+        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
+          - Description: Responds to a ping message with a stream of pong messages
 
-[STREAM] Ping: 14810b0f-7045-401e-8f50-581d6252eafa @ 08:48:28 UTC
-[STREAM] Pong: 14810b0f-7045-401e-8f50-581d6252eafa @ 08:48:29 UTC
-[STREAM] Pong: 14810b0f-7045-401e-8f50-581d6252eafa @ 08:48:30 UTC
-[STREAM] Pong: 14810b0f-7045-401e-8f50-581d6252eafa @ 08:48:31 UTC
-[STREAM] Pong: 14810b0f-7045-401e-8f50-581d6252eafa @ 08:48:32 UTC
+[STREAM] Ping: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:24 UTC
+[STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:25 UTC
+[STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:26 UTC
+[STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:27 UTC
+[STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:28 UTC
+[STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:29 UTC
 ```
 
 

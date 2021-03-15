@@ -68,6 +68,10 @@ namespace DataCore.Adapter.Json {
                     return isArray
                         ? new Variant(ReadArray<DateTime>(valueElement, arrayDimensions!, options))
                         : valueElement.GetDateTime();
+                case VariantType.ExtensionObject:
+                    return isArray
+                        ? new Variant(ReadArray<EncodedObject>(valueElement, arrayDimensions!, options))
+                        : JsonSerializer.Deserialize<EncodedObject>(valueElement.GetRawText(), options)!;
                 case VariantType.Double:
                     return isArray
                         ? new Variant(ReadArray<double>(valueElement, arrayDimensions!, options))
@@ -240,9 +244,6 @@ namespace DataCore.Adapter.Json {
         /// <param name="options">
         ///   Serialization options.
         /// </param>
-        /// <returns>
-        ///   The <see cref="Array"/> that was read from the <see cref="JsonElement"/>.
-        /// </returns>
         private static void ReadArray<T>(JsonElement element, Array array, int dimension, int[] indices, JsonSerializerOptions? options) {
             var i = 0;
             foreach (var el in element.EnumerateArray()) {
