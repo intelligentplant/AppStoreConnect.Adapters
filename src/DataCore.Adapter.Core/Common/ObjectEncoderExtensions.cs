@@ -671,6 +671,29 @@ namespace DataCore.Adapter.Common {
         }
 
 
+        /// <summary>
+        /// Recursively decodes a source array of <see cref="EncodedObject"/> into a destination 
+        /// array of the specified type.
+        /// </summary>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="type">
+        ///   The element type for the destination array.
+        /// </param>
+        /// <param name="sourceArray">
+        ///   The source array.
+        /// </param>
+        /// <param name="destinationArray">
+        ///   The destination array. Must have the same dimensions as the source array.
+        /// </param>
+        /// <param name="dimension">
+        ///   The current array dimension that is being processed.
+        /// </param>
+        /// <param name="indices">
+        ///   The indices of the next element to be copied from the source array to the 
+        ///   destination array.
+        /// </param>
         private static void DecodeArray(IObjectEncoder encoder, Type type, Array sourceArray, Array destinationArray, int dimension, int[] indices) {
             var length = sourceArray.GetLength(dimension);
 
@@ -691,53 +714,193 @@ namespace DataCore.Adapter.Common {
         }
 
 
-        public static Array? Decode(this IObjectEncoder encoder, Type type, Array? value) {
+        /// <summary>
+        /// Decodes a source array of <see cref="EncodedObject"/> instances into an array of the 
+        /// specified element type.
+        /// </summary>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="type">
+        ///   The element type for the destination array.
+        /// </param>
+        /// <param name="source">
+        ///   The source array of <see cref="EncodedObject"/> instances.
+        /// </param>
+        /// <returns>
+        ///   An array of decoded objects.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="source"/> is not <see cref="EncodedObject"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The <paramref name="encoder"/> cannot decode the elements in the <paramref name="source"/>
+        ///   array.
+        /// </exception>
+        /// <remarks>
+        ///   <paramref name="source"/> can be a multidimensional array of <see cref="EncodedObject"/> 
+        ///   instances.
+        /// </remarks>
+        public static Array? Decode(this IObjectEncoder encoder, Type type, Array? source) {
             if (encoder == null) {
                 throw new ArgumentNullException(nameof(encoder));
             }
             if (type == null) {
                 throw new ArgumentNullException(nameof(type));
             }
-            if (value == null) {
+            if (source == null) {
                 return null;
             }
 
-            var elementType = value.GetType().GetElementType();
+            var elementType = source.GetType().GetElementType();
             if (elementType != typeof(EncodedObject)) {
-                throw new ArgumentOutOfRangeException(nameof(value), value, SharedResources.Error_CannotDecodeType);
+                throw new ArgumentOutOfRangeException(nameof(source), source, SharedResources.Error_CannotDecodeType);
             }
 
-            var dimensions = new int[value.Rank];
-            for (var i = 0; i < value.Rank; i++) {
-                dimensions[i] = value.GetLength(i);
+            var dimensions = new int[source.Rank];
+            for (var i = 0; i < source.Rank; i++) {
+                dimensions[i] = source.GetLength(i);
             }
 
             var result = Array.CreateInstance(type, dimensions);
-            DecodeArray(encoder, type, value, result, 0, new int[dimensions.Length]);
+            DecodeArray(encoder, type, source, result, 0, new int[dimensions.Length]);
 
             return result;
         }
 
 
-        public static Array? Decode<T>(this IObjectEncoder encoder, Array? value) {
-            return encoder.Decode(typeof(T), value);
+        /// <summary>
+        /// Decodes a source array of <see cref="EncodedObject"/> instances into an array of 
+        /// <typeparamref name="T"/> instances.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The element type for the destination array.
+        /// </typeparam>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source array of <see cref="EncodedObject"/> instances.
+        /// </param>
+        /// <returns>
+        ///   An array of decoded objects.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="source"/> is not <see cref="EncodedObject"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The <paramref name="encoder"/> cannot decode the elements in the <paramref name="source"/>
+        ///   array.
+        /// </exception>
+        /// <remarks>
+        ///   <paramref name="source"/> can be a multidimensional array of <see cref="EncodedObject"/> 
+        ///   instances.
+        /// </remarks>
+        public static Array? Decode<T>(this IObjectEncoder encoder, Array? source) {
+            return encoder.Decode(typeof(T), source);
         }
 
 
-        public static T[]? Decode<T>(this IObjectEncoder encoder, EncodedObject[]? value) {
-            return (T[]?) encoder.Decode(typeof(T), value);
+        /// <summary>
+        /// Decodes a 1-dimensional source array of <see cref="EncodedObject"/> instances into an 
+        /// array of <typeparamref name="T"/> instances.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The element type for the destination array.
+        /// </typeparam>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source array of <see cref="EncodedObject"/> instances.
+        /// </param>
+        /// <returns>
+        ///   An array of decoded objects.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="source"/> is not <see cref="EncodedObject"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The <paramref name="encoder"/> cannot decode the elements in the <paramref name="source"/>
+        ///   array.
+        /// </exception>
+        public static T[]? Decode<T>(this IObjectEncoder encoder, EncodedObject[]? source) {
+            return (T[]?) encoder.Decode(typeof(T), source);
         }
 
 
-        public static T[,]? Decode<T>(this IObjectEncoder encoder, EncodedObject[,]? value) {
-            return (T[,]?) encoder.Decode(typeof(T), value);
+        /// <summary>
+        /// Decodes a 2-dimensional source array of <see cref="EncodedObject"/> instances into an 
+        /// array of <typeparamref name="T"/> instances.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The element type for the destination array.
+        /// </typeparam>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source array of <see cref="EncodedObject"/> instances.
+        /// </param>
+        /// <returns>
+        ///   An array of decoded objects.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="source"/> is not <see cref="EncodedObject"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The <paramref name="encoder"/> cannot decode the elements in the <paramref name="source"/>
+        ///   array.
+        /// </exception>
+        public static T[,]? Decode<T>(this IObjectEncoder encoder, EncodedObject[,]? source) {
+            return (T[,]?) encoder.Decode(typeof(T), source);
         }
 
 
-        public static T[,,]? Decode<T>(this IObjectEncoder encoder, EncodedObject[,,]? value) {
-            return (T[,,]?) encoder.Decode(typeof(T), value);
+        /// <summary>
+        /// Decodes a 3-dimensional source array of <see cref="EncodedObject"/> instances into an 
+        /// array of <typeparamref name="T"/> instances.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The element type for the destination array.
+        /// </typeparam>
+        /// <param name="encoder">
+        ///   The <see cref="IObjectEncoder"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source array of <see cref="EncodedObject"/> instances.
+        /// </param>
+        /// <returns>
+        ///   An array of decoded objects.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="encoder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The element type of <paramref name="source"/> is not <see cref="EncodedObject"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   The <paramref name="encoder"/> cannot decode the elements in the <paramref name="source"/>
+        ///   array.
+        /// </exception>
+        public static T[,,]? Decode<T>(this IObjectEncoder encoder, EncodedObject[,,]? source) {
+            return (T[,,]?) encoder.Decode(typeof(T), source);
         }
-
 
     }
 
