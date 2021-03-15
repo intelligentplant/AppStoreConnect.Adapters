@@ -109,12 +109,14 @@ namespace DataCore.Adapter.Example {
                     Description = "Responds to a ping message with a pong message",
                     Inputs = new[] {
                         new ExtensionFeatureOperationParameterDescriptor() {
+                            VariantType = VariantType.ExtensionObject,
                             TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                             Description = "The ping message"
                         }
                     },
                     Outputs = new[] {
                         new ExtensionFeatureOperationParameterDescriptor() {
+                            VariantType = VariantType.ExtensionObject,
                             TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                             Description = "The resulting pong message"
                         }
