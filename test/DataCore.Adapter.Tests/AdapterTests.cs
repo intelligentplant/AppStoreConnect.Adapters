@@ -556,7 +556,7 @@ namespace DataCore.Adapter.Tests {
 
                 var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, ct).ConfigureAwait(false);
 
-                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.Name.Contains(nameof(PingPongExtension.PingInvoke)))?.OperationId;
+                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.OperationId.ToString().EndsWith("/Ping/"))?.OperationId;
                 if (operationId == null) {
                     Assert.Fail("Invoke operation should be available.");
                 }
