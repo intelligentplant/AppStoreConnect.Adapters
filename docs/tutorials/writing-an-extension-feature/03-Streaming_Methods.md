@@ -9,53 +9,53 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](02-Extension_Methods.md), we created a simple request-response operation for our extension feature. In this chapter, we will demonstrate another operation type: streaming methods. Streaming methods allow a caller to create a subscription on our feature and receive a stream of result objects back (using a `ChannelReader<T>` object). We keep on streaming results until either the feature decides to end the stream, or the caller cancels the subscription. This approach is also used in most standard adapter features.
 
+First, we will add a method to our `PingPongExtension` class that will process streaming requests:
+
+```csharp
+public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, PingMessage message, CancellationToken cancellationToken) {
+    if (message == null) {
+        throw new ArgumentNullException(nameof(message));
+    }
+
+    var result = Channel.CreateUnbounded<PongMessage>();
+
+    result.Writer.RunBackgroundOperation(async (ch, ct) => {
+        while (!ct.IsCancellationRequested) {
+            // Every second, we will return a new PongMessage
+            await Task.Delay(1000, ct);
+
+            var pongMessage = Ping(context, message);
+            await ch.WriteAsync(pongMessage, ct);
+        }
+    }, true, BackgroundTaskService, cancellationToken);
+
+    return Task.FromResult(result.Reader);
+}
+```
+
+Note that the method uses the `RunBackgroundOperation` extension method to periodically write pong messages into the result channel in a background task.
+
 To register our new operation, we will call the `BindStream` method in our `PingPongExtension` constructor:
 
 ```csharp
 public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
     // -- Existing BindInvoke call removed for brevity --
     
-    BindStream<PingPongExtension>(
-        // Handler
-        (ctx, req, ct) => {
-            // The handler delegate requires that we return a Task<ChannelReader<InvocationResponse>>.
-            var outChannel = Channel.CreateUnbounded<InvocationResponse>();
-
-            var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
-
-            // Start a background task that will write results into our channel whenever 
-            // we receive a new input.
-            outChannel.Writer.RunBackgroundOperation(async (ch, ct2) => {
-                while (!ct2.IsCancellationRequested) {
-                    // Every second, we will return a new PongMessage
-                    await Task.Delay(1000, ct2);
-
-                    var pongMessage = Ping(pingMessage);
-                    await ch.WriteAsync(new InvocationResponse() {
-                        Results = new[] { Encode(pongMessage) }
-                    }, ct2);
-                }
-            }, true, backgroundTaskService, ct);
-
-            // Return the reader portion of the channel.
-            return Task.FromResult(outChannel.Reader);
-        },
-        // Operation name
-        nameof(Ping),
-        // Description
-        "Responds to a ping message with a stream of pong messages",
-        // Input parameter descriptions
-        new[] {
+    BindStream<PingPongExtension, PingMessage, PongMessage>(
+        Ping,
+        description: "Responds to a ping message with a stream of pong messages",
+        inputParameters: new[] {
             new ExtensionFeatureOperationParameterDescriptor() {
                 Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
                 TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                 Description = "The ping message"
             }
         },
-        // Output parameter descriptions
-        new[] {
+        outputParameters: new[] {
             new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 1,
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
                 TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                 Description = "The pong message"
             }
@@ -91,21 +91,18 @@ var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensi
 var correlationId = Guid.NewGuid().ToString();
 var now = DateTime.UtcNow;
 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-var channel = await extensionFeature.Stream(
+var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
     context,
-    new InvocationRequest() {
-        OperationId = new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
-        Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-    },
+    new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
+    pingMessage,
     cancellationToken
 );
 
 Console.WriteLine();
-Console.WriteLine($"[INVOKE] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
+Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
 
-await foreach (var response in channel.ReadAllAsync(cancellationToken)) {
-    var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
-    Console.WriteLine($"[INVOKE] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
+await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
+    Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
 }
 ```
 

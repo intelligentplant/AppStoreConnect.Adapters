@@ -62,15 +62,12 @@ namespace MyAdapter {
                 var correlationId = Guid.NewGuid().ToString();
                 var now = DateTime.UtcNow;
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-                var response = await extensionFeature.Invoke(
+                var pongMessage = await extensionFeature.Invoke<PingMessage, PongMessage>(
                     context,
-                    new InvocationRequest() { 
-                        OperationId = new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
-                        Arguments = new [] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-                    },
+                    new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
+                    pingMessage,
                     cancellationToken
                 );
-                var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
 
                 Console.WriteLine();
                 Console.WriteLine($"[INVOKE] Ping: {correlationId} @ {now:HH:mm:ss} UTC");

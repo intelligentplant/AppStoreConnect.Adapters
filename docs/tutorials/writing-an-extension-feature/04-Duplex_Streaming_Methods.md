@@ -9,58 +9,51 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](03-Streaming_Methods.md), we implemented a server-to-client streaming operation that allowed us to asynchronously push values to a caller until they cancelled their subscription. In this chapter, we will implement a bidirectional (or duplex) streaming operation, allowing a caller to stream values to the extension feature and also allowing the feature to stream values back to the caller. Just as a streaming response uses a `ChannelReader<T>` to return results to the caller, a `ChannelReader<T>` is also used to stream inputs to the operation.
 
+First, we will add a method to our `PingPongExtension` class that will process duplex streaming requests:
+
+```csharp
+public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
+    if (messages == null) {
+        throw new ArgumentNullException(nameof(messages));
+    }
+
+    var result = Channel.CreateUnbounded<PongMessage>();
+
+    result.Writer.RunBackgroundOperation(async (ch, ct) => {
+        await foreach (var pingMessage in messages.ReadAllAsync(ct)) {
+            if (pingMessage == null) {
+                continue;
+            }
+            var pongMessage = Ping(context, pingMessage);
+            await ch.WriteAsync(pongMessage, ct);
+        }
+    }, true, BackgroundTaskService, cancellationToken);
+
+    return Task.FromResult(result.Reader);
+}
+```
+
 To register our new operation, we will call the `BindDuplexStream` method in our `PingPongExtension` constructor:
 
 ```csharp
 public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
     // -- Existing BindInvoke and BindStream calls removed for brevity --
 
-    BindDuplexStream<PingPongExtension>(
-        // Handler
-        (ctx, req, inChannel, ct) => {
-            // The handler delegate requires that we return a Task<ChannelReader<InvocationResponse>>.
-            var outChannel = Channel.CreateUnbounded<InvocationResponse>();
-
-            // Start a background task that will write results into our channel whenever 
-            // we receive a new input.
-            outChannel.Writer.RunBackgroundOperation(async (ch, ct2) => {
-                // First, we process the ping message in the original request.
-                var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
-                var pongMessage = Ping(pingMessage);
-                await ch.WriteAsync(new InvocationResponse() {
-                    Results = new[] { Encode(pongMessage) }
-                }, ct2);
-
-                // Now, we process the additional ping messages that are streamed into the 
-                // inChannel.
-                await foreach (var update in inChannel.ReadAllAsync(ct2)) {
-                    pingMessage = Decode<PingMessage>(update.Arguments.FirstOrDefault());
-                    pongMessage = Ping(pingMessage);
-                    await ch.WriteAsync(new InvocationResponse() {
-                        Results = new[] { Encode(pongMessage) }
-                    }, ct2);
-                }
-            }, true, backgroundTaskService, ct);
-
-            // Return the reader portion of the channel.
-            return Task.FromResult(outChannel.Reader);
-        },
-        // Operation name
-        nameof(Ping),
-        // Description
-        "Responds to each ping message in the incoming stream with a pong message",
-        // Input parameter descriptions
-        new[] {
+    BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(
+        Ping,
+        description: "Responds to each ping message in the incoming stream with a pong message",
+        inputParameters: new[] {
             new ExtensionFeatureOperationParameterDescriptor() {
                 Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
                 TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                 Description = "The ping message"
             }
         },
-        // Output parameter descriptions
-        new[] {
+        outputParameters: new[] {
             new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 1,
+                Ordinal = 0,
+                VariantType = VariantType.ExtensionObject,
                 TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                 Description = "The pong message"
             }
@@ -98,20 +91,16 @@ var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensi
 var correlationId = Guid.NewGuid().ToString();
 var now = DateTime.UtcNow;
 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-var pingMessageStream = Channel.CreateUnbounded<InvocationStreamItem>();
+var pingMessageStream = Channel.CreateUnbounded<PingMessage>();
 
-var channel = await extensionFeature.DuplexStream(
+var pongMessageStream = await extensionFeature.DuplexStream<PingMessage, PongMessage>(
     context,
-    new InvocationRequest() {
-        OperationId = new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
-        Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-    },
+    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
     pingMessageStream,
     cancellationToken
 );
 
 Console.WriteLine();
-Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
 
 pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
     var rnd = new Random();
@@ -124,14 +113,11 @@ pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
         var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
 
         Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
-        await ch.WriteAsync(new InvocationStreamItem() { 
-            Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-        }, ct);
+        await ch.WriteAsync(pingMessage, ct);
     }
 }, true, cancellationToken: cancellationToken);
 
-await foreach (var response in channel.ReadAllAsync(cancellationToken)) {
-    var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
+await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
 }
 ```

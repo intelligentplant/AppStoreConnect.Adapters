@@ -12,6 +12,7 @@ In the [previous chapter](04-Duplex_Streaming_Methods.md), we implemented a dupl
 Our new extension will be a simple temperature converter, with operations for converting from degrees Celsius to degrees Fahrenheit, and vice versa. To get started, we will create a new file called `ITemperatureConverter.cs` and add our extension feature definition to the file:
 
 ```csharp
+using DataCore.Adapter;
 using DataCore.Adapter.Extensions;
 
 namespace MyAdapter {
@@ -23,14 +24,67 @@ namespace MyAdapter {
     )]
     public interface ITemperatureConverter : IAdapterExtensionFeature {
 
-        double CtoF(double degC);
+        [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetCtoFMetadata))]
+        double CtoF(IAdapterCallContext context, double degC);
 
-        double FtoC(double degF);
+        [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetFtoCMetadata))]
+        double FtoC(IAdapterCallContext context, double degF);
+
+    }
+
+
+    public static class TemperatureConverterMetadata { 
+    
+        public static ExtensionFeatureOperationDescriptorPartial GetCtoFMetadata() {
+            return new ExtensionFeatureOperationDescriptorPartial() { 
+                Description = "Converts a temperature in Celsius to Fahrenheit",
+                Inputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = DataCore.Adapter.Common.VariantType.Double,
+                        Description = "The temperature in Celsius."
+                    }
+                },
+                Outputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = DataCore.Adapter.Common.VariantType.Double,
+                        Description = "The temperature in Fahrenheit."
+                    }
+                }
+            };
+        }
+
+
+        public static ExtensionFeatureOperationDescriptorPartial GetFtoCMetadata() {
+            return new ExtensionFeatureOperationDescriptorPartial() {
+                Description = "Converts a temperature in Fahrenheit to Celsius",
+                Inputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = DataCore.Adapter.Common.VariantType.Double,
+                        Description = "The temperature in Fahrenheit."
+                    }
+                },
+                Outputs = new[] {
+                    new ExtensionFeatureOperationParameterDescriptor() {
+                        Ordinal = 0,
+                        VariantType = DataCore.Adapter.Common.VariantType.Double,
+                        Description = "The temperature in Celsius."
+                    }
+                }
+            };
+        }
 
     }
 
 }
 ```
+
+Note that, in addition to the interface itself, we have included a class that returns metadata about the extension feature's operations, and we have annotated our interface methods with `[ExtensionFeatureOperation]` attributes. These attributes allow us to define provider methods for retrieving metadata about the operations so that we do not have to provide this information when we bind the operations.
+
+Note as well that, when defining the metadata about the input and ourput parameters, we do not include a `TypeId`, and instead just specify that the `VariantType` of the parameters is `DataCore.Adapter.Common.VariantType.Double`. This is because `Variant` values can automatically be converted to or from `double` without needing to encode the value inside an `EncodedObject` instance.
+
 Next, we will update our `PingPongExtension` class to implement our new interface:
 
 ```csharp
@@ -43,11 +97,11 @@ public class PingPongExtension : AdapterExtensionFeature, ITemperatureConverter 
 
     // -- Existing implementation removed for brevity --
 
-    public double CtoF(double degC) {
+    public double CtoF(IAdapterCallContext context, double degC) {
         return (degC * 1.8) + 32;
     }
 
-    public double FtoC(double degF) {
+    public double FtoC(IAdapterCallContext context, double degF) {
         return (degF - 32) / 1.8;
     }
 }
@@ -60,62 +114,14 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
     // -- Existing bindings removed for brevity --
 
     // ITemperatureConverter bindings
-
-    BindInvoke<ITemperatureConverter>(
-        (ctx, req, ct) => {
-            var inTemp = Decode<double>(req.Arguments.FirstOrDefault());
-            var outTemp = CtoF(inTemp);
-            return Task.FromResult(new InvocationResponse() { 
-                Results = new[] { Encode(outTemp) }
-            });
-        },
-        nameof(CtoF),
-        "Converts a temperature in Celsius to Fahrenheit",
-        new [] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                TypeId = TypeLibrary.GetTypeId<double>(),
-                Description = "The temperature in Celsius."
-            }
-        },
-        new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                TypeId = TypeLibrary.GetTypeId<double>(),
-                Description = "The temperature in Fahrenheit."
-            }
-        }
-    );
-
-    BindInvoke<ITemperatureConverter>(
-        (ctx, req, ct) => {
-            var inTemp = Decode<double>(req.Arguments.FirstOrDefault());
-            var outTemp = FtoC(inTemp);
-            return Task.FromResult(new InvocationResponse() {
-                Results = new[] { Encode(outTemp) }
-            });
-        },
-        nameof(FtoC),
-        "Converts a temperature in Fahrenheit to Celsius",
-        new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                TypeId = TypeLibrary.GetTypeId<double>(),
-                Description = "The temperature in Fahrenheit."
-            }
-        },
-        new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                TypeId = TypeLibrary.GetTypeId<double>(),
-                Description = "The temperature in Celsius."
-            }
-        }
-    );
+    BindInvoke<ITemperatureConverter, double, double>(CtoF);
+    BindInvoke<ITemperatureConverter, double, double>(FtoC);
 }
 ```
 
-Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. If you run and compile the program, you will see that the new extension and its registered operations are now visible in the adapter summary:
+Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. Note also that, because we have defined our operation metadata via `[ExtensionFeatureOperation]` annotations on our interface methods, our binding call is much mor concise!
+
+If you run and compile the program, you will see that the new extension and its registered operations are now visible in the adapter summary:
 
 ```
 [example]
@@ -152,28 +158,22 @@ var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensi
 Console.WriteLine();
 
 var degC = 40d;
-var response = await extensionFeature.Invoke(
+var degF = await extensionFeature.Invoke<double, double>(
     context,
-    new InvocationRequest() { 
-        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
-        Arguments = new [] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degC) }
-    },
+    new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
+    degC,
     cancellationToken
 );
-var degF = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
 Console.WriteLine($"{degC:0.#} Celsius is {degF:0.#} Fahrenheit");
 
 degF = 60d;
-response = await extensionFeature.Invoke(
+degC = await extensionFeature.Invoke<double, double>(
     context,
-    new InvocationRequest() {
-        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
-        Arguments = new[] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degF) }
-    },
+    new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
+    degF,
     cancellationToken
 );
-degC = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
 Console.WriteLine($"{degF:0.#} Fahrenheit is {degC:0.#} Celsius");
 ```

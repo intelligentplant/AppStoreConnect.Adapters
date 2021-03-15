@@ -24,31 +24,21 @@ namespace MyAdapter {
         public const string ExtensionUri = "tutorial/ping-pong/";
 
         public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
-            BindInvoke<PingPongExtension>(
-                // Handler
-                (ctx, req, ct) => {
-                    var pingMessage = this.Decode<PingMessage>(req.Arguments.FirstOrDefault());
-                    var pongMessage = Ping(pingMessage);
-                    return Task.FromResult(new InvocationResponse() {
-                        Results = new[] { this.Encode(pongMessage) }
-                    });
-                }, 
-                // Operation name
-                nameof(Ping), 
-                // Description
-                "Responds to a ping message with a pong message", 
-                // Input parameter descriptions
-                new [] {
+            BindInvoke<PingPongExtension, PingMessage, PongMessage>(
+                Ping,
+                description: "Responds to a ping message with a pong message",
+                inputParameters: new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
                         Ordinal = 0,
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PingMessage>(),
                         Description = "The ping message"
                     }
                 },
-                // Output parameter descriptions
-                new[] {
+                outputParameters: new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
                         Ordinal = 0,
+                        VariantType = VariantType.ExtensionObject,
                         TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                         Description = "The pong message"
                     }
@@ -57,7 +47,7 @@ namespace MyAdapter {
         }
 
 
-        public PongMessage Ping(PingMessage message) {
+        public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }

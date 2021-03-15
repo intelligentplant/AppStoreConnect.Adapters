@@ -62,20 +62,16 @@ namespace MyAdapter {
                 var correlationId = Guid.NewGuid().ToString();
                 var now = DateTime.UtcNow;
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-                var pingMessageStream = Channel.CreateUnbounded<InvocationStreamItem>();
+                var pingMessageStream = Channel.CreateUnbounded<PingMessage>();
 
-                var channel = await extensionFeature.DuplexStream(
+                var pongMessageStream = await extensionFeature.DuplexStream<PingMessage, PongMessage>(
                     context,
-                    new InvocationRequest() {
-                        OperationId = new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
-                        Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-                    },
+                    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
                     pingMessageStream,
                     cancellationToken
                 );
 
                 Console.WriteLine();
-                Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
 
                 pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
                     var rnd = new Random();
@@ -88,17 +84,13 @@ namespace MyAdapter {
                         var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
 
                         Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
-                        await ch.WriteAsync(new InvocationStreamItem() { 
-                            Arguments = new[] { EncodedObject.Create(pingMessage, DataCore.Adapter.Json.JsonObjectEncoder.Default) }
-                        }, ct);
+                        await ch.WriteAsync(pingMessage, ct);
                     }
                 }, true, cancellationToken: cancellationToken);
 
-                await foreach (var response in channel.ReadAllAsync(cancellationToken)) {
-                    var pongMessage = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<PongMessage>(response.Results.FirstOrDefault());
+                await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
                     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
                 }
-
             }
         }
 

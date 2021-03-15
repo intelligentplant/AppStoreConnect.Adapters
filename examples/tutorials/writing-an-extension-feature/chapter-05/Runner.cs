@@ -62,28 +62,22 @@ namespace MyAdapter {
                 Console.WriteLine();
 
                 var degC = 40d;
-                var response = await extensionFeature.Invoke(
+                var degF = await extensionFeature.Invoke<double, double>(
                     context,
-                    new InvocationRequest() { 
-                        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
-                        Arguments = new [] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degC) }
-                    },
+                    new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
+                    degC,
                     cancellationToken
                 );
-                var degF = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
                 Console.WriteLine($"{degC:0.#} Celsius is {degF:0.#} Fahrenheit");
 
                 degF = 60d;
-                response = await extensionFeature.Invoke(
+                degC = await extensionFeature.Invoke<double, double>(
                     context,
-                    new InvocationRequest() {
-                        OperationId = new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
-                        Arguments = new[] { DataCore.Adapter.Json.JsonObjectEncoder.Default.Encode(degF) }
-                    },
+                    new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
+                    degF,
                     cancellationToken
                 );
-                degC = DataCore.Adapter.Json.JsonObjectEncoder.Default.Decode<double>(response.Results.FirstOrDefault());
 
                 Console.WriteLine($"{degF:0.#} Fahrenheit is {degC:0.#} Celsius");
             }
