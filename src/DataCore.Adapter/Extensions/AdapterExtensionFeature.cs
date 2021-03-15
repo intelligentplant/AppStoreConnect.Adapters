@@ -311,8 +311,8 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
-        ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 
@@ -355,8 +355,8 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
-        ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 
@@ -404,8 +404,8 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="ConvertToVariant{T}"/> method to 
-        ///   simplify creation of values if your extension method returns <see cref="Variant"/> 
+        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
+        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
         ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
         /// </para>
         /// 

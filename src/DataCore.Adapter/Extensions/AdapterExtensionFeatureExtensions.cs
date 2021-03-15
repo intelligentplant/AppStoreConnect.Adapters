@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Extensions {
         #region [ Helper Methods ]
 
         /// <summary>
-        /// Converts the specified value to a <see cref="Variant"/>, encoding it as an <see cref="EncodedObject"/> 
+        /// Converts the specified value to a <see cref="Common.Variant"/>, encoding it as an <see cref="EncodedObject"/> 
         /// if it does not map to a standard <see cref="VariantType"/>.
         /// </summary>
         /// <typeparam name="T">
@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">
-        ///   <typeparamref name="T"/> is not directly assignable to <see cref="Variant"/>, and the 
+        ///   <typeparamref name="T"/> is not directly assignable to <see cref="Common.Variant"/>, and the 
         ///   <paramref name="feature"/> does not define an <see cref="IObjectEncoder"/> that is 
         ///   capable of encoding the object.
         /// </exception>
@@ -66,10 +66,10 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
-        /// Converts the specified <see cref="Variant"/> to an instance of <typeparamref name="T"/>.
+        /// Converts the specified <see cref="Common.Variant"/> to an instance of <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">
-        ///   The type to convert the <see cref="Variant"/> to.
+        ///   The type to convert the <see cref="Common.Variant"/> to.
         /// </typeparam>
         /// <param name="feature">
         ///   The <see cref="IAdapterExtensionFeature"/>.
