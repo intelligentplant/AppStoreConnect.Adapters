@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Extensions {
         /// The <see cref="IObjectEncoder"/> instances to use when encoding or decoding <see cref="EncodedObject"/> 
         /// instances.
         /// </summary>
-        private readonly IEnumerable<IObjectEncoder> _encoders;
+        public IEnumerable<IObjectEncoder> Encoders { get; }
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.Extensions {
         /// </param>
         protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService, IEnumerable<IObjectEncoder> encoders) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            _encoders = encoders?.ToArray() ?? Array.Empty<IObjectEncoder>();
+            Encoders = encoders?.ToArray() ?? Array.Empty<IObjectEncoder>();
 
             foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
                 // Create auto-binding for GetDescriptor method
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Extensions {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() { 
                         Results = new Variant[] {
-                            ConvertToVariant(desc)!
+                            this.ConvertToVariant(desc)!
                         }
                     };
                 };
@@ -105,84 +105,12 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() { 
-                        Results = ops.Select(x => ConvertToVariant(x)!).ToArray()
+                        Results = new[] {
+                            this.ConvertToVariant(ops.ToArray())
+                        }
                     };
                 };
             }
-        }
-
-
-        /// <summary>
-        /// Converts the specified value to a <see cref="Common.Variant"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The type of the object to convert.
-        /// </typeparam>
-        /// <param name="value">
-        ///   The value to convert.
-        /// </param>
-        /// <returns>
-        ///   The converted.
-        /// </returns>
-        protected Variant ConvertToVariant<T>(T? value) {
-            var targetType = typeof(T);
-            if (targetType == typeof(Variant) || Variant.TryGetVariantType(targetType, out var _)) {
-                return Variant.FromValue(value);
-            }
-
-            if (targetType.IsArray) {
-                var elementType = targetType.GetElementType();
-                if (elementType == typeof(Variant) || Variant.TryGetVariantType(elementType, out var _)) {
-                    return Variant.FromValue(value);
-                }
-
-                var encoder = _encoders.FirstOrDefault(x => x.CanEncode(elementType));
-                if (encoder == null) {
-                    return Variant.Null;
-                }
-
-                return new Variant(encoder.Encode((Array?) (object?) value));
-            }
-            else {
-                var encoder = _encoders.FirstOrDefault(x => x.CanEncode(typeof(T)));
-                if (encoder == null) {
-                    return Variant.Null;
-                }
-
-                return new Variant(EncodedObject.Create(value, encoder));
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the specified <see cref="Common.Variant"/> to an instance of <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The type to convert the <see cref="Common.Variant"/> to.
-        /// </typeparam>
-        /// <param name="value">
-        ///   The object to convert.
-        /// </param>
-        /// <returns>
-        ///   The converted value.
-        /// </returns>
-        protected T? ConvertFromVariant<T>(Variant value) {
-            var targetType = typeof(T);
-            IObjectEncoder? encoder;
-
-            if (targetType.IsArray) {
-                var elementType = targetType.GetElementType();
-                encoder = _encoders.FirstOrDefault(x => x.CanDecode(elementType));
-            }
-            else {
-                encoder = _encoders.FirstOrDefault(x => x.CanDecode(typeof(T)));
-            }
-
-            if (encoder == null) {
-                return default;
-            }
-
-            return encoder.Decode<T>(value);
         }
 
 

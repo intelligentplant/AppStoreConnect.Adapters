@@ -488,11 +488,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var invokeResult = await feature.Invoke(context, new InvocationRequest() { 
-                    OperationId = operationId
-                }, ct).ConfigureAwait(false);
-
-                var operationsFromInvoke = invokeResult.Results.Select(x => encoder.Decode<ExtensionFeatureOperationDescriptor>(x)).ToArray();
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -524,11 +520,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
-                    OperationId = operationId
-                }, ct).ConfigureAwait(false);
-
-                var operationsFromInvoke = invokeResult.Results.Select(x => encoder.Decode<ExtensionFeatureOperationDescriptor>(x)).ToArray();
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -566,12 +558,7 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var invokeResult = await feature.Invoke(context, new InvocationRequest() { 
-                    OperationId = operationId,
-                    Arguments = new Variant[] { encoder.Encode(pingMessage) }
-                }, ct).ConfigureAwait(false);
-
-                var pongMessage = encoder.Decode<PongMessage>(invokeResult.Results[0]);
+                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
@@ -606,19 +593,14 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var reader = await feature.Stream(context, new InvocationRequest() {
-                    OperationId = operationId,
-                    Arguments = new Variant[] { encoder.Encode(pingMessage) }
-                }, ct).ConfigureAwait(false);
-
-                var streamResult = await reader.ReadAsync(ct).ConfigureAwait(false);
-                var pongMessage = encoder.Decode<PongMessage>(streamResult.Results[0]);
+                var pongChannel = await feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
+                var pongMessage = await pongChannel.ReadAsync(ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
 
                 // Should be no more values in the stream
-                Assert.IsFalse(await reader.WaitToReadAsync(ct));
+                Assert.IsFalse(await pongChannel.WaitToReadAsync(ct));
             });
         }
 
@@ -653,23 +635,12 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var reader = await feature.DuplexStream(
-                    context,
-                    new InvocationRequest() { 
-                        OperationId = operationId
-                    },
-                    pingMessages.Select(x => new InvocationStreamItem() {
-                        Arguments = new Variant[] { encoder.Encode(x) }
-                    }).PublishToChannel(),
-                    ct
-                );
+                var reader = await feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel(), ct).ConfigureAwait(false);
 
                 var messagesRead = 0;
 
                 while (await reader.WaitToReadAsync(ct)) {
-                    while (reader.TryRead(out var streamResult)) {
-                        var pongMessage = encoder.Decode<PongMessage>(streamResult.Results[0]);
-
+                    while (reader.TryRead(out var pongMessage)) {
                         ++messagesRead;
                         if (messagesRead > pingMessages.Count) {
                             Assert.Fail("Incorrect number of pong messages received.");
@@ -724,14 +695,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 };
 
-                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
-                    OperationId = operationId,
-                    Arguments = new Variant[] { 
-                        encoder.Encode(pingMessages)
-                    }
-                }, ct).ConfigureAwait(false);
-
-                var pongMessages = encoder.Decode<PongMessage[]>(invokeResult.Results[0]);
+                var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
 
                 Assert.AreEqual(pingMessages.Length, pongMessages.Length);
 
@@ -798,14 +762,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 };
 
-                var invokeResult = await feature.Invoke(context, new InvocationRequest() {
-                    OperationId = operationId,
-                    Arguments = new Variant[] {
-                        new Variant(encoder.Encode(pingMessages))
-                    }
-                }, ct).ConfigureAwait(false);
-
-                var pongMessages = encoder.Decode<PongMessage[,]>(invokeResult.Results[0]);
+                var pongMessages = await feature.Invoke<PingMessage[,], PongMessage[,]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
 
                 Assert.AreEqual(pingMessages.Rank, pongMessages.Rank);
 

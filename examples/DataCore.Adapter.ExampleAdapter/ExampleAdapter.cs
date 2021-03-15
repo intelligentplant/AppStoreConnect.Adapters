@@ -84,11 +84,11 @@ namespace DataCore.Adapter.Example {
             public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
                 BindInvoke<IExampleExtensionFeature>(
                     (ctx, req, ct) => {
-                        var ping = ConvertFromVariant<PingMessage>(req.Arguments[0]);
+                        var ping = this.ConvertFromVariant<PingMessage>(req.Arguments[0]);
                         var pong = Ping(ping);
 
                         return Task.FromResult(new InvocationResponse() { 
-                            Results = new Variant[] { ConvertToVariant(pong) }
+                            Results = new Variant[] { this.ConvertToVariant(pong) }
                         });
                     }, 
                     descriptorProvider: MethodInfoUtil.GetMethodInfo<PingMessage, PongMessage>(Ping)

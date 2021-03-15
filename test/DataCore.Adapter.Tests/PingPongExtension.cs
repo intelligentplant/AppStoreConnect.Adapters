@@ -160,7 +160,7 @@ namespace DataCore.Adapter.Tests {
         ) {
             return Task.FromResult(new InvocationResponse() { 
                 Results = new Variant[] {
-                    ConvertToVariant("Hello, world!")
+                    this.ConvertToVariant("Hello, world!")
                 }
             });
         }
