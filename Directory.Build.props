@@ -10,7 +10,8 @@
   <Import Project=".\build\Dependencies.props"/>
   
   <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant Ltd.</Company>
     <PackagePrefix>IntelligentPlant.AppStoreConnect</PackagePrefix>

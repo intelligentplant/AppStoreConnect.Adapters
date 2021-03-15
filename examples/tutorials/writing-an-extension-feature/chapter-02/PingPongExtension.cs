@@ -27,10 +27,10 @@ namespace MyAdapter {
             BindInvoke<PingPongExtension>(
                 // Handler
                 (ctx, req, ct) => {
-                    var pingMessage = Decode<PingMessage>(req.Arguments.FirstOrDefault());
+                    var pingMessage = this.Decode<PingMessage>(req.Arguments.FirstOrDefault());
                     var pongMessage = Ping(pingMessage);
                     return Task.FromResult(new InvocationResponse() {
-                        Results = new[] { Encode(pongMessage) }
+                        Results = new[] { this.Encode(pongMessage) }
                     });
                 }, 
                 // Operation name
@@ -48,7 +48,7 @@ namespace MyAdapter {
                 // Output parameter descriptions
                 new[] {
                     new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 1,
+                        Ordinal = 0,
                         TypeId = TypeLibrary.GetTypeId<PongMessage>(),
                         Description = "The pong message"
                     }
