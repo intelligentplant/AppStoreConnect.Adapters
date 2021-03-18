@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Json {
         /// Default <see cref="JsonObjectEncoder"/> instance. You can use this instance if you do 
         /// not need to modify default <see cref="JsonSerializerOptions"/> settings.
         /// </summary>
-        public static JsonObjectEncoder Default { get; } = new JsonObjectEncoder();
+        public static IObjectEncoder Default { get; } = new JsonObjectEncoder();
 
         /// <inheritdoc/>
         public override string EncodingType => "json";
