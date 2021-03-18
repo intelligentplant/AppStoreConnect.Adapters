@@ -82,23 +82,16 @@ namespace DataCore.Adapter.Example {
         internal class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
             public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
-                BindInvoke<IExampleExtensionFeature>(
-                    (ctx, req, ct) => {
-                        var ping = this.ConvertFromVariant<PingMessage>(req.Arguments[0]);
-                        var pong = Ping(ping);
-
-                        return Task.FromResult(new InvocationResponse() { 
-                            Results = new Variant[] { this.ConvertToVariant(pong) }
-                        });
-                    }, 
-                    descriptorProvider: MethodInfoUtil.GetMethodInfo<PingMessage, PongMessage>(Ping)
-                );
+                BindInvoke<IExampleExtensionFeature, string, InvocationResponse>(Ping);
             }
 
 
-            public PongMessage Ping(PingMessage ping) {
-                return new PongMessage() { 
-                    CorrelationId = ping.CorrelationId
+            public InvocationResponse Ping(IAdapterCallContext context, string correlationId) {
+                return new InvocationResponse() { 
+                    Results = new Variant[] {
+                        correlationId,
+                        DateTime.UtcNow
+                    }
                 };
             }
 
@@ -109,16 +102,21 @@ namespace DataCore.Adapter.Example {
                     Description = "Responds to a ping message with a pong message",
                     Inputs = new[] {
                         new ExtensionFeatureOperationParameterDescriptor() {
-                            VariantType = VariantType.ExtensionObject,
-                            TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                            Description = "The ping message"
+                            Ordinal = 0,
+                            VariantType = VariantType.String,
+                            Description = "The correlation ID for the ping message"
                         }
                     },
                     Outputs = new[] {
                         new ExtensionFeatureOperationParameterDescriptor() {
-                            VariantType = VariantType.ExtensionObject,
-                            TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                            Description = "The resulting pong message"
+                            Ordinal = 0,
+                            VariantType = VariantType.String,
+                            Description = "The correlation ID for the pong message"
+                        },
+                        new ExtensionFeatureOperationParameterDescriptor() {
+                            Ordinal = 1,
+                            VariantType = VariantType.DateTime,
+                            Description = "The UTC time that the ping request was processed at"
                         }
                     }
                 };
