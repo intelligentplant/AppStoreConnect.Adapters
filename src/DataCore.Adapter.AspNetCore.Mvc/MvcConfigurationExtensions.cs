@@ -29,9 +29,9 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
 #if NETSTANDARD2_0
-            builder.AddJsonOptions(options => options.SerializerSettings.Converters.AddDataCoreAdapterConverters());
+            builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
 #else
-            builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.AddDataCoreAdapterConverters());
+            builder.AddJsonOptions(options => options.JsonSerializerOptions.AddDataCoreAdapterConverters());
 #endif
 
             return builder;

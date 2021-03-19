@@ -45,11 +45,11 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 #if NETSTANDARD2_0
             return builder.AddJsonProtocol(options => {
-                options.PayloadSerializerSettings.Converters.AddDataCoreAdapterConverters();
+                options.PayloadSerializerSettings.AddDataCoreAdapterConverters();
             });
 #else
             return builder.AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.Converters.AddDataCoreAdapterConverters();
+                options.PayloadSerializerOptions.AddDataCoreAdapterConverters();
             });
 #endif
         }
