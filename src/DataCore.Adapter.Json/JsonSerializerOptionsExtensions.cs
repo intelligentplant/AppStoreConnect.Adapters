@@ -39,12 +39,36 @@ namespace DataCore.Adapter.Json {
         /// <summary>
         /// Registers adapter-related converters.
         /// </summary>
-        /// <param name="converters">
+        /// <param name="options">
         ///   The JSON serialization options.
         /// </param>
+        public static void AddDataCoreAdapterConverters(this JsonSerializerOptions? options) {
+            if (options == null) {
+                return;
+            }
+
+            options.Converters.AddDataCoreAdapterConverters();
+        }
+
+
+        /// <summary>
+        /// Registers adapter-related converters.
+        /// </summary>
+        /// <param name="converters">
+        ///   The JSON converter collection.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="converters"/> is <see langword="null"/>.
+        /// </exception>
         public static void AddDataCoreAdapterConverters(this IList<JsonConverter> converters) {
             if (converters == null) {
                 throw new ArgumentNullException(nameof(converters));
+            }
+
+            // Add a string enum converter if one has not already been registered.
+
+            if (!converters.OfType<JsonStringEnumConverter>().Any()) {
+                converters.Add(new JsonStringEnumConverter());
             }
 
             foreach (var item in s_converters) {

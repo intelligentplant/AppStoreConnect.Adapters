@@ -16,25 +16,10 @@ namespace DataCore.Adapter.Example {
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
         [ExtensionFeatureOperation(typeof(ExampleAdapter.ExampleExtensionImpl), nameof(ExampleAdapter.ExampleExtensionImpl.GetPingDescriptor))]
-        PongMessage Ping(
-            PingMessage ping
+        InvocationResponse Ping(
+            IAdapterCallContext context,
+            string correlationId
         );
-
-    }
-
-
-    [ExtensionFeatureDataType(typeof(IExampleExtensionFeature), "ping-message")]
-    public class PingMessage {
-
-        public Guid CorrelationId { get; set; } = Guid.NewGuid();
-
-    }
-
-
-    [ExtensionFeatureDataType(typeof(IExampleExtensionFeature), "pong-message")]
-    public class PongMessage {
-
-        public Guid CorrelationId { get; set; } = Guid.NewGuid();
 
     }
 

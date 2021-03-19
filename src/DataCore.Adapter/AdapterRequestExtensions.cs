@@ -10,7 +10,7 @@ namespace DataCore.Adapter {
     public static class AdapterRequestExtensions {
 
         /// <summary>
-        /// Selects a page of items based on the paging settings in a request
+        /// Selects a page of items based on the paging settings in a request.
         /// </summary>
         /// <param name="items">
         ///   The items to select from.
@@ -39,7 +39,51 @@ namespace DataCore.Adapter {
                 return items;
             }
 
-            return items.Skip(request.PageSize * (request.Page - 1)).Take(request.PageSize);
+            return items.SelectPage(request.PageSize, request.Page);
+        }
+
+
+        /// <summary>
+        /// Selects a page of items.
+        /// </summary>
+        /// <param name="items">
+        ///   The items to select from.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size.
+        /// </param>
+        /// <param name="page">
+        ///   The page number.
+        /// </param>
+        /// <returns>
+        ///   The selected items.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="items"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   If <paramref name="pageSize"/> is less than one, a page size of one will be used.
+        /// </para>
+        /// 
+        /// <para>
+        ///   If <paramref name="page"/> is less than one, the first page of items will be selected.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static IEnumerable<T> SelectPage<T>(this IOrderedEnumerable<T> items, int pageSize, int page) {
+            if (items == null) {
+                throw new ArgumentNullException(nameof(items));
+            }
+            if (pageSize < 1) {
+                pageSize = 1;
+            }
+            if (page < 1) {
+                page = 1;
+            }
+
+            return items.Skip(pageSize * (page - 1)).Take(pageSize);
         }
 
     }

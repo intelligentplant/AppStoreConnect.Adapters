@@ -97,7 +97,11 @@ namespace DataCore.Adapter.Tags {
                 return tags;
             }
 
-            return tags.Where(x => x.MatchesFilter(filter)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(filter);
+            return tags
+                .Where(x => x.MatchesFilter(filter))
+                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .SelectPage(filter)
+                .Select(x => filter.ResultFields == TagDefinitionFields.All ? x : x.Clone(filter.ResultFields));
         }
 
 

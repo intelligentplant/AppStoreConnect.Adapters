@@ -21,10 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
     public class SnapshotTagValuePush : SubscriptionManager<SnapshotTagValuePushOptions, TagIdentifier, TagValueQueryResult, TagValueSubscriptionChannel>, ISnapshotTagValuePush {
 
         /// <summary>
-        /// Holds the current values for subscribed tags.
+        /// Holds the current values for subscribed tags indexed by tag ID.
         /// </summary>
         private readonly ConcurrentDictionary<string, TagValueQueryResult> _currentValueByTagId = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
-
 
         /// <summary>
         /// Channel that is used to publish changes to subscribed topics.
@@ -247,6 +246,16 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(message));
             }
 
+            // If we wanted to ensure that we only accepted values for tags with subscribers, we
+            // could uncomment the following...
+
+            //if (!Options.KeepCurrentValuesForUnsubscribedTags) {
+            //    var identifier = new TagIdentifier(message.TagId, message.TagName);
+            //    if (!_subscriberCount.TryGetValue(identifier, out var count) || count == 0) {
+            //        return new ValueTask<bool>(false);
+            //    }
+            //}
+
             // Add the value
             var latestValue = _currentValueByTagId.AddOrUpdate(
                 message.TagId,
@@ -428,9 +437,11 @@ namespace DataCore.Adapter.RealTimeData {
                 await Options.OnTagSubscriptionsRemoved.Invoke(tags, cancellationToken).ConfigureAwait(false);
             }
 
-            // Remove current value if we are caching it.
-            foreach (var tag in tags) {
-                _currentValueByTagId.TryRemove(tag.Id, out var _);
+            if (!Options.KeepCurrentValuesForUnsubscribedTags) {
+                // Remove current value if we are caching it.
+                foreach (var tag in tags) {
+                    _currentValueByTagId.TryRemove(tag.Id, out var _);
+                }
             }
         }
 
@@ -545,6 +556,62 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// A method compatible with <see cref="IReadSnapshotTagValues.ReadSnapshotTagValues"/> 
+        /// that can be used when the <see cref="SnapshotTagValuePush"/> cache is being used to 
+        /// satisfy snapshot tag value polling requests for an adapter.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   The data query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will complete once the request has completed.
+        /// </returns>
+        /// <remarks>
+        ///   When <see cref="SnapshotTagValuePushOptions.KeepCurrentValuesForUnsubscribedTags"/> 
+        ///   is <see langword="false"/>, <see cref="ReadSnapshotTagValues"/> will only return 
+        ///   values for tags that have subscribers.
+        /// </remarks>
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var tags = request.Tags?.ToArray() ?? Array.Empty<string>();
+            if (tags == null) {
+                return Task.FromResult(Array.Empty<TagValueQueryResult>().PublishToChannel());
+            }
+
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagIdentifiers = await ResolveTags(context, tags, ct).ConfigureAwait(false);
+                foreach (var item in tagIdentifiers) {
+                    if (!_currentValueByTagId.TryGetValue(item.Id, out var val)) {
+                        continue;
+                    }
+
+                    await ch.WriteAsync(val, ct).ConfigureAwait(false);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return Task.FromResult(result.Reader);
+        }
+
+
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
@@ -605,6 +672,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// </para>
         /// </remarks>
         public Func<TagIdentifier, TagIdentifier, bool>? IsTopicMatch { get; set; }
+
+        /// <summary>
+        /// When <see langword="true"/>, the cached current value for a tag will be kept even if 
+        /// there are no subscribers for that tag.
+        /// </summary>
+        public bool KeepCurrentValuesForUnsubscribedTags { get; set; }
 
     }
 
