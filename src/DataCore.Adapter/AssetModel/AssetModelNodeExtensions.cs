@@ -77,6 +77,38 @@ namespace DataCore.Adapter.AssetModel {
             return nodes.Where(x => x.MatchesFilter(filter)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(filter);
         }
 
+
+        /// <summary>
+        /// Applies filter terms to the specified asset model nodes and selects a page of results.
+        /// </summary>
+        /// <param name="nodes">
+        ///   The nodes to filter and select.
+        /// </param>
+        /// <param name="filter">
+        ///   The filter to apply.
+        /// </param>
+        /// <returns>
+        ///   The matching nodes.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="nodes"/> is <see langword="null"/>.
+        /// </exception>
+        public static IEnumerable<AssetModelNode> ApplyFilter(this IEnumerable<AssetModelNode> nodes, BrowseAssetModelNodesRequest? filter) {
+            if (nodes == null) {
+                throw new ArgumentNullException(nameof(nodes));
+            }
+
+            if (filter == null) {
+                return nodes;
+            }
+
+            var result = filter.ParentId == null
+                ? nodes.Where(x => x.Parent == null)
+                : nodes.Where(x => filter.ParentId.Equals(x.Parent, StringComparison.OrdinalIgnoreCase));
+
+            return nodes.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(filter);
+        }
+
     }
 
 }
