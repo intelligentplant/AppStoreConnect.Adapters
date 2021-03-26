@@ -25,6 +25,11 @@ namespace DataCore.Adapter.RealTimeData {
     public class ReadHistoricalTagValues : IReadPlotTagValues, IReadProcessedTagValues, IReadTagValuesAtTimes, IBackgroundTaskServiceProvider {
 
         /// <summary>
+        /// The ID of the associated adapter.
+        /// </summary>
+        private readonly string? _adapterId;
+
+        /// <summary>
         /// The tag info provider.
         /// </summary>
         private readonly ITagInfo _tagInfoProvider;
@@ -46,6 +51,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Creates a new <see cref="ReadHistoricalTagValues"/> object.
         /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the associated adapter.
+        /// </param>
         /// <param name="tagInfoProvider">
         ///   The <see cref="ITagInfo"/> instance that will provide the tag definitions for tags 
         ///   being queried.
@@ -64,7 +72,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="rawValuesProvider"/> is <see langword="null"/>.
         /// </exception>
-        public ReadHistoricalTagValues(ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService? backgroundTaskService) {
+        public ReadHistoricalTagValues(string? adapterId, ITagInfo tagInfoProvider, IReadRawTagValues rawValuesProvider, IBackgroundTaskService? backgroundTaskService) {
+            _adapterId = adapterId;
             _tagInfoProvider = tagInfoProvider ?? throw new ArgumentNullException(nameof(tagInfoProvider));
             _rawValuesProvider = rawValuesProvider ?? throw new ArgumentNullException(nameof(rawValuesProvider));
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
@@ -97,6 +106,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return new ReadHistoricalTagValues(
+                adapter.Descriptor.Id,
                 adapter.Features.Get<ITagInfo>(), 
                 adapter.Features.Get<IReadRawTagValues>(), 
                 adapter.BackgroundTaskService

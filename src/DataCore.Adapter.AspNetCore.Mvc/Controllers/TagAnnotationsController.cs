@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -72,27 +76,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                var result = new List<TagValueAnnotationQueryResult>();
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    var result = new List<TagValueAnnotationQueryResult>();
+                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        if (!reader.TryRead(out var value) || value == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxAnnotationsPerQuery) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
+                            break;
+                        }
+
+                        result.Add(value);
                     }
 
-                    if (result.Count > MaxAnnotationsPerQuery) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
-                        break;
-                    }
-
-                    result.Add(value);
+                    activity.SetResponseItemCountTag(result.Count);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -131,17 +138,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
+            var request = new ReadAnnotationRequest() {
+                Tag = tagId,
+                AnnotationId = annotationId
+            };
 
-            try {
-                var result = await feature.ReadAnnotation(callContext, new ReadAnnotationRequest() {
-                    Tag = tagId,
-                    AnnotationId = annotationId
-                }, cancellationToken).ConfigureAwait(false);
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartReadAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = await feature.ReadAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -181,17 +190,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
+            var request = new CreateAnnotationRequest() {
+                Tag = tagId,
+                Annotation = annotation
+            };
 
-            try {
-                var result = await feature.CreateAnnotation(callContext, new CreateAnnotationRequest() {
-                    Tag = tagId,
-                    Annotation = annotation
-                }, cancellationToken).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartCreateAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = await feature.CreateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+
+                }
             }
         }
 
@@ -235,17 +248,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var result = await feature.UpdateAnnotation(callContext, new UpdateAnnotationRequest() {
-                    Tag = tagId,
-                    AnnotationId = annotationId,
-                    Annotation = annotation
-                }, cancellationToken).ConfigureAwait(false);
+            var request = new UpdateAnnotationRequest() {
+                Tag = tagId,
+                AnnotationId = annotationId,
+                Annotation = annotation
+            };
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartUpdateAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = await feature.UpdateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -286,16 +303,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var result = await feature.DeleteAnnotation(callContext, new DeleteAnnotationRequest() {
-                    Tag = tagId,
-                    AnnotationId = annotationId
-                }, cancellationToken).ConfigureAwait(false);
+            var request = new DeleteAnnotationRequest() {
+                Tag = tagId,
+                AnnotationId = annotationId
+            };
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartDeleteAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = await feature.DeleteAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

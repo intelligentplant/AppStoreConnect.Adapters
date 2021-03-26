@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -89,7 +90,7 @@ namespace DataCore.Adapter.Events {
 
             ValidationExtensions.ValidateObject(request);
 
-            var subscription = CreateSubscription(context, request, cancellationToken);
+            var subscription = CreateSubscription<IEventMessagePush>(context, nameof(Subscribe), request, cancellationToken);
             return Task.FromResult(subscription.Reader);
         }
 

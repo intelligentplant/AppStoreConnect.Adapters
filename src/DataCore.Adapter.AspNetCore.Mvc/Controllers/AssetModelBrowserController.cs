@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.AssetModel;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -66,49 +70,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
-        public async Task<IActionResult> BrowseNodes(string adapterId, CancellationToken cancellationToken, string? start = null, int page = 1, int pageSize = 10) {
-            var callContext = new HttpAdapterCallContext(HttpContext);
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
-            }
-            if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IAssetModelBrowse))); // 400
-            }
-            if (!resolvedFeature.IsFeatureAuthorized) {
-                return Forbid(); // 403
-            }
-            var feature = resolvedFeature.Feature;
-
-            try {
-                var resultChannel = await feature.BrowseAssetModelNodes(callContext, new BrowseAssetModelNodesRequest() {
-                    ParentId = string.IsNullOrWhiteSpace(start)
-                        ? null
-                        : start,
-                    PageSize = pageSize,
-                    Page = page
-                }, cancellationToken).ConfigureAwait(false);
-
-                var result = new List<AssetModelNode>(MaxNodesPerQuery);
-
-                var itemsRead = 0;
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var item) && item != null) {
-                        ++itemsRead;
-                        result.Add(item);
-
-                        if (itemsRead >= MaxNodesPerQuery) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                            break;
-                        }
-                    }
-                }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
-            }
+        public Task<IActionResult> BrowseNodes(string adapterId, string? start = null, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default) {
+            return BrowseNodesPost(adapterId, new BrowseAssetModelNodesRequest() { 
+                ParentId = start,
+                PageSize = pageSize,
+                Page = page
+            }, cancellationToken);
         }
 
 
@@ -145,28 +112,31 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Diagnostics.Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-                var itemsRead = 0;
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var item) && item != null) {
-                        ++itemsRead;
-                        result.Add(item);
+                    var itemsRead = 0;
+                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        if (resultChannel.TryRead(out var item) && item != null) {
+                            ++itemsRead;
+                            result.Add(item);
 
-                        if (itemsRead >= MaxNodesPerQuery) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                            break;
+                            if (itemsRead >= MaxNodesPerQuery) {
+                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                                break;
+                            }
                         }
                     }
-                }
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(itemsRead);
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -203,28 +173,31 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Diagnostics.Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-                var itemsRead = 0;
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var item) && item != null) {
-                        ++itemsRead;
-                        result.Add(item);
+                    var itemsRead = 0;
+                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        if (resultChannel.TryRead(out var item) && item != null) {
+                            ++itemsRead;
+                            result.Add(item);
 
-                        if (itemsRead >= MaxNodesPerQuery) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                            break;
+                            if (itemsRead >= MaxNodesPerQuery) {
+                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                                break;
+                            }
                         }
                     }
-                }
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(itemsRead);
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -262,28 +235,31 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Diagnostics.Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                var result = new List<AssetModelNode>(MaxNodesPerQuery);
+                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
-                var itemsRead = 0;
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var item) && item != null) {
-                        ++itemsRead;
-                        result.Add(item);
+                    var itemsRead = 0;
+                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                        if (resultChannel.TryRead(out var item) && item != null) {
+                            ++itemsRead;
+                            result.Add(item);
 
-                        if (itemsRead >= MaxNodesPerQuery) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                            break;
+                            if (itemsRead >= MaxNodesPerQuery) {
+                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
+                                break;
+                            }
                         }
                     }
-                }
 
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(itemsRead);
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

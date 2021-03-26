@@ -77,7 +77,7 @@ namespace DataCore.Adapter.RealTimeData {
                 ? options.PollingInterval
                 : DefaultPollingInterval;
 
-            BackgroundTaskService.QueueBackgroundWorkItem(RunSnapshotPollingLoop, null, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(RunSnapshotPollingLoop, DisposedToken);
         }
 
 

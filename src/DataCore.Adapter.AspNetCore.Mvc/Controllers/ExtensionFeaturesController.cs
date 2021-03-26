@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -108,15 +109,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
 
-            try {
-                var descriptor = await resolvedFeature.Feature.GetDescriptor(callContext, id, cancellationToken).ConfigureAwait(false);
-                return Ok(descriptor); // 200
-            }
-            catch (ArgumentException e) {
-                return BadRequest(e.Message); // 400
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartGetDescriptorActivity(resolvedFeature.Adapter.Descriptor.Id, id)) {
+                try {
+                    var descriptor = await resolvedFeature.Feature.GetDescriptor(callContext, id, cancellationToken).ConfigureAwait(false);
+                    return Ok(descriptor); // 200
+                }
+                catch (ArgumentException e) {
+                    return BadRequest(e.Message); // 400
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -163,16 +166,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
 
-            try {
-                var ops = await resolvedFeature.Feature.GetOperations(callContext, id, cancellationToken).ConfigureAwait(false);
-                // Note that we filter out any non-invocation operations here!
-                return Ok(ops?.Where(x => x != null && x.OperationType == ExtensionFeatureOperationType.Invoke).ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>()); // 200
-            }
-            catch (ArgumentException e) {
-                return BadRequest(e.Message); // 400
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartGetOperationsActivity(resolvedFeature.Adapter.Descriptor.Id, id)) {
+                try {
+                    var ops = await resolvedFeature.Feature.GetOperations(callContext, id, cancellationToken).ConfigureAwait(false);
+                    // Note that we filter out any non-invocation operations here!
+                    return Ok(ops?.Where(x => x != null && x.OperationType == ExtensionFeatureOperationType.Invoke).ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>()); // 200
+                }
+                catch (ArgumentException e) {
+                    return BadRequest(e.Message); // 400
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -219,15 +224,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
 
-            try {
-                var result = await resolvedFeature.Feature.Invoke(callContext, request, cancellationToken).ConfigureAwait(false);
-                return Ok(result); // 200
-            }
-            catch (ArgumentException e) {
-                return BadRequest(e.Message); // 400
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartInvokeActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = await resolvedFeature.Feature.Invoke(callContext, request, cancellationToken).ConfigureAwait(false);
+                    return Ok(result); // 200
+                }
+                catch (ArgumentException e) {
+                    return BadRequest(e.Message); // 400
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

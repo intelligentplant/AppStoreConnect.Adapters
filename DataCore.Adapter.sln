@@ -101,6 +101,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.WaveGenera
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Json.Newtonsoft", "src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj", "{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.OpenTelemetry", "src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj", "{A955719A-1C0A-4CE4-80C4-C09CD404380F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -215,6 +217,10 @@ Global
 		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A955719A-1C0A-4CE4-80C4-C09CD404380F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A955719A-1C0A-4CE4-80C4-C09CD404380F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A955719A-1C0A-4CE4-80C4-C09CD404380F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A955719A-1C0A-4CE4-80C4-C09CD404380F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -252,6 +258,7 @@ Global
 		{7A247D52-A607-4810-B5DC-ACC3650CE5BF} = {5E4F5BAB-DAA5-47B0-862A-B6E4173F146C}
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
+		{A955719A-1C0A-4CE4-80C4-C09CD404380F} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

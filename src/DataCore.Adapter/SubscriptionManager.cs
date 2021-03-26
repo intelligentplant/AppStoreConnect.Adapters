@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -38,6 +39,11 @@ namespace DataCore.Adapter {
         /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService { get; }
+
+        /// <summary>
+        /// The ID of the adapter associated with the subscription manager.
+        /// </summary>
+        public string? AdapterId { get; }
 
         /// <summary>
         /// Logging.
@@ -123,12 +129,16 @@ namespace DataCore.Adapter {
         /// <param name="logger">
         ///   The logger for the subscription manager.
         /// </param>
-        public SubscriptionManager(TOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
+        protected SubscriptionManager(TOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
             Options = options ?? new TOptions();
+            AdapterId = Options.AdapterId;
             _maxSubscriptionCount = Options.MaxSubscriptionCount;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            BackgroundTaskService.QueueBackgroundWorkItem(PublishToSubscribers, _disposedTokenSource.Token);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                PublishToSubscribers, 
+                _disposedTokenSource.Token
+            );
         }
 
 
@@ -212,6 +222,9 @@ namespace DataCore.Adapter {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
         /// </param>
+        /// <param name="name">
+        ///   A display name for the subscription.
+        /// </param>
         /// <param name="state">
         ///   A state value that will be passed to <see cref="CreateSubscriptionChannel"/>.
         /// </param>
@@ -227,7 +240,7 @@ namespace DataCore.Adapter {
         /// <exception cref="InvalidOperationException">
         ///   The subscription manager does not have the capacity to add a new subscription.
         /// </exception>
-        protected TSubscription CreateSubscription(IAdapterCallContext context, object? state, CancellationToken cancellationToken) {
+        protected TSubscription CreateSubscription(IAdapterCallContext context, string? name, object? state, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -238,10 +251,68 @@ namespace DataCore.Adapter {
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
             var subscription = CreateSubscriptionChannel(
                 context, 
-                subscriptionId, 
+                subscriptionId,
                 Options.ChannelCapacity,
                 new[] { DisposedToken, cancellationToken }, 
                 () => OnSubscriptionCancelledInternal(subscriptionId), 
+                state
+            );
+            _subscriptions[subscriptionId] = subscription;
+
+            OnSubscriptionAdded(subscription);
+
+            return subscription;
+        }
+
+
+        /// <summary>
+        /// Creates a subscription associated with an adapter feature.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> describing the subscriber.
+        /// </param>
+        /// <param name="name">
+        ///   The name of the feature method that is creating the subscription.
+        /// </param>
+        /// <param name="state">
+        ///   A state value that will be passed to <see cref="CreateSubscriptionChannel"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription provided by the caller.
+        /// </param>
+        /// <returns>
+        ///   A new <typeparamref name="TSubscription"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The subscription manager does not have the capacity to add a new subscription.
+        /// </exception>
+        protected TSubscription CreateSubscription<TFeature>(IAdapterCallContext context, string name, object? state, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (string.IsNullOrWhiteSpace(name)) {
+                throw new ArgumentException(SharedResources.Error_NameIsRequired, nameof(name));
+            }
+            if (_maxSubscriptionCount > 0 && _subscriptions.Count >= _maxSubscriptionCount) {
+                throw new InvalidOperationException(Resources.Error_TooManySubscriptions);
+            }
+
+            var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
+            var subscription = CreateSubscriptionChannel(
+                context,
+                subscriptionId,
+                Options.ChannelCapacity,
+                new[] { DisposedToken, cancellationToken },
+                () => OnSubscriptionCancelledInternal(subscriptionId),
                 state
             );
             _subscriptions[subscriptionId] = subscription;
@@ -462,6 +533,11 @@ namespace DataCore.Adapter {
     /// Options for <see cref="SubscriptionManager{TOptions, TTopic, TValue, TSubscription}"/>.
     /// </summary>
     public class SubscriptionManagerOptions {
+
+        /// <summary>
+        /// The ID of the adapter associated with the subscription manager.
+        /// </summary>
+        public string? AdapterId { get; set; }
 
         /// <summary>
         /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 

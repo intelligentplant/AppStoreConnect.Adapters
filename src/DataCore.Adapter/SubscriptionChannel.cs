@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -174,11 +175,11 @@ namespace DataCore.Adapter {
             };
             _ctRegistration = CancellationToken.Register(_cleanup);
 
-            backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, CancellationToken);
+            backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, null, true, CancellationToken);
 
             // If we have a publish interval, run a background task to handle this.
             if (PublishInterval > TimeSpan.Zero) {
-                backgroundTaskService.QueueBackgroundWorkItem(RunEgressLoop, CancellationToken);
+                backgroundTaskService.QueueBackgroundWorkItem(RunEgressLoop, null, true, CancellationToken);
             }
         }
 
@@ -301,10 +302,12 @@ namespace DataCore.Adapter {
                     if (val == null) {
                         continue;
                     }
-                    _outChannel.Writer.TryWrite(val);
+                    await _outChannel.Writer.WriteAsync(val, cancellationToken).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) { 
+                // Do nothing.
+            }
             catch (Exception e) {
                 _outChannel.Writer.TryComplete(e);
             }

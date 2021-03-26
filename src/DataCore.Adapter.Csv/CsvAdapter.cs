@@ -141,6 +141,7 @@ namespace DataCore.Adapter.Csv {
                 var simulatedPush = new PollingSnapshotTagValuePush(
                     this.GetFeature<IReadSnapshotTagValues>(),
                     new PollingSnapshotTagValuePushOptions() {
+                        AdapterId = Descriptor.Id,
                         PollingInterval = TimeSpan.FromMilliseconds(snapshotPushUpdateInterval),
                         TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
                     },
