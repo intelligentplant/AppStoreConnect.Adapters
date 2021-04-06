@@ -48,9 +48,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel();
-            var baseActivity = Activity.Current;
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 using (Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
@@ -88,8 +88,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            ValidateObject(request);
 
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.Subscribe(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 #endif
@@ -120,6 +131,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             ValidateObject(request);
 
             var result = ChannelExtensions.CreateTagValueChannel();
+
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 using (Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
                     var resultChannel = await adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, ct).ConfigureAwait(false);
@@ -151,7 +163,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadRawTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadRawTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadRawTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadRawTagValues(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -174,7 +197,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadPlotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadPlotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadPlotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadPlotTagValues(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -197,7 +231,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -217,7 +262,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            return await adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(DefaultChannelCapacity);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(adapter.Adapter.Descriptor.Id)) {
+                    var resultChannel = await adapter.Feature.GetSupportedDataFunctions(adapterCallContext, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -240,7 +296,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadProcessedTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueChannel<ProcessedTagValueQueryResult>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadProcessedTagValues(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
         #endregion
@@ -267,7 +334,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            return await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueWriteResultChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
+                    var resultChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, channel, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -289,7 +367,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            return await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueWriteResultChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
+                    var resultChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 #else
@@ -319,8 +408,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
+                        var outChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    }
                 }
                 finally {
                     ctSource.Cancel();
@@ -354,8 +445,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
+                        var outChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    }
                 }
                 finally {
                     ctSource.Cancel();

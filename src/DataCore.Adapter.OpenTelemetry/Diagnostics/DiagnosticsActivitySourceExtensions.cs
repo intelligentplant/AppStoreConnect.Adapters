@@ -2,8 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 
-using DataCore.Adapter.Diagnostics;
-
 namespace DataCore.Adapter.Diagnostics.Diagnostics {
     public static class DiagnosticsActivitySourceExtensions {
 
