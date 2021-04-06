@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace DataCore.Adapter.Diagnostics { 
+namespace DataCore.Adapter.Diagnostics.Diagnostics { 
 
     /// <summary>
     /// Extensions for <see cref="ActivitySource"/> related to adapter diagnostic operations.
