@@ -21,6 +21,7 @@ Some of the core projects in the repository are:
 * `DataCore.Adapter` ([source](/src/DataCore.Adapter)) - a library that contains base classes and utility classes for simplifying the implementation of adapters and adapter features.
 * `DataCore.Adapter.DependencyInjection` ([source](/src/DataCore.Adapter.DependencyInjection)) - types and extension methods for `Microsoft.Extensions.DependencyInjection`, to simplify the registration of required services with a dependency injection container.
 * `DataCore.Adapter.Json` ([source](/src/DataCore.Adapter.Json)) - converters for model types for the `System.Text.Json` JSON serializer.
+* `DataCore.Adapter.Json.Newtonsoft` ([source](/src/DataCore.Adapter.Json.Newtonsoft)) - converters for model types for the `Newtonsoft.Json` JSON serializer.
 
 ## Hosting
 
@@ -31,6 +32,7 @@ The following projects provide support for hosting adapters in ASP.NET Core appl
 * `DataCore.Adapter.AspNetCore.Mvc` ([source](/src/DataCore.Adapter.AspNetCore.Mvc)) - a library containing API controllers for use with with ASP.NET Core 2.2, 3.1 and 5.0 applications.
 * `DataCore.Adapter.AspNetCore.SignalR` ([source](/src/DataCore.Adapter.AspNetCore.SignalR)) - a library containing SignalR hubs for use with with ASP.NET Core 2.2, 3.1 and 5.0 applications.
 * `DataCore.Adapter.AspNetCore.Grpc` ([source](/src/DataCore.Adapter.AspNetCore.Grpc)) - a library to assist with hosting adapter gRPC services in ASP.NET Core 3.1 and 5.0 applications.
+* `DataCore.Adapter.OpenTelemetry` ([source](/src/DataCore.Adapter.OpenTelemetry)) - extensions related to creating OpenTelemetry-compatible tracing in applications that host adapters.
 
 ## Client Libraries
 
@@ -145,6 +147,35 @@ services
 ```
 
 Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.
+
+
+# Telemetry
+
+Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The activity source name is defined using the `DiagnosticSourceName` constant in the [ActivitySourceExtensions](/src/DataCore.Adapter.OpenTelemetry/ActivitySourceExtensions.cs) class in the [DataCore.Adapter.OpenTelemetry](/src/DataCore.Adapter.OpenTelemetry) project. The `ActivitySource` instance itself is defined on the `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class in the [DataCore.Adapter](/src/DataCore.Adapter) project.
+
+Traces can be enabled and collected using the packages provided by the [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-dotnet) project.
+
+For example, to enable trace collection and export to the console from an ASP.NET Core application that is hosting adapters via API controllers, SignalR, or gRPC:
+
+1. Add references to the following NuGet packages: 
+    - [OpenTelemetry.Extensions.Hosting](https://www.nuget.org/packages/OpenTelemetry.Extensions.Hosting)
+    - [OpenTelemetry.Instrumentation.AspNetCore](https://www.nuget.org/packages/OpenTelemetry.Instrumentation.AspNetCore)
+    - [OpenTelemetry.Exporter.Console](https://www.nuget.org/packages/OpenTelemetry.Exporter.Console)
+    - [IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry](IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry).
+2. Add the following code to your `ConfigureServices` method in your `Startup` class:
+
+```csharp
+// Add OpenTelemetry tracing
+services.AddOpenTelemetryTracing(builder => {
+    builder
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("My Application"))
+        .AddAspNetCoreInstrumentation()
+        .AddDataCoreAdapterInstrumentation()
+        .AddConsoleExporter();
+});
+```
+
+To export to another destination (e.g. [Jaeger](https://www.jaegertracing.io/)), follow the instructions on the [OpenTelemetry GitHub repository](https://github.com/open-telemetry/opentelemetry-dotnet).
 
 
 # Building
