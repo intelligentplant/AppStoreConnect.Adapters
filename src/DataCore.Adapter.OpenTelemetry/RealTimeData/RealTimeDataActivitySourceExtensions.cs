@@ -5,8 +5,25 @@ using System.Linq;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Diagnostics.RealTimeData {
+
+    /// <summary>
+    /// Extensions for <see cref="ActivitySource"/> related to real-time data operations.
+    /// </summary>
     public static class RealTimeDataActivitySourceExtensions {
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadPlotTagValues.ReadPlotTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadPlotTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -40,6 +57,18 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadProcessedTagValues.GetSupportedDataFunctions"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartGetSupportedDataFunctionsActivity(
             this ActivitySource source,
             string adapterId,
@@ -66,6 +95,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadProcessedTagValues.ReadProcessedTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadProcessedTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -100,6 +142,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadRawTagValues.ReadRawTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadRawTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -134,6 +189,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadSnapshotTagValues.ReadSnapshotTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadSnapshotTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -165,6 +233,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadTagValueAnnotations.ReadAnnotations"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadAnnotationsActivity(
             this ActivitySource source,
             string adapterId,
@@ -198,6 +279,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadTagValueAnnotations.ReadAnnotation"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadAnnotationActivity(
             this ActivitySource source,
             string adapterId,
@@ -230,6 +324,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadTagValuesAtTimes.ReadTagValuesAtTimes"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadTagValuesAtTimesActivity(
             this ActivitySource source,
             string adapterId,
@@ -262,6 +369,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="ISnapshotTagValuePush.Subscribe"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartSnapshotTagValuePushSubscribeActivity(
             this ActivitySource source,
             string adapterId,
@@ -294,6 +414,18 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteHistoricalTagValues.WriteHistoricalTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartWriteHistoricalTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -321,6 +453,18 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteSnapshotTagValues.WriteSnapshotTagValues"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartWriteSnapshotTagValuesActivity(
             this ActivitySource source,
             string adapterId,
@@ -348,6 +492,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteTagValueAnnotations.CreateAnnotation"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartCreateAnnotationActivity(
             this ActivitySource source,
             string adapterId,
@@ -375,6 +532,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteTagValueAnnotations.UpdateAnnotation"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartUpdateAnnotationActivity(
             this ActivitySource source,
             string adapterId,
@@ -407,6 +577,19 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteTagValueAnnotations.DeleteAnnotation"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartDeleteAnnotationActivity(
             this ActivitySource source,
             string adapterId,

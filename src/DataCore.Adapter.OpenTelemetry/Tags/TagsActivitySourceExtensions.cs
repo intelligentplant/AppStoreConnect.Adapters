@@ -5,8 +5,25 @@ using System.Linq;
 using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.Diagnostics.Tags {
+
+    /// <summary>
+    /// Extensions for <see cref="ActivitySource"/> related to adapter diagnostic operations.
+    /// </summary>
     public static class TagsActivitySourceExtensions {
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="ITagInfo.GetTagProperties"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartGetTagPropertiesActivity(
             this ActivitySource source,
             string adapterId,
@@ -38,6 +55,19 @@ namespace DataCore.Adapter.Diagnostics.Tags {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="ITagInfo.GetTags"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartGetTagsActivity(
             this ActivitySource source,
             string adapterId,
@@ -69,6 +99,19 @@ namespace DataCore.Adapter.Diagnostics.Tags {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="ITagSearch.FindTags"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartFindTagsActivity(
             this ActivitySource source,
             string adapterId,

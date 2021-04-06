@@ -1,14 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 using DataCore.Adapter.Extensions;
-using DataCore.Adapter.Diagnostics.Extensions;
 
 namespace DataCore.Adapter.Diagnostics.Extensions {
+
+    /// <summary>
+    /// Extensions for <see cref="ActivitySource"/> related to extension feature operations.
+    /// </summary>
     public static class ExtensionFeaturesActivitySourceExtensions {
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IAdapterExtensionFeature.GetDescriptor"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="featureId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartGetDescriptorActivity(
             this ActivitySource source,
             string adapterId,
@@ -40,6 +54,19 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IAdapterExtensionFeature.GetOperations"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="featureId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartGetOperationsActivity(
             this ActivitySource source,
             string adapterId,
@@ -71,6 +98,19 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IAdapterExtensionFeature.Invoke"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartInvokeActivity(
             this ActivitySource source,
             string adapterId,
@@ -102,6 +142,19 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IAdapterExtensionFeature.Stream"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartStreamActivity(
             this ActivitySource source,
             string adapterId,
@@ -134,6 +187,19 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IAdapterExtensionFeature.DuplexStream"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartDuplexStreamActivity(
             this ActivitySource source,
             string adapterId,

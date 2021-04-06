@@ -2,10 +2,27 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace DataCore.Adapter.Diagnostics.Diagnostics {
+namespace DataCore.Adapter.Diagnostics { 
+
+    /// <summary>
+    /// Extensions for <see cref="ActivitySource"/> related to adapter diagnostic operations.
+    /// </summary>
     public static class DiagnosticsActivitySourceExtensions {
 
-        public static Activity? StartConfigurationChangesSubscribeActivity(
+    /// <summary>
+    /// Starts an <see cref="Activity"/> associated with an 
+    /// <see cref="IConfigurationChanges.Subscribe"/> call.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="adapterId"></param>
+    /// <param name="request"></param>
+    /// <param name="kind"></param>
+    /// <param name="parentId"></param>
+    /// <returns>
+    ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+    ///   <paramref name="source"/> is not enabled.
+    /// </returns>
+    public static Activity? StartConfigurationChangesSubscribeActivity(
             this ActivitySource source,
             string adapterId,
             ConfigurationChangesSubscriptionRequest? request,
@@ -37,6 +54,18 @@ namespace DataCore.Adapter.Diagnostics.Diagnostics {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IHealthCheck.CheckHealthAsync"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartCheckHealthActivity(
             this ActivitySource source,
             string adapterId,
@@ -63,6 +92,18 @@ namespace DataCore.Adapter.Diagnostics.Diagnostics {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IHealthCheck.Subscribe"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartHealthCheckSubscribeActivity(
             this ActivitySource source,
             string adapterId,

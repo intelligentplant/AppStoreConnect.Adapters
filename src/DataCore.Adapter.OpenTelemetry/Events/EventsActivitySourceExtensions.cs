@@ -5,8 +5,25 @@ using System.Linq;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.Diagnostics.Events {
+
+    /// <summary>
+    /// Extensions for <see cref="ActivitySource"/> related to event operations.
+    /// </summary>
     public static class EventsActivitySourceExtensions {
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IEventMessagePush.Subscribe"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartEventMessagePushSubscribeActivity(
             this ActivitySource source,
             string adapterId,
@@ -39,6 +56,19 @@ namespace DataCore.Adapter.Diagnostics.Events {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IEventMessagePushWithTopics.Subscribe"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartEventMessagePushWithTopicsSubscribeActivity(
             this ActivitySource source,
             string adapterId,
@@ -71,6 +101,19 @@ namespace DataCore.Adapter.Diagnostics.Events {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadEventMessagesForTimeRangeActivity(
             this ActivitySource source,
             string adapterId,
@@ -105,6 +148,19 @@ namespace DataCore.Adapter.Diagnostics.Events {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="request"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartReadEventMessagesUsingCursorActivity(
             this ActivitySource source,
             string adapterId,
@@ -137,6 +193,18 @@ namespace DataCore.Adapter.Diagnostics.Events {
         }
 
 
+        /// <summary>
+        /// Starts an <see cref="Activity"/> associated with an 
+        /// <see cref="IWriteEventMessages.WriteEventMessages"/> call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns>
+        ///   A new <see cref="Activity"/> instance, or <see langword="null"/> if the 
+        ///   <paramref name="source"/> is not enabled.
+        /// </returns>
         public static Activity? StartWriteEventMessagesActivity(
             this ActivitySource source,
             string adapterId,
