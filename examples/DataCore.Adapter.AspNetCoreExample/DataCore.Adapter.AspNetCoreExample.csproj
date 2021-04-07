@@ -13,6 +13,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion)" />
     <PackageReference Include="NSwag.AspNetCore" Version="$(NSwagAspNetCoreVersion)" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.0.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.0.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc3" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc3" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc3" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc3" />
   </ItemGroup>
   
   <ItemGroup>
@@ -20,6 +26,7 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj" />
   </ItemGroup>

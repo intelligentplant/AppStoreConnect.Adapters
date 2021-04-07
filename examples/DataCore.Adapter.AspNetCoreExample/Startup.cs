@@ -9,6 +9,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
         public Startup(IConfiguration configuration) {
@@ -23,12 +26,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             // Add adapter services
 
+            var version = GetType().Assembly.GetName().Version.ToString(3);
+
             services
                 .AddDataCoreAdapterAspNetCoreServices()
                 .AddHostInfo(
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core",
-                    GetType().Assembly.GetName().Version.ToString(),
+                    version,
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     true,
                     true,
@@ -45,8 +50,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     // Bind CSV adapter options against the application configuration.
                     svc.Configure<Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:sensor-csv"));
                 })
-                .AddAdapter<ExampleAdapter>()
-                .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() { 
+                //.AddAdapter<ExampleAdapter>()
+                .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() {
                     Name = "Wave Generator",
                     Description = "Generates tag values using wave generator functions",
                     EnableAdHocGenerators = true
@@ -89,6 +94,16 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services
                 .AddHealthChecks()
                 .AddAdapterHeathChecks();
+
+            // Add OpenTelemetry tracing
+            services.AddOpenTelemetryTracing(builder => {
+                builder
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Adapter API", serviceVersion: version, serviceInstanceId: System.Net.Dns.GetHostName()))
+                    .AddAspNetCoreInstrumentation()
+                    .AddDataCoreAdapterInstrumentation()
+                    .AddJaegerExporter();
+                    //.AddConsoleExporter();
+            });
 
             services.AddOpenApiDocument(options => {
                 options.DocumentName = "v1.0";

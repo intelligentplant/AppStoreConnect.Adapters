@@ -1,8 +1,11 @@
-﻿using System.Threading;
+﻿using System.Diagnostics;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -30,7 +33,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.FindTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagDefinitionChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartFindTagsActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.FindTags(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -53,7 +67,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.GetTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagDefinitionChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartGetTagsActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.GetTags(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -76,7 +101,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateChannel<AdapterProperty>(DefaultChannelCapacity);
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartGetTagPropertiesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.GetTagProperties(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
     }

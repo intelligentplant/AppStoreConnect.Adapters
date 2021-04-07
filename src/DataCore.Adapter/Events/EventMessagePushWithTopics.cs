@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -55,7 +56,10 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
             : base(options, backgroundTaskService, logger) { 
-            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTopicSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ProcessTopicSubscriptionChangesChannel,
+                DisposedToken
+            );
         }
 
 
@@ -75,12 +79,17 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var subscription = CreateSubscription(context, request, cancellationToken);
+            var subscription = CreateSubscription<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, cancellationToken);
             if (request.Topics != null && request.Topics.Any()) {
                 await OnTopicsAddedToSubscriptionInternal(subscription, request.Topics, cancellationToken).ConfigureAwait(false);
             }
 
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChangesListener(subscription, channel, ct), subscription.CancellationToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ct => RunSubscriptionChangesListener(subscription, channel, ct),
+                null,
+                true,
+                subscription.CancellationToken
+            );
 
             return subscription.Reader;
         }

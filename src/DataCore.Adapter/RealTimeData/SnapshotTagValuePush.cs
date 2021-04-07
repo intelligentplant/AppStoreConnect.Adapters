@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -54,7 +55,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         public SnapshotTagValuePush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) 
             : base(options, backgroundTaskService, logger) {
-            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ProcessTagSubscriptionChangesChannel,
+                DisposedToken
+            );
         }
 
 
@@ -139,7 +143,13 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var subscription = CreateSubscription(context, request, cancellationToken);
+            var subscription = CreateSubscription<ISnapshotTagValuePush>(
+                context, 
+                nameof(Subscribe), 
+                request, 
+                cancellationToken
+            );
+
             if (request.Tags != null && request.Tags.Any()) {
                 await OnTagsAddedToSubscription(
                     subscription, 
@@ -148,7 +158,12 @@ namespace DataCore.Adapter.RealTimeData {
                 ).ConfigureAwait(false);
             }
 
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChangesListener(subscription, channel, ct), subscription.CancellationToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ct => RunSubscriptionChangesListener(subscription, channel, ct),
+                null,
+                true,
+                subscription.CancellationToken
+            );
 
             return subscription.Reader;
         }

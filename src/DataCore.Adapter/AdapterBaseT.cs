@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -13,6 +13,7 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -52,6 +53,11 @@ namespace DataCore.Adapter {
         /// Scope for the <see cref="Logger"/> that gets set when the adapter is created.
         /// </summary>
         private readonly IDisposable _loggerScope;
+
+        /// <summary>
+        /// The <see cref="AdapterEventSource"/> for the adapter.
+        /// </summary>
+        protected internal virtual AdapterEventSource EventSource => Telemetry.EventSource;
 
         /// <summary>
         /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
@@ -136,6 +142,17 @@ namespace DataCore.Adapter {
                     .ToArray();
             }
         }
+
+        /// <summary>
+        /// The <see cref="System.Diagnostics.ActivitySource"/> that can be used to create 
+        /// activities for the adapter.
+        /// </summary>
+        /// <remarks>
+        ///   By default, the property returns <see cref="Telemetry.ActivitySource"/>. You don't 
+        ///   need to override the property unless you want your adapter traces to be generated 
+        ///   by a custom source.
+        /// </remarks>
+        protected virtual ActivitySource ActivitySource => Telemetry.ActivitySource;
 
         #endregion
 
@@ -368,7 +385,7 @@ namespace DataCore.Adapter {
         #region [ Helper Methods ]
 
         /// <summary>
-        /// Creates anew adapter descriptor.
+        /// Creates a new adapter descriptor.
         /// </summary>
         /// <param name="id">
         ///   The adapter ID.
@@ -1072,26 +1089,33 @@ namespace DataCore.Adapter {
 
                 var descriptorId = Descriptor.Id;
 
-                try {
-                    Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
+                using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StartAsync)))) {
+                    if (activity != null) {
+                        activity.SetAdapterTag(this);
+                    }
 
-                    IsStarting = true;
                     try {
-                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
-                            await StartAsync(ctSource.Token).ConfigureAwait(false);
-                            _isRunning = true;
-                            await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
-                        }
-                    }
-                    finally {
-                        IsStarting = false;
-                    }
+                        Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
 
-                    Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
-                    throw;
+                        IsStarting = true;
+                        try {
+                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
+                                await StartAsync(ctSource.Token).ConfigureAwait(false);
+                                _isRunning = true;
+                                await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
+                            }
+                        }
+                        finally {
+                            IsStarting = false;
+                        }
+
+                        EventSource.AdapterStarted(descriptorId);
+                        Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
+                    }
+                    catch (Exception e) {
+                        Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
+                        throw;
+                    }
                 }
             }
             finally {
@@ -1116,10 +1140,16 @@ namespace DataCore.Adapter {
             var descriptorId = Descriptor.Id;
 
             try {
-                Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
-                _stopTokenSource.Cancel();
-                await StopAsync(cancellationToken).ConfigureAwait(false);
-                Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
+                using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StopAsync)))) {
+                    if (activity != null) {
+                        activity.SetAdapterTag(this);
+                    }
+                    Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
+                    _stopTokenSource.Cancel();
+                    await StopAsync(cancellationToken).ConfigureAwait(false);
+                    EventSource.AdapterStopped(descriptorId);
+                    Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
+                }
             }
             catch (Exception e) {
                 Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
@@ -1139,6 +1169,7 @@ namespace DataCore.Adapter {
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
+            EventSource.AdapterDisposed(Descriptor.Id);
         }
 
 
@@ -1148,6 +1179,7 @@ namespace DataCore.Adapter {
             await DisposeAsyncCore().ConfigureAwait(false);
             Dispose(false);
             GC.SuppressFinalize(this);
+            EventSource.AdapterDisposed(Descriptor.Id);
         }
 
 

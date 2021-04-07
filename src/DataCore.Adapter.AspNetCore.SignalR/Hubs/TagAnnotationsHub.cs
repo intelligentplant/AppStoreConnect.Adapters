@@ -1,6 +1,10 @@
-﻿using System.Threading;
+﻿using System.Diagnostics;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -28,7 +32,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (Telemetry.ActivitySource.StartReadAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
+                return await adapter.Feature.ReadAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
 
@@ -51,7 +58,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadAnnotations(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateTagValueAnnotationChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadAnnotationsActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadAnnotations(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -72,7 +90,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var cancellationToken = Context.ConnectionAborted;
             var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.CreateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (Telemetry.ActivitySource.StartCreateAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
+                return await adapter.Feature.CreateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
 
@@ -93,7 +114,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var cancellationToken = Context.ConnectionAborted;
             var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.UpdateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (Telemetry.ActivitySource.StartUpdateAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
+                return await adapter.Feature.UpdateAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
 
@@ -114,7 +138,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var cancellationToken = Context.ConnectionAborted;
             var adapter = await ResolveAdapterAndFeature<IWriteTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.DeleteAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (Telemetry.ActivitySource.StartDeleteAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
+                return await adapter.Feature.DeleteAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
     }

@@ -2183,7 +2183,7 @@ namespace DataCore.Adapter.Tests {
             return RunAdapterTest(async (adapter, context, ct) => {
                 var tcs = new TaskCompletionSource<bool>();
 
-                adapter.BackgroundTaskService.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async ct2 => {
+                adapter.BackgroundTaskService.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async (ct2) => {
                     using (var compositeCtSource = CancellationTokenSource.CreateLinkedTokenSource(ct, ct2)) {
                         try {
                             await Task.Delay(-1, compositeCtSource.Token).ConfigureAwait(false);

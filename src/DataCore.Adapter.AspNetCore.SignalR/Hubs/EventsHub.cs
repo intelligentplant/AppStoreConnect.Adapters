@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -46,9 +48,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.Subscribe(adapterCallContext, request, channel, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 #else
@@ -77,9 +89,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.Subscribe(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 #endif
@@ -105,9 +127,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.Subscribe(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
     #endregion
@@ -133,7 +165,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessage>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 
@@ -156,7 +199,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            var result = ChannelExtensions.CreateEventMessageChannel<EventMessageWithCursorPosition>();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(adapter.Adapter.Descriptor.Id, request)) {
+                    var resultChannel = await adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, request, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
     #endregion
@@ -183,8 +237,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            return await adapter.Feature.WriteEventMessages(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
 
+            var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                using (Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id)) {
+                    var resultChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, channel, ct).ConfigureAwait(false);
+                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return result.Reader;
         }
 
 #else
@@ -202,10 +266,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The write result.
         /// </returns>
         public async Task<WriteEventMessageResult> WriteEventMessage(string adapterId, WriteEventMessageItem item) {
-            if (item == null) {
-                throw new ArgumentNullException(nameof(item));
-            }
+            ValidateObject(item);
             var adapterCallContext = new SignalRAdapterCallContext(Context);
+
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
                 var cancellationToken = ctSource.Token;
                 try {
@@ -214,8 +277,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id)) {
+                        var outChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
+                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    }
                 }
                 finally {
                     ctSource.Cancel();

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Diagnostics;
 
 using Grpc.Core;
 
@@ -11,7 +13,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="AdaptersService.AdaptersServiceBase"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class AdaptersServiceImpl : AdaptersService.AdaptersServiceBase {
 
         /// <summary>
@@ -75,12 +76,14 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<Diagnostics.IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
-            
-            var result = await adapter.Feature.CheckHealthAsync(adapterCallContext, context.CancellationToken).ConfigureAwait(false);
 
-            return new CheckAdapterHealthResponse() { 
-                Result = result.ToGrpcHealthCheckResult()
-            };
+            using (Telemetry.ActivitySource.StartCheckHealthActivity(adapter.Adapter.Descriptor.Id)) {
+                var result = await adapter.Feature.CheckHealthAsync(adapterCallContext, context.CancellationToken).ConfigureAwait(false);
+
+                return new CheckAdapterHealthResponse() {
+                    Result = result.ToGrpcHealthCheckResult()
+                };
+            }
         }
 
 
@@ -91,17 +94,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var subscription = await adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false);
-            while (!cancellationToken.IsCancellationRequested) {
-                try {
-                    var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (System.Threading.Channels.ChannelClosedException) {
-                    // Do nothing
+            using (var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
+                var subscription = await adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false);
+                long outputItemsWritten = 0;
+                while (!cancellationToken.IsCancellationRequested) {
+                    try {
+                        var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
+                        await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(++outputItemsWritten);
+                    }
+                    catch (OperationCanceledException) {
+                        // Do nothing
+                    }
+                    catch (System.Threading.Channels.ChannelClosedException) {
+                        // Do nothing
+                    }
                 }
             }
         }
