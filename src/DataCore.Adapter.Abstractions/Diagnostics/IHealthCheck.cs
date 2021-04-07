@@ -31,6 +31,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// </returns>
         Task<HealthCheckResult> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken);
 
+
         /// <summary>
         /// Subscribes to receive adapter health check updates.
         /// </summary>
