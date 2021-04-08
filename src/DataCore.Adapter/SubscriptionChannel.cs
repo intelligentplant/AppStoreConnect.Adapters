@@ -55,6 +55,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The reader for the publish channel.
         /// </summary>
+        [Obsolete("Use " + nameof(ReadAllAsync) + " instead", false)]
         public ChannelReader<TValue> Reader => _outChannel.Reader;
 
         /// <summary>
