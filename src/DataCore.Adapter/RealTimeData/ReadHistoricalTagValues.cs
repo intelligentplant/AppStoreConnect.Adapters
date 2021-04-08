@@ -170,16 +170,9 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct).ConfigureAwait(false);
 
-                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, BackgroundTaskService, ct);
-                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!resultValuesReader.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-
-                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(val);
-                        }
-
+                    var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader.ReadAllAsync(ct), ct);
+                    await foreach (var val in resultValuesReader.WithCancellation(ct).ConfigureAwait(false)) {
+                        await ch.WriteAsync(val, ct).ConfigureAwait(false);
                     }
                 }
             }, true, BackgroundTaskService, cancellationToken);
@@ -292,15 +285,9 @@ namespace DataCore.Adapter.RealTimeData {
                         BoundaryType = RawDataBoundaryType.Outside
                     }, ct).ConfigureAwait(false);
 
-                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, BackgroundTaskService, ct);
-                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!resultValuesReader.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-
-                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(val);
-                        }
+                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader.ReadAllAsync(ct), ct);
+                    await foreach (var value in resultValuesReader.ConfigureAwait(false)) {
+                        await ch.WriteAsync(value, ct).ConfigureAwait(false);
                     }
                 }
             }, true, BackgroundTaskService, cancellationToken);
@@ -360,9 +347,9 @@ namespace DataCore.Adapter.RealTimeData {
                         }
                     }, true, BackgroundTaskService, ct);
 
-                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel, BackgroundTaskService, ct);
-                    while (await resultValuesReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!resultValuesReader.TryRead(out var val) || val == null) {
+                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel.Reader.ReadAllAsync(ct), ct);
+                    await foreach (var val in resultValuesReader.WithCancellation(ct).ConfigureAwait(false)) {
+                        if (val == null) {
                             continue;
                         }
 

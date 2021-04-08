@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -766,25 +767,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The sample interval for the data query.
         /// </param>
         /// <param name="rawData">
-        ///   The channel that will provide the raw data for the aggregation calculations.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
+        ///   The <see cref="IAsyncEnumerable{T}"/> that will provide the raw data for the aggregation calculations.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit the calculated values.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+        public async IAsyncEnumerable<ProcessedTagValueQueryResult> GetAggregatedValues(
             TagSummary tag, 
             IEnumerable<string> dataFunctions, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IAsyncEnumerable<TagValueQueryResult> rawData,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -797,22 +795,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
             }
 
-            var result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
-                FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = false,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
             var funcs = GetAggregateCalculatorsForRequest(dataFunctions);
 
             if (funcs.Count == 0) {
-                result.Writer.TryComplete();
-                return result;
+                yield break;
             }
-            
-            result.Writer.RunBackgroundOperation((ch, ct) => GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, ch, funcs, ct), true, backgroundTaskService, cancellationToken);
-            return result;
+
+            await foreach (var val in GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, rawData, funcs, cancellationToken).ConfigureAwait(false)) {
+                yield return val;
+            }
         }
 
 
@@ -837,39 +828,26 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   The raw data for the aggregation calculations.
         /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+        public IAsyncEnumerable<ProcessedTagValueQueryResult> GetAggregatedValues(
             TagSummary tag,
             IEnumerable<string> dataFunctions,
             DateTime utcStartTime,
             DateTime utcEndTime,
             TimeSpan sampleInterval,
             IEnumerable<TagValueQueryResult> rawData,
-            IBackgroundTaskService? backgroundTaskService = null,
             CancellationToken cancellationToken = default
         ) {
             if (rawData == null) {
                 throw new ArgumentNullException(nameof(rawData));
             }
 
-            var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = false,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
-            foreach (var item in rawData) {
-                channel.Writer.TryWrite(item);
-            }
-            channel.Writer.TryComplete();
+            var channel = rawData.PublishToChannel();
 
             return GetAggregatedValues(
                 tag,
@@ -877,8 +855,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 utcStartTime,
                 utcEndTime,
                 sampleInterval,
-                channel,
-                backgroundTaskService,
+                channel.ReadAllAsync(cancellationToken),
                 cancellationToken
             );
         }
@@ -914,14 +891,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+        public async IAsyncEnumerable<ProcessedTagValueQueryResult> GetAggregatedValues(
             IEnumerable<TagSummary> tags, 
             IEnumerable<string> dataFunctions, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
-            ChannelReader<TagValueQueryResult> rawData, 
+            IAsyncEnumerable<TagValueQueryResult> rawData, 
             IBackgroundTaskService? backgroundTaskService = null, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (tags == null) {
@@ -933,44 +911,47 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (sampleInterval <= TimeSpan.Zero) {
                 throw new ArgumentException(SharedResources.Error_SampleIntervalMustBeGreaterThanZero, nameof(sampleInterval));
             }
+            if (rawData == null) {
+                throw new ArgumentNullException(nameof(rawData));
+            }
 
-            Channel<ProcessedTagValueQueryResult> result;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
+            }
 
             if (!tags.Any()) {
-                // No tags; create the channel and return.
-                result = Channel.CreateUnbounded<ProcessedTagValueQueryResult>();
-                result.Writer.TryComplete();
-                return result;
+                // No tags.
+                yield break;
             }
 
             if (tags.Count() == 1) {
                 // Single tag; use the optimised single-tag overload.
-                return GetAggregatedValues(
+                await foreach (var val in GetAggregatedValues(
                     tags.First(),
                     dataFunctions,
                     utcStartTime,
                     utcEndTime,
                     sampleInterval,
                     rawData,
-                    backgroundTaskService,
                     cancellationToken
-                );
+                )) {
+                    yield return val;
+                }
+                yield break;
             }
 
             var funcs = GetAggregateCalculatorsForRequest(dataFunctions);
 
             if (funcs.Count == 0) {
-                // No aggregate functions specified; complete the channel and return.
-                result = Channel.CreateUnbounded<ProcessedTagValueQueryResult>();
-                result.Writer.TryComplete();
-                return result;
+                // No aggregate functions specified.
+                yield break;
             }
 
             // Multiple tags; create a single result channel, and create individual input channels 
             // for each tag in the request and redirect each value emitted from the raw data channel 
             // into the appropriate per-tag input channel.
 
-            result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
+            var result = Channel.CreateBounded<ProcessedTagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
                 AllowSynchronousContinuations = false,
                 SingleReader = true,
@@ -986,13 +967,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }));
 
             // Redirect values from input channel to per-tag channel.
-            rawData.RunBackgroundOperation(async (ch, ct) => {
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => {
                 try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-
+                    await foreach (var val in rawData.WithCancellation(ct).ConfigureAwait(false)) {
                         if (!tagRawDataChannels.TryGetValue(val.TagId, out var perTagChannel)) {
                             continue;
                         }
@@ -1013,26 +990,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         item.Writer.TryComplete();
                     }
                 }
-            }, backgroundTaskService, cancellationToken);
+            }, cancellationToken);
 
             // Execute stream for each tag in the query and write all values into the shared 
             // result channel.
+
+            async Task GetValuesForTag(TagSummary tag, ChannelReader<TagValueQueryResult> reader, ChannelWriter<ProcessedTagValueQueryResult> writer, CancellationToken cancellationToken) {
+                await foreach (var val in GetAggregatedValues(tag, utcStartTime, utcEndTime, sampleInterval, reader.ReadAllAsync(cancellationToken), funcs, cancellationToken).ConfigureAwait(false)) {
+                    await writer.WriteAsync(val, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await Task.WhenAll(
-                    tagRawDataChannels.Select(x => GetAggregatedValues(
-                        tagLookupById[x.Key],
-                        utcStartTime,
-                        utcEndTime,
-                        sampleInterval,
-                        x.Value,
-                        ch,
-                        funcs,
-                        ct
-                    ))
-                ).WithCancellation(ct).ConfigureAwait(false);
+                await Task.WhenAll(tagRawDataChannels.Select(x => {
+                    var tag = tagLookupById[x.Key];
+                    var channel = x.Value;
+                    return GetValuesForTag(tag, channel.Reader, ch, ct);
+                })).ConfigureAwait(false);
             }, true, backgroundTaskService, cancellationToken);
 
-            return result;
+            await foreach (var val in result.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
+                yield return val;
+            }
         }
 
 
@@ -1066,7 +1045,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   A channel that will emit the calculated values.
         /// </returns>
-        public ChannelReader<ProcessedTagValueQueryResult> GetAggregatedValues(
+        public IAsyncEnumerable<ProcessedTagValueQueryResult> GetAggregatedValues(
             IEnumerable<TagSummary> tags,
             IEnumerable<string> dataFunctions,
             DateTime utcStartTime,
@@ -1080,16 +1059,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentNullException(nameof(rawData));
             }
 
-            var channel = Channel.CreateUnbounded<TagValueQueryResult>(new UnboundedChannelOptions() {
-                AllowSynchronousContinuations = false,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
-            foreach (var item in rawData) {
-                channel.Writer.TryWrite(item);
-            }
-            channel.Writer.TryComplete();
+            var channel = rawData.PublishToChannel();
 
             return GetAggregatedValues(
                 tags,
@@ -1097,7 +1067,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 utcStartTime,
                 utcEndTime,
                 sampleInterval,
-                channel,
+                channel.ReadAllAsync(cancellationToken),
                 backgroundTaskService,
                 cancellationToken
             );
@@ -1120,10 +1090,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The sample interval.
         /// </param>
         /// <param name="rawData">
-        ///   A channel that will provide raw tag values to be aggregated.
-        /// </param>
-        /// <param name="resultChannel">
-        ///   A channel that calculated results will be written to.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide raw tag values to be aggregated.
         /// </param>
         /// <param name="funcs">
         ///   The aggregations to perform.
@@ -1132,26 +1099,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will read raw data, aggregate it, and write the results to the output 
-        ///   channel.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will read raw data, aggregate it, and write 
+        ///   the results to the output channel.
         /// </returns>
-        private static async Task GetAggregatedValues(
+        private static async IAsyncEnumerable<ProcessedTagValueQueryResult> GetAggregatedValues(
             TagSummary tag, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan sampleInterval, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            ChannelWriter<ProcessedTagValueQueryResult> resultChannel, 
+            IAsyncEnumerable<TagValueQueryResult> rawData,
             IDictionary<string, AggregateCalculator> funcs, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(sampleInterval), utcStartTime, utcEndTime);
             
-            while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!rawData.TryRead(out var val)) {
-                    break;
-                }
-
+            await foreach (var val in rawData.WithCancellation(cancellationToken).ConfigureAwait(false)) {
                 if (val == null) {
                     continue;
                 }
@@ -1167,7 +1130,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     do {
                         // Emit values from the current bucket and create a new bucket.
-                        await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+                        foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
+                            yield return calcVal;
+                        }
+
                         var previousBucket = bucket;
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
@@ -1197,7 +1163,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (bucket.UtcBucketEnd <= utcEndTime) {
                 // Only emit the final bucket if it is within our time range.
-                await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+                foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
+                    yield return calcVal;
+                }
             }
 
             if (bucket.UtcBucketEnd < utcEndTime) {
@@ -1230,7 +1198,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         }
                     }
 
-                    await CalculateAndEmitBucketSamples(tag, bucket, resultChannel, funcs, utcStartTime, utcEndTime, cancellationToken).ConfigureAwait(false);
+                    foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
+                        yield return calcVal;
+                    }
                 }
             }
         }
@@ -1245,9 +1215,6 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="bucket">
         ///   The bucket.
         /// </param>
-        /// <param name="resultChannel">
-        ///   The channel to write the results to.
-        /// </param>
         /// <param name="funcs">
         ///   The aggregations to perform.
         /// </param>
@@ -1257,20 +1224,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="utcNotAfter">
         ///   Values occurring after this time will not be emitted.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   A task that will compute and emit the aggregated samples for the bucket.
         /// </returns>
-        private static async Task CalculateAndEmitBucketSamples(
+        private static IEnumerable<ProcessedTagValueQueryResult> CalculateAndEmitBucketSamples(
             TagSummary tag, 
-            TagValueBucket bucket, 
-            ChannelWriter<ProcessedTagValueQueryResult> resultChannel, 
+            TagValueBucket bucket,
             IDictionary<string, AggregateCalculator> funcs, 
             DateTime utcNotBefore, 
-            DateTime utcNotAfter, 
-            CancellationToken cancellationToken
+            DateTime utcNotAfter
         ) {
             foreach (var agg in funcs) {
                 var vals = agg.Value.Invoke(tag, bucket);
@@ -1279,8 +1241,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 foreach (var val in vals.Where(v => v != null).Where(v => v.UtcSampleTime >= utcNotBefore && v.UtcSampleTime <= utcNotAfter)) {
-                    if (val != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key));
+                    if (val != null) {
+                        yield return ProcessedTagValueQueryResult.Create(tag.Id, tag.Name, val, agg.Key);
                     }
                 }
             }

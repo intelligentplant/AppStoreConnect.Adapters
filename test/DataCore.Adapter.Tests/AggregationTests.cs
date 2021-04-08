@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
@@ -1426,12 +1426,10 @@ namespace DataCore.Adapter.Tests {
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();
 
-            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData);
+            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData.ReadAllAsync(CancellationToken));
             var plotValues = new List<TagValueQueryResult>();
-            while (await plotChannel.WaitToReadAsync(CancellationToken)) {
-                while (plotChannel.TryRead(out var val)) {
-                    plotValues.Add(val);
-                }
+            await foreach(var val in plotChannel.WithCancellation(CancellationToken).ConfigureAwait(false)) {
+                plotValues.Add(val);
             }
 
             Assert.AreEqual(9, plotValues.Count);
@@ -1473,14 +1471,12 @@ namespace DataCore.Adapter.Tests {
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).PublishToChannel();
 
-            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData);
+            var plotChannel = PlotHelper.GetPlotValues(tag, start, end, interval, rawData.ReadAllAsync(CancellationToken));
             var plotValues = new List<TagValueQueryResult>();
-            while (await plotChannel.WaitToReadAsync(CancellationToken)) {
-                while (plotChannel.TryRead(out var val)) {
-                    plotValues.Add(val);
-                }
+            await foreach (var val in plotChannel.WithCancellation(CancellationToken).ConfigureAwait(false)) {
+                plotValues.Add(val);
             }
-
+            
             Assert.AreEqual(7, plotValues.Count);
         }
 
