@@ -122,9 +122,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will stream the results of the operation.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will stream the results of the operation.
         /// </returns>
-        Task<ChannelReader<InvocationResponse>> Stream(
+        IAsyncEnumerable<InvocationResponse> Stream(
             IAdapterCallContext context, 
             InvocationRequest request,
             CancellationToken cancellationToken
@@ -141,7 +141,7 @@ namespace DataCore.Adapter.Extensions {
         ///   The invocation request.
         /// </param>
         /// <param name="channel">
-        ///   A channel that will stream the inputs for the operation.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will stream the inputs for the operation.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -149,10 +149,10 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   A channel that will stream the results of the operation.
         /// </returns>
-        Task<ChannelReader<InvocationResponse>> DuplexStream(
+        IAsyncEnumerable<InvocationResponse> DuplexStream(
             IAdapterCallContext context,
             InvocationRequest request, 
-            ChannelReader<InvocationStreamItem> channel, 
+            IAsyncEnumerable<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         );
     

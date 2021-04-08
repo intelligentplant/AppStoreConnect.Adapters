@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -593,14 +594,19 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var pongChannel = await feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
-                var pongMessage = await pongChannel.ReadAsync(ct).ConfigureAwait(false);
+                var pongMessageCount = 0;
 
-                Assert.IsNotNull(pongMessage);
-                Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false)) {
+                    ++pongMessageCount;
+                    if (pongMessageCount > 1) {
+                        break;
+                    }
+                    Assert.IsNotNull(pongMessage);
+                    Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                }
 
                 // Should be no more values in the stream
-                Assert.IsFalse(await pongChannel.WaitToReadAsync(ct));
+                Assert.AreEqual(1, pongMessageCount);
             });
         }
 
@@ -635,22 +641,18 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var reader = await feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel(), ct).ConfigureAwait(false);
-
                 var messagesRead = 0;
 
-                while (await reader.WaitToReadAsync(ct)) {
-                    while (reader.TryRead(out var pongMessage)) {
-                        ++messagesRead;
-                        if (messagesRead > pingMessages.Count) {
-                            Assert.Fail("Incorrect number of pong messages received.");
-                        }
-
-                        var pingMessage = pingMessages[messagesRead - 1];
-
-                        Assert.IsNotNull(pongMessage);
-                        Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                    ++messagesRead;
+                    if (messagesRead > pingMessages.Count) {
+                        Assert.Fail("Incorrect number of pong messages received.");
                     }
+
+                    var pingMessage = pingMessages[messagesRead - 1];
+
+                    Assert.IsNotNull(pongMessage);
+                    Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
                 }
 
                 Assert.AreEqual(pingMessages.Count, messagesRead, "Incorrect number of pong messages received.");

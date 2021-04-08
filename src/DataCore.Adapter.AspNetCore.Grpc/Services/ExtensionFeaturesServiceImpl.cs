@@ -196,7 +196,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
-            var adapterRequest = new Extensions.InvocationRequest() {
+            var adapterRequest = new InvocationRequest() {
                 OperationId = operationId!,
                 Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
             };
@@ -204,11 +204,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             using (var activity = Telemetry.ActivitySource.StartStreamActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
                 try {
-                    var result = await adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
                     long outputItems = 0;
-                    while (!cancellationToken.IsCancellationRequested) {
-                        var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
 
+                    await foreach (var val in adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
                         var response = new InvokeExtensionResponse();
                         response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
 
@@ -216,8 +214,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         activity.SetResponseItemCountTag(++outputItems);
                     }
                 }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
                 catch (SecurityException) {
                     throw Util.CreatePermissionDeniedException();
                 }
@@ -264,7 +260,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterId = request.AdapterId;
             
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
-            var adapterRequest = new Extensions.InvocationRequest() {
+            var adapterRequest = new InvocationRequest() {
                 OperationId = operationId!,
                 Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
             };
@@ -279,8 +275,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         SingleReader = true,
                         SingleWriter = true
                     });
-
-                    var result = await adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel, cancellationToken).ConfigureAwait(false);
 
                     // Run a background operation to process the remaining request stream items.
                     _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
@@ -302,9 +296,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     }, null, true, cancellationToken);
 
                     long outputItems = 0;
-                    while (!cancellationToken.IsCancellationRequested) {
-                        var val = await result.ReadAsync(cancellationToken).ConfigureAwait(false);
-
+                    await foreach (var val in adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
                         var response = new InvokeExtensionResponse();
                         response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
 
@@ -312,8 +304,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         activity.SetResponseItemCountTag(++outputItems);
                     }
                 }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
                 catch (SecurityException) {
                     throw Util.CreatePermissionDeniedException();
                 }

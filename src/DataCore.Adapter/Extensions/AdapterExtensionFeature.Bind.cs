@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -2372,7 +2373,7 @@ namespace DataCore.Adapter.Extensions {
         ///   ID has already been registered.
         /// </returns>
         private bool BindStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>> handler,
+            Func<IAdapterCallContext, InvocationRequest, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             ExtensionFeatureOperationDescriptorPartial partialDescriptor
         ) {
             var descriptor = CreateOperationDescriptor<TFeature>(
@@ -2451,7 +2452,7 @@ namespace DataCore.Adapter.Extensions {
         ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </exception>
         protected bool BindStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>> handler,
+            Func<IAdapterCallContext, InvocationRequest, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2540,7 +2541,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <see cref="ExtensionFeatureDataTypeAttribute"/>.
         /// </remarks>
         protected bool BindStream<TFeature, T>(
-            Func<IAdapterCallContext, CancellationToken, Task<ChannelReader<T?>>> handler,
+            Func<IAdapterCallContext, CancellationToken, IAsyncEnumerable<T?>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2560,21 +2561,30 @@ namespace DataCore.Adapter.Extensions {
                 descriptorProvider
             );
 
-            return BindStream<TFeature>(async (ctx, req, ct) => {
-                var output = await handler.Invoke(ctx, ct).ConfigureAwait(false);
-
-                if (output is ChannelReader<InvocationResponse> ir) {
-                    return ir;
-                }
-
-                return output.Transform(x => new InvocationResponse() {
-                    Results = new Variant[] {
-                        Variant.TryGetVariantType(typeof(T), out var _)
-                            ? Variant.FromValue(x)
-                            : this.ConvertToVariant(x)
+            async IAsyncEnumerable<InvocationResponse> RunHandler(
+                IAdapterCallContext ctx,
+                InvocationRequest req,
+                Func<IAdapterCallContext, CancellationToken, IAsyncEnumerable<T?>> handler,
+                [EnumeratorCancellation]
+                CancellationToken ct    
+            ) {
+                await foreach (var item in handler.Invoke(ctx, ct).ConfigureAwait(false)) {
+                    if (item is InvocationResponse ir) {
+                        yield return ir;
+                        continue;
                     }
-                }, BackgroundTaskService, ct); ;
-            }, partialDescriptor);
+
+                    yield return new InvocationResponse() {
+                        Results = new Variant[] {
+                            Variant.TryGetVariantType(typeof(T), out var _)
+                                ? Variant.FromValue(item)
+                                : this.ConvertToVariant(item)
+                        }
+                    };
+                }
+            }
+
+            return BindStream<TFeature>((ctx, req, ct) => RunHandler(ctx, req, handler, ct), partialDescriptor);
         }
 
 
@@ -2646,7 +2656,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <see cref="ExtensionFeatureDataTypeAttribute"/>.
         /// </remarks>
         protected bool BindStream<TFeature, T1, T2>(
-            Func<IAdapterCallContext, T1?, CancellationToken, Task<ChannelReader<T2?>>> handler,
+            Func<IAdapterCallContext, T1?, CancellationToken, IAsyncEnumerable<T2?>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2666,22 +2676,31 @@ namespace DataCore.Adapter.Extensions {
                 descriptorProvider
             );
 
-            return BindStream<TFeature>(async (ctx, req, ct) => {
+            async IAsyncEnumerable<InvocationResponse> RunHandler(
+                IAdapterCallContext ctx,
+                InvocationRequest req,
+                Func<IAdapterCallContext, T1?, CancellationToken, IAsyncEnumerable<T2?>> handler,
+                [EnumeratorCancellation]
+                CancellationToken ct
+            ) {
                 var input1 = this.ConvertFromVariant<T1>(req.Arguments.ElementAtOrDefault(0));
-                var output = await handler.Invoke(ctx, input1, ct).ConfigureAwait(false);
-
-                if (output is ChannelReader<InvocationResponse> ir) {
-                    return ir;
-                }
-
-                return output.Transform(x => new InvocationResponse() {
-                    Results = new Variant[] {
-                        Variant.TryGetVariantType(typeof(T2), out var _)
-                            ? Variant.FromValue(x)
-                            : this.ConvertToVariant(x)
+                await foreach (var item in handler.Invoke(ctx, input1, ct).ConfigureAwait(false)) {
+                    if (item is InvocationResponse ir) {
+                        yield return ir;
+                        continue;
                     }
-                }, BackgroundTaskService, ct);;
-            }, partialDescriptor);
+
+                    yield return new InvocationResponse() {
+                        Results = new Variant[] {
+                            Variant.TryGetVariantType(typeof(T2), out var _)
+                                ? Variant.FromValue(item)
+                                : this.ConvertToVariant(item)
+                        }
+                    };
+                }
+            }
+
+            return BindStream<TFeature>((ctx, req, ct) => RunHandler(ctx, req, handler, ct), partialDescriptor);
         }
 
         #endregion
@@ -2707,7 +2726,7 @@ namespace DataCore.Adapter.Extensions {
         ///   ID has already been registered.
         /// </returns>
         private bool BindDuplexStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>> handler,
+            Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             ExtensionFeatureOperationDescriptorPartial partialDescriptor
         ) {
             var descriptor = CreateOperationDescriptor<TFeature>(
@@ -2786,7 +2805,7 @@ namespace DataCore.Adapter.Extensions {
         ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </exception>
         protected bool BindDuplexStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>> handler,
+            Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2878,7 +2897,7 @@ namespace DataCore.Adapter.Extensions {
         ///   <see cref="ExtensionFeatureDataTypeAttribute"/>.
         /// </remarks>
         protected bool BindDuplexStream<TFeature, T1, T2>(
-            Func<IAdapterCallContext, ChannelReader<T1?>, CancellationToken, Task<ChannelReader<T2?>>> handler,
+            Func<IAdapterCallContext, IAsyncEnumerable<T1?>, CancellationToken, IAsyncEnumerable<T2?>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2898,34 +2917,32 @@ namespace DataCore.Adapter.Extensions {
                 descriptorProvider
             );
 
-            return BindDuplexStream<TFeature>(async (ctx, req, ch, ct) => {
-                var input = Channel.CreateUnbounded<T1?>();
-
-                // Write first input from request.
-                await input.Writer.WriteAsync(this.ConvertFromVariant<T1>(req.Arguments?.ElementAtOrDefault(0) ?? Variant.Null), ct).ConfigureAwait(false);
-
-                // Run background task to write subsequent inputs received from the input channel.
-                input.Writer.RunBackgroundOperation(async (ch2, ct2) => { 
-                    while (!ct2.IsCancellationRequested) {
-                        var update = await ch.ReadAsync(ct2).ConfigureAwait(false);
-                        await ch2.WriteAsync(this.ConvertFromVariant<T1>(update.Arguments?.ElementAtOrDefault(0) ?? Variant.Null), ct2).ConfigureAwait(false);
+            async IAsyncEnumerable<InvocationResponse> RunHandler(
+                IAdapterCallContext ctx,
+                InvocationRequest req,
+                IAsyncEnumerable<InvocationStreamItem> input,
+                Func<IAdapterCallContext, IAsyncEnumerable<T1?>, CancellationToken, IAsyncEnumerable<T2?>> handler,
+                [EnumeratorCancellation]
+                CancellationToken ct
+            ) {
+                var transformedInput = input.Transform(update => this.ConvertFromVariant<T1>(update?.Arguments?.ElementAtOrDefault(0) ?? Variant.Null), ct);
+                await foreach (var item in handler.Invoke(ctx, transformedInput, ct).ConfigureAwait(false)) {
+                    if (item is InvocationResponse ir) {
+                        yield return ir;
+                        continue;
                     }
-                }, true, BackgroundTaskService, ct);
 
-                var output = await handler.Invoke(ctx, input, ct).ConfigureAwait(false);
-
-                if (output is ChannelReader<InvocationResponse> ir) {
-                    return ir;
+                    yield return new InvocationResponse() {
+                        Results = new Variant[] {
+                            Variant.TryGetVariantType(typeof(T2), out var _)
+                                ? Variant.FromValue(item)
+                                : this.ConvertToVariant(item)
+                        }
+                    };
                 }
+            }
 
-                return output.Transform(x => new InvocationResponse() {
-                    Results = new Variant[] {
-                        Variant.TryGetVariantType(typeof(T2), out var _)
-                            ? Variant.FromValue(x)
-                            : this.ConvertToVariant(x)
-                    }
-                }, BackgroundTaskService, ct); ;
-            }, partialDescriptor);
+            return BindDuplexStream<TFeature>((ctx, req, input, ct) => RunHandler(ctx, req, input, handler, ct));
         }
 
         #endregion

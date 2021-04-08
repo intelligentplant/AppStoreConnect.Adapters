@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -158,9 +159,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<InvocationResponse>> InvokeStreamingExtension(
+        public async IAsyncEnumerable<InvocationResponse> InvokeStreamingExtension(
             string adapterId,
             InvocationRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
@@ -178,17 +180,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateChannel<InvocationResponse>(DefaultChannelCapacity);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await resolved.Feature.Stream(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in resolved.Feature.Stream(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
                     Activity.Current.SetResponseItemCountTag(outputItems);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
 #if NETSTANDARD2_0 == false
@@ -211,10 +214,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<InvocationResponse>> InvokeDuplexStreamingExtension(
+        public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
             InvocationRequest request,
-            ChannelReader<InvocationStreamItem> channel,
+            IAsyncEnumerable<InvocationStreamItem> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
@@ -232,17 +236,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateChannel<InvocationResponse>(DefaultChannelCapacity);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await resolved.Feature.DuplexStream(adapterCallContext, request, channel, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in resolved.Feature.DuplexStream(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
                     Activity.Current.SetResponseItemCountTag(outputItems);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
 #else
@@ -285,8 +290,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryComplete();
 
                     using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                        var outChannel = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel, cancellationToken).ConfigureAwait(false);
-                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                        var result = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        Activity.Current.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
                     }
                 }
                 finally {

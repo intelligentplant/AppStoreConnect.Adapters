@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -65,7 +66,7 @@ namespace DataCore.Adapter.Tests {
 
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
-        public Task<ChannelReader<PongMessage>> PingStream(
+        public IAsyncEnumerable<PongMessage> PingStream(
             IAdapterCallContext context,
             PingMessage ping,
             CancellationToken cancellationToken
@@ -83,37 +84,27 @@ namespace DataCore.Adapter.Tests {
                 });
             }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+            return result.Reader.ReadAllAsync(cancellationToken);
         }
 
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
-        public Task<ChannelReader<PongMessage>> PingDuplexStream(
+        public async IAsyncEnumerable<PongMessage> PingDuplexStream(
             IAdapterCallContext context,
-            ChannelReader<PingMessage> channel,
+            IAsyncEnumerable<PingMessage> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var result = Channel.CreateUnbounded<PongMessage>();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                while (!ct.IsCancellationRequested) {
-                    var ping = await channel.ReadAsync(ct).ConfigureAwait(false);
-                    if (ping == null) {
-                        continue;
-                    }
-
-                    await ch.WriteAsync(new PongMessage() {
-                        CorrelationId = ping.CorrelationId,
-                        UtcServerTime = DateTime.UtcNow
-                    }, ct).ConfigureAwait(false);
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            await foreach(var ping in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                yield return new PongMessage() {
+                    CorrelationId = ping.CorrelationId,
+                    UtcServerTime = DateTime.UtcNow
+                };
+            }
         }
 
 
