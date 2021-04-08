@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
-    <!-- IAsyncDisposable support for .NET Standard 2.0 and .NET Framework 4.x -->
+    <!-- IAsyncEnumerable/IAsyncDisposable support for .NET Standard 2.0 and .NET Framework 4.x -->
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftBclAsyncInterfacesVersion)" />
   </ItemGroup>
 

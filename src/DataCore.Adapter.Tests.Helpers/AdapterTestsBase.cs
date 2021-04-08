@@ -430,11 +430,10 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IHealthCheck)}.{nameof(IHealthCheck.Subscribe)}"));
-
-                var health = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                VerifyHealthCheckResult(health);
+                await foreach (var item in feature.Subscribe(context, ct).ConfigureAwait(false)) {
+                    VerifyHealthCheckResult(item);
+                    break;
+                }
             });
         }
 

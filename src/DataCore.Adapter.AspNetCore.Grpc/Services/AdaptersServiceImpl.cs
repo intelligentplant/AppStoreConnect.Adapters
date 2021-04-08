@@ -95,20 +95,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             using (var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
-                var subscription = await adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false);
                 long outputItemsWritten = 0;
-                while (!cancellationToken.IsCancellationRequested) {
-                    try {
-                        var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
-                        await responseStream.WriteAsync(msg.ToGrpcHealthCheckResult()).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(++outputItemsWritten);
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+                        await responseStream.WriteAsync(item.ToGrpcHealthCheckResult()).ConfigureAwait(false);
+                        ++outputItemsWritten;
                     }
-                    catch (OperationCanceledException) {
-                        // Do nothing
-                    }
-                    catch (System.Threading.Channels.ChannelClosedException) {
-                        // Do nothing
-                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItemsWritten);
                 }
             }
         }
