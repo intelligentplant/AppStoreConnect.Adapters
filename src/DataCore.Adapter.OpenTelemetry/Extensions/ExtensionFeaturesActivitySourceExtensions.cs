@@ -203,7 +203,7 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         public static Activity? StartDuplexStreamActivity(
             this ActivitySource source,
             string adapterId,
-            InvocationRequest? request,
+            DuplexStreamInvocationRequest? request,
             ActivityKind kind = ActivityKind.Internal,
             string? parentId = null
         ) {

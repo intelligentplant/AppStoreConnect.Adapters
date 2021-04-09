@@ -2726,7 +2726,7 @@ namespace DataCore.Adapter.Extensions {
         ///   ID has already been registered.
         /// </returns>
         private bool BindDuplexStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
+            Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             ExtensionFeatureOperationDescriptorPartial partialDescriptor
         ) {
             var descriptor = CreateOperationDescriptor<TFeature>(
@@ -2805,7 +2805,7 @@ namespace DataCore.Adapter.Extensions {
         ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
         /// </exception>
         protected bool BindDuplexStream<TFeature>(
-            Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
+            Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>> handler,
             string? name = null,
             string? description = null,
             IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters = null,
@@ -2919,7 +2919,7 @@ namespace DataCore.Adapter.Extensions {
 
             async IAsyncEnumerable<InvocationResponse> RunHandler(
                 IAdapterCallContext ctx,
-                InvocationRequest req,
+                DuplexStreamInvocationRequest req,
                 IAsyncEnumerable<InvocationStreamItem> input,
                 Func<IAdapterCallContext, IAsyncEnumerable<T1?>, CancellationToken, IAsyncEnumerable<T2?>> handler,
                 [EnumeratorCancellation]
@@ -2942,7 +2942,7 @@ namespace DataCore.Adapter.Extensions {
                 }
             }
 
-            return BindDuplexStream<TFeature>((ctx, req, input, ct) => RunHandler(ctx, req, input, handler, ct));
+            return BindDuplexStream<TFeature>((ctx, req, input, ct) => RunHandler(ctx, req, input, handler, ct), partialDescriptor);
         }
 
         #endregion

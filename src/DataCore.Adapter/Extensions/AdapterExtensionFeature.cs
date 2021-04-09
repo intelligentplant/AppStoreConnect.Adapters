@@ -61,7 +61,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Handlers for duplex streaming methods created by a call to one of the <see cref="BindDuplexStream"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
 
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<InvocationResponse> DuplexStream(IAdapterCallContext context, InvocationRequest request, IAsyncEnumerable<InvocationStreamItem> channel, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<InvocationResponse> DuplexStream(IAdapterCallContext context, DuplexStreamInvocationRequest request, IAsyncEnumerable<InvocationStreamItem> channel, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -412,8 +412,8 @@ namespace DataCore.Adapter.Extensions {
         /// </remarks>
         protected virtual IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
-            IAdapterCallContext context, 
-            InvocationRequest request, 
+            IAdapterCallContext context,
+            DuplexStreamInvocationRequest request, 
             IAsyncEnumerable<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         ) {

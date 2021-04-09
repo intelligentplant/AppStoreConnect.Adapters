@@ -151,7 +151,7 @@ namespace DataCore.Adapter.Extensions {
         /// </returns>
         IAsyncEnumerable<InvocationResponse> DuplexStream(
             IAdapterCallContext context,
-            InvocationRequest request, 
+            DuplexStreamInvocationRequest request, 
             IAsyncEnumerable<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         );

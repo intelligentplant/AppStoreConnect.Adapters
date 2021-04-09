@@ -125,8 +125,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
-            IAdapterCallContext context, 
-            InvocationRequest request, 
+            IAdapterCallContext context,
+            DuplexStreamInvocationRequest request, 
             IAsyncEnumerable<InvocationStreamItem> channel, 
             [EnumeratorCancellation]
             CancellationToken cancellationToken
@@ -142,10 +142,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 AdapterId = Proxy.RemoteDescriptor.Id,
                 OperationId = request.OperationId?.ToString() ?? string.Empty
             };
-
-            foreach (var item in request.Arguments) {
-                req.Arguments.Add(item.ToGrpcVariant());
-            }
 
             await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
 

@@ -100,6 +100,10 @@ namespace DataCore.Adapter.Tests {
             }
 
             await foreach(var ping in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                if (ping == null) {
+                    continue;
+                }
+
                 yield return new PongMessage() {
                     CorrelationId = ping.CorrelationId,
                     UtcServerTime = DateTime.UtcNow

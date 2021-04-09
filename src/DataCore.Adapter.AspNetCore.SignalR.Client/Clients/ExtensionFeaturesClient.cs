@@ -246,7 +246,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// </exception>
         public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtensionAsync(
             string adapterId,
-            InvocationRequest request,
+            DuplexStreamInvocationRequest request,
             IAsyncEnumerable<InvocationStreamItem> channel,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
@@ -290,9 +290,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 response = await connection.InvokeAsync<InvocationResponse>(
                     "InvokeDuplexStreamingExtension",
                     adapterId,
-                    new InvocationRequest() {
-                        OperationId = request.OperationId,
-                        Properties = request.Properties,
+                    request,
+                    new InvocationStreamItem() {
                         Arguments = item.Arguments
                     },
                     cancellationToken

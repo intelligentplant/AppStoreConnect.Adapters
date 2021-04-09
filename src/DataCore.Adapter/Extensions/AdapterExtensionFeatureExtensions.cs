@@ -2033,7 +2033,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var request = new InvocationRequest() {
+            var request = new DuplexStreamInvocationRequest() {
                 OperationId = operationId
             };
 
@@ -2046,99 +2046,6 @@ namespace DataCore.Adapter.Extensions {
             }, cancellationToken), cancellationToken);
 
             await foreach(var item in response.ConfigureAwait(false)) {
-                var result = item.Results?.FirstOrDefault();
-                if (!result.HasValue || result.Value.IsNull()) {
-                    yield return default;
-                }
-
-                yield return feature.ConvertFromVariant<T2>(result!.Value);
-            }
-        }
-
-
-        /// <summary>
-        /// Calls an extension feature duplex stream operation.
-        /// </summary>
-        /// <typeparam name="T1">
-        ///   The operation argument type.
-        /// </typeparam>
-        /// <typeparam name="T2">
-        ///   The operation return type.
-        /// </typeparam>
-        /// <param name="feature">
-        ///   The <see cref="IAdapterExtensionFeature"/>.
-        /// </param>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the operation.
-        /// </param>
-        /// <param name="operationId">
-        ///   The ID of the operation to call.
-        /// </param>
-        /// <param name="argument">
-        ///   The initial operation argument.
-        /// </param>
-        /// <param name="inputStream">
-        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide additional arguments to stream 
-        ///   to the operation.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   An <see cref="IAsyncEnumerable{T}"/> will convert the first <see cref="InvocationResponse.Results"/> 
-        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
-        ///   <typeparamref name="T2"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="feature"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="context"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="inputStream"/> is <see langword="null"/>.
-        /// </exception>
-        public static async IAsyncEnumerable<T2?> DuplexStream<T1, T2>(
-            this IAdapterExtensionFeature feature,
-            IAdapterCallContext context,
-            Uri operationId,
-            T1? argument,
-            IAsyncEnumerable<T1?> inputStream,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            if (feature == null) {
-                throw new ArgumentNullException(nameof(feature));
-            }
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
-            }
-            if (inputStream == null) {
-                throw new ArgumentNullException(nameof(inputStream));
-            }
-
-            var request = new InvocationRequest() {
-                OperationId = operationId,
-                Arguments = new[] {
-                    feature.ConvertToVariant(argument),
-                }
-            };
-
-            var response = feature.DuplexStream(context, request, inputStream.Transform(x => {
-                return new InvocationStreamItem() {
-                    Arguments = new[] {
-                        feature.ConvertToVariant(x),
-                    }
-                };
-            }, cancellationToken), cancellationToken);
-
-            await foreach (var item in response.ConfigureAwait(false)) {
                 var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
                     yield return default;

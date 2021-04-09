@@ -260,9 +260,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterId = request.AdapterId;
             
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
-            var adapterRequest = new InvocationRequest() {
-                OperationId = operationId!,
-                Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+            var adapterRequest = new DuplexStreamInvocationRequest() {
+                OperationId = operationId!
             };
             Util.ValidateObject(adapterRequest);
 

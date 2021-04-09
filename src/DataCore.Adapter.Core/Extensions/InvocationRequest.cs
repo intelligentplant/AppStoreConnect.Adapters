@@ -6,7 +6,8 @@ using DataCore.Adapter.Common;
 namespace DataCore.Adapter.Extensions {
 
     /// <summary>
-    /// A request to invoke an extension operation on an adapter. 
+    /// A request to invoke an extension operation on an adapter of type <see cref="ExtensionFeatureOperationType.Invoke"/> 
+    /// or <see cref="ExtensionFeatureOperationType.Stream"/>. 
     /// </summary>
     public class InvocationRequest : AdapterRequest {
 

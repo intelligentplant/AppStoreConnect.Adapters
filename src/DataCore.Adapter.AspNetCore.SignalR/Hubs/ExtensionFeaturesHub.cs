@@ -216,7 +216,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
-            InvocationRequest request,
+            DuplexStreamInvocationRequest request,
             IAsyncEnumerable<InvocationStreamItem> channel,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
@@ -259,17 +259,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The adapter to query.
         /// </param>
         /// <param name="request">
-        ///   The URI of the operation to invoke.
+        ///   The request message.
+        /// </param>
+        /// <param name="streamItem">
+        ///   The stream item.
         /// </param>
         /// <returns>
         ///   The operation result.
         /// </returns>
         public async Task<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
-            InvocationRequest request
+            DuplexStreamInvocationRequest request,
+            InvocationStreamItem streamItem
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             ValidateObject(request);
+            ValidateObject(streamItem);
 
             var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
@@ -287,6 +292,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 var cancellationToken = ctSource.Token;
                 try {
                     var inChannel = Channel.CreateUnbounded<InvocationStreamItem>();
+                    inChannel.Writer.TryWrite(streamItem);
                     inChannel.Writer.TryComplete();
 
                     using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {

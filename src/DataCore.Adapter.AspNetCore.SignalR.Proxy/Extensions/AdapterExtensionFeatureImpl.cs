@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(IAdapterCallContext context, InvocationRequest request, IAsyncEnumerable<InvocationStreamItem> channel, CancellationToken cancellationToken) {
+        protected override IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(IAdapterCallContext context, DuplexStreamInvocationRequest request, IAsyncEnumerable<InvocationStreamItem> channel, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context, channel);
             var client = Proxy.GetClient();
             return client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, channel, cancellationToken);
