@@ -306,17 +306,19 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
             
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedToken)) {
-                foreach (var item in messages) {
-                    ctSource.Token.ThrowIfCancellationRequested();
-                    yield return EventMessageBuilder.CreateFromExisting(item).Build();
-                }
+            foreach (var item in messages) {
+                yield return EventMessageBuilder.CreateFromExisting(item).Build();
             }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessageWithCursorPosition> ReadEventMessagesUsingCursor(
+            IAdapterCallContext context, 
+            ReadEventMessagesUsingCursorRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -333,7 +335,7 @@ namespace DataCore.Adapter.Events {
                         : _eventMessages.Reverse();
                 }
                 else if (!CursorPosition.TryParse(request.CursorPosition!, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
-                    return Task.FromResult(Array.Empty<EventMessageWithCursorPosition>().PublishToChannel());
+                    yield break;
                 }
                 else {
                     selector = request.Direction == EventReadDirection.Forwards
@@ -353,7 +355,9 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
 
-            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key.ToString())).PublishToChannel());
+            foreach (var item in messages) {
+                yield return EventMessageBuilder.CreateFromExisting(item.Value).Build(item.Key.ToString());
+            }
         }
 
 

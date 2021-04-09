@@ -1927,10 +1927,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadEventMessagesUsingCursor(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesUsingCursor)}.{nameof(IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor)}"));
-
-                var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var events = await feature.ReadEventMessagesUsingCursor(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {

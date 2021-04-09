@@ -154,13 +154,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
                     var result = new List<EventMessageWithCursorPosition>();
 
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var msg) || msg == null) {
+                    await foreach (var msg in feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
@@ -171,6 +170,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
                         result.Add(msg);
                     }
+
+                    activity.SetResponseItemCountTag(result.Count);
 
                     return Ok(result); // 200
                 }
