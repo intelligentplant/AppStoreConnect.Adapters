@@ -2025,10 +2025,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.BrowseAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.BrowseAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.BrowseAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
@@ -2059,10 +2056,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.GetAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.GetAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
 
                 var remainingNodeIds = new HashSet<string>(request.Nodes);
@@ -2117,10 +2111,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.FindAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelSearch)}.{nameof(IAssetModelSearch.FindAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.FindAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 

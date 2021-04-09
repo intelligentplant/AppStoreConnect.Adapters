@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -60,82 +61,55 @@ namespace DataCore.Adapter.Example.Features {
         }
 
 
-        public Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var channel = ChannelExtensions.CreateAssetModelNodeChannel();
+        public async IAsyncEnumerable<AssetModelNode> BrowseAssetModelNodes(
+            IAdapterCallContext context, 
+            BrowseAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
 
-            channel.Writer.RunBackgroundOperation((ch, ct) => {
-                var skipCount = (request.Page - 1) * request.PageSize;
-                var takeCount = request.PageSize;
+            var nodes = string.IsNullOrWhiteSpace(request.ParentId)
+                ? _nodes.Values.Where(x => string.IsNullOrWhiteSpace(x.Parent))
+                : _nodes.Values.Where(x => string.Equals(x.Parent, request.ParentId, StringComparison.Ordinal));
 
-                var nodes = string.IsNullOrWhiteSpace(request.ParentId)
-                    ? _nodes.Values.Where(x => string.IsNullOrWhiteSpace(x.Parent))
-                    : _nodes.Values.Where(x => string.Equals(x.Parent, request.ParentId, StringComparison.Ordinal));
-
-                BrowseAssetModelNodes(nodes, ch, ref skipCount, ref takeCount);
-
-                return Task.CompletedTask;
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(channel.Reader);
-        }
-
-
-        private void BrowseAssetModelNodes(IEnumerable<AssetModelNode> nodes, ChannelWriter<AssetModelNode> channel, ref int skip, ref int take) {
-            foreach (var item in nodes) {
-                if (take < 1) {
-                    break;
-                }
-
-                if (skip > 0) {
-                    --skip;
-                    continue;
-                }
-
-                if (take > 0) {
-                    channel.TryWrite(item);
-                    --take;
-                }
+            foreach (var node in nodes.ApplyFilter(request)) {
+                yield return node;
             }
         }
 
 
-        public Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var channel = ChannelExtensions.CreateAssetModelNodeChannel();
+        public async IAsyncEnumerable<AssetModelNode> GetAssetModelNodes(
+            IAdapterCallContext context, 
+            GetAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
 
-            channel.Writer.RunBackgroundOperation((ch, ct) => {
-                foreach (var item in request.Nodes) {
-                    if (!_nodes.TryGetValue(item, out var node)) {
-                        continue;
-                    }
-
-                    ch.TryWrite(node);
+            foreach (var item in request.Nodes) {
+                if (!_nodes.TryGetValue(item, out var node)) {
+                    continue;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(channel.Reader);
+                yield return node;
+            }
         }
 
 
-        public Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
-            var channel = ChannelExtensions.CreateAssetModelNodeChannel();
+        public async IAsyncEnumerable<AssetModelNode> FindAssetModelNodes(
+            IAdapterCallContext context, 
+            FindAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
 
-            channel.Writer.RunBackgroundOperation((ch, ct) => {
-                IEnumerable<AssetModelNode> nodes = _nodes.Values;
-                if (!string.IsNullOrWhiteSpace(request.Name)) {
-                    nodes = nodes.Where(x => x.Name.Like(request.Name));
-                }
-                if (!string.IsNullOrWhiteSpace(request.Description)) {
-                    nodes = nodes.Where(x => x.Description.Like(request.Description));
-                }
+            IEnumerable<AssetModelNode> nodes = _nodes.Values.ApplyFilter(request);
 
-                nodes = nodes.OrderBy(x => x.Name).Skip((request.Page - 1) * request.PageSize).Take(request.PageSize);
-
-                foreach (var node in nodes) {
-                    ch.TryWrite(node);
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(channel.Reader);
+            foreach (var node in nodes) {
+                yield return node;
+            }
         }
     }
 }

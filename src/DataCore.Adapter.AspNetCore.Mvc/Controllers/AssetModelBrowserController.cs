@@ -112,15 +112,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Diagnostics.Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+            using (var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var resultChannel = await feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
-
                     var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
                     var itemsRead = 0;
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var item) && item != null) {
+                    await foreach (var item in feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item != null) {
                             ++itemsRead;
                             result.Add(item);
 
@@ -173,15 +171,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Diagnostics.Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+            using (var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var resultChannel = await feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
-
                     var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
                     var itemsRead = 0;
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var item) && item != null) {
+                    await foreach (var item in feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item != null) {
                             ++itemsRead;
                             result.Add(item);
 
@@ -235,15 +231,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Diagnostics.Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+            using (var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var resultChannel = await feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false);
-
                     var result = new List<AssetModelNode>(MaxNodesPerQuery);
 
                     var itemsRead = 0;
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var item) && item != null) {
+                    await foreach (var item in feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item != null) {
                             ++itemsRead;
                             result.Add(item);
 
