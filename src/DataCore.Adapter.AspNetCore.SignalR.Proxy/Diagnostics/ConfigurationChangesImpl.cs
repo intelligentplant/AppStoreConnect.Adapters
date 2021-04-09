@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -22,15 +24,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<ConfigurationChange>> Subscribe(
+        public async IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 
             ConfigurationChangesSubscriptionRequest request, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, cancellationToken);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
     }
 }

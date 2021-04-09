@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -55,9 +57,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<ChannelReader<ConfigurationChange>> CreateConfigurationChangesChannelAsync(
+        public async IAsyncEnumerable<ConfigurationChange> CreateConfigurationChangesChannelAsync(
             string adapterId, 
             ConfigurationChangesSubscriptionRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -66,12 +69,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<ConfigurationChange>(
+            await foreach (var item in connection.StreamAsync<ConfigurationChange>(
                 "CreateConfigurationChangesChannel",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
     }

@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<ConfigurationChange>> Subscribe(
+        public IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 
             ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
@@ -84,7 +84,8 @@ namespace DataCore.Adapter.Diagnostics {
             if (request.ItemTypes != null && request.ItemTypes.Any()) {
                 subscription.AddTopics(request.ItemTypes);
             }
-            return Task.FromResult(subscription.Reader);
+
+            return subscription.ReadAllAsync(cancellationToken);
         }
 
 

@@ -331,36 +331,43 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IConfigurationChanges)}.{nameof(IConfigurationChanges.Subscribe)}"));
-
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
-
-                var testValuesEmitted = await EmitTestConfigurationChanges(TestContext, adapter, request.ItemTypes, ConfigurationChangeType.Created, ct).ConfigureAwait(false);
-                if (!testValuesEmitted) {
-                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(EmitTestConfigurationChanges));
-                    return;
-                }
-
                 var allItemTypes = new HashSet<string>(request.ItemTypes);
                 var remainingTypes = new HashSet<string>(request.ItemTypes);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value, FormatMessage(Resources.ChannelContainedNullItem, nameof(ConfigurationChange)));
-                        if (allItemTypes.Contains(value.ItemType)) {
-                            remainingTypes.Remove(value.ItemType);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedItemReceived, nameof(ConfigurationChange), value.ItemType));
-                        }
+                var tcs = new TaskCompletionSource<bool>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestConfigurationChanges(TestContext, adapter, request.ItemTypes, ConfigurationChangeType.Created, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                await foreach (var value in feature.Subscribe(context, request, ct).ConfigureAwait(false)) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ChannelContainedNullItem, nameof(ConfigurationChange)));
+                    if (allItemTypes.Contains(value.ItemType)) {
+                        remainingTypes.Remove(value.ItemType);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedItemReceived, nameof(ConfigurationChange), value.ItemType));
                     }
 
                     if (remainingTypes.Count == 0) {
                         break;
                     }
+                }
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
+                if (!testValuesEmitted) {
+                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(EmitTestConfigurationChanges));
+                    return;
                 }
 
                 Assert.AreEqual(0, remainingTypes.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
