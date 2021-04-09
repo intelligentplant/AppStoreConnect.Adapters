@@ -151,14 +151,14 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader =  _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
                 var bucketSize = PlotHelper.CalculateBucketSize(request.UtcStartTime, request.UtcEndTime, request.Intervals);
 
-                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
+                    if (tag == null) {
                         continue;
                     }
 
@@ -268,12 +268,12 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateProcessedTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
-                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
+                    if (tag == null) {
                         continue;
                     }
 
@@ -310,12 +310,12 @@ namespace DataCore.Adapter.RealTimeData {
             var result = ChannelExtensions.CreateTagValueChannel();
 
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = await _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
                     Tags = request.Tags
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
-                while (await tagDefinitionsReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    if (!tagDefinitionsReader.TryRead(out var tag) || tag == null) {
+                await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
+                    if (tag == null) {
                         continue;
                     }
 

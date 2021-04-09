@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
@@ -535,44 +536,53 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> FindTags(
+            IAdapterCallContext context, 
+            FindTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
+            
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
                 foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
-                    ch.TryWrite(item.Clone(request.ResultFields));
+                    yield return item.Clone(request.ResultFields);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult<ChannelReader<TagDefinition>>(result);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> GetTags(
+            IAdapterCallContext context, 
+            GetTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ct).ConfigureAwait(false);
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
                 foreach (var item in request.Tags) {
                     var tag = GetTagByIdOrName(item, dataSet);
-                    if (tag != null) {
-                        ch.TryWrite(TagDefinition.FromExisting(tag));
+                    if (tag == null) {
+                        continue;
                     }
+                    yield return TagDefinition.FromExisting(tag);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult<ChannelReader<TagDefinition>>(result);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<AdapterProperty> GetTagProperties(
+            IAdapterCallContext context, 
+            GetTagPropertiesRequest request, 
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            return Task.FromResult(Array.Empty<AdapterProperty>().PublishToChannel());
+            return Array.Empty<AdapterProperty>().ToAsyncEnumerable(cancellationToken);
         }
 
 

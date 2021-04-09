@@ -33,9 +33,9 @@ namespace DataCore.Adapter.Example.Features {
 
                 var dataReferences = nodeDefinitions.Where(x => !string.IsNullOrWhiteSpace(x.DataReference)).Select(x => x.DataReference).ToArray();
 
-                var dataReferencesChannel = await tagSearch.GetTags(new DefaultAdapterCallContext(), new Tags.GetTagsRequest() { 
+                var dataReferencesChannel = tagSearch.GetTags(new DefaultAdapterCallContext(), new Tags.GetTagsRequest() { 
                     Tags = dataReferences
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
                 var tags = await dataReferencesChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 

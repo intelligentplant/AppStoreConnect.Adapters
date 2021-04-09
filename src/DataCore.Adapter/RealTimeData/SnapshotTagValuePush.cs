@@ -81,9 +81,9 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return async (context, tags, cancellationToken) => {
-                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                var ch = feature.GetTags(context, new GetTagsRequest() {
                     Tags = tags?.ToArray()!
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
                 return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
             };
@@ -118,9 +118,9 @@ namespace DataCore.Adapter.RealTimeData {
                     return Array.Empty<TagIdentifier>();
                 }
 
-                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                var ch = feature.GetTags(context, new GetTagsRequest() {
                     Tags = tags?.ToArray()!
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
                 return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
             };

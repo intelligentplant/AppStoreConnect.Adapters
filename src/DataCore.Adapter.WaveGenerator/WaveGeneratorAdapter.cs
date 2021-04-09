@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
@@ -508,59 +509,67 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<AdapterProperty> GetTagProperties(
+            IAdapterCallContext context, 
+            GetTagPropertiesRequest request, 
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            return Task.FromResult(s_tagPropertyDefinitions.PublishToChannel());
+            return s_tagPropertyDefinitions.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request).ToAsyncEnumerable(cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> GetTags(
+            IAdapterCallContext context, 
+            GetTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => { 
-                foreach (var item in request.Tags) {
-                    if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
-                        continue;
-                    }
-                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
+            await Task.Yield();
+
+            foreach (var item in request.Tags) {
+                if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
+                    continue;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+                yield return ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> FindTags(
+            IAdapterCallContext context, 
+            FindTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
+            await Task.Yield();
 
-                if (string.IsNullOrEmpty(request.Name)) {
-                    // No name filter; we will just select a page of results from the available definitions.
-                    selectedItems = _tagDefinitions
-                        .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
-                        .SelectPage(request)
-                        .ToArray();
-                }
-                else {
-                    selectedItems = _tagDefinitions
-                        .Where(x => x.Key.Like(request.Name!))
-                        .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
-                        .SelectPage(request)
-                        .ToArray();
-                }
+            IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
 
-                foreach (var item in selectedItems) {
-                    await ch.WriteAsync(ToTagDefinition(item.Key, item.Value, request.ResultFields), ct).ConfigureAwait(false);
-                }
-            }, true, BackgroundTaskService, cancellationToken);
+            if (string.IsNullOrEmpty(request.Name)) {
+                // No name filter; we will just select a page of results from the available definitions.
+                selectedItems = _tagDefinitions
+                    .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                    .SelectPage(request)
+                    .ToArray();
+            }
+            else {
+                selectedItems = _tagDefinitions
+                    .Where(x => x.Key.Like(request.Name!))
+                    .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                    .SelectPage(request)
+                    .ToArray();
+            }
 
-            return Task.FromResult(result.Reader);
+            foreach (var item in selectedItems) {
+                 yield return ToTagDefinition(item.Key, item.Value, request.ResultFields);
+            }
         }
 
 

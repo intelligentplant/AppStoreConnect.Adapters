@@ -75,18 +75,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false);
-                    var props = new List<AdapterProperty>();
+                    var result = new List<AdapterProperty>();
 
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var prop) || prop == null) {
+                    await foreach (var item in feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
                             continue;
                         }
-                        props.Add(prop);
+                        result.Add(item);
                     }
 
-                    activity.SetResponseItemCountTag(props.Count);
-                    return Ok(props); // 200
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
                 }
                 catch (SecurityException) {
                     return Forbid(); // 403
@@ -160,18 +160,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false);
-                    var tags = new List<TagDefinition>();
+                    var result = new List<TagDefinition>();
 
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var tag) || tag == null) {
+                    await foreach (var item in feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
                             continue;
                         }
-                        tags.Add(tag);
+                        result.Add(item);
                     }
 
-                    activity.SetResponseItemCountTag(tags.Count);
-                    return Ok(tags); // 200
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
                 }
                 catch (SecurityException) {
                     return Forbid(); // 403
@@ -257,18 +257,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false);
-                    var tags = new List<TagDefinition>();
+                    var result = new List<TagDefinition>();
 
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var tag) || tag == null) {
+                    await foreach (var item in feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
                             continue;
                         }
-                        tags.Add(tag);
+                        result.Add(item);
                     }
 
-                    activity.SetResponseItemCountTag(tags.Count);
-                    return Ok(tags); // 200
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
                 }
                 catch (SecurityException) {
                     return Forbid(); // 403

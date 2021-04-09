@@ -499,10 +499,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetTagProperties(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTagProperties)}"));
-
-                var props = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var props = await feature.GetTagProperties(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(props.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, props.Count(), request.PageSize));
 
                 if (props.Any()) {
@@ -533,11 +530,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.GetTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.AreEqual(request.Tags.Count(), tags.Count(), FormatMessage(Resources.UnexpectedItemCount, request.Tags.Count(), tags.Count()));
 
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -604,11 +597,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.All;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -654,11 +643,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.BasicInformation;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -716,11 +701,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.All;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {

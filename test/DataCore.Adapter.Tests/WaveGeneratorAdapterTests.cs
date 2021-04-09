@@ -122,9 +122,9 @@ namespace DataCore.Adapter.Tests {
                 var generatorLiteral = "Type=Sawtooth;Period=180;Amplitude=500";
 
                 var feature = adapter.GetFeature<ITagInfo>();
-                var tagChannel = await feature.GetTags(context, new GetTagsRequest() {
+                var tagChannel = feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { generatorLiteral }
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
                 var tags = await tagChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, tags.Count());
@@ -140,9 +140,9 @@ namespace DataCore.Adapter.Tests {
 
                 var feature = adapter.GetFeature<ITagInfo>();
                 Assert.IsNotNull(feature);
-                var tagChannel = await feature.GetTags(context, new GetTagsRequest() {
+                var tagChannel = feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { generatorLiteral }
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
                 var tags = await tagChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(0, tags.Count());
