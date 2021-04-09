@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -21,47 +23,43 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.EventMessage>> Subscribe(
+        public async IAsyncEnumerable<Adapter.Events.EventMessage> Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageSubscriptionRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
+            var client = CreateClient<EventsService.EventsServiceClient>();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = CreateClient<EventsService.EventsServiceClient>();
+            var grpcRequest = new CreateEventPushChannelRequest() {
+                AdapterId = AdapterId,
+                SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
+                    ? EventSubscriptionType.Active
+                    : EventSubscriptionType.Passive
+            };
 
-                var grpcRequest = new CreateEventPushChannelRequest() {
-                    AdapterId = AdapterId,
-                    SubscriptionType = request.SubscriptionType == EventMessageSubscriptionType.Active
-                        ? EventSubscriptionType.Active
-                        : EventSubscriptionType.Passive
-                };
-
-                if (request.Properties != null) {
-                    foreach (var item in request.Properties) {
-                        grpcRequest.Properties.Add(item.Key, item.Value ?? string.Empty);
-                    }
+            if (request.Properties != null) {
+                foreach (var item in request.Properties) {
+                    grpcRequest.Properties.Add(item.Key, item.Value ?? string.Empty);
                 }
+            }
 
-                using (var grpcChannel = client.CreateEventPushChannel(
-                   grpcRequest,
-                   GetCallOptions(context, ct)
-                )) {
-                    // Read event messages.
-                    while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                        if (grpcChannel.ResponseStream.Current == null) {
-                            continue;
-                        }
-
-                        await result.Writer.WriteAsync(grpcChannel.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcChannel = client.CreateEventPushChannel(
+               grpcRequest,
+               GetCallOptions(context, ctSource.Token)
+            )) {
+                // Read event messages.
+                while (await grpcChannel.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcChannel.ResponseStream.Current == null) {
+                        continue;
                     }
-                }
-            }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+                    yield return grpcChannel.ResponseStream.Current.ToAdapterEventMessage();
+                }
+            }
         }
 
     }

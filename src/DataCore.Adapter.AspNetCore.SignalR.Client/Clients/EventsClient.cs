@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -58,18 +59,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannelAsync(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageChannelAsync(
+            string adapterId, 
+            CreateEventMessageSubscriptionRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessage>(
+            await foreach (var item in connection.StreamAsync<EventMessage>(
                 "CreateEventMessageChannel",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 

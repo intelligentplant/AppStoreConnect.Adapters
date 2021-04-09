@@ -81,23 +81,18 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var subscription = await adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
+                long outputItems = 0;
                 try {
-                    long outputItems = 0;
-
-                    while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (subscription.TryRead(out var msg) && msg != null) {
-                            await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
-                            activity.SetResponseItemCountTag(++outputItems);
+                    await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
                         }
+
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (ChannelClosedException) {
-                    // Do nothing
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }

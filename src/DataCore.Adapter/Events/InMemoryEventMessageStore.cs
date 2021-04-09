@@ -111,7 +111,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<EventMessage>> IEventMessagePush.Subscribe(
+        IAsyncEnumerable<EventMessage> IEventMessagePush.Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageSubscriptionRequest request, 
             CancellationToken cancellationToken

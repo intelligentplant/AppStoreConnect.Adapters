@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessage>> Subscribe(
+        public IAsyncEnumerable<EventMessage> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageSubscriptionRequest request,
             CancellationToken cancellationToken
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Events {
             ValidationExtensions.ValidateObject(request);
 
             var subscription = CreateSubscription<IEventMessagePush>(context, nameof(Subscribe), request, cancellationToken);
-            return Task.FromResult(subscription.Reader);
+            return subscription.ReadAllAsync(cancellationToken);
         }
 
 

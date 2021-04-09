@@ -1673,17 +1673,30 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePush)}.{nameof(IEventMessagePush.Subscribe)}"));
+                var tcs = new TaskCompletionSource<bool>();
 
-                var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                var received = await feature.Subscribe(context, request, ct).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
+
+                var testEventEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testEventEmitted) {
                     AssertInconclusiveDueToMissingTestInput<IEventMessagePush>(nameof(EmitTestEvent));
                     return;
                 }
-
-                var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 

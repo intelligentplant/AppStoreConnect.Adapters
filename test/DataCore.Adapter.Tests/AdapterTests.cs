@@ -40,14 +40,13 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, ct);
-                Assert.IsNotNull(subscription);
+                _ = Task.Run(async () => {
+                    await Task.Delay(200, ct);
+                    await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                });
 
-                await Task.Delay(1000, ct);
-                await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
-
-                using (var ctSource = new CancellationTokenSource(1000)) {
-                    var val = await subscription.ReadAsync(ctSource.Token);
+                using (var ctSource = new CancellationTokenSource(2000)) {
+                    var val = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, ctSource.Token).FirstOrDefaultAsync(ctSource.Token);
                     Assert.IsNotNull(val);
                 }
             });
@@ -63,19 +62,13 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(
-                    context, 
-                    new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, 
-                    ct
-                );
-                Assert.IsNotNull(subscription);
+                _ = Task.Run(async () => {
+                    await Task.Delay(200, ct);
+                    await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                });
 
-                await Task.Delay(1000, ct);
-                await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
-
-
-                using (var ctSource = new CancellationTokenSource(1000)) {
-                    var val = await subscription.ReadAsync(ctSource.Token);
+                using (var ctSource = new CancellationTokenSource(2000)) {
+                    var val = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, ctSource.Token).FirstOrDefaultAsync(ctSource.Token);
                     Assert.IsNotNull(val);
                 }
             });

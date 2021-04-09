@@ -349,11 +349,16 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
                 CancelAfter(TimeSpan.FromSeconds(1));
                 var success = await tcs.Task.WithCancellation(CancellationToken);
@@ -371,12 +376,18 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 Cancel();
                 var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                 Assert.IsTrue(success);
@@ -391,17 +402,31 @@ namespace DataCore.Adapter.Tests {
             var options = new EventMessagePushOptions();
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateEventMessageSubscriptionRequest(), 
-                    CancellationToken
-                );
+                var tcs = new TaskCompletionSource<EventMessage>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        tcs.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                });
+
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
                 await feature.ValueReceived(msg);
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
+                var emitted = await tcs.Task;
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(msg.Message, emitted.Message);
             }
@@ -417,17 +442,44 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateEventMessageSubscriptionRequest(), 
-                    CancellationToken
-                );
+                var tcs1 = new TaskCompletionSource<EventMessage>();
+                var tcs2 = new TaskCompletionSource<EventMessage>();
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                ));
+                _ = Task.Run(async () => {
+                    try {
+                        tcs1.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs1.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs1.TrySetException(e);
+                    }
+                });
+
+                _ = Task.Run(async () => {
+                    try {
+                        // Wait for a short while to ensure that this task runs after the first one
+                        await Task.Delay(100, CancellationToken).ConfigureAwait(false);
+                        tcs2.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs2.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs2.TrySetException(e);
+                    }
+                });
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 
