@@ -738,6 +738,24 @@ namespace DataCore.Adapter {
             _healthCheckManager.RecalculateHealthStatus();
         }
 
+
+        /// <summary>
+        /// Creates a new <see cref="CancellationTokenSource"/> that will cancel when the 
+        /// adapter's <see cref="StopToken"/> or any of the specified additional tokens 
+        /// request cancellation.
+        /// </summary>
+        /// <param name="additionalTokens">
+        ///   The additional cancellation tokens to monitor.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="CancellationTokenSource"/> instance. Nogte that it is the caller's 
+        ///   responsibility to dispose of the <see cref="CancellationTokenSource"/> when it is no 
+        ///   longer required.
+        /// </returns>
+        public CancellationTokenSource CreateCancellationTokenSource(params CancellationToken[] additionalTokens) {
+            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken }.ToArray());
+        }
+
         #endregion
 
         #region [ Feature Management ]
