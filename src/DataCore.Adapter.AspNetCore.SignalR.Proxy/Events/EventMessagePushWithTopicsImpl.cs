@@ -1,9 +1,8 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events {
@@ -23,20 +22,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<EventMessage>> Subscribe(
-            IAdapterCallContext context, 
+        public async IAsyncEnumerable<EventMessage> Subscribe(
+            IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request, channel);
 
-            return GetClient().Events.CreateEventMessageTopicChannelAsync(
-                AdapterId, 
-                request, 
-                channel,
-                cancellationToken
-            );
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in GetClient().Events.CreateEventMessageTopicChannelAsync(
+                    AdapterId,
+                    request,
+                    channel,
+                    cancellationToken
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
 
     }

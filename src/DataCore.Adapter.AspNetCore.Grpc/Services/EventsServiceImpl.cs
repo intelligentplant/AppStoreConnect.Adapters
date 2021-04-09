@@ -121,7 +121,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             var updateChannel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
-            Activity? activity = null;
 
             try {
                 // Keep reading from the request stream until we get an item that allows us to create 
@@ -143,21 +142,24 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     };
                     Util.ValidateObject(adapterRequest);
 
-                    activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest);
-                    var subscription = await adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
+                    // Start a background task to run the subscription.
+                    _backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
+                        using (var activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                            long outputItems = 0;
+                            try {
+                                await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel.Reader.ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                                    if (val == null) {
+                                        continue;
+                                    }
+                                    ++outputItems;
+                                    await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
+                            }
+                            finally {
+                                activity.SetResponseItemCountTag(outputItems);
                             }
                         }
-                    }, _backgroundTaskService, cancellationToken);
+                    }, cancellationToken);
 
                     // Break out of the initial loop; we'll handle subscription updates below!
                     break;
@@ -183,7 +185,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 updateChannel.Writer.TryComplete();
-                activity?.Dispose();
             }
         }
 

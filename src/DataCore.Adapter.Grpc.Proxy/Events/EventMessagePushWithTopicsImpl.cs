@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
+
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Proxy.Events {
 
@@ -24,16 +26,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
 
 
         /// <inheritdoc/>
-        public async Task<ChannelReader<Adapter.Events.EventMessage>> Subscribe(
-            IAdapterCallContext context, 
+        public async IAsyncEnumerable<Adapter.Events.EventMessage> Subscribe(
+            IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request, channel);
 
             var client = CreateClient<EventsService.EventsServiceClient>();
-            var grpcStream = client.CreateEventTopicPushChannel(GetCallOptions(context, cancellationToken));
 
             var createSubscriptionMessage = new CreateEventTopicPushChannelMessage() {
                 AdapterId = AdapterId,
@@ -48,15 +50,17 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                 }
             }
 
-            // Create the subscription.
-            await grpcStream.RequestStream.WriteAsync(new CreateEventTopicPushChannelRequest() {
-                Create = createSubscriptionMessage
-            }).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcStream = client.CreateEventTopicPushChannel(GetCallOptions(context, ctSource.Token))) {
 
-            // Stream subscription changes.
-            channel.RunBackgroundOperation(async (ch, ct) => {
-                while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (ch.TryRead(out var update)) {
+                // Create the subscription.
+                await grpcStream.RequestStream.WriteAsync(new CreateEventTopicPushChannelRequest() {
+                    Create = createSubscriptionMessage
+                }).ConfigureAwait(false);
+
+                // Stream subscription changes.
+                Proxy.BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    await foreach (var update in channel.WithCancellation(ct).ConfigureAwait(false)) {
                         if (update == null) {
                             continue;
                         }
@@ -75,24 +79,17 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                             Update = msg
                         }).ConfigureAwait(false);
                     }
-                }
-            }, BackgroundTaskService, cancellationToken);
+                }, ctSource.Token);
 
-            // Stream the results.
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(0);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                // Read tag values.
-                while (await grpcStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                // Stream the results.
+                while (await grpcStream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     if (grpcStream.ResponseStream.Current == null) {
                         continue;
                     }
 
-                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+                    yield return grpcStream.ResponseStream.Current.ToAdapterEventMessage();
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
     }

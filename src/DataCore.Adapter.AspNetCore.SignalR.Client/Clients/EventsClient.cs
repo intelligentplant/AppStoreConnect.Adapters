@@ -99,10 +99,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannelAsync(
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageTopicChannelAsync(
             string adapterId,
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -119,13 +120,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<EventMessage>(
+                await foreach (var item in connection.StreamAsync<EventMessage>(
                     "CreateEventMessageTopicChannel",
                     adapterId,
                     request,
                     channel,
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // We are using ASP.NET Core 2.x, so we cannot use client-to-server streaming. Instead, 
@@ -156,16 +160,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                     Properties = request.Properties,
                     Topics = new [] { topic }
                 };
-                var ch = await connection.StreamAsChannelAsync<EventMessage>(
+                await foreach (var item in connection.StreamAsync<EventMessage>(
                     "CreateEventMessageTopicChannel",
                     adapterId,
                     req,
                     ct
-                ).ConfigureAwait(false);
-
-                while (!ct.IsCancellationRequested) {
-                    var val = await ch.ReadAsync(ct).ConfigureAwait(false);
-                    await result!.Writer.WriteAsync(val, ct).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    await result!.Writer.WriteAsync(item, ct).ConfigureAwait(false);
                 }
             }
 
@@ -188,9 +189,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                             try {
                                 await RunTopicSubscription(topic, ct).ConfigureAwait(false);
                             }
-#pragma warning disable CA1031 // Do not catch general exception types
                             catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
                             finally {
                                 if (subscriptions!.TryRemove(topic, out var cts)) {
                                     cts.Cancel();
@@ -216,21 +215,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                         ProcessTopicSubscriptionChange(request.Topics, true);
                     }
 
-                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (channel.TryRead(out var update)) {
-                            if (update?.Topics == null || !update.Topics.Any()) {
-                                continue;
-                            }
-
-                            ProcessTopicSubscriptionChange(update.Topics, update.Action == SubscriptionUpdateAction.Subscribe);
+                    await foreach (var update in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                        if (update?.Topics == null || !update.Topics.Any()) {
+                            continue;
                         }
+
+                        ProcessTopicSubscriptionChange(update.Topics, update.Action == SubscriptionUpdateAction.Subscribe);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {
@@ -248,7 +243,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
             }, cancellationToken);
 
-            return result;
+            while (await result.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (result.Reader.TryRead(out var item)) {
+                    yield return item;
+                }
+            }
         }
 
 

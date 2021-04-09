@@ -121,10 +121,10 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<EventMessage>> IEventMessagePushWithTopics.Subscribe(
+        IAsyncEnumerable<EventMessage> IEventMessagePushWithTopics.Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             return ((IEventMessagePushWithTopics) _pushWithTopics).Subscribe(context, request, channel, cancellationToken);

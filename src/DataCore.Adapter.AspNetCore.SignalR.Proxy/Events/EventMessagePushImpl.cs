@@ -37,7 +37,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Events.Features {
                     AdapterId,
                     request,
                     ctSource.Token
-                )) {
+                ).ConfigureAwait(false)) {
                     yield return item;
                 }
             }
