@@ -84,12 +84,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 req.Arguments.Add(item.ToGrpcVariant());
             }
 
-            var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, cancellationToken));
-
-            var result = await response.ResponseAsync.ConfigureAwait(false);
-            return new Adapter.Extensions.InvocationResponse() { 
-                Results = result.Results.Select(x => x.ToAdapterVariant()).ToArray()
-            };
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, ctSource.Token))) {
+                var result = await response.ResponseAsync.ConfigureAwait(false);
+                return new InvocationResponse() {
+                    Results = result.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                };
+            }
         }
 
 
@@ -113,12 +114,13 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 req.Arguments.Add(item.ToGrpcVariant());
             }
 
-            var response = client.InvokeStreamingExtension(req, Proxy.GetCallOptions(context, cancellationToken));
-
-            while (await response.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                yield return new InvocationResponse() {
-                    Results = response.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
-                };
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var response = client.InvokeStreamingExtension(req, Proxy.GetCallOptions(context, ctSource.Token))) {
+                while (await response.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    yield return new InvocationResponse() {
+                        Results = response.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                    };
+                }
             }
         }
 
@@ -136,39 +138,41 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             var result = Channel.CreateUnbounded<InvocationResponse>();
 
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
-            var stream = client.InvokeDuplexStreamingExtension(Proxy.GetCallOptions(context, cancellationToken));
 
-            var req = new InvokeExtensionRequest() {
-                AdapterId = Proxy.RemoteDescriptor.Id,
-                OperationId = request.OperationId?.ToString() ?? string.Empty
-            };
-
-            await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
-
-            Proxy.BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                try {
-                    await foreach (var val in channel.WithCancellation(ct).ConfigureAwait(false)) {
-                        var req = new InvokeExtensionRequest() {
-                            AdapterId = Proxy.RemoteDescriptor.Id,
-                            OperationId = request.OperationId?.ToString() ?? string.Empty
-                        };
-
-                        foreach (var item in val.Arguments) {
-                            req.Arguments.Add(item.ToGrpcVariant());
-                        }
-
-                        await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    await stream.RequestStream.CompleteAsync().ConfigureAwait(false);
-                }
-            }, cancellationToken);
-
-            while (await stream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                yield return new InvocationResponse() {
-                    Results = stream.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var stream = client.InvokeDuplexStreamingExtension(Proxy.GetCallOptions(context, ctSource.Token))) {
+                var req = new InvokeExtensionRequest() {
+                    AdapterId = Proxy.RemoteDescriptor.Id,
+                    OperationId = request.OperationId?.ToString() ?? string.Empty
                 };
+
+                await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
+
+                Proxy.BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        await foreach (var val in channel.WithCancellation(ct).ConfigureAwait(false)) {
+                            var req = new InvokeExtensionRequest() {
+                                AdapterId = Proxy.RemoteDescriptor.Id,
+                                OperationId = request.OperationId?.ToString() ?? string.Empty
+                            };
+
+                            foreach (var item in val.Arguments) {
+                                req.Arguments.Add(item.ToGrpcVariant());
+                            }
+
+                            await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
+                        }
+                    }
+                    finally {
+                        await stream.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    }
+                }, ctSource.Token);
+
+                while (await stream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    yield return new InvocationResponse() {
+                        Results = stream.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                    };
+                }
             }
         }
 
