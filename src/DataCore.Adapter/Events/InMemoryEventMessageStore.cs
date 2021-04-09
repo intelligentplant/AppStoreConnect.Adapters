@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -269,7 +270,12 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesForTimeRange(
+            IAdapterCallContext context, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -299,8 +305,13 @@ namespace DataCore.Adapter.Events {
             finally {
                 _eventMessagesLock.ExitReadLock();
             }
-
-            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x).Build()).PublishToChannel());
+            
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedToken)) {
+                foreach (var item in messages) {
+                    ctSource.Token.ThrowIfCancellationRequested();
+                    yield return EventMessageBuilder.CreateFromExisting(item).Build();
+                }
+            }
         }
 
 

@@ -88,6 +88,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                             continue;
                         }
 
+                        ++outputItems;
                         await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
                 }
@@ -210,16 +211,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var msg) || msg == null) {
-                        continue;
-                    }
+                try {
+                    await foreach (var msg in adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
 
-                    await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+                        ++outputItems;
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }

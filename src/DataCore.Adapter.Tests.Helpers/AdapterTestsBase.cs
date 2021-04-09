@@ -1874,10 +1874,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadEventMessagesForTimeRange(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesForTimeRange)}.{nameof(IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange)}"));
-
-                var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var events = await feature.ReadEventMessagesForTimeRange(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {

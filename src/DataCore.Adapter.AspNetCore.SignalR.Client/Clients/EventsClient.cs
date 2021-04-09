@@ -276,19 +276,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<EventMessage>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesAsync(
+            string adapterId, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessage>(
+            await foreach (var item in connection.StreamAsync<EventMessage>(
                 "ReadEventMessagesForTimeRange",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 

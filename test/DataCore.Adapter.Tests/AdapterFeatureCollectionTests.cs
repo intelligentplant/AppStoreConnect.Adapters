@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -92,7 +93,7 @@ namespace DataCore.Adapter.Tests {
                 throw new NotImplementedException();
             }
 
-            Task<ChannelReader<EventMessage>> IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+            IAsyncEnumerable<EventMessage> IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }
         }
