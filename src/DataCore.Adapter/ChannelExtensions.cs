@@ -2117,6 +2117,35 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Emits all items in the <see cref="IEnumerable{T}"/> as an <see cref="IAsyncEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IEnumerable{T}"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/>.
+        /// </returns>
+        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> enumerable, [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+            if (enumerable == null) {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
+
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            foreach (var item in enumerable) {    
+                yield return item;
+            }
+        }
+
+
+        /// <summary>
         /// Asynchronously reads items from the <see cref="IAsyncEnumerable{T}"/> and returns them 
         /// as an <see cref="IEnumerable{T}"/>.
         /// </summary>
