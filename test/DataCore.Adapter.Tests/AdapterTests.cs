@@ -232,44 +232,6 @@ namespace DataCore.Adapter.Tests {
         #region [ IWriteEventMessages ]
 
         [TestMethod]
-        public Task WriteEventMessagesViaChannelShouldSucceed() {
-            return RunAdapterTest(async (adapter, context, ct) => {
-                var feature = adapter.Features.Get<IWriteEventMessages>();
-                if (feature == null) {
-                    AssertFeatureNotImplemented<IWriteEventMessages>();
-                    return;
-                }
-
-                var now = DateTime.UtcNow;
-                var values = new List<WriteEventMessageItem>();
-                for (var i = 0; i < 5; i++) {
-                    values.Add(new WriteEventMessageItem() {
-                        CorrelationId = Guid.NewGuid().ToString(),
-                        EventMessage = EventMessageBuilder.Create().Build()
-                    });
-                }
-
-                var writeResults = await feature.WriteEventMessages(context, values.PublishToChannel(), ct);
-                var index = 0;
-
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
-                    }
-                }
-            });
-        }
-
-
-        [TestMethod]
         public Task WriteEventMessagesViaEnumerableShouldSucceed() {
             return RunAdapterTest(async (adapter, context, ct) => {
                 var feature = adapter.Features.Get<IWriteEventMessages>();
@@ -287,18 +249,16 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteEventMessages(context, values, ct);
-
-                Assert.AreEqual(values.Count, writeResults.Count());
-
-                var index = 0;
-                foreach (var item in writeResults) {
+                var writeResults = await feature.WriteEventMessages(context, new WriteEventMessagesRequest(), values.ToAsyncEnumerable(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                for (var index = 0; index < writeResults.Count(); index++) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
+                    }
+                    var item = writeResults.ElementAt(index);
                     var expected = values[index];
 
                     Assert.IsNotNull(item);
                     Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                    ++index;
                 }
             });
         }

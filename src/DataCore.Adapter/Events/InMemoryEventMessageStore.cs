@@ -230,42 +230,37 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            IAdapterCallContext context, 
+            WriteEventMessagesRequest request, 
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            ValidationExtensions.ValidateObject(request);
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
-            channel.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        while (ch.TryRead(out var item)) {
-                            if (item?.EventMessage == null) {
-                                continue;
-                            }
+            await foreach(var item in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                if (item?.EventMessage == null) {
+                    continue;
+                }
 
-                            var cursorPosition = await WriteEventMessage(item.EventMessage, ct).ConfigureAwait(false);
-                            if (!await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                                break;
-                            }
+                var cursorPosition = await WriteEventMessage(item.EventMessage, cancellationToken).ConfigureAwait(false);
 
-                            result.Writer.TryWrite(new WriteEventMessageResult(
-                                item.CorrelationId,
-                                Common.WriteStatus.Success,
-                                null,
-                                new[] {
-                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))
-                                }
-                            ));
-                        }
+                yield return new WriteEventMessageResult(
+                    item.CorrelationId,
+                    Common.WriteStatus.Success,
+                    null,
+                    new[] {
+                        new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))
                     }
-                }
-                catch (Exception e) {
-                    result.Writer.TryComplete(e);
-                }
-                finally {
-                    result.Writer.TryComplete();
-                }
-            }, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+                );
+            }
         }
 
 
@@ -276,9 +271,11 @@ namespace DataCore.Adapter.Events {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
+            ValidationExtensions.ValidateObject(request);
+            await Task.Yield();
 
             EventMessage[] messages;
 
@@ -322,6 +319,8 @@ namespace DataCore.Adapter.Events {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
+
+            await Task.Yield();
 
             KeyValuePair<CursorPosition, EventMessage>[] messages;
 

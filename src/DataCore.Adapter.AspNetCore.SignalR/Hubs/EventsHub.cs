@@ -242,9 +242,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Write Event Messages ]
+        #region [ Write Event Messages ]
 
 #if NETSTANDARD2_0 == false
 
@@ -254,30 +254,42 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The write request.
+        /// </param>
         /// <param name="channel">
-        ///   A channel that will provide the event messages to write.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the event messages to write.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel reader that will return the write results.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the write results.
         /// </returns>
-        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            string adapterId,
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
+            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id)) {
-                    var resultChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, channel, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+                try {
+                    await foreach (var item in adapter.Feature.WriteEventMessages(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 #else
@@ -288,14 +300,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The write request.
+        /// </param>
         /// <param name="item">
         ///   The event message to write.
         /// </param>
         /// <returns>
         ///   The write result.
         /// </returns>
-        public async Task<WriteEventMessageResult> WriteEventMessage(string adapterId, WriteEventMessageItem item) {
+        public async Task<WriteEventMessageResult> WriteEventMessage(
+            string adapterId, 
+            WriteEventMessagesRequest request, 
+            WriteEventMessageItem item
+        ) {
             ValidateObject(item);
+            ValidateObject(request);
             var adapterCallContext = new SignalRAdapterCallContext(Context);
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
@@ -306,9 +326,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    using (Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id)) {
-                        var outChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                        var result = await adapter.Feature.WriteEventMessages(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
                     }
                 }
                 finally {

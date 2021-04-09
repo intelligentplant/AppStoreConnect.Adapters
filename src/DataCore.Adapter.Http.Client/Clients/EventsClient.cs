@@ -169,7 +169,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(
             string adapterId, 
-            WriteEventMessagesRequest request, 
+            WriteEventMessagesRequestExtended request, 
             RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {

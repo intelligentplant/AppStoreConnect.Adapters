@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -21,20 +22,24 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="channel">
-        ///   A <see cref="ChannelReader{T}"/> that will provide the event messages to write to the 
-        ///   adapter.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the event messages to write 
+        ///   to the adapter.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ChannelReader{T}"/> that will emit a write result for each item read from 
-        ///   the input <paramref name="channel"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit a write result for each item 
+        ///   read from the input <paramref name="channel"/>.
         /// </returns>
-        Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(
+        IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
             IAdapterCallContext context, 
-            ChannelReader<WriteEventMessageItem> channel, 
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
             CancellationToken cancellationToken
         );
 

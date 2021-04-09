@@ -1985,10 +1985,7 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteEventMessages(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteEventMessages)}.{nameof(IWriteEventMessages.WriteEventMessages)}"));
-
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var writeResults = await feature.WriteEventMessages(context, new WriteEventMessagesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));

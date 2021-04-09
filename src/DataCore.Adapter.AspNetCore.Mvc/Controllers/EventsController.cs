@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Diagnostics;
@@ -207,7 +208,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write")]
         [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
-        public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -222,42 +223,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var writeChannel = ChannelExtensions.CreateEventMessageWriteChannel(MaxEventMessagesPerWriteRequest);
+                    var result = new List<WriteEventMessageResult>();
+                    var channel = request.Events.PublishToChannel();
 
-                    
-                    writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                        var itemsWritten = 0;
-
-                        foreach (var evt in request.Events) {
-                            if (evt == null) {
-                                continue;
-                            }
-
-                            await ch.WriteAsync(evt, ct).ConfigureAwait(false);
-                            activity.SetRequestItemCountTag(++itemsWritten);
-
-                            if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
-                                break;
-                            }
+                    await foreach (var msg in feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
                         }
-                    }, true, _backgroundTaskService, cancellationToken);
 
-                    
-
-                    var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
-                    var resultChannel = await feature.WriteEventMessages(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var res) && res != null) {
-                            result.Add(res);
+                        if (result.Count > MaxEventMessagesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                            break;
                         }
+
+                        result.Add(msg);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
-
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {
