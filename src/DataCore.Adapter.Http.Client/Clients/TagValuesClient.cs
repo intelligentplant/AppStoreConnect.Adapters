@@ -354,7 +354,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotValuesAsync(
             string adapterId, 
-            WriteTagValuesRequest request, 
+            WriteTagValuesRequestExtended request, 
             RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
@@ -403,7 +403,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalValuesAsync(
             string adapterId, 
-            WriteTagValuesRequest request, 
+            WriteTagValuesRequestExtended request, 
             RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {

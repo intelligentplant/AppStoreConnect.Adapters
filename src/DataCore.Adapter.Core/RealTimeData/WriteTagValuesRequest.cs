@@ -1,19 +1,11 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
-    /// Describes a request to write snapshot or historical tag values.
+    /// A request to write tag values to an adapter.
     /// </summary>
-    public class WriteTagValuesRequest {
+    public class WriteTagValuesRequest : AdapterRequest { }
 
-        /// <summary>
-        /// The values to write.
-        /// </summary>
-        [Required]
-        [MinLength(1)]
-        public WriteTagValueItem[] Values { get; set; } = Array.Empty<WriteTagValueItem>();
-
-    }
 }

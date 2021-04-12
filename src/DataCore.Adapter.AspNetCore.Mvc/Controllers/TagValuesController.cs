@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Diagnostics;
@@ -728,7 +729,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -742,40 +743,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+                    var result = new List<WriteTagValueResult>();
+                    var channel = request.Values.PublishToChannel();
 
-                    writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                        var itemsWritten = 0;
-
-                        foreach (var value in request.Values) {
-                            if (value == null) {
-                                continue;
-                            }
-
-                            await ch.WriteAsync(value, ct).ConfigureAwait(false);
-                            activity.SetRequestItemCountTag(++itemsWritten);
-
-                            if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                                break;
-                            }
+                    await foreach (var msg in feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
                         }
-                    }, true, _backgroundTaskService, cancellationToken);
 
-                    var resultChannel = await feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-                    var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var res) && res != null) {
-                            result.Add(res);
+                        if (result.Count > MaxSamplesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                            break;
                         }
+
+                        result.Add(msg);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
-
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {
@@ -810,7 +796,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/history")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -824,40 +810,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+                    var result = new List<WriteTagValueResult>();
+                    var channel = request.Values.PublishToChannel();
 
-                    writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                        var itemsWritten = 0;
-
-                        foreach (var value in request.Values) {
-                            if (value == null) {
-                                continue;
-                            }
-
-                            await ch.WriteAsync(value, ct).ConfigureAwait(false);
-                            activity.SetRequestItemCountTag(++itemsWritten);
-
-                            if (itemsWritten >= MaxSamplesPerWriteRequest) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                                break;
-                            }
+                    await foreach (var msg in feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
                         }
-                    }, true, _backgroundTaskService, cancellationToken);
 
-                    var resultChannel = await feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-                    var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-                    while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (resultChannel.TryRead(out var res) && res != null) {
-                            result.Add(res);
+                        if (result.Count > MaxSamplesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
+                            break;
                         }
+
+                        result.Add(msg);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
-
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {

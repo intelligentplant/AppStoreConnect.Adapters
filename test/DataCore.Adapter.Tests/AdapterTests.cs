@@ -97,21 +97,19 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteSnapshotTagValues(context, values.PublishToChannel(), ct);
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), values.PublishToChannel().ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 var index = 0;
 
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
+                foreach (var item in writeResults) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
                     }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
                 }
             });
         }
@@ -136,7 +134,7 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteSnapshotTagValues(context, values, ct);
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), values, ct);
                 
                 Assert.AreEqual(values.Count, writeResults.Count());
 
@@ -172,21 +170,19 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteHistoricalTagValues(context, values.PublishToChannel(), ct);
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), values.PublishToChannel().ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 var index = 0;
 
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
+                foreach (var item in writeResults) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
                     }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
                 }
             });
         }
@@ -211,7 +207,7 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteHistoricalTagValues(context, values, ct);
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), values, ct);
 
                 Assert.AreEqual(values.Count, writeResults.Count());
 

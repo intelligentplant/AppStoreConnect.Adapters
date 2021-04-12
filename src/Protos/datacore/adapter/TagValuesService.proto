@@ -117,4 +117,5 @@ message WriteTagValueRequest {
 
 message WriteTagValueInitMessage {
     string adapter_id = 1;
+    map<string,string> properties = 2;
 }

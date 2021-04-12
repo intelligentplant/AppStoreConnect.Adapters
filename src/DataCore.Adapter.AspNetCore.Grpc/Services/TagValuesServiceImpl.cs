@@ -322,9 +322,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
-            Activity? activity = null;
 
             try {
+                ResolvedAdapterFeature<IWriteSnapshotTagValues> adapter = default;
+                WriteTagValuesRequest adapterRequest = null!;
+
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -334,37 +336,53 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     // We received a create request!
 
-                    var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
-                    activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id);
+                    adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
+                    adapterRequest = new Adapter.RealTimeData.WriteTagValuesRequest() {
+                        Properties = new Dictionary<string, string>(requestStream.Current.Init.Properties)
+                    };
 
-                    var subscription = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
-                                }
-                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
-                            }
-                        }
-                    }, _backgroundTaskService, cancellationToken);
-
-                    // Break out of the initial loop; we'll handle the actual writes below.
+                    // Break out of the initial loop; we'll handle the actual writes below!
                     break;
                 }
 
-                // Now handle write requests.
-                long inputItems = 0;
-                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
-                        continue;
-                    }
+                if (adapterRequest == null) {
+                    return;
+                }
 
-                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
-                    activity.SetRequestItemCountTag(++inputItems);
+                // Start a background task to forward additional writes to the adapter
+                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
+                            if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
+                                continue;
+                            }
+
+                            await valueChannel.Writer.WriteAsync(requestStream.Current.Write.ToAdapterWriteTagValueItem(), ct).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception e) {
+                        valueChannel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        valueChannel.Writer.TryComplete();
+                    }
+                }, cancellationToken);
+
+                // Stream results back to caller.
+                using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                    long outputItems = 0;
+                    try {
+                        await foreach (var val in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                            if (val == null) {
+                                continue;
+                            }
+                            ++outputItems;
+                            await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
+                        }
+                    }
+                    finally {
+                        activity.SetResponseItemCountTag(outputItems);
+                    }
                 }
             }
             catch (OperationCanceledException) { }
@@ -373,7 +391,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 valueChannel.Writer.TryComplete();
-                activity?.Dispose();
             }
         }
 
@@ -384,9 +401,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
-            Activity? activity = null;
 
             try {
+                ResolvedAdapterFeature<IWriteHistoricalTagValues> adapter = default;
+                WriteTagValuesRequest adapterRequest = null!;
+
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -396,37 +415,53 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     // We received a create request!
 
-                    var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
-                    activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id);
-
-                    var subscription = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
-                                }
-                                await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
-                            }
-                        }
-                    }, _backgroundTaskService, cancellationToken);
+                    adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
+                    adapterRequest = new Adapter.RealTimeData.WriteTagValuesRequest() {
+                        Properties = new Dictionary<string, string>(requestStream.Current.Init.Properties)
+                    };
 
                     // Break out of the initial loop; we'll handle the actual writes below!
                     break;
                 }
 
-                // Now handle write requests.
-                long inputItems = 0;
-                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
-                        continue;
-                    }
+                if (adapterRequest == null) {
+                    return;
+                }
 
-                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteTagValueItem());
-                    activity.SetRequestItemCountTag(++inputItems);
+                // Start a background task to forward additional writes to the adapter
+                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
+                            if (requestStream.Current.OperationCase != WriteTagValueRequest.OperationOneofCase.Write) {
+                                continue;
+                            }
+
+                            await valueChannel.Writer.WriteAsync(requestStream.Current.Write.ToAdapterWriteTagValueItem(), ct).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception e) {
+                        valueChannel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        valueChannel.Writer.TryComplete();
+                    }
+                }, cancellationToken);
+
+                // Stream results back to caller.
+                using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                    long outputItems = 0;
+                    try {
+                        await foreach (var val in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                            if (val == null) {
+                                continue;
+                            }
+                            ++outputItems;
+                            await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
+                        }
+                    }
+                    finally {
+                        activity.SetResponseItemCountTag(outputItems);
+                    }
                 }
             }
             catch (OperationCanceledException) { }

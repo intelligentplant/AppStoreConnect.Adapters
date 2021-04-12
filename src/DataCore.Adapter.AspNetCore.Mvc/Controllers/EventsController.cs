@@ -233,7 +233,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                             continue;
                         }
 
-                        if (result.Count > MaxEventMessagesPerReadRequest) {
+                        if (result.Count > MaxEventMessagesPerWriteRequest) {
                             Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                             break;
                         }

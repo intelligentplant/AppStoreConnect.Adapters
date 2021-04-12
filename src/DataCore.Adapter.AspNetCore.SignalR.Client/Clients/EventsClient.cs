@@ -421,12 +421,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                         var writeResult = await connection.InvokeAsync<WriteEventMessageResult>(
                             "WriteEventMessage",
                             adapterId,
-                            new WriteEventMessagesRequestExtended() {
-                                Properties = request.Properties,
-                                Events = new[] {
-                                    val
-                                }
-                            },
+                            request,
+                            val,
                             cancellationToken
                         ).ConfigureAwait(false);
 
@@ -435,9 +431,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {

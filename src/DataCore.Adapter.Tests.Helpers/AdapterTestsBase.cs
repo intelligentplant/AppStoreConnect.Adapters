@@ -1487,10 +1487,8 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteSnapshotTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteSnapshotTagValues)}.{nameof(IWriteSnapshotTagValues.WriteSnapshotTagValues)}"));
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
@@ -1555,10 +1553,8 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteHistoricalTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteHistoricalTagValues)}.{nameof(IWriteHistoricalTagValues.WriteHistoricalTagValues)}"));
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));

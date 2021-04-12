@@ -420,6 +420,7 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         /// </summary>
         /// <param name="source"></param>
         /// <param name="adapterId"></param>
+        /// <param name="request"></param>
         /// <param name="kind"></param>
         /// <param name="parentId"></param>
         /// <returns>
@@ -429,6 +430,7 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         public static Activity? StartWriteHistoricalTagValuesActivity(
             this ActivitySource source,
             string adapterId,
+            WriteTagValuesRequest? request = null,
             ActivityKind kind = ActivityKind.Internal,
             string? parentId = null
         ) {
@@ -459,6 +461,7 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         /// </summary>
         /// <param name="source"></param>
         /// <param name="adapterId"></param>
+        /// <param name="request"></param>
         /// <param name="kind"></param>
         /// <param name="parentId"></param>
         /// <returns>
@@ -468,6 +471,7 @@ namespace DataCore.Adapter.Diagnostics.RealTimeData {
         public static Activity? StartWriteSnapshotTagValuesActivity(
             this ActivitySource source,
             string adapterId,
+            WriteTagValuesRequest? request = null,
             ActivityKind kind = ActivityKind.Internal,
             string? parentId = null
         ) {

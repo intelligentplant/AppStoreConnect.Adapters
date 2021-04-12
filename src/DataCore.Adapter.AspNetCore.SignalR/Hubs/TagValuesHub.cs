@@ -365,6 +365,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="channel">
         ///   A channel that will provide the values to write.
         /// </param>
@@ -374,21 +377,31 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will return the write results.
         /// </returns>
-        public async Task<ChannelReader<WriteTagValueResult>> WriteSnapshotTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<WriteTagValueResult> WriteSnapshotTagValues(
+            string adapterId, 
+            WriteTagValuesRequest request,
+            IAsyncEnumerable<WriteTagValueItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel();
+            ValidateObject(request);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
-                    var resultChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, channel, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 
@@ -398,6 +411,9 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="channel">
         ///   A channel that will provide the values to write.
         /// </param>
@@ -407,21 +423,30 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will return the write results.
         /// </returns>
-        public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(string adapterId, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<WriteTagValueResult> WriteHistoricalTagValues(
+            string adapterId, 
+            WriteTagValuesRequest request,
+            IAsyncEnumerable<WriteTagValueItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel();
+            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
-                    var resultChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, channel, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+                try {
+                    await foreach (var item in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 #else
@@ -432,17 +457,24 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="item">
         ///   The value to write.
         /// </param>
         /// <returns>
         ///   The write result.
         /// </returns>
-        public async Task<WriteTagValueResult> WriteSnapshotTagValue(string adapterId, WriteTagValueItem item) {
-            if (item == null) {
-                throw new ArgumentNullException(nameof(item));
-            }
+        public async Task<WriteTagValueResult> WriteSnapshotTagValue(
+            string adapterId, 
+            WriteTagValuesRequest request,
+            WriteTagValueItem item
+        ) {
+            ValidateObject(item);
+            ValidateObject(request);
             var adapterCallContext = new SignalRAdapterCallContext(Context);
+
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
                 var cancellationToken = ctSource.Token;
                 try {
@@ -451,9 +483,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    using (Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
-                        var outChannel = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                        var result = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
                     }
                 }
                 finally {
@@ -469,17 +502,24 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="item">
         ///   The value to write.
         /// </param>
         /// <returns>
         ///   The write result.
         /// </returns>
-        public async Task<WriteTagValueResult> WriteHistoricalTagValue(string adapterId, WriteTagValueItem item) {
-            if (item == null) {
-                throw new ArgumentNullException(nameof(item));
-            }
+        public async Task<WriteTagValueResult> WriteHistoricalTagValue(
+            string adapterId,
+            WriteTagValuesRequest request,
+            WriteTagValueItem item
+        ) {
+            ValidateObject(item);
+            ValidateObject(request);
             var adapterCallContext = new SignalRAdapterCallContext(Context);
+
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
                 var cancellationToken = ctSource.Token;
                 try {
@@ -488,9 +528,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    using (Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id)) {
-                        var outChannel = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                        return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                        var result = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
                     }
                 }
                 finally {
