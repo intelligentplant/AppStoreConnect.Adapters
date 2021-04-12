@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -28,9 +27,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel containing the values for the requested tags.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the requested tag values.
         /// </returns>
-        Task<ChannelReader<TagValueQueryResult>> ReadPlotTagValues(
+        IAsyncEnumerable<TagValueQueryResult> ReadPlotTagValues(
             IAdapterCallContext context, 
             ReadPlotTagValuesRequest request, 
             CancellationToken cancellationToken

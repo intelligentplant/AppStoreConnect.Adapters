@@ -498,10 +498,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <summary>
-        /// Adds tags to the adapter that are not defined in the CSV. Callers should override the 
-        /// <see cref="ReadSnapshotTagValues(IAdapterCallContext, ReadSnapshotTagValuesRequest, ChannelWriter{TagValueQueryResult}, CancellationToken)"/> 
-        /// and <see cref="ReadRawTagValues(IAdapterCallContext, ReadRawTagValuesRequest, ChannelWriter{TagValueQueryResult}, CancellationToken)"/> 
-        /// methods to handle data queries for these tags.
+        /// Adds tags to the adapter that are not defined in the CSV.
         /// </summary>
         /// <param name="tags">
         ///   The tags to add.
@@ -608,7 +605,7 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+        public virtual async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
             [EnumeratorCancellation]
