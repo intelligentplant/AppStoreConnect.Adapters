@@ -618,11 +618,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+                    var result = new List<ProcessedTagValueQueryResult>();
 
-                    var result = new List<ProcessedTagValueQueryResult>(request.Tags.Count());
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var value) || value == null) {
+                    await foreach (var msg in feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
@@ -631,10 +630,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                             break;
                         }
 
-                        result.Add(value);
+                        result.Add(msg);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
+
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {
@@ -681,13 +681,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                try {
-                    var result = await (await feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
-                    return Ok(result); // 200
+                var result = new List<DataFunctionDescriptor>();
+
+                await foreach (var msg in feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)) {
+                    if (msg == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(msg);
                 }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+
+                activity.SetResponseItemCountTag(result.Count);
+
+                return Ok(result); // 200
             }
         }
 

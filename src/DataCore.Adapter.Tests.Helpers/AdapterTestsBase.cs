@@ -1144,9 +1144,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetSupportedDataFunctions(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.GetSupportedDataFunctions)}"));
-                var dataFunctions = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var dataFunctions = await feature.GetSupportedDataFunctions(context, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 Assert.IsTrue(dataFunctions.Any(), FormatMessage(Resources.AdapterDoesNotImplementAnyAggregates, nameof(IReadProcessedTagValues)));
                 Assert.IsTrue(dataFunctions.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(DataFunctionDescriptor)));
@@ -1177,9 +1175,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadProcessedTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.ReadProcessedTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadProcessedTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var dataFunctions = new List<string>(request.DataFunctions);
                 var allTags = new HashSet<string>(request.Tags);

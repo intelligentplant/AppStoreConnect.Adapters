@@ -240,8 +240,8 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            return Task.FromResult(_aggregationHelper.GetSupportedDataFunctions().PublishToChannel());
+        public IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+            return _aggregationHelper.GetSupportedDataFunctions().PublishToChannel().ReadAllAsync(cancellationToken);
         }
 
 
@@ -257,7 +257,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<ProcessedTagValueQueryResult> ReadProcessedTagValues(
+            IAdapterCallContext context,
+            ReadProcessedTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -266,34 +271,28 @@ namespace DataCore.Adapter.RealTimeData {
             }
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateProcessedTagValueChannel();
+            var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                Tags = request.Tags
+            }, cancellationToken);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
-                    Tags = request.Tags
-                }, ct);
-
-                await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
-                    if (tag == null) {
-                        continue;
-                    }
-
-                    var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                        Tags = new[] { tag.Id },
-                        UtcStartTime = request.UtcStartTime,
-                        UtcEndTime = request.UtcEndTime,
-                        SampleCount = 0,
-                        BoundaryType = RawDataBoundaryType.Outside
-                    }, ct).ConfigureAwait(false);
-
-                    var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader.ReadAllAsync(ct), ct);
-                    await foreach (var value in resultValuesReader.ConfigureAwait(false)) {
-                        await ch.WriteAsync(value, ct).ConfigureAwait(false);
-                    }
+            await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
+                if (tag == null) {
+                    continue;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
 
-            return Task.FromResult<ChannelReader<ProcessedTagValueQueryResult>>(result);
+                var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                    Tags = new[] { tag.Id },
+                    UtcStartTime = request.UtcStartTime,
+                    UtcEndTime = request.UtcEndTime,
+                    SampleCount = 0,
+                    BoundaryType = RawDataBoundaryType.Outside
+                }, cancellationToken).ConfigureAwait(false);
+
+                var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader.ReadAllAsync(cancellationToken), cancellationToken);
+                await foreach (var value in resultValuesReader.ConfigureAwait(false)) {
+                    yield return value;
+                }
+            }
         }
 
 

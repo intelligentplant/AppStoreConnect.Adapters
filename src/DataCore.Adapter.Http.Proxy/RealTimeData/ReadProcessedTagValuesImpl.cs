@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -20,41 +22,42 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// </param>
         public ReadProcessedTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
+
         /// <inheritdoc />
-        public Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
+            IAdapterCallContext context, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context);
-            var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+            var client = GetClient();
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
         /// <inheritdoc />
-        public Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<ProcessedTagValueQueryResult> ReadProcessedTagValues(
+            IAdapterCallContext context, 
+            ReadProcessedTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

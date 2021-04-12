@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -26,9 +25,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit the available data functions.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the available data functions.
         /// </returns>
-        Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(
+        IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
             IAdapterCallContext context, 
             CancellationToken cancellationToken
         );
@@ -46,9 +45,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit the values for the requested tags.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the requested tag values.
         /// </returns>
-        Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(
+        IAsyncEnumerable<ProcessedTagValueQueryResult> ReadProcessedTagValues(
             IAdapterCallContext context, 
             ReadProcessedTagValuesRequest request, 
             CancellationToken cancellationToken
