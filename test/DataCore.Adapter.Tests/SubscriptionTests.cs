@@ -141,13 +141,13 @@ namespace DataCore.Adapter.Tests {
 
                 _ = Task.Run(async () => {
                     try {
-                        await Task.Delay(100, CancellationToken);
-
                         // val1 should not be received by the subscription.
                         await feature.ValueReceived(val1, CancellationToken);
 
                         // val2 should be received by the subscription.
                         await feature.ValueReceived(val2, CancellationToken);
+
+                        await Task.Delay(100, CancellationToken);
 
                         // Add the subscription change - we should receive the current value for
                         // the tag at the point of subscription.
