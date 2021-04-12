@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,25 +26,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
-            IAdapterCallContext context, 
-            Uri? featureUri, 
-            CancellationToken cancellationToken
-        ) {
-            Proxy.ValidateInvocation(context);
-
-            var client = Proxy.GetClient();
-            return client.Extensions.GetDescriptorAsync(
-                Proxy.RemoteDescriptor.Id,
-                featureUri!, 
-                context?.ToRequestMetadata(),
-                cancellationToken
-            );
-        }
-
-
-        /// <inheritdoc/>
-        protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
+        protected override async Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
             IAdapterCallContext context,
             Uri? featureUri,
             CancellationToken cancellationToken
@@ -53,26 +34,53 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             Proxy.ValidateInvocation(context);
 
             var client = Proxy.GetClient();
-            return client.Extensions.GetOperationsAsync(
-                Proxy.RemoteDescriptor.Id, 
-                featureUri!, 
-                context?.ToRequestMetadata(), 
-                cancellationToken
-            );
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) { 
+                return await client.Extensions.GetDescriptorAsync(
+                    Proxy.RemoteDescriptor.Id,
+                    featureUri!,
+                    context?.ToRequestMetadata(),
+                    ctSource.Token
+                ).ConfigureAwait(false);
+            }
         }
 
 
         /// <inheritdoc/>
-        protected override Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
+        protected override async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
+            IAdapterCallContext context,
+            Uri? featureUri,
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context);
+
+            var client = Proxy.GetClient();
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.Extensions.GetOperationsAsync(
+                    Proxy.RemoteDescriptor.Id,
+                    featureUri!,
+                    context?.ToRequestMetadata(),
+                    ctSource.Token
+                ).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context, request);
 
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeExtensionAsync(
-                Proxy.RemoteDescriptor.Id, 
-                request, 
-                context?.ToRequestMetadata(), 
-                cancellationToken
-            )!;
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.Extensions.InvokeExtensionAsync(
+                    Proxy.RemoteDescriptor.Id,
+                    request,
+                    context?.ToRequestMetadata(),
+                    ctSource.Token
+                ).ConfigureAwait(false);
+            }
         }
 
     }

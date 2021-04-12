@@ -39,14 +39,15 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Proxy.ValidateInvocation(context);
 
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
-            var response = client.GetDescriptorAsync(new GetExtensionDescriptorRequest() {
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var response = client.GetDescriptorAsync(new GetExtensionDescriptorRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
                 FeatureUri = featureUri?.ToString() ?? string.Empty
-            }, Proxy.GetCallOptions(context, cancellationToken));
-
-            var result = await response.ResponseAsync.ConfigureAwait(false);
-
-            return result.ToAdapterFeatureDescriptor();
+            }, Proxy.GetCallOptions(context, ctSource.Token))) {
+                var result = await response.ResponseAsync.ConfigureAwait(false);
+                return result.ToAdapterFeatureDescriptor();
+            }
         }
 
 
@@ -59,14 +60,15 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Proxy.ValidateInvocation(context);
 
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
-            var response = client.GetOperationsAsync(new GetExtensionOperationsRequest() {
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var response = client.GetOperationsAsync(new GetExtensionOperationsRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
                 FeatureUri = featureUri?.ToString() ?? string.Empty
-            }, Proxy.GetCallOptions(context, cancellationToken));
-
-            var result = await response.ResponseAsync.ConfigureAwait(false);
-
-            return result.Operations.Select(x => x.ToAdapterExtensionOperatorDescriptor()).ToArray();
+            }, Proxy.GetCallOptions(context, ctSource.Token))) {
+                var result = await response.ResponseAsync.ConfigureAwait(false);
+                return result.Operations.Select(x => x.ToAdapterExtensionOperatorDescriptor()).ToArray();
+            }
         }
 
 
