@@ -1248,9 +1248,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadTagValuesAtTimes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValuesAtTimes)}.{nameof(IReadTagValuesAtTimes.ReadTagValuesAtTimes)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadTagValuesAtTimes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var allTimestamps = new HashSet<DateTime>(request.UtcSampleTimes);
                 var allTags = new HashSet<string>(request.Tags);

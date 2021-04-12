@@ -297,7 +297,12 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
+            IAdapterCallContext context,
+            ReadTagValuesAtTimesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -307,60 +312,54 @@ namespace DataCore.Adapter.RealTimeData {
 
             ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel();
+            var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
+                Tags = request.Tags
+            }, cancellationToken);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagDefinitionsReader = _tagInfoProvider.GetTags(context, new GetTagsRequest() {
-                    Tags = request.Tags
-                }, ct);
+            await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
+                if (tag == null) {
+                    continue;
+                }
 
-                await foreach (var tag in tagDefinitionsReader.ConfigureAwait(false)) {
-                    if (tag == null) {
+                // Values-at-times queries are managed differently to regular interpolated 
+                // queries. For values-at-times, we make a raw data query with an outside 
+                // boundary type for every requested sample time (in case the sample times 
+                // span a huge number of raw samples). We then write the values received 
+                // from the resulting channel into a master raw data channel, which is used 
+                // by the InterpolationHelper to calcukate the required values.
+
+                var rawValuesChannel = ChannelExtensions.CreateTagValueChannel();
+
+                rawValuesChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
+                    foreach (var sampleTime in request.UtcSampleTimes) {
+                        var valueReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                            Tags = new[] { tag.Id },
+                            UtcStartTime = sampleTime.AddSeconds(-1),
+                            UtcEndTime = sampleTime.AddSeconds(1),
+                            SampleCount = 0,
+                            BoundaryType = RawDataBoundaryType.Outside
+                        }, ct).ConfigureAwait(false);
+
+                        while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
+                            while (valueReader.TryRead(out var val)) {
+                                if (val == null) {
+                                    continue;
+                                }
+                                await ch.WriteAsync(val, ct).ConfigureAwait(false);
+                            }
+                        }
+                    }
+                }, true, BackgroundTaskService, cancellationToken);
+
+                var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken);
+                await foreach (var val in resultValuesReader.ConfigureAwait(false)) {
+                    if (val == null) {
                         continue;
                     }
 
-                    // Values-at-times queries are managed differently to regular interpolated 
-                    // queries. For values-at-times, we make a raw data query with an outside 
-                    // boundary type for every requested sample time (in case the sample times 
-                    // span a huge number of raw samples). We then write the values received 
-                    // from the resulting channel into a master raw data channel, which is used 
-                    // by the InterpolationHelper to calcukate the required values.
-
-                    var rawValuesChannel = ChannelExtensions.CreateTagValueChannel();
-
-                    rawValuesChannel.Writer.RunBackgroundOperation(async (ch2, ct2) => {
-                        foreach (var sampleTime in request.UtcSampleTimes) {
-                            var valueReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
-                                Tags = new[] { tag.Id },
-                                UtcStartTime = sampleTime.AddSeconds(-1),
-                                UtcEndTime = sampleTime.AddSeconds(1),
-                                SampleCount = 0,
-                                BoundaryType = RawDataBoundaryType.Outside
-                            }, ct2).ConfigureAwait(false);
-
-                            while (await valueReader.WaitToReadAsync(ct2).ConfigureAwait(false)) {
-                                if (!valueReader.TryRead(out var val) || val == null) {
-                                    continue;
-                                }
-                                ch2.TryWrite(val);
-                            }
-                        }
-                    }, true, BackgroundTaskService, ct);
-
-                    var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel.Reader.ReadAllAsync(ct), ct);
-                    await foreach (var val in resultValuesReader.WithCancellation(ct).ConfigureAwait(false)) {
-                        if (val == null) {
-                            continue;
-                        }
-
-                        if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            ch.TryWrite(val);
-                        }
-                    }
+                    yield return val;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
+            }
         }
 
     }

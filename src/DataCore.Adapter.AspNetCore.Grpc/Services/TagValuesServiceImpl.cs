@@ -233,16 +233,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
 
-                var outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var val) || val == null) {
-                        continue;
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.Plot)).ConfigureAwait(false);
                     }
-
-                    await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.ValuesAtTimes)).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }

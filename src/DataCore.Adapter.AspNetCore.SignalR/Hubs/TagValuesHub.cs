@@ -243,22 +243,29 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will return the query results.
         /// </returns>
-        public async Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
+            string adapterId, 
+            ReadTagValuesAtTimesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel();
+            using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+                try {
+                    await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 

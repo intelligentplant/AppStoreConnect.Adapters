@@ -580,14 +580,16 @@ namespace DataCore.Adapter.WaveGenerator {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            await Task.Yield();
             ValidateInvocation(context, request);
-
+            await Task.Yield();
+            
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
                 foreach (var tag in request.Tags) {
+                    ctSource.Token.ThrowIfCancellationRequested();
+
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -656,12 +658,18 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
+            IAdapterCallContext context, 
+            ReadTagValuesAtTimesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.Yield();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
+                    ctSource.Token.ThrowIfCancellationRequested();
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -669,17 +677,16 @@ namespace DataCore.Adapter.WaveGenerator {
                     var tagId = tagOptions?.Name ?? tag;
 
                     foreach (var sampleTime in request.UtcSampleTimes) {
+                        ctSource.Token.ThrowIfCancellationRequested();
                         var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();
 
-                        await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                        yield return new TagValueQueryResult(tagId, tagId, val);
                     }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }
