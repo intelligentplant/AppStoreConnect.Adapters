@@ -27,7 +27,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will complete once the request has completed.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the requested tag values.
         /// </returns>
         IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
