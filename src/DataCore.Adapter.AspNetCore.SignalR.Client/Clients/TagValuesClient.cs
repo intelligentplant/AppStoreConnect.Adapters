@@ -402,6 +402,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -413,17 +416,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// </exception>
         public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctionsAsync(
             string adapterId, 
+            GetSupportedDataFunctionsRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
+            AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<DataFunctionDescriptor>(
                 "GetSupportedDataFunctions",
                 adapterId,
+                request,
                 cancellationToken
             ).ConfigureAwait(false)) {
                 yield return item;

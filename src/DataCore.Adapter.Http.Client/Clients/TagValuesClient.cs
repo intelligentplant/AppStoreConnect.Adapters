@@ -244,6 +244,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="metadata">
         ///   The metadata to associate with the outgoing request.
         /// </param>
@@ -258,16 +261,18 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// </exception>
         public async Task<IEnumerable<DataFunctionDescriptor>> GetSupportedDataFunctionsAsync(
             string adapterId, 
+            GetSupportedDataFunctionsRequest request,
             RequestMetadata? metadata = null, 
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
+            AdapterHttpClient.ValidateObject(request);
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/supported-aggregations";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 httpResponse.EnsureSuccessStatusCode();
 

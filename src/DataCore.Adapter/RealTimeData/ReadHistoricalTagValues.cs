@@ -240,7 +240,19 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
+            IAdapterCallContext context, 
+            GetSupportedDataFunctionsRequest request,
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+            ValidationExtensions.ValidateObject(request);
+
             return _aggregationHelper.GetSupportedDataFunctions().PublishToChannel().ReadAllAsync(cancellationToken);
         }
 

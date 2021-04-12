@@ -24,16 +24,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// <inheritdoc />
         public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
             IAdapterCallContext context, 
+            GetSupportedDataFunctionsRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
                 await foreach (var item in client.TagValues.GetSupportedDataFunctionsAsync(
                     AdapterId,
+                    request,
                     ctSource.Token
                 ).ConfigureAwait(false)) {
                     yield return item;

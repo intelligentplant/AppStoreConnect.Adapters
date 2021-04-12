@@ -93,6 +93,7 @@ message ReadTagValuesAtTimesRequest {
 // Read processed tag values
 message GetSupportedDataFunctionsRequest {
     string adapter_id = 1;
+    map<string,string> properties = 2;
 }
 
 message ReadProcessedTagValuesRequest {

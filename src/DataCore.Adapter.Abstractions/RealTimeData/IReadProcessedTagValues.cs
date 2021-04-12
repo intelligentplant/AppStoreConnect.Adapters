@@ -21,6 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -29,6 +32,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
             IAdapterCallContext context, 
+            GetSupportedDataFunctionsRequest request,
             CancellationToken cancellationToken
         );
 

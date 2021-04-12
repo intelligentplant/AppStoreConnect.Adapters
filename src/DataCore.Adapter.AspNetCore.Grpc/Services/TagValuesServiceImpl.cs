@@ -260,10 +260,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
+            var adapterRequest = new RealTimeData.GetSupportedDataFunctionsRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
+
             using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(adapter.Adapter.Descriptor.Id)) {
                 long outputItems = 0;
                 try {
-                    await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+                    await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
                         if (item == null) {
                             continue;
                         }

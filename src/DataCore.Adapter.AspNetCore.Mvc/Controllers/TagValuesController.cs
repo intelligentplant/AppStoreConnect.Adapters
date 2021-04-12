@@ -667,7 +667,37 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
-        public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
+        public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
+            return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Requests the aggregate functions that can be specified when requesting processed data.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain descriptors for the aggregated function names that can 
+        ///   be specified.
+        /// </returns>
+        /// <remarks>
+        ///   Processed data queries are used to request aggregated values for tags. The functions 
+        ///   supported vary by data source. The <see cref="DefaultDataFunctions"/> class defines
+        ///   constants for commonly-supported aggregate functions.
+        /// </remarks>
+        /// <seealso cref="DefaultDataFunctions"/>
+        [HttpPost]
+        [Route("{adapterId}/supported-aggregations")]
+        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, GetSupportedDataFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -684,7 +714,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
                 var result = new List<DataFunctionDescriptor>();
 
-                await foreach (var msg in feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)) {
+                await foreach (var msg in feature.GetSupportedDataFunctions(callContext, request, cancellationToken).ConfigureAwait(false)) {
                     if (msg == null) {
                         continue;
                     }

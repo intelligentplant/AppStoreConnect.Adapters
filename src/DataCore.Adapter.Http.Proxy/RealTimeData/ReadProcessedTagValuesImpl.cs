@@ -26,15 +26,16 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// <inheritdoc />
         public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
             IAdapterCallContext context, 
+            GetSupportedDataFunctionsRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
+            Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
+                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
                     yield return item;
                 }

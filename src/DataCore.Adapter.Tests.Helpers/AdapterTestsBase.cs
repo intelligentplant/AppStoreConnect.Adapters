@@ -1146,7 +1146,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var dataFunctions = await feature.GetSupportedDataFunctions(context, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                var dataFunctions = await feature.GetSupportedDataFunctions(context, new GetSupportedDataFunctionsRequest(), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 Assert.IsTrue(dataFunctions.Any(), FormatMessage(Resources.AdapterDoesNotImplementAnyAggregates, nameof(IReadProcessedTagValues)));
                 Assert.IsTrue(dataFunctions.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(DataFunctionDescriptor)));
