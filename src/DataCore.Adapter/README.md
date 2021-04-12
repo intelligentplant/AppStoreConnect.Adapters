@@ -15,41 +15,69 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](http
 Extend [AdapterBase&lt;T&gt;](./AdapterBaseT.cs) or [AdapterBase](./AdapterBase.cs) to inherit a base adapter implementation. In both cases, you must implement the `StartAsync` and `StopAsync` methods at a bare minimum.
 
 
-## Working with Channels
+## Working with IAsyncEnumerable<T>
 
-Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. 
+Adapter features make extensive use of the `IAsyncEnumerable<T>` type, to allow query results to be streamed back to the caller asynchronously. For .NET Framework and .NET Standard 2.0 targets, the [Microsoft.Bcl.AsyncInterfaces](https://www.nuget.org/packages/Microsoft.Bcl.AsyncInterfaces/) NuGet package is used to define the type.
 
-In most cases, it is advisable to create the result channel as soon as possible in your method implementation, start a background task to write values into the channel, and then return the channel as soon as possible. This project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` classes, to easily create, read from, or write to channels in background tasks. For example:
+> NOTE: In order to produce `IAsyncEnumerable<T>` instances from iterator methods, or to consume `IAsyncEnumerator<T>` instances using `await foreach` loops, your project must use C# 8.0 or higher.
+
+In most cases, it is advisable to declare a feature method using the `async` keyword, and to use `yield return` statements to emit values as they occur. For example:
 
 ```csharp
 public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
 
     // -- other code removed for brevity --
 
-    Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(
+    async IAsyncEnumerable<ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
         IAdapterCallContext context, 
         ReadSnapshotTagValuesRequest request, 
+        [EnumeratorCancellation]
         CancellationToken cancellationToken
     ) {
-        var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
+        ValidateInvocation(context, request);
 
-        channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-            using (var values = GetSnapshotValues(request.Tags)) {
-                while (await values.MoveNext(ct).ConfigureAwait(false)) {
-                    var canWrite = await channel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
-                    if (!canWrite) {
-                        return;
-                    }
-
-                    channel.Writer.TryWrite(values.Current);
-                }
+        // CreateCancellationTokenSource is defined on AdapterBase<TOptions>, and is used to 
+        // create CancellationTokenSource instances that will cancel when the adapter is stopped, 
+        // in addition to when any cancellation tokens passed to the method are cancelled.
+        using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+            await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
+                yield return item;
             }
-        }, true, BackgroundTaskService, cancellationToken);
-
-        return Task.FromResult(channel.Reader);
+        }
     }
 
-    private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
+    private IAsyncEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
+        ...
+    }
+
+}
+```
+
+If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.Yield` to make the implementation asynchronous:
+
+```csharp
+public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
+
+    // -- other code removed for brevity --
+
+    async IAsyncEnumerable<ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
+        IAdapterCallContext context, 
+        ReadSnapshotTagValuesRequest request, 
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken
+    ) {
+        ValidateInvocation(context, request);
+
+        await Task.Yield();
+
+        using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+            foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
+                yield return item;
+            }
+        }
+    }
+
+    private IEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
         ...
     }
 
@@ -112,95 +140,148 @@ For example, the full implementation of a "ping pong" extension, that responds t
 )]
 public class PingPongExtension : AdapterExtensionFeature {
 
-    public PingPongExtension(AdapterBase adapter) : this(adapter.BackgroundTaskService) { }
-
-    public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
-        BindInvoke<PingMessage, PongMessage>(Ping);
-        BindStream<PingMessage, PongMessage>(Ping);
-        BindDuplexStream<PingMessage, PongMessage>(Ping);
+    public PingPongExtension(
+        IBackgroundTaskService backgroundTaskService, 
+        IEnumerable<IObjectEncoder> encoders
+    ) : base(backgroundTaskService, encoders) {
+        BindInvoke<PingPongExtension, PingMessage, PongMessage>(PingInvoke);
+        BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
+        BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
     }
 
-    // Invoke
-    [ExtensionFeatureOperation(
-        Name = "Ping",
-        Description = "Performs a ping operation on the adapter.",
-        InputParameterDescription = "The ping message.",
-        OutputParameterDescription = "The pong message."
-    )]
-    public PongMessage Ping(PingMessage message) {
-        if (message == null) {
-            throw new ArgumentNullException(nameof(message));
+
+    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
+    public Task<PongMessage> PingInvoke(
+        IAdapterCallContext context, 
+        PingMessage ping, 
+        CancellationToken cancellationToken
+    ) {
+        if (ping == null) {
+            throw new ArgumentNullException(nameof(ping));
         }
 
-        return new PongMessage() {
-            CorrelationId = message.CorrelationId
+        return Task.FromResult(new PongMessage() {
+            CorrelationId = ping.CorrelationId
+        });
+    }
+
+
+    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
+    public async IAsyncEnumerable<PongMessage> PingStream(
+        IAdapterCallContext context,
+        PingMessage ping,
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken
+    ) {
+        if (ping == null) {
+            throw new ArgumentNullException(nameof(ping));
+        }
+
+        await Task.Yield();
+        yield return new PongMessage() {
+            CorrelationId = ping.CorrelationId
         };
     }
 
-    // Stream
-    [ExtensionFeatureOperation(
-        Name = "Ping",
-        Description = "Performs a streaming ping operation on the adapter.",
-        InputParameterDescription = "The ping message.",
-        OutputParameterDescription = "The pong message stream."
-    )]
-    public Task<ChannelReader<PongMessage>> Ping(
-        PingMessage message, 
-        CancellationToken cancellationToken
-    ) {
-        if (message == null) {
-            throw new ArgumentNullException(nameof(message));
-        }
 
-        var result = Channel.CreateUnbounded<PongMessage>();
-
-        result.Writer.RunBackgroundOperation(async (ch, ct) => {
-            result.Writer.TryWrite(new PongMessage() {
-                CorrelationId = message.CorrelationId
-            });
-        }, true, BackgroundTaskService, cancellationToken);
-
-        return Task.FromResult(result.Reader);
-    }
-
-    // DuplexStream
-    [ExtensionFeatureOperation(
-        Name = "Ping",
-        Description = "Performs a duplex streaming ping operation on the adapter.",
-        InputParameterDescription = "The ping messages.",
-        OutputParameterDescription = "The pong messages."
-    )]
-    public Task<ChannelReader<PongMessage>> Ping(
-        ChannelReader<PingMessage> channel,
+    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
+    public async IAsyncEnumerable<PongMessage> PingDuplexStream(
+        IAdapterCallContext context,
+        IAsyncEnumerable<PingMessage> channel,
+        [EnumeratorCancellation]
         CancellationToken cancellationToken
     ) {
         if (channel == null) {
             throw new ArgumentNullException(nameof(channel));
         }
 
-        var result = Channel.CreateUnbounded<PongMessage>();
-
-        result.Writer.RunBackgroundOperation(async (ch, ct) => {
-            await foreach (var message in channel.ReadAllAsync(ct).ConfigureAwait(false)) {
-                if (message == null) {
-                    continue;
-                }
-
-                result.Writer.TryWrite(new PongMessage() {
-                    CorrelationId = message.CorrelationId
-                });
+        await foreach(var ping in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+            if (ping == null) {
+                continue;
             }
-        }, true, BackgroundTaskService, cancellationToken);
 
-        return Task.FromResult(result.Reader);
+            yield return new PongMessage() {
+                CorrelationId = ping.CorrelationId
+            };
+        }
+    }
+
+
+    internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
+        return new ExtensionFeatureOperationDescriptorPartial() {
+            Name = "Ping",
+            Description = "Returns a pong message that matches the correlation ID of the specified ping message",
+            Inputs = new [] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                    Description = "The ping message"
+                }
+            },
+            Outputs = new [] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                    Description = "The resulting pong message"
+                }
+            }
+        };
+    }
+
+
+    internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
+        return new ExtensionFeatureOperationDescriptorPartial() {
+            Name = "Ping",
+            Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
+            Inputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                    Description = "The ping message"
+                }
+            },
+            Outputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                    Description = "The resulting pong message"
+                }
+            }
+        };
+    }
+
+
+    internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
+        return new ExtensionFeatureOperationDescriptorPartial() {
+            Name = "Ping",
+            Description = "Returns a pong message every time a ping message is received",
+            Inputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
+                    Description = "The ping message"
+                }
+            },
+            Outputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    VariantType = VariantType.ExtensionObject,
+                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
+                    Description = "The resulting pong message"
+                }
+            }
+        };
     }
 
 }
 
+
+[ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
 public class PingMessage {
     public Guid CorrelationId { get; set; } = Guid.NewGuid();
 }
 
+
+[ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
 public class PongMessage {
     public Guid CorrelationId { get; set; } = Guid.NewGuid();
 }
@@ -220,18 +301,28 @@ When writing an extension feature, methods can be annotated with an [ExtensionFe
 
 ```json
 {
-  "operationId": "asc:extensions/example/ping-pong/Ping/Invoke/",
-  "operationType": "Invoke",
-  "name": "Ping",
-  "description": "Performs a ping operation on the adapter.",
-  "input": {
-    "description": "The ping message.",
-    "exampleValue": "{ \"CorrelationId\": \"310b5036-9956-40c0-872a-59a68bc13a8f\" }"
-  },
-  "output": {
-    "description": "The pong message.",
-    "exampleValue": "{ \"CorrelationId\": \"10085252-5b69-4ca2-a727-c850c7825630\" }"
-  }
+    "operationId": "asc:extensions/example/ping-pong/invoke/Ping/",
+    "operationType": "Invoke",
+    "name": "Ping",
+    "description": "Returns a pong message that matches the correlation ID of the specified ping message",
+    "inputs": [
+        {
+            "ordinal": 0,
+            "variantType": "ExtensionObject",
+            "arrayRank": 0,
+            "typeId": "asc:extensions/unit-tests/ping-pong/types/ping-message/",
+            "description": "The ping message"
+        }
+    ],
+    "outputs": [
+        {
+            "ordinal": 0,
+            "variantType": "ExtensionObject",
+            "arrayRank": 0,
+            "typeId": "asc:extensions/unit-tests/ping-pong/types/pong-message/",
+            "description": "The resulting pong message"
+        }
+    ]
 }
 ```
 

@@ -59,12 +59,34 @@ In addition to standard features that inherit from [IAdapterFeature](./IAdapterF
 )]
 public interface IMyExampleExtensionFeature : IAdapterExtensionFeature {
     
-    [ExtensionFeatureOperation(
-        Description = "Greets a person.",
-        InputParameterDescription = "The name of a person.",
-        OutputParameterDescription = "The greeting."
-    )]
-    string Greet(string name);
+    [ExtensionFeatureOperation(typeof(MyExampleExtensionFeatureProvider), nameof(GetGreetDescriptor))]
+    string Greet(IAdapterCallContext context, string name);
+
+}
+
+
+internal static class MyExampleExtensionFeatureProvider {
+    
+    internal static ExtensionFeatureOperationDescriptorPartial GetGreetDescriptor() {
+        return new ExtensionFeatureOperationDescriptorPartial() {
+            Name = "Greet",
+            Description = "Greets a person",
+            Inputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    Ordinal = 0,
+                    VariantType = VariantType.String,
+                    Description = "The name of the person to greet"
+                }
+            },
+            Outputs = new[] {
+                new ExtensionFeatureOperationParameterDescriptor() {
+                    Ordinal = 0,
+                    VariantType = VariantType.String,
+                    Description = "The greeting"
+                }
+            }
+        };
+    }
 
 }
 ```
@@ -76,41 +98,69 @@ The [ExtensionFeatureOperationAttribute](./Extensions/ExtensionFeatureOperationA
 In order to simplify implementation of non-standard adapter features, the [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class in the [DataCore.Adapter](/src/DataCore.Adapter) project can be used as the basis of an extension feature implementation. This class offers a number of `BindInvoke`, `BindStream`, and `BindDuplexStream` method overloads to automatically register methods on the implementation to be handled by the `Invoke`, `Stream` or `DuplexStream` method defined by `IAdapterExtensionFeature` as appropriate.
 
 
-## Working with Channels
+## Working with IAsyncEnumerable<T>
 
-Adapter features make extensive use of the [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) NuGet package, to allow query results to be streamed back to the caller asynchronously. 
+Adapter features make extensive use of the `IAsyncEnumerable<T>` type, to allow query results to be streamed back to the caller asynchronously. For .NET Framework and .NET Standard 2.0 targets, the [Microsoft.Bcl.AsyncInterfaces](https://www.nuget.org/packages/Microsoft.Bcl.AsyncInterfaces/) NuGet package is used to define the type.
 
-In most cases, it is advisable to create the result channel as soon as possible in your method implementation, start a background task to write values into the channel, and then return the channel as soon as possible. The [DataCore.Adapter](/src/DataCore.Adapter) project also contains extension methods for the `ChannelReader<T>` and `ChannelWriter<T>` classes, to easily create, read from, or write to channels in background tasks. For example:
+> NOTE: In order to produce `IAsyncEnumerable<T>` instances from iterator methods, or to consume `IAsyncEnumerator<T>` instances using `await foreach` loops, your project must use C# 8.0 or higher.
+
+In most cases, it is advisable to declare a feature method using the `async` keyword, and to use `yield return` statements to emit values as they occur. For example:
 
 ```csharp
 public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
 
     // -- other code removed for brevity --
 
-    Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(
+    async IAsyncEnumerable<ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
         IAdapterCallContext context, 
         ReadSnapshotTagValuesRequest request, 
+        [EnumeratorCancellation]
         CancellationToken cancellationToken
     ) {
-        var channel = ChannelExtensions.CreateTagValueChannel<TagValueQueryResult>()
+        ValidateInvocation(context, request);
 
-        channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-            using (var values = GetSnapshotValues(request.Tags)) {
-                while (await values.MoveNext(ct).ConfigureAwait(false)) {
-                    var canWrite = await channel.Writer.WaitToWriteAsync(ct).ConfigureAwait(false);
-                    if (!canWrite) {
-                        return;
-                    }
-
-                    channel.Writer.TryWrite(values.Current);
-                }
+        // CreateCancellationTokenSource is defined on AdapterBase<TOptions>, and is used to 
+        // create CancellationTokenSource instances that will cancel when the adapter is stopped, 
+        // in addition to when any cancellation tokens passed to the method are cancelled.
+        using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+            await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
+                yield return item;
             }
-        }, true, BackgroundTaskService, cancellationToken);
-
-        return Task.FromResult(channel.Reader);
+        }
     }
 
-    private IAsyncEnumerator<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags) {
+    private IAsyncEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
+        ...
+    }
+
+}
+```
+
+If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.Yield` to make the implementation asynchronous:
+
+```csharp
+public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
+
+    // -- other code removed for brevity --
+
+    async IAsyncEnumerable<ChannelReader<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
+        IAdapterCallContext context, 
+        ReadSnapshotTagValuesRequest request, 
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken
+    ) {
+        ValidateInvocation(context, request);
+
+        await Task.Yield();
+
+        using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+            foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
+                yield return item;
+            }
+        }
+    }
+
+    private IEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
         ...
     }
 
