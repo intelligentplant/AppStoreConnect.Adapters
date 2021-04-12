@@ -89,7 +89,7 @@ namespace DataCore.Adapter.Tests {
             public IBackgroundTaskService BackgroundTaskService => IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
 
 
-            Task<ChannelReader<TagValueQueryResult>> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+            IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
                 throw new NotImplementedException();
             }
 

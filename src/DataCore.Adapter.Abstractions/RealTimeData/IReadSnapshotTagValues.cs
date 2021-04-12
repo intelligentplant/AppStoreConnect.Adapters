@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -30,7 +29,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel that will complete once the request has completed.
         /// </returns>
-        Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+        IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
             CancellationToken cancellationToken

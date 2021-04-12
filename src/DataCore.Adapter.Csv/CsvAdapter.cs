@@ -608,54 +608,20 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateTagValueChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await ReadSnapshotTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
-        }
-
-
-        /// <summary>
-        /// Reads snapshot tag values.
-        /// </summary>
-        /// <param name="context">
-        ///   The adapter call context.
-        /// </param>
-        /// <param name="request">
-        ///   The snapshot read request.
-        /// </param>
-        /// <param name="channel">
-        ///   The <see cref="ChannelWriter{T}"/> to write the results to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will retrieve the snapshot tag values and write them to the 
-        ///   <paramref name="channel"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="request"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        protected virtual async Task ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
+                foreach (var item in ReadSnapshotTagValuesInternal(dataSet, request, ctSource.Token)) {
+                    yield return item;
+                }
             }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
-
-            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
-            await ReadSnapshotTagValues(dataSet, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -668,16 +634,17 @@ namespace DataCore.Adapter.Csv {
         /// <param name="request">
         ///   The snapshot request.
         /// </param>
-        /// <param name="resultChannel">
-        ///   The channel to write the query results to.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will retrieve the snapshot tag values.
         /// </returns>
-        private static async Task ReadSnapshotTagValues(CsvDataSet dataSet, ReadSnapshotTagValuesRequest request, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static IEnumerable<TagValueQueryResult> ReadSnapshotTagValuesInternal(
+            CsvDataSet dataSet, 
+            ReadSnapshotTagValuesRequest request, 
+            CancellationToken cancellationToken
+        ) {
             var tags = request.Tags.Select(x => GetTagByIdOrName(x, dataSet)).Where(x => x != null).ToArray();
             var dataSetDuration = dataSet.DataSetDuration;
             var earliestSampleTimeUtc = dataSet.UtcEarliestSampleTime;
@@ -686,13 +653,15 @@ namespace DataCore.Adapter.Csv {
             // If we don't have any valid tags in the request, or if we don't have any CSV data to work with, 
             // return a null value for each valid tag.
             if (tags.Length == 0 || dataSetDuration <= TimeSpan.Zero) {
-                return;
+                yield break;
             }
 
             var now = DateTime.UtcNow;
 
             if (!dataSet.IsDataLoopingAllowed) {
                 foreach (var tag in tags) {
+                    cancellationToken.ThrowIfCancellationRequested();
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -711,17 +680,21 @@ namespace DataCore.Adapter.Csv {
                             // than or at the current time.
                             : valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime <= now);
 
-                    if (snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, snapshot));
+                    if (snapshot == null) {
+                        continue;
                     }
+
+                    yield return TagValueQueryResult.Create(tag.Id, tag.Name, snapshot);
                 }
-                return;
+                yield break;
             }
 
             if (now >= earliestSampleTimeUtc && now <= latestSampleTimeUtc) {
                 // We're inside the data set - the snapshot value is the last value earlier than or 
                 // at the current time.
                 foreach (var tag in tags) {
+                    cancellationToken.ThrowIfCancellationRequested();
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -729,12 +702,13 @@ namespace DataCore.Adapter.Csv {
                     }
 
                     var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime <= now);
-
-                    if ( snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, snapshot));
+                    if (snapshot == null) {
+                        continue;
                     }
+
+                    yield return TagValueQueryResult.Create(tag.Id, tag.Name, snapshot);
                 }
-                return;
+                yield break;
             }
 
             // We're outside of the data set. Offset the CSV dates until "now" is inside the set, and 
@@ -762,6 +736,8 @@ namespace DataCore.Adapter.Csv {
             }
 
             foreach (var tagNameOrId in request.Tags) {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var tag = GetTagByIdOrName(tagNameOrId, dataSet);
                 if (tag == null) {
                     continue;
@@ -773,9 +749,11 @@ namespace DataCore.Adapter.Csv {
                 // Get the value at or immediately before now.
                 var snapshot = valuesForTag.Values.LastOrDefault(x => x.UtcSampleTime.Add(offset) <= now);
 
-                if (snapshot != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, new TagValueBuilder(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build()));
+                if (snapshot == null) {
+                    continue;
                 }
+
+                yield return TagValueQueryResult.Create(tag.Id, tag.Name, new TagValueBuilder(snapshot).WithUtcSampleTime(snapshot.UtcSampleTime.Add(offset)).Build());
             }
 
         }

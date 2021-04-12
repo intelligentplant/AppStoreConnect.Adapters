@@ -174,14 +174,15 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            var channel = await _readSnapshotFeature.ReadSnapshotTagValues(
-                new DefaultAdapterCallContext(), 
+            await foreach (var val in _readSnapshotFeature.ReadSnapshotTagValues(
+                new DefaultAdapterCallContext(),
                 new ReadSnapshotTagValuesRequest() {
                     Tags = tags
                 }, cancellationToken
-            ).ConfigureAwait(false);
-
-            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false) && channel.TryRead(out var val) && val != null) {
+            ).ConfigureAwait(false)) {
+                if (val == null) {
+                    continue;
+                }
                 await ValueReceived(val, cancellationToken).ConfigureAwait(false);
             }
         }

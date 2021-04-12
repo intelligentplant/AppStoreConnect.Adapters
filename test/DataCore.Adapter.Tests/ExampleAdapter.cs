@@ -108,17 +108,23 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = request.Tags.Select(t => new TagValueQueryResult(
-                t,
-                t,
-                new TagValueBuilder()
-                    .WithUtcSampleTime(DateTime.MinValue)
-                    .WithValue(0)
-                    .Build()
-            )).PublishToChannel();
-
-            return Task.FromResult(result);
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
+            foreach (var tag in request.Tags) {
+                yield return new TagValueQueryResult(
+                    tag,
+                    tag,
+                    new TagValueBuilder()
+                        .WithUtcSampleTime(DateTime.MinValue)
+                        .WithValue(0)
+                        .Build()
+                );
+            }
         }
 
 

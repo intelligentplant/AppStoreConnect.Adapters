@@ -574,11 +574,18 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
                 foreach (var tag in request.Tags) {
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
@@ -592,11 +599,9 @@ namespace DataCore.Adapter.WaveGenerator {
                         .WithValue(CalculateValue(sampleTime, tagOptions!))
                         .Build();
 
-                    await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                    yield return new TagValueQueryResult(tagId, tagId, val);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 

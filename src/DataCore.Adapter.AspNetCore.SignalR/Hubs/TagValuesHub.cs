@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -125,22 +127,29 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will return the query results.
         /// </returns>
-        public async Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            string adapterId, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueChannel();
+            using (var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+                try {
+                    await foreach (var item in adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 

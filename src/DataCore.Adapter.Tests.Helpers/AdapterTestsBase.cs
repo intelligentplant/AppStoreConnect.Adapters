@@ -760,9 +760,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadSnapshotTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadSnapshotTagValues)}.{nameof(IReadSnapshotTagValues.ReadSnapshotTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadSnapshotTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var remainingTags = new HashSet<string>(request.Tags);
 
