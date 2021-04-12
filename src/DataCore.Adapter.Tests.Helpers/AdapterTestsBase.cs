@@ -838,14 +838,25 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
+                var tcs = new TaskCompletionSource<bool>();
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
 
-                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                var received = await feature.Subscribe(context, request, ct).ToEnumerable(request.Tags.Count(), ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testValuesEmitted) {
                     AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
                     return;
@@ -854,22 +865,16 @@ namespace DataCore.Adapter.Tests {
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-                        if (allTags.Contains(value.TagId)) {
-                            remainingTags.Remove(value.TagId);
-                        }
-                        else if (allTags.Contains(value.TagName)) {
-                            remainingTags.Remove(value.TagName);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
-                        }
+                foreach (var value in received) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
+                    if (allTags.Contains(value.TagId)) {
+                        remainingTags.Remove(value.TagId);
                     }
-
-                    if (remainingTags.Count == 0) {
-                        break;
+                    else if (allTags.Contains(value.TagName)) {
+                        remainingTags.Remove(value.TagName);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
                 }
 
@@ -903,25 +908,30 @@ namespace DataCore.Adapter.Tests {
 
                 var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    PublishInterval = request.PublishInterval,
-                    Properties = request.Properties 
-                }, channel.Reader, ct).ConfigureAwait(false);
-
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
-
-                // Now add the tags to the subscription.
-
                 channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
                     Action = SubscriptionUpdateAction.Subscribe,
                     Tags = request.Tags
                 });
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                var tcs = new TaskCompletionSource<bool>();
 
-                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                var received = await feature.Subscribe(context, request, channel.Reader.ReadAllAsync(ct), ct).ToEnumerable(request.Tags.Count(), ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testValuesEmitted) {
                     AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
                     return;
@@ -930,22 +940,16 @@ namespace DataCore.Adapter.Tests {
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var val)) {
-                        Assert.IsNotNull(val, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-                        if (allTags.Contains(val.TagId)) {
-                            remainingTags.Remove(val.TagId);
-                        }
-                        else if (allTags.Contains(val.TagName)) {
-                            remainingTags.Remove(val.TagName);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, val.TagName, val.TagId));
-                        }
+                foreach (var value in received) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
+                    if (allTags.Contains(value.TagId)) {
+                        remainingTags.Remove(value.TagId);
                     }
-
-                    if (remainingTags.Count == 0) {
-                        break;
+                    else if (allTags.Contains(value.TagName)) {
+                        remainingTags.Remove(value.TagName);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
                 }
 

@@ -2174,7 +2174,7 @@ namespace DataCore.Adapter {
                 try {
                     await foreach (var item in enumerable.WithCancellation(ctSource.Token).ConfigureAwait(false)) {
                         result.Add(item);
-                        if (maxItems > 0 && result.Count > maxItems) {
+                        if (maxItems > 0 && result.Count >= maxItems) {
                             break;
                         }
                     }

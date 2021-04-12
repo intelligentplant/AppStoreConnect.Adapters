@@ -66,25 +66,21 @@ namespace DataCore.Adapter.Tests {
 
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
-        public IAsyncEnumerable<PongMessage> PingStream(
+        public async IAsyncEnumerable<PongMessage> PingStream(
             IAdapterCallContext context,
             PingMessage ping,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (ping == null) {
                 throw new ArgumentNullException(nameof(ping));
             }
 
-            var result = Channel.CreateUnbounded<PongMessage>();
-
-            result.Writer.RunBackgroundOperation((ch, ct) => {
-                ch.TryWrite(new PongMessage() {
-                    CorrelationId = ping.CorrelationId,
-                    UtcServerTime = DateTime.UtcNow
-                });
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader.ReadAllAsync(cancellationToken);
+            await Task.Yield();
+            yield return new PongMessage() {
+                CorrelationId = ping.CorrelationId,
+                UtcServerTime = DateTime.UtcNow
+            };
         }
 
 

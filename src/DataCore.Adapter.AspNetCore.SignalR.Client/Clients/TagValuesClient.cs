@@ -56,10 +56,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <returns>
         ///   A channel reader that wil emit values for the subscription.
         /// </returns>
-        public async Task<ChannelReader<TagValueQueryResult>> CreateSnapshotTagValueChannelAsync(
+        public async IAsyncEnumerable<TagValueQueryResult> CreateSnapshotTagValueChannelAsync(
             string adapterId,
             CreateSnapshotTagValueSubscriptionRequest request,
-            ChannelReader<TagValueSubscriptionUpdate> channel,
+            IAsyncEnumerable<TagValueSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -76,13 +77,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<TagValueQueryResult>(
+                await foreach (var item in connection.StreamAsync<TagValueQueryResult>(
                     "CreateSnapshotTagValueChannel",
                     adapterId,
                     request,
                     channel,
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // We are using ASP.NET Core 2.x, so we cannot use client-to-server streaming. Instead, 
@@ -109,20 +113,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             // token fires.
             async Task RunTopicSubscription(string topic, CancellationToken ct) {
                 var req = new CreateSnapshotTagValueSubscriptionRequest() {
-                    PublishInterval = request.PublishInterval,
                     Properties = request.Properties,
                     Tags = new[] { topic }
                 };
-                var ch = await connection.StreamAsChannelAsync<TagValueQueryResult>(
+                await foreach (var item in connection.StreamAsync<TagValueQueryResult>(
                     "CreateSnapshotTagValueChannel",
                     adapterId,
                     req,
                     ct
-                ).ConfigureAwait(false);
-
-                while (!ct.IsCancellationRequested) {
-                    var val = await ch.ReadAsync(ct).ConfigureAwait(false);
-                    await result!.Writer.WriteAsync(val, ct).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    await result!.Writer.WriteAsync(item, ct).ConfigureAwait(false);
                 }
             }
 
@@ -145,9 +145,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                             try {
                                 await RunTopicSubscription(topic, ct).ConfigureAwait(false);
                             }
-#pragma warning disable CA1031 // Do not catch general exception types
                             catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
                             finally {
                                 if (subscriptions!.TryRemove(topic, out var cts)) {
                                     cts.Cancel();
@@ -165,29 +163,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
             }
 
-            // Background task that will add/remove subscriptions to indivudual tags as subscription 
+            // Background task that will add/remove subscriptions to indivudual topics subscription 
             // changes occur.
             _ = Task.Run(async () => {
                 try {
-                    if (!cancellationToken.IsCancellationRequested && request.Tags.Any()) {
+                    if (request.Tags.Any()) {
                         ProcessTopicSubscriptionChange(request.Tags, true);
                     }
 
-                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (channel.TryRead(out var update)) {
-                            if (update?.Tags == null || !update.Tags.Any()) {
-                                continue;
-                            }
-
-                            ProcessTopicSubscriptionChange(update.Tags, update.Action == SubscriptionUpdateAction.Subscribe);
+                    await foreach (var update in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                        if (update?.Tags == null || !update.Tags.Any()) {
+                            continue;
                         }
+
+                        ProcessTopicSubscriptionChange(update.Tags, update.Action == SubscriptionUpdateAction.Subscribe);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {
@@ -205,7 +199,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
             }, cancellationToken);
 
-            return result;
+            while (await result.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (result.Reader.TryRead(out var item)) {
+                    yield return item;
+                }
+            }
         }
 
 

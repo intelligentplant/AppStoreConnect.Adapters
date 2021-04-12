@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -28,20 +30,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<TagValueQueryResult>> Subscribe(
+        public async IAsyncEnumerable<TagValueQueryResult> Subscribe(
             IAdapterCallContext context, 
             CreateSnapshotTagValueSubscriptionRequest request, 
-            ChannelReader<TagValueSubscriptionUpdate> channel,
+            IAsyncEnumerable<TagValueSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request, channel);
 
-            return GetClient().TagValues.CreateSnapshotTagValueChannelAsync(
-                AdapterId,
-                request,
-                channel,
-                cancellationToken
-            );
+            var client = GetClient();
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.TagValues.CreateSnapshotTagValueChannelAsync(
+                    AdapterId,
+                    request,
+                    channel,
+                    cancellationToken
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
         
     }

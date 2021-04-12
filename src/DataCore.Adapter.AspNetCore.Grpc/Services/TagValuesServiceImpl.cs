@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -53,7 +52,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             var updateChannel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
-            Activity? activity = null;
 
             try {
                 // Keep reading from the request stream until we get an item that allows us to create 
@@ -68,26 +66,28 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, requestStream.Current.Create.AdapterId, cancellationToken).ConfigureAwait(false);
                     var adapterRequest = new CreateSnapshotTagValueSubscriptionRequest() {
                         Tags = requestStream.Current.Create.Tags.ToArray(),
-                        PublishInterval = requestStream.Current.Create.PublishInterval.ToTimeSpan(),
                         Properties = new Dictionary<string, string>(requestStream.Current.Create.Properties)
                     };
                     Util.ValidateObject(adapterRequest);
 
-                    activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest);
-                    var subscription = await adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
+                    // Start a background task to run the subscription.
+                    _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                        using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                            long outputItems = 0;
+                            try {
+                                await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel.Reader.ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                                    if (val == null) {
+                                        continue;
+                                    }
+                                    ++outputItems;
+                                    await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
+                            }
+                            finally {
+                                activity.SetResponseItemCountTag(outputItems);
                             }
                         }
-                    }, _backgroundTaskService, cancellationToken);
+                    }, cancellationToken);
 
                     // Break out of the initial loop; we'll handle subscription updates below!
                     break;
@@ -113,7 +113,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 updateChannel.Writer.TryComplete();
-                activity?.Dispose();
             }
         }
 
