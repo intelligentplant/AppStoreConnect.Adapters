@@ -36,10 +36,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
-            var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
-            return result.ToAdapterWriteTagValueAnnotationResult();
+                return result.ToAdapterWriteTagValueAnnotationResult();
+            }
         }
 
 
@@ -61,10 +63,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
-            var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
-            return result.ToAdapterWriteTagValueAnnotationResult();
+                return result.ToAdapterWriteTagValueAnnotationResult();
+            }
         }
 
 
@@ -85,10 +89,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
-            var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
-            return result.ToAdapterWriteTagValueAnnotationResult();
+                return result.ToAdapterWriteTagValueAnnotationResult();
+            }
         }
 
     }

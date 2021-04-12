@@ -1339,10 +1339,8 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadAnnotations(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValueAnnotations)}.{nameof(IReadTagValueAnnotations.ReadAnnotations)}"));
+                var annotations = await feature.ReadAnnotations(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var annotations = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.IsTrue(annotations.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(TagValueAnnotation), 0));
 
                 var allTags = new HashSet<string>(request.Tags);

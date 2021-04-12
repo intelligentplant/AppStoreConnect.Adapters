@@ -23,7 +23,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -31,7 +34,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -39,7 +45,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false);
+            }
         }
     }
 }
