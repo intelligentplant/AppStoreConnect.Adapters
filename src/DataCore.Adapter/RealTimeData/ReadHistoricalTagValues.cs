@@ -166,15 +166,15 @@ namespace DataCore.Adapter.RealTimeData {
                     continue;
                 }
 
-                var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                     Tags = new[] { tag.Id },
                     UtcStartTime = request.UtcStartTime.Subtract(bucketSize),
                     UtcEndTime = request.UtcEndTime,
                     SampleCount = 0,
                     BoundaryType = RawDataBoundaryType.Outside
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
-                var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader.ReadAllAsync(cancellationToken), cancellationToken);
+                var resultValuesReader = PlotHelper.GetPlotValues(tag, request.UtcStartTime, request.UtcEndTime, bucketSize, rawValuesReader, cancellationToken);
                 await foreach (var val in resultValuesReader.ConfigureAwait(false)) {
                     yield return val;
                 }
@@ -280,15 +280,15 @@ namespace DataCore.Adapter.RealTimeData {
                     continue;
                 }
 
-                var rawValuesReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                var rawValuesReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                     Tags = new[] { tag.Id },
                     UtcStartTime = request.UtcStartTime,
                     UtcEndTime = request.UtcEndTime,
                     SampleCount = 0,
                     BoundaryType = RawDataBoundaryType.Outside
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
-                var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader.ReadAllAsync(cancellationToken), cancellationToken);
+                var resultValuesReader = _aggregationHelper.GetAggregatedValues(tag, request.DataFunctions, request.UtcStartTime, request.UtcEndTime, request.SampleInterval, rawValuesReader, cancellationToken);
                 await foreach (var value in resultValuesReader.ConfigureAwait(false)) {
                     yield return value;
                 }
@@ -332,21 +332,16 @@ namespace DataCore.Adapter.RealTimeData {
 
                 rawValuesChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
                     foreach (var sampleTime in request.UtcSampleTimes) {
-                        var valueReader = await _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+                        var valueReader = _rawValuesProvider.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
                             Tags = new[] { tag.Id },
                             UtcStartTime = sampleTime.AddSeconds(-1),
                             UtcEndTime = sampleTime.AddSeconds(1),
                             SampleCount = 0,
                             BoundaryType = RawDataBoundaryType.Outside
-                        }, ct).ConfigureAwait(false);
+                        }, ct);
 
-                        while (await valueReader.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (valueReader.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
-                                }
-                                await ch.WriteAsync(val, ct).ConfigureAwait(false);
-                            }
+                        await foreach (var val in valueReader.ConfigureAwait(false)) {
+                            await ch.WriteAsync(val, ct).ConfigureAwait(false);
                         }
                     }
                 }, true, BackgroundTaskService, cancellationToken);

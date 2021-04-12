@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -608,16 +607,23 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context, 
+            ReadRawTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.Yield();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 var sampleInterval = GetSampleInterval();
                 var startTime = RoundDownToNearestSampleTime(request.UtcStartTime, sampleInterval);
                 var endTime = RoundUpToNearestSampleTime(request.UtcEndTime, sampleInterval);
 
                 foreach (var tag in request.Tags) {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -626,6 +632,8 @@ namespace DataCore.Adapter.WaveGenerator {
                     var valuesEmittedForTag = 0;
 
                     for (var sampleTime = startTime; sampleTime <= endTime; sampleTime = sampleTime.Add(sampleInterval)) {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         if (request.SampleCount > 0 && valuesEmittedForTag >= request.SampleCount) {
                             // No need to emit any more samples for this tag.
                             break;
@@ -644,16 +652,14 @@ namespace DataCore.Adapter.WaveGenerator {
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();
 
-                        await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                        yield return new TagValueQueryResult(tagId, tagId, val);
 
                         if (request.SampleCount > 0) {
                             ++valuesEmittedForTag;
                         }
                     }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 

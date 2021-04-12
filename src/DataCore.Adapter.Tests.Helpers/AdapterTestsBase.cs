@@ -995,9 +995,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadRawTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadRawTagValues)}.{nameof(IReadRawTagValues.ReadRawTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadRawTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);

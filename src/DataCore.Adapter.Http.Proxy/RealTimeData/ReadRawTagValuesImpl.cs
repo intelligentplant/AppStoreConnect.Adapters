@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -20,23 +22,24 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// </param>
         public ReadRawTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
+
         /// <inheritdoc />
-        public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context, 
+            ReadRawTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateTagValueChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var clientResponse = await client.TagValues.ReadRawTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var clientResponse = await client.TagValues.ReadRawTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

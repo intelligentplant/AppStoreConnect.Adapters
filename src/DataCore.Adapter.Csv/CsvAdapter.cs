@@ -7,8 +7,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using CsvHelper;
 
 using DataCore.Adapter.Common;
@@ -16,6 +16,7 @@ using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 
@@ -757,53 +758,21 @@ namespace DataCore.Adapter.Csv {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public virtual async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context, 
+            ReadRawTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.Yield();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await ReadRawTagValues(context, request, ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult<ChannelReader<TagValueQueryResult>>(result);
-        }
-
-
-        /// <summary>
-        /// Reads raw tag values.
-        /// </summary>
-        /// <param name="context">
-        ///   The adapter call context.
-        /// </param>
-        /// <param name="request">
-        ///   The raw read request.
-        /// </param>
-        /// <param name="channel">
-        ///   The <see cref="ChannelWriter{T}"/> to write the results to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will retrieve the snapshot tag values and write them to the 
-        ///   <paramref name="channel"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="request"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        protected virtual async Task ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, ChannelWriter<TagValueQueryResult> channel, CancellationToken cancellationToken) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
+                foreach (var item in ReadRawTagValues(dataSet, request, cancellationToken)) {
+                    yield return item;
+                }
             }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
-
-            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
-            await ReadRawTagValues(dataSet, request, channel, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -816,16 +785,17 @@ namespace DataCore.Adapter.Csv {
         /// <param name="request">
         ///   The data query.
         /// </param>
-        /// <param name="writer">
-        ///   The channel to write the results to.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will retrieve the raw values.
+        ///   The raw values.
         /// </returns>
-        private static async Task ReadRawTagValues(CsvDataSet dataSet, ReadRawTagValuesRequest request, ChannelWriter<TagValueQueryResult> writer, CancellationToken cancellationToken) {
+        private static IEnumerable<TagValueQueryResult> ReadRawTagValues(
+            CsvDataSet dataSet, 
+            ReadRawTagValuesRequest request, 
+            CancellationToken cancellationToken
+        ) {
             var utcStartTime = request.UtcStartTime;
             var utcEndTime = request.UtcEndTime;
             var boundaryType = request.BoundaryType;
@@ -845,6 +815,7 @@ namespace DataCore.Adapter.Csv {
                 // For every valid tag in the request, return the raw values inside the requested time range.
 
                 foreach (var tag in tags) {
+                    cancellationToken.ThrowIfCancellationRequested();
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (!dataSet.Values.TryGetValue(tag.Id, out var valuesForTag)) {
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -861,13 +832,11 @@ namespace DataCore.Adapter.Csv {
 
                     foreach (var value in query) {
                         cancellationToken.ThrowIfCancellationRequested();
-                        if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                            writer.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, value));
-                        }
+                        yield return TagValueQueryResult.Create(tag.Id, tag.Name, value);
                     }
                 }
 
-                return;
+                yield break;
             }
 
             // The time stamp offset that we have to apply to the original CSV samples in order to create 
@@ -984,9 +953,7 @@ namespace DataCore.Adapter.Csv {
                             ? unmodifiedSample
                             : new TagValueBuilder(unmodifiedSample).WithUtcSampleTime(sampleTimeThisIteration).Build();
 
-                        if (await writer.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                            writer.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, sample));
-                        }
+                        yield return TagValueQueryResult.Create(tag.Id, tag.Name, sample);
                     }
                 }
 

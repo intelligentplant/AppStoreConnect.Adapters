@@ -255,11 +255,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+                    var result = new List<TagValueQueryResult>();
 
-                    var result = new List<TagValueQueryResult>(request.Tags.Count());
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var value) || value == null) {
+                    await foreach (var msg in feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
@@ -268,10 +267,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                             break;
                         }
 
-                        result.Add(value);
+                        result.Add(msg);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
+
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {
