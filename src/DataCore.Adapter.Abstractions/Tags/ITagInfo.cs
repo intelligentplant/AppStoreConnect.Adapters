@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 using DataCore.Adapter.Common;
 
@@ -33,7 +32,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   The available tag properties.
         /// </returns>
-        Task<ChannelReader<AdapterProperty>> GetTagProperties(
+        IAsyncEnumerable<AdapterProperty> GetTagProperties(
             IAdapterCallContext context, 
             GetTagPropertiesRequest request, 
             CancellationToken cancellationToken
@@ -54,7 +53,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   The matching tag definitions.
         /// </returns>
-        Task<ChannelReader<TagDefinition>> GetTags(
+        IAsyncEnumerable<TagDefinition> GetTags(
             IAdapterCallContext context, 
             GetTagsRequest request, 
             CancellationToken cancellationToken

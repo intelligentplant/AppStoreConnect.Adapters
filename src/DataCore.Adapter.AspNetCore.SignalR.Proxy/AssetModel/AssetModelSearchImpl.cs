@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -22,23 +24,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
 
 
         /// <inheritdoc />
-        public async Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> FindAssetModelNodes(
+            IAdapterCallContext context, 
+            FindAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            var hubChannel = await client.AssetModel.FindAssetModelNodesAsync(
-                AdapterId, 
-                request, 
-                cancellationToken
-            ).ConfigureAwait(false);
-
-            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result;
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
 
     }

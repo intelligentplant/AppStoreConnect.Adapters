@@ -1,12 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
@@ -54,37 +61,37 @@ namespace MyAdapter {
         }
 
 
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateRequest(request);
-            var result = Channel.CreateUnbounded<TagValueQueryResult>();
+            ValidateInvocation(context, request);
+
+            await Task.CompletedTask.ConfigureAwait(false);
+
             var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
-            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
-                    if (ct.IsCancellationRequested) {
+                    if (ctSource.Token.IsCancellationRequested) {
                         break;
                     }
                     if (string.IsNullOrWhiteSpace(tag)) {
                         continue;
                     }
 
-                    ch.TryWrite(new TagValueQueryResult(
+                    yield return new TagValueQueryResult(
                         tag,
                         tag,
-                        TagValueBuilder
-                            .Create()
+                        new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(SinusoidWave(sampleTime, TimeSpan.Zero, 60, 1))
                             .Build()
-                    ));
+                    );
                 }
-            }, result.Writer, true, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

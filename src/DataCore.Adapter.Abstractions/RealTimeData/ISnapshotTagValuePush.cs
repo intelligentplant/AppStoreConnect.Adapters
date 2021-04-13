@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -26,18 +25,19 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A request describing the subscription settings.
         /// </param>
         /// <param name="channel">
-        ///   A channel that will add tags to or remove tags from the subscription.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will add tags to or remove tags from the 
+        ///   subscription.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the subscription.
         /// </param>
         /// <returns>
-        ///   A channel reader that will emit tag values as they occur.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit tag values as they occur.
         /// </returns>
-        Task<ChannelReader<TagValueQueryResult>> Subscribe(
+        IAsyncEnumerable<TagValueQueryResult> Subscribe(
             IAdapterCallContext context,
             CreateSnapshotTagValueSubscriptionRequest request,
-            ChannelReader<TagValueSubscriptionUpdate> channel,
+            IAsyncEnumerable<TagValueSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         );
 

@@ -62,19 +62,21 @@ namespace MyAdapter {
                 var correlationId = Guid.NewGuid().ToString();
                 var now = DateTime.UtcNow;
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-                var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
-                    context,
-                    new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
-                    pingMessage,
-                    cancellationToken
-                );
 
                 Console.WriteLine();
                 Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
 
-                await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
-                    Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
+                try {
+                    await foreach (var pongMessage in extensionFeature.Stream<PingMessage, PongMessage>(
+                        context,
+                        new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
+                        pingMessage,
+                        cancellationToken
+                    )) {
+                        Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
+                    }
                 }
+                catch (OperationCanceledException) { }
             }
         }
 

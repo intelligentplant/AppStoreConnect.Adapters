@@ -1,6 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
@@ -22,38 +22,42 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.RealTimeData.DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context);
+        public async IAsyncEnumerable<Adapter.RealTimeData.DataFunctionDescriptor> GetSupportedDataFunctions(
+            IAdapterCallContext context, 
+            Adapter.RealTimeData.GetSupportedDataFunctionsRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new GetSupportedDataFunctionsRequest() {
                 AdapterId = AdapterId
             };
 
-            var grpcResponse = client.GetSupportedDataFunctions(grpcRequest, GetCallOptions(context, cancellationToken));
+            if (request.Properties != null) {
+                grpcRequest.Properties.Add(request.Properties);
+            }
 
-            var result = ChannelExtensions.CreateChannel<Adapter.RealTimeData.DataFunctionDescriptor>(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterDataFunctionDescriptor(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.GetSupportedDataFunctions(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterDataFunctionDescriptor();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.RealTimeData.ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.RealTimeData.ProcessedTagValueQueryResult> ReadProcessedTagValues(
+            IAdapterCallContext context, 
+            Adapter.RealTimeData.ReadProcessedTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
@@ -71,25 +75,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.ReadProcessedTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
-
-            var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterProcessedTagValueQueryResult(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.ReadProcessedTagValues(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterProcessedTagValueQueryResult();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

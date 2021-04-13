@@ -1,19 +1,11 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
     /// <summary>
-    /// Describes a request to write event messages to an adapter.
+    /// A request to write event messages to an adapter.
     /// </summary>
-    public class WriteEventMessagesRequest {
+    public class WriteEventMessagesRequest : AdapterRequest { }
 
-        /// <summary>
-        /// The event messages to write.
-        /// </summary>
-        [Required]
-        [MinLength(1)]
-        public WriteEventMessageItem[] Events { get; set; } = Array.Empty<WriteEventMessageItem>();
-
-    }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -85,8 +87,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will return a channel that is used to stream the results back to the 
-        ///   caller.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the results.
         /// </returns>
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
@@ -97,19 +98,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<TagValueAnnotationQueryResult> ReadAnnotationsAsync(
+            string adapterId, 
+            ReadAnnotationsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<TagValueAnnotationQueryResult>(
+            await foreach (var item in connection.StreamAsync<TagValueAnnotationQueryResult>(
                 "ReadAnnotations",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading;
 using System.Threading.Channels;
@@ -90,11 +92,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive the matching adapters.
         /// </returns>
-        public async Task<ChannelReader<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AdapterDescriptor> FindAdapters(
+            FindAdaptersRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapters = await AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false);
 
-            return adapters.Transform(x => AdapterDescriptor.FromExisting(x.Descriptor), BackgroundTaskService, cancellationToken);
+            await foreach (var item in AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false)) {
+                yield return AdapterDescriptor.FromExisting(item.Descriptor);
+            }
         }
 
 
@@ -145,22 +152,23 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive health check messages.
         /// </returns>
-        public async Task<ChannelReader<HealthCheckResult>> CreateAdapterHealthChannel(string adapterId, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<HealthCheckResult> CreateAdapterHealthChannel(string adapterId, [EnumeratorCancellation] CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateChannel<HealthCheckResult>(DefaultChannelCapacity);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
-                    var resultChannel = await adapter.Feature.Subscribe(adapterCallContext, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+            long itemCount = 0;
+            using (var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 

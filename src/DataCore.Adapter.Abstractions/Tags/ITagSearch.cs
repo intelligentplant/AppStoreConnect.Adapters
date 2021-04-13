@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.Tags {
 
@@ -30,7 +29,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   A channel that the search results can be read from.
         /// </returns>
-        Task<ChannelReader<TagDefinition>> FindTags(
+        IAsyncEnumerable<TagDefinition> FindTags(
             IAdapterCallContext context, 
             FindTagsRequest request, 
             CancellationToken cancellationToken

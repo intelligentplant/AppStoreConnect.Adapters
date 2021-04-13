@@ -199,6 +199,7 @@ namespace DataCore.Adapter.Diagnostics.Events {
         /// </summary>
         /// <param name="source"></param>
         /// <param name="adapterId"></param>
+        /// <param name="request"></param>
         /// <param name="kind"></param>
         /// <param name="parentId"></param>
         /// <returns>
@@ -208,6 +209,7 @@ namespace DataCore.Adapter.Diagnostics.Events {
         public static Activity? StartWriteEventMessagesActivity(
             this ActivitySource source,
             string adapterId,
+            WriteEventMessagesRequest request,
             ActivityKind kind = ActivityKind.Internal,
             string? parentId = null
         ) {

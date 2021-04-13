@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -33,8 +35,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartReadAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
-                return await adapter.Feature.ReadAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationActivity(adapter.Adapter.Descriptor.Id, request)) {
+                var result = await adapter.Feature.ReadAnnotation(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+                activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                return result;
             }
         }
 
@@ -54,22 +58,29 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel that will return the matching annotations.
         /// </returns>
-        public async Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueAnnotationQueryResult> ReadAnnotations(
+            string adapterId, 
+            ReadAnnotationsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateTagValueAnnotationChannel();
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartReadAnnotationsActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.ReadAnnotations(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
-                    Activity.Current.SetResponseItemCountTag(outputItems);
+                try {
+                    await foreach (var item in adapter.Feature.ReadAnnotations(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -52,14 +53,15 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The available adapters.
         /// </returns>
-        protected abstract Task<ChannelReader<IAdapter>> GetAdapters(CancellationToken cancellationToken);
+        protected abstract IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken);
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<IAdapter>> FindAdapters(
+        public async IAsyncEnumerable<IAdapter> FindAdapters(
             IAdapterCallContext context, 
             FindAdaptersRequest request, 
             bool enabledOnly = true,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (request == null) {
@@ -70,68 +72,53 @@ namespace DataCore.Adapter {
             var skipCount = (request.Page - 1) * request.PageSize;
             var takeCount = request.PageSize;
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (var queryCtSource = CancellationTokenSource.CreateLinkedTokenSource(ct)) {
-                    try {
-                        var adapters = await GetAdapters(queryCtSource.Token).ConfigureAwait(false);
+            await foreach (var item in GetAdapters(cancellationToken).ConfigureAwait(false)) {
+                if (enabledOnly && !item.IsEnabled) {
+                    continue;
+                }
 
-                        while (takeCount > 0 && await adapters.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (adapters.TryRead(out var item)) {
-                                if (enabledOnly && !item.IsEnabled) {
-                                    continue;
-                                }
+                if (!string.IsNullOrWhiteSpace(request.Id) && !item.Descriptor.Id.Like(request.Id!)) {
+                    continue;
+                }
 
-                                if (!string.IsNullOrWhiteSpace(request.Id) && !item.Descriptor.Id.Like(request.Id!)) {
-                                    continue;
-                                }
+                if (!string.IsNullOrWhiteSpace(request.Name) && !item.Descriptor.Name.Like(request.Name!)) {
+                    continue;
+                }
 
-                                if (!string.IsNullOrWhiteSpace(request.Name) && !item.Descriptor.Name.Like(request.Name!)) {
-                                    continue;
-                                }
+                if (!string.IsNullOrWhiteSpace(request.Description) && !item.Descriptor.Description.Like(request.Description!)) {
+                    continue;
+                }
 
-                                if (!string.IsNullOrWhiteSpace(request.Description) && !item.Descriptor.Description.Like(request.Description!)) {
-                                    continue;
-                                }
+                if (request.Features != null) {
+                    foreach (var feature in request.Features) {
+                        if (string.IsNullOrWhiteSpace(feature)) {
+                            continue;
+                        }
 
-                                if (request.Features != null) {
-                                    foreach (var feature in request.Features) {
-                                        if (string.IsNullOrWhiteSpace(feature)) {
-                                            continue;
-                                        }
-
-                                        if (!item.HasFeature(feature)) {
-                                            continue;
-                                        }
-                                    }
-                                }
-
-                                if (!await AuthorizationService.AuthorizeAdapter(item, context, ct).ConfigureAwait(false)) {
-                                    // Caller is not authorized to use this adapter.
-                                    continue;
-                                }
-
-                                if (skipCount > 0) {
-                                    --skipCount;
-                                    continue;
-                                }
-
-                                --takeCount;
-                                await ch.WriteAsync(item, ct).ConfigureAwait(false);
-
-                                if (takeCount < 1) {
-                                    // We can finish now.
-                                    break;
-                                }
-                            }
+                        if (!item.HasFeature(feature)) {
+                            continue;
                         }
                     }
-                    finally {
-                        queryCtSource.Cancel();
-                    }
                 }
-            }, true, _backgroundTaskService, cancellationToken);
 
-            return Task.FromResult(result.Reader);
+                if (!await AuthorizationService.AuthorizeAdapter(item, context, cancellationToken).ConfigureAwait(false)) {
+                    // Caller is not authorized to use this adapter.
+                    continue;
+                }
+
+                if (skipCount > 0) {
+                    --skipCount;
+                    continue;
+                }
+
+                --takeCount;
+                yield return item;
+
+                if (takeCount < 1) {
+                    // We can finish now.
+                    break;
+                }
+            }
         }
 
 
@@ -146,25 +133,20 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
 
-            var adapters = await GetAdapters(cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (adapters.TryRead(out var item)) {
-                    if (!item.Descriptor.Id.Equals(adapterId, StringComparison.OrdinalIgnoreCase)) {
-                        continue;
-                    }
-
-                    if (enabledOnly && !item.IsEnabled) {
-                        return null;
-                    }
-
-                    if (!await AuthorizationService.AuthorizeAdapter(item, context, cancellationToken).ConfigureAwait(false)) {
-                        return null;
-                    }
-
-                    return item;
+            await foreach (var item in GetAdapters(cancellationToken).ConfigureAwait(false)) {
+                if (!item.Descriptor.Id.Equals(adapterId, StringComparison.OrdinalIgnoreCase)) {
+                    continue;
                 }
+
+                if (enabledOnly && !item.IsEnabled) {
+                    return null;
+                }
+
+                if (!await AuthorizationService.AuthorizeAdapter(item, context, cancellationToken).ConfigureAwait(false)) {
+                    return null;
+                }
+
+                return item;
             }
 
             return null;

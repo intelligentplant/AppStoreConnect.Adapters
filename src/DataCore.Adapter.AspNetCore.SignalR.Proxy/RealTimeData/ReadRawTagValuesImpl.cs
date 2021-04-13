@@ -1,6 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
@@ -20,24 +20,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// </param>
         public ReadRawTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
+
         /// <inheritdoc />
-        public async Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context,
+            ReadRawTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            var hubChannel = await client.TagValues.ReadRawTagValuesAsync(
-                AdapterId, 
-                request, 
-                cancellationToken
-            ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateTagValueChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result;
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.TagValues.ReadRawTagValuesAsync(
+                    AdapterId,
+                    request,
+                    cancellationToken
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
 
     }

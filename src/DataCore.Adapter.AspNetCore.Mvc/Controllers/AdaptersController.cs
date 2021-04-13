@@ -107,13 +107,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 // Don't allow arbitrarily large queries!
                 request.PageSize = 100;
             }
-            var adapters = await _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken).ConfigureAwait(false);
+            var adapters = _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken);
 
             var result = new List<AdapterDescriptor>(request.PageSize);
-            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (adapters.TryRead(out var item)) {
-                    result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
-                }
+            await foreach (var item in adapters.ConfigureAwait(false)) {
+                result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
             }
 
             return Ok(result); // 200

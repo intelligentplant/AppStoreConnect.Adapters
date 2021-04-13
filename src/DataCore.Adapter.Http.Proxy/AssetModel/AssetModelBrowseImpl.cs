@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
 
@@ -20,41 +19,41 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
         public AssetModelBrowseImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(IAdapterCallContext context, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> BrowseAssetModelNodes(
+            IAdapterCallContext context, 
+            BrowseAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var clientResponse = await client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var clientResponse = await client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
         /// <inheritdoc />
-        public Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(IAdapterCallContext context, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> GetAssetModelNodes(
+            IAdapterCallContext context, 
+            GetAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-                var clientResponse = await client.AssetModel.GetNodesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var clientResponse = await client.AssetModel.GetNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

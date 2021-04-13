@@ -37,25 +37,23 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
         /// <inheritdoc/>
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) {
             var adapterCallContext = new DefaultAdapterCallContext();
-            var adapters = await _adapterAccessor.GetAllAdapters(adapterCallContext, cancellationToken).ConfigureAwait(false);
+            var adapters = _adapterAccessor.GetAllAdapters(adapterCallContext, cancellationToken);
 
             var healthChecks = new Dictionary<string, Adapter.Diagnostics.HealthCheckResult>(StringComparer.OrdinalIgnoreCase);
 
-            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (adapters.TryRead(out var item)) {
-                    try {
-                        var feature = item.GetFeature<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck);
-                        if (feature == null) {
-                            healthChecks[item.Descriptor.Id] = item.IsRunning
-                                ? Adapter.Diagnostics.HealthCheckResult.Healthy(null)
-                                : Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, Resources.HealthChecks_AdapterNotRunning);
-                            continue;
-                        }
-                        healthChecks[item.Descriptor.Id] = await feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
+            await foreach (var item in adapters.ConfigureAwait(false)) {
+                try {
+                    var feature = item.GetFeature<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck);
+                    if (feature == null) {
+                        healthChecks[item.Descriptor.Id] = item.IsRunning
+                            ? Adapter.Diagnostics.HealthCheckResult.Healthy(null)
+                            : Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, Resources.HealthChecks_AdapterNotRunning);
+                        continue;
                     }
-                    catch (Exception e) {
-                        healthChecks[item.Descriptor.Id] = Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
-                    }
+                    healthChecks[item.Descriptor.Id] = await feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception e) {
+                    healthChecks[item.Descriptor.Id] = Adapter.Diagnostics.HealthCheckResult.Unhealthy(null, error: e.ToString());
                 }
             }
 

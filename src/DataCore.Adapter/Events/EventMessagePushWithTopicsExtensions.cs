@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A channel reader that will emit event messages as they occur.
         /// </returns>
-        public static Task<ChannelReader<EventMessage>> Subscribe(
+        public static IAsyncEnumerable<EventMessage> Subscribe(
             this IEventMessagePushWithTopics feature,
             IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
@@ -45,7 +46,7 @@ namespace DataCore.Adapter.Events {
             var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
             channel.Writer.TryComplete();
 
-            return feature.Subscribe(context, request, channel, cancellationToken);
+            return feature.Subscribe(context, request, channel.Reader.ReadAllAsync(cancellationToken), cancellationToken);
         }
 
     }

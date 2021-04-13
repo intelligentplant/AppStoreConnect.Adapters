@@ -27,13 +27,18 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tags = new[] { TestContext.TestName }
-                    },
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest() { 
+                                Tags = new[] { TestContext.TestName } 
+                            },
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
                 CancelAfter(TimeSpan.FromSeconds(1));
                 var success = await tcs.Task.WithCancellation(CancellationToken);
@@ -53,14 +58,20 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tags = new[] { TestContext.TestName }
-                    },
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest() { 
+                                Tags = new[] { TestContext.TestName }
+                            },
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 Cancel();
                 var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                 Assert.IsTrue(success);
@@ -77,20 +88,34 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tags = new[] { TestContext.TestName }
-                    }, 
-                    CancellationToken
-                );
+                var tcs = new TaskCompletionSource<TagValueQueryResult>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        tcs.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest() {
+                                Tags = new[] { TestContext.TestName }
+                            },
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                });
+
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
 
                 var val = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
                 await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val));
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
+                var emitted = await tcs.Task;
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(TestContext.TestName, emitted.TagId);
                 Assert.AreEqual(TestContext.TestName, emitted.TagName);
@@ -108,46 +133,46 @@ namespace DataCore.Adapter.Tests {
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
-            var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
-
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateSnapshotTagValueSubscriptionRequest(),
-                    channel,
-                    CancellationToken
-                );
+                var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
+                var val1 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build());
+                var val2 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build());
 
-                channel.Writer.TryWrite(new TagValueSubscriptionUpdate() { 
-                    Action = Common.SubscriptionUpdateAction.Subscribe,
-                    Tags = new [] { TestContext.TestName }
-                });
+                _ = Task.Run(async () => {
+                    try {
+                        // val1 should not be received by the subscription.
+                        await feature.ValueReceived(val1, CancellationToken);
 
-                var val2 = new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
-                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
+                        // val2 should be received by the subscription.
+                        await feature.ValueReceived(val2, CancellationToken);
+
+                        await Task.Delay(100, CancellationToken);
+
+                        // Add the subscription change - we should receive the current value for
+                        // the tag at the point of subscription.
+                        await channel.Writer.WriteAsync(new TagValueSubscriptionUpdate() {
+                            Tags = new[] { TestContext.TestName },
+                            Action = Common.SubscriptionUpdateAction.Subscribe
+                        }, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                try {
-                    var count = 0;
-                    while (await subscription.WaitToReadAsync(CancellationToken)) {
-                        while (subscription.TryRead(out var emitted)) {
-                            ++count;
-                            if (count > 1) {
-                                Assert.Fail("Only one value should be received.");
-                            }
-                            Assert.IsNotNull(emitted);
-                            Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                            Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                            Assert.AreEqual(val2.UtcSampleTime, emitted.Value.UtcSampleTime);
-                            Assert.AreEqual(val2.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
-                        }
-                    }
-                }
-                catch (OperationCanceledException) { }
+                var emitted = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest(),
+                    channel.Reader.ReadAllAsync(CancellationToken),
+                    CancellationToken
+                ).FirstOrDefaultAsync(CancellationToken).ConfigureAwait(false);
+
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                Assert.AreEqual(val2.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
+                Assert.AreEqual(val2.Value.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
             }
         }
 
@@ -160,50 +185,58 @@ namespace DataCore.Adapter.Tests {
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
             };
 
-            var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
-
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateSnapshotTagValueSubscriptionRequest() { 
-                        Tags = new[] { TestContext.TestName }
-                    },
-                    channel,
-                    CancellationToken
-                );
+                var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val1));
+                var val1 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build());
+                var val2 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build());
 
-                channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
-                    Action = Common.SubscriptionUpdateAction.Unsubscribe,
-                    Tags = new[] { TestContext.TestName }
-                });
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        // val1 should be received by the subscription.
+                        await feature.ValueReceived(val1, CancellationToken);
 
-                await Task.Delay(1000, CancellationToken);
+                        channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
+                            Tags = new[] { TestContext.TestName },
+                            Action = Common.SubscriptionUpdateAction.Unsubscribe
+                        });
 
-                var val2 = new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build();
-                await feature.ValueReceived(TagValueQueryResult.Create(TestContext.TestName, TestContext.TestName, val2));
+                        await Task.Delay(100, CancellationToken);
+
+                        // val2 should not be received by the subscription.
+                        await feature.ValueReceived(val2, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                try {
-                    var count = 0;
-                    while (await subscription.WaitToReadAsync(CancellationToken)) {
-                        while (subscription.TryRead(out var emitted)) {
-                            ++count;
-                            if (count > 1) {
-                                Assert.Fail("Only one value should be received.");
-                            }
-                            Assert.IsNotNull(emitted);
-                            Assert.AreEqual(TestContext.TestName, emitted.TagId);
-                            Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                            Assert.AreEqual(val1.UtcSampleTime, emitted.Value.UtcSampleTime);
-                            Assert.AreEqual(val1.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
-                        }
-                    }
+                var emittedCount = 0;
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                await using (var enumerator = feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tags = new[] { TestContext.TestName }
+                    },
+                    channel.Reader.ReadAllAsync(CancellationToken),
+                    CancellationToken
+                ).GetAsyncEnumerator(CancellationToken)) {
+                    var emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
+
+                    Assert.IsNotNull(emitted);
+                    ++emittedCount;
+                    Assert.AreEqual(TestContext.TestName, emitted.TagId);
+                    Assert.AreEqual(TestContext.TestName, emitted.TagName);
+                    Assert.AreEqual(val1.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
+                    Assert.AreEqual(val1.Value.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
                 }
-                catch (OperationCanceledException) { }
+
+                Assert.AreEqual(1, emittedCount, "Only one value should have been emitted.");
             }
         }
 
@@ -220,15 +253,6 @@ namespace DataCore.Adapter.Tests {
             var valueCount = 0;
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                        new CreateSnapshotTagValueSubscriptionRequest() { 
-                        PublishInterval = TimeSpan.FromSeconds(1),
-                        Tags = new[] { TestContext.TestName }
-                    }, 
-                    CancellationToken
-                );
-
                 _ = Task.Run(async () => {
                     try {
                         while (!CancellationToken.IsCancellationRequested) {
@@ -242,10 +266,15 @@ namespace DataCore.Adapter.Tests {
 
                 CancelAfter(publishInterval);
                 try {
-                    while (await subscription.WaitToReadAsync(CancellationToken)) {
-                        if (subscription.TryRead(out var val)) {
-                            ++valueCount;
-                        }
+                    await foreach (var val in feature.Subscribe(
+                        ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest() {
+                                PublishInterval = TimeSpan.FromSeconds(1),
+                                Tags = new[] { TestContext.TestName }
+                            },
+                        CancellationToken
+                    ).ConfigureAwait(false)) {
+                        ++valueCount;
                     }
                 }
                 catch (OperationCanceledException) { }
@@ -265,21 +294,44 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tags = new[] { TestContext.TestName }
-                    }, 
-                    CancellationToken
-                );
+                var tcs1 = new TaskCompletionSource<TagValueQueryResult>();
+                var tcs2 = new TaskCompletionSource<TagValueQueryResult>();
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateSnapshotTagValueSubscriptionRequest() {
-                        Tags = new[] { TestContext.TestName }
-                    }, 
-                    CancellationToken
-                ));
+                _ = Task.Run(async () => {
+                    try {
+                        tcs1.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs1.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs1.TrySetException(e);
+                    }
+                });
+
+                _ = Task.Run(async () => {
+                    try {
+                        // Wait for a short while to ensure that this task runs after the first one
+                        await Task.Delay(100, CancellationToken).ConfigureAwait(false);
+                        tcs2.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateSnapshotTagValueSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs2.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs2.TrySetException(e);
+                    }
+                });
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 
@@ -298,44 +350,72 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
+                // We should receive this message due to the IsTopicMatch delegate.
+                var id1 = $"{TestContext.TestName}/Should_Match";
+                var msg1 = new TagValueQueryResult(id1, id1, new TagValueBuilder()
+                    .WithValue(DateTime.UtcNow.Ticks)
+                    .Build()
+                );
+
+                // We should not receive this message.
+                var id2 = "Should_Not_Match";
+                var msg2 = new TagValueQueryResult(id2, id2, new TagValueBuilder()
+                    .WithValue(DateTime.UtcNow.Ticks)
+                    .Build()
+                );
+
+                // We should receive this message since the topic exactly matches our subscription.
+                var id3 = TestContext.TestName;
+                var msg3 = new TagValueQueryResult(id3, id3, new TagValueBuilder()
+                    .WithValue(DateTime.UtcNow.Ticks)
+                    .Build()
+                );
+
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        await feature.ValueReceived(msg1, CancellationToken);
+                        await feature.ValueReceived(msg2, CancellationToken);
+                        await feature.ValueReceived(msg3, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
+
+                var messagesReceived = 0;
+
+                CancelAfter(TimeSpan.FromSeconds(1));
+
+                await using (var enumerator = feature.Subscribe(
                     ExampleCallContext.ForPrincipal(null),
                     new CreateSnapshotTagValueSubscriptionRequest() {
                         Tags = new[] { TestContext.TestName }
                     },
                     CancellationToken
-                );
+                ).GetAsyncEnumerator(CancellationToken)) {
+                    var emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
 
-                // We should receive this value due to our IsTopicMatch delegate
-                var val1 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                var tagId1 = TestContext.TestName + "/SubTag";
-                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId1, tagId1, val1)), "Sub-tag value write failed.");
+                    ++messagesReceived;
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(msg1.TagId, emitted.TagId);
+                    Assert.AreEqual(msg1.TagName, emitted.TagName);
+                    Assert.AreEqual(msg1.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
+                    Assert.AreEqual(msg1.Value.Value, emitted.Value.Value);
 
-                // We should not receive this value
-                var val2 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                var tagId2 = "Should_Not_Match";
-                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId2, tagId2, val2)), "Non-matching value write failed.");
+                    emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
 
-                // We should receive this value because it is an exact match for the tag we subscribed to.
-                var val3 = new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build();
-                var tagId3 = TestContext.TestName;
-                Assert.IsTrue(await feature.ValueReceived(TagValueQueryResult.Create(tagId3, tagId3, val3)), "Exact match value write failed.");
+                    ++messagesReceived;
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(msg3.TagId, emitted.TagId);
+                    Assert.AreEqual(msg3.TagName, emitted.TagName);
+                    Assert.AreEqual(msg3.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
+                    Assert.AreEqual(msg3.Value.Value, emitted.Value.Value);
+                }
 
-                CancelAfter(TimeSpan.FromSeconds(1));
-
-                var emitted = await subscription.ReadAsync(CancellationToken);
-                Assert.IsNotNull(emitted);
-                Assert.AreEqual(tagId1, emitted.TagId);
-                Assert.AreEqual(tagId1, emitted.TagName);
-                Assert.AreEqual(val1.UtcSampleTime, emitted.Value.UtcSampleTime);
-                Assert.AreEqual(val1.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
-
-                emitted = await subscription.ReadAsync(CancellationToken);
-                Assert.IsNotNull(emitted);
-                Assert.AreEqual(tagId3, emitted.TagId);
-                Assert.AreEqual(tagId3, emitted.TagName);
-                Assert.AreEqual(val3.UtcSampleTime, emitted.Value.UtcSampleTime);
-                Assert.AreEqual(val3.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
+                Assert.AreEqual(2, messagesReceived, "2 messages should have been received.");
             }
         }
 
@@ -349,11 +429,16 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
                 CancelAfter(TimeSpan.FromSeconds(1));
                 var success = await tcs.Task.WithCancellation(CancellationToken);
@@ -371,12 +456,18 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 Cancel();
                 var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                 Assert.IsTrue(success);
@@ -391,17 +482,31 @@ namespace DataCore.Adapter.Tests {
             var options = new EventMessagePushOptions();
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateEventMessageSubscriptionRequest(), 
-                    CancellationToken
-                );
+                var tcs = new TaskCompletionSource<EventMessage>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        tcs.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                });
+
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 var msg = EventMessageBuilder.Create().WithUtcEventTime(now).WithMessage(TestContext.TestName).Build();
                 await feature.ValueReceived(msg);
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
+                var emitted = await tcs.Task;
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(msg.Message, emitted.Message);
             }
@@ -417,17 +522,44 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePush(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null), 
-                    new CreateEventMessageSubscriptionRequest(), 
-                    CancellationToken
-                );
+                var tcs1 = new TaskCompletionSource<EventMessage>();
+                var tcs2 = new TaskCompletionSource<EventMessage>();
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageSubscriptionRequest(),
-                    CancellationToken
-                ));
+                _ = Task.Run(async () => {
+                    try {
+                        tcs1.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs1.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs1.TrySetException(e);
+                    }
+                });
+
+                _ = Task.Run(async () => {
+                    try {
+                        // Wait for a short while to ensure that this task runs after the first one
+                        await Task.Delay(100, CancellationToken).ConfigureAwait(false);
+                        tcs2.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs2.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs2.TrySetException(e);
+                    }
+                });
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 
@@ -441,11 +573,16 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionAdded += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageTopicSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
                 CancelAfter(TimeSpan.FromSeconds(1));
                 var success = await tcs.Task.WithCancellation(CancellationToken);
@@ -463,12 +600,18 @@ namespace DataCore.Adapter.Tests {
 
                 feature.SubscriptionCancelled += sub => tcs.TrySetResult(true);
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest(),
-                    CancellationToken
-                );
+                _ = Task.Run(async () => {
+                    try {
+                        await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageTopicSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken);
+                    }
+                    catch { }
+                });
 
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
                 Cancel();
                 var success = await tcs.Task.TimeoutAfter(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                 Assert.IsTrue(success);
@@ -484,13 +627,27 @@ namespace DataCore.Adapter.Tests {
             var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { topic }
-                    },
-                    CancellationToken
-                );
+                var tcs = new TaskCompletionSource<EventMessage>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        tcs.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageTopicSubscriptionRequest() { 
+                                Topics = new[] { topic }
+                            },
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                });
+
+                await Task.Delay(100, CancellationToken).ConfigureAwait(false);
 
                 var msg = EventMessageBuilder
                     .Create()
@@ -503,7 +660,7 @@ namespace DataCore.Adapter.Tests {
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
+                var emitted = await tcs.Task;
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(msg.Message, emitted.Message);
             }
@@ -520,25 +677,12 @@ namespace DataCore.Adapter.Tests {
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest(),
-                    CancellationToken
-                );
-
                 var msg1 = EventMessageBuilder
                     .Create()
                     .WithTopic(topic)
                     .WithUtcEventTime(now)
                     .WithMessage(TestContext.TestName)
                     .Build();
-
-                await feature.ValueReceived(msg1, CancellationToken);
-
-                channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
-                    Action = Common.SubscriptionUpdateAction.Subscribe,
-                    Topics = new[] { TestContext.TestName }
-                });
 
                 var msg2 = EventMessageBuilder
                     .Create()
@@ -547,26 +691,38 @@ namespace DataCore.Adapter.Tests {
                     .WithMessage(TestContext.TestName)
                     .Build();
 
-                await feature.ValueReceived(msg2, CancellationToken);
+                _ = Task.Run(async () => { 
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        // msg1 should not be received by the subscription.
+                        await feature.ValueReceived(msg1, CancellationToken);
+
+                        await Task.Delay(100, CancellationToken);
+
+                        await channel.Writer.WriteAsync(new EventMessageSubscriptionUpdate() {
+                            Topics = new[] { topic }
+                        }, CancellationToken);
+
+                        await Task.Delay(100, CancellationToken);
+
+                        // msg2 should be received by the subscription.
+                        await feature.ValueReceived(msg2, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                try {
-                    var count = 0;
-                    while (await subscription.WaitToReadAsync(CancellationToken)) {
-                        while (subscription.TryRead(out var emitted)) {
-                            ++count;
-                            if (count > 1) {
-                                Assert.Fail("Only one value should be received.");
-                            }
+                var emitted = await feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest(),
+                    channel.Reader.ReadAllAsync(CancellationToken),
+                    CancellationToken
+                ).FirstOrDefaultAsync(CancellationToken).ConfigureAwait(false);
 
-                            Assert.IsNotNull(emitted);
-                            Assert.AreEqual(msg2.UtcEventTime, emitted.UtcEventTime);
-                            Assert.AreEqual(msg2.Message, emitted.Message);
-                        }
-                    }
-                }
-                catch (OperationCanceledException) { }
+                Assert.IsNotNull(emitted);
+                Assert.AreEqual(msg2.UtcEventTime, emitted.UtcEventTime);
+                Assert.AreEqual(msg2.Message, emitted.Message);
             }
         }
 
@@ -581,29 +737,12 @@ namespace DataCore.Adapter.Tests {
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
 
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { TestContext.TestName }
-                    },
-                    CancellationToken
-                );
-
                 var msg1 = EventMessageBuilder
                     .Create()
                     .WithTopic(topic)
                     .WithUtcEventTime(now)
                     .WithMessage(TestContext.TestName)
                     .Build();
-
-                await feature.ValueReceived(msg1, CancellationToken);
-
-                channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
-                    Action = Common.SubscriptionUpdateAction.Unsubscribe,
-                    Topics = new[] { TestContext.TestName }
-                });
-
-                await Task.Delay(1000, CancellationToken);
 
                 var msg2 = EventMessageBuilder
                     .Create()
@@ -612,26 +751,48 @@ namespace DataCore.Adapter.Tests {
                     .WithMessage(TestContext.TestName)
                     .Build();
 
-                await feature.ValueReceived(msg2, CancellationToken);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        // msg1 should be received by the subscription.
+                        await feature.ValueReceived(msg1, CancellationToken);
+
+                        channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
+                            Topics = new[] { topic },
+                            Action = Common.SubscriptionUpdateAction.Unsubscribe
+                        });
+
+                        await Task.Delay(100, CancellationToken);
+
+                        // msg2 should not be received by the subscription.
+                        await feature.ValueReceived(msg2, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
+
+                var emittedCount = 0;
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                try {
-                    var count = 0;
-                    while (await subscription.WaitToReadAsync(CancellationToken)) {
-                        while (subscription.TryRead(out var emitted)) {
-                            ++count;
-                            if (count > 1) {
-                                Assert.Fail("Only one value should be received.");
-                            }
+                await using (var enumerator = feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topics = new[] { topic }
+                    },
+                    channel.Reader.ReadAllAsync(CancellationToken),
+                    CancellationToken
+                ).GetAsyncEnumerator(CancellationToken)) {
+                    var emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
 
-                            Assert.IsNotNull(emitted);
-                            Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
-                            Assert.AreEqual(msg1.Message, emitted.Message);
-                        }
-                    }
+                    Assert.IsNotNull(emitted);
+                    ++emittedCount;
+                    Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
+                    Assert.AreEqual(msg1.Message, emitted.Message);
                 }
-                catch (OperationCanceledException) { }
+
+                Assert.AreEqual(1, emittedCount, "Only one value should have been emitted.");
             }
         }
 
@@ -650,14 +811,6 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { topicRoot }
-                    },
-                    CancellationToken
-                );
-
                 // We should receive this message due to the IsTopicMatch delegate.
                 var msg1 = EventMessageBuilder
                     .Create()
@@ -682,33 +835,47 @@ namespace DataCore.Adapter.Tests {
                     .WithMessage(TestContext.TestName + "_3")
                     .Build();
 
-                await feature.ValueReceived(msg1);
-                await feature.ValueReceived(msg2);
-                await feature.ValueReceived(msg3);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        await feature.ValueReceived(msg1, CancellationToken);
+                        await feature.ValueReceived(msg2, CancellationToken);
+                        await feature.ValueReceived(msg3, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
 
                 var messagesReceived = 0;
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
-                Assert.IsNotNull(emitted);
-                Assert.AreEqual(msg1.Message, emitted.Message);
-                ++messagesReceived;
+                await using (var enumerator = feature.Subscribe(
+                    ExampleCallContext.ForPrincipal(null),
+                    new CreateEventMessageTopicSubscriptionRequest() {
+                        Topics = new[] { topicRoot }
+                    },
+                    CancellationToken
+                ).GetAsyncEnumerator(CancellationToken)) {
+                    var emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
 
-                emitted = await subscription.ReadAsync(CancellationToken);
-                Assert.IsNotNull(emitted);
-                Assert.AreEqual(msg3.Message, emitted.Message);
-                ++messagesReceived;
-
-                try {
-                    emitted = await subscription.ReadAsync(CancellationToken);
-                    // Exception should be thrown before we get to here!
                     ++messagesReceived;
-                }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
+                    Assert.AreEqual(msg1.Message, emitted.Message);
 
-                Assert.AreEqual(2, messagesReceived);
+                    emitted = await enumerator.MoveNextAsync().ConfigureAwait(false)
+                        ? enumerator.Current
+                        : null;
+
+                    ++messagesReceived;
+                    Assert.IsNotNull(emitted);
+                    Assert.AreEqual(msg3.UtcEventTime, emitted.UtcEventTime);
+                    Assert.AreEqual(msg3.Message, emitted.Message);
+                }
+
+                Assert.AreEqual(2, messagesReceived, "2 messages should have been received.");
             }
         }
 
@@ -721,14 +888,6 @@ namespace DataCore.Adapter.Tests {
             var options = new EventMessagePushWithTopicsOptions();
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { topic }
-                    },
-                    CancellationToken
-                );
-
                 var msg1 = EventMessageBuilder
                     .Create()
                     .WithTopic(topic)
@@ -743,27 +902,40 @@ namespace DataCore.Adapter.Tests {
                     .WithMessage(TestContext.TestName)
                     .Build();
 
-                await feature.ValueReceived(msg1);
-                await feature.ValueReceived(msg2);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(100, CancellationToken);
+                        await feature.ValueReceived(msg1, CancellationToken);
+                        await feature.ValueReceived(msg2, CancellationToken);
+                    }
+                    catch { }
+                }, CancellationToken);
 
                 var messagesReceived = 0;
 
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-                var emitted = await subscription.ReadAsync(CancellationToken);
-                Assert.IsNotNull(emitted);
-                Assert.AreEqual(msg1.Message, emitted.Message);
-                ++messagesReceived;
-
                 try {
-                    emitted = await subscription.ReadAsync(CancellationToken);
-                    // Exception should be thrown before we get to here!
-                    ++messagesReceived;
+                    await foreach (var emitted in feature.Subscribe(
+                        ExampleCallContext.ForPrincipal(null),
+                        new CreateEventMessageTopicSubscriptionRequest() {
+                            Topics = new[] { topic }
+                        },
+                        CancellationToken
+                    ).ConfigureAwait(false)) {
+                        ++messagesReceived;
+                        if (messagesReceived > 1) {
+                            Assert.Fail("Only one value should have been emitted.");
+                        }
+
+                        Assert.IsNotNull(emitted);
+                        Assert.AreEqual(msg1.UtcEventTime, emitted.UtcEventTime);
+                        Assert.AreEqual(msg1.Message, emitted.Message);
+                    }
                 }
                 catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
 
-                Assert.AreEqual(1, messagesReceived);
+                Assert.AreEqual(1, messagesReceived, "One value should have been emitted.");
             }
         }
 
@@ -778,21 +950,44 @@ namespace DataCore.Adapter.Tests {
             };
 
             using (var feature = new EventMessagePushWithTopics(options, null, null)) {
-                var subscription = await feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { topic }
-                    },
-                    CancellationToken
-                );
+                var tcs1 = new TaskCompletionSource<EventMessage>();
+                var tcs2 = new TaskCompletionSource<EventMessage>();
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => feature.Subscribe(
-                    ExampleCallContext.ForPrincipal(null),
-                    new CreateEventMessageTopicSubscriptionRequest() {
-                        Topics = new[] { topic }
-                    },
-                    CancellationToken
-                ));
+                _ = Task.Run(async () => {
+                    try {
+                        tcs1.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageTopicSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs1.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs1.TrySetException(e);
+                    }
+                });
+
+                _ = Task.Run(async () => {
+                    try {
+                        // Wait for a short while to ensure that this task runs after the first one
+                        await Task.Delay(100, CancellationToken).ConfigureAwait(false);
+                        tcs2.TrySetResult(await feature.Subscribe(
+                            ExampleCallContext.ForPrincipal(null),
+                            new CreateEventMessageTopicSubscriptionRequest(),
+                            CancellationToken
+                        ).FirstOrDefaultAsync(CancellationToken));
+                    }
+                    catch (OperationCanceledException) {
+                        tcs2.TrySetCanceled(CancellationToken);
+                    }
+                    catch (Exception e) {
+                        tcs2.TrySetException(e);
+                    }
+                });
+
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 

@@ -84,4 +84,5 @@ message WriteEventMessageRequest {
 
 message WriteEventMessageInitMessage {
     string adapter_id = 1;
+    map<string,string> properties = 2;
 }

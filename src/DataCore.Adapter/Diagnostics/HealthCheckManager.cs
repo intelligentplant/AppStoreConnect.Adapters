@@ -206,7 +206,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<HealthCheckResult>> Subscribe(
+        public IAsyncEnumerable<HealthCheckResult> Subscribe(
             IAdapterCallContext context, 
             CancellationToken cancellationToken
         ) {
@@ -236,7 +236,7 @@ namespace DataCore.Adapter.Diagnostics {
 
             _subscriptions[subscriptionId] = subscription;
 
-            return Task.FromResult(subscription.Reader);
+            return subscription.ReadAllAsync(cancellationToken);
         }
 
 

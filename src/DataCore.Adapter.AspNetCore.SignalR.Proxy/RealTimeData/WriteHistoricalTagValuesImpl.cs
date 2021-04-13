@@ -1,6 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
@@ -21,23 +21,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public WriteHistoricalTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public async Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        public async IAsyncEnumerable<WriteTagValueResult> WriteHistoricalTagValues(
+            IAdapterCallContext context, 
+            WriteTagValuesRequest request,
+            IAsyncEnumerable<WriteTagValueItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
 
             var client = GetClient();
-            var hubChannel = await client.TagValues.WriteHistoricalTagValuesAsync(
-                AdapterId, 
-                channel, 
-                cancellationToken
-            ).ConfigureAwait(false);
-            
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result;
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.TagValues.WriteHistoricalTagValuesAsync(
+                    AdapterId,
+                    request,
+                    channel,
+                    ctSource.Token
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
     }
 }

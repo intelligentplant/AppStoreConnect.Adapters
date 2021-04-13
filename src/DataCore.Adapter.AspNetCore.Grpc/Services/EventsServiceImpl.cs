@@ -81,23 +81,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var subscription = await adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
+                long outputItems = 0;
                 try {
-                    long outputItems = 0;
-
-                    while (await subscription.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (subscription.TryRead(out var msg) && msg != null) {
-                            await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
-                            activity.SetResponseItemCountTag(++outputItems);
+                    await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
                         }
+
+                        ++outputItems;
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (ChannelClosedException) {
-                    // Do nothing
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }
@@ -126,7 +122,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
 
             var updateChannel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
-            Activity? activity = null;
 
             try {
                 // Keep reading from the request stream until we get an item that allows us to create 
@@ -148,21 +143,24 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     };
                     Util.ValidateObject(adapterRequest);
 
-                    activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest);
-                    var subscription = await adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
+                    // Start a background task to run the subscription.
+                    _backgroundTaskService.QueueBackgroundWorkItem(async ct => { 
+                        using (var activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                            long outputItems = 0;
+                            try {
+                                await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel.Reader.ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                                    if (val == null) {
+                                        continue;
+                                    }
+                                    ++outputItems;
+                                    await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
                                 }
-                                await responseStream.WriteAsync(val.ToGrpcEventMessage()).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
+                            }
+                            finally {
+                                activity.SetResponseItemCountTag(outputItems);
                             }
                         }
-                    }, _backgroundTaskService, cancellationToken);
+                    }, cancellationToken);
 
                     // Break out of the initial loop; we'll handle subscription updates below!
                     break;
@@ -188,7 +186,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 updateChannel.Writer.TryComplete();
-                activity?.Dispose();
             }
         }
 
@@ -214,16 +211,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var msg) || msg == null) {
-                        continue;
-                    }
+                try {
+                    await foreach (var msg in adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
 
-                    await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+                        ++outputItems;
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessage()).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }
@@ -248,16 +248,19 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var msg) || msg == null) {
-                        continue;
-                    }
+                try {
+                    await foreach (var msg in adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
 
-                    await responseStream.WriteAsync(msg.ToGrpcEventMessageWithCursorPosition()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+                        ++outputItems;
+                        await responseStream.WriteAsync(msg.ToGrpcEventMessageWithCursorPosition()).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
                 }
             }
         }
@@ -265,14 +268,20 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
-        public override async Task WriteEventMessages(IAsyncStreamReader<WriteEventMessageRequest> requestStream, IServerStreamWriter<WriteEventMessageResult> responseStream, ServerCallContext context) {
+        public override async Task WriteEventMessages(
+            IAsyncStreamReader<WriteEventMessageRequest> requestStream, 
+            IServerStreamWriter<WriteEventMessageResult> responseStream, 
+            ServerCallContext context
+        ) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
 
             var valueChannel = Channel.CreateUnbounded<Events.WriteEventMessageItem>();
-            Activity? activity = null;
 
             try {
+                ResolvedAdapterFeature<IWriteEventMessages> adapter = default;
+                WriteEventMessagesRequest adapterRequest = null!;
+
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -282,38 +291,53 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     // We received a create request!
 
-                    var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
-                    activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id);
-
-                    var subscription = await adapter.Feature.WriteEventMessages(adapterCallContext, valueChannel, cancellationToken).ConfigureAwait(false);
-
-                    subscription.RunBackgroundOperation(async (ch, ct) => {
-                        long outputItems = 0;
-                        while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                            while (ch.TryRead(out var val)) {
-                                if (val == null) {
-                                    continue;
-                                }
-                                await responseStream.WriteAsync(val.ToGrpcWriteEventMessageResult()).ConfigureAwait(false);
-                                activity.SetResponseItemCountTag(++outputItems);
-                            }
-                        }
-                    }, _backgroundTaskService, cancellationToken);
+                    adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
+                    adapterRequest = new Adapter.Events.WriteEventMessagesRequest() { 
+                        Properties = new Dictionary<string, string>(requestStream.Current.Init.Properties)
+                    };
 
                     // Break out of the initial loop; we'll handle the actual writes below!
                     break;
                 }
 
-                long inputItems = 0;
+                if (adapterRequest == null) {
+                    return;
+                }
 
-                // Now handle write requests.
-                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (requestStream.Current.OperationCase != WriteEventMessageRequest.OperationOneofCase.Write) {
-                        continue;
+                // Start a background task to forward additional writes to the adapter
+                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
+                            if (requestStream.Current.OperationCase != WriteEventMessageRequest.OperationOneofCase.Write) {
+                                continue;
+                            }
+
+                            await valueChannel.Writer.WriteAsync(requestStream.Current.Write.ToAdapterWriteEventMessageItem(), ct).ConfigureAwait(false);
+                        }
                     }
+                    catch (Exception e) {
+                        valueChannel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        valueChannel.Writer.TryComplete();
+                    }
+                }, cancellationToken);
 
-                    valueChannel.Writer.TryWrite(requestStream.Current.Write.ToAdapterWriteEventMessageItem());
-                    activity.SetRequestItemCountTag(++inputItems);
+                // Stream results back to caller.
+                using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                    long outputItems = 0;
+                    try {
+                        await foreach (var val in adapter.Feature.WriteEventMessages(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                            if (val == null) {
+                                continue;
+                            }
+                            ++outputItems;
+                            await responseStream.WriteAsync(val.ToGrpcWriteEventMessageResult()).ConfigureAwait(false);
+                        }
+                    }
+                    finally {
+                        activity.SetResponseItemCountTag(outputItems);
+                    }
                 }
             }
             catch (OperationCanceledException) { }
@@ -322,7 +346,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 valueChannel.Writer.TryComplete();
-                activity?.Dispose();
             }
         }
 

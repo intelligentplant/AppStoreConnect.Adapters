@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -22,7 +24,12 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.AssetModel.AssetModelNode>> FindAssetModelNodes(IAdapterCallContext context, Adapter.AssetModel.FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.AssetModel.AssetModelNode> FindAssetModelNodes(
+            IAdapterCallContext context, 
+            Adapter.AssetModel.FindAssetModelNodesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
@@ -38,25 +45,17 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                     grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
                 }
             }
-            var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, cancellationToken));
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel(-1);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, ctSource.Token));
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterAssetModelNode(), ct).ConfigureAwait(false);
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterAssetModelNode();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

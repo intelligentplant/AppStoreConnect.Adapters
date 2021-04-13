@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -21,23 +23,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         public WriteEventMessagesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
         /// <inheritdoc />
-        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            IAdapterCallContext context, 
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
 
             var client = GetClient();
-            var hubChannel = await client.Events.WriteEventMessagesAsync(
-                AdapterId, 
-                channel, 
-                cancellationToken
-            ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result;
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.Events.WriteEventMessagesAsync(
+                    AdapterId,
+                    request,
+                    channel,
+                    ctSource.Token
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
     }
 }

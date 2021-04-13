@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -28,22 +30,23 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching nodes.
         /// </returns>
-        public async Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> BrowseAssetModelNodes(string adapterId, BrowseAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
                     Activity.Current.SetResponseItemCountTag(outputItems);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
 
@@ -62,22 +65,24 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching nodes.
         /// </returns>
-        public async Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> GetAssetModelNodes(string adapterId, GetAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.GetAssetModelNodes(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
                     Activity.Current.SetResponseItemCountTag(outputItems);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
 
@@ -96,22 +101,23 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching nodes.
         /// </returns>
-        public async Task<ChannelReader<AssetModelNode>> FindAssetModelNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AssetModelNode> FindAssetModelNodes(string adapterId, FindAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            var result = ChannelExtensions.CreateAssetModelNodeChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                using (Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                    var resultChannel = await adapter.Feature.FindAssetModelNodes(adapterCallContext, request, ct).ConfigureAwait(false);
-                    var outputItems = await resultChannel.Forward(ch, ct).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
                     Activity.Current.SetResponseItemCountTag(outputItems);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
     }

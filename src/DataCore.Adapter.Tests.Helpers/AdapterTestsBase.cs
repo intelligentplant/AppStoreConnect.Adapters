@@ -331,36 +331,43 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IConfigurationChanges)}.{nameof(IConfigurationChanges.Subscribe)}"));
-
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
-
-                var testValuesEmitted = await EmitTestConfigurationChanges(TestContext, adapter, request.ItemTypes, ConfigurationChangeType.Created, ct).ConfigureAwait(false);
-                if (!testValuesEmitted) {
-                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(EmitTestConfigurationChanges));
-                    return;
-                }
-
                 var allItemTypes = new HashSet<string>(request.ItemTypes);
                 var remainingTypes = new HashSet<string>(request.ItemTypes);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value, FormatMessage(Resources.ChannelContainedNullItem, nameof(ConfigurationChange)));
-                        if (allItemTypes.Contains(value.ItemType)) {
-                            remainingTypes.Remove(value.ItemType);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedItemReceived, nameof(ConfigurationChange), value.ItemType));
-                        }
+                var tcs = new TaskCompletionSource<bool>();
+
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestConfigurationChanges(TestContext, adapter, request.ItemTypes, ConfigurationChangeType.Created, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                await foreach (var value in feature.Subscribe(context, request, ct).ConfigureAwait(false)) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ChannelContainedNullItem, nameof(ConfigurationChange)));
+                    if (allItemTypes.Contains(value.ItemType)) {
+                        remainingTypes.Remove(value.ItemType);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedItemReceived, nameof(ConfigurationChange), value.ItemType));
                     }
 
                     if (remainingTypes.Count == 0) {
                         break;
                     }
+                }
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
+                if (!testValuesEmitted) {
+                    AssertInconclusiveDueToMissingTestInput<IConfigurationChanges>(nameof(EmitTestConfigurationChanges));
+                    return;
                 }
 
                 Assert.AreEqual(0, remainingTypes.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
@@ -430,11 +437,10 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IHealthCheck)}.{nameof(IHealthCheck.Subscribe)}"));
-
-                var health = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                VerifyHealthCheckResult(health);
+                await foreach (var item in feature.Subscribe(context, ct).ConfigureAwait(false)) {
+                    VerifyHealthCheckResult(item);
+                    break;
+                }
             });
         }
 
@@ -493,10 +499,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetTagProperties(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTagProperties)}"));
-
-                var props = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var props = await feature.GetTagProperties(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(props.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, props.Count(), request.PageSize));
 
                 if (props.Any()) {
@@ -527,11 +530,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagInfo)}.{nameof(ITagInfo.GetTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.GetTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.AreEqual(request.Tags.Count(), tags.Count(), FormatMessage(Resources.UnexpectedItemCount, request.Tags.Count(), tags.Count()));
 
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -598,11 +597,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.All;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -648,11 +643,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.BasicInformation;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -710,11 +701,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 request.ResultFields = TagDefinitionFields.All;
-                var channel = await feature.FindTags(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ITagSearch)}.{nameof(ITagSearch.FindTags)}"));
-
-                var tags = await ReadAllAsync(channel, ct).ConfigureAwait(false);
-
+                var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -773,9 +760,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadSnapshotTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadSnapshotTagValues)}.{nameof(IReadSnapshotTagValues.ReadSnapshotTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadSnapshotTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var remainingTags = new HashSet<string>(request.Tags);
 
@@ -853,14 +838,25 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
+                var tcs = new TaskCompletionSource<bool>();
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
 
-                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                var received = await feature.Subscribe(context, request, ct).ToEnumerable(request.Tags.Count(), ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testValuesEmitted) {
                     AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
                     return;
@@ -869,22 +865,16 @@ namespace DataCore.Adapter.Tests {
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var value)) {
-                        Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-                        if (allTags.Contains(value.TagId)) {
-                            remainingTags.Remove(value.TagId);
-                        }
-                        else if (allTags.Contains(value.TagName)) {
-                            remainingTags.Remove(value.TagName);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
-                        }
+                foreach (var value in received) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
+                    if (allTags.Contains(value.TagId)) {
+                        remainingTags.Remove(value.TagId);
                     }
-
-                    if (remainingTags.Count == 0) {
-                        break;
+                    else if (allTags.Contains(value.TagName)) {
+                        remainingTags.Remove(value.TagName);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
                 }
 
@@ -918,25 +908,30 @@ namespace DataCore.Adapter.Tests {
 
                 var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var subscription = await feature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() { 
-                    PublishInterval = request.PublishInterval,
-                    Properties = request.Properties 
-                }, channel.Reader, ct).ConfigureAwait(false);
-
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(ISnapshotTagValuePush)}.{nameof(ISnapshotTagValuePush.Subscribe)}"));
-
-                // Now add the tags to the subscription.
-
                 channel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
                     Action = SubscriptionUpdateAction.Subscribe,
                     Tags = request.Tags
                 });
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                var tcs = new TaskCompletionSource<bool>();
 
-                var testValuesEmitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestSnapshotValue(TestContext, adapter, request.Tags, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                var received = await feature.Subscribe(context, request, channel.Reader.ReadAllAsync(ct), ct).ToEnumerable(request.Tags.Count(), ct).ConfigureAwait(false);
+
+                var testValuesEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testValuesEmitted) {
                     AssertInconclusiveDueToMissingTestInput<ISnapshotTagValuePush>(nameof(EmitTestSnapshotValue));
                     return;
@@ -945,22 +940,16 @@ namespace DataCore.Adapter.Tests {
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
 
-                while (await subscription.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (subscription.TryRead(out var val)) {
-                        Assert.IsNotNull(val, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-                        if (allTags.Contains(val.TagId)) {
-                            remainingTags.Remove(val.TagId);
-                        }
-                        else if (allTags.Contains(val.TagName)) {
-                            remainingTags.Remove(val.TagName);
-                        }
-                        else {
-                            Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, val.TagName, val.TagId));
-                        }
+                foreach (var value in received) {
+                    Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
+                    if (allTags.Contains(value.TagId)) {
+                        remainingTags.Remove(value.TagId);
                     }
-
-                    if (remainingTags.Count == 0) {
-                        break;
+                    else if (allTags.Contains(value.TagName)) {
+                        remainingTags.Remove(value.TagName);
+                    }
+                    else {
+                        Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
                 }
 
@@ -1010,9 +999,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadRawTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadRawTagValues)}.{nameof(IReadRawTagValues.ReadRawTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadRawTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -1096,9 +1083,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadPlotTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadPlotTagValues)}.{nameof(IReadPlotTagValues.ReadPlotTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadPlotTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var allTags = new HashSet<string>(request.Tags);
                 var remainingTags = new HashSet<string>(request.Tags);
@@ -1161,9 +1146,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetSupportedDataFunctions(context, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.GetSupportedDataFunctions)}"));
-                var dataFunctions = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var dataFunctions = await feature.GetSupportedDataFunctions(context, new GetSupportedDataFunctionsRequest(), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 Assert.IsTrue(dataFunctions.Any(), FormatMessage(Resources.AdapterDoesNotImplementAnyAggregates, nameof(IReadProcessedTagValues)));
                 Assert.IsTrue(dataFunctions.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(DataFunctionDescriptor)));
@@ -1194,9 +1177,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadProcessedTagValues(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadProcessedTagValues)}.{nameof(IReadProcessedTagValues.ReadProcessedTagValues)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadProcessedTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var dataFunctions = new List<string>(request.DataFunctions);
                 var allTags = new HashSet<string>(request.Tags);
@@ -1269,9 +1250,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadTagValuesAtTimes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValuesAtTimes)}.{nameof(IReadTagValuesAtTimes.ReadTagValuesAtTimes)}"));
-                var values = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var values = await feature.ReadTagValuesAtTimes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
                 var allTimestamps = new HashSet<DateTime>(request.UtcSampleTimes);
                 var allTags = new HashSet<string>(request.Tags);
@@ -1364,10 +1343,8 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadAnnotations(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValueAnnotations)}.{nameof(IReadTagValueAnnotations.ReadAnnotations)}"));
+                var annotations = await feature.ReadAnnotations(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var annotations = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.IsTrue(annotations.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(TagValueAnnotation), 0));
 
                 var allTags = new HashSet<string>(request.Tags);
@@ -1514,10 +1491,8 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteSnapshotTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteSnapshotTagValues)}.{nameof(IWriteSnapshotTagValues.WriteSnapshotTagValues)}"));
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
@@ -1582,10 +1557,8 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteHistoricalTagValues(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteHistoricalTagValues)}.{nameof(IWriteHistoricalTagValues.WriteHistoricalTagValues)}"));
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
@@ -1667,17 +1640,30 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePush)}.{nameof(IEventMessagePush.Subscribe)}"));
+                var tcs = new TaskCompletionSource<bool>();
 
-                var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                var received = await feature.Subscribe(context, request, ct).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
+
+                var testEventEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testEventEmitted) {
                     AssertInconclusiveDueToMissingTestInput<IEventMessagePush>(nameof(EmitTestEvent));
                     return;
                 }
-
-                var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1723,21 +1709,30 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePushWithTopics)}.{nameof(IEventMessagePushWithTopics.Subscribe)}"));
+                var tcs = new TaskCompletionSource<bool>();
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us making the initial request.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
 
-                var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                var received = await feature.Subscribe(context, request, ct).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
+
+                var testEventEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testEventEmitted) {
-                    AssertInconclusiveDueToMissingTestInput<IEventMessagePushWithTopics>(nameof(EmitTestEvent));
+                    AssertInconclusiveDueToMissingTestInput<IEventMessagePush>(nameof(EmitTestEvent));
                     return;
                 }
-
-                var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1766,29 +1761,41 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var channel = Channel.CreateUnbounded<EventMessageSubscriptionUpdate>();
-
-                var subscription = await feature.Subscribe(context, new CreateEventMessageTopicSubscriptionRequest() { SubscriptionType = request.SubscriptionType, Properties = request.Properties }, channel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(subscription, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IEventMessagePushWithTopics)}.{nameof(IEventMessagePushWithTopics.Subscribe)}"));
-
-                // Now add the topics to the subscription.
-
                 channel.Writer.TryWrite(new EventMessageSubscriptionUpdate() {
                     Action = SubscriptionUpdateAction.Subscribe,
                     Topics = request.Topics
                 });
 
-                // Pause briefly to allow the subscription change to take effect, since the change 
-                // will be processed asynchronously to us writing the update into the channel.
-                await Task.Delay(200, ct).ConfigureAwait(false);
+                var tcs = new TaskCompletionSource<bool>();
 
-                var testEventEmitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                _ = Task.Run(async () => {
+                    try {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                        var emitted = await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                        tcs.TrySetResult(emitted);
+                    }
+                    catch (OperationCanceledException) {
+                        tcs.TrySetCanceled(ct);
+                    }
+                    catch (Exception e) {
+                        tcs.TrySetException(e);
+                    }
+                }, ct);
+
+                // Create new request object that does not contain any initial topics; the topics
+                // will be passed via the update channel.
+                var received = await feature.Subscribe(context, new CreateEventMessageTopicSubscriptionRequest() { 
+                    SubscriptionType = request.SubscriptionType,
+                    Properties = request.Properties
+                }, channel.Reader.ReadAllAsync(ct), ct).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+
+                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
+
+                var testEventEmitted = await tcs.Task.ConfigureAwait(false);
                 if (!testEventEmitted) {
-                    AssertInconclusiveDueToMissingTestInput<IEventMessagePushWithTopics>(nameof(EmitTestEvent));
+                    AssertInconclusiveDueToMissingTestInput<IEventMessagePush>(nameof(EmitTestEvent));
                     return;
                 }
-
-                var received = await subscription.ReadAsync(ct).ConfigureAwait(false);
-                Assert.IsNotNull(received, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
             });
         }
 
@@ -1834,10 +1841,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadEventMessagesForTimeRange(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesForTimeRange)}.{nameof(IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange)}"));
-
-                var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var events = await feature.ReadEventMessagesForTimeRange(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {
@@ -1890,10 +1894,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.ReadEventMessagesUsingCursor(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadEventMessagesUsingCursor)}.{nameof(IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor)}"));
-
-                var events = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var events = await feature.ReadEventMessagesUsingCursor(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {
@@ -1951,10 +1952,7 @@ namespace DataCore.Adapter.Tests {
                 }
                 inChannel.Writer.TryComplete();
 
-                var channel = await feature.WriteEventMessages(context, inChannel.Reader, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteEventMessages)}.{nameof(IWriteEventMessages.WriteEventMessages)}"));
-
-                var writeResults = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var writeResults = await feature.WriteEventMessages(context, new WriteEventMessagesRequest(), inChannel.Reader.ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.AreEqual(writeItems.Count(), writeResults.Count(), FormatMessage(Resources.UnexpectedItemCount, writeItems.Count(), writeResults.Count()));
 
                 var expectedCorrelationIds = new HashSet<string>(writeItems.Select(x => x.CorrelationId!));
@@ -2026,10 +2024,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.BrowseAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.BrowseAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.BrowseAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
@@ -2060,10 +2055,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.GetAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelBrowse)}.{nameof(IAssetModelBrowse.GetAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.GetAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
 
                 var remainingNodeIds = new HashSet<string>(request.Nodes);
@@ -2118,10 +2110,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var channel = await feature.FindAssetModelNodes(context, request, ct).ConfigureAwait(false);
-                Assert.IsNotNull(channel, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IAssetModelSearch)}.{nameof(IAssetModelSearch.FindAssetModelNodes)}"));
-
-                var nodes = await ReadAllAsync(channel, ct).ConfigureAwait(false);
+                var nodes = await feature.FindAssetModelNodes(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 

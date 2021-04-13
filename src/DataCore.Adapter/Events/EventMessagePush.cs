@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -73,9 +74,10 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessage>> Subscribe(
+        public async IAsyncEnumerable<EventMessage> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageSubscriptionRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (IsDisposed) {
@@ -90,8 +92,12 @@ namespace DataCore.Adapter.Events {
 
             ValidationExtensions.ValidateObject(request);
 
-            var subscription = CreateSubscription<IEventMessagePush>(context, nameof(Subscribe), request, cancellationToken);
-            return Task.FromResult(subscription.Reader);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
+                var subscription = CreateSubscription<IEventMessagePush>(context, nameof(Subscribe), request, ctSource.Token);
+                await foreach(var item in subscription.ReadAllAsync(ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
 
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -60,19 +62,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<TagDefinition>> FindTagsAsync(string adapterId, FindTagsRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<TagDefinition> FindTagsAsync(
+            string adapterId, 
+            FindTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<TagDefinition>(
+            await foreach (var item in connection.StreamAsync<TagDefinition>(
                 "FindTags",
                 adapterId,
                 request, 
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -101,19 +110,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<TagDefinition>> GetTagsAsync(string adapterId, GetTagsRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<TagDefinition> GetTagsAsync(
+            string adapterId, 
+            GetTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<TagDefinition>(
+            await foreach(var item in connection.StreamAsync<TagDefinition>(
                 "GetTags",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -142,19 +158,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<AdapterProperty>> GetTagPropertiesAsync(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<AdapterProperty> GetTagPropertiesAsync(
+            string adapterId, 
+            GetTagPropertiesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<AdapterProperty>(
+            await foreach (var item in connection.StreamAsync<AdapterProperty>(
                 "GetTagProperties",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
     }

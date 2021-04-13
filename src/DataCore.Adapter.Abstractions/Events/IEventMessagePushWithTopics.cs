@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.Events {
 
@@ -36,10 +35,10 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A channel reader that will emit event messages as they occur.
         /// </returns>
-        Task<ChannelReader<EventMessage>> Subscribe(
+        IAsyncEnumerable<EventMessage> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         );
 

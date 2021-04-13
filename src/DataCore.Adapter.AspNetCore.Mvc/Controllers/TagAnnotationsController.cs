@@ -78,11 +78,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
-                    var reader = await feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false);
-
                     var result = new List<TagValueAnnotationQueryResult>();
-                    while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        if (!reader.TryRead(out var value) || value == null) {
+
+                    await foreach (var item in feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
                             continue;
                         }
 
@@ -91,10 +90,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                             break;
                         }
 
-                        result.Add(value);
+                        result.Add(item);
                     }
 
                     activity.SetResponseItemCountTag(result.Count);
+
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {
@@ -143,9 +143,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 AnnotationId = annotationId
             };
 
-            using (Telemetry.ActivitySource.StartReadAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
                 try {
                     var result = await feature.ReadAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+                    activity.SetResponseItemCountTag(result == null ? 0 : 1);
                     return Ok(result); // 200
                 }
                 catch (SecurityException) {

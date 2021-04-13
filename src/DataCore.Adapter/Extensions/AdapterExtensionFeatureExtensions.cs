@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -1106,9 +1107,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <see cref="InvocationResponse"/> into an instance of <typeparamref name="T"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1119,10 +1120,11 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T?>> Stream<T>(
+        public static async IAsyncEnumerable<T?> Stream<T>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1139,16 +1141,14 @@ namespace DataCore.Adapter.Extensions {
                 OperationId = operationId
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach(var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T>(result!.Value);
+            }
         }
 
 
@@ -1177,9 +1177,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T2"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <see cref="InvocationResponse"/> into an instance of <typeparamref name="T2"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1190,11 +1190,12 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T2?>> Stream<T1, T2>(
+        public static async IAsyncEnumerable<T2?> Stream<T1, T2>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
             T1? argument,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1214,16 +1215,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T2>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T2>(result!.Value);
+            }
         }
 
 
@@ -1258,9 +1257,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T3"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <see cref="InvocationResponse"/> into an instance of <typeparamref name="T3"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1271,12 +1270,13 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T3?>> Stream<T1, T2, T3>(
+        public static async IAsyncEnumerable<T3?> Stream<T1, T2, T3>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
             T1? argument1,
             T2? argument2,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1297,16 +1297,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T3>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T3>(result!.Value);
+            }
         }
 
 
@@ -1347,9 +1345,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T4"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T4"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1360,13 +1358,14 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T4?>> Stream<T1, T2, T3, T4>(
+        public static async IAsyncEnumerable<T4?> Stream<T1, T2, T3, T4>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
             T1? argument1,
             T2? argument2,
             T3? argument3,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1388,16 +1387,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T4>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T4>(result!.Value);
+            }
         }
 
 
@@ -1444,9 +1441,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T5"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T5"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1457,7 +1454,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T5?>> Stream<T1, T2, T3, T4, T5>(
+        public static async IAsyncEnumerable<T5?> Stream<T1, T2, T3, T4, T5>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -1465,6 +1462,7 @@ namespace DataCore.Adapter.Extensions {
             T2? argument2,
             T3? argument3,
             T4? argument4,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1487,16 +1485,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T5>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T5>(result!.Value);
+            }
         }
 
 
@@ -1549,9 +1545,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T6"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T6"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1562,7 +1558,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T6?>> Stream<T1, T2, T3, T4, T5, T6>(
+        public static async IAsyncEnumerable<T6?> Stream<T1, T2, T3, T4, T5, T6>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -1571,6 +1567,7 @@ namespace DataCore.Adapter.Extensions {
             T3? argument3,
             T4? argument4,
             T5? argument5,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1594,16 +1591,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T6>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T6>(result!.Value);
+            }
         }
 
 
@@ -1662,9 +1657,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T7"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T7"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1675,7 +1670,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T7?>> Stream<T1, T2, T3, T4, T5, T6, T7>(
+        public static async IAsyncEnumerable<T7?> Stream<T1, T2, T3, T4, T5, T6, T7>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -1685,6 +1680,7 @@ namespace DataCore.Adapter.Extensions {
             T4? argument4,
             T5? argument5,
             T6? argument6,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1709,16 +1705,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T7>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T7>(result!.Value);
+            }
         }
 
 
@@ -1783,9 +1777,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T8"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T8"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1796,7 +1790,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T8?>> Stream<T1, T2, T3, T4, T5, T6, T7, T8>(
+        public static async IAsyncEnumerable<T8?> Stream<T1, T2, T3, T4, T5, T6, T7, T8>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -1807,6 +1801,7 @@ namespace DataCore.Adapter.Extensions {
             T5? argument5,
             T6? argument6,
             T7? argument7,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1832,16 +1827,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T8>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T8>(result!.Value);
+            }
         }
 
 
@@ -1912,9 +1905,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T9"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T9"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -1925,7 +1918,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="operationId"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T9?>> Stream<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+        public static async IAsyncEnumerable<T9?> Stream<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
@@ -1937,6 +1930,7 @@ namespace DataCore.Adapter.Extensions {
             T6? argument6,
             T7? argument7,
             T8? argument8,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -1963,16 +1957,14 @@ namespace DataCore.Adapter.Extensions {
                 }
             };
 
-            var response = await feature.Stream(context, request, cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => { 
-                var result = x.Results?.FirstOrDefault();
+            await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T9>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
+                yield return feature.ConvertFromVariant<T9>(result!.Value);
+            }
         }
 
         #endregion
@@ -2004,9 +1996,9 @@ namespace DataCore.Adapter.Extensions {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T2"/>.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will convert the first <see cref="InvocationResponse.Results"/> 
+        ///   entry of each streamed <see cref="InvocationResponse"/> into an instance of 
+        ///   <typeparamref name="T2"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
@@ -2020,11 +2012,12 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<ChannelReader<T2?>> DuplexStream<T1, T2>(
+        public static async IAsyncEnumerable<T2?> DuplexStream<T1, T2>(
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
-            ChannelReader<T1?> channel,
+            IAsyncEnumerable<T1?> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (feature == null) {
@@ -2040,117 +2033,26 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var request = new InvocationRequest() {
+            var request = new DuplexStreamInvocationRequest() {
                 OperationId = operationId
             };
 
-            var response = await feature.DuplexStream(context, request, channel.Transform(x => {
+            var response = feature.DuplexStream(context, request, channel.Transform(x => {
                 return new InvocationStreamItem() {
                     Arguments = new[] {
                         feature.ConvertToVariant(x),
                     }
                 };
-            }, feature.BackgroundTaskService, cancellationToken), cancellationToken).ConfigureAwait(false);
+            }, cancellationToken), cancellationToken);
 
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
+            await foreach(var item in response.ConfigureAwait(false)) {
+                var result = item.Results?.FirstOrDefault();
                 if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
+                    yield return default;
                 }
 
-                return feature.ConvertFromVariant<T2>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
-        }
-
-
-        /// <summary>
-        /// Calls an extension feature duplex stream operation.
-        /// </summary>
-        /// <typeparam name="T1">
-        ///   The operation argument type.
-        /// </typeparam>
-        /// <typeparam name="T2">
-        ///   The operation return type.
-        /// </typeparam>
-        /// <param name="feature">
-        ///   The <see cref="IAdapterExtensionFeature"/>.
-        /// </param>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the operation.
-        /// </param>
-        /// <param name="operationId">
-        ///   The ID of the operation to call.
-        /// </param>
-        /// <param name="argument">
-        ///   The initial operation argument.
-        /// </param>
-        /// <param name="channel">
-        ///   A channel that will provide additional arguments to stream to the operation.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return a <see cref="ChannelReader{T}"/> that 
-        ///   will convert the first <see cref="InvocationResponse.Results"/> entry of each 
-        ///   streamed <see cref="InvocationResponse"/> into an instance of <typeparamref name="T2"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="feature"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="context"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="operationId"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        public static async Task<ChannelReader<T2?>> DuplexStream<T1, T2>(
-            this IAdapterExtensionFeature feature,
-            IAdapterCallContext context,
-            Uri operationId,
-            T1? argument,
-            ChannelReader<T1?> channel,
-            CancellationToken cancellationToken
-        ) {
-            if (feature == null) {
-                throw new ArgumentNullException(nameof(feature));
+                yield return feature.ConvertFromVariant<T2>(result!.Value);
             }
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (operationId == null) {
-                throw new ArgumentNullException(nameof(operationId));
-            }
-            if (channel == null) {
-                throw new ArgumentNullException(nameof(channel));
-            }
-
-            var request = new InvocationRequest() {
-                OperationId = operationId,
-                Arguments = new[] {
-                    feature.ConvertToVariant(argument),
-                }
-            };
-
-            var response = await feature.DuplexStream(context, request, channel.Transform(x => {
-                return new InvocationStreamItem() {
-                    Arguments = new[] {
-                        feature.ConvertToVariant(x),
-                    }
-                };
-            }, feature.BackgroundTaskService, cancellationToken), cancellationToken).ConfigureAwait(false);
-
-            return response.Transform(x => {
-                var result = x.Results?.FirstOrDefault();
-                if (!result.HasValue || result.Value.IsNull()) {
-                    return default;
-                }
-
-                return feature.ConvertFromVariant<T2>(result.Value);
-            }, feature.BackgroundTaskService, cancellationToken);
         }
 
         #endregion

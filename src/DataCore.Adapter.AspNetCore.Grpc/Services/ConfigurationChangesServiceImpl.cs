@@ -46,17 +46,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartConfigurationChangesSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var subscription = await adapter.Feature.Subscribe(
-                    adapterCallContext,
-                    adapterRequest,
-                    cancellationToken
-                ).ConfigureAwait(false);
-
                 long outputItems = 0;
 
-                while (!cancellationToken.IsCancellationRequested) {
+                await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
                     try {
-                        var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
                         await responseStream.WriteAsync(msg.ToGrpcConfigurationChange()).ConfigureAwait(false);
                         activity.SetResponseItemCountTag(++outputItems);
                     }

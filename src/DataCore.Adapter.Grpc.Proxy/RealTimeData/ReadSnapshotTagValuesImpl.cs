@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -22,7 +24,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, Adapter.RealTimeData.ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.RealTimeData.TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context,
+            Adapter.RealTimeData.ReadSnapshotTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
@@ -36,25 +43,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.ReadSnapshotTagValues(grpcRequest, GetCallOptions(context, cancellationToken));
-
-            var result = ChannelExtensions.CreateTagValueChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.ReadSnapshotTagValues(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterTagValueQueryResult();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
     }

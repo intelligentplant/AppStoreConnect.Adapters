@@ -19,6 +19,9 @@ namespace DataCore.Adapter.Events {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   The write request.
+        /// </param>
         /// <param name="events">
         ///   The event messages to write.
         /// </param>
@@ -38,6 +41,7 @@ namespace DataCore.Adapter.Events {
         public static async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessages(
             this IWriteEventMessages feature, 
             IAdapterCallContext context, 
+            WriteEventMessagesRequest request,
             IEnumerable<WriteEventMessageItem> events,
             CancellationToken cancellationToken = default
         ) {
@@ -48,27 +52,7 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(events));
             }
 
-            var channel = ChannelExtensions.CreateEventMessageWriteChannel();
-            channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                foreach (var item in events) {
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
-
-                    ch.TryWrite(item);
-                }
-            }, true, feature.BackgroundTaskService, cancellationToken);
-
-            var result = new List<WriteEventMessageResult>(events.Count());
-            var outChannel = await feature.WriteEventMessages(context, channel, cancellationToken).ConfigureAwait(false);
-
-            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (outChannel.TryRead(out var item)) {
-                    result.Add(item);
-                }
-            }
-
-            return result;
+            return await feature.WriteEventMessages(context, request, events.ToAsyncEnumerable(cancellationToken), cancellationToken).ToEnumerable(events.Count(), cancellationToken).ConfigureAwait(false);
         }
 
     }

@@ -2,21 +2,24 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
     public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues {
 
-        private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>();
+        private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
 
         private readonly ConcurrentDictionary<string, TagDefinition> _tagsByName = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
 
@@ -34,6 +37,7 @@ namespace MyAdapter {
             logger
         ) {
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+                AdapterId = id,
                 PollingInterval = TimeSpan.FromSeconds(1),
                 TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
             }, BackgroundTaskService, Logger));
@@ -126,8 +130,7 @@ namespace MyAdapter {
             return new TagValueQueryResult(
                 tag.Id,
                 tag.Name,
-                TagValueBuilder
-                    .Create()
+                new TagValueBuilder()
                     .WithUtcSampleTime(utcSampleTime)
                     .WithValue(value)
                     .WithStatus(status)
@@ -159,32 +162,35 @@ namespace MyAdapter {
         }
 
 
-        public Task<ChannelReader<AdapterProperty>> GetTagProperties(
+        public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
             IAdapterCallContext context,
             GetTagPropertiesRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateRequest(request);
+            ValidateInvocation(context, request);
 
-            var result = new[] {
-                CreateWaveTypeProperty(null),
-            }.OrderBy(x => x.Name).SelectPage(request).PublishToChannel();
+            await Task.CompletedTask.ConfigureAwait(false);
 
-            return Task.FromResult(result);
+            foreach (var item in new[] { CreateWaveTypeProperty(null) }.OrderBy(x => x.Name).SelectPage(request)) {
+                yield return item;
+            }
         }
 
 
-        public Task<ChannelReader<TagDefinition>> GetTags(
+        public async IAsyncEnumerable<TagDefinition> GetTags(
             IAdapterCallContext context,
             GetTagsRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateRequest(request);
-            var result = Channel.CreateUnbounded<TagDefinition>();
+            ValidateInvocation(context, request);
 
-            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
+            await Task.CompletedTask.ConfigureAwait(false);
+
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
-                    if (ct.IsCancellationRequested) {
+                    if (ctSource.Token.IsCancellationRequested) {
                         break;
                     }
                     if (string.IsNullOrWhiteSpace(tag)) {
@@ -192,48 +198,50 @@ namespace MyAdapter {
                     }
 
                     if (_tagsById.TryGetValue(tag, out var t) || _tagsByName.TryGetValue(tag, out t)) {
-                        result.Writer.TryWrite(t);
+                        yield return t;
                     }
                 }
-            }, result.Writer, true, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
-        public Task<ChannelReader<TagDefinition>> FindTags(
+        public async IAsyncEnumerable<TagDefinition> FindTags(
             IAdapterCallContext context,
             FindTagsRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateRequest(request);
-            var result = Channel.CreateUnbounded<TagDefinition>();
+            ValidateInvocation(context, request);
 
-            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
+            await Task.CompletedTask.ConfigureAwait(false);
+
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in _tagsById.Values.ApplyFilter(request)) {
-                    if (ct.IsCancellationRequested) {
+                    if (ctSource.Token.IsCancellationRequested) {
                         break;
                     }
-                    ch.TryWrite(tag);
+                    yield return tag;
                 }
-            }, result.Writer, true, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context,
             ReadSnapshotTagValuesRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateRequest(request);
-            var result = Channel.CreateUnbounded<TagValueQueryResult>();
-            var sampleTime = CalculateSampleTime(DateTime.UtcNow);
+            ValidateInvocation(context, request);
 
-            BackgroundTaskService.QueueBackgroundChannelOperation((ch, ct) => {
+            await Task.CompletedTask.ConfigureAwait(false);
+
+            var sampleTime = CalculateSampleTime(DateTime.UtcNow);
+            var rnd = new Random(sampleTime.GetHashCode());
+
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
-                    if (ct.IsCancellationRequested) {
+                    if (ctSource.Token.IsCancellationRequested) {
                         break;
                     }
                     if (string.IsNullOrWhiteSpace(tag)) {
@@ -243,13 +251,9 @@ namespace MyAdapter {
                         continue;
                     }
 
-                    var rnd = new Random(sampleTime.GetHashCode());
-                    ch.TryWrite(CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
+                    yield return CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
                 }
-            }, result.Writer, true, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -2088,6 +2089,131 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Returns the first item emitted from the <see cref="IAsyncEnumerable{T}"/>, or the 
+        /// default value of the item type if no values are emitted.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the first item emitted, or the 
+        ///   default value of <typeparamref name="T"/>.
+        /// </returns>
+        public static async Task<T> FirstOrDefaultAsync<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken = default) {
+            await using (var enumerator = enumerable.GetAsyncEnumerator(cancellationToken)) {
+                if (!await enumerator.MoveNextAsync().ConfigureAwait(false)) {
+                    return default!;
+                }
+
+                return enumerator.Current;
+            }
+        }
+
+
+        /// <summary>
+        /// Emits all items in the <see cref="IEnumerable{T}"/> as an <see cref="IAsyncEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IEnumerable{T}"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/>.
+        /// </returns>
+        public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> enumerable, [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+            if (enumerable == null) {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
+
+            await Task.CompletedTask.ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            foreach (var item in enumerable) {    
+                yield return item;
+            }
+        }
+
+
+        /// <summary>
+        /// Asynchronously reads items from the <see cref="IAsyncEnumerable{T}"/> and returns them 
+        /// as an <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The items that were read.
+        /// </returns>
+        public static Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken = default) {
+            return enumerable.ToEnumerable(-1, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Asynchronously reads items from the <see cref="IAsyncEnumerable{T}"/> and returns them 
+        /// as an <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="maxItems">
+        ///   The maximum number of items to read from the <see cref="IAsyncEnumerable{T}"/>. 
+        ///   Specify less than one to read all items.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The items that were read.
+        /// </returns>
+        public static async Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems, CancellationToken cancellationToken = default) {
+            if (enumerable == null) {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
+            
+            var result = maxItems > 0
+                ? new List<T>(maxItems)
+                : new List<T>(500);
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)) {
+                try {
+                    await foreach (var item in enumerable.WithCancellation(ctSource.Token).ConfigureAwait(false)) {
+                        result.Add(item);
+                        if (maxItems > 0 && result.Count >= maxItems) {
+                            break;
+                        }
+                    }
+                }
+                finally {
+                    ctSource.Cancel();
+                }
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
         /// Reads items from the channel and returns a collection of the items that were read.
         /// </summary>
         /// <typeparam name="T">
@@ -2166,6 +2292,43 @@ namespace DataCore.Adapter {
                 while (channel.TryRead(out var item)) {
                     await callback.Invoke(item).WithCancellation(cancellationToken).ConfigureAwait(false);
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="IAsyncEnumerable{T}"/> that transforms items emitted from the 
+        /// current <see cref="IAsyncEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="TIn">
+        ///   The input item type.
+        /// </typeparam>
+        /// <typeparam name="TOut">
+        ///   The output item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="callback">
+        ///   The transform function to use.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="IAsyncEnumerable{T}"/> that will transform and emit items read from 
+        ///   the original <see cref="IAsyncEnumerable{T}"/>.
+        /// </returns>
+        public static async IAsyncEnumerable<TOut> Transform<TIn, TOut>(this IAsyncEnumerable<TIn> enumerable, Func<TIn, TOut> callback, [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+            if (enumerable == null) {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
+            if (callback == null) {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            await foreach (var item in enumerable.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                yield return callback(item);
             }
         }
 

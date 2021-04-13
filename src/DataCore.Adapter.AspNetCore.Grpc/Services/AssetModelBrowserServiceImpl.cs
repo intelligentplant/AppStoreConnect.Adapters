@@ -51,11 +51,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                var reader = adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
 
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var node) || node == null) {
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
                         continue;
                     }
 
@@ -80,11 +80,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(adapterRequest);
 
             using (var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = await adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                var reader = adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
 
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var node) || node == null) {
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
                         continue;
                     }
 
@@ -111,12 +111,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-
             using (var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var reader = adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
+
                 long outputItems = 0;
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var node) || node == null) {
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
                         continue;
                     }
 

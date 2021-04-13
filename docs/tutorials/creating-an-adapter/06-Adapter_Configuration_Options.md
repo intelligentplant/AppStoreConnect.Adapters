@@ -46,10 +46,11 @@ public class Adapter : AdapterBase<MyAdapterOptions>, ITagSearch, IReadSnapshotT
         backgroundTaskService, 
         logger
     ) {
-        AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
-            this, 
-            TimeSpan.FromSeconds(1)
-        ));
+        AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+            AdapterId = id,
+            PollingInterval = TimeSpan.FromSeconds(1),
+            TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+        }, BackgroundTaskService, Logger));
 
         AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
     }
@@ -91,8 +92,7 @@ private TagValueQueryResult CalculateValueForTag(
     return new TagValueQueryResult(
         tag.Id,
         tag.Name,
-        TagValueBuilder
-            .Create()
+        new TagValueBuilder()
             .WithUtcSampleTime(utcSampleTime)
             .WithValue(value)
             .WithStatus(status)

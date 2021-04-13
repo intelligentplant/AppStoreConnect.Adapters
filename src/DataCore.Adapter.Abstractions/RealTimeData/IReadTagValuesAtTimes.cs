@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -28,11 +27,12 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel containing the values for the requested tags. The adapter can decide if it 
-        ///   will interpolate a tag value using the closest raw samples to a requested time stamp, 
-        ///   or if it will repeat the previous raw value before the time stamp.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the values for the requested tags. 
+        ///   The adapter can decide if it will interpolate a tag value using the closest raw 
+        ///   samples to a requested time stamp, or if it will repeat the previous raw value 
+        ///   before the time stamp.
         /// </returns>
-        Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(
+        IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
             IAdapterCallContext context, 
             ReadTagValuesAtTimesRequest request, 
             CancellationToken cancellationToken

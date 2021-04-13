@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -60,16 +61,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The bucket size to use when calculating the plot data set.
         /// </param>
         /// <param name="rawData">
-        ///   A channel that will provide the raw data to use in the calculations.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the raw data to use in the calculations.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit a set of trend-friendly samples.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit a set of trend-friendly samples.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
@@ -98,13 +96,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(
+        public static async IAsyncEnumerable<TagValueQueryResult> GetPlotValues(
             TagSummary tag, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan bucketSize, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IAsyncEnumerable<TagValueQueryResult> rawData,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -117,29 +115,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentException(Resources.Error_BucketSizeMustBeGreaterThanZero, nameof(bucketSize));
             }
 
-            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
-                FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = false,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
-            result.Writer.RunBackgroundOperation(
-                (ch, ct) => GetPlotValues(
-                    tag,
-                    utcStartTime,
-                    utcEndTime,
-                    bucketSize,
-                    rawData,
-                    ch,
-                    ct
-                ),
-                true,
-                backgroundTaskService,
-                cancellationToken
-            );
-
-            return result;
+            await foreach (var item in GetPlotValuesInternal(tag, utcStartTime, utcEndTime, bucketSize, rawData, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -159,16 +137,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The bucket size to use when calculating the plot data set.
         /// </param>
         /// <param name="rawData">
-        ///   A channel that will provide the raw data to use in the calculations.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the raw data to use in the calculations.
         /// </param>
         /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit a set of trend-friendly samples.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit a set of trend-friendly samples.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tags"/> is <see langword="null"/>.
@@ -197,13 +175,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static ChannelReader<TagValueQueryResult> GetPlotValues(
+        public static async IAsyncEnumerable<TagValueQueryResult> GetPlotValues(
             IEnumerable<TagSummary> tags, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan bucketSize, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IAsyncEnumerable<TagValueQueryResult> rawData, 
+            IBackgroundTaskService? backgroundTaskService = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (tags == null) {
@@ -215,34 +194,35 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (bucketSize <= TimeSpan.Zero) {
                 throw new ArgumentException(Resources.Error_BucketSizeMustBeGreaterThanZero, nameof(bucketSize));
             }
-
-            Channel<TagValueQueryResult> result;
+            if (backgroundTaskService == null) {
+                backgroundTaskService = BackgroundTaskService.Default;
+            }
 
             if (!tags.Any()) {
                 // No tags; complete the channel and return.
-                result = Channel.CreateUnbounded<TagValueQueryResult>();
-                result.Writer.TryComplete();
-                return result;
+                yield break;
             }
 
             if (tags.Count() == 1) {
                 // Single tag; use the optimised single-tag overload.
-                return GetPlotValues(
+                await foreach (var item in GetPlotValues(
                     tags.First(), 
                     utcStartTime, 
                     utcEndTime, 
                     bucketSize, 
                     rawData, 
-                    backgroundTaskService, 
                     cancellationToken
-                );
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // Multiple tags; create a single result channel, and create individual input channels 
             // for each tag in the request and redirect each value emitted from the raw data channel 
             // into the appropriate per-tag input channel.
 
-            result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
+            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
                 FullMode = BoundedChannelFullMode.Wait,
                 AllowSynchronousContinuations = false,
                 SingleReader = true,
@@ -258,13 +238,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }));
 
             // Redirect values from input channel to per-tag channel.
-            rawData.RunBackgroundOperation(async (ch, ct) => {
+            backgroundTaskService.QueueBackgroundWorkItem(async ct => {
                 try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        if (!ch.TryRead(out var val) || val == null) {
-                            continue;
-                        }
-
+                    await foreach (var val in rawData.WithCancellation(ct).ConfigureAwait(false)) {
                         if (!tagRawDataChannels.TryGetValue(val.TagId, out var perTagChannel)) {
                             continue;
                         }
@@ -285,25 +261,28 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         item.Writer.TryComplete();
                     }
                 }
-            }, backgroundTaskService, cancellationToken);
+            }, cancellationToken);
 
             // Execute stream for each tag in the query and write all values into the shared 
             // result channel.
+
+            async Task GetValuesForTag(TagSummary tag, ChannelReader<TagValueQueryResult> reader, ChannelWriter<TagValueQueryResult> writer, CancellationToken cancellationToken) {
+                await foreach (var val in GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                    await writer.WriteAsync(val, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
             result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await Task.WhenAll(
-                    tagRawDataChannels.Select(x => GetPlotValues(
-                        tagLookupById[x.Key],
-                        utcStartTime,
-                        utcEndTime,
-                        bucketSize,
-                        x.Value,
-                        ch,
-                        ct
-                    ))    
-                ).WithCancellation(ct).ConfigureAwait(false);
+                await Task.WhenAll(tagRawDataChannels.Select(x => {
+                    var tag = tagLookupById[x.Key];
+                    var channel = x.Value;
+                    return GetValuesForTag(tag, channel.Reader, ch, ct);
+                })).ConfigureAwait(false);
             }, true, backgroundTaskService, cancellationToken);
 
-            return result;
+            await foreach (var val in result.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
+                yield return val;
+            }
         }
 
 
@@ -325,16 +304,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data to use in the calculations.
         /// </param>
-        /// <param name="resultChannel">
-        ///   A channel that the computed values will be written to.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A task that will compute the values.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the computed values.
         /// </returns>
-        private static async Task GetPlotValues(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, ChannelReader<TagValueQueryResult> rawData, ChannelWriter<TagValueQueryResult> resultChannel, CancellationToken cancellationToken) {
+        private static async IAsyncEnumerable<TagValueQueryResult> GetPlotValuesInternal(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, IAsyncEnumerable<TagValueQueryResult> rawData, [EnumeratorCancellation] CancellationToken cancellationToken) {
             // We will determine the values to return for the plot request by creating aggregation 
             // buckets that cover a time range that is equal to the bucketSize. For each bucket, we 
             // will we add up to 5 raw samples into the resulting data set:
@@ -352,10 +328,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             TagValueExtended lastValuePreviousBucket = null!;
 
-            while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!rawData.TryRead(out var val)) {
-                    break;
-                }
+            await foreach (var val in rawData.WithCancellation(cancellationToken).ConfigureAwait(false)) {
                 if (val == null) {
                     continue;
                 }
@@ -370,7 +343,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                 if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
                     if (bucket.RawSampleCount > 0) {
-                        await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
+                        foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket)) {
+                            yield return calculatedValue;
+                        }
                         lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
 
@@ -382,8 +357,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 bucket.AddRawSample(val.Value);
             }
 
-            if (bucket.RawSampleCount > 0) {
-                await CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket, resultChannel, cancellationToken).ConfigureAwait(false);
+            if (bucket.RawSampleCount > 0) { 
+                foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket)) {
+                    yield return calculatedValue;
+                }
             }
         }
 
@@ -400,19 +377,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="lastValuePreviousBucket">
         ///   The last value that was added to the previous bucket for the same tag.
         /// </param>
-        /// <param name="resultsChannel">
-        ///   The channel to write the calculated values to.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
-        ///   A task that will calculate and emit the samples.
+        ///   An <see cref="IEnumerable{T}"/> that contains the samples.
         /// </returns>
         /// <remarks>
         ///   Assumes that the <paramref name="bucket"/> contains at least one sample.
         /// </remarks>
-        private static async Task CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket, ChannelWriter<TagValueQueryResult> resultsChannel, CancellationToken cancellationToken) {
+        private static IEnumerable<TagValueQueryResult> CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket) {
             var significantValues = new HashSet<TagValueExtended>();
 
             if (tag.DataType.IsNumericType()) {
@@ -460,17 +431,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             foreach (var value in significantValues.OrderBy(x => x.UtcSampleTime)) {
-                if (!await resultsChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                    break;
-                }
-                resultsChannel.TryWrite(TagValueQueryResult.Create(
+                yield return TagValueQueryResult.Create(
                     tag.Id, 
                     tag.Name, 
                     new TagValueBuilder(value)
                         .WithBucketProperties(bucket)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build()
-                ));
+                );
             }
         }
 

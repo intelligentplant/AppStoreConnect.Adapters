@@ -29,46 +29,45 @@ public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRaw
 Next, we will implement the `ReadRawTagValues` method:
 
 ```csharp
-public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(
-    IAdapterCallContext context, 
-    ReadRawTagValuesRequest request, 
-    CancellationToken cancellationToken
-) {
-    ValidateRequest(request);
-    var result = Channel.CreateUnbounded<TagValueQueryResult>();
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context,
+            ReadRawTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            ValidateInvocation(context, request);
 
-    TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
-        foreach (var tag in request.Tags) {
-            if (ct.IsCancellationRequested) {
-                break;
-            }
-            if (string.IsNullOrWhiteSpace(tag)) {
-                continue;
-            }
-            if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
-                continue;
-            }
+            await Task.CompletedTask.ConfigureAwait(false);
 
-            var sampleCount = 0;
-            var ts = CalculateSampleTime(request.UtcStartTime).AddSeconds(-1);
-            var rnd = new Random(ts.GetHashCode());
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                foreach (var tag in request.Tags) {
+                    if (ctSource.Token.IsCancellationRequested) {
+                        break;
+                    }
+                    if (string.IsNullOrWhiteSpace(tag)) {
+                        continue;
+                    }
+                    if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+                        continue;
+                    }
 
-            do {
-                ts = ts.AddSeconds(1);
-                if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
-                    continue;
+                    var sampleCount = 0;
+                    var ts = CalculateSampleTime(request.UtcStartTime).AddSeconds(-1);
+                    var rnd = new Random(ts.GetHashCode());
+
+                    do {
+                        ts = ts.AddSeconds(1);
+                        if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
+                            continue;
+                        }
+                        yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+                    } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
                 }
-                ch.TryWrite(CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
-            } while (ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
+            }
         }
-        
-    }, result.Writer, true, cancellationToken);
-
-    return Task.FromResult(result.Reader);
-}
 ```
 
-Let's take a closer look at the part of the method that emits values for a given tag (variable `t`):
+Let's take a closer look at the part of the method that emits values for a given tag (variable `tag` in the `foreach (var tag in request.Tags)` loop):
 
 ```csharp
 var sampleCount = 0;
@@ -85,15 +84,15 @@ do {
     if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
         continue;
     }
-    ch.TryWrite(CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
-} while (ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
+    yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+} while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
 ```
 
 The `ReadRawTagValuesRequest` class includes a `BoundaryType` property, which a caller can use to specify if they only want raw values falling inside the query time range, or if they also want to receive the raw values immediately before and immediately after the boundary times. In our `do..while` loop, we increment the sample time by one second and then check to see if we should skip the current sample time based on the query's boundary type. We calculate and emit the value if required, and then repeat until we reach the query end time, or we retrieve the maximum sample count specified by the caller. For each sample, we randomly decide if the quality status of the sample should be good or bad in the same way as in `ReadSnapshotTagValues`; this will have an effect on how aggregated values are calculated (see below).
 
 At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that natively supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) helper class.
 
-The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `System.Threading.Channels.Channel<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
+The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `IAsyncEnumerable<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
 
 Registering `ReadHistoricalTagValues` is a simple change to our adapter's constructor:
 
@@ -111,16 +110,16 @@ public Adapter(
     backgroundTaskService, 
     logger
 ) {
-    AddFeature<ISnapshotTagValuePush, PollingSnapshotTagValuePush>(PollingSnapshotTagValuePush.ForAdapter(
-        this, 
-        TimeSpan.FromSeconds(5)
-    ));
+    AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+        AdapterId = id,
+        PollingInterval = TimeSpan.FromSeconds(1),
+        TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+    }, BackgroundTaskService, Logger));
 
     AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
 }
 ```
 
-Note that, in this case, we are using the `AddFeatures` method inherited from `AdapterBase` to automatically scan the `ReadHistoricalTagValues` object for adapter features and register them with our own adapter.
 
 ### A Note on Data Function Descriptors
 
@@ -159,7 +158,7 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         Console.WriteLine();
         Console.WriteLine("  Supported Aggregations:");
         var funcs = new List<DataFunctionDescriptor>();
-        await foreach (var func in (await readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken)).ReadAllAsync()) {
+        await foreach (var func in readProcessedFeature.GetSupportedDataFunctions(context, new GetSupportedDataFunctionsRequest(), cancellationToken)) {
             funcs.Add(func);
             Console.WriteLine($"    - {func.Id}");
             Console.WriteLine($"      - Name: {func.Name}");
@@ -170,69 +169,60 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
             }
         }
 
-        var tags = await tagSearchFeature.FindTags(
-            context,
-            new FindTagsRequest() {
-                Name = "Sin*",
-                PageSize = 1
-            },
-            cancellationToken
-        );
-
-        await tags.WaitToReadAsync(cancellationToken);
-        tags.TryRead(out var tag);
-
-        Console.WriteLine();
-        Console.WriteLine("[Tag Details]");
-        Console.WriteLine($"  Name: {tag.Name}");
-        Console.WriteLine($"  ID: {tag.Id}");
-        Console.WriteLine($"  Description: {tag.Description}");
-        Console.WriteLine("  Properties:");
-        foreach (var prop in tag.Properties) {
-            Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-        }
-
-        var now = DateTime.UtcNow;
-        var start = now.AddSeconds(-15);
-        var end = now;
-        var sampleInterval = TimeSpan.FromSeconds(5);
-
-        Console.WriteLine();
-        Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
-        var rawValues = await readRawFeature.ReadRawTagValues(
-            context,
-            new ReadRawTagValuesRequest() {
-                Tags = new[] { tag.Id },
-                UtcStartTime = start,
-                UtcEndTime = end,
-                BoundaryType = RawDataBoundaryType.Outside
-            },
-            cancellationToken
-        );
-        await foreach (var value in rawValues.ReadAllAsync(cancellationToken)) {
-            Console.WriteLine($"    - {value.Value}");
-        }
-
-        foreach (var func in funcs) {
+        await foreach (var tag in tagSearchFeature.FindTags(context, new FindTagsRequest() {
+            Name = "Sin*",
+            PageSize = 1
+        }, cancellationToken)) {
             Console.WriteLine();
-            Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
+            Console.WriteLine("[Tag Details]");
+            Console.WriteLine($"  Name: {tag.Name}");
+            Console.WriteLine($"  ID: {tag.Id}");
+            Console.WriteLine($"  Description: {tag.Description}");
+            Console.WriteLine("  Properties:");
+            foreach (var prop in tag.Properties) {
+                Console.WriteLine($"    - {prop.Name} = {prop.Value}");
+            }
 
-            var processedValues = await readProcessedFeature.ReadProcessedTagValues(
+            var now = DateTime.UtcNow;
+            var start = now.AddSeconds(-15);
+            var end = now;
+            var sampleInterval = TimeSpan.FromSeconds(5);
+
+            Console.WriteLine();
+            Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
+            await foreach (var value in readRawFeature.ReadRawTagValues(
                 context,
-                new ReadProcessedTagValuesRequest() {
+                new ReadRawTagValuesRequest() {
                     Tags = new[] { tag.Id },
-                    DataFunctions = new[] { func.Id },
                     UtcStartTime = start,
                     UtcEndTime = end,
-                    SampleInterval = sampleInterval
+                    BoundaryType = RawDataBoundaryType.Outside
                 },
                 cancellationToken
-            );
-
-            await foreach (var value in processedValues.ReadAllAsync(cancellationToken)) {
+            )) {
                 Console.WriteLine($"    - {value.Value}");
             }
+
+            foreach (var func in funcs) {
+                Console.WriteLine();
+                Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
+
+                await foreach (var value in readProcessedFeature.ReadProcessedTagValues(
+                    context,
+                    new ReadProcessedTagValuesRequest() {
+                        Tags = new[] { tag.Id },
+                        DataFunctions = new[] { func.Id },
+                        UtcStartTime = start,
+                        UtcEndTime = end,
+                        SampleInterval = sampleInterval
+                    },
+                    cancellationToken
+                )) {
+                    Console.WriteLine($"    - {value.Value}");
+                }
+            }
         }
+
     }
 }
 ```

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+
 
 namespace DataCore.Adapter.RealTimeData {
     /// <summary>
@@ -19,6 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="values">
         ///   The event messages to write.
         /// </param>
@@ -33,39 +38,31 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
         public static async Task<IEnumerable<WriteTagValueResult>> WriteSnapshotTagValues(
             this IWriteSnapshotTagValues feature, 
             IAdapterCallContext context, 
+            WriteTagValuesRequest request,
             IEnumerable<WriteTagValueItem> values,
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
             if (values == null) {
                 throw new ArgumentNullException(nameof(values));
             }
 
-            var channel = ChannelExtensions.CreateTagValueWriteChannel();
-            channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                foreach (var item in values) {
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
-
-                    ch.TryWrite(item);
-                }
-            }, true, feature.BackgroundTaskService, cancellationToken);
-
             var result = new List<WriteTagValueResult>(values.Count());
-            var outChannel = await feature.WriteSnapshotTagValues(context, channel, cancellationToken).ConfigureAwait(false);
-
-            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (outChannel.TryRead(out var item)) {
-                    result.Add(item);
-                }
+            await foreach (var item in feature.WriteSnapshotTagValues(context, request, values.PublishToChannel().ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                result.Add(item);
             }
 
             return result;
@@ -81,6 +78,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="context">
         ///   The <see cref="IAdapterCallContext"/> for the caller.
         /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="values">
         ///   The event messages to write.
         /// </param>
@@ -95,39 +95,31 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
         ///   <paramref name="values"/> is <see langword="null"/>.
         /// </exception>
         public static async Task<IEnumerable<WriteTagValueResult>> WriteHistoricalTagValues(
             this IWriteHistoricalTagValues feature, 
             IAdapterCallContext context, 
+            WriteTagValuesRequest request,
             IEnumerable<WriteTagValueItem> values,
             CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
             if (values == null) {
                 throw new ArgumentNullException(nameof(values));
             }
 
-            var channel = ChannelExtensions.CreateTagValueWriteChannel();
-            channel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                foreach (var item in values) {
-                    if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        break;
-                    }
-
-                    ch.TryWrite(item);
-                }
-            }, true, feature.BackgroundTaskService, cancellationToken);
-
             var result = new List<WriteTagValueResult>(values.Count());
-            var outChannel = await feature.WriteHistoricalTagValues(context, channel, cancellationToken).ConfigureAwait(false);
-
-            while (await outChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (outChannel.TryRead(out var item)) {
-                    result.Add(item);
-                }
+            await foreach (var item in feature.WriteHistoricalTagValues(context, request, values.PublishToChannel().ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                result.Add(item);
             }
 
             return result;
