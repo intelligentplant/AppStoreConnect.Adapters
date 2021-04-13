@@ -748,7 +748,7 @@ namespace DataCore.Adapter {
         ///   The additional cancellation tokens to monitor.
         /// </param>
         /// <returns>
-        ///   A new <see cref="CancellationTokenSource"/> instance. Nogte that it is the caller's 
+        ///   A new <see cref="CancellationTokenSource"/> instance. Note that it is the caller's 
         ///   responsibility to dispose of the <see cref="CancellationTokenSource"/> when it is no 
         ///   longer required.
         /// </returns>
