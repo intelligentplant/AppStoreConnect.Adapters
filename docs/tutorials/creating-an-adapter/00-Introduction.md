@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this tutorial, you will learn how to create a basic adapter as part of a .NET Core 3.1 console application, that supports discovery of tags, polling for both real-time and historical tag values, and push notification of changes in real-time tag values.
+In this tutorial, you will learn how to create a basic adapter as part of a .NET console application, that supports discovery of tags, polling for both real-time and historical tag values, and push notification of changes in real-time tag values.
 
 The tutorial also highlights some of the base and helper classes available when writing an adapter. 
 

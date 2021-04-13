@@ -45,7 +45,10 @@ namespace MyAdapter {
                 }
 
                 var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
-                var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
+
+                Console.WriteLine();
+                Console.WriteLine("  Snapshot Values:");
+                await foreach (var value in readSnapshotFeature.ReadSnapshotTagValues(
                     context,
                     new ReadSnapshotTagValuesRequest() {
                         Tags = new[] {
@@ -54,11 +57,7 @@ namespace MyAdapter {
                         }
                     },
                     cancellationToken
-                );
-
-                Console.WriteLine();
-                Console.WriteLine("  Snapshot Values:");
-                await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
+                )) {
                     Console.WriteLine($"    [{value.TagName}] - {value.Value}");
                 }
 

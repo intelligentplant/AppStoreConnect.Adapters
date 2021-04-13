@@ -47,15 +47,13 @@ namespace MyAdapter {
                 var tagSearchFeature = adapter.GetFeature<ITagSearch>();
                 var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
 
-                var tags = await tagSearchFeature.FindTags(
+                await foreach (var tag in tagSearchFeature.FindTags(
                     context,
                     new FindTagsRequest() {
                         Name = "*"
                     },
                     cancellationToken
-                );
-
-                await foreach (var tag in tags.ReadAllAsync(cancellationToken)) {
+                )) {
                     Console.WriteLine();
                     Console.WriteLine("[Tag Details]");
                     Console.WriteLine($"  Name: {tag.Name}");
@@ -66,18 +64,16 @@ namespace MyAdapter {
                         Console.WriteLine($"    - {prop.Name} = {prop.Value}");
                     }
 
-                    var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
+                    var value = await readSnapshotFeature.ReadSnapshotTagValues(
                         context,
                         new ReadSnapshotTagValuesRequest() {
                             Tags = new[] { tag.Id }
                         },
                         cancellationToken
-                    );
+                    ).FirstOrDefaultAsync(cancellationToken);
 
                     Console.WriteLine("  Snapshot Value:");
-                    await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-                        Console.WriteLine($"    - {value.Value}");
-                    }
+                    Console.WriteLine($"    - {value.Value}");
                 }
             }
         }

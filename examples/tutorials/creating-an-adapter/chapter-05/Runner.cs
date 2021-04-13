@@ -51,7 +51,7 @@ namespace MyAdapter {
                 Console.WriteLine();
                 Console.WriteLine("  Supported Aggregations:");
                 var funcs = new List<DataFunctionDescriptor>();
-                await foreach (var func in (await readProcessedFeature.GetSupportedDataFunctions(context, cancellationToken)).ReadAllAsync()) {
+                await foreach (var func in readProcessedFeature.GetSupportedDataFunctions(context, new GetSupportedDataFunctionsRequest(), cancellationToken)) {
                     funcs.Add(func);
                     Console.WriteLine($"    - {func.Id}");
                     Console.WriteLine($"      - Name: {func.Name}");
@@ -62,69 +62,60 @@ namespace MyAdapter {
                     }
                 }
 
-                var tags = await tagSearchFeature.FindTags(
-                    context,
-                    new FindTagsRequest() {
-                        Name = "Sin*",
-                        PageSize = 1
-                    },
-                    cancellationToken
-                );
-
-                await tags.WaitToReadAsync(cancellationToken);
-                tags.TryRead(out var tag);
-
-                Console.WriteLine();
-                Console.WriteLine("[Tag Details]");
-                Console.WriteLine($"  Name: {tag.Name}");
-                Console.WriteLine($"  ID: {tag.Id}");
-                Console.WriteLine($"  Description: {tag.Description}");
-                Console.WriteLine("  Properties:");
-                foreach (var prop in tag.Properties) {
-                    Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-                }
-
-                var now = DateTime.UtcNow;
-                var start = now.AddSeconds(-15);
-                var end = now;
-                var sampleInterval = TimeSpan.FromSeconds(5);
-
-                Console.WriteLine();
-                Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
-                var rawValues = await readRawFeature.ReadRawTagValues(
-                    context,
-                    new ReadRawTagValuesRequest() {
-                        Tags = new[] { tag.Id },
-                        UtcStartTime = start,
-                        UtcEndTime = end,
-                        BoundaryType = RawDataBoundaryType.Outside
-                    },
-                    cancellationToken
-                );
-                await foreach (var value in rawValues.ReadAllAsync(cancellationToken)) {
-                    Console.WriteLine($"    - {value.Value}");
-                }
-
-                foreach (var func in funcs) {
+                await foreach (var tag in tagSearchFeature.FindTags(context, new FindTagsRequest() {
+                    Name = "Sin*",
+                    PageSize = 1
+                }, cancellationToken)) {
                     Console.WriteLine();
-                    Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
+                    Console.WriteLine("[Tag Details]");
+                    Console.WriteLine($"  Name: {tag.Name}");
+                    Console.WriteLine($"  ID: {tag.Id}");
+                    Console.WriteLine($"  Description: {tag.Description}");
+                    Console.WriteLine("  Properties:");
+                    foreach (var prop in tag.Properties) {
+                        Console.WriteLine($"    - {prop.Name} = {prop.Value}");
+                    }
 
-                    var processedValues = await readProcessedFeature.ReadProcessedTagValues(
+                    var now = DateTime.UtcNow;
+                    var start = now.AddSeconds(-15);
+                    var end = now;
+                    var sampleInterval = TimeSpan.FromSeconds(5);
+
+                    Console.WriteLine();
+                    Console.WriteLine($"  Raw Values ({start:HH:mm:ss.fff} - {end:HH:mm:ss.fff} UTC):");
+                    await foreach (var value in readRawFeature.ReadRawTagValues(
                         context,
-                        new ReadProcessedTagValuesRequest() {
+                        new ReadRawTagValuesRequest() {
                             Tags = new[] { tag.Id },
-                            DataFunctions = new[] { func.Id },
                             UtcStartTime = start,
                             UtcEndTime = end,
-                            SampleInterval = sampleInterval
+                            BoundaryType = RawDataBoundaryType.Outside
                         },
                         cancellationToken
-                    );
-
-                    await foreach (var value in processedValues.ReadAllAsync(cancellationToken)) {
+                    )) {
                         Console.WriteLine($"    - {value.Value}");
                     }
+
+                    foreach (var func in funcs) {
+                        Console.WriteLine();
+                        Console.WriteLine($"  {func.Name} Values ({sampleInterval} sample interval):");
+
+                        await foreach (var value in readProcessedFeature.ReadProcessedTagValues(
+                            context,
+                            new ReadProcessedTagValuesRequest() {
+                                Tags = new[] { tag.Id },
+                                DataFunctions = new[] { func.Id },
+                                UtcStartTime = start,
+                                UtcEndTime = end,
+                                SampleInterval = sampleInterval
+                            },
+                            cancellationToken
+                        )) {
+                            Console.WriteLine($"    - {value.Value}");
+                        }
+                    }
                 }
+
             }
         }
 

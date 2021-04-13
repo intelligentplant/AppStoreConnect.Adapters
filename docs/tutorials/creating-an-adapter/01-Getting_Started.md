@@ -17,6 +17,8 @@ cd MyAdapter
 dotnet new console
 ```
 
+The project can target .NET Framework 4.8, .NET Core 3.1, or .NET 5.0 or later.
+
 Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
 
 We will use the [.NET Generic Host](https://docs.microsoft.com/en-us/dotnet/core/extensions/generic-host) to run the example console applications in this tutorial. After you have added the above package references, replace the code in your `Program.cs` file with the following:
@@ -26,6 +28,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
     class Program {
@@ -36,7 +39,9 @@ namespace MyAdapter {
 
 
         private static IHostBuilder CreateHostBuilder(string[] args) {
-            return Host.CreateDefaultBuilder(args).ConfigureServices(services => {
+            return Host.CreateDefaultBuilder(args).ConfigureLogging(options => {
+                options.SetMinimumLevel(LogLevel.Warning);
+            }).ConfigureServices(services => {
                 services.AddHostedService<Runner>();
             });
         }
@@ -46,16 +51,21 @@ namespace MyAdapter {
 }
 ```
 
+> Note: programs that use the .NET Generic Host will keep running until they are cancelled e.g. by pressing `CTRL+C`.
+
 Next, add a new file to the project called `Runner.cs` and replace the code with the following:
 
 ```csharp
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.Hosting;
 
@@ -223,7 +233,7 @@ If you compile and run the program, you will see output similar to the following
   Description: Allows an adapter's tag definitions to be searched.
 ```
 
-> Note: adapters are not required to implement every standard feature! You can pick and choose which of the features are appropriate for your adapter.
+> Note: adapters are not required to implement every feature! You can pick and choose which of the features are appropriate for your adapter.
 
 
 ### Creating an Adapter
@@ -232,12 +242,18 @@ Next, create a new class called `Adapter`, and extend `AdapterBase`:
 
 ```csharp
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -254,12 +270,18 @@ The first thing we have to do is write a constructor that will call the protecte
 
 ```csharp
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -289,7 +311,7 @@ Note that the base class requires us to pass it an instance of the `AdapterOptio
 
 The `IBackgroundTaskService` type is defined in the [IntelligentPlant.BackgroundTasks](https://www.nuget.org/packages/IntelligentPlant.BackgroundTasks/) package, which is transitively referenced by the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) package.
 
-Next, we must provide implementations for the abstract `StartAsync` and `StopAsync` methods:
+Next, we must provide implementations for the abstract `StartAsync` and `StopAsync` methods, that are called when the adapter is started and stopped respectively:
 
 ```csharp
 protected override Task StartAsync(CancellationToken cancellationToken) {
@@ -342,6 +364,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using Microsoft.Extensions.Hosting;
 
@@ -357,6 +380,18 @@ namespace MyAdapter {
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken) {
             return Run(new DefaultAdapterCallContext(), stoppingToken);
+        }
+
+
+        private static void PrintFeatureDescriptions() {
+            foreach (var type in TypeExtensions.GetStandardAdapterFeatureTypes().OrderBy(x => x.FullName)) {
+                var descriptor = type.CreateFeatureDescriptor();
+                Console.WriteLine($"[{descriptor.DisplayName}]");
+                Console.WriteLine($"  Type: {type.FullName}");
+                Console.WriteLine($"  URI: {descriptor.Uri}");
+                Console.WriteLine($"  Description: {descriptor.Description}");
+                Console.WriteLine();
+            }
         }
 
 
@@ -392,7 +427,6 @@ namespace MyAdapter {
 
     }
 }
-
 ```
 
 The `Run` method will display information about the adapter, including the implemented features. It will then call the `IHealthCheck.CheckHealthAsync` method and display the health check results.
