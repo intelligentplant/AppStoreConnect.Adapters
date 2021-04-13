@@ -76,7 +76,7 @@ namespace DataCore.Adapter.Tests {
                 throw new ArgumentNullException(nameof(ping));
             }
 
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
             yield return new PongMessage() {
                 CorrelationId = ping.CorrelationId,
                 UtcServerTime = DateTime.UtcNow

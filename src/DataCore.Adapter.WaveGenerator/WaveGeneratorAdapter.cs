@@ -527,7 +527,7 @@ namespace DataCore.Adapter.WaveGenerator {
         ) {
             ValidateInvocation(context, request);
 
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             foreach (var item in request.Tags) {
                 if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
@@ -547,7 +547,7 @@ namespace DataCore.Adapter.WaveGenerator {
         ) {
             ValidateInvocation(context, request);
 
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
 
@@ -580,7 +580,7 @@ namespace DataCore.Adapter.WaveGenerator {
             CancellationToken cancellationToken
         ) {
             ValidateInvocation(context, request);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
             
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -614,7 +614,7 @@ namespace DataCore.Adapter.WaveGenerator {
             CancellationToken cancellationToken
         ) {
             ValidateInvocation(context, request);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 var sampleInterval = GetSampleInterval();
@@ -671,7 +671,7 @@ namespace DataCore.Adapter.WaveGenerator {
             CancellationToken cancellationToken
         ) {
             ValidateInvocation(context, request);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {

@@ -100,7 +100,7 @@ namespace DataCore.Adapter.Tests {
                 throw new ArgumentNullException(nameof(request));
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             foreach (var item in request.Tags) {
                 yield return new TagDefinition(item, item, null, null, VariantType.Double, null, null, null, null);
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Tests {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
             foreach (var tag in request.Tags) {
                 yield return new TagValueQueryResult(
                     tag,

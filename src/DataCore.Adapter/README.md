@@ -53,7 +53,7 @@ public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
 }
 ```
 
-If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.Yield` to make the implementation asynchronous:
+If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.CompletedTask` to make the implementation asynchronous:
 
 ```csharp
 public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
@@ -68,7 +68,7 @@ public class MyAdapter : AdapterBase, IReadSnapshotTagValues {
     ) {
         ValidateInvocation(context, request);
 
-        await Task.Yield();
+        await Task.CompletedTask.ConfigureAwait(false);
 
         using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
             foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
@@ -177,7 +177,7 @@ public class PingPongExtension : AdapterExtensionFeature {
             throw new ArgumentNullException(nameof(ping));
         }
 
-        await Task.Yield();
+        await Task.CompletedTask.ConfigureAwait(false);
         yield return new PongMessage() {
             CorrelationId = ping.CorrelationId
         };

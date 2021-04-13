@@ -2136,12 +2136,33 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(enumerable));
             }
 
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
             foreach (var item in enumerable) {    
                 yield return item;
             }
+        }
+
+
+        /// <summary>
+        /// Asynchronously reads items from the <see cref="IAsyncEnumerable{T}"/> and returns them 
+        /// as an <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The items that were read.
+        /// </returns>
+        public static Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken = default) {
+            return enumerable.ToEnumerable(-1, cancellationToken);
         }
 
 
@@ -2165,7 +2186,11 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The items that were read.
         /// </returns>
-        public static async Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems = -1, CancellationToken cancellationToken = default) {
+        public static async Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems, CancellationToken cancellationToken = default) {
+            if (enumerable == null) {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
+            
             var result = maxItems > 0
                 ? new List<T>(maxItems)
                 : new List<T>(500);

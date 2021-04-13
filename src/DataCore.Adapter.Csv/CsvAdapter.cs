@@ -765,7 +765,7 @@ namespace DataCore.Adapter.Csv {
             CancellationToken cancellationToken
         ) {
             ValidateInvocation(context, request);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);

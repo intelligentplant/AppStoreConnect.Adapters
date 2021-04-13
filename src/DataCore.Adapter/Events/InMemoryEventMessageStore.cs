@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
-
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events {
@@ -275,7 +273,7 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(context));
             }
             ValidationExtensions.ValidateObject(request);
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             EventMessage[] messages;
 
@@ -320,7 +318,7 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            await Task.Yield();
+            await Task.CompletedTask.ConfigureAwait(false);
 
             KeyValuePair<CursorPosition, EventMessage>[] messages;
 
