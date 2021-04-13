@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using DataCore.Adapter.Common;
 
@@ -37,7 +35,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   A channel containing the adapters available to the caller.
         /// </returns>
-        Task<ChannelReader<IAdapter>> FindAdapters(
+        IAsyncEnumerable<IAdapter> FindAdapters(
             IAdapterCallContext context, 
             FindAdaptersRequest request, 
             bool enabledOnly = true,

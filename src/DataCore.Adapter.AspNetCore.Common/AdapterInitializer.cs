@@ -54,23 +54,20 @@ namespace DataCore.Adapter.AspNetCore {
         /// </returns>
         public Task StartAsync(CancellationToken cancellationToken) {
             return Task.Run(async () => {
-                var adapters = await _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-                while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    while (adapters.TryRead(out var adapter)) {
-                        if (cancellationToken.IsCancellationRequested) {
-                            break;
-                        }
-                        if (!adapter.IsEnabled) {
-                            continue;
-                        }
+                await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        break;
+                    }
+                    if (!adapter.IsEnabled) {
+                        continue;
+                    }
 
-                        try {
-                            _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                            await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
-                        }
-                        catch (Exception e) {
-                            _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        }
+                    try {
+                        _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
                     }
                 }
             }, cancellationToken);
@@ -88,22 +85,18 @@ namespace DataCore.Adapter.AspNetCore {
         ///   A task that will stop the registered adapters.
         /// </returns>
         public async Task StopAsync(CancellationToken cancellationToken) {
-            var adapters = await _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false);
-
             try {
-                while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    while (adapters.TryRead(out var adapter)) {
-                        if (!adapter.IsRunning) {
-                            continue;
-                        }
+                await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
+                    if (!adapter.IsRunning) {
+                        continue;
+                    }
 
-                        try {
-                            _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                            await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
-                        }
-                        catch (Exception e) {
-                            _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        }
+                    try {
+                        _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
                     }
                 }
             }

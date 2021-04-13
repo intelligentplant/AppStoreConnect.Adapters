@@ -92,11 +92,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive the matching adapters.
         /// </returns>
-        public async Task<ChannelReader<AdapterDescriptor>> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<AdapterDescriptor> FindAdapters(
+            FindAdaptersRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapters = await AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false);
 
-            return adapters.Transform(x => AdapterDescriptor.FromExisting(x.Descriptor), BackgroundTaskService, cancellationToken);
+            await foreach (var item in AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false)) {
+                yield return AdapterDescriptor.FromExisting(item.Descriptor);
+            }
         }
 
 

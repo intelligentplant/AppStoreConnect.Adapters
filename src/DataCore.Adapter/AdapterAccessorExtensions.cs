@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   A channel that will return the available adapters.
         /// </returns>
-        public static Task<ChannelReader<IAdapter>> GetAllAdapters(
+        public static IAsyncEnumerable<IAdapter> GetAllAdapters(
             this IAdapterAccessor adapterAccessor, 
             IAdapterCallContext context, 
             CancellationToken cancellationToken = default
@@ -34,13 +35,10 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
 
-            var result = adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
+            return adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
                 Page = 1,
                 PageSize = int.MaxValue
             }, false, cancellationToken);
-
-            return result;
-
         }
 
 

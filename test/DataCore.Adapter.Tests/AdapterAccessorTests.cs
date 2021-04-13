@@ -187,9 +187,8 @@ namespace DataCore.Adapter.Tests {
             }
 
 
-            protected override Task<ChannelReader<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
-                var channel = new[] { _adapter }.PublishToChannel();
-                return Task.FromResult(channel);
+            protected override IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken) {
+                return new[] { _adapter }.PublishToChannel().ReadAllAsync(cancellationToken);
             }
         }
 
