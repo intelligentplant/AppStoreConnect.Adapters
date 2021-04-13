@@ -7,30 +7,25 @@ _This is part 4 of a tutorial series about creating an extension feature for an 
 
 _The full code for this chapter can be found [here](/examples/tutorials/writing-an-extension-feature/chapter-04)._
 
-In the [previous chapter](03-Streaming_Methods.md), we implemented a server-to-client streaming operation that allowed us to asynchronously push values to a caller until they cancelled their subscription. In this chapter, we will implement a bidirectional (or duplex) streaming operation, allowing a caller to stream values to the extension feature and also allowing the feature to stream values back to the caller. Just as a streaming response uses a `ChannelReader<T>` to return results to the caller, a `ChannelReader<T>` is also used to stream inputs to the operation.
+In the [previous chapter](03-Streaming_Methods.md), we implemented a server-to-client streaming operation that allowed us to asynchronously push values to a caller until they cancelled their subscription. In this chapter, we will implement a bidirectional (or duplex) streaming operation, allowing a caller to stream values to the extension feature and also allowing the feature to stream values back to the caller. Just as a streaming response uses an `IAsyncEnumerable<T>` to return results to the caller, an `IAsyncEnumerable<T>` is also used to stream inputs to the operation.
 
 First, we will add a method to our `PingPongExtension` class that will process duplex streaming requests:
 
 ```csharp
-public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, ChannelReader<PingMessage> messages, CancellationToken cancellationToken) {
-    if (messages == null) {
-        throw new ArgumentNullException(nameof(messages));
-    }
-
-    var result = Channel.CreateUnbounded<PongMessage>();
-
-    result.Writer.RunBackgroundOperation(async (ch, ct) => {
-        await foreach (var pingMessage in messages.ReadAllAsync(ct)) {
-            if (pingMessage == null) {
-                continue;
+        public async IAsyncEnumerable<PongMessage> Ping(
+            IAdapterCallContext context, 
+            IAsyncEnumerable<PingMessage> messages, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            if (messages == null) {
+                throw new ArgumentNullException(nameof(messages));
             }
-            var pongMessage = Ping(context, pingMessage);
-            await ch.WriteAsync(pongMessage, ct);
-        }
-    }, true, BackgroundTaskService, cancellationToken);
 
-    return Task.FromResult(result.Reader);
-}
+            await foreach (var pingMessage in messages.WithCancellation(cancellationToken)) {
+                yield return Ping(context, pingMessage);
+            }
+        }
 ```
 
 To register our new operation, we will call the `BindDuplexStream` method in our `PingPongExtension` constructor:
@@ -84,7 +79,7 @@ Compiling and running the program at this point will show the new operation in o
           - Description: Responds to each ping message in the incoming stream with a pong message
 ```
 
-To test the new method, we will create a `Channel<InvocationStreamItem>` that we will write a ping message to at a random interval, and then read the corresponding pong messages from our subscription channel. Replace the code for calling the streaming operation in `Runner.cs` with the following:
+To test the new method, we will create a `Channel<PingMessage>` that we will write a ping message to at a random interval in a background task, and then read the corresponding pong messages from our subscription. Replace the code for calling the streaming operation in `Runner.cs` with the following:
 
 ```csharp
 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
@@ -93,31 +88,35 @@ var now = DateTime.UtcNow;
 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
 var pingMessageStream = Channel.CreateUnbounded<PingMessage>();
 
-var pongMessageStream = await extensionFeature.DuplexStream<PingMessage, PongMessage>(
-    context,
-    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
-    pingMessageStream,
-    cancellationToken
-);
-
 Console.WriteLine();
 
-pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
-    var rnd = new Random();
-    while (!ct.IsCancellationRequested) {
-        // Delay for up to 2 seconds.
-        var delay = TimeSpan.FromMilliseconds(2000 * rnd.NextDouble());
-        if (delay > TimeSpan.Zero) {
-            await Task.Delay(delay, ct);
+_ = Task.Run(async () => { 
+    try {
+        var rnd = new Random();
+        while (!cancellationToken.IsCancellationRequested) {
+            // Delay for up to 2 seconds.
+            var delay = TimeSpan.FromMilliseconds(2000 * rnd.NextDouble());
+            if (delay > TimeSpan.Zero) {
+                await Task.Delay(delay, cancellationToken);
+            }
+            var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
+
+            Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
+            await pingMessageStream.Writer.WriteAsync(pingMessage, cancellationToken);
         }
-        var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
-
-        Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
-        await ch.WriteAsync(pingMessage, ct);
     }
-}, true, cancellationToken: cancellationToken);
+    catch { }
+    finally {
+        pingMessageStream.Writer.TryComplete();
+    }
+}, cancellationToken);
 
-await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
+await foreach (var pongMessage in extensionFeature.DuplexStream<PingMessage, PongMessage>(
+    context,
+    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
+    pingMessageStream.Reader.ReadAllAsync(cancellationToken),
+    cancellationToken
+)) {
     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
 }
 ```

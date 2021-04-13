@@ -7,33 +7,29 @@ _This is part 3 of a tutorial series about creating an extension feature for an 
 
 _The full code for this chapter can be found [here](/examples/tutorials/writing-an-extension-feature/chapter-03)._
 
-In the [previous chapter](02-Extension_Methods.md), we created a simple request-response operation for our extension feature. In this chapter, we will demonstrate another operation type: streaming methods. Streaming methods allow a caller to create a subscription on our feature and receive a stream of result objects back (using a `ChannelReader<T>` object). We keep on streaming results until either the feature decides to end the stream, or the caller cancels the subscription. This approach is also used in most standard adapter features.
+In the [previous chapter](02-Extension_Methods.md), we created a simple request-response operation for our extension feature. In this chapter, we will demonstrate another operation type: streaming methods. Streaming methods allow a caller to create a subscription on our feature and receive a stream of result objects back (using an `IAsyncEnumerable<T>` object). We keep on streaming results until either the feature decides to end the stream, or the caller cancels the subscription. This approach is also used in most standard adapter features.
 
 First, we will add a method to our `PingPongExtension` class that will process streaming requests:
 
 ```csharp
-public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, PingMessage message, CancellationToken cancellationToken) {
+public async IAsyncEnumerable<PongMessage> Ping(
+    IAdapterCallContext context, 
+    PingMessage message, 
+    [EnumeratorCancellation]
+    CancellationToken cancellationToken
+) {
     if (message == null) {
         throw new ArgumentNullException(nameof(message));
     }
 
-    var result = Channel.CreateUnbounded<PongMessage>();
+    while (!cancellationToken.IsCancellationRequested) {
+        // Every second, we will return a new PongMessage
+        await Task.Delay(1000, cancellationToken);
 
-    result.Writer.RunBackgroundOperation(async (ch, ct) => {
-        while (!ct.IsCancellationRequested) {
-            // Every second, we will return a new PongMessage
-            await Task.Delay(1000, ct);
-
-            var pongMessage = Ping(context, message);
-            await ch.WriteAsync(pongMessage, ct);
-        }
-    }, true, BackgroundTaskService, cancellationToken);
-
-    return Task.FromResult(result.Reader);
+        yield return Ping(context, message);
+    }
 }
 ```
-
-Note that the method uses the `RunBackgroundOperation` extension method to periodically write pong messages into the result channel in a background task.
 
 To register our new operation, we will call the `BindStream` method in our `PingPongExtension` constructor:
 
@@ -91,19 +87,21 @@ var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensi
 var correlationId = Guid.NewGuid().ToString();
 var now = DateTime.UtcNow;
 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
-var pongMessageStream = await extensionFeature.Stream<PingMessage, PongMessage>(
-    context,
-    new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
-    pingMessage,
-    cancellationToken
-);
 
 Console.WriteLine();
 Console.WriteLine($"[STREAM] Ping: {correlationId} @ {now:HH:mm:ss} UTC");
 
-await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
-    Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
+try {
+    await foreach (var pongMessage in extensionFeature.Stream<PingMessage, PongMessage>(
+        context,
+        new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
+        pingMessage,
+        cancellationToken
+    )) {
+        Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
+    }
 }
+catch (OperationCanceledException) { }
 ```
 
 When you compile and run the program again, you will see a pong message displayed every second until you cancel the subscription by pressing `CTRL+C` e.g.
