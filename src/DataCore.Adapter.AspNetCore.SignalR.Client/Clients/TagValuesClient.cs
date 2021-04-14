@@ -427,9 +427,46 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<DataFunctionDescriptor>(
-                "GetSupportedDataFunctions",
+                "GetSupportedDataFunctionsWithRequest",
                 adapterId,
                 request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the data functions that an adapter supports when calling 
+        /// <see cref="ReadProcessedTagValuesAsync(string, ReadProcessedTagValuesRequest, CancellationToken)"/>.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the results.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        [Obsolete("Use GetSupportedDataFunctionsAsync(string, GetSupportedDataFunctionsRequest, CancellationToken) instead.", false)]
+        public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctionsAsync(
+            string adapterId,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+
+            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            await foreach (var item in connection.StreamAsync<DataFunctionDescriptor>(
+                "GetSupportedDataFunctions",
+                adapterId,
                 cancellationToken
             ).ConfigureAwait(false)) {
                 yield return item;
