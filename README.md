@@ -102,18 +102,12 @@ services
 
 services.AddMvc()
     .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-    .AddJsonOptions(options => {
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    })
     .AddDataCoreAdapterMvc();
 
 // Add the adapter hub to the SignalR registration.
 services
     .AddSignalR()
-    .AddDataCoreAdapterSignalR()
-    .AddJsonProtocol(options => {
-        options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+    .AddDataCoreAdapterSignalR();
 ```
 
 6. In your `Startup.cs` file, add adapter Web API controller and SignalR hub endpoints in the `Configure` method:
