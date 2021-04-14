@@ -118,48 +118,51 @@ namespace DataCore.Adapter.Tests {
                 var feature = adapter.Features.Get<ISnapshotTagValuePush>();
 
                 var now = DateTime.UtcNow;
-
-                _ = Task.Run(async () => { 
-                    try {
-                        await Task.Delay(100, ct).ConfigureAwait(false);
-
-                        // Write a couple of values that we should then be able to read out again via 
-                        // the subscription's channel.
-                        
-                        await adapter.WriteSnapshotValue(
-                            TagValueQueryResult.Create(
-                                TestContext.TestName,
-                                TestContext.TestName,
-                                new TagValueBuilder()
-                                    .WithUtcSampleTime(now.AddSeconds(-5))
-                                    .WithValue(100)
-                                    .Build()
-                            )
-                        );
-                        await adapter.WriteSnapshotValue(
-                            TagValueQueryResult.Create(
-                                TestContext.TestName,
-                                TestContext.TestName,
-                                new TagValueBuilder()
-                                    .WithUtcSampleTime(now.AddSeconds(-1))
-                                    .WithValue(99)
-                                    .Build()
-                            )
-                        );
-                    }
-                    catch (OperationCanceledException) { }
-                }, ct);
+                var initialValueReceivedTcs = new TaskCompletionSource<int>();
 
                 using (var ctSource = new CancellationTokenSource(1000)) {
+
+                    _ = Task.Run(async () => {
+                        try {
+                            await initialValueReceivedTcs.Task.WithCancellation(ct).ConfigureAwait(false);
+
+                            // Write a couple of values that we should then be able to read out again via 
+                            // the subscription's channel.
+
+                            await adapter.WriteSnapshotValue(
+                                TagValueQueryResult.Create(
+                                    TestContext.TestName,
+                                    TestContext.TestName,
+                                    new TagValueBuilder()
+                                        .WithUtcSampleTime(now.AddSeconds(-5))
+                                        .WithValue(100)
+                                        .Build()
+                                )
+                            );
+                            await adapter.WriteSnapshotValue(
+                                TagValueQueryResult.Create(
+                                    TestContext.TestName,
+                                    TestContext.TestName,
+                                    new TagValueBuilder()
+                                        .WithUtcSampleTime(now.AddSeconds(-1))
+                                        .WithValue(99)
+                                        .Build()
+                                )
+                            );
+                        }
+                        catch (OperationCanceledException) { }
+                    }, ctSource.Token);
+                
                     await using (var enumerator = feature.Subscribe(
                         ExampleCallContext.ForPrincipal(null),
                         new CreateSnapshotTagValueSubscriptionRequest() {
                             Tags = new[] { TestContext.TestName }
                         },
-                        ct
-                    ).GetAsyncEnumerator(ct)) {
+                        ctSource.Token
+                    ).GetAsyncEnumerator(ctSource.Token)) {
                         // Read initial value.
                         Assert.IsTrue(await enumerator.MoveNextAsync().ConfigureAwait(false));
+                        initialValueReceivedTcs.TrySetResult(0);
                         var value = enumerator.Current;
                         Assert.IsNotNull(value);
 

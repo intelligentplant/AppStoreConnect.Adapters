@@ -592,9 +592,10 @@ namespace DataCore.Adapter.RealTimeData {
         ///   is <see langword="false"/>, <see cref="ReadSnapshotTagValues"/> will only return 
         ///   values for tags that have subscribers.
         /// </remarks>
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (context == null) {
@@ -606,23 +607,22 @@ namespace DataCore.Adapter.RealTimeData {
 
             var tags = request.Tags?.ToArray() ?? Array.Empty<string>();
             if (tags == null) {
-                return Task.FromResult(Array.Empty<TagValueQueryResult>().PublishToChannel());
+                yield break;
             }
 
-            var result = ChannelExtensions.CreateTagValueChannel();
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var tagIdentifiers = await ResolveTags(context, tags, ct).ConfigureAwait(false);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
+                var tagIdentifiers = await ResolveTags(context, tags, ctSource.Token).ConfigureAwait(false);
                 foreach (var item in tagIdentifiers) {
+                    if (ctSource.IsCancellationRequested) {
+                        break;
+                    }
                     if (!_currentValueByTagId.TryGetValue(item.Id, out var val)) {
                         continue;
                     }
 
-                    await ch.WriteAsync(val, ct).ConfigureAwait(false);
+                    yield return val;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 

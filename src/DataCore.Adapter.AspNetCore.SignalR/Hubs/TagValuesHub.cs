@@ -289,6 +289,27 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The supported data functions for processed data queries.
+        /// </returns>
+        public IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
+            string adapterId,
+            CancellationToken cancellationToken
+        ) {
+            return GetSupportedDataFunctionsWithRequest(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Gets the data functions supported by <see cref="ReadProcessedTagValues(string, ReadProcessedTagValuesRequest, CancellationToken)"/> 
+        /// queries.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
         /// <param name="request">
         ///   The request.
         /// </param>
@@ -298,12 +319,16 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The supported data functions for processed data queries.
         /// </returns>
-        public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
+        public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctionsWithRequest(
             string adapterId, 
             GetSupportedDataFunctionsRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            // NOTE: this hub method is not called GetSupportedDataFunctions because ASP.NET Core
+            // SignalR does not allow overloads of hub methods, so a different method name must be
+            // used.
+
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             ValidateObject(request);
