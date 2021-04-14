@@ -64,31 +64,35 @@ namespace MyAdapter {
                 var pingMessage = new PingMessage() { CorrelationId = correlationId, UtcTime = now };
                 var pingMessageStream = Channel.CreateUnbounded<PingMessage>();
 
-                var pongMessageStream = await extensionFeature.DuplexStream<PingMessage, PongMessage>(
-                    context,
-                    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
-                    pingMessageStream,
-                    cancellationToken
-                );
-
                 Console.WriteLine();
 
-                pingMessageStream.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var rnd = new Random();
-                    while (!ct.IsCancellationRequested) {
-                        // Delay for up to 2 seconds.
-                        var delay = TimeSpan.FromMilliseconds(2000 * rnd.NextDouble());
-                        if (delay > TimeSpan.Zero) {
-                            await Task.Delay(delay, ct);
+                _ = Task.Run(async () => { 
+                    try {
+                        var rnd = new Random();
+                        while (!cancellationToken.IsCancellationRequested) {
+                            // Delay for up to 2 seconds.
+                            var delay = TimeSpan.FromMilliseconds(2000 * rnd.NextDouble());
+                            if (delay > TimeSpan.Zero) {
+                                await Task.Delay(delay, cancellationToken);
+                            }
+                            var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
+
+                            Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
+                            await pingMessageStream.Writer.WriteAsync(pingMessage, cancellationToken);
                         }
-                        var pingMessage = new PingMessage() { CorrelationId = Guid.NewGuid().ToString() };
-
-                        Console.WriteLine($"[DUPLEX STREAM] Ping: {pingMessage.CorrelationId} @ {pingMessage.UtcTime:HH:mm:ss} UTC");
-                        await ch.WriteAsync(pingMessage, ct);
                     }
-                }, true, cancellationToken: cancellationToken);
+                    catch { }
+                    finally {
+                        pingMessageStream.Writer.TryComplete();
+                    }
+                }, cancellationToken);
 
-                await foreach (var pongMessage in pongMessageStream.ReadAllAsync(cancellationToken)) {
+                await foreach (var pongMessage in extensionFeature.DuplexStream<PingMessage, PongMessage>(
+                    context,
+                    new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
+                    pingMessageStream.Reader.ReadAllAsync(cancellationToken),
+                    cancellationToken
+                )) {
                     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
                 }
             }

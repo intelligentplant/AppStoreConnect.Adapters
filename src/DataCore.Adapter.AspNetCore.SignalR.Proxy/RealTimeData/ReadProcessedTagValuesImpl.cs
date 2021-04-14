@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
@@ -20,43 +20,49 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
         /// </param>
         public ReadProcessedTagValuesImpl(SignalRAdapterProxy proxy) : base(proxy) { }
 
-        /// <inheritdoc />
-        public async Task<ChannelReader<DataFunctionDescriptor>> GetSupportedDataFunctions(IAdapterCallContext context, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context);
-
-            var client = GetClient();
-            var hubChannel = await client.TagValues.GetSupportedDataFunctionsAsync(
-                AdapterId, 
-                cancellationToken
-            ).ConfigureAwait(false);
-
-            var result = ChannelExtensions.CreateChannel<DataFunctionDescriptor>(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result;
-        }
 
         /// <inheritdoc />
-        public async Task<ChannelReader<ProcessedTagValueQueryResult>> ReadProcessedTagValues(IAdapterCallContext context, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<DataFunctionDescriptor> GetSupportedDataFunctions(
+            IAdapterCallContext context, 
+            GetSupportedDataFunctionsRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            var hubChannel = await client.TagValues.ReadProcessedTagValuesAsync(
-                AdapterId, 
-                request, 
-                cancellationToken
-            ).ConfigureAwait(false);
 
-            var result = ChannelExtensions.CreateProcessedTagValueChannel(-1);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.TagValues.GetSupportedDataFunctionsAsync(
+                    AdapterId,
+                    request,
+                    ctSource.Token
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
+        }
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                await hubChannel.Forward(ch, ct).ConfigureAwait(false);
-            }, true, BackgroundTaskService, cancellationToken);
+        /// <inheritdoc />
+        public async IAsyncEnumerable<ProcessedTagValueQueryResult> ReadProcessedTagValues(
+            IAdapterCallContext context, 
+            ReadProcessedTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request);
 
-            return result;
+            var client = GetClient();
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.TagValues.ReadProcessedTagValuesAsync(
+                    AdapterId,
+                    request,
+                    ctSource.Token
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
         
     }

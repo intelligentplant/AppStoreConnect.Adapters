@@ -259,7 +259,7 @@ namespace DataCore.Adapter.Tests {
                     .Build()
                 ).ToArray();
 
-                var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequest() {
+                var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequestExtended() {
                     Events = messages.Select(msg => new WriteEventMessageItem() {
                         CorrelationId = msg.Id,
                         EventMessage = msg
@@ -292,7 +292,7 @@ namespace DataCore.Adapter.Tests {
 
             var correlationId = Guid.NewGuid().ToString();
 
-            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequest() { 
+            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequestExtended() { 
                 Events = new [] { 
                     new WriteEventMessageItem() {
                         EventMessage = msg,

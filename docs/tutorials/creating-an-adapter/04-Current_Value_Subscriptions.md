@@ -32,6 +32,7 @@ public Adapter(
     logger
 ) {
     AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+        AdapterId = id,
         PollingInterval = TimeSpan.FromSeconds(1),
         TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
     }, BackgroundTaskService, Logger));
@@ -68,17 +69,14 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
         var snapshotPushFeature = adapter.GetFeature<ISnapshotTagValuePush>();
 
-        var tags = await tagSearchFeature.FindTags(
-                context,
-                new FindTagsRequest() {
-                    Name = "Sin*",
-                    PageSize = 1
-                },
-                cancellationToken
-            );
-
-        await tags.WaitToReadAsync(cancellationToken);
-        tags.TryRead(out var tag);
+        var tag = await tagSearchFeature.FindTags(
+            context,
+            new FindTagsRequest() {
+                Name = "Sin*",
+                PageSize = 1
+            },
+            cancellationToken
+        ).FirstOrDefaultAsync(cancellationToken);
 
         Console.WriteLine();
         Console.WriteLine("[Tag Details]");
@@ -90,25 +88,21 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
             Console.WriteLine($"    - {prop.Name} = {prop.Value}");
         }
 
-        var subscription = await snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
-            Tags = new[] { tag.Id }
-        }, cancellationToken);
-
-        subscription.RunBackgroundOperation(async (ch, ct) => {
+        try {
             Console.WriteLine("  Snapshot Value:");
-            await foreach (var value in ch.ReadAllAsync(ct)) {
+            await foreach (var value in snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
+                Tags = new[] { tag.Id },
+                PublishInterval = TimeSpan.FromSeconds(1)
+            }, cancellationToken)) {
                 Console.WriteLine($"    - {value.Value}");
             }
-        }, null, cancellationToken);
-
-        await subscription.Completion;
+        }
+        catch (OperationCanceledException) { }
     }
 }
 ```
 
-After displaying the usual adapter information, the `Run` method searches for a single tag with a name starting with `Sin` (i.e. our `Sinusoid_Wave` tag), and then creates a subscription on that tag. It then uses the `RunBackgroundOperation` extension method on the subscription result (a `ChannelReader<T>`) to values read from the channel and print them to the screen.
-
-Once the background operation has been registered, the method waits for the subscription's `Completed` property (a `Task`) to complete before existing. The task will complete when the subscription is cancelled. In the program's `Main` method in part 1, we added an event handler that will cancel the cancellation token when `CTRL+C` is pressed.
+After displaying the usual adapter information, the `Run` method searches for a single tag with a name starting with `Sin` (i.e. our `Sinusoid_Wave` tag), and then creates a subscription on that tag and uses an `await foreach` loop to iterate over every value returned by the `IAsyncEnumerable<T>` returned by the `Subscribe` method. The `await foreach` loop will continue until the program is stopped (via `CTRL+C`).
 
 Run the program and wait until it receives a few value updates, and then press `CTRL+C` to cancel the subscription and exit. You should see output similar to the following:
 

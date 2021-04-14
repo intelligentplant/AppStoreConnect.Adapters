@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
+
+using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
@@ -22,79 +24,53 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public async Task<ChannelReader<Adapter.RealTimeData.WriteTagValueResult>> WriteSnapshotTagValues(IAdapterCallContext context, ChannelReader<Adapter.RealTimeData.WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        /// <inheritdoc />
+        public async IAsyncEnumerable<Adapter.RealTimeData.WriteTagValueResult> WriteSnapshotTagValues(
+            IAdapterCallContext context,
+            WriteTagValuesRequest request,
+            IAsyncEnumerable<Adapter.RealTimeData.WriteTagValueItem> channel,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-            var grpcStream = client.WriteSnapshotTagValues(GetCallOptions(context, cancellationToken));
 
-            // Create the subscription.
-            await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
-                Init = new WriteTagValueInitMessage() {
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcStream = client.WriteSnapshotTagValues(GetCallOptions(context, ctSource.Token))) {
+                // Create the subscription.
+                var initMessage = new WriteTagValueInitMessage() {
                     AdapterId = AdapterId
+                };
+
+                if (request.Properties != null) {
+                    foreach (var prop in request.Properties) {
+                        initMessage.Properties.Add(prop.Key, prop.Value ?? string.Empty);
+                    }
                 }
-            }).ConfigureAwait(false);
 
-            // Flag is set to true when the input channel completes.
-            var complete = false;
-            // Tracks the number of responses that are pending from the gRPC server.
-            var pendingResponseCount = 0;
+                await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
+                    Init = initMessage
+                }).ConfigureAwait(false);
 
-            // Stream subscription changes.
-            channel.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        while (ch.TryRead(out var update)) {
-                            if (update == null) {
-                                continue;
-                            }
-
+                // Run a background task to stream the values to write.
+                Proxy.BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        await foreach (var item in channel.WithCancellation(ct).ConfigureAwait(false)) {
                             await grpcStream.RequestStream.WriteAsync(new WriteTagValueRequest() {
-                                Write = update.ToGrpcWriteTagValueItem()
+                                Write = item.ToGrpcWriteTagValueItem()
                             }).ConfigureAwait(false);
-
-                            Interlocked.Increment(ref pendingResponseCount);
                         }
                     }
-                }
-                finally {
-                    // We do not call CompleteAsync on the gRPC request stream here, because doing 
-                    // so will also cause the response stream to complete, and we may still be 
-                    // waiting for pending write results. Instead, we will set a flag that the 
-                    // response stream task will monitor to determine if it needs to keep running.
-                    complete = true;
-                }
-            }, BackgroundTaskService, cancellationToken);
-
-            // Stream the results.
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel(0);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    // Read results as long as the request stream has not completed or we are 
-                    // still expecting results from the response stream.
-                    while (!complete || pendingResponseCount > 0) {
-                        if (!await grpcStream.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                            break;
-                        }
-
-                        Interlocked.Decrement(ref pendingResponseCount);
-
-                        if (grpcStream.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult(), ct).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    if (!ct.IsCancellationRequested) {
-                        // Notify the gRPC server that no more request items are coming.
+                    finally {
                         await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
                     }
-                }
-            }, true, BackgroundTaskService, cancellationToken);
+                }, ctSource.Token);
 
-            return result.Reader;
+                while (await grpcStream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    yield return grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult();
+                }
+            }
         }
 
     }

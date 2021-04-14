@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
+
 using IntelligentPlant.BackgroundTasks;
-
-using Microsoft.Extensions.Logging;
-
-using GrpcCore = Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
@@ -30,22 +26,19 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc />
-        public async Task<ChannelReader<Adapter.RealTimeData.TagValueQueryResult>> Subscribe(
+        public async IAsyncEnumerable<Adapter.RealTimeData.TagValueQueryResult> Subscribe(
             IAdapterCallContext context, 
             CreateSnapshotTagValueSubscriptionRequest request, 
-            ChannelReader<TagValueSubscriptionUpdate> channel,
+            IAsyncEnumerable<TagValueSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request, channel);
 
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
-            var grpcStream = client.CreateSnapshotPushChannel(GetCallOptions(context, cancellationToken));
 
             var createSubscriptionMessage = new CreateSnapshotPushChannelMessage() {
-                AdapterId = AdapterId,
-                PublishInterval = request.PublishInterval > TimeSpan.Zero
-                    ? Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(request.PublishInterval)
-                    : Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(TimeSpan.Zero)
+                AdapterId = AdapterId                
             };
             createSubscriptionMessage.Tags.Add(request.Tags?.Where(x => x != null) ?? Array.Empty<string>());
             if (request.Properties != null) {
@@ -54,20 +47,22 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            // Create the subscription.
-            await grpcStream.RequestStream.WriteAsync(new CreateSnapshotPushChannelRequest() { 
-                Create = createSubscriptionMessage
-            }).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcStream = client.CreateSnapshotPushChannel(GetCallOptions(context, ctSource.Token))) {
 
-            // Stream subscription changes.
-            channel.RunBackgroundOperation(async (ch, ct) => { 
-                while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                    while (ch.TryRead(out var update)) {
+                // Create the subscription.
+                await grpcStream.RequestStream.WriteAsync(new CreateSnapshotPushChannelRequest() {
+                    Create = createSubscriptionMessage
+                }).ConfigureAwait(false);
+
+                // Stream subscription changes.
+                Proxy.BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    await foreach (var update in channel.WithCancellation(ct).ConfigureAwait(false)) {
                         if (update == null) {
                             continue;
                         }
 
-                        var msg = new UpdateSnapshotPushChannelMessage() { 
+                        var msg = new UpdateSnapshotPushChannelMessage() {
                             Action = update.Action == Common.SubscriptionUpdateAction.Subscribe
                                 ? SubscriptionUpdateAction.Subscribe
                                 : SubscriptionUpdateAction.Unsubscribe
@@ -77,28 +72,21 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             continue;
                         }
 
-                        await grpcStream.RequestStream.WriteAsync(new CreateSnapshotPushChannelRequest() { 
+                        await grpcStream.RequestStream.WriteAsync(new CreateSnapshotPushChannelRequest() {
                             Update = msg
                         }).ConfigureAwait(false);
                     }
-                }
-            }, BackgroundTaskService, cancellationToken);
+                }, ctSource.Token);
 
-            // Stream the results.
-            var result = ChannelExtensions.CreateTagValueChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                // Read tag values.
-                while (await grpcStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                // Stream the results.
+                while (await grpcStream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     if (grpcStream.ResponseStream.Current == null) {
                         continue;
                     }
 
-                    await result.Writer.WriteAsync(grpcStream.ResponseStream.Current.ToAdapterTagValueQueryResult(), ct).ConfigureAwait(false);
+                    yield return grpcStream.ResponseStream.Current.ToAdapterTagValueQueryResult();
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return result.Reader;
+            }
         }
 
     }

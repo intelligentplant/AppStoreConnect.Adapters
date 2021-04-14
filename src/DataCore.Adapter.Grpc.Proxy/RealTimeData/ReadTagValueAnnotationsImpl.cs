@@ -1,7 +1,8 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
@@ -21,7 +22,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.RealTimeData.TagValueAnnotationQueryResult>> ReadAnnotations(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.RealTimeData.TagValueAnnotationQueryResult> ReadAnnotations(
+            IAdapterCallContext context, 
+            Adapter.RealTimeData.ReadAnnotationsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
@@ -38,25 +44,15 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, cancellationToken));
-
-            var result = ChannelExtensions.CreateTagValueAnnotationChannel(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterTagValueAnnotationQueryResult(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterTagValueAnnotationQueryResult();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
@@ -71,10 +67,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AnnotationId = request.AnnotationId
             };
 
-            var grpcResponse = client.ReadAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken));
-            var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.ReadAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
-            return result.ToAdapterTagValueAnnotation();
+                return result.ToAdapterTagValueAnnotation();
+            }
         }
 
     }

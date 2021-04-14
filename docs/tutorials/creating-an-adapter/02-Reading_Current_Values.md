@@ -32,37 +32,37 @@ private static double SinusoidWave(DateTime sampleTime, TimeSpan offset, double 
 }
 
 
-public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
     IAdapterCallContext context, 
     ReadSnapshotTagValuesRequest request, 
+    [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateRequest(request);
-    var result = Channel.CreateUnbounded<TagValueQueryResult>();
-    var now = DateTime.UtcNow;
+    ValidateInvocation(context, request);
 
-    TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+    await Task.CompletedTask.ConfigureAwait(false);
+
+    var sampleTime = CalculateSampleTime(DateTime.UtcNow);
+
+    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
         foreach (var tag in request.Tags) {
-            if (ct.IsCancellationRequested) {
+            if (ctSource.Token.IsCancellationRequested) {
                 break;
             }
             if (string.IsNullOrWhiteSpace(tag)) {
                 continue;
             }
 
-            ch.TryWrite(new TagValueQueryResult(
+            yield return new TagValueQueryResult(
                 tag,
                 tag,
-                TagValueBuilder
-                    .Create()
-                    .WithUtcSampleTime(now)
-                    .WithValue(SinusoidWave(now, TimeSpan.Zero, 1, 1))
+                new TagValueBuilder()
+                    .WithUtcSampleTime(sampleTime)
+                    .WithValue(SinusoidWave(sampleTime, TimeSpan.Zero, 60, 1))
                     .Build()
-            ));
+            );
         }
-    }, result.Writer, true, cancellationToken);
-
-    return Task.FromResult(result.Reader);
+    }
 }
 ```
 
@@ -70,47 +70,51 @@ The `CalculateSampleTime` method will take a timestamp and round it down to the 
 
 The `SinusoidWave` method will calculate a value for us using the provided sample time, period, and amplitude. The wave is assumed to start at midnight on the current UTC day, but can be offset using the `offset` parameter.
 
-Let's walk through the `ReadSnapshotTagValues` method. First of all, we validate the request that is passed to the method:
+Let's look at the `ReadSnapshotTagValues` method. Note that the return type for the method is `IAsyncEnumerable<T>`. Many adapter feature methods return this type, which allows for values to be streamed from an adapter as they are retrieved or computed, instead of using a waterfall approach that returns an entire data set on one go. By adding the `async` keyword to the declaration, we can make our method an async iterator (i.e. we can `yield return` results as they are calculated). Since we have declared the method to be `async`, we annotate the `CancellationToken` parameter with the `[EnumeratorCancellation]` attribute, otherwise we will get compiler warning `CS8424`.
+
+Now, let's walk through the method implementation. First of all, we validate the `IAdapterCallContext` and request object that are passed to the method:
 
 ```csharp
-ValidateRequest(request);
+ValidateInvocation(context, request);
 ```
 
-The `ValidateRequest<TRequest>` method is inherited from `AdapterBase`. It will throw an exception if the request object is `null`, or if it fails validation using the [System.Componentmodel.DataAnnotations.Validator](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validator) class.
+The `ValidateInvocation` method is inherited from our base class. It will throw an exception if the context or request objects are `null`, or if the request object fails validation using the [System.Componentmodel.DataAnnotations.Validator](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validator) class.
 
-Next, we create our response channel:
+Next, we `await` on `Task.CompletedTask`:
 
 ```csharp
-var result = Channel.CreateUnbounded<TagValueQueryResult>();
+await Task.CompletedTask.ConfigureAwait(false);
 ```
 
-Adapter features make extensive use of [System.Threading.Channels](https://www.nuget.org/packages/System.Threading.Channels/) to publish query results to consumers.
+This step is only necessary to satisfy compiler warning `CS1998`, as the rest of our implementation is actually synchronous; if we were `await`-ing on another call inside our method, it would not be required.
 
-After creating the channel, we get the current UTC time (which we will use when calculating values), and then we kick off a background operation that will publish the snapshot values to the result channel:
+Next, we get the current UTC time (which we will use when calculating values), and then we start our loop that will emit results back to the caller:
 
 ```csharp
-TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
     foreach (var tag in request.Tags) {
+        if (ctSource.Token.IsCancellationRequested) {
+            break;
+        }
         if (string.IsNullOrWhiteSpace(tag)) {
             continue;
         }
 
-        ch.TryWrite(new TagValueQueryResult(
+        yield return new TagValueQueryResult(
             tag,
             tag,
-            TagValueBuilder
-                .Create()
-                .WithUtcSampleTime(now)
-                .WithValue(SinusoidWave(now, TimeSpan.Zero, 60, 1)) // 60s period
+            new TagValueBuilder()
+                .WithUtcSampleTime(sampleTime)
+                .WithValue(SinusoidWave(sampleTime, TimeSpan.Zero, 60, 1))
                 .Build()
-        ));
+        );
     }
-}, result.Writer, true, cancellationToken);
+}
 ```
 
-The `TaskScheduler` property is the `IBackgroundTaskService` that was passed into our constructor. A default implementation is provided if the constructor parameter was `null`. The `QueueBackgroundChannelOperation` extension method allows us to write values to our channel's writer (`result.Writer` in this case) in a background task. The `true` parameter indicates that the channel's writer should be completed once the background operation finishes.
+We use the `CreateCancellationTokenSource` method inherited from our base class to create a `CancellationTokenSource` instance that will request cancellation when our `cancellationToken` parameter is cancelled, or if our adapter is stopped
 
-The background operation itself is specified using a lambda function that accepts the channel writer, and a `CancellationToken` that will fire when either the `cancellationToken` parameter fires, or the adapter is disposed. In our lambda, we simply write a value into the channel for every tag specified in the request. The [TagValueBuilder](/src/DataCore.Adapter/RealTimeData/TagValueBuilder.cs) class simplifies the creation of tag values.
+The [TagValueBuilder](/src/DataCore.Adapter/RealTimeData/TagValueBuilder.cs) class simplifies the creation of tag values.
 
 Note that we don't do any sort of checks on whether the tags specified in the request are valid (beyond ensuring that they are not `null` or white space); we will add this in later. Also, at this stage, all tags in the request will return exactly the same result.
 
@@ -139,20 +143,19 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         }
 
         var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
-        var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
+
+        Console.WriteLine();
+        Console.WriteLine("  Snapshot Values:");
+        await foreach (var value in readSnapshotFeature.ReadSnapshotTagValues(
             context,
-            new ReadSnapshotTagValuesRequest() { 
-                Tags = new[] { 
+            new ReadSnapshotTagValuesRequest() {
+                Tags = new[] {
                     "Example 1",
                     "Example 2"
                 }
             },
             cancellationToken
-        );
-
-        Console.WriteLine();
-        Console.WriteLine("  Snapshot Values:");
-        await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
+        )) {
             Console.WriteLine($"    [{value.TagName}] - {value.Value}");
         }
 

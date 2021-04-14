@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Grpc.Core;
@@ -12,7 +14,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="TagSearchService.TagSearchServiceBase"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class TagSearchServiceImpl : TagSearchService.TagSearchServiceBase {
 
         /// <summary>
@@ -46,14 +47,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var prop) || prop == null) {
-                    continue;
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcAdapterProperty()).ConfigureAwait(false);
+                    }
                 }
-
-                await responseStream.WriteAsync(prop.ToGrpcAdapterProperty()).ConfigureAwait(false);
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
             }
         }
 
@@ -78,14 +86,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var tag) || tag == null) {
-                    continue;
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
+                    }
                 }
-
-                await responseStream.WriteAsync(tag.ToGrpcTagDefinition()).ConfigureAwait(false);
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
             }
         }
 
@@ -103,14 +118,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var tag) || tag == null) {
-                    continue;
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
+                    }
                 }
-
-                await responseStream.WriteAsync(tag.ToGrpcTagDefinition()).ConfigureAwait(false);
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
             }
         }
 

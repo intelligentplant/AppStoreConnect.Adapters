@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using System.Security;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -88,27 +94,29 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false);
-                var result = new List<EventMessage>();
+            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<EventMessage>();
 
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var msg) || msg == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxEventMessagesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxEventMessagesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                        break;
-                    }
-
-                    result.Add(msg);
+                    activity.SetResponseItemCountTag(result.Count);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -147,27 +155,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false);
-                var result = new List<EventMessageWithCursorPosition>();
+            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<EventMessageWithCursorPosition>();
 
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var msg) || msg == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxEventMessagesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxEventMessagesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(msg);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -197,7 +208,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write")]
         [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
-        public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -212,45 +223,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var writeChannel = ChannelExtensions.CreateEventMessageWriteChannel(MaxEventMessagesPerWriteRequest);
+            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<WriteEventMessageResult>();
+                    var channel = request.Events.PublishToChannel();
 
-                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var itemsWritten = 0;
-
-                    foreach (var evt in request.Events) {
-                        ++itemsWritten;
-
-                        if (evt == null) {
+                    await foreach (var msg in feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
-                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
+                        if (result.Count > MaxEventMessagesPerWriteRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
                             break;
                         }
 
-                        ch.TryWrite(evt);
-
-                        if (itemsWritten >= MaxEventMessagesPerWriteRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerWriteRequest));
-                            break;
-                        }
+                        result.Add(msg);
                     }
-                }, true, _backgroundTaskService, cancellationToken);
 
-                var resultChannel = await feature.WriteEventMessages(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-                var result = new List<WriteEventMessageResult>(MaxEventMessagesPerWriteRequest);
-
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var res) && res != null) {
-                        result.Add(res);
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

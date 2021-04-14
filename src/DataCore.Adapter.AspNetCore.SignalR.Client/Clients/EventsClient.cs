@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -58,18 +59,25 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
         /// </exception>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannelAsync(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageChannelAsync(
+            string adapterId, 
+            CreateEventMessageSubscriptionRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessage>(
+            await foreach (var item in connection.StreamAsync<EventMessage>(
                 "CreateEventMessageChannel",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -91,10 +99,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <returns>
         ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannelAsync(
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageTopicChannelAsync(
             string adapterId,
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -111,13 +120,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<EventMessage>(
+                await foreach (var item in connection.StreamAsync<EventMessage>(
                     "CreateEventMessageTopicChannel",
                     adapterId,
                     request,
                     channel,
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // We are using ASP.NET Core 2.x, so we cannot use client-to-server streaming. Instead, 
@@ -148,16 +160,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                     Properties = request.Properties,
                     Topics = new [] { topic }
                 };
-                var ch = await connection.StreamAsChannelAsync<EventMessage>(
+                await foreach (var item in connection.StreamAsync<EventMessage>(
                     "CreateEventMessageTopicChannel",
                     adapterId,
                     req,
                     ct
-                ).ConfigureAwait(false);
-
-                while (!ct.IsCancellationRequested) {
-                    var val = await ch.ReadAsync(ct).ConfigureAwait(false);
-                    await result!.Writer.WriteAsync(val, ct).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    await result!.Writer.WriteAsync(item, ct).ConfigureAwait(false);
                 }
             }
 
@@ -180,9 +189,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                             try {
                                 await RunTopicSubscription(topic, ct).ConfigureAwait(false);
                             }
-#pragma warning disable CA1031 // Do not catch general exception types
                             catch { }
-#pragma warning restore CA1031 // Do not catch general exception types
                             finally {
                                 if (subscriptions!.TryRemove(topic, out var cts)) {
                                     cts.Cancel();
@@ -208,21 +215,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                         ProcessTopicSubscriptionChange(request.Topics, true);
                     }
 
-                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (channel.TryRead(out var update)) {
-                            if (update?.Topics == null || !update.Topics.Any()) {
-                                continue;
-                            }
-
-                            ProcessTopicSubscriptionChange(update.Topics, update.Action == SubscriptionUpdateAction.Subscribe);
+                    await foreach (var update in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                        if (update?.Topics == null || !update.Topics.Any()) {
+                            continue;
                         }
+
+                        ProcessTopicSubscriptionChange(update.Topics, update.Action == SubscriptionUpdateAction.Subscribe);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {
@@ -240,7 +243,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
             }, cancellationToken);
 
-            return result;
+            while (await result.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (result.Reader.TryRead(out var item)) {
+                    yield return item;
+                }
+            }
         }
 
 
@@ -269,19 +276,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<EventMessage>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesAsync(
+            string adapterId, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessage>(
+            await foreach (var item in connection.StreamAsync<EventMessage>(
                 "ReadEventMessagesForTimeRange",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -310,19 +324,26 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesAsync(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<EventMessageWithCursorPosition> ReadEventMessagesAsync(
+            string adapterId, 
+            ReadEventMessagesUsingCursorRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<EventMessageWithCursorPosition>(
+            await foreach (var item in connection.StreamAsync<EventMessageWithCursorPosition>(
                 "ReadEventMessagesUsingCursor",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -331,6 +352,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
         /// </param>
         /// <param name="channel">
         ///   The channel that will emit the items to write.
@@ -348,9 +372,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessagesAsync(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken = default) {
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessagesAsync(
+            string adapterId, 
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
             }
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
@@ -359,12 +392,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<WriteEventMessageResult>(
+                await foreach (var item in connection.StreamAsync<WriteEventMessageResult>(
                     "WriteEventMessages",
                     adapterId,
+                    request,
                     channel,
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
@@ -373,31 +410,28 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             _ = Task.Run(async () => { 
                 try {
-                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (channel.TryRead(out var val)) {
-                            if (cancellationToken.IsCancellationRequested) {
-                                break;
-                            }
-                            if (val == null) {
-                                continue;
-                            }
-
-                            var writeResult = await connection.InvokeAsync<WriteEventMessageResult>(
-                                "WriteEventMessage",
-                                adapterId,
-                                val,
-                                cancellationToken
-                            ).ConfigureAwait(false);
-
-                            await result.Writer.WriteAsync(writeResult, cancellationToken).ConfigureAwait(false);
+                    await foreach (var val in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            break;
                         }
+                        if (val == null) {
+                            continue;
+                        }
+
+                        var writeResult = await connection.InvokeAsync<WriteEventMessageResult>(
+                            "WriteEventMessage",
+                            adapterId,
+                            request,
+                            val,
+                            cancellationToken
+                        ).ConfigureAwait(false);
+
+                        await result.Writer.WriteAsync(writeResult, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
                     result.Writer.TryComplete(e);
                 }
                 finally {
@@ -405,7 +439,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
             }, cancellationToken);
 
-            return result.Reader;
+            while (await result.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
+                while (result.Reader.TryRead(out var item)) {
+                    yield return item;
+                }
+            }
         }
 
     }

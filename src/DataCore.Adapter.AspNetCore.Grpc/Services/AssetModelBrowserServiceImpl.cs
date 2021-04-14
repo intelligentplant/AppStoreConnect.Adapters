@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.AssetModel;
+
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -10,7 +14,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="AssetModelBrowserService.AssetModelBrowserServiceBase"/>
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class AssetModelBrowserServiceImpl : AssetModelBrowserService.AssetModelBrowserServiceBase {
 
         /// <summary>
@@ -47,14 +50,18 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var reader = adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var node) || node == null) {
-                    continue;
+                long outputItems = 0;
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
+                        continue;
+                    }
+
+                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
+                    activity.SetResponseItemCountTag(++outputItems);
                 }
-
-                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 
@@ -72,14 +79,18 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var reader = adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var node) || node == null) {
-                    continue;
+                long outputItems = 0;
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
+                        continue;
+                    }
+
+                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
+                    activity.SetResponseItemCountTag(++outputItems);
                 }
-
-                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 
@@ -100,14 +111,18 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var reader = adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var node) || node == null) {
-                    continue;
+                long outputItems = 0;
+                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                    if (node == null) {
+                        continue;
+                    }
+
+                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
+                    activity.SetResponseItemCountTag(++outputItems);
                 }
-
-                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 

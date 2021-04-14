@@ -295,15 +295,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
         /// </returns>
         private async Task RunRemoteHealthSubscription(CancellationToken cancellationToken) {
-            var healthCheckStream = await _client.Value.Adapters.CreateAdapterHealthChannelAsync(
-                _remoteAdapterId, 
-                cancellationToken
-            ).ConfigureAwait(false);
-
-            while (await healthCheckStream.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!healthCheckStream.TryRead(out var _)) {
-                    continue;
-                }
+            await foreach (var item in _client.Value.Adapters.CreateAdapterHealthChannelAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false)) {
                 OnHealthStatusChanged();
             }
         }

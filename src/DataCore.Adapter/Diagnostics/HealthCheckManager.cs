@@ -137,15 +137,17 @@ namespace DataCore.Adapter.Diagnostics {
                         break;
                     }
 
-                    try {
-                        var success = subscriber.Publish(update);
-                        if (!success) {
-                            _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                    using (var publishActivity = Telemetry.ActivitySource.StartActivity("publish_to_subscriber")) {
+                        try {
+                            var success = subscriber.Publish(update);
+                            if (!success) {
+                                _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                            }
                         }
-                    }
-                    catch (OperationCanceledException) { }
-                    catch (Exception e) {
-                        _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        catch (OperationCanceledException) { }
+                        catch (Exception e) {
+                            _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                        }
                     }
                 }
             }
@@ -204,7 +206,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<HealthCheckResult>> Subscribe(
+        public IAsyncEnumerable<HealthCheckResult> Subscribe(
             IAdapterCallContext context, 
             CancellationToken cancellationToken
         ) {
@@ -234,7 +236,7 @@ namespace DataCore.Adapter.Diagnostics {
 
             _subscriptions[subscriptionId] = subscription;
 
-            return Task.FromResult(subscription.Reader);
+            return subscription.ReadAllAsync(cancellationToken);
         }
 
 

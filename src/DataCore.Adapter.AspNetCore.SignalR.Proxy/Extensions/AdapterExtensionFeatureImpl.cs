@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -29,50 +29,80 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
+        protected override async Task<FeatureDescriptor?> GetDescriptorFromRemoteAdapter(
             IAdapterCallContext context,
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context);
             var client = Proxy.GetClient();
-            return client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken)!;
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri!, ctSource.Token).ConfigureAwait(false);
+            }
         }
 
 
         /// <inheritdoc/>
-        protected override Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
+        protected override async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsFromRemoteAdapter(
             IAdapterCallContext context, 
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context);
             var client = Proxy.GetClient();
-            return client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri!, ctSource.Token).ConfigureAwait(false);
+            }
         }
 
 
         /// <inheritdoc/>
-        protected override Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context);
+        protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
+            Proxy.ValidateInvocation(context, request);
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, request, cancellationToken)!;
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, request, ctSource.Token).ConfigureAwait(false);
+            }
         }
 
 
         /// <inheritdoc/>
-        protected override Task<ChannelReader<InvocationResponse>> StreamInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context);
+        protected override async IAsyncEnumerable<InvocationResponse> StreamInternal(
+            IAdapterCallContext context, 
+            InvocationRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request);
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, cancellationToken)!;
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
+            }
         }
 
 
         /// <inheritdoc/>
-        protected override Task<ChannelReader<InvocationResponse>> DuplexStreamInternal(IAdapterCallContext context, InvocationRequest request, ChannelReader<InvocationStreamItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
+            IAdapterCallContext context, 
+            DuplexStreamInvocationRequest request, 
+            IAsyncEnumerable<InvocationStreamItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
             var client = Proxy.GetClient();
-            return client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, channel, cancellationToken);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                await foreach (var item in client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, channel, ctSource.Token)) {
+                    yield return item;
+                }
+            }
         }
 
     }

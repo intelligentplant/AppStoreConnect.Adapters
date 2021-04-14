@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -56,7 +57,7 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<ConfigurationChange>> Subscribe(
+        public IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 
             ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
@@ -73,11 +74,18 @@ namespace DataCore.Adapter.Diagnostics {
 
             ValidationExtensions.ValidateObject(request);
 
-            var subscription = CreateSubscription(context, null, cancellationToken);
+            var subscription = CreateSubscription(
+                context, 
+                string.Concat(WellKnownFeatures.Diagnostics.ConfigurationChanges, nameof(Subscribe)), 
+                null, 
+                cancellationToken
+            );
+
             if (request.ItemTypes != null && request.ItemTypes.Any()) {
                 subscription.AddTopics(request.ItemTypes);
             }
-            return Task.FromResult(subscription.Reader);
+
+            return subscription.ReadAllAsync(cancellationToken);
         }
 
 

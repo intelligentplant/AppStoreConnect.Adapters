@@ -22,7 +22,10 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.CreateAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -30,7 +33,10 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.UpdateAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc />
@@ -38,7 +44,10 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             Proxy.ValidateInvocation(context, request);
 
             var client = GetClient();
-            return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                return await client.TagValueAnnotations.DeleteAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.Diagnostics {
 
@@ -31,7 +30,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   A channel reader that will emit configuration changes as they occur.
         /// </returns>
-        Task<ChannelReader<ConfigurationChange>> Subscribe(
+        IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 
             ConfigurationChangesSubscriptionRequest request,
             CancellationToken cancellationToken

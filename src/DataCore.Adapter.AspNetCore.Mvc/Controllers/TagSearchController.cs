@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Microsoft.AspNetCore.Mvc;
@@ -63,7 +65,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagInfo))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
@@ -71,21 +73,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false);
-                var tags = new List<AdapterProperty>();
+            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<AdapterProperty>();
 
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var prop) || prop == null) {
-                        continue;
+                    await foreach (var item in feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        result.Add(item);
                     }
-                    tags.Add(prop);
-                }
 
-                return Ok(tags); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -153,21 +158,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false);
-                var tags = new List<TagDefinition>();
+            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagDefinition>();
 
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var tag) || tag == null) {
-                        continue;
+                    await foreach (var item in feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        result.Add(item);
                     }
-                    tags.Add(tag);
-                }
 
-                return Ok(tags); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -240,28 +248,31 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagSearch))); // 400
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagInfo))); // 400
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false);
-                var tags = new List<TagDefinition>();
+            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagDefinition>();
 
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var tag) || tag == null) {
-                        continue;
+                    await foreach (var item in feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        result.Add(item);
                     }
-                    tags.Add(tag);
-                }
 
-                return Ok(tags); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                    activity.SetResponseItemCountTag(result.Count);
+
+                    return Ok(result); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

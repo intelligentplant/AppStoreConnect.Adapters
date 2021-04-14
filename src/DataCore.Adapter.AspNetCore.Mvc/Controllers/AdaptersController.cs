@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Diagnostics;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -105,13 +107,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 // Don't allow arbitrarily large queries!
                 request.PageSize = 100;
             }
-            var adapters = await _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken).ConfigureAwait(false);
+            var adapters = _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken);
 
             var result = new List<AdapterDescriptor>(request.PageSize);
-            while (await adapters.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (adapters.TryRead(out var item)) {
-                    result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
-                }
+            await foreach (var item in adapters.ConfigureAwait(false)) {
+                result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
             }
 
             return Ok(result); // 200
@@ -175,11 +175,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+            using (Telemetry.ActivitySource.StartCheckHealthActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+                try {
+                    return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
+                }
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

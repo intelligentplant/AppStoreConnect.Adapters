@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -126,27 +132,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagValueQueryResult>();
 
-                var result = new List<TagValueQueryResult>(request.Tags.Count());
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxSamplesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(value);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -245,27 +254,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagValueQueryResult>();
 
-                var result = new List<TagValueQueryResult>(request.Tags.Count());
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxSamplesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(value);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -368,27 +380,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagValueQueryResult>();
 
-                var result = new List<TagValueQueryResult>(request.Tags.Count());
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxSamplesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(value);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -459,27 +474,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<TagValueQueryResult>();
 
-                var result = new List<TagValueQueryResult>(request.Tags.Count());
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxSamplesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(value);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -599,27 +617,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            try {
-                var reader = await feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<ProcessedTagValueQueryResult>();
 
-                var result = new List<ProcessedTagValueQueryResult>(request.Tags.Count());
-                while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!reader.TryRead(out var value) || value == null) {
-                        continue;
+                    await foreach (var msg in feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
+                            continue;
+                        }
+
+                        if (result.Count > MaxSamplesPerReadRequest) {
+                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                            break;
+                        }
+
+                        result.Add(msg);
                     }
 
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
 
-                    result.Add(value);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -646,7 +667,37 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
-        public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
+        public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
+            return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Requests the aggregate functions that can be specified when requesting processed data.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain descriptors for the aggregated function names that can 
+        ///   be specified.
+        /// </returns>
+        /// <remarks>
+        ///   Processed data queries are used to request aggregated values for tags. The functions 
+        ///   supported vary by data source. The <see cref="DefaultDataFunctions"/> class defines
+        ///   constants for commonly-supported aggregate functions.
+        /// </remarks>
+        /// <seealso cref="DefaultDataFunctions"/>
+        [HttpPost]
+        [Route("{adapterId}/supported-aggregations")]
+        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, GetSupportedDataFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -660,12 +711,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var result = await (await feature.GetSupportedDataFunctions(callContext, cancellationToken).ConfigureAwait(false)).ToEnumerable(-1, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+                var result = new List<DataFunctionDescriptor>();
+
+                await foreach (var msg in feature.GetSupportedDataFunctions(callContext, request, cancellationToken).ConfigureAwait(false)) {
+                    if (msg == null) {
+                        continue;
+                    }
+
+                    if (result.Count > MaxSamplesPerReadRequest) {
+                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
+                        break;
+                    }
+
+                    result.Add(msg);
+                }
+
+                activity.SetResponseItemCountTag(result.Count);
+
                 return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
             }
         }
 
@@ -695,7 +759,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -709,46 +773,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<WriteTagValueResult>();
+                    var channel = request.Values.PublishToChannel();
 
-                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var itemsWritten = 0;
-
-                    foreach (var value in request.Values) {
-                        ++itemsWritten;
-
-                        if (value == null) {
+                    await foreach (var msg in feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
-                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            break;
-                        }
-
-                        ch.TryWrite(value);
-
-                        if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                        if (result.Count > MaxSamplesPerWriteRequest) {
                             Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
                             break;
                         }
+
+                        result.Add(msg);
                     }
-                }, true, _backgroundTaskService, cancellationToken);
 
-                var resultChannel = await feature.WriteSnapshotTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-                var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var res) && res != null) {
-                        result.Add(res);
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 
@@ -760,7 +808,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
         /// </param>
-        /// <param name="values">
+        /// <param name="request">
         ///   The values to write.
         /// </param>
         /// <param name="cancellationToken">
@@ -778,7 +826,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/write/history")]
         [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
-        public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequest values, CancellationToken cancellationToken) {
+        public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -792,46 +840,30 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            try {
-                var writeChannel = ChannelExtensions.CreateTagValueWriteChannel(MaxSamplesPerWriteRequest);
+            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
+                try {
+                    var result = new List<WriteTagValueResult>();
+                    var channel = request.Values.PublishToChannel();
 
-                writeChannel.Writer.RunBackgroundOperation(async (ch, ct) => {
-                    var itemsWritten = 0;
-
-                    foreach (var value in values.Values) {
-                        ++itemsWritten;
-
-                        if (value == null) {
+                    await foreach (var msg in feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (msg == null) {
                             continue;
                         }
 
-                        if (!await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                            break;
-                        }
-
-                        ch.TryWrite(value);
-
-                        if (itemsWritten >= MaxSamplesPerWriteRequest) {
+                        if (result.Count > MaxSamplesPerWriteRequest) {
                             Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
                             break;
                         }
+
+                        result.Add(msg);
                     }
-                }, true, _backgroundTaskService, cancellationToken);
 
-                var resultChannel = await feature.WriteHistoricalTagValues(callContext, writeChannel, cancellationToken).ConfigureAwait(false);
-
-                var result = new List<WriteTagValueResult>(MaxSamplesPerWriteRequest);
-
-                while (await resultChannel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (resultChannel.TryRead(out var res) && res != null) {
-                        result.Add(res);
-                    }
+                    activity.SetResponseItemCountTag(result.Count);
+                    return Ok(result); // 200
                 }
-
-                return Ok(result); // 200
-            }
-            catch (SecurityException) {
-                return Forbid(); // 403
+                catch (SecurityException) {
+                    return Forbid(); // 403
+                }
             }
         }
 

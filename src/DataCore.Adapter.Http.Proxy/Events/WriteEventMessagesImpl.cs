@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -23,33 +25,30 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
 
         /// <inheritdoc />
-        public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            IAdapterCallContext context, 
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
 
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
+                var items = (await channel.ToEnumerable(1000, ctSource.Token).ConfigureAwait(false)).ToArray();
 
-                const int maxItems = 1000;
-                var items = (await channel.ToEnumerable(maxItems, ct).ConfigureAwait(false)).ToArray();
-                if (items.Length >= maxItems) {
-                    Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
-                }
-
-                var request = new WriteEventMessagesRequest() { 
-                    Events = items
+                var req = new WriteEventMessagesRequestExtended() {
+                    Events = items,
+                    Properties = request.Properties
                 };
 
-                var clientResponse = await client.Events.WriteEventMessagesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+                var clientResponse = await client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }

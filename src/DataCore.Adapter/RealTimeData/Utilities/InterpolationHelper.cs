@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -515,22 +516,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The sample times.
         /// </param>
         /// <param name="rawData">
-        ///   A channel that will provide the raw data for the calculations.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use when writing values into the channel.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the raw data for the calculations.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will emit the calculated tag values.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the calculated tag values.
         /// </returns>
-        public static ChannelReader<TagValueQueryResult> GetPreviousValuesAtSampleTimes(
+        public static IAsyncEnumerable<TagValueQueryResult> GetPreviousValuesAtSampleTimes(
             TagSummary tag, 
             IEnumerable<DateTime> utcSampleTimes, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            IBackgroundTaskService backgroundTaskService, 
+            IAsyncEnumerable<TagValueQueryResult> rawData, 
             CancellationToken cancellationToken = default
         ) {
             if (tag == null) {
@@ -539,17 +536,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (utcSampleTimes == null) {
                 throw new ArgumentNullException(nameof(utcSampleTimes));
             }
+            if (rawData == null) {
+                throw new ArgumentNullException(nameof(rawData));
+            }
 
-            var result = Channel.CreateBounded<TagValueQueryResult>(new BoundedChannelOptions(500) {
-                FullMode = BoundedChannelFullMode.Wait,
-                AllowSynchronousContinuations = false,
-                SingleReader = true,
-                SingleWriter = true
-            });
-
-            result.Writer.RunBackgroundOperation((ch, ct) => GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, ch, ct), true, backgroundTaskService, cancellationToken);
-
-            return result;
+            return GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, cancellationToken);
         }
 
 
@@ -563,28 +554,25 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The sample times.
         /// </param>
         /// <param name="rawData">
-        ///   A channel that will provide the raw data for the calculations.
-        /// </param>
-        /// <param name="resultChannel">
-        ///   The channel to write the results to.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the raw data for the calculations.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task"/> that will perform the calculations.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the results.
         /// </returns>
-        private static async Task GetPreviousValuesAtTimes(
+        private static async IAsyncEnumerable<TagValueQueryResult> GetPreviousValuesAtTimes(
             TagSummary tag, 
             IEnumerable<DateTime> utcSampleTimes, 
-            ChannelReader<TagValueQueryResult> rawData, 
-            ChannelWriter<TagValueQueryResult> resultChannel, 
+            IAsyncEnumerable<TagValueQueryResult> rawData,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var sampleTimesEnumerator = utcSampleTimes.GetEnumerator();
             try {
                 if (!sampleTimesEnumerator.MoveNext()) {
-                    return;
+                    yield break;
                 }
 
                 var nextSampleTime = sampleTimesEnumerator.Current;
@@ -592,10 +580,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 TagValueExtended value0 = null!;
                 var sampleTimesRemaining = true;
 
-                while (await rawData.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    if (!rawData.TryRead(out var val)) {
-                        break;
-                    }
+                await foreach (var val in rawData.WithCancellation(cancellationToken).ConfigureAwait(false)) {
                     if (val == null || !sampleTimesRemaining) {
                         continue;
                     }
@@ -617,9 +602,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                                 continue;
                             }
 
-                            if (await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                                resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
-                            }
+                            yield return TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue);
                         }
                     }
                 }
@@ -634,8 +617,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
                     
-                    if (interpolatedValue != null && await resultChannel.WaitToWriteAsync(cancellationToken).ConfigureAwait(false)) {
-                        resultChannel.TryWrite(TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue));
+                    if (interpolatedValue != null) {
+                        yield return TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue);
                     }
                 }
             }

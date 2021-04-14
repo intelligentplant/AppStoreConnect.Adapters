@@ -1,5 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Diagnostics {
@@ -31,6 +31,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// </returns>
         Task<HealthCheckResult> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken);
 
+
         /// <summary>
         /// Subscribes to receive adapter health check updates.
         /// </summary>
@@ -42,9 +43,9 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The cancellation token for the subscription.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the health check updates.
         /// </returns>
-        Task<ChannelReader<HealthCheckResult>> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken);
+        IAsyncEnumerable<HealthCheckResult> Subscribe(IAdapterCallContext context, CancellationToken cancellationToken);
 
     }
 }

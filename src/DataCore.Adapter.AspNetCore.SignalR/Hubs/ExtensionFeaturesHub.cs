@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -46,11 +50,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            return (await resolved.Feature.GetDescriptor(
-                adapterCallContext, 
-                featureUri, 
-                Context.ConnectionAborted
-            ).ConfigureAwait(false))!;
+            using (Telemetry.ActivitySource.StartGetDescriptorActivity(resolved.Adapter.Descriptor.Id, featureUri)) {
+                return (await resolved.Feature.GetDescriptor(
+                    adapterCallContext,
+                    featureUri,
+                    Context.ConnectionAborted
+                ).ConfigureAwait(false))!;
+            }
         }
 
 
@@ -85,13 +91,15 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            var ops = await resolved.Feature.GetOperations(
-                adapterCallContext,
-                featureUri,
-                Context.ConnectionAborted
-            ).ConfigureAwait(false);
+            using (Telemetry.ActivitySource.StartGetOperationsActivity(resolved.Adapter.Descriptor.Id, featureUri)) {
+                var ops = await resolved.Feature.GetOperations(
+                    adapterCallContext,
+                    featureUri,
+                    Context.ConnectionAborted
+                ).ConfigureAwait(false);
 
-            return ops?.Where(x => x != null)?.ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>();
+                return ops?.Where(x => x != null)?.ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>();
+            }
         }
 
 
@@ -126,13 +134,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-#pragma warning disable CS8603 // Possible null reference return.
-            return await resolved.Feature.Invoke(
-                adapterCallContext, 
-                request, 
-                Context.ConnectionAborted
-            ).ConfigureAwait(false);
-#pragma warning restore CS8603 // Possible null reference return.
+            using (Telemetry.ActivitySource.StartInvokeActivity(resolved.Adapter.Descriptor.Id, request)) {
+                return await resolved.Feature.Invoke(
+                    adapterCallContext,
+                    request,
+                    Context.ConnectionAborted
+                ).ConfigureAwait(false);
+            }
         }
 
 
@@ -151,9 +159,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<InvocationResponse>> InvokeStreamingExtension(
+        public async IAsyncEnumerable<InvocationResponse> InvokeStreamingExtension(
             string adapterId,
             InvocationRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
@@ -171,13 +180,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-            return await resolved.Feature.Stream(
-                adapterCallContext,
-                request,
-                cancellationToken
-            ).ConfigureAwait(false);
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+            using (Telemetry.ActivitySource.StartStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in resolved.Feature.Stream(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }
         }
 
 #if NETSTANDARD2_0 == false
@@ -200,10 +214,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
-        public async Task<ChannelReader<InvocationResponse>> InvokeDuplexStreamingExtension(
+        public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
-            InvocationRequest request,
-            ChannelReader<InvocationStreamItem> channel,
+            DuplexStreamInvocationRequest request,
+            IAsyncEnumerable<InvocationStreamItem> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
@@ -221,14 +236,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-            return await resolved.Feature.DuplexStream(
-                adapterCallContext,
-                request,
-                channel!,
-                cancellationToken
-            ).ConfigureAwait(false);
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+            using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in resolved.Feature.DuplexStream(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++outputItems;
+                        yield return item;
+                    }
+                }
+                finally {
+                    Activity.Current.SetResponseItemCountTag(outputItems);
+                }
+            }
         }
 
 #else
@@ -240,17 +259,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The adapter to query.
         /// </param>
         /// <param name="request">
-        ///   The URI of the operation to invoke.
+        ///   The request message.
+        /// </param>
+        /// <param name="streamItem">
+        ///   The stream item.
         /// </param>
         /// <returns>
         ///   The operation result.
         /// </returns>
         public async Task<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
-            InvocationRequest request
+            DuplexStreamInvocationRequest request,
+            InvocationStreamItem streamItem
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             ValidateObject(request);
+            ValidateObject(streamItem);
 
             var operationId = request.OperationId.EnsurePathHasTrailingSlash();
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
@@ -268,10 +292,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 var cancellationToken = ctSource.Token;
                 try {
                     var inChannel = Channel.CreateUnbounded<InvocationStreamItem>();
+                    inChannel.Writer.TryWrite(streamItem);
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel, cancellationToken).ConfigureAwait(false);
-                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
+                        var result = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        Activity.Current.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
+                    }
                 }
                 finally {
                     ctSource.Cancel();

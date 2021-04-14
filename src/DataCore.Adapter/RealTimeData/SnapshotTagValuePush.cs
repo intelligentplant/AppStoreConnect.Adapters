@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -54,7 +55,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         public SnapshotTagValuePush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) 
             : base(options, backgroundTaskService, logger) {
-            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTagSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ProcessTagSubscriptionChangesChannel,
+                DisposedToken
+            );
         }
 
 
@@ -77,9 +81,9 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             return async (context, tags, cancellationToken) => {
-                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                var ch = feature.GetTags(context, new GetTagsRequest() {
                     Tags = tags?.ToArray()!
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
                 return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
             };
@@ -114,9 +118,9 @@ namespace DataCore.Adapter.RealTimeData {
                     return Array.Empty<TagIdentifier>();
                 }
 
-                var ch = await feature.GetTags(context, new GetTagsRequest() {
+                var ch = feature.GetTags(context, new GetTagsRequest() {
                     Tags = tags?.ToArray()!
-                }, cancellationToken).ConfigureAwait(false);
+                }, cancellationToken);
 
                 return await ch.ToEnumerable(tags.Count(), cancellationToken).ConfigureAwait(false);
             };
@@ -124,7 +128,13 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public async Task<ChannelReader<TagValueQueryResult>> Subscribe(IAdapterCallContext context, CreateSnapshotTagValueSubscriptionRequest request, ChannelReader<TagValueSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> Subscribe(
+            IAdapterCallContext context, 
+            CreateSnapshotTagValueSubscriptionRequest request, 
+            IAsyncEnumerable<TagValueSubscriptionUpdate> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (IsDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
@@ -139,18 +149,24 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var subscription = CreateSubscription(context, request, cancellationToken);
-            if (request.Tags != null && request.Tags.Any()) {
-                await OnTagsAddedToSubscription(
-                    subscription, 
-                    await ResolveTags(context, request.Tags, cancellationToken).ConfigureAwait(false), 
-                    cancellationToken
-                ).ConfigureAwait(false);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
+                var subscription = CreateSubscription<ISnapshotTagValuePush>(context, nameof(Subscribe), request, ctSource.Token);
+                if (request.Tags != null && request.Tags.Any()) {
+                    await OnTagsAddedToSubscription(subscription, await ResolveTags(context, request.Tags, cancellationToken).ConfigureAwait(false), ctSource.Token).ConfigureAwait(false);
+                }
+
+                BackgroundTaskService.QueueBackgroundWorkItem(
+                    ct => RunSubscriptionChangesListener(subscription, channel, ct),
+                    null,
+                    true,
+                    subscription.CancellationToken,
+                    ctSource.Token
+                );
+
+                await foreach (var item in subscription.ReadAllAsync(ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
             }
-
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChangesListener(subscription, channel, ct), subscription.CancellationToken);
-
-            return subscription.Reader;
         }
 
 
@@ -526,33 +542,87 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The long-running task.
         /// </returns>
-        private async Task RunSubscriptionChangesListener(TagValueSubscriptionChannel subscription, ChannelReader<TagValueSubscriptionUpdate> channel, CancellationToken cancellationToken) {
-            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (channel.TryRead(out var item)) {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (item?.Tags == null) {
-                        continue;
-                    }
+        private async Task RunSubscriptionChangesListener(TagValueSubscriptionChannel subscription, IAsyncEnumerable<TagValueSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+            await foreach (var item in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (item?.Tags == null) {
+                    continue;
+                }
 
-                    var topics = item.Tags.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-                    if (topics.Length == 0) {
-                        continue;
-                    }
+                var topics = item.Tags.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+                if (topics.Length == 0) {
+                    continue;
+                }
 
-                    var tags = await ResolveTags(subscription.Context, topics, cancellationToken).ConfigureAwait(false);
-                    tags = tags.Where(x => x != null).ToArray();
-                    if (!tags.Any()) {
-                        continue;
-                    }
+                var tags = await ResolveTags(subscription.Context, topics, cancellationToken).ConfigureAwait(false);
+                tags = tags.Where(x => x != null).ToArray();
+                if (!tags.Any()) {
+                    continue;
+                }
 
-                    if (item.Action == SubscriptionUpdateAction.Subscribe) {
-                        await OnTagsAddedToSubscription(subscription, tags, cancellationToken).ConfigureAwait(false);
-                    }
-                    else {
-                        OnTagsRemovedFromSubscription(subscription, tags);
-                    }
+                if (item.Action == SubscriptionUpdateAction.Subscribe) {
+                    await OnTagsAddedToSubscription(subscription, tags, cancellationToken).ConfigureAwait(false);
+                }
+                else {
+                    OnTagsRemovedFromSubscription(subscription, tags);
                 }
             }
+        }
+
+
+        /// <summary>
+        /// A method compatible with <see cref="IReadSnapshotTagValues.ReadSnapshotTagValues"/> 
+        /// that can be used when the <see cref="SnapshotTagValuePush"/> cache is being used to 
+        /// satisfy snapshot tag value polling requests for an adapter.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   The data query.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A channel that will complete once the request has completed.
+        /// </returns>
+        /// <remarks>
+        ///   When <see cref="SnapshotTagValuePushOptions.KeepCurrentValuesForUnsubscribedTags"/> 
+        ///   is <see langword="false"/>, <see cref="ReadSnapshotTagValues"/> will only return 
+        ///   values for tags that have subscribers.
+        /// </remarks>
+        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var tags = request.Tags?.ToArray() ?? Array.Empty<string>();
+            if (tags == null) {
+                return Task.FromResult(Array.Empty<TagValueQueryResult>().PublishToChannel());
+            }
+
+            var result = ChannelExtensions.CreateTagValueChannel();
+
+            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+                var tagIdentifiers = await ResolveTags(context, tags, ct).ConfigureAwait(false);
+                foreach (var item in tagIdentifiers) {
+                    if (!_currentValueByTagId.TryGetValue(item.Id, out var val)) {
+                        continue;
+                    }
+
+                    await ch.WriteAsync(val, ct).ConfigureAwait(false);
+                }
+            }, true, BackgroundTaskService, cancellationToken);
+
+            return Task.FromResult(result.Reader);
         }
 
 

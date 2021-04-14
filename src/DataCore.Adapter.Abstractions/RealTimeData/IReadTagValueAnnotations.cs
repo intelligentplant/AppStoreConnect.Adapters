@@ -1,5 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -28,9 +28,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel containing the annotations for the requested tags.
+        ///   An <see cref="IAsyncEnumerable{T}"/> containing the annotations for the requested tags.
         /// </returns>
-        Task<ChannelReader<TagValueAnnotationQueryResult>> ReadAnnotations(
+        IAsyncEnumerable<TagValueAnnotationQueryResult> ReadAnnotations(
             IAdapterCallContext context, 
             ReadAnnotationsRequest request, 
             CancellationToken cancellationToken

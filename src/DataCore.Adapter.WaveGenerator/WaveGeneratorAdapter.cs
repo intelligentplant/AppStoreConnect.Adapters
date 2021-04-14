@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -508,70 +508,87 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<AdapterProperty> GetTagProperties(
+            IAdapterCallContext context, 
+            GetTagPropertiesRequest request, 
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            return Task.FromResult(s_tagPropertyDefinitions.PublishToChannel());
+            return s_tagPropertyDefinitions.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request).ToAsyncEnumerable(cancellationToken);
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> GetTags(
+            IAdapterCallContext context, 
+            GetTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => { 
-                foreach (var item in request.Tags) {
-                    if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
-                        continue;
-                    }
-                    await ch.WriteAsync(ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All), ct).ConfigureAwait(false);
+            await Task.CompletedTask.ConfigureAwait(false);
+
+            foreach (var item in request.Tags) {
+                if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
+                    continue;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+                yield return ToTagDefinition(tagOptions?.Name ?? item, tagOptions!, TagDefinitionFields.All);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagDefinition>> FindTags(IAdapterCallContext context, FindTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> FindTags(
+            IAdapterCallContext context, 
+            FindTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagDefinitionChannel();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
+            await Task.CompletedTask.ConfigureAwait(false);
 
-                if (string.IsNullOrEmpty(request.Name)) {
-                    // No name filter; we will just select a page of results from the available definitions.
-                    selectedItems = _tagDefinitions
-                        .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
-                        .SelectPage(request)
-                        .ToArray();
-                }
-                else {
-                    selectedItems = _tagDefinitions
-                        .Where(x => x.Key.Like(request.Name!))
-                        .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
-                        .SelectPage(request)
-                        .ToArray();
-                }
+            IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
 
-                foreach (var item in selectedItems) {
-                    await ch.WriteAsync(ToTagDefinition(item.Key, item.Value, request.ResultFields), ct).ConfigureAwait(false);
-                }
-            }, true, BackgroundTaskService, cancellationToken);
+            if (string.IsNullOrEmpty(request.Name)) {
+                // No name filter; we will just select a page of results from the available definitions.
+                selectedItems = _tagDefinitions
+                    .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                    .SelectPage(request)
+                    .ToArray();
+            }
+            else {
+                selectedItems = _tagDefinitions
+                    .Where(x => x.Key.Like(request.Name!))
+                    .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                    .SelectPage(request)
+                    .ToArray();
+            }
 
-            return Task.FromResult(result.Reader);
+            foreach (var item in selectedItems) {
+                 yield return ToTagDefinition(item.Key, item.Value, request.ResultFields);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.CompletedTask.ConfigureAwait(false);
+            
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
                 var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
                 foreach (var tag in request.Tags) {
+                    ctSource.Token.ThrowIfCancellationRequested();
+
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -583,25 +600,30 @@ namespace DataCore.Adapter.WaveGenerator {
                         .WithValue(CalculateValue(sampleTime, tagOptions!))
                         .Build();
 
-                    await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                    yield return new TagValueQueryResult(tagId, tagId, val);
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadRawTagValues(IAdapterCallContext context, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context, 
+            ReadRawTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.CompletedTask.ConfigureAwait(false);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 var sampleInterval = GetSampleInterval();
                 var startTime = RoundDownToNearestSampleTime(request.UtcStartTime, sampleInterval);
                 var endTime = RoundUpToNearestSampleTime(request.UtcEndTime, sampleInterval);
 
                 foreach (var tag in request.Tags) {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -610,6 +632,8 @@ namespace DataCore.Adapter.WaveGenerator {
                     var valuesEmittedForTag = 0;
 
                     for (var sampleTime = startTime; sampleTime <= endTime; sampleTime = sampleTime.Add(sampleInterval)) {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         if (request.SampleCount > 0 && valuesEmittedForTag >= request.SampleCount) {
                             // No need to emit any more samples for this tag.
                             break;
@@ -628,26 +652,30 @@ namespace DataCore.Adapter.WaveGenerator {
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();
 
-                        await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                        yield return new TagValueQueryResult(tagId, tagId, val);
 
                         if (request.SampleCount > 0) {
                             ++valuesEmittedForTag;
                         }
                     }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<TagValueQueryResult>> ReadTagValuesAtTimes(IAdapterCallContext context, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
+            IAdapterCallContext context, 
+            ReadTagValuesAtTimesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             ValidateInvocation(context, request);
-            var result = ChannelExtensions.CreateTagValueChannel();
+            await Task.CompletedTask.ConfigureAwait(false);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
+            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
+                    ctSource.Token.ThrowIfCancellationRequested();
                     if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
                         continue;
                     }
@@ -655,17 +683,16 @@ namespace DataCore.Adapter.WaveGenerator {
                     var tagId = tagOptions?.Name ?? tag;
 
                     foreach (var sampleTime in request.UtcSampleTimes) {
+                        ctSource.Token.ThrowIfCancellationRequested();
                         var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
                             .Build();
 
-                        await ch.WriteAsync(new TagValueQueryResult(tagId, tagId, val), ct).ConfigureAwait(false);
+                        yield return new TagValueQueryResult(tagId, tagId, val);
                     }
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }

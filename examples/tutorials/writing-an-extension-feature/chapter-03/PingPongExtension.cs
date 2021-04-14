@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -77,24 +78,22 @@ namespace MyAdapter {
         }
 
 
-        public Task<ChannelReader<PongMessage>> Ping(IAdapterCallContext context, PingMessage message, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<PongMessage> Ping(
+            IAdapterCallContext context, 
+            PingMessage message, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var result = Channel.CreateUnbounded<PongMessage>();
+            while (!cancellationToken.IsCancellationRequested) {
+                // Every second, we will return a new PongMessage
+                await Task.Delay(1000, cancellationToken);
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                while (!ct.IsCancellationRequested) {
-                    // Every second, we will return a new PongMessage
-                    await Task.Delay(1000, ct);
-
-                    var pongMessage = Ping(context, message);
-                    await ch.WriteAsync(pongMessage, ct);
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+                yield return Ping(context, message);
+            }
         }
 
     }

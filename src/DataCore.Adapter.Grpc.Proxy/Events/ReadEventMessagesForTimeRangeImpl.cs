@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
 
@@ -22,7 +21,12 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, Adapter.Events.ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.Events.EventMessage> ReadEventMessagesForTimeRange(
+            IAdapterCallContext context, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<EventsService.EventsServiceClient>();
@@ -44,25 +48,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
                 }
             }
-            var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, cancellationToken));
 
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessage>(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterEventMessage(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterEventMessage();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
 
@@ -22,7 +21,12 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<Adapter.Events.EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, Adapter.Events.ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<Adapter.Events.EventMessageWithCursorPosition> ReadEventMessagesUsingCursor(
+            IAdapterCallContext context, 
+            ReadEventMessagesUsingCursorRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             Proxy.ValidateInvocation(context, request);
 
             var client = CreateClient<EventsService.EventsServiceClient>();
@@ -38,25 +42,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                     grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
                 }
             }
-            var grpcResponse = client.GetEventMessagesUsingCursorPosition(grpcRequest, GetCallOptions(context, cancellationToken));
 
-            var result = ChannelExtensions.CreateEventMessageChannel<Adapter.Events.EventMessageWithCursorPosition>(-1);
-
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await grpcResponse.ResponseStream.MoveNext(ct).ConfigureAwait(false)) {
-                        if (grpcResponse.ResponseStream.Current == null) {
-                            continue;
-                        }
-                        await ch.WriteAsync(grpcResponse.ResponseStream.Current.ToAdapterEventMessageWithCursorPosition(), ct).ConfigureAwait(false);
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
+            using (var grpcResponse = client.GetEventMessagesUsingCursorPosition(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                    if (grpcResponse.ResponseStream.Current == null) {
+                        continue;
                     }
+                    yield return grpcResponse.ResponseStream.Current.ToAdapterEventMessageWithCursorPosition();
                 }
-                finally {
-                    grpcResponse.Dispose();
-                }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }

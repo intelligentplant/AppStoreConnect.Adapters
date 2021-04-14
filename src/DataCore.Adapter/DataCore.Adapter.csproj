@@ -10,12 +10,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(MicrosoftAspNetCoreVersion)" />
+    <PackageReference Include="System.Threading.Channels" Version="$(SystemThreadingChannelsVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>AdapterOptionsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Diagnostics\AdapterEventSourceResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AdapterEventSourceResources.resx</DependentUpon>
     </Compile>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -35,6 +42,10 @@
     <EmbeddedResource Update="AdapterOptionsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AdapterOptionsResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Diagnostics\AdapterEventSourceResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AdapterEventSourceResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

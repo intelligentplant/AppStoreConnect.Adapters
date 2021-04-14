@@ -46,17 +46,14 @@ namespace MyAdapter {
                 var tagSearchFeature = adapter.GetFeature<ITagSearch>();
                 var snapshotPushFeature = adapter.GetFeature<ISnapshotTagValuePush>();
 
-                var tags = await tagSearchFeature.FindTags(
-                        context,
-                        new FindTagsRequest() {
-                            Name = "Sin*",
-                            PageSize = 1
-                        },
-                        cancellationToken
-                    );
-
-                await tags.WaitToReadAsync(cancellationToken);
-                tags.TryRead(out var tag);
+                var tag = await tagSearchFeature.FindTags(
+                    context,
+                    new FindTagsRequest() {
+                        Name = "Sin*",
+                        PageSize = 1
+                    },
+                    cancellationToken
+                ).FirstOrDefaultAsync(cancellationToken);
 
                 Console.WriteLine();
                 Console.WriteLine("[Tag Details]");
@@ -68,19 +65,16 @@ namespace MyAdapter {
                     Console.WriteLine($"    - {prop.Name} = {prop.Value}");
                 }
 
-                var subscription = await snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
-                    Tags = new[] { tag.Id },
-                    PublishInterval = TimeSpan.FromSeconds(1)
-                }, cancellationToken);
-
-                subscription.RunBackgroundOperation(async (ch, ct) => {
+                try {
                     Console.WriteLine("  Snapshot Value:");
-                    await foreach (var value in ch.ReadAllAsync(ct)) {
+                    await foreach (var value in snapshotPushFeature.Subscribe(context, new CreateSnapshotTagValueSubscriptionRequest() {
+                        Tags = new[] { tag.Id },
+                        PublishInterval = TimeSpan.FromSeconds(1)
+                    }, cancellationToken)) {
                         Console.WriteLine($"    - {value.Value}");
                     }
-                }, null, cancellationToken);
-
-                await subscription.Completion;
+                }
+                catch (OperationCanceledException) { }
             }
         }
 

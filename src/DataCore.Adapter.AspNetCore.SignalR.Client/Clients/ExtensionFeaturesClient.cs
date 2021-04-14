@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -190,9 +191,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<ChannelReader<InvocationResponse>> InvokeStreamingExtensionAsync(
+        public async IAsyncEnumerable<InvocationResponse> InvokeStreamingExtensionAsync(
             string adapterId,
             InvocationRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -201,12 +203,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             AdapterSignalRClient.ValidateObject(request);
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<InvocationResponse>(
+            await foreach (var item in connection.StreamAsync<InvocationResponse>(
                 "InvokeStreamingExtension",
                 adapterId,
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -240,10 +244,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
         /// </exception>
-        public async Task<ChannelReader<InvocationResponse>> InvokeDuplexStreamingExtensionAsync(
+        public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtensionAsync(
             string adapterId,
-            InvocationRequest request,
-            ChannelReader<InvocationStreamItem> channel,
+            DuplexStreamInvocationRequest request,
+            IAsyncEnumerable<InvocationStreamItem> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -257,58 +262,43 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
-                return await connection.StreamAsChannelAsync<InvocationResponse>(
+                await foreach (var item in connection.StreamAsync<InvocationResponse>(
                     "InvokeDuplexStreamingExtension",
                     adapterId,
                     request,
                     channel,
                     cancellationToken
-                ).ConfigureAwait(false);
+                ).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
             }
 
             // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
-            // we will read the channel ourselves and make an invocation call for every value.
-            var result = Channel.CreateUnbounded<InvocationResponse>();
+            // we will read the intput stream ourselves and make an invocation call for every value.
 
-            _ = Task.Run(async () => {
-                try {
-                    while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                        while (channel.TryRead(out var val)) {
-                            if (cancellationToken.IsCancellationRequested) {
-                                break;
-                            }
-                            if (val == null) {
-                                continue;
-                            }
+            var response = await connection.InvokeAsync<InvocationResponse>(
+                "InvokeDuplexStreamingExtension",
+                adapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false);
 
-                            var writeResult = await connection.InvokeAsync<InvocationResponse>(
-                                "InvokeDuplexStreamingExtension",
-                                adapterId,
-                                new InvocationRequest() { 
-                                    OperationId = request.OperationId,
-                                    Properties = request.Properties,
-                                    Arguments = val.Arguments
-                                },
-                                cancellationToken
-                            ).ConfigureAwait(false);
+            yield return response;
 
-                            await result.Writer.WriteAsync(writeResult, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                    result.Writer.TryComplete(e);
-                }
-                finally {
-                    result.Writer.TryComplete();
-                }
-            }, cancellationToken);
+            await foreach (var item in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                response = await connection.InvokeAsync<InvocationResponse>(
+                    "InvokeDuplexStreamingExtension",
+                    adapterId,
+                    request,
+                    new InvocationStreamItem() {
+                        Arguments = item.Arguments
+                    },
+                    cancellationToken
+                ).ConfigureAwait(false);
 
-            return result.Reader;
+                yield return response;
+            }
         }
 
     }

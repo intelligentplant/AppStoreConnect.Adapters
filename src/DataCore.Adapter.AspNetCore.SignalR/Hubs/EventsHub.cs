@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -37,18 +41,31 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageTopicChannel(
             string adapterId, 
             CreateEventMessageTopicSubscriptionRequest request, 
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 #else
@@ -69,17 +86,30 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageTopicChannel(
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageTopicChannel(
             string adapterId,
             CreateEventMessageTopicSubscriptionRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 #endif
@@ -101,13 +131,30 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that the subscriber can observe to receive new event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> CreateEventMessageChannel(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageChannel(
+            string adapterId,
+            CreateEventMessageSubscriptionRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             // Resolve the adapter and feature.
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
-            // Create the subscription.
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
     #endregion
@@ -129,11 +176,29 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesForTimeRange(
+            string adapterId, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.ReadEventMessagesForTimeRange(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 
@@ -152,16 +217,34 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The matching event messages.
         /// </returns>
-        public async Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessageWithCursorPosition> ReadEventMessagesUsingCursor(
+            string adapterId, 
+            ReadEventMessagesUsingCursorRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.ReadEventMessagesUsingCursor(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Write Event Messages ]
+        #region [ Write Event Messages ]
 
 #if NETSTANDARD2_0 == false
 
@@ -171,20 +254,42 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The write request.
+        /// </param>
         /// <param name="channel">
-        ///   A channel that will provide the event messages to write.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the event messages to write.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel reader that will return the write results.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the write results.
         /// </returns>
-        public async Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(string adapterId, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            string adapterId,
+            WriteEventMessagesRequest request,
+            IAsyncEnumerable<WriteEventMessageItem> channel,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-            return await adapter.Feature.WriteEventMessages(adapterCallContext, channel, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
 
+            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.WriteEventMessages(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
 #else
@@ -195,17 +300,24 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="adapterId">
         ///   The adapter ID.
         /// </param>
+        /// <param name="request">
+        ///   The write request.
+        /// </param>
         /// <param name="item">
         ///   The event message to write.
         /// </param>
         /// <returns>
         ///   The write result.
         /// </returns>
-        public async Task<WriteEventMessageResult> WriteEventMessage(string adapterId, WriteEventMessageItem item) {
-            if (item == null) {
-                throw new ArgumentNullException(nameof(item));
-            }
+        public async Task<WriteEventMessageResult> WriteEventMessage(
+            string adapterId, 
+            WriteEventMessagesRequest request, 
+            WriteEventMessageItem item
+        ) {
+            ValidateObject(item);
+            ValidateObject(request);
             var adapterCallContext = new SignalRAdapterCallContext(Context);
+
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
                 var cancellationToken = ctSource.Token;
                 try {
@@ -214,8 +326,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     inChannel.Writer.TryWrite(item);
                     inChannel.Writer.TryComplete();
 
-                    var outChannel = await adapter.Feature.WriteEventMessages(adapterCallContext, inChannel, cancellationToken).ConfigureAwait(false);
-                    return await outChannel.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, request)) {
+                        var result = await adapter.Feature.WriteEventMessages(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                        return result!;
+                    }
                 }
                 finally {
                     ctSource.Cancel();

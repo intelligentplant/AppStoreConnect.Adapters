@@ -248,6 +248,7 @@ Next, we will create the extension itself. Create a new class file, `PingPongExt
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;

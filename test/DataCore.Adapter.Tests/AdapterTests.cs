@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -39,14 +40,13 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, ct);
-                Assert.IsNotNull(subscription);
+                _ = Task.Run(async () => {
+                    await Task.Delay(200, ct);
+                    await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                });
 
-                await Task.Delay(1000, ct);
-                await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
-
-                using (var ctSource = new CancellationTokenSource(1000)) {
-                    var val = await subscription.ReadAsync(ctSource.Token);
+                using (var ctSource = new CancellationTokenSource(2000)) {
+                    var val = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Active }, ctSource.Token).FirstOrDefaultAsync(ctSource.Token);
                     Assert.IsNotNull(val);
                 }
             });
@@ -62,19 +62,13 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                var subscription = await feature.Subscribe(
-                    context, 
-                    new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, 
-                    ct
-                );
-                Assert.IsNotNull(subscription);
+                _ = Task.Run(async () => {
+                    await Task.Delay(200, ct);
+                    await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
+                });
 
-                await Task.Delay(1000, ct);
-                await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
-
-
-                using (var ctSource = new CancellationTokenSource(1000)) {
-                    var val = await subscription.ReadAsync(ctSource.Token);
+                using (var ctSource = new CancellationTokenSource(2000)) {
+                    var val = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, ctSource.Token).FirstOrDefaultAsync(ctSource.Token);
                     Assert.IsNotNull(val);
                 }
             });
@@ -103,21 +97,19 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteSnapshotTagValues(context, values.PublishToChannel(), ct);
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), values.PublishToChannel().ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 var index = 0;
 
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
+                foreach (var item in writeResults) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
                     }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
                 }
             });
         }
@@ -142,7 +134,7 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteSnapshotTagValues(context, values, ct);
+                var writeResults = await feature.WriteSnapshotTagValues(context, new WriteTagValuesRequest(), values, ct);
                 
                 Assert.AreEqual(values.Count, writeResults.Count());
 
@@ -178,21 +170,19 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteHistoricalTagValues(context, values.PublishToChannel(), ct);
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), values.PublishToChannel().ReadAllAsync(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 var index = 0;
 
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
+                foreach (var item in writeResults) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
                     }
+                    var expected = values[index];
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
+
+                    ++index;
                 }
             });
         }
@@ -217,7 +207,7 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteHistoricalTagValues(context, values, ct);
+                var writeResults = await feature.WriteHistoricalTagValues(context, new WriteTagValuesRequest(), values, ct);
 
                 Assert.AreEqual(values.Count, writeResults.Count());
 
@@ -238,44 +228,6 @@ namespace DataCore.Adapter.Tests {
         #region [ IWriteEventMessages ]
 
         [TestMethod]
-        public Task WriteEventMessagesViaChannelShouldSucceed() {
-            return RunAdapterTest(async (adapter, context, ct) => {
-                var feature = adapter.Features.Get<IWriteEventMessages>();
-                if (feature == null) {
-                    AssertFeatureNotImplemented<IWriteEventMessages>();
-                    return;
-                }
-
-                var now = DateTime.UtcNow;
-                var values = new List<WriteEventMessageItem>();
-                for (var i = 0; i < 5; i++) {
-                    values.Add(new WriteEventMessageItem() {
-                        CorrelationId = Guid.NewGuid().ToString(),
-                        EventMessage = EventMessageBuilder.Create().Build()
-                    });
-                }
-
-                var writeResults = await feature.WriteEventMessages(context, values.PublishToChannel(), ct);
-                var index = 0;
-
-                while (await writeResults.WaitToReadAsync(ct)) {
-                    while (writeResults.TryRead(out var item)) {
-                        if (index > values.Count) {
-                            Assert.Fail("Too many results received");
-                        }
-                        var expected = values[index];
-
-                        Assert.IsNotNull(item);
-                        Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                        ++index;
-                    }
-                }
-            });
-        }
-
-
-        [TestMethod]
         public Task WriteEventMessagesViaEnumerableShouldSucceed() {
             return RunAdapterTest(async (adapter, context, ct) => {
                 var feature = adapter.Features.Get<IWriteEventMessages>();
@@ -293,18 +245,16 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var writeResults = await feature.WriteEventMessages(context, values, ct);
-
-                Assert.AreEqual(values.Count, writeResults.Count());
-
-                var index = 0;
-                foreach (var item in writeResults) {
+                var writeResults = await feature.WriteEventMessages(context, new WriteEventMessagesRequest(), values.ToAsyncEnumerable(ct), ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                for (var index = 0; index < writeResults.Count(); index++) {
+                    if (index > values.Count) {
+                        Assert.Fail("Too many results received");
+                    }
+                    var item = writeResults.ElementAt(index);
                     var expected = values[index];
 
                     Assert.IsNotNull(item);
                     Assert.AreEqual(expected.CorrelationId, item.CorrelationId);
-
-                    ++index;
                 }
             });
         }
@@ -593,14 +543,19 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var pongChannel = await feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
-                var pongMessage = await pongChannel.ReadAsync(ct).ConfigureAwait(false);
+                var pongMessageCount = 0;
 
-                Assert.IsNotNull(pongMessage);
-                Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false)) {
+                    ++pongMessageCount;
+                    if (pongMessageCount > 1) {
+                        break;
+                    }
+                    Assert.IsNotNull(pongMessage);
+                    Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                }
 
                 // Should be no more values in the stream
-                Assert.IsFalse(await pongChannel.WaitToReadAsync(ct));
+                Assert.AreEqual(1, pongMessageCount);
             });
         }
 
@@ -635,22 +590,18 @@ namespace DataCore.Adapter.Tests {
                     });
                 }
 
-                var reader = await feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel(), ct).ConfigureAwait(false);
-
                 var messagesRead = 0;
 
-                while (await reader.WaitToReadAsync(ct)) {
-                    while (reader.TryRead(out var pongMessage)) {
-                        ++messagesRead;
-                        if (messagesRead > pingMessages.Count) {
-                            Assert.Fail("Incorrect number of pong messages received.");
-                        }
-
-                        var pingMessage = pingMessages[messagesRead - 1];
-
-                        Assert.IsNotNull(pongMessage);
-                        Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
+                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                    ++messagesRead;
+                    if (messagesRead > pingMessages.Count) {
+                        Assert.Fail("Incorrect number of pong messages received.");
                     }
+
+                    var pingMessage = pingMessages[messagesRead - 1];
+
+                    Assert.IsNotNull(pongMessage);
+                    Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
                 }
 
                 Assert.AreEqual(pingMessages.Count, messagesRead, "Incorrect number of pong messages received.");

@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
+
 using Grpc.Core;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -11,7 +15,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="TagValueAnnotationsService.TagValueAnnotationsServiceBase"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class TagValueAnnotationsServiceImpl : TagValueAnnotationsService.TagValueAnnotationsServiceBase {
 
         /// <summary>
@@ -47,14 +50,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var reader = await adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
 
-            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!reader.TryRead(out var val) || val == null) {
-                    continue;
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcTagValueAnnotationQueryResult()).ConfigureAwait(false);
+                    }
                 }
-
-                await responseStream.WriteAsync(val.ToGrpcTagValueAnnotationQueryResult()).ConfigureAwait(false);
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
             }
         }
 
@@ -73,8 +83,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var result = await adapter.Feature.ReadAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-            return result!.ToGrpcTagValueAnnotation();
+            using (var activity = Telemetry.ActivitySource.StartReadAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var result = await adapter.Feature.ReadAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                activity.SetResponseItemCountTag(result == null ? 0 : 1);
+                return result!.ToGrpcTagValueAnnotation();
+            }
         }
 
 
@@ -92,8 +105,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var result = await adapter.Feature.CreateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            using (var activity = Telemetry.ActivitySource.StartCreateAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var result = await adapter.Feature.CreateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            }
         }
 
 
@@ -112,8 +127,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var result = await adapter.Feature.UpdateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            using (var activity = Telemetry.ActivitySource.StartUpdateAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var result = await adapter.Feature.UpdateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            }
         }
 
 
@@ -131,8 +148,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            var result = await adapter.Feature.DeleteAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            using (var activity = Telemetry.ActivitySource.StartDeleteAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var result = await adapter.Feature.DeleteAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
+            }
         }
 
     }

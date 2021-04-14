@@ -1,6 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -29,9 +28,9 @@ namespace DataCore.Adapter.AssetModel {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The matching asset model nodes.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the matching asset model nodes.
         /// </returns>
-        Task<ChannelReader<AssetModelNode>> BrowseAssetModelNodes(
+        IAsyncEnumerable<AssetModelNode> BrowseAssetModelNodes(
             IAdapterCallContext context, 
             BrowseAssetModelNodesRequest request, 
             CancellationToken cancellationToken
@@ -50,9 +49,9 @@ namespace DataCore.Adapter.AssetModel {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The matching asset model nodes.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the matching asset model nodes.
         /// </returns>
-        Task<ChannelReader<AssetModelNode>> GetAssetModelNodes(
+        IAsyncEnumerable<AssetModelNode> GetAssetModelNodes(
             IAdapterCallContext context, 
             GetAssetModelNodesRequest request, 
             CancellationToken cancellationToken

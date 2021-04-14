@@ -48,9 +48,8 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The available adapters.
         /// </returns>
-        protected override Task<ChannelReader<IAdapter>> GetAdapters(CancellationToken cancellationToken) {
-            var channel = _adapters.PublishToChannel();
-            return Task.FromResult(channel);
+        protected override IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken) {
+            return _adapters.PublishToChannel().ReadAllAsync(cancellationToken);
         }
     }
 }

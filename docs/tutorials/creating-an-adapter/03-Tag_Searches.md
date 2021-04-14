@@ -17,10 +17,10 @@ public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues {
 }
 ```
 
-The `ITagSearch` feature uses the [TagDefinition](/src/DataCore.Adapter.Core/RealTimeData/TagDefinition.cs) class to describe available tags. Tags can be identifier using both the tag name, and a unique tag identifier. The recommended behaviour for adapters is that tag names should be case-insensitive, but that identifiers should be case-sensitive. We will add two dictionaries to our adapter, to index tag definitions by both ID and name:
+The `ITagSearch` feature uses the [TagDefinition](/src/DataCore.Adapter.Core/RealTimeData/TagDefinition.cs) class to describe available tags. Tags can be identified using both the tag name, and a unique tag identifier. The recommended behaviour for adapters is that tag names and identifiers should be case-insensitive wherever possible. We will add two dictionaries to our adapter, to index tag definitions by both ID and name:
 
 ```csharp
-private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>();
+private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
 
 private readonly ConcurrentDictionary<string, TagDefinition> _tagsByName = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
 ```
@@ -40,8 +40,7 @@ private void CreateTags() {
         var tagId = i.ToString();
         var tagName = string.Concat(waveType, "_Wave");
 
-        var tag = TagDefinitionBuilder
-            .Create(tagId, tagName)
+        var tag = new TagDefinitionBuilder(tagId, tagName)
             .WithDescription($"A tag that returns a {waveType.ToLower()} wave value")
             .WithDataType(VariantType.Double)
             .WithProperties(CreateWaveTypeProperty(waveType))
@@ -82,17 +81,19 @@ Tags are defined as `TagDefinition` objects. A `TagDefinition` can hold a variet
 Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another interface, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
 
 ```csharp
-public Task<ChannelReader<TagDefinition>> GetTags(
-    IAdapterCallContext context, 
-    GetTagsRequest request, 
+public async IAsyncEnumerable<TagDefinition> GetTags(
+    IAdapterCallContext context,
+    GetTagsRequest request,
+    [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateRequest(request);
-    var result = Channel.CreateUnbounded<TagDefinition>();
+    ValidateInvocation(context, request);
 
-    TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+    await Task.CompletedTask.ConfigureAwait(false);
+
+    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
         foreach (var tag in request.Tags) {
-            if (ct.IsCancellationRequested) {
+            if (ctSource.Token.IsCancellationRequested) {
                 break;
             }
             if (string.IsNullOrWhiteSpace(tag)) {
@@ -100,60 +101,59 @@ public Task<ChannelReader<TagDefinition>> GetTags(
             }
 
             if (_tagsById.TryGetValue(tag, out var t) || _tagsByName.TryGetValue(tag, out t)) {
-                result.Writer.TryWrite(t);
+                yield return t;
             }
         }
-    }, result.Writer, true, cancellationToken);
-    
-    return Task.FromResult(result.Reader);
+    }
 }
 ```
 
-Note that, again, we use the `TaskScheduler.QueueBackgroundChannelOperation` extension method to run a background operation that will publish tag definitions to our response channel. The background operation performs some simple validation on each tag in the request, and then returns the definition for the tag if it exists in either of our lookups.
+In our loop, we perform some simple validation on each tag in the request, and then return the definition for a tag if it exists in either of our lookups.
 
 Next, we implement the `GetTagProperties` and `FindTags` methods. The `GetTagProperties` method is used to provide callers with details of the properties that can be defined on our adapter's tag definitions:
 
 ```csharp
-public Task<ChannelReader<AdapterProperty>> GetTagProperties(
-    IAdapterCallContext context, 
-    GetTagPropertiesRequest request, 
+public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
+    IAdapterCallContext context,
+    GetTagPropertiesRequest request,
+    [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateRequest(request);
+    ValidateInvocation(context, request);
 
-    var result = new[] {
-        CreateWaveTypeProperty(null),
-    }.OrderBy(x => x.Name).SelectPage(request).PublishToChannel();
+    await Task.CompletedTask.ConfigureAwait(false);
 
-    return Task.FromResult(result);
+    foreach (var item in new[] { CreateWaveTypeProperty(null) }.OrderBy(x => x.Name).SelectPage(request)) {
+        yield return item;
+    }
 }
 ```
 
-The `GetTagPropertiesRequest` class implements the [IPageableAdapterRequest](/src/DataCore.Adapter.Core/Common/IPageableAdapterRequest.cs) interface, meaning that it specifies a page size and page number to apply to the tag properties. The `SelectPage` extension method allows us to apply the paging specified in an `IPageableAdapterRequest` to any `IOrderedEnumerable<T>`. The `PublishToChannel` extension method will take any `IEnumerable<T>` and return a `ChannelReader<T>` that will emit the contents of the enumerable.
+The `GetTagPropertiesRequest` class implements the [IPageableAdapterRequest](/src/DataCore.Adapter.Core/Common/IPageableAdapterRequest.cs) interface, meaning that it specifies a page size and page number to apply to the tag properties. The `SelectPage` extension method allows us to apply the paging specified in an `IPageableAdapterRequest` to any `IOrderedEnumerable<T>`.
 
 `GetTagProperties` is important, because we can opt to allow callers to `FindTags` to include search filters that match against custom tag properties. In this case, `GetTagProperties` is the way that the available properties can be discovered.
 
 Next, we implement the `FindTags` method:
 
 ```csharp
-public Task<ChannelReader<TagDefinition>> FindTags(
-    IAdapterCallContext context, 
-    FindTagsRequest request, 
+public async IAsyncEnumerable<TagDefinition> FindTags(
+    IAdapterCallContext context,
+    FindTagsRequest request,
+    [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateRequest(request);
-    var result = Channel.CreateUnbounded<TagDefinition>();
+    ValidateInvocation(context, request);
 
-    TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+    await Task.CompletedTask.ConfigureAwait(false);
+
+    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
         foreach (var tag in _tagsById.Values.ApplyFilter(request)) {
-            if (ct.IsCancellationRequested) {
+            if (ctSource.Token.IsCancellationRequested) {
                 break;
             }
-            ch.TryWrite(tag);
+            yield return tag;
         }
-    }, result.Writer, true, cancellationToken);
-
-    return Task.FromResult(result.Reader);
+    }
 }
 ```
 
@@ -226,18 +226,22 @@ Note that `CalculateValueForTag` also allows us to specify a _quality status_ fo
 Finally, we can update our `ReadSnapshotTagValues` method so that it will only return values for known tags:
 
 ```csharp
-public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
-    IAdapterCallContext context, 
-    ReadSnapshotTagValuesRequest request, 
+public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+    IAdapterCallContext context,
+    ReadSnapshotTagValuesRequest request,
+    [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateRequest(request);
-    var result = Channel.CreateUnbounded<TagValueQueryResult>();
-    var sampleTime = CalculateSampleTime(DateTime.UtcNow);
+    ValidateInvocation(context, request);
 
-    TaskScheduler.QueueBackgroundChannelOperation((ch, ct) => {
+    await Task.CompletedTask.ConfigureAwait(false);
+
+    var sampleTime = CalculateSampleTime(DateTime.UtcNow);
+    var rnd = new Random(sampleTime.GetHashCode());
+
+    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
         foreach (var tag in request.Tags) {
-            if (ct.IsCancellationRequested) {
+            if (ctSource.Token.IsCancellationRequested) {
                 break;
             }
             if (string.IsNullOrWhiteSpace(tag)) {
@@ -247,12 +251,9 @@ public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(
                 continue;
             }
 
-            var rnd = new Random(sampleTime.GetHashCode());
-            ch.TryWrite(CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad));
+            yield return CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
         }
-    }, result.Writer, true, cancellationToken);
-
-    return Task.FromResult(result.Reader);
+    }
 }
 ```
 
@@ -285,15 +286,13 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
         var tagSearchFeature = adapter.GetFeature<ITagSearch>();
         var readSnapshotFeature = adapter.GetFeature<IReadSnapshotTagValues>();
 
-        var tags = await tagSearchFeature.FindTags(
+        await foreach (var tag in tagSearchFeature.FindTags(
             context,
-            new FindTagsRequest() { 
+            new FindTagsRequest() {
                 Name = "*"
             },
             cancellationToken
-        );
-        
-        await foreach(var tag in tags.ReadAllAsync(cancellationToken)) {
+        )) {
             Console.WriteLine();
             Console.WriteLine("[Tag Details]");
             Console.WriteLine($"  Name: {tag.Name}");
@@ -304,18 +303,16 @@ private static async Task Run(IAdapterCallContext context, CancellationToken can
                 Console.WriteLine($"    - {prop.Name} = {prop.Value}");
             }
 
-            var snapshotValues = await readSnapshotFeature.ReadSnapshotTagValues(
+            var value = await readSnapshotFeature.ReadSnapshotTagValues(
                 context,
-                new ReadSnapshotTagValuesRequest() { 
+                new ReadSnapshotTagValuesRequest() {
                     Tags = new[] { tag.Id }
                 },
                 cancellationToken
-            );
+            ).FirstOrDefaultAsync(cancellationToken);
 
             Console.WriteLine("  Snapshot Value:");
-            await foreach (var value in snapshotValues.ReadAllAsync(cancellationToken)) {
-                Console.WriteLine($"    - {value.Value}");
-            }
+            Console.WriteLine($"    - {value.Value}");
         }
     }
 }

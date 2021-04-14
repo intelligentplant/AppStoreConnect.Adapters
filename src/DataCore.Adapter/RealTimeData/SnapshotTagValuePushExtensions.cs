@@ -1,9 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-
-using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
@@ -30,7 +28,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A channel reader that will emit tag values as they occur.
         /// </returns>
-        public static Task<ChannelReader<TagValueQueryResult>> Subscribe(
+        public static IAsyncEnumerable<TagValueQueryResult> Subscribe(
             this ISnapshotTagValuePush feature,
             IAdapterCallContext context,
             CreateSnapshotTagValueSubscriptionRequest request,
@@ -40,10 +38,9 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(feature));
             }
 
-            var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
-            channel.Writer.TryComplete();
+            var channel = Array.Empty<TagValueSubscriptionUpdate>().PublishToChannel();
 
-            return feature.Subscribe(context, request, channel, cancellationToken);
+            return feature.Subscribe(context, request, channel.ReadAllAsync(cancellationToken), cancellationToken);
         }
 
     }

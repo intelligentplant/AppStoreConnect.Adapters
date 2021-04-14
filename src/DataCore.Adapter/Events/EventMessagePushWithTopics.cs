@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -55,12 +57,21 @@ namespace DataCore.Adapter.Events {
         /// </param>
         public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
             : base(options, backgroundTaskService, logger) { 
-            BackgroundTaskService.QueueBackgroundWorkItem(ProcessTopicSubscriptionChangesChannel, DisposedToken);
+            BackgroundTaskService.QueueBackgroundWorkItem(
+                ProcessTopicSubscriptionChangesChannel,
+                DisposedToken
+            );
         }
 
 
         /// <inheritdoc/>
-        public async Task<ChannelReader<EventMessage>> Subscribe(IAdapterCallContext context, CreateEventMessageTopicSubscriptionRequest request, ChannelReader<EventMessageSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessage> Subscribe(
+            IAdapterCallContext context, 
+            CreateEventMessageTopicSubscriptionRequest request, 
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (IsDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
@@ -75,14 +86,24 @@ namespace DataCore.Adapter.Events {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var subscription = CreateSubscription(context, request, cancellationToken);
-            if (request.Topics != null && request.Topics.Any()) {
-                await OnTopicsAddedToSubscriptionInternal(subscription, request.Topics, cancellationToken).ConfigureAwait(false);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
+                var subscription = CreateSubscription<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, ctSource.Token);
+                if (request.Topics != null && request.Topics.Any()) {
+                    await OnTopicsAddedToSubscriptionInternal(subscription, request.Topics, ctSource.Token).ConfigureAwait(false);
+                }
+
+                BackgroundTaskService.QueueBackgroundWorkItem(
+                    ct => RunSubscriptionChangesListener(subscription, channel, ct),
+                    null,
+                    true,
+                    subscription.CancellationToken,
+                    ctSource.Token
+                );
+
+                await foreach (var item in subscription.ReadAllAsync(ctSource.Token).ConfigureAwait(false)) {
+                    yield return item;
+                }
             }
-
-            BackgroundTaskService.QueueBackgroundWorkItem(ct => RunSubscriptionChangesListener(subscription, channel, ct), subscription.CancellationToken);
-
-            return subscription.Reader;
         }
 
 
@@ -238,25 +259,23 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   The long-running task.
         /// </returns>
-        private async Task RunSubscriptionChangesListener(EventSubscriptionChannel subscription, ChannelReader<EventMessageSubscriptionUpdate> channel, CancellationToken cancellationToken) {
-            while (await channel.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                while (channel.TryRead(out var item)) {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (item?.Topics == null) {
-                        continue;
-                    }
+        private async Task RunSubscriptionChangesListener(EventSubscriptionChannel subscription, IAsyncEnumerable<EventMessageSubscriptionUpdate> channel, CancellationToken cancellationToken) {
+            await foreach (var item in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (item?.Topics == null) {
+                    continue;
+                }
 
-                    var topics = item.Topics.Where(x => x != null).ToArray();
-                    if (topics.Length == 0) {
-                        continue;
-                    }
+                var topics = item.Topics.Where(x => x != null).ToArray();
+                if (topics.Length == 0) {
+                    continue;
+                }
 
-                    if (item.Action == SubscriptionUpdateAction.Subscribe) {
-                        await OnTopicsAddedToSubscriptionInternal(subscription, topics, cancellationToken).ConfigureAwait(false);
-                    }
-                    else {
-                        OnTopicsRemovedFromSubscriptionInternal(subscription, topics);
-                    }
+                if (item.Action == SubscriptionUpdateAction.Subscribe) {
+                    await OnTopicsAddedToSubscriptionInternal(subscription, topics, cancellationToken).ConfigureAwait(false);
+                }
+                else {
+                    OnTopicsRemovedFromSubscriptionInternal(subscription, topics);
                 }
             }
         }

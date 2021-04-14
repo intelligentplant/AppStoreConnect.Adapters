@@ -1,8 +1,12 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Diagnostics;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
@@ -26,15 +30,29 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   A channel reader that subscribers can observe to receive configuration change 
         ///   notifications.
         /// </returns>
-        public async Task<ChannelReader<ConfigurationChange>> CreateConfigurationChangesChannel(
+        public async IAsyncEnumerable<ConfigurationChange> CreateConfigurationChangesChannel(
             string adapterId,
             ConfigurationChangesSubscriptionRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IConfigurationChanges>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
-            return await adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+
+            using (var activity = Telemetry.ActivitySource.StartConfigurationChangesSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
+                long itemCount = 0;
+
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                        ++itemCount;
+                        yield return item;
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(itemCount);
+                }
+            }
         }
 
     }

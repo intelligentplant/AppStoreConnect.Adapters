@@ -56,12 +56,12 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Handlers for streaming methods created by a call to one of the <see cref="BindStream"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>>> _boundStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<ChannelReader<InvocationResponse>>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, IAsyncEnumerable<InvocationResponse>>> _boundStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, CancellationToken, IAsyncEnumerable<InvocationResponse>>>();
 
         /// <summary>
         /// Handlers for duplex streaming methods created by a call to one of the <see cref="BindDuplexStream"/> overloads.
         /// </summary>
-        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, InvocationRequest, ChannelReader<InvocationStreamItem>, CancellationToken, Task<ChannelReader<InvocationResponse>>>>();
+        private readonly ConcurrentDictionary<Uri, Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>> _boundDuplexStreamMethods = new ConcurrentDictionary<Uri, Func<IAdapterCallContext, DuplexStreamInvocationRequest, IAsyncEnumerable<InvocationStreamItem>, CancellationToken, IAsyncEnumerable<InvocationResponse>>>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 
 
@@ -165,7 +165,7 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<InvocationResponse>> Stream(
+        public IAsyncEnumerable<InvocationResponse> Stream(
             IAdapterCallContext context,
             InvocationRequest request, 
             CancellationToken cancellationToken
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<InvocationResponse>> DuplexStream(IAdapterCallContext context, InvocationRequest request, ChannelReader<InvocationStreamItem> channel, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<InvocationResponse> DuplexStream(IAdapterCallContext context, DuplexStreamInvocationRequest request, IAsyncEnumerable<InvocationStreamItem> channel, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -361,7 +361,7 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<InvocationResponse>> StreamInternal(
+        protected virtual IAsyncEnumerable<InvocationResponse> StreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             InvocationRequest request, 
@@ -410,11 +410,11 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<ChannelReader<InvocationResponse>> DuplexStreamInternal(
+        protected virtual IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
-            IAdapterCallContext context, 
-            InvocationRequest request, 
-            ChannelReader<InvocationStreamItem> channel, 
+            IAdapterCallContext context,
+            DuplexStreamInvocationRequest request, 
+            IAsyncEnumerable<InvocationStreamItem> channel, 
             CancellationToken cancellationToken
         ) {
             if (_boundDuplexStreamMethods.TryGetValue(request.OperationId, out var handler)) {

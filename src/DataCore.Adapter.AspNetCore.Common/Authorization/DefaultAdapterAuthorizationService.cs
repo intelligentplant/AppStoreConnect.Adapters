@@ -57,23 +57,27 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapter(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (!UseAuthorization || context == null) {
-                return true;
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity(Diagnostics.ActivitySourceExtensions.GetActivityName(typeof(IAdapterAuthorizationService), nameof(AuthorizeAdapter)))) {
+                if (!UseAuthorization || context == null) {
+                    return true;
+                }
+                
+                var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
+                return result.Succeeded;
             }
-
-            var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(null)).ConfigureAwait(false);
-            return result.Succeeded;
         }
 
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapterFeature(IAdapter adapter, IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
-            if (!UseAuthorization || context == null) {
-                return true;
-            }
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity(Diagnostics.ActivitySourceExtensions.GetActivityName(typeof(IAdapterAuthorizationService), nameof(AuthorizeAdapterFeature)))) {
+                if (!UseAuthorization || context == null) {
+                    return true;
+                }
 
-            var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(featureUri)).ConfigureAwait(false);
-            return result.Succeeded;
+                var result = await _authorizationService.AuthorizeAsync(context.User!, adapter, new FeatureAuthorizationRequirement(featureUri)).ConfigureAwait(false);
+                return result.Succeeded;
+            }
         }
     }
 }

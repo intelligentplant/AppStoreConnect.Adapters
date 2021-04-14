@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -73,7 +74,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task<ChannelReader<AdapterProperty>> GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
+        public IAsyncEnumerable<AdapterProperty>GetTagProperties(IAdapterCallContext context, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -82,13 +83,16 @@ namespace DataCore.Adapter.Tests {
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
 
-            var result = Channel.CreateUnbounded<AdapterProperty>();
-            result.Writer.TryComplete();
-            return Task.FromResult(result.Reader);
+            return Array.Empty<AdapterProperty>().ToAsyncEnumerable(cancellationToken);
         }
 
 
-        public Task<ChannelReader<TagDefinition>> GetTags(IAdapterCallContext context, GetTagsRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<TagDefinition> GetTags(
+            IAdapterCallContext context, 
+            GetTagsRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -96,27 +100,31 @@ namespace DataCore.Adapter.Tests {
                 throw new ArgumentNullException(nameof(request));
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
+            await Task.CompletedTask.ConfigureAwait(false);
 
-            var result = Channel.CreateUnbounded<TagDefinition>();
             foreach (var item in request.Tags) {
-                result.Writer.TryWrite(new TagDefinition(item, item, null, null, VariantType.Double, null, null, null, null));
+                yield return new TagDefinition(item, item, null, null, VariantType.Double, null, null, null, null);
             }
-            result.Writer.TryComplete();
-            return Task.FromResult(result.Reader);
         }
 
 
-        public Task<ChannelReader<TagValueQueryResult>> ReadSnapshotTagValues(IAdapterCallContext context, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
-            var result = request.Tags.Select(t => new TagValueQueryResult(
-                t,
-                t,
-                new TagValueBuilder()
-                    .WithUtcSampleTime(DateTime.MinValue)
-                    .WithValue(0)
-                    .Build()
-            )).PublishToChannel();
-
-            return Task.FromResult(result);
+        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+            IAdapterCallContext context, 
+            ReadSnapshotTagValuesRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.CompletedTask.ConfigureAwait(false);
+            foreach (var tag in request.Tags) {
+                yield return new TagValueQueryResult(
+                    tag,
+                    tag,
+                    new TagValueBuilder()
+                        .WithUtcSampleTime(DateTime.MinValue)
+                        .WithValue(0)
+                        .Build()
+                );
+            }
         }
 
 

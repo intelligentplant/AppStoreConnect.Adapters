@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
+using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Diagnostics.Diagnostics;
 
 using Grpc.Core;
 
@@ -11,7 +13,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="ConfigurationChangesService.ConfigurationChangesServiceBase"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Arguments are passed by gRPC framework")]
     public class ConfigurationChangesServiceImpl : ConfigurationChangesService.ConfigurationChangesServiceBase {
 
         /// <summary>
@@ -38,25 +39,26 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<Diagnostics.IConfigurationChanges>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            var subscription = await adapter.Feature.Subscribe(
-                adapterCallContext, 
-                new Diagnostics.ConfigurationChangesSubscriptionRequest() {
-                    ItemTypes = request.ItemTypes,
-                    Properties = new Dictionary<string, string>(request.Properties)
-                },
-                cancellationToken
-            ).ConfigureAwait(false);
+            var adapterRequest = new ConfigurationChangesSubscriptionRequest() {
+                ItemTypes = request.ItemTypes,
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
 
-            while (!cancellationToken.IsCancellationRequested) {
-                try {
-                    var msg = await subscription.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    await responseStream.WriteAsync(msg.ToGrpcConfigurationChange()).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) {
-                    // Do nothing
-                }
-                catch (System.Threading.Channels.ChannelClosedException) {
-                    // Do nothing
+            using (var activity = Telemetry.ActivitySource.StartConfigurationChangesSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+
+                await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                    try {
+                        await responseStream.WriteAsync(msg.ToGrpcConfigurationChange()).ConfigureAwait(false);
+                        activity.SetResponseItemCountTag(++outputItems);
+                    }
+                    catch (OperationCanceledException) {
+                        // Do nothing
+                    }
+                    catch (System.Threading.Channels.ChannelClosedException) {
+                        // Do nothing
+                    }
                 }
             }
         }

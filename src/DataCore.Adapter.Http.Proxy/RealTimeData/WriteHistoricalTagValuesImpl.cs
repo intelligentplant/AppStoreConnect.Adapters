@@ -1,10 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy.RealTimeData {
@@ -21,34 +22,36 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         /// </param>
         public WriteHistoricalTagValuesImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
+
         /// <inheritdoc />
-        public Task<ChannelReader<WriteTagValueResult>> WriteHistoricalTagValues(IAdapterCallContext context, ChannelReader<WriteTagValueItem> channel, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, channel);
+        public async IAsyncEnumerable<WriteTagValueResult> WriteHistoricalTagValues(
+            IAdapterCallContext context, 
+            WriteTagValuesRequest request,
+            IAsyncEnumerable<WriteTagValueItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            Proxy.ValidateInvocation(context, request, channel);
 
-            var result = ChannelExtensions.CreateTagValueWriteResultChannel(-1);
+            var client = GetClient();
 
-            result.Writer.RunBackgroundOperation(async (ch, ct) => {
-                var client = GetClient();
-
+            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
                 const int maxItems = 5000;
-                var items = (await channel.ToEnumerable(maxItems, ct).ConfigureAwait(false)).ToArray();
+                var items = (await channel.ToEnumerable(maxItems, ctSource.Token).ConfigureAwait(false)).ToArray();
                 if (items.Length >= maxItems) {
                     Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
                 }
 
-                var request = new WriteTagValuesRequest() {
-                    Values = items
+                var req = new WriteTagValuesRequestExtended() {
+                    Values = items,
+                    Properties = request.Properties
                 };
 
-                var clientResponse = await client.TagValues.WriteHistoricalValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ct).ConfigureAwait(false);
+                var clientResponse = await client.TagValues.WriteHistoricalValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
                 foreach (var item in clientResponse) {
-                    if (await ch.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                        ch.TryWrite(item);
-                    }
+                    yield return item;
                 }
-            }, true, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+            }
         }
     }
 }

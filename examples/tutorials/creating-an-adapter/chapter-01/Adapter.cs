@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {

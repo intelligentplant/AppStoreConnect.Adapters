@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
-
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Events {
@@ -111,7 +110,7 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<EventMessage>> IEventMessagePush.Subscribe(
+        IAsyncEnumerable<EventMessage> IEventMessagePush.Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageSubscriptionRequest request, 
             CancellationToken cancellationToken
@@ -121,10 +120,10 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        Task<ChannelReader<EventMessage>> IEventMessagePushWithTopics.Subscribe(
+        IAsyncEnumerable<EventMessage> IEventMessagePushWithTopics.Subscribe(
             IAdapterCallContext context, 
             CreateEventMessageTopicSubscriptionRequest request,
-            ChannelReader<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
             CancellationToken cancellationToken
         ) {
             return ((IEventMessagePushWithTopics) _pushWithTopics).Subscribe(context, request, channel, cancellationToken);
@@ -229,50 +228,52 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<WriteEventMessageResult>> WriteEventMessages(IAdapterCallContext context, ChannelReader<WriteEventMessageItem> channel, CancellationToken cancellationToken) {
-            var result = ChannelExtensions.CreateEventMessageWriteResultChannel();
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
+            IAdapterCallContext context, 
+            WriteEventMessagesRequest request, 
+            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            ValidationExtensions.ValidateObject(request);
+            if (channel == null) {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
-            channel.RunBackgroundOperation(async (ch, ct) => {
-                try {
-                    while (await ch.WaitToReadAsync(ct).ConfigureAwait(false)) {
-                        while (ch.TryRead(out var item)) {
-                            if (item?.EventMessage == null) {
-                                continue;
-                            }
+            await foreach(var item in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
+                if (item?.EventMessage == null) {
+                    continue;
+                }
 
-                            var cursorPosition = await WriteEventMessage(item.EventMessage, ct).ConfigureAwait(false);
-                            if (!await result.Writer.WaitToWriteAsync(ct).ConfigureAwait(false)) {
-                                break;
-                            }
+                var cursorPosition = await WriteEventMessage(item.EventMessage, cancellationToken).ConfigureAwait(false);
 
-                            result.Writer.TryWrite(new WriteEventMessageResult(
-                                item.CorrelationId,
-                                Common.WriteStatus.Success,
-                                null,
-                                new[] {
-                                new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))
-                                }
-                            ));
-                        }
+                yield return new WriteEventMessageResult(
+                    item.CorrelationId,
+                    Common.WriteStatus.Success,
+                    null,
+                    new[] {
+                        new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))
                     }
-                }
-                catch (Exception e) {
-                    result.Writer.TryComplete(e);
-                }
-                finally {
-                    result.Writer.TryComplete();
-                }
-            }, BackgroundTaskService, cancellationToken);
-
-            return Task.FromResult(result.Reader);
+                );
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessage>> ReadEventMessagesForTimeRange(IAdapterCallContext context, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesForTimeRange(
+            IAdapterCallContext context, 
+            ReadEventMessagesForTimeRangeRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
+            ValidationExtensions.ValidateObject(request);
+            await Task.CompletedTask.ConfigureAwait(false);
 
             EventMessage[] messages;
 
@@ -299,16 +300,25 @@ namespace DataCore.Adapter.Events {
             finally {
                 _eventMessagesLock.ExitReadLock();
             }
-
-            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x).Build()).PublishToChannel());
+            
+            foreach (var item in messages) {
+                yield return EventMessageBuilder.CreateFromExisting(item).Build();
+            }
         }
 
 
         /// <inheritdoc/>
-        public Task<ChannelReader<EventMessageWithCursorPosition>> ReadEventMessagesUsingCursor(IAdapterCallContext context, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
+        public async IAsyncEnumerable<EventMessageWithCursorPosition> ReadEventMessagesUsingCursor(
+            IAdapterCallContext context, 
+            ReadEventMessagesUsingCursorRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
+
+            await Task.CompletedTask.ConfigureAwait(false);
 
             KeyValuePair<CursorPosition, EventMessage>[] messages;
 
@@ -322,7 +332,7 @@ namespace DataCore.Adapter.Events {
                         : _eventMessages.Reverse();
                 }
                 else if (!CursorPosition.TryParse(request.CursorPosition!, out var cursorPosition) || !_eventMessages.ContainsKey(cursorPosition)) {
-                    return Task.FromResult(Array.Empty<EventMessageWithCursorPosition>().PublishToChannel());
+                    yield break;
                 }
                 else {
                     selector = request.Direction == EventReadDirection.Forwards
@@ -342,7 +352,9 @@ namespace DataCore.Adapter.Events {
                 _eventMessagesLock.ExitReadLock();
             }
 
-            return Task.FromResult(messages.Select(x => EventMessageBuilder.CreateFromExisting(x.Value).Build(x.Key.ToString())).PublishToChannel());
+            foreach (var item in messages) {
+                yield return EventMessageBuilder.CreateFromExisting(item.Value).Build(item.Key.ToString());
+            }
         }
 
 

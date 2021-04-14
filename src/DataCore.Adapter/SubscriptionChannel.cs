@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -53,7 +55,8 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The reader for the publish channel.
         /// </summary>
-        public ChannelReader<TValue> Reader => _outChannel;
+        [Obsolete("Use " + nameof(ReadAllAsync) + " instead", false)]
+        public ChannelReader<TValue> Reader => _outChannel.Reader;
 
         /// <summary>
         /// The subscription topics.
@@ -174,11 +177,11 @@ namespace DataCore.Adapter {
             };
             _ctRegistration = CancellationToken.Register(_cleanup);
 
-            backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, CancellationToken);
+            backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, null, true, CancellationToken);
 
             // If we have a publish interval, run a background task to handle this.
             if (PublishInterval > TimeSpan.Zero) {
-                backgroundTaskService.QueueBackgroundWorkItem(RunEgressLoop, CancellationToken);
+                backgroundTaskService.QueueBackgroundWorkItem(RunEgressLoop, null, true, CancellationToken);
             }
         }
 
@@ -301,15 +304,36 @@ namespace DataCore.Adapter {
                     if (val == null) {
                         continue;
                     }
-                    _outChannel.Writer.TryWrite(val);
+                    await _outChannel.Writer.WriteAsync(val, cancellationToken).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) { 
+                // Do nothing.
+            }
             catch (Exception e) {
                 _outChannel.Writer.TryComplete(e);
             }
             finally {
                 _outChannel.Writer.TryComplete();
+            }
+        }
+
+
+        /// <summary>
+        /// Creates an <see cref="IAsyncEnumerable{T}"/> that enables reading all of the data 
+        /// from the subscription.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the enumeration.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="IAsyncEnumerable{T}"/>.
+        /// </returns>
+        public async IAsyncEnumerable<TValue> ReadAllAsync([EnumeratorCancellation] CancellationToken cancellationToken) {
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken)) {
+                await foreach (var item in _outChannel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
             }
         }
 

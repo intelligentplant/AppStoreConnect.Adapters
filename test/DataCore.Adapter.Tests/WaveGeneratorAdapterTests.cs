@@ -122,9 +122,9 @@ namespace DataCore.Adapter.Tests {
                 var generatorLiteral = "Type=Sawtooth;Period=180;Amplitude=500";
 
                 var feature = adapter.GetFeature<ITagInfo>();
-                var tagChannel = await feature.GetTags(context, new GetTagsRequest() {
+                var tagChannel = feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { generatorLiteral }
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
                 var tags = await tagChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, tags.Count());
@@ -140,9 +140,9 @@ namespace DataCore.Adapter.Tests {
 
                 var feature = adapter.GetFeature<ITagInfo>();
                 Assert.IsNotNull(feature);
-                var tagChannel = await feature.GetTags(context, new GetTagsRequest() {
+                var tagChannel = feature.GetTags(context, new GetTagsRequest() {
                     Tags = new[] { generatorLiteral }
-                }, ct).ConfigureAwait(false);
+                }, ct);
 
                 var tags = await tagChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(0, tags.Count());
@@ -164,20 +164,18 @@ namespace DataCore.Adapter.Tests {
                 var now = DateTime.UtcNow;
                 var feature = adapter.GetFeature<IReadTagValuesAtTimes>();
 
-                var baseFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var baseFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { baseFunc },
                     UtcSampleTimes = new[] { now.AddSeconds(phase) }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var baseFuncValues = await baseFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, baseFuncValues.Count());
 
-                var offsetFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var offsetFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { offsetFunc },
                     UtcSampleTimes = new[] { now }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
                 Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>(), offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
@@ -199,20 +197,18 @@ namespace DataCore.Adapter.Tests {
                 var now = DateTime.UtcNow;
                 var feature = adapter.GetFeature<IReadTagValuesAtTimes>();
 
-                var baseFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var baseFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { baseFunc },
                     UtcSampleTimes = new[] { now }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var baseFuncValues = await baseFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, baseFuncValues.Count());
 
-                var offsetFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var offsetFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { offsetFunc },
                     UtcSampleTimes = new[] { now }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
                 Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() * amplitude, offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
@@ -234,20 +230,18 @@ namespace DataCore.Adapter.Tests {
                 var now = DateTime.UtcNow;
                 var feature = adapter.GetFeature<IReadTagValuesAtTimes>();
 
-                var baseFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var baseFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { baseFunc },
                     UtcSampleTimes = new[] { now }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var baseFuncValues = await baseFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, baseFuncValues.Count());
 
-                var offsetFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var offsetFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { offsetFunc },
                     UtcSampleTimes = new[] { now }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
                 Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>() + offset, offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);
@@ -270,7 +264,7 @@ namespace DataCore.Adapter.Tests {
 
                 var feature = adapter.GetFeature<IReadTagValuesAtTimes>();
 
-                var baseFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var baseFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { baseFunc },
                     UtcSampleTimes = new[] {
 #if NETCOREAPP
@@ -279,12 +273,11 @@ namespace DataCore.Adapter.Tests {
                         new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(defaultPeriod)
 #endif
                     }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var baseFuncValues = await baseFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, baseFuncValues.Count());
 
-                var offsetFuncChannel = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
+                var offsetFuncValues = await feature.ReadTagValuesAtTimes(context, new ReadTagValuesAtTimesRequest() {
                     Tags = new[] { offsetFunc },
                     UtcSampleTimes = new[] { 
 #if NETCOREAPP
@@ -293,9 +286,8 @@ namespace DataCore.Adapter.Tests {
                         new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(period)
 #endif
                     }
-                }, ct).ConfigureAwait(false);
+                }, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
 
-                var offsetFuncValues = await offsetFuncChannel.ToEnumerable(cancellationToken: ct).ConfigureAwait(false);
                 Assert.AreEqual(1, offsetFuncValues.Count());
 
                 Assert.AreEqual(baseFuncValues.First().Value.GetValueOrDefault<double>(), offsetFuncValues.First().Value.GetValueOrDefault<double>(), s_calculationDelta);

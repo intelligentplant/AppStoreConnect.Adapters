@@ -2,6 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
     class Program {
@@ -12,7 +13,9 @@ namespace MyAdapter {
 
 
         private static IHostBuilder CreateHostBuilder(string[] args) {
-            return Host.CreateDefaultBuilder(args).ConfigureServices(services => {
+            return Host.CreateDefaultBuilder(args).ConfigureLogging(options => {
+                options.SetMinimumLevel(LogLevel.Warning);
+            }).ConfigureServices(services => {
                 services.AddHostedService<Runner>();
             });
         }
