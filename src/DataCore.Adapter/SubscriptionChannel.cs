@@ -53,12 +53,6 @@ namespace DataCore.Adapter {
         private readonly Channel<TValue> _outChannel;
 
         /// <summary>
-        /// The reader for the publish channel.
-        /// </summary>
-        [Obsolete("Use " + nameof(ReadAllAsync) + " instead", false)]
-        public ChannelReader<TValue> Reader => _outChannel.Reader;
-
-        /// <summary>
         /// The subscription topics.
         /// </summary>
         private readonly List<TTopic> _topics;
