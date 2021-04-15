@@ -33,10 +33,10 @@
   <!-- gRPC Packages -->
   <PropertyGroup>
     <GoogleProtobufVersion>3.14.0</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.35.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.35.0</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.35.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.35.0</GrpcToolsVersion>
+    <GrpcAspNetCoreServerVersion>2.36.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.37.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.36.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.37.0</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
