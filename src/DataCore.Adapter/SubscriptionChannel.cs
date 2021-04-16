@@ -216,7 +216,7 @@ namespace DataCore.Adapter {
         ///   The value.
         /// </param>
         /// <param name="immediate">
-        ///   When <see langword="true"/>, the value will be sent to the <see cref="Reader"/> 
+        ///   When <see langword="true"/>, the value will be published to the subscriber
         ///   immediately, even if the subscription is using a publish interval.
         /// </param>
         /// <returns>

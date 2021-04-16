@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +26,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TAdapterOptions">
     ///   The options type for the adapter.
     /// </typeparam>
+    [AutomaticFeatureRegistration(true)]
     public abstract class AdapterBase<TAdapterOptions> : IAdapter where TAdapterOptions : AdapterOptions, new() {
 
         #region [ Fields / Properties ]
@@ -194,7 +196,12 @@ namespace DataCore.Adapter {
 
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
             AddFeatures(_healthCheckManager);
-            AddFeatures(this);
+
+            // Automatically register features implemented directly on the adapter if required. 
+            var autoRegisterFeatures = GetType().GetCustomAttribute<AutomaticFeatureRegistrationAttribute>(true);
+            if (autoRegisterFeatures?.IsEnabled ?? true) {
+                AddFeatures(this);
+            }
         }
 
 
