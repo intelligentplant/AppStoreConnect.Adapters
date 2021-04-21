@@ -70,10 +70,6 @@ namespace DataCore.Adapter {
         /// <typeparam name="TFeature">
         ///   The feature. This must be an interface derived from <see cref="IAdapterFeature"/>.
         /// </typeparam>
-        /// <typeparam name="TFeatureImpl">
-        ///   The feature implementation type. This must be a concrete class that implements 
-        ///   <typeparamref name="TFeature"/>.
-        /// </typeparam>
         /// <param name="feature">
         ///   The implementation object.
         /// </param>
@@ -87,7 +83,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   An implementation of <typeparamref name="TFeature"/> has already been registered.
         /// </exception>
-        public void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
+        public void AddFeature<TFeature>(TFeature feature) where TFeature : IAdapterFeature {
             CheckDisposed();
             if (!typeof(TFeature).IsAdapterFeature()) {
                 throw new ArgumentException(string.Format(

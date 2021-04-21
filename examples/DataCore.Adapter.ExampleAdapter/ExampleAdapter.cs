@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Example {
         ) {
             // Register additional features!
             _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
-            AddFeature<IAssetModelBrowse, Features.AssetModelBrowser>(_assetModelBrowser);
+            AddFeature<IAssetModelBrowse>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
             AddExtensionFeatures(new ExampleExtensionImpl(this, encoders));
         }

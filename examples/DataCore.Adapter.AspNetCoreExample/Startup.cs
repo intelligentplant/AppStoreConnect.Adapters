@@ -50,7 +50,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     // Bind CSV adapter options against the application configuration.
                     svc.Configure<Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:sensor-csv"));
                 })
-                //.AddAdapter<ExampleAdapter>()
+                .AddAdapter<ExampleAdapter>()
                 .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGenerator.WaveGeneratorAdapter>(sp, "wave-generator", new WaveGenerator.WaveGeneratorAdapterOptions() {
                     Name = "Wave Generator",
                     Description = "Generates tag values using wave generator functions",
