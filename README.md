@@ -172,6 +172,11 @@ services.AddOpenTelemetryTracing(builder => {
 To export to another destination (e.g. [Jaeger](https://www.jaegertracing.io/)), follow the instructions on the [OpenTelemetry GitHub repository](https://github.com/open-telemetry/opentelemetry-dotnet).
 
 
+# Implementing an Adapter
+
+See [here](/docs/writing-an-adapter.md) for information about writing an adapter.
+
+
 # Building
 
 Run [build.ps1](./build.ps1) to bootstrap and build the solution using [Cake](https://cakebuild.net/).

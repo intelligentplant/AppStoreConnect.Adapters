@@ -104,6 +104,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.OpenTelemetry", "src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj", "{A955719A-1C0A-4CE4-80C4-C09CD404380F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}"
+	ProjectSection(SolutionItems) = preProject
+		docs\writing-an-adapter.md = docs\writing-an-adapter.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tutorials", "tutorials", "{8ED7CFDF-3C22-4980-AC18-940049B0ED10}"
 EndProject
