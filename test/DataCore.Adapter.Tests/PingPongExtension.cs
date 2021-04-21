@@ -44,13 +44,12 @@ namespace DataCore.Adapter.Tests {
             BindInvoke<PingPongExtension, PingMessage[], PongMessage[]>(PingArray1D);
             BindInvoke<PingPongExtension, PingMessage[,], PongMessage[,]>(PingArray2D);
 
-            BindInvoke<IHelloWorld>(Greet);
+            BindInvoke<IHelloWorld, string>(Greet);
         }
 
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
         public Task<PongMessage> PingInvoke(
-            IAdapterCallContext context, 
             PingMessage ping, 
             CancellationToken cancellationToken
         ) {
@@ -67,7 +66,6 @@ namespace DataCore.Adapter.Tests {
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
         public async IAsyncEnumerable<PongMessage> PingStream(
-            IAdapterCallContext context,
             PingMessage ping,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
@@ -86,7 +84,6 @@ namespace DataCore.Adapter.Tests {
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
         public async IAsyncEnumerable<PongMessage> PingDuplexStream(
-            IAdapterCallContext context,
             IAsyncEnumerable<PingMessage> channel,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
@@ -108,7 +105,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public PongMessage[] PingArray1D(IAdapterCallContext context, PingMessage[] messages) {
+        public PongMessage[] PingArray1D(PingMessage[] messages) {
             var result = new PongMessage[messages.Length];
 
             for (var i = 0; i < messages.Length; i++) {
@@ -124,7 +121,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public PongMessage[,] PingArray2D(IAdapterCallContext context, PingMessage[,] messages) {
+        public PongMessage[,] PingArray2D(PingMessage[,] messages) {
             var len0 = messages.GetLength(0);
             var len1 = messages.GetLength(1);
             var result = new PongMessage[len0, len1];
@@ -144,16 +141,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task<InvocationResponse> Greet(
-            IAdapterCallContext context,
-            InvocationRequest message,
-            CancellationToken cancellationToken
-        ) {
-            return Task.FromResult(new InvocationResponse() { 
-                Results = new Variant[] {
-                    this.ConvertToVariant("Hello, world!")
-                }
-            });
+        public string Greet() {
+            return "Hello, world!";
         }
 
 
@@ -263,7 +252,7 @@ namespace DataCore.Adapter.Tests {
     internal interface IHelloWorld : IAdapterExtensionFeature {
 
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(PingPongExtension.GetGreetDescriptor))]
-        Task<InvocationResponse> Greet(IAdapterCallContext context, InvocationRequest message, CancellationToken cancellationToken);
+        string Greet();
 
     }
 
