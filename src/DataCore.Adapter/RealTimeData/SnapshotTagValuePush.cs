@@ -118,7 +118,7 @@ namespace DataCore.Adapter.RealTimeData {
                     return Array.Empty<TagIdentifier>();
                 }
 
-                var ch = feature.GetTags(context, new GetTagsRequest() {
+                var ch = feature!.GetTags(context, new GetTagsRequest() {
                     Tags = tags?.ToArray()!
                 }, cancellationToken);
 

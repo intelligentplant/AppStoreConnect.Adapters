@@ -27,7 +27,7 @@ namespace DataCore.Adapter {
     ///   The options type for the adapter.
     /// </typeparam>
     [AutomaticFeatureRegistration(true)]
-    public abstract class AdapterBase<TAdapterOptions> : IAdapter where TAdapterOptions : AdapterOptions, new() {
+    public abstract partial class AdapterBase<TAdapterOptions> : IAdapter where TAdapterOptions : AdapterOptions, new() {
 
         #region [ Fields / Properties ]
 
@@ -99,11 +99,6 @@ namespace DataCore.Adapter {
         public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
-        /// The adapter features.
-        /// </summary>
-        private readonly AdapterFeaturesCollection _features = new AdapterFeaturesCollection(true);
-
-        /// <summary>
         /// The <see cref="HealthCheckManager{TAdapterOptions}"/> that provides the <see cref="IHealthCheck"/> feature.
         /// </summary>
         private readonly HealthCheckManager<TAdapterOptions> _healthCheckManager;
@@ -129,7 +124,7 @@ namespace DataCore.Adapter {
         public IAdapterFeaturesCollection Features {
             get {
                 CheckDisposed();
-                return _features;
+                return (IAdapterFeaturesCollection) this;
             }
         }
 
@@ -195,7 +190,9 @@ namespace DataCore.Adapter {
             _loggerScope = Logger.BeginScope(id);
 
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
-            AddFeatures(_healthCheckManager);
+
+            // Register default features.
+            AddDefaultFeatures();
 
             // Automatically register features implemented directly on the adapter if required. 
             var autoRegisterFeatures = GetType().GetCustomAttribute<AutomaticFeatureRegistrationAttribute>(true);
@@ -701,12 +698,13 @@ namespace DataCore.Adapter {
             var result = new List<HealthCheckResult>();
             var processedFeatures = new HashSet<object>();
 
-            foreach (var key in _features.Keys.ToArray()) {
+            foreach (var item in _featureLookup) {
                 if (cancellationToken.IsCancellationRequested) {
                     return Array.Empty<HealthCheckResult>();
                 }
 
-                var feature = _features[key];
+                var key = item.Key;
+                var feature = item.Value;
 
                 if (feature == null || feature == this || !processedFeatures.Add(feature) || !(feature is IFeatureHealthCheck healthCheck)) {
                     continue;
@@ -761,170 +759,6 @@ namespace DataCore.Adapter {
         /// </returns>
         public CancellationTokenSource CreateCancellationTokenSource(params CancellationToken[] additionalTokens) {
             return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken }.ToArray());
-        }
-
-        #endregion
-
-        #region [ Feature Management ]
-
-        /// <summary>
-        /// Adds a feature to the adapter.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature. This must be an interface derived from <see cref="IAdapterFeature"/>.
-        /// </typeparam>
-        /// <typeparam name="TFeatureImpl">
-        ///   The feature implementation type. This must be a concrete class that implements 
-        ///   <typeparamref name="TFeature"/>.
-        /// </typeparam>
-        /// <param name="feature">
-        ///   The implementation object.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <typeparamref name="TFeature"/> is not an interface, or it does not interit from 
-        ///   <see cref="IAdapterFeature"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="feature"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   An implementation of <typeparamref name="TFeature"/> has already been registered.
-        /// </exception>
-        public void AddFeature<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
-            CheckDisposed();
-            _features.Add<TFeature, TFeatureImpl>(feature ?? throw new ArgumentNullException(nameof(feature)));
-        }
-
-
-        /// <summary>
-        /// Adds an adapter feature.
-        /// </summary>
-        /// <param name="featureType">
-        ///   The feature type. This must be an interface derived from <see cref="IAdapterFeature"/>.
-        /// </param>
-        /// <param name="feature">
-        ///   The feature implementation.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="featureType"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="feature"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="featureType"/> is not an adapter feature type.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="feature"/> is not an instance of <paramref name="featureType"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   An implementation of <paramref name="featureType"/> has already been registered.
-        /// </exception>
-        public void AddFeature(Type featureType, IAdapterFeature feature) {
-            CheckDisposed();
-            _features.Add(featureType, feature);
-        }
-
-
-        /// <summary>
-        /// Adds all adapter features implemented by the specified feature provider.
-        /// </summary>
-        /// <param name="provider">
-        ///   The object that will provide the adapter feature implementations.
-        /// </param>
-        /// <param name="addStandardFeatures">
-        ///   Specifies if standard adapter feature implementations should be added to the 
-        ///   collection. Standard feature types can be obtained by calling 
-        ///   <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>.
-        /// </param>
-        /// <param name="addExtensionFeatures">
-        ///   Specifies if extension adapter feature implementations should be added to the 
-        ///   collection. Extension features must derive from <see cref="IAdapterExtensionFeature"/> 
-        ///   and must match the criteria specified in <see cref="TypeExtensions.IsExtensionAdapterFeature"/>.
-        /// </param>
-        /// <remarks>
-        ///   All interfaces implemented by the <paramref name="provider"/> that extend 
-        ///   <see cref="IAdapterFeature"/> will be registered with the <see cref="Adapter"/> 
-        ///   (assuming that they meet the <paramref name="addStandardFeatures"/> and 
-        ///   <paramref name="addExtensionFeatures"/> constraints).
-        /// </remarks>
-        public void AddFeatures(object provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
-            CheckDisposed();
-            _features.AddFromProvider(provider ?? throw new ArgumentNullException(nameof(provider)), addStandardFeatures, addExtensionFeatures);
-        }
-
-
-        /// <summary>
-        /// Adds all standard adapter features implemented by the specified feature provider. 
-        /// Standard feature types can be obtained by calling <see cref="TypeExtensions.GetStandardAdapterFeatureTypes"/>
-        /// </summary>
-        /// <param name="provider">
-        ///   The object that will provide the adapter feature implementations.
-        /// </param>
-        public void AddStandardFeatures(object provider) {
-            AddFeatures(provider, true, false);
-        }
-
-
-        /// <summary>
-        /// Adds all extension adapter features implemented by the specified feature provider. See 
-        /// the remarks for details on how extension feature types are identified.
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   Extension feature implementations supplied by the <paramref name="provider"/> are 
-        ///   identified in one of two ways:
-        /// </para>
-        /// 
-        /// <list type="number">
-        ///   <item>
-        ///     <description>
-        ///       If the <paramref name="provider"/> implements <see cref="IAdapterExtensionFeature"/> 
-        ///       and is directly annotated with <see cref="ExtensionFeatureAttribute"/>, the 
-        ///       <paramref name="provider"/> will be directly registered using its own type as the 
-        ///       index in the adapter's features dictionary.
-        ///     </description>
-        ///   </item>
-        ///   <item>
-        ///     <description>
-        ///       If the <paramref name="provider"/> implements any interfaces that extend 
-        ///       <see cref="IAdapterExtensionFeature"/> that are annotated with 
-        ///       <see cref="ExtensionFeatureAttribute"/>, the <paramref name="provider"/> 
-        ///       will be registered using each of the implemented extension feature interfaces.
-        ///     </description>
-        ///   </item>
-        /// </list>
-        /// 
-        /// </remarks>
-        public void AddExtensionFeatures(object provider) {
-            AddFeatures(provider, false, true);
-        }
-
-
-        /// <summary>
-        /// Removes a registered feature.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature type to remove.
-        /// </typeparam>
-        /// <returns>
-        ///   <see langword="true"/> if the feature was removed, or <see langword="false"/>
-        ///   otherwise.
-        /// </returns>
-        public bool RemoveFeature<TFeature>() where TFeature : IAdapterFeature {
-            CheckDisposed();
-            return _features.Remove<TFeature>();
-        }
-
-
-        /// <summary>
-        /// Removes all features.
-        /// </summary>
-        public void RemoveAllFeatures() {
-            CheckDisposed();
-            _features.Clear();
         }
 
         #endregion
@@ -1259,7 +1093,7 @@ namespace DataCore.Adapter {
 
             if (disposing) {
                 DisposeCommon();
-                _features.Dispose();
+                DisposeFeatures();
             }
 
             _isDisposed = true;
@@ -1282,7 +1116,7 @@ namespace DataCore.Adapter {
         /// <seealso cref="Dispose(bool)"/>
         protected virtual async ValueTask DisposeAsyncCore() {
             DisposeCommon();
-            await _features.DisposeAsync().ConfigureAwait(false);
+            await DisposeFeaturesAsync().ConfigureAwait(false);
         }
 
         #endregion

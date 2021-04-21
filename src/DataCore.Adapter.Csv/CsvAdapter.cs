@@ -141,7 +141,7 @@ namespace DataCore.Adapter.Csv {
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
                 var simulatedPush = new PollingSnapshotTagValuePush(
-                    this.GetFeature<IReadSnapshotTagValues>(),
+                    this.GetFeature<IReadSnapshotTagValues>()!,
                     new PollingSnapshotTagValuePushOptions() {
                         AdapterId = Descriptor.Id,
                         PollingInterval = TimeSpan.FromMilliseconds(snapshotPushUpdateInterval),

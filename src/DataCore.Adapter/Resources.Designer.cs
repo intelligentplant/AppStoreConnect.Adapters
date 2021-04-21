@@ -475,6 +475,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while disposing feature: {feature}.
+        /// </summary>
+        internal static string Log_ErrorWhileDisposingOfFeature {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileDisposingOfFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while disposing of a snapshot subscription..
         /// </summary>
         internal static string Log_ErrorWhileDisposingOfSnapshotSubscription {

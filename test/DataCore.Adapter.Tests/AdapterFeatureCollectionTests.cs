@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
@@ -18,69 +17,89 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void AdapterFeatureCollectionShouldBePrePopulated() {
-            var featureCollection = new AdapterFeaturesCollection(new FeatureProvider());
-            Assert.IsNotNull(featureCollection.Get<IReadSnapshotTagValues>(), $"{nameof(IReadSnapshotTagValues)} feature should be defined.");
-            Assert.IsNotNull(featureCollection.Get<IReadEventMessagesForTimeRange>(), $"{nameof(IReadEventMessagesForTimeRange)} feature should be defined.");
-        }
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                adapter.AddFeatures(new FeatureProvider());
+                var featureCollection = adapter.Features;
+                Assert.IsNotNull(featureCollection.Get<IReadSnapshotTagValues>(), $"{nameof(IReadSnapshotTagValues)} feature should be defined.");
+                Assert.IsNotNull(featureCollection.Get<IReadEventMessagesForTimeRange>(), $"{nameof(IReadEventMessagesForTimeRange)} feature should be defined.");
+            }
 
+        }
 
         [TestMethod]
         public void AdapterFeaturesCollectionShouldBeEmptyWhenProviderDoesNotImplementFeatures() {
-            var featureCollection = new AdapterFeaturesCollection(new object());
-            Assert.IsNull(featureCollection.Get<IReadSnapshotTagValues>(), $"{nameof(IReadSnapshotTagValues)} feature should not be defined.");
-            Assert.IsNull(featureCollection.Get<IReadEventMessagesForTimeRange>(), $"{nameof(IReadEventMessagesForTimeRange)} feature should not be defined.");
-        }
-
-
-        [TestMethod]
-        public void AdapterFeaturesCollectionShouldBeEmptyWhenProviderIsNull() {
-            var featureCollection = new AdapterFeaturesCollection(null);
-            Assert.IsNull(featureCollection.Get<IReadSnapshotTagValues>(), $"{nameof(IReadSnapshotTagValues)} feature should not be defined.");
-            Assert.IsNull(featureCollection.Get<IReadEventMessagesForTimeRange>(), $"{nameof(IReadEventMessagesForTimeRange)} feature should not be defined.");
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                var featureCollection = adapter.Features;
+                Assert.IsNull(featureCollection.Get<IReadSnapshotTagValues>(), $"{nameof(IReadSnapshotTagValues)} feature should not be defined.");
+                Assert.IsNull(featureCollection.Get<IReadEventMessagesForTimeRange>(), $"{nameof(IReadEventMessagesForTimeRange)} feature should not be defined.");
+            }
         }
 
 
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUri() {
-            var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                var featureCollection = adapter.Features;
 
-            Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.FeatureUri)));
-            Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.FeatureUri), out var f));
-            Assert.IsNotNull(f);
+                Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.FeatureUri)));
+                Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.FeatureUri), out var f));
+                Assert.IsNotNull(f);
+            }
         }
 
 
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUri() {
-            var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                var featureCollection = adapter.Features;
 
-            Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative)));
-            Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative), out var f));
-            Assert.IsNotNull(f);
+                Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative)));
+                Assert.IsTrue(featureCollection.TryGetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative), out var f));
+                Assert.IsNotNull(f);
+            }
         }
 
 
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUriString() {
-            var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                var featureCollection = adapter.Features;
 
-            Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.FeatureUri));
-            Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.FeatureUri, out var f));
-            Assert.IsNotNull(f);
+                Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.FeatureUri));
+                Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.FeatureUri, out var f));
+                Assert.IsNotNull(f);
+            }
         }
 
 
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUriString() {
-            var featureCollection = new AdapterFeaturesCollection();
-            featureCollection.AddFromProvider(new PingPongExtension((IBackgroundTaskService) null!, Array.Empty<Common.IObjectEncoder>()));
+            using (var adapter = new TestAdapter(TestContext.TestName)) {
+                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                var featureCollection = adapter.Features;
 
-            Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.RelativeFeatureUri));
-            Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.RelativeFeatureUri, out var f));
-            Assert.IsNotNull(f);
+                Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.RelativeFeatureUri));
+                Assert.IsTrue(featureCollection.TryGetExtension(PingPongExtension.RelativeFeatureUri, out var f));
+                Assert.IsNotNull(f);
+            }
+        }
+
+
+        private class TestAdapter : AdapterBase {
+
+            internal TestAdapter(string id) : base(id, null, null, null, null) { }
+
+
+            protected override Task StartAsync(CancellationToken cancellationToken) {
+                return Task.CompletedTask;
+            }
+
+            protected override Task StopAsync(CancellationToken cancellationToken) {
+                return Task.CompletedTask;
+            }
         }
 
 

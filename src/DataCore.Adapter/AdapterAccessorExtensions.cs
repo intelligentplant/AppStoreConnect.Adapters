@@ -144,7 +144,7 @@ namespace DataCore.Adapter {
             }
 
             var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, uri, cancellationToken).ConfigureAwait(false);
-            return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
+            return new ResolvedAdapterFeature<TFeature>(adapter, feature!, isAuthorized);
         }
 
 

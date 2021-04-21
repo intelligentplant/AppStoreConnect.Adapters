@@ -2142,7 +2142,7 @@ namespace DataCore.Adapter.Tests {
                     var feature = adapter.GetExtensionFeature(extensionUri);
                     Assert.IsNotNull(feature, FormatMessage(Resources.UnableToResolveExtensionFeature, extensionUri));
 
-                    var descriptor = await feature.GetDescriptor(context, extensionUri, ct).ConfigureAwait(false);
+                    var descriptor = await feature!.GetDescriptor(context, extensionUri, ct).ConfigureAwait(false);
                     Assert.IsNotNull(descriptor, FormatMessage(Resources.FeatureDescriptorIsNull, extensionUri));
                     Assert.AreEqual(extensionUri, descriptor!.Uri, FormatMessage(Resources.FeatureDescriptorUriMismatch, extensionUri, descriptor!.Uri));
 

@@ -269,6 +269,9 @@
   <data name="Log_ErrorWhileDisposingOfEventMessageSubscription" xml:space="preserve">
     <value>An error occurred while disposing of an event message subscription.</value>
   </data>
+  <data name="Log_ErrorWhileDisposingOfFeature" xml:space="preserve">
+    <value>Error while disposing feature: {feature}</value>
+  </data>
   <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
     <value>An error occurred while disposing of a snapshot subscription.</value>
   </data>
