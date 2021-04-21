@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -49,10 +50,11 @@ namespace DataCore.Adapter.Tests {
             );
             Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
             TypeDescriptor = this.CreateTypeDescriptor();
-            var features = new AdapterFeaturesCollection(this);
+            var features = new AdapterFeaturesCollection();
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
+            features.AddFromProvider(this);
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
             features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
             features.Add<IEventMessagePushWithTopics, EventTopicSubscriptionManager>(_eventTopicSubscriptionManager);
@@ -128,6 +130,11 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        public void AddFeatures(object provider) {
+            ((AdapterFeaturesCollection) Features).AddFromProvider(provider);
+        }
+
+
         public void Dispose() {
             _snapshotSubscriptionManager.Dispose();
         }
@@ -168,6 +175,65 @@ namespace DataCore.Adapter.Tests {
                             .WithValue(0)
                             .Build()
                     )).GetAwaiter().GetResult();
+                }
+            }
+
+        }
+
+
+        private class AdapterFeaturesCollection : IAdapterFeaturesCollection {
+
+            private readonly ConcurrentDictionary<Uri, IAdapterFeature> _features = new ConcurrentDictionary<Uri, IAdapterFeature>();
+
+
+            /// <inheritdoc/>
+            public IEnumerable<Uri> Keys {
+                get { return _features.Keys; }
+            }
+
+
+
+            /// <inheritdoc/>
+            public IAdapterFeature this[Uri key] {
+                get {
+                    return key == null || !_features.TryGetValue(key, out var value)
+                        ? default!
+                        : value;
+                }
+            }
+
+
+            private void AddInternal(Type type, IAdapterFeature implementation) {
+                var uri = type.GetAdapterFeatureUri();
+                _features[uri!] = implementation;
+            }
+
+
+            public void Add<TFeature, TFeatureImpl>(TFeatureImpl feature) where TFeature : IAdapterFeature where TFeatureImpl : class, TFeature {
+                AddInternal(typeof(TFeature), feature);
+            }
+
+
+            public void AddFromProvider(object featureProvider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
+                if (featureProvider == null) {
+                    return;
+                }
+
+                var type = featureProvider.GetType();
+
+                var implementedFeatures = type.GetInterfaces().Where(x => x.IsAdapterFeature());
+                foreach (var feature in implementedFeatures) {
+                    if (!addStandardFeatures && feature.IsStandardAdapterFeature()) {
+                        continue;
+                    }
+                    if (!addExtensionFeatures && feature.IsExtensionAdapterFeature()) {
+                        continue;
+                    }
+                    AddInternal(feature, (IAdapterFeature) featureProvider);
+                }
+
+                if (addExtensionFeatures && type.IsConcreteExtensionAdapterFeature()) {
+                    AddInternal(type, (IAdapterFeature) featureProvider);
                 }
             }
 

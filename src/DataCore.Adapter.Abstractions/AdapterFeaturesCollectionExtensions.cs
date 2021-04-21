@@ -31,7 +31,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
         /// 
-        public static TFeature Get<TFeature>(
+        public static TFeature? Get<TFeature>(
             this IAdapterFeaturesCollection features
         ) where TFeature : IAdapterFeature {
             if (features == null) {
@@ -70,7 +70,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uri"/> is <see langword="null"/>.
         /// </exception>
-        public static TFeature Get<TFeature>(
+        public static TFeature? Get<TFeature>(
             this IAdapterFeaturesCollection features, 
             Uri uri
         ) where TFeature : IAdapterFeature {
@@ -110,7 +110,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
-        public static TFeature Get<TFeature>(
+        public static TFeature? Get<TFeature>(
             this IAdapterFeaturesCollection features, 
             string uriString
         ) where TFeature : IAdapterFeature {
@@ -148,7 +148,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uri"/> is <see langword="null"/>.
         /// </exception>
-        public static IAdapterFeature Get(this IAdapterFeaturesCollection features, Uri uri) {
+        public static IAdapterFeature? Get(this IAdapterFeaturesCollection features, Uri uri) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
@@ -181,7 +181,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
-        public static IAdapterFeature Get(this IAdapterFeaturesCollection features, string uriString) {
+        public static IAdapterFeature? Get(this IAdapterFeaturesCollection features, string uriString) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
@@ -214,7 +214,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uri"/> is <see langword="null"/>.
         /// </exception>
-        public static IAdapterExtensionFeature GetExtension(this IAdapterFeaturesCollection features, Uri uri) {
+        public static IAdapterExtensionFeature? GetExtension(this IAdapterFeaturesCollection features, Uri uri) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
@@ -256,7 +256,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
-        public static IAdapterExtensionFeature GetExtension(this IAdapterFeaturesCollection features, string uriString) {
+        public static IAdapterExtensionFeature? GetExtension(this IAdapterFeaturesCollection features, string uriString) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
@@ -305,7 +305,7 @@ namespace DataCore.Adapter {
         ///
         public static bool TryGet<TFeature>(
             this IAdapterFeaturesCollection features,
-            out TFeature feature
+            out TFeature? feature
         ) where TFeature : IAdapterFeature {
             feature = features.Get<TFeature>();
             return feature != null;
@@ -340,7 +340,7 @@ namespace DataCore.Adapter {
         public static bool TryGet<TFeature>(
             this IAdapterFeaturesCollection features, 
             Uri uri,
-            out TFeature feature
+            out TFeature? feature
         ) where TFeature : IAdapterFeature {
             feature = features.Get<TFeature>(uri);
             return feature != null;
@@ -378,7 +378,7 @@ namespace DataCore.Adapter {
         public static bool TryGet<TFeature>(
             this IAdapterFeaturesCollection features,
             string uriString,
-            out TFeature feature
+            out TFeature? feature
         ) where TFeature : IAdapterFeature {
             feature = features.Get<TFeature>(uriString);
             return feature != null;
@@ -413,7 +413,7 @@ namespace DataCore.Adapter {
         public static bool TryGet(
             this IAdapterFeaturesCollection features,
             Uri uri,
-            out IAdapterFeature feature
+            out IAdapterFeature? feature
         ) {
             feature = features.Get(uri);
             return feature != null;
@@ -448,7 +448,7 @@ namespace DataCore.Adapter {
         public static bool TryGet(
             this IAdapterFeaturesCollection features, 
             string uriString, 
-            out IAdapterFeature feature
+            out IAdapterFeature? feature
         ) {
             feature = features.Get(uriString);
             return feature != null;
@@ -483,7 +483,7 @@ namespace DataCore.Adapter {
         public static bool TryGetExtension(
             this IAdapterFeaturesCollection features,
             Uri uri,
-            out IAdapterExtensionFeature feature
+            out IAdapterExtensionFeature? feature
         ) {
             feature = features.GetExtension(uri);
             return feature != null;
@@ -518,7 +518,7 @@ namespace DataCore.Adapter {
         public static bool TryGetExtension(
             this IAdapterFeaturesCollection features,
             string uriString,
-            out IAdapterExtensionFeature feature
+            out IAdapterExtensionFeature? feature
         ) {
             feature = features.GetExtension(uriString);
             return feature != null;

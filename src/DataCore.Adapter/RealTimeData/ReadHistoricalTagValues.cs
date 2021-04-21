@@ -108,8 +108,8 @@ namespace DataCore.Adapter.RealTimeData {
 
             return new ReadHistoricalTagValues(
                 adapter.Descriptor.Id,
-                adapter.Features.Get<ITagInfo>(), 
-                adapter.Features.Get<IReadRawTagValues>(), 
+                adapter.Features.Get<ITagInfo>()!, 
+                adapter.Features.Get<IReadRawTagValues>()!, 
                 adapter.BackgroundTaskService
             );
         }
