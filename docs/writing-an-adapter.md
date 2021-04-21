@@ -293,9 +293,7 @@ public class PingPongExtension : AdapterExtensionFeature {
         while (!cancellationToken.IsCancellationRequested) {
             try {
                 await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                 yield return new PongMessage() {
-                    CorrelationId = ping.CorrelationId
-                };
+                yield return PingInvoke(ping);
             }
             catch (OperationCanceledException) { }
         }
@@ -316,10 +314,7 @@ public class PingPongExtension : AdapterExtensionFeature {
             if (ping == null) {
                 continue;
             }
-
-            yield return new PongMessage() {
-                CorrelationId = ping.CorrelationId
-            };
+            yield return PingInvoke(ping);
         }
     }
 
@@ -414,7 +409,7 @@ The `[ExtensionFeature]` annotation defines a URI for the extension. This can be
 }
 ```
 
-When writing an extension feature, methods can be annotated with an [ExtensionFeatureOperationAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureOperationAttribute.cs). When one of the `BindXXX` methods is used to bind the method to an `Invoke`, `Stream`, or `DuplexStream` operation, this attribute is used to generate a descriptor for the operation. An example (JSON-encoded) descriptor for the `Ping` method that is bound to the `Invoke` call above would look like this:
+When writing an extension feature, methods can be annotated with an [ExtensionFeatureOperationAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureOperationAttribute.cs). When one of the `BindXXX` methods is used to bind the method to an `Invoke`, `Stream`, or `DuplexStream` operation, this attribute is used to generate a descriptor for the operation. An example (JSON-encoded) descriptor for the `PingInvoke` method that is bound using the `BindInvoke` call above would look like this:
 
 ```json
 {
