@@ -269,24 +269,19 @@ public class PingPongExtension : AdapterExtensionFeature {
 
 
     [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
-    public Task<PongMessage> PingInvoke(
-        IAdapterCallContext context, 
-        PingMessage ping, 
-        CancellationToken cancellationToken
-    ) {
+    public PongMessage PingInvoke(PingMessage ping) {
         if (ping == null) {
             throw new ArgumentNullException(nameof(ping));
         }
 
-        return Task.FromResult(new PongMessage() {
+        return new PongMessage() {
             CorrelationId = ping.CorrelationId
-        });
+        };
     }
 
 
     [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
     public async IAsyncEnumerable<PongMessage> PingStream(
-        IAdapterCallContext context,
         PingMessage ping,
         [EnumeratorCancellation]
         CancellationToken cancellationToken
@@ -295,16 +290,20 @@ public class PingPongExtension : AdapterExtensionFeature {
             throw new ArgumentNullException(nameof(ping));
         }
 
-        await Task.CompletedTask.ConfigureAwait(false);
-        yield return new PongMessage() {
-            CorrelationId = ping.CorrelationId
-        };
+        while (!cancellationToken.IsCancellationRequested) {
+            try {
+                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
+                 yield return new PongMessage() {
+                    CorrelationId = ping.CorrelationId
+                };
+            }
+            catch (OperationCanceledException) { }
+        }
     }
 
 
     [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
     public async IAsyncEnumerable<PongMessage> PingDuplexStream(
-        IAdapterCallContext context,
         IAsyncEnumerable<PingMessage> channel,
         [EnumeratorCancellation]
         CancellationToken cancellationToken
