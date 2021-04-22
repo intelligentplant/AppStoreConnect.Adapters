@@ -625,14 +625,39 @@ partial class MyAdapter : IReadSnapshotTagValues {
 A [helper package](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers) is available to assist with basic testing of adapters using MSTest. To write tests for your adapter, extend the [AdapterTestsBase&lt;TAdapter&gt;](/src/DataCore.Adapter.Tests.Helpers/AdapterTestsBase.cs) base class, annotate your new class with a `[TestClass]` attribute, implement the abstract `CreateServiceScope` and `CreateAdapter` methods, and then override the various `CreateXXXRequest` methods to supply settings for the features that your adapter implements:
 
 ```csharp
+// AssemblyInitializer.cs
+
+[TestClass]
+public class AssemblyInitializer {
+
+    public static IServiceProvider? ServiceProvider { get; private set; }
+
+    [AssemblyInitialize]
+    public static void Init(TestContext testContext) {
+        // This method is called by MSTest when your test assembly is loaded. If you will not 
+        // be using a service provider when creating adapter instances for use in tests, this 
+        // class is not required.
+
+        var services = new ServiceCollection();
+
+        // TODO: add services such as logging here.
+
+        ServiceProvider = services.BuildServiceProvider();
+    }
+
+}
+```
+
+```csharp
+// MyAdapterTests.cs
+
 [TestClass]
 public class MyAdapterTests : AdapterTestsBase<MyAdapter> {
 
     protected override IServiceScope? CreateServiceScope(TestContext context) {
-        // If you want to inject services from a dependency injection container into your adapter 
-        // (such as logging), you can create your container during the MSTest "assembly initialize" 
-        // or "class initialize" phases and then create a new service scope here.
-        return null;
+        // Create and return a service scope for a test. You can return null if you will not be 
+        // using a service provider when creating your adapter instances in CreateAdapter below.
+        return AssemblyInitializer.ServiceProvider?.CreateScope();
     }
 
     protected override MyAdapter CreateAdapter(TestContext context, IServiceProvider? serviceProvider) {
