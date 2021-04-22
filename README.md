@@ -71,11 +71,16 @@ The [examples](/examples) folder contains example host and client applications.
 Package versions are defined in a [common build properties file](/build/Dependencies.props).
 
 
-# ASP.NET Core Quick Start
+# Writing an Adapter
+
+See [here](/docs/writing-an-adapter.md) for information about writing an adapter.
+
+
+# ASP.NET Core Hosting Quick Start
 
 1. Create a new ASP.NET Core project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
-3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. The [AdapterBase<T>](/src/DataCore.Adapter/AdapterBaseT.cs) and [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes provides abstract base classes that you can inherit from.
+3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. Detailed information is available [here](/docs/writing-an-adapter.md).
 4. If you want to apply authorization policies to the adapter or to individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class. More details are available [here](/src/DataCore.Adapter.AspNetCore.Common/README.md).
 5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
 
@@ -170,11 +175,6 @@ services.AddOpenTelemetryTracing(builder => {
 ```
 
 To export to another destination (e.g. [Jaeger](https://www.jaegertracing.io/)), follow the instructions on the [OpenTelemetry GitHub repository](https://github.com/open-telemetry/opentelemetry-dotnet).
-
-
-# Implementing an Adapter
-
-See [here](/docs/writing-an-adapter.md) for information about writing an adapter.
 
 
 # Building

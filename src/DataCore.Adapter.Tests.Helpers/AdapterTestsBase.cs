@@ -34,9 +34,9 @@ namespace DataCore.Adapter.Tests {
         ///   The test context.
         /// </param>
         /// <returns>
-        ///   A new <see cref="IServiceScope"/> instance.
+        ///   A new <see cref="IServiceScope"/> instance, or <see langword="null"/>.
         /// </returns>
-        protected abstract IServiceScope CreateServiceScope(TestContext context);
+        protected abstract IServiceScope? CreateServiceScope(TestContext context);
 
 
         /// <summary>
@@ -46,12 +46,13 @@ namespace DataCore.Adapter.Tests {
         ///   The test context.
         /// </param>
         /// <param name="serviceProvider">
-        ///   The service provider for the test.
+        ///   The service provider for the test, or <see langword="null"/> if <see cref="CreateServiceScope"/> 
+        ///   returns <see langword="null"/>.
         /// </param>
         /// <returns>
         ///   A new <typeparamref name="TAdapter"/> instance.
         /// </returns>
-        protected abstract TAdapter CreateAdapter(TestContext context, IServiceProvider serviceProvider);
+        protected abstract TAdapter CreateAdapter(TestContext context, IServiceProvider? serviceProvider);
 
 
         /// <summary>
@@ -89,7 +90,7 @@ namespace DataCore.Adapter.Tests {
             }
 
             using (var scope = CreateServiceScope(TestContext)) {
-                var adapter = CreateAdapter(TestContext, scope.ServiceProvider);
+                var adapter = CreateAdapter(TestContext, scope?.ServiceProvider);
                 if (adapter == null) {
                     Assert.Inconclusive(Resources.AdapterCreationDelegateReturnedNull);
                     return;
