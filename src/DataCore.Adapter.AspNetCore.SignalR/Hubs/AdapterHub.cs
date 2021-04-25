@@ -99,7 +99,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
 
-            await foreach (var item in AdapterAccessor.FindAdapters(adapterCallContext, request, true, cancellationToken).ConfigureAwait(false)) {
+            await foreach (var item in AdapterAccessor.FindAdapters(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
                 yield return AdapterDescriptor.FromExisting(item.Descriptor);
             }
         }
@@ -116,7 +116,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await AdapterAccessor.GetAdapter(adapterCallContext, adapterId, true, Context.ConnectionAborted).ConfigureAwait(false);
+            var adapter = await AdapterAccessor.GetAdapter(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             return adapter == null ? null! : adapter.CreateExtendedAdapterDescriptor();
         }
 

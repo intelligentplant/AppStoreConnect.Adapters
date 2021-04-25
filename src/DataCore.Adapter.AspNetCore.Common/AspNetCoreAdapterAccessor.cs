@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using IntelligentPlant.BackgroundTasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 
@@ -24,32 +24,61 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="AspNetCoreAdapterAccessor"/> object.
         /// </summary>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use.
-        /// </param>
         /// <param name="authorizationService">
         ///   The authorization service that will be used to control access to adapters.
         /// </param>
         /// <param name="adapters">
         ///   The ASP.NET Core hosted services.
         /// </param>
-        public AspNetCoreAdapterAccessor(IBackgroundTaskService backgroundTaskService, IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
-            : base(backgroundTaskService, authorizationService) {
+        public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
+            : base(authorizationService) {
             _adapters = adapters?.OrderBy(x => x.Descriptor.Name, StringComparer.OrdinalIgnoreCase)?.ToArray() ?? Array.Empty<IAdapter>();
         }
 
 
-        /// <summary>
-        /// Returns the available adapters.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The available adapters.
-        /// </returns>
-        protected override IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken) {
-            return _adapters.PublishToChannel().ReadAllAsync(cancellationToken);
+        /// <inheritdoc/>
+        protected override async IAsyncEnumerable<IAdapter> FindAdapters(
+            IAdapterCallContext context, 
+            FindAdaptersRequest request, 
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            var adapters = _adapters
+                .Where(x => x.IsEnabled)
+                .Where(x => MatchesFilter(x, request))
+                .OrderBy(x => x.GetName(), StringComparer.OrdinalIgnoreCase);
+
+            var skip = (request.Page - 1) * request.PageSize;
+            var take = request.PageSize;
+
+            foreach (var adapter in adapters) {
+                if (!await IsAuthorized(adapter, context, cancellationToken).ConfigureAwait(false)) {
+                    continue;
+                }
+
+                if (skip > 0) {
+                    --skip;
+                    continue;
+                }
+
+                yield return adapter;
+                --take;
+                if (take <= 0) {
+                    break;
+                }
+            }
         }
+
+
+        /// <inheritdoc/>
+        protected override async Task<IAdapter?> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+            var adapter = _adapters.FirstOrDefault(x => string.Equals(x.Descriptor.Id, adapterId, StringComparison.OrdinalIgnoreCase));
+            if (adapter == null || !adapter.IsEnabled || !await IsAuthorized(adapter, context, cancellationToken).ConfigureAwait(false)) {
+                return null;
+            }
+
+            return adapter;
+        }
+
     }
 }

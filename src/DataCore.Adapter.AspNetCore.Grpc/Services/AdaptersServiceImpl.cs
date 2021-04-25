@@ -45,7 +45,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     PageSize = request.PageSize,
                     Page = request.Page
                 },
-                true,
                 context.CancellationToken
             );
 
@@ -60,7 +59,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <inheritdoc/>
         public override async Task<GetAdapterResponse> GetAdapter(GetAdapterRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
-            var adapter = await _adapterAccessor.GetAdapter(adapterCallContext, request.AdapterId, true, context.CancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(adapterCallContext, request.AdapterId, context.CancellationToken).ConfigureAwait(false);
 
             return new GetAdapterResponse() {
                 Adapter = adapter?.CreateExtendedAdapterDescriptor().ToGrpcExtendedAdapterDescriptor()

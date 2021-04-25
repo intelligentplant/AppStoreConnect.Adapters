@@ -493,7 +493,7 @@ namespace DataCore.Adapter {
         ///   starting.
         /// </param>
         protected void CheckStarted(bool allowStarting = false) {
-            if (IsRunning || (allowStarting && IsStarting)) {
+            if (IsEnabled && (IsRunning || (allowStarting && IsStarting))) {
                 return;
             }
 
