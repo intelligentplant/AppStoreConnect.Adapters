@@ -206,12 +206,15 @@ namespace DataCore.Adapter {
         /// <param name="topics">
         ///   The topics.
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   <see langword="true"/> if the value matches any of the topics, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        protected virtual bool IsTopicMatch(TValue value, IEnumerable<TTopic> topics) {
-            return true;
+        protected virtual ValueTask<bool> IsTopicMatch(TValue value, IEnumerable<TTopic> topics, CancellationToken cancellationToken) {
+            return new ValueTask<bool>(true);
         }
 
 
@@ -380,7 +383,7 @@ namespace DataCore.Adapter {
 
             var subscribers = new List<TSubscription>();
             foreach (var sub in _subscriptions.Values) {
-                if (IsTopicMatch(message, sub.Topics)) {
+                if (await IsTopicMatch(message, sub.Topics, cancellationToken).ConfigureAwait(false)) {
                     subscribers.Add(sub);
                 }
             }

@@ -342,10 +342,10 @@ namespace DataCore.Adapter.Tests {
 
             var options = new SnapshotTagValuePushOptions() {
                 TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray()),
-                IsTopicMatch = (subscribed, received) => {
+                IsTopicMatch = (subscribed, received, ct) => {
                     // If we subscribe to "tag_root", we should receive messages with a topic of 
                     // e.g. "tag_root/sub_tag".
-                    return received.Id.Equals(subscribed.Id) || received.Id.StartsWith(subscribed.Id + "/");
+                    return new ValueTask<bool>(received.Id.Equals(subscribed.Id) || received.Id.StartsWith(subscribed.Id + "/"));
                 }
             };
 
@@ -803,10 +803,10 @@ namespace DataCore.Adapter.Tests {
             var topicRoot = Guid.NewGuid().ToString();
 
             var options = new EventMessagePushWithTopicsOptions() {
-                IsTopicMatch = (subscribed, received) => {
+                IsTopicMatch = (subscribed, received, ct) => {
                     // If we subscribe to "topic_root", we should receive messages with a topic of 
                     // e.g. "topic_root/sub_topic".
-                    return received != null && received.StartsWith(subscribed);
+                    return new ValueTask<bool>(received != null && received.StartsWith(subscribed));
                 }
             };
 

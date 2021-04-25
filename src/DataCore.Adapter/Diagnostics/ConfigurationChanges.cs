@@ -95,9 +95,9 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        protected override bool IsTopicMatch(ConfigurationChange value, IEnumerable<string> topics) {
+        protected override ValueTask<bool> IsTopicMatch(ConfigurationChange value, IEnumerable<string> topics, CancellationToken cancellationToken) {
             var result = topics.Any(x => string.Equals(value.ItemType, x, StringComparison.OrdinalIgnoreCase));
-            return result;
+            return new ValueTask<bool>(result);
         }
 
 
