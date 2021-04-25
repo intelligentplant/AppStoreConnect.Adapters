@@ -22,6 +22,11 @@ namespace DataCore.Adapter.RealTimeData {
     public class SnapshotTagValuePush : SubscriptionManager<SnapshotTagValuePushOptions, TagIdentifier, TagValueQueryResult, TagValueSubscriptionChannel>, ISnapshotTagValuePush {
 
         /// <summary>
+        /// Flags if the object has been disposed.
+        /// </summary>
+        private bool _isDisposed;
+
+        /// <summary>
         /// Holds the current values for subscribed tags indexed by tag ID.
         /// </summary>
         private readonly ConcurrentDictionary<string, TagValueQueryResult> _currentValueByTagId = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
@@ -135,7 +140,7 @@ namespace DataCore.Adapter.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (context == null) {
@@ -630,12 +635,18 @@ namespace DataCore.Adapter.RealTimeData {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
+            if (_isDisposed) {
+                return;
+            }
+
             if (disposing) {
                 _topicSubscriptionChangesChannel.Writer.TryComplete();
                 lock (_subscriberCount) {
                     _subscriberCount.Clear();
                 }
             }
+
+            _isDisposed = true;
         }
 
     }

@@ -21,6 +21,11 @@ namespace DataCore.Adapter.Events {
     public class EventMessagePushWithTopics : SubscriptionManager<EventMessagePushWithTopicsOptions, string, EventMessage, EventSubscriptionChannel>, IEventMessagePushWithTopics {
 
         /// <summary>
+        /// Flags if the object has been disposed.
+        /// </summary>
+        private bool _isDisposed;
+
+        /// <summary>
         /// Channel that is used to publish changes to subscribed topics.
         /// </summary>
         private readonly Channel<(List<string> Topics, bool Added, TaskCompletionSource<bool> Processed)> _topicSubscriptionChangesChannel = Channel.CreateUnbounded<(List<string>, bool, TaskCompletionSource<bool>)>(new UnboundedChannelOptions() {
@@ -72,7 +77,7 @@ namespace DataCore.Adapter.Events {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (context == null) {
@@ -442,12 +447,18 @@ namespace DataCore.Adapter.Events {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
+            if (_isDisposed) {
+                return;
+            }
+
             if (disposing) {
                 _topicSubscriptionChangesChannel.Writer.TryComplete();
                 lock (_subscriberCount) {
                     _subscriberCount.Clear();
                 }
             }
+
+            _isDisposed = true;
         }
 
     }

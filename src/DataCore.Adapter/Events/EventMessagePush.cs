@@ -26,6 +26,11 @@ namespace DataCore.Adapter.Events {
     public class EventMessagePush : SubscriptionManager<EventMessagePushOptions, string, EventMessage, EventSubscriptionChannel>, IEventMessagePush {
 
         /// <summary>
+        /// Flags if the object has been disposed.
+        /// </summary>
+        private bool _isDisposed;
+
+        /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
         /// a forward-only cursor that you do not want to advance when only passive listeners are 
         /// attached to the adapter, you can use this property to identify if any active listeners are 
@@ -80,7 +85,7 @@ namespace DataCore.Adapter.Events {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (context == null) {
@@ -125,6 +130,13 @@ namespace DataCore.Adapter.Events {
             result[Resources.HealthChecks_Data_PassiveSubscriberCount] = subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo);
 
             return result;
+        }
+
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            _isDisposed = true;
         }
 
     }
