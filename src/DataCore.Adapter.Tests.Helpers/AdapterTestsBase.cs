@@ -182,6 +182,37 @@ namespace DataCore.Adapter.Tests {
         #region [ IAdapter ]
 
         /// <summary>
+        /// Ensures that exceptions are not thrown if an adapter is disposed multiple times.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        [TestMethod]
+        public Task AdapterShouldAllowDisposeToBeCalledMultipleTimes() {
+            return RunAdapterTest((adapter, context, ct) => {
+                adapter.Dispose();
+                adapter.Dispose();
+                return Task.CompletedTask;
+            });
+        }
+
+
+        /// <summary>
+        /// Ensures that exceptions are not thrown if an adapter is disposed multiple times.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        [TestMethod]
+        public Task AdapterShouldAllowDisposeAsyncToBeCalledMultipleTimes() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                await adapter.DisposeAsync().ConfigureAwait(false);
+                await adapter.DisposeAsync().ConfigureAwait(false);
+            });
+        }
+
+
+        /// <summary>
         /// Verifies that the adapter's <see cref="IBackgroundTaskServiceProvider.BackgroundTaskService"/> 
         /// property is not <see langword="null"/>.
         /// </summary>

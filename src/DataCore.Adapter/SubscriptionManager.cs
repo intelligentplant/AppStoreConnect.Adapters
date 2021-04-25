@@ -52,7 +52,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Flags if the object has been disposed.
         /// </summary>
-        protected bool IsDisposed { get; private set; }
+        private bool _isDisposed;
 
         /// <summary>
         /// Fires when then object is being disposed.
@@ -109,7 +109,7 @@ namespace DataCore.Adapter {
         /// Channel that is used to publish new event messages. This is a single-consumer channel; the 
         /// consumer thread will then re-publish to subscribers as required.
         /// </summary>
-        private readonly Channel<(TValue Value, SubscriptionChannel<TTopic, TValue>[] Subscribers)> _masterChannel = Channel.CreateUnbounded<(TValue, SubscriptionChannel<TTopic, TValue>[])>(new UnboundedChannelOptions() {
+        private readonly Channel<(TValue Value, IEnumerable<SubscriptionChannel<TTopic, TValue>> Subscribers)> _masterChannel = Channel.CreateUnbounded<(TValue, IEnumerable<SubscriptionChannel<TTopic, TValue>>)>(new UnboundedChannelOptions() {
             AllowSynchronousContinuations = false,
             SingleReader = true,
             SingleWriter = true
@@ -340,7 +340,7 @@ namespace DataCore.Adapter {
         ///   The cancelled subscription ID.
         /// </param>
         private void OnSubscriptionCancelledInternal(int id) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 return;
             }
 
@@ -371,14 +371,19 @@ namespace DataCore.Adapter {
         ///   <paramref name="message"/> is <see langword="null"/>.
         /// </exception>
         public virtual async ValueTask<bool> ValueReceived(TValue message, CancellationToken cancellationToken = default) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var subscribers = _subscriptions.Values.Where(x => IsTopicMatch(message, x.Topics)).ToArray();
+            var subscribers = new List<TSubscription>();
+            foreach (var sub in _subscriptions.Values) {
+                if (IsTopicMatch(message, sub.Topics)) {
+                    subscribers.Add(sub);
+                }
+            }
 
             try {
                 using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
@@ -453,7 +458,7 @@ namespace DataCore.Adapter {
         ///   disposed, or <see langword="false"/> if it is being finalized.
         /// </param>
         protected virtual void Dispose(bool disposing) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 return;
             }
 
@@ -469,7 +474,7 @@ namespace DataCore.Adapter {
                 _subscriptions.Clear();
             }
 
-            IsDisposed = true;
+            _isDisposed = true;
         }
 
 
@@ -503,7 +508,7 @@ namespace DataCore.Adapter {
                     }
 
                     Publish?.Invoke(item.Value);
-                    if (item.Subscribers.Length == 0) {
+                    if (!item.Subscribers.Any()) {
                         continue;
                     }
 

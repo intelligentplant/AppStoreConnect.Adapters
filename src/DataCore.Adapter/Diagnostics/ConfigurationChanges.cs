@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -16,6 +15,12 @@ namespace DataCore.Adapter.Diagnostics {
     /// Default implementation of the <see cref="IConfigurationChanges"/> feature.
     /// </summary>
     public class ConfigurationChanges : SubscriptionManager<ConfigurationChangesOptions, string, ConfigurationChange, ConfigurationChangesSubscription>, IConfigurationChanges {
+
+        /// <summary>
+        /// Flags if the object has been disposed.
+        /// </summary>
+        private bool _isDisposed;
+
 
         /// <summary>
         /// Creates a new <see cref="ConfigurationChanges"/> object.
@@ -62,7 +67,7 @@ namespace DataCore.Adapter.Diagnostics {
             ConfigurationChangesSubscriptionRequest request, 
             CancellationToken cancellationToken
         ) {
-            if (IsDisposed) {
+            if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().FullName);
             }
             if (context == null) {
@@ -91,7 +96,15 @@ namespace DataCore.Adapter.Diagnostics {
 
         /// <inheritdoc/>
         protected override bool IsTopicMatch(ConfigurationChange value, IEnumerable<string> topics) {
-            return topics.Any(x => string.Equals(value.ItemType, x, StringComparison.OrdinalIgnoreCase));
+            var result = topics.Any(x => string.Equals(value.ItemType, x, StringComparison.OrdinalIgnoreCase));
+            return result;
+        }
+
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            _isDisposed = true;
         }
 
     }
