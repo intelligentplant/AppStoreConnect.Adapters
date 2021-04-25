@@ -242,7 +242,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override bool IsTopicMatch(TagValueQueryResult value, IEnumerable<TagIdentifier> topics) {
+        protected override async ValueTask<bool> IsTopicMatch(TagValueQueryResult value, IEnumerable<TagIdentifier> topics, CancellationToken cancellationToken) {
             if (value == null) {
                 return false;
             }
@@ -250,7 +250,12 @@ namespace DataCore.Adapter.RealTimeData {
 
             // If a custom delegate has been specified, defer to that.
             if (Options.IsTopicMatch != null) {
-                return topics.Any(x => Options.IsTopicMatch(x, tagIdentifier));
+                foreach (var topic in topics) {
+                    if (await Options.IsTopicMatch(topic, tagIdentifier, cancellationToken).ConfigureAwait(false)) {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             if (topics.Any(x => TagIdentifierComparer.Id.Equals(tagIdentifier, x))) {
@@ -696,7 +701,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   the tag ID on a subscribed topic.
         /// </para>
         /// </remarks>
-        public Func<TagIdentifier, TagIdentifier, bool>? IsTopicMatch { get; set; }
+        public Func<TagIdentifier, TagIdentifier, CancellationToken, ValueTask<bool>>? IsTopicMatch { get; set; }
 
         /// <summary>
         /// When <see langword="true"/>, the cached current value for a tag will be kept even if 

@@ -167,13 +167,19 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override bool IsTopicMatch(EventMessage value, IEnumerable<string> topics) {
+        protected override async ValueTask<bool> IsTopicMatch(EventMessage value, IEnumerable<string> topics, CancellationToken cancellationToken) {
             if (value?.Topic == null) {
                 return false;
             }
 
+            // If a custom delegate has been specified, defer to that.
             if (Options.IsTopicMatch != null) {
-                return topics.Any(x => Options.IsTopicMatch(x, value.Topic));
+                foreach (var topic in topics) {
+                    if (await Options.IsTopicMatch(topic, value.Topic, cancellationToken).ConfigureAwait(false)) {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             if (topics.Any(x => string.Equals(value.Topic, x, StringComparison.Ordinal))) {
@@ -489,7 +495,7 @@ namespace DataCore.Adapter.Events {
         ///   The first parameter passed to the delegate is the subscription topic, and the second 
         ///   parameter is the topic for the received event message.
         /// </remarks>
-        public Func<string, string?, bool>? IsTopicMatch { get; set; }
+        public Func<string, string?, CancellationToken, ValueTask<bool>>? IsTopicMatch { get; set; }
 
     }
 
