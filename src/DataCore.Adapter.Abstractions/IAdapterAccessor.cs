@@ -26,9 +26,6 @@ namespace DataCore.Adapter {
         /// <param name="request">
         ///   The search filter.
         /// </param>
-        /// <param name="enabledOnly">
-        ///   When <see langword="true"/>, only enabled adapters will be returned.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -38,8 +35,7 @@ namespace DataCore.Adapter {
         IAsyncEnumerable<IAdapter> FindAdapters(
             IAdapterCallContext context, 
             FindAdaptersRequest request, 
-            bool enabledOnly = true,
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken
         );
 
 
@@ -52,9 +48,6 @@ namespace DataCore.Adapter {
         /// <param name="adapterId">
         ///   The ID of the adapter.
         /// </param>
-        /// <param name="enabledOnly">
-        ///   When <see langword="true"/>, the adapter will only be returned if it is enabled.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -64,8 +57,7 @@ namespace DataCore.Adapter {
         Task<IAdapter?> GetAdapter(
             IAdapterCallContext context, 
             string adapterId,
-            bool enabledOnly = true,
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken
         );
 
     }

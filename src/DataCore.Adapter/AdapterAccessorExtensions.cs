@@ -38,7 +38,7 @@ namespace DataCore.Adapter {
             return adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
                 Page = 1,
                 PageSize = int.MaxValue
-            }, false, cancellationToken);
+            }, cancellationToken);
         }
 
 
@@ -82,8 +82,8 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var adapter = await adapterAccessor.GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null || !adapter.IsEnabled) {
                 return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
             }
 
@@ -121,7 +121,6 @@ namespace DataCore.Adapter {
         ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
         ///   authorization result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Parameter is not guaranteed to be a URI")]
         public static async Task<ResolvedAdapterFeature<TFeature>> GetAdapterAndFeature<TFeature>(
             this IAdapterAccessor adapterAccessor, 
             IAdapterCallContext context, 
@@ -132,8 +131,8 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
             
-            var adapter = await adapterAccessor.GetAdapter(context, adapterId, true, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null || !adapter.IsEnabled) {
                 return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
             }
 

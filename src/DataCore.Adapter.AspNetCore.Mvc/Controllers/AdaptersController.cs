@@ -107,7 +107,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 // Don't allow arbitrarily large queries!
                 request.PageSize = 100;
             }
-            var adapters = _adapterAccessor.FindAdapters(callContext, request, true, cancellationToken);
+            var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
 
             var result = new List<AdapterDescriptor>(request.PageSize);
             await foreach (var item in adapters.ConfigureAwait(false)) {
@@ -136,7 +136,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, true, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }

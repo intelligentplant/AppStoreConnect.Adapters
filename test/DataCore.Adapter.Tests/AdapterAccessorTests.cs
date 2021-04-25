@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 
@@ -15,41 +17,13 @@ namespace DataCore.Adapter.Tests {
     public class AdapterAccessorTests : TestsBase {
 
         [TestMethod]
-        public async Task AdapterAccessor_ShouldReturnEnabledAdapter() {
+        public async Task AdapterAccessor_ShouldReturnAdapter() {
             using (var adapter = new ExampleAdapter()) {
                 var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
+                IAdapterAccessor accessor = new AdapterAccessorImpl(adapter, authService);
 
                 var context = ExampleCallContext.ForPrincipal(null);
-                var a = await accessor.GetAdapter(context, adapter.Descriptor.Id);
-                Assert.IsNotNull(a);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldNotReturnDisabledAdapter() {
-            using (var adapter = new ExampleAdapter()) {
-                adapter.IsEnabled = false;
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var a = await accessor.GetAdapter(context, adapter.Descriptor.Id);
-                Assert.IsNull(a);
-            }
-        }
-
-
-        [TestMethod]
-        public async Task AdapterAccessor_ShouldReturnDisabledAdapter() {
-            using (var adapter = new ExampleAdapter()) {
-                adapter.IsEnabled = false;
-                var authService = new AuthorizationService(true);
-                var accessor = new AdapterAccessorImpl(adapter, authService);
-
-                var context = ExampleCallContext.ForPrincipal(null);
-                var a = await accessor.GetAdapter(context, adapter.Descriptor.Id, false);
+                var a = await accessor.GetAdapter(context, adapter.Descriptor.Id, default);
                 Assert.IsNotNull(a);
             }
         }
@@ -182,14 +156,33 @@ namespace DataCore.Adapter.Tests {
             private readonly IAdapter _adapter;
 
 
-            public AdapterAccessorImpl(IAdapter adapter, IAdapterAuthorizationService authService) : base(adapter.BackgroundTaskService, authService) {
+            public AdapterAccessorImpl(IAdapter adapter, IAdapterAuthorizationService authService) : base(authService) {
                 _adapter = adapter;
             }
 
 
-            protected override IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken) {
-                return new[] { _adapter }.PublishToChannel().ReadAllAsync(cancellationToken);
+            protected override async IAsyncEnumerable<IAdapter> FindAdapters(
+                IAdapterCallContext context, 
+                FindAdaptersRequest request, 
+                [EnumeratorCancellation]
+                CancellationToken cancellationToken
+            ) {
+                if (request.Page > 1 || !MatchesFilter(_adapter, request) || !await IsAuthorized(_adapter, context, cancellationToken).ConfigureAwait(false)) {
+                    yield break;
+                }
+
+                yield return _adapter;
             }
+
+
+            protected override Task<IAdapter> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
+                if (string.Equals(adapterId, _adapter.Descriptor.Id, StringComparison.OrdinalIgnoreCase)) {
+                    return Task.FromResult(_adapter);
+                }
+
+                return Task.FromResult<IAdapter>(null);
+            }
+
         }
 
 

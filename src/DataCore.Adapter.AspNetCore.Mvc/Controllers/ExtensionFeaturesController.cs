@@ -58,7 +58,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<string>), 200)]
         public async Task<IActionResult> GetAvailableExtensions(string adapterId, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, true, cancellationToken).ConfigureAwait(false);
+            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (adapter == null) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using DataCore.Adapter.Common;
 
-using IntelligentPlant.BackgroundTasks;
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 
@@ -17,11 +14,6 @@ namespace DataCore.Adapter {
     /// </summary>
     public abstract class AdapterAccessor : IAdapterAccessor {
 
-        /// <summary>
-        /// Service for running background operations.
-        /// </summary>
-        private readonly IBackgroundTaskService _backgroundTaskService;
-
         /// <inheritdoc/>
         public IAdapterAuthorizationService AuthorizationService { get; }
 
@@ -29,127 +21,195 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Creates a new <see cref="AdapterAccessor"/> object.
         /// </summary>
-        /// <param name="backgroundTaskService">
-        ///   The background task service to use.
-        /// </param>
         /// <param name="authorizationService">
         ///   The adapter authorization service to use.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="authorizationService"/> is <see langword="null"/>.
         /// </exception>
-        protected AdapterAccessor(IBackgroundTaskService backgroundTaskService, IAdapterAuthorizationService authorizationService) {
-            _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
+        protected AdapterAccessor(IAdapterAuthorizationService authorizationService) {
             AuthorizationService = authorizationService ?? throw new ArgumentNullException(nameof(authorizationService));
         }
 
 
         /// <summary>
-        /// Gets the available adapters.
+        /// Gets the available adapters matching the specified filter.
         /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The available adapters.
         /// </returns>
-        protected abstract IAsyncEnumerable<IAdapter> GetAdapters(CancellationToken cancellationToken);
+        /// <remarks>
+        ///   Implementers should use <see cref="IsAuthorized"/> to determine if a caller 
+        ///   is authorized to access a particular adapter. Only enabled adapters should 
+        ///   be returned.
+        /// </remarks>
+        protected abstract IAsyncEnumerable<IAdapter> FindAdapters(
+            IAdapterCallContext context, 
+            FindAdaptersRequest request,
+            CancellationToken cancellationToken
+        );
+
+
+        /// <summary>
+        /// Gets the available adapters matching the specified filter.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to retrieve.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The adapter, or <see langword="null"/> if the adapter cannot be resolved.
+        /// </returns>
+        /// <remarks>
+        ///   Implementers should use <see cref="IsAuthorized"/> to determine if a caller 
+        ///   is authorized to access a particular adapter. Only enabled adapters should 
+        ///   be returned.
+        /// </remarks>
+        protected abstract Task<IAdapter?> GetAdapter(
+            IAdapterCallContext context,
+            string adapterId,
+            CancellationToken cancellationToken
+        );
 
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<IAdapter> FindAdapters(
+        async IAsyncEnumerable<IAdapter> IAdapterAccessor.FindAdapters(
             IAdapterCallContext context, 
-            FindAdaptersRequest request, 
-            bool enabledOnly = true,
+            FindAdaptersRequest request,
             [EnumeratorCancellation]
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken
         ) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
             }
+            ValidationExtensions.ValidateObject(request);
 
-            var result = ChannelExtensions.CreateChannel<IAdapter>(50);
-            var skipCount = (request.Page - 1) * request.PageSize;
-            var takeCount = request.PageSize;
-
-            await foreach (var item in GetAdapters(cancellationToken).ConfigureAwait(false)) {
-                if (enabledOnly && !item.IsEnabled) {
+            await foreach (var item in FindAdapters(context, request, cancellationToken).ConfigureAwait(false)) {
+                if (item == null || !item.IsEnabled) {
                     continue;
                 }
-
-                if (!string.IsNullOrWhiteSpace(request.Id) && !item.Descriptor.Id.Like(request.Id!)) {
-                    continue;
-                }
-
-                if (!string.IsNullOrWhiteSpace(request.Name) && !item.Descriptor.Name.Like(request.Name!)) {
-                    continue;
-                }
-
-                if (!string.IsNullOrWhiteSpace(request.Description) && !item.Descriptor.Description.Like(request.Description!)) {
-                    continue;
-                }
-
-                if (request.Features != null) {
-                    foreach (var feature in request.Features) {
-                        if (string.IsNullOrWhiteSpace(feature)) {
-                            continue;
-                        }
-
-                        if (!item.HasFeature(feature)) {
-                            continue;
-                        }
-                    }
-                }
-
-                if (!await AuthorizationService.AuthorizeAdapter(item, context, cancellationToken).ConfigureAwait(false)) {
-                    // Caller is not authorized to use this adapter.
-                    continue;
-                }
-
-                if (skipCount > 0) {
-                    --skipCount;
-                    continue;
-                }
-
-                --takeCount;
                 yield return item;
-
-                if (takeCount < 1) {
-                    // We can finish now.
-                    break;
-                }
             }
         }
 
 
         /// <inheritdoc/>
-        public async Task<IAdapter?> GetAdapter(
+        async Task<IAdapter?> IAdapterAccessor.GetAdapter(
             IAdapterCallContext context, 
-            string adapterId, 
-            bool enabledOnly = true,
-            CancellationToken cancellationToken = default
+            string adapterId,
+            CancellationToken cancellationToken
         ) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             if (string.IsNullOrWhiteSpace(adapterId)) {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
 
-            await foreach (var item in GetAdapters(cancellationToken).ConfigureAwait(false)) {
-                if (!item.Descriptor.Id.Equals(adapterId, StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                }
-
-                if (enabledOnly && !item.IsEnabled) {
-                    return null;
-                }
-
-                if (!await AuthorizationService.AuthorizeAdapter(item, context, cancellationToken).ConfigureAwait(false)) {
-                    return null;
-                }
-
-                return item;
+            var result = await GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            if (result == null || !result.IsEnabled) {
+                return null;
             }
 
-            return null;
+            return result;
+        }
+
+
+        /// <summary>
+        /// Tests if an adapter matches a search filter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the adapter matches the filter, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        protected bool MatchesFilter(IAdapter adapter, FindAdaptersRequest request) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (request == null) {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Id)) {
+                if (!string.Equals(adapter.Descriptor.Id, request.Id, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Id.Like(request.Id)) {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Name)) {
+                if (!string.Equals(adapter.Descriptor.Name, request.Name, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Name.Like(request.Name)) {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Description)) {
+                if (!string.Equals(adapter.Descriptor.Description, request.Description, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Description.Like(request.Description)) {
+                    return false;
+                }
+            }
+
+            if (request.Features != null) {
+                foreach (var feature in request.Features) {
+                    if (string.IsNullOrWhiteSpace(feature)) {
+                        return false;
+                    }
+
+                    if (!adapter.HasFeature(feature)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// Tests if a caller is authorized to access the specified adapter.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the caller 
+        ///   is authorized to access the adapter, or <see langword="false"/> otherwise.
+        /// </returns>
+        protected Task<bool> IsAuthorized(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            return AuthorizationService.AuthorizeAdapter(adapter, context, cancellationToken);
         }
 
     }
