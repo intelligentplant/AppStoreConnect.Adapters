@@ -152,19 +152,19 @@ namespace DataCore.Adapter {
             }
 
             if (!string.IsNullOrWhiteSpace(request.Id)) {
-                if (!string.Equals(adapter.Descriptor.Id, request.Id, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Id.Like(request.Id)) {
+                if (!string.Equals(adapter.Descriptor.Id, request.Id, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Id.Like(request.Id!)) {
                     return false;
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(request.Name)) {
-                if (!string.Equals(adapter.Descriptor.Name, request.Name, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Name.Like(request.Name)) {
+                if (!string.Equals(adapter.Descriptor.Name, request.Name, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Name.Like(request.Name!)) {
                     return false;
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(request.Description)) {
-                if (!string.Equals(adapter.Descriptor.Description, request.Description, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Description.Like(request.Description)) {
+                if (!string.Equals(adapter.Descriptor.Description, request.Description, StringComparison.OrdinalIgnoreCase) && !adapter.Descriptor.Description.Like(request.Description!)) {
                     return false;
                 }
             }
