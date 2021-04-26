@@ -8,6 +8,7 @@ using GrpcNet = Grpc.Net;
 #endif
 
 using GrpcCore = Grpc.Core;
+using Grpc.Core.Interceptors;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
 using IntelligentPlant.BackgroundTasks;
@@ -232,6 +233,11 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   A new gRPC client instance.
         /// </returns>
         public TClient CreateClient<TClient>() where TClient : GrpcCore.ClientBase<TClient> {
+            var interceptors = Options.GetClientInterceptors?.Invoke()?.ToArray();
+            if (interceptors?.Length > 0) {
+                return (TClient) Activator.CreateInstance(typeof(TClient), _channel.Intercept(interceptors))!;
+            }
+
             return (TClient) Activator.CreateInstance(typeof(TClient), _channel)!;
         }
 

@@ -53,6 +53,9 @@
         <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
         <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
         <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Proxy\DataCore.Adapter.Grpc.Proxy.csproj" />
+        <ProjectReference Include="..\..\src\DataCore.Adapter.Grpc.Client\DataCore.Adapter.Grpc.Client.csproj">
+          <Aliases>DataCoreAdapterGrpcClient</Aliases>
+        </ProjectReference>
       </ItemGroup>
     </When>
     <!-- .NET Framework 4.8 references -->

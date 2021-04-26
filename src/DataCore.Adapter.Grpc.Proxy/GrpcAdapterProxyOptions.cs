@@ -24,15 +24,21 @@ namespace DataCore.Adapter.Grpc.Proxy {
         public TimeSpan HeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
-        /// A factory that can be used to set per-call credentials for gRPC calls.
+        /// A callback that can be used to set per-call credentials for gRPC calls.
         /// </summary>
-        public GetGrpcCallCredentials GetCallCredentials { get; set; } = default!;
+        public GetGrpcCallCredentials? GetCallCredentials { get; set; }
+
+        /// <summary>
+        /// A callback that is used to retrieve <see cref="GrpcCore.Interceptors.Interceptor"/> 
+        /// instances to attach to all gRPC clients created by the adapter.
+        /// </summary>
+        public GetGrpcClientInterceptors? GetClientInterceptors { get; set; }
 
         /// <summary>
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
-        public ExtensionFeatureFactory<GrpcAdapterProxy> ExtensionFeatureFactory { get; set; } = default!;
+        public ExtensionFeatureFactory<GrpcAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
         /// <summary>
         /// When <see langword="true"/>, <see cref="GrpcCore.ChannelBase.ShutdownAsync"/> will be 
