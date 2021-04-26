@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task SnapshotSubscriptionManagerShouldNotifyWhenSubscriptionIsAdded() {
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task SnapshotSubscriptionManagerShouldNotifyWhenSubscriptionIsCancelled() {
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -84,7 +84,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -130,7 +130,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -182,7 +182,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -247,7 +247,7 @@ namespace DataCore.Adapter.Tests {
             var publishInterval = TimeSpan.FromSeconds(1);
 
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             var valueCount = 0;
@@ -290,7 +290,7 @@ namespace DataCore.Adapter.Tests {
 
             var options = new SnapshotTagValuePushOptions() {
                 MaxSubscriptionCount = 1,
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray())
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct)
             };
 
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
@@ -341,7 +341,7 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
 
             var options = new SnapshotTagValuePushOptions() {
-                TagResolver = (ctx, names, ct) => new ValueTask<IEnumerable<TagIdentifier>>(names.Select(name => new TagIdentifier(name, name)).ToArray()),
+                TagResolver = (ctx, names, ct) => names.Select(name => new TagIdentifier(name, name)).PublishToChannel().ReadAllAsync(ct),
                 IsTopicMatch = (subscribed, received, ct) => {
                     // If we subscribe to "tag_root", we should receive messages with a topic of 
                     // e.g. "tag_root/sub_tag".
