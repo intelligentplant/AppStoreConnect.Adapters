@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override HttpAdapterProxy CreateProxy(string remoteAdapterId, IServiceProvider serviceProvider) {
+        protected override HttpAdapterProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider) {
             return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(serviceProvider, nameof(HttpProxyTests), new HttpAdapterProxyOptions() {
                 RemoteId = remoteAdapterId
             });

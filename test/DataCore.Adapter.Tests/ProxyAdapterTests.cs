@@ -26,7 +26,7 @@ namespace DataCore.Adapter.Tests {
 
 
         protected sealed override TProxy CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
-            return CreateProxy(WebHostConfiguration.AdapterId, serviceProvider);
+            return CreateProxy(context, WebHostConfiguration.AdapterId, serviceProvider);
         }
 
 
@@ -305,7 +305,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected abstract TProxy CreateProxy(string remoteAdapterId, IServiceProvider serviceProvider);
+        protected abstract TProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider);
 
 
 

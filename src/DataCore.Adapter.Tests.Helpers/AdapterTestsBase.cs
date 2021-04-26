@@ -81,10 +81,13 @@ namespace DataCore.Adapter.Tests {
         /// <param name="callback">
         ///   The callback delegate that will perform the test.
         /// </param>
+        /// <param name="startAdapter">
+        ///   When <see langword="true"/>, the adapter will be started before running the test.
+        /// </param>
         /// <returns>
         ///   A <see cref="Task"/> that will run the test.
         /// </returns>
-        protected async Task RunAdapterTest(Func<TAdapter, IAdapterCallContext, CancellationToken, Task> callback) {
+        protected async Task RunAdapterTest(Func<TAdapter, IAdapterCallContext, CancellationToken, Task> callback, bool startAdapter = true) {
             if (callback == null) {
                 throw new ArgumentNullException(nameof(callback));
             }
@@ -97,7 +100,9 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 try {
-                    await adapter.StartAsync(CancellationToken).ConfigureAwait(false);
+                    if (startAdapter) {
+                        await adapter.StartAsync(CancellationToken).ConfigureAwait(false);
+                    }
                     var context = CreateCallContext(TestContext);
                     await callback(adapter, context, CancellationToken).ConfigureAwait(false);
                 }
