@@ -15,14 +15,14 @@ Operations can fall into one of the following categories:
 - `Streaming` - operations that receive a single request but stream multiple responses back to the caller.
 - `Duplex Streaming` - operations that receive a stream of requests from the caller, and send a stream of responses back.
 
-> In this part of the tutorial, we will focus on invoke operations, and then add streaming and duplex streaming operations in subsequent chapters.
+> In this part of the tutorial, we will focus on registering the extension, and then add operations in subsequent chapters.
 
 Extension features must meet the following criteria:
 
 1. The extension must be defined as a class or interface that extends or implements the [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs) interface.
 2. The extension type must be annotated with the [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs) attribute to supply required extension metadata (such as the extension's URI).
 
-The `IAdapterExtensionFeature` defines a number of methods that allow a caller to retrieve metadata about the extension and its available operations, and to call the operations. The [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class helps to simplify a lot of these tasks, and allows extension authors a way of writing strongly-typed methods that can in turn be invoked via the standard methods defined on `IAdapterExtensionFeature`.
+The `IAdapterExtensionFeature` interface defines a number of methods that allow a caller to retrieve metadata about the extension and its available operations, and to call the operations. The [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) base class helps to simplify a lot of these tasks, and allows extension authors a way of writing strongly-typed methods that can in turn be invoked via the standard methods defined on `IAdapterExtensionFeature`.
 
 To get started, create a new console app in Visual Studio or from the command line using the `dotnet new` command:
 

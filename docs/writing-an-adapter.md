@@ -1,6 +1,6 @@
 # Writing an Adapter
 
-> The [Creating an Adapter](/src/DataCore.Adapter/tutorials/creating-an-adapter) tutorial provides a walk-through example of how to write an adapter.
+> The [Creating an Adapter](/docs/tutorials/creating-an-adapter) tutorial provides a walk-through example of how to write an adapter.
 
 To get started, add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter).
 
@@ -235,7 +235,7 @@ If your source implements some of these capabilities but not others, you can use
 
 ## Extension Features
 
-> The [Writing an Extension Feature](/src/DataCore.Adapter/tutorials/writing-an-extension-feature) tutorial provides a walk-through example of how to write an extension feature for an adapter.
+> The [Writing an Extension Feature](/docs/tutorials/writing-an-extension-feature) tutorial provides a walk-through example of how to write an extension feature for an adapter.
 
 In addition to standard features, implementers can define their own extension features.
 

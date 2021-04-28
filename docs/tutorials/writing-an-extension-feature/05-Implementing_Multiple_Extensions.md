@@ -25,10 +25,10 @@ namespace MyAdapter {
     public interface ITemperatureConverter : IAdapterExtensionFeature {
 
         [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetCtoFMetadata))]
-        double CtoF(IAdapterCallContext context, double degC);
+        double CtoF(double degC);
 
         [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetFtoCMetadata))]
-        double FtoC(IAdapterCallContext context, double degF);
+        double FtoC(double degF);
 
     }
 
@@ -97,11 +97,11 @@ public class PingPongExtension : AdapterExtensionFeature, ITemperatureConverter 
 
     // -- Existing implementation removed for brevity --
 
-    public double CtoF(IAdapterCallContext context, double degC) {
+    public double CtoF(double degC) {
         return (degC * 1.8) + 32;
     }
 
-    public double FtoC(IAdapterCallContext context, double degF) {
+    public double FtoC(double degF) {
         return (degF - 32) / 1.8;
     }
 }

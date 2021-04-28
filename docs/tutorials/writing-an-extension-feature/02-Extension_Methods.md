@@ -9,7 +9,7 @@ _The full code for this chapter can be found [here](/examples/tutorials/writing-
 
 In the [previous chapter](01-Getting_Started.md), we created and registered an extension feature on our adapter, but the extension had a major flaw - there were no operations on the feature for us to call! In this chapter, we will add a simple request-response method to our extension feature, and bind it so that it gets registered as a discoverable operation.
 
-Our operation will allow a caller to specify a `PingMessage` object and receive a corresponding `PongMessage` object in return. Update the  `PingPongExtension` as follows:
+Our operation will allow a caller to specify a `PingMessage` object and receive a corresponding `PongMessage` object in return. Update the  `PingPongExtension` class as follows:
 
 ```csharp
 public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
@@ -23,7 +23,7 @@ public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
 }
 ```
 
-Note that we have specified a parameter of type `IAdapterCallContext`. All extension operations receive a parameter of this type, which can be used to identify the calling user and authorize the call.
+Note that we have specified a parameter of type `IAdapterCallContext`. This parameter is not strictly necessary, but it allows us to receive information about the calling user and authorize the call if our logic requires it.
 
 Next, update the `PingPongExtension` constructor as follows:
 
@@ -33,9 +33,9 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IO
 }
 ```
 
-The constructor now makes a call to the `BindInvoke` method to tell the base class that it should register an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. Here, we are calling the `BindInvoke<TFeature, TIn, TOut>` overload of the method, which allows us to tell the binding method that we expect the operation to receive a single input parameter of type `PingMessage` and return a result of type `PongMessage`.
+The constructor now makes a call to the `BindInvoke` method to tell the base class that it should register an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. Here, we are calling the `BindInvoke<TFeature, TIn, TOut>` overload of the method, which allows us to tell the binding method that we expect the operation to receive a single input parameter of type `PingMessage` and return a result of type `PongMessage`, and that the method should be added as an operation on the `PingPongExtension` extension registration.
 
-Normally, the delegate signature for an invocable method is `Func<IAdapterCallContext, InvocationRequest, InvocationResponse Task<InvocationResponse>>`. However, the various `BindInvoke` methods inherited from the `AdapterExtensionFeature` base class allow registration of methods that have different signatures, covnerting to and from the specified input and output types.
+Normally, the delegate signature for an invocable method is `Func<IAdapterCallContext, InvocationRequest, InvocationResponse Task<InvocationResponse>>`. However, the various `BindInvoke` methods inherited from the `AdapterExtensionFeature` base class allow registration of methods that have different signatures, converting to and from the specified input and output types.
 
 Compile and run the program and we will see the following output:
 
@@ -55,7 +55,7 @@ Compile and run the program and we will see the following output:
           - Description:
 ```
 
-Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. The `/invoke/` section towards the end of the URI indicates that the operation can be invoked via the `Invoke` method on the `IAdapterExtensionFeature` interface. However, we do not have a description. That is because the binding system does not have a way of assigning all of the metadata it needs to the binding. The simplest way to assign operation metadata is by specifying additional optional parameters when calling the `BindInvoke` method. Replace the `BindInvoke` call as follows:
+Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. The `/invoke/` section towards the end of the URI indicates that the operation can be invoked via the `Invoke` method on the `IAdapterExtensionFeature` interface. However, we do not have a description. This is because we have not provided any operation metadata. We can do this by specifying additional optional parameters when calling the `BindInvoke` method. Replace the `BindInvoke` call as follows:
 
 ```csharp
 public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {

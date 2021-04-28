@@ -24,7 +24,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Route("api/[area]/v2.0/tag-values")]
     // Legacy route for compatibility with v1 of the toolkit
     [Route("api/data-core/v1.0/tag-values")] 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Validation is performed by MVC framework")]
     public class TagValuesController: ControllerBase {
 
         /// <summary>

@@ -12,10 +12,10 @@ namespace MyAdapter {
     public interface ITemperatureConverter : IAdapterExtensionFeature {
 
         [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetCtoFMetadata))]
-        double CtoF(IAdapterCallContext context, double degC);
+        double CtoF(double degC);
 
         [ExtensionFeatureOperation(typeof(TemperatureConverterMetadata), nameof(TemperatureConverterMetadata.GetFtoCMetadata))]
-        double FtoC(IAdapterCallContext context, double degF);
+        double FtoC(double degF);
 
     }
 
