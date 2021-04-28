@@ -17,9 +17,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// The URL prefix for API calls.
         /// </summary>
-        private string UrlPrefix => _client.CompatibilityVersion == CompatibilityVersion.Version_1_0
-            ? "api/data-core/v1.0/tag-values"
-            : "api/app-store-connect/v1.0/tag-values";
+        private string UrlPrefix => string.Concat(_client.GetBaseUrl(), "/tag-values");
 
         /// <summary>
         /// The adapter HTTP client that is used to perform the requests.
