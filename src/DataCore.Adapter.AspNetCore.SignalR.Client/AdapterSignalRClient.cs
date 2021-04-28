@@ -241,7 +241,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
 
         /// <inheritdoc/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Called from DisposeAsync")]
         public async ValueTask DisposeAsync() {
             await DisposeAsyncCore().ConfigureAwait(false);
             Dispose(false);
@@ -283,7 +282,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             }
 
             if (disposing && _disposeConnection) {
-                Task.Run(() => _hubConnection.DisposeAsync()).GetAwaiter().GetResult();
+                Task.Run(async () => await _hubConnection.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
             }
 
             _isDisposed = true;
