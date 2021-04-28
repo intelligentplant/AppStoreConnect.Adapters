@@ -1,10 +1,10 @@
 {
-  "x-generator": "NSwag v13.10.2.0 (NJsonSchema v10.3.4.0 (Newtonsoft.Json v10.0.0.0))",
+  "x-generator": "NSwag v13.10.2.0 (NJsonSchema v10.3.4.0 (Newtonsoft.Json v12.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
     "description": "HTTP API for querying an App Store Connect adapters host.",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "servers": [
     {
@@ -12,7 +12,7 @@
     }
   ],
   "paths": {
-    "/api/app-store-connect/v1.0/adapters": {
+    "/api/app-store-connect/v2.0/adapters": {
       "get": {
         "tags": [
           "Adapters"
@@ -140,7 +140,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/adapters/{adapterId}": {
+    "/api/app-store-connect/v2.0/adapters/{adapterId}": {
       "get": {
         "tags": [
           "Adapters"
@@ -174,7 +174,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/adapters/{adapterId}/health-status": {
+    "/api/app-store-connect/v2.0/adapters/{adapterId}/health-status": {
       "get": {
         "tags": [
           "Adapters"
@@ -208,7 +208,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/asset-model/{adapterId}/browse": {
+    "/api/app-store-connect/v2.0/asset-model/{adapterId}/browse": {
       "get": {
         "tags": [
           "AssetModelBrowser"
@@ -325,7 +325,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/asset-model/{adapterId}/get-by-id": {
+    "/api/app-store-connect/v2.0/asset-model/{adapterId}/get-by-id": {
       "post": {
         "tags": [
           "AssetModelBrowser"
@@ -375,7 +375,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/asset-model/{adapterId}/find": {
+    "/api/app-store-connect/v2.0/asset-model/{adapterId}/find": {
       "post": {
         "tags": [
           "AssetModelBrowser"
@@ -425,7 +425,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/events/{adapterId}/by-time-range": {
+    "/api/app-store-connect/v2.0/events/{adapterId}/by-time-range": {
       "post": {
         "tags": [
           "Events"
@@ -475,7 +475,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/events/{adapterId}/by-cursor": {
+    "/api/app-store-connect/v2.0/events/{adapterId}/by-cursor": {
       "post": {
         "tags": [
           "Events"
@@ -525,7 +525,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/events/{adapterId}/write": {
+    "/api/app-store-connect/v2.0/events/{adapterId}/write": {
       "post": {
         "tags": [
           "Events"
@@ -552,7 +552,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WriteEventMessagesRequest"
+                "$ref": "#/components/schemas/WriteEventMessagesRequestExtended"
               }
             }
           },
@@ -576,7 +576,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/extensions/{adapterId}": {
+    "/api/app-store-connect/v2.0/extensions/{adapterId}": {
       "get": {
         "tags": [
           "ExtensionFeatures"
@@ -600,10 +600,12 @@
           "200": {
             "description": "Successful responses contain a collection of adapter extension feature URIs.",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -611,7 +613,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/extensions/{adapterId}/descriptor": {
+    "/api/app-store-connect/v2.0/extensions/{adapterId}/descriptor": {
       "get": {
         "tags": [
           "ExtensionFeatures"
@@ -646,10 +648,9 @@
           "200": {
             "description": "Successful responses contain a FeatureDescriptor object.",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "$ref": "#/components/schemas/FeatureDescriptor"
                 }
               }
             }
@@ -657,7 +658,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/extensions/{adapterId}/operations": {
+    "/api/app-store-connect/v2.0/extensions/{adapterId}/operations": {
       "get": {
         "tags": [
           "ExtensionFeatures"
@@ -692,10 +693,12 @@
           "200": {
             "description": "Successful responses contain a collection of ExtensionFeatureOperationDescriptor objects.",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExtensionFeatureOperationDescriptor"
+                  }
                 }
               }
             }
@@ -703,7 +706,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/extensions/{adapterId}/operations/invoke": {
+    "/api/app-store-connect/v2.0/extensions/{adapterId}/operations/invoke": {
       "post": {
         "tags": [
           "ExtensionFeatures"
@@ -721,41 +724,28 @@
               "nullable": true
             },
             "x-position": 1
-          },
-          {
-            "name": "id",
-            "in": "query",
-            "description": "The URI of the operation to invoke.",
-            "schema": {
-              "type": "string",
-              "format": "uri",
-              "nullable": true
-            },
-            "x-position": 2
           }
         ],
         "requestBody": {
+          "x-name": "request",
+          "description": "The invocation request.",
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "properties": {
-                  "argument": {
-                    "type": "string",
-                    "nullable": true
-                  }
-                }
+                "$ref": "#/components/schemas/InvocationRequest"
               }
             }
-          }
+          },
+          "required": true,
+          "x-position": 2
         },
         "responses": {
           "200": {
-            "description": "Successful responses contain a string describing the result of the operation. Callers are responsible for correctly parsing or inferring meaning from this result.",
+            "description": "Successful responses contain an InvocationResponse describing the operation result.",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "$ref": "#/components/schemas/InvocationResponse"
                 }
               }
             }
@@ -763,7 +753,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/host-info": {
+    "/api/app-store-connect/v2.0/host-info": {
       "get": {
         "tags": [
           "HostInfo"
@@ -784,7 +774,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/host-info/adapter-features": {
+    "/api/app-store-connect/v2.0/host-info/adapter-features": {
       "get": {
         "tags": [
           "HostInfo"
@@ -808,7 +798,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-annotations/{adapterId}": {
+    "/api/app-store-connect/v2.0/tag-annotations/{adapterId}": {
       "post": {
         "tags": [
           "TagAnnotations"
@@ -858,7 +848,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-annotations/{adapterId}/{tagId}/{annotationId}": {
+    "/api/app-store-connect/v2.0/tag-annotations/{adapterId}/{tagId}/{annotationId}": {
       "get": {
         "tags": [
           "TagAnnotations"
@@ -1035,7 +1025,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-annotations/{adapterId}/{tagId}/create": {
+    "/api/app-store-connect/v2.0/tag-annotations/{adapterId}/{tagId}/create": {
       "post": {
         "tags": [
           "TagAnnotations"
@@ -1093,7 +1083,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tags/{adapterId}/properties": {
+    "/api/app-store-connect/v2.0/tags/{adapterId}/properties": {
       "post": {
         "tags": [
           "TagSearch"
@@ -1200,7 +1190,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tags/{adapterId}/find": {
+    "/api/app-store-connect/v2.0/tags/{adapterId}/find": {
       "post": {
         "tags": [
           "TagSearch"
@@ -1336,7 +1326,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tags/{adapterId}": {
+    "/api/app-store-connect/v2.0/tags/{adapterId}": {
       "post": {
         "tags": [
           "TagSearch"
@@ -1472,7 +1462,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tags/{adapterId}/get-by-id": {
+    "/api/app-store-connect/v2.0/tags/{adapterId}/get-by-id": {
       "post": {
         "tags": [
           "TagSearch"
@@ -1572,7 +1562,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/snapshot": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/snapshot": {
       "get": {
         "tags": [
           "TagValues"
@@ -1672,7 +1662,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/raw": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/raw": {
       "get": {
         "tags": [
           "TagValues"
@@ -1819,7 +1809,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/plot": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/plot": {
       "get": {
         "tags": [
           "TagValues"
@@ -1954,7 +1944,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/values-at-times": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/values-at-times": {
       "get": {
         "tags": [
           "TagValues"
@@ -2070,7 +2060,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/processed": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/processed": {
       "get": {
         "tags": [
           "TagValues"
@@ -2220,14 +2210,14 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/supported-aggregations": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/supported-aggregations": {
       "get": {
         "tags": [
           "TagValues"
         ],
         "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
-        "operationId": "TagValues_GetSupportedDataFunctions",
+        "operationId": "TagValues_GetSupportedDataFunctionsAll",
         "parameters": [
           {
             "name": "adapterId",
@@ -2256,9 +2246,58 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "TagValues"
+        ],
+        "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
+        "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
+        "operationId": "TagValues_GetSupportedDataFunctions",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetSupportedDataFunctionsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain descriptors for the aggregated function names that can be specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DataFunctionDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/write/snapshot": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/write/snapshot": {
       "post": {
         "tags": [
           "TagValues"
@@ -2285,7 +2324,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WriteTagValuesRequest"
+                "$ref": "#/components/schemas/WriteTagValuesRequestExtended"
               }
             }
           },
@@ -2309,7 +2348,7 @@
         }
       }
     },
-    "/api/app-store-connect/v1.0/tag-values/{adapterId}/write/history": {
+    "/api/app-store-connect/v2.0/tag-values/{adapterId}/write/history": {
       "post": {
         "tags": [
           "TagValues"
@@ -2331,12 +2370,12 @@
           }
         ],
         "requestBody": {
-          "x-name": "values",
+          "x-name": "request",
           "description": "The values to write.",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WriteTagValuesRequest"
+                "$ref": "#/components/schemas/WriteTagValuesRequestExtended"
               }
             }
           },
@@ -2614,6 +2653,15 @@
                 "$ref": "#/components/schemas/VariantType"
               }
             ]
+          },
+          "arrayDimensions": {
+            "type": "array",
+            "description": "If Value is an array, ArrayDimensions defines the \ndimensions of the array. For all other values, this property will be \nnull.",
+            "nullable": true,
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },
@@ -2623,7 +2671,7 @@
         "x-enumNames": [
           "Unknown",
           "Null",
-          "Object",
+          "ExtensionObject",
           "Boolean",
           "SByte",
           "Byte",
@@ -2643,7 +2691,7 @@
         "enum": [
           "Unknown",
           "Null",
-          "Object",
+          "ExtensionObject",
           "Boolean",
           "SByte",
           "Byte",
@@ -3174,23 +3222,30 @@
           "Pending"
         ]
       },
-      "WriteEventMessagesRequest": {
-        "type": "object",
-        "description": "Describes a request to write event messages to an adapter.",
-        "additionalProperties": false,
-        "required": [
-          "events"
-        ],
-        "properties": {
-          "events": {
-            "type": "array",
-            "description": "The event messages to write.",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/components/schemas/WriteEventMessageItem"
+      "WriteEventMessagesRequestExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WriteEventMessagesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to write event messages to an adapter.",
+            "additionalProperties": false,
+            "required": [
+              "events"
+            ],
+            "properties": {
+              "events": {
+                "type": "array",
+                "description": "The event messages to write.",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/components/schemas/WriteEventMessageItem"
+                }
+              }
             }
           }
-        }
+        ]
       },
       "WriteEventMessageItem": {
         "type": "object",
@@ -3214,6 +3269,188 @@
             ]
           }
         }
+      },
+      "WriteEventMessagesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to write event messages to an adapter.",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "FeatureDescriptor": {
+        "type": "object",
+        "description": "Describes an adapter feature.",
+        "additionalProperties": false,
+        "required": [
+          "uri",
+          "displayName"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "The extension feature URI.",
+            "format": "uri",
+            "minLength": 1
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The feature display name.",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "The feature description.",
+            "maxLength": 500,
+            "nullable": true
+          }
+        }
+      },
+      "ExtensionFeatureOperationDescriptor": {
+        "type": "object",
+        "description": "Describes an operation on an extension adapter feature.",
+        "additionalProperties": false,
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "description": "The operation URI.",
+            "format": "uri"
+          },
+          "operationType": {
+            "description": "The operation type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExtensionFeatureOperationType"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The name for the operation."
+          },
+          "description": {
+            "type": "string",
+            "description": "The description.",
+            "nullable": true
+          },
+          "inputs": {
+            "type": "array",
+            "description": "The input parameter descriptors for the operation.",
+            "items": {
+              "$ref": "#/components/schemas/ExtensionFeatureOperationParameterDescriptor"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "description": "The output parameter descriptors for the operation.",
+            "items": {
+              "$ref": "#/components/schemas/ExtensionFeatureOperationParameterDescriptor"
+            }
+          }
+        }
+      },
+      "ExtensionFeatureOperationType": {
+        "type": "string",
+        "description": "Describes the operation type for an extension adapter feature operation.",
+        "x-enumNames": [
+          "Invoke",
+          "Stream",
+          "DuplexStream"
+        ],
+        "enum": [
+          "Invoke",
+          "Stream",
+          "DuplexStream"
+        ]
+      },
+      "ExtensionFeatureOperationParameterDescriptor": {
+        "type": "object",
+        "description": "Describes an input or output parameter on an ExtensionFeatureOperationDescriptor.",
+        "additionalProperties": false,
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "description": "The ordinal position of the parameter in the operation's InvocationRequest, \nInvocationStreamItem, or InvocationResponse message.",
+            "format": "int32"
+          },
+          "variantType": {
+            "description": "The VariantType for the parameter.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VariantType"
+              }
+            ]
+          },
+          "arrayRank": {
+            "type": "integer",
+            "description": "The array rank of the parameter. A value of less than one indicates that the parameter \nis a single value rather than an array of values.",
+            "format": "int32"
+          },
+          "typeId": {
+            "type": "string",
+            "description": "The type ID for the parameter type, if VariantType is \nExtensionObject.",
+            "format": "uri",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the parameter value.",
+            "nullable": true
+          }
+        }
+      },
+      "InvocationResponse": {
+        "type": "object",
+        "description": "Describes a response to an InvocationRequest.",
+        "additionalProperties": false,
+        "required": [
+          "results"
+        ],
+        "properties": {
+          "results": {
+            "type": "array",
+            "description": "The invocation results.",
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            }
+          }
+        }
+      },
+      "InvocationRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to invoke an extension operation on an adapter of type Invoke \nor Stream. ",
+            "additionalProperties": false,
+            "required": [
+              "operationId",
+              "arguments"
+            ],
+            "properties": {
+              "operationId": {
+                "type": "string",
+                "description": "The ID of the operation.",
+                "format": "uri",
+                "minLength": 1
+              },
+              "arguments": {
+                "type": "array",
+                "description": "The invocation arguments.",
+                "items": {
+                  "$ref": "#/components/schemas/Variant"
+                }
+              }
+            }
+          }
+        ]
       },
       "HostInfo": {
         "type": "object",
@@ -3249,35 +3486,6 @@
             "items": {
               "$ref": "#/components/schemas/AdapterProperty"
             }
-          }
-        }
-      },
-      "FeatureDescriptor": {
-        "type": "object",
-        "description": "Describes an adapter feature.",
-        "additionalProperties": false,
-        "required": [
-          "uri",
-          "displayName"
-        ],
-        "properties": {
-          "uri": {
-            "type": "string",
-            "description": "The extension feature URI.",
-            "format": "uri",
-            "minLength": 1
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The feature display name.",
-            "maxLength": 100,
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "description": "The feature description.",
-            "maxLength": 500,
-            "nullable": true
           }
         }
       },
@@ -3807,12 +4015,13 @@
             "description": "The UTC sample time for the value.",
             "format": "date-time"
           },
-          "values": {
-            "type": "array",
-            "description": "The values for the sample. In the majority of cases, this collection will contain a \nsingle item. However, multiple items are allowed to account for situations where the \nsample represents a digital state, and both the numerical and text values of the state \nare being returned.",
-            "items": {
-              "$ref": "#/components/schemas/Variant"
-            }
+          "value": {
+            "description": "The value for the sample.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Variant"
+              }
+            ]
           },
           "status": {
             "description": "The quality status for the value.",
@@ -4100,6 +4309,18 @@
           "WorstCase"
         ]
       },
+      "GetSupportedDataFunctionsRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to get the data functions that are supported by an adapter.",
+            "additionalProperties": false
+          }
+        ]
+      },
       "WriteTagValueResult": {
         "allOf": [
           {
@@ -4127,23 +4348,30 @@
           }
         ]
       },
-      "WriteTagValuesRequest": {
-        "type": "object",
-        "description": "Describes a request to write snapshot or historical tag values.",
-        "additionalProperties": false,
-        "required": [
-          "values"
-        ],
-        "properties": {
-          "values": {
-            "type": "array",
-            "description": "The values to write.",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/components/schemas/WriteTagValueItem"
+      "WriteTagValuesRequestExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WriteTagValuesRequest"
+          },
+          {
+            "type": "object",
+            "description": "Describes a request to write snapshot or historical tag values.",
+            "additionalProperties": false,
+            "required": [
+              "values"
+            ],
+            "properties": {
+              "values": {
+                "type": "array",
+                "description": "The values to write.",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/components/schemas/WriteTagValueItem"
+                }
+              }
             }
           }
-        }
+        ]
       },
       "WriteTagValueItem": {
         "type": "object",
@@ -4173,6 +4401,18 @@
             ]
           }
         }
+      },
+      "WriteTagValuesRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to write tag values to an adapter.",
+            "additionalProperties": false
+          }
+        ]
       }
     }
   }
