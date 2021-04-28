@@ -140,11 +140,11 @@ namespace MyAdapter {
         }
 
 
-        public double CtoF(IAdapterCallContext context, double degC) {
+        public double CtoF(double degC) {
             return (degC * 1.8) + 32;
         }
 
-        public double FtoC(IAdapterCallContext context, double degF) {
+        public double FtoC(double degF) {
             return (degF - 32) / 1.8;
         }
 
