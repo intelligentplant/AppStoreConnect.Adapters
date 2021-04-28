@@ -106,9 +106,10 @@ namespace DataCore.Adapter.AspNetCoreExample {
             });
 
             services.AddOpenApiDocument(options => {
-                options.DocumentName = "v1.0";
+                options.DocumentName = "v2.0";
                 options.Title = "App Store Connect Adapters";
                 options.Description = "HTTP API for querying an App Store Connect adapters host.";
+                options.Version = "2.0.0";
                 options.AddOperationFilter(context => {
                     // Don't include the legacy routes.
                     return !context.OperationDescription.Path.StartsWith("/api/data-core/");
