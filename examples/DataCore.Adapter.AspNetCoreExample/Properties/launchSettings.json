@@ -4,7 +4,7 @@
     "DataCore.Adapter.AspNetCoreExample": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/app-store-connect/v1.0/host-info",
+      "launchUrl": "api/app-store-connect/v2.0/host-info",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

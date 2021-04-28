@@ -160,6 +160,18 @@ namespace DataCore.Adapter.Http.Client {
         }
 
 
+        /// <summary>
+        /// Gets the base relative API path to use.
+        /// </summary>
+        /// <returns>
+        ///   The base relative API path for the client.
+        /// </returns>
+        internal string GetBaseUrl() {
+            return CompatibilityVersion == CompatibilityVersion.Version_1_0
+                ? "api/data-core/v1.0"
+                : "api/app-store-connect/v2.0";
+        }
+
 
         /// <summary>
         /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
@@ -182,7 +194,6 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Caller is responsible for disposing the object")]
         protected internal static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             Uri url, 

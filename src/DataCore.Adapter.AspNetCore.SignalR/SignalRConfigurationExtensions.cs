@@ -20,13 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <summary>
         /// SignalR Hub route.
         /// </summary>
-        public const string HubRoute = "/signalr/app-store-connect/v1.0";
-
-        /// <summary>
-        /// Legacy SignalR hub route.
-        /// </summary>
-        [Obsolete("Use HubRoute instead.", false)]
-        private const string LegacyHubRoute = "/signalr/data-core/v1.0";
+        public const string HubRoute = "/signalr/app-store-connect/v2.0";
 
 
         /// <summary>
@@ -74,7 +68,6 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(endpoints));
             }
             endpoints.MapHub<AdapterHub>(HubRoute);
-            endpoints.MapHub<AdapterHub>(LegacyHubRoute);
             return endpoints;
         }
 
@@ -111,9 +104,6 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </returns>
         public static IEndpointRouteBuilder MapDataCoreAdapterHubs(this IEndpointRouteBuilder endpoints, Action<Type, HubEndpointConventionBuilder>? builder) {
             var hubEndpointBuilder = endpoints.MapHub<AdapterHub>(HubRoute);
-            builder?.Invoke(typeof(AdapterHub), hubEndpointBuilder);
-
-            hubEndpointBuilder = endpoints.MapHub<AdapterHub>(LegacyHubRoute);
             builder?.Invoke(typeof(AdapterHub), hubEndpointBuilder);
 
             return endpoints;

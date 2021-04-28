@@ -17,7 +17,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     /// </summary>
     [ApiController]
     [Area("app-store-connect")]
-    [Route("api/[area]/v1.0/asset-model")]
+    [Route("api/[area]/v2.0/asset-model")]
     // Legacy route for compatibility with v1 of the toolkit
     [Route("api/data-core/v1.0/asset-model")] 
     public class AssetModelBrowserController : ControllerBase {
