@@ -27,7 +27,7 @@ namespace DataCore.Adapter {
         private Type? _resourceType;
 
         /// <summary>
-        /// The feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>.
+        /// The adapter type URI.
         /// </summary>
         public Uri Uri { get; }
 
@@ -48,18 +48,16 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// The display name for the feature.
+        /// The display name for the adapter type.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Name {
             get => _name.Value;
             set => _name.Value = value;
         }
 
         /// <summary>
-        /// The description for the feature.
+        /// The description for the adapter type.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Description {
             get => _description.Value;
             set => _description.Value = value;
@@ -67,12 +65,13 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Creates a new <see cref="AdapterFeatureAttribute"/>.
+        /// Creates a new <see cref="AdapterMetadataAttribute"/>.
         /// </summary>
         /// <param name="uriString">
-        ///   The absolute feature URI. Well-known URIs are defined in <see cref="WellKnownFeatures"/>. 
-        ///   Note that the URI assigned to the <see cref="Uri"/> property will always have a trailing 
-        ///   forwards slash (/) appended if required.
+        ///   The absolute type URI for the adapter. This is used to identify the adapter type 
+        ///   only; it is not required that the URI can be dereferenced. Note that the URI 
+        ///   assigned to the <see cref="Uri"/> property will always have a trailing forwards 
+        ///   slash (/) appended if required.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uriString"/> is <see langword="null"/>.
