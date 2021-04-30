@@ -2,6 +2,8 @@
 
 > The [Creating an Adapter](/docs/tutorials/creating-an-adapter) tutorial provides a walk-through example of how to write an adapter.
 
+> You can use the `dotnet new` command to create a new adapter using a template. See [here](/src/DataCore.Adapter.Templates) for more information.
+
 To get started, add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter).
 
 An adapter is a component that exposes real-time process data and/or alarm & event data to [Intelligent Plant](https://www.intelligentplant.com) App Store Connect. This data can then be used by apps on the [Industrial App Store](https://appstore.intelligentplant.com) such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).

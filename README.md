@@ -61,6 +61,10 @@ The following libraries are available to assist with unit testing adapter implem
 
 * `DataCore.Adapter.Tests.Helpers` ([source](/src/DataCore.Adapter.Tests.Helpers)) - base classes that provide MSTest unit tests for standard adapter features.
 
+## Templates
+
+* `DataCore.Adapter.Templates` ([source](/src/DataCore.Adapter.Templates)) - templates for `dotnet new` to provide quick start adapter implementations.
+
 ## Example Projects
 
 The [examples](/examples) folder contains example host and client applications.
@@ -77,6 +81,8 @@ See [here](/docs/writing-an-adapter.md) for information about writing an adapter
 
 
 # ASP.NET Core Hosting Quick Start
+
+> An alternative to following the instructions below is to generate a project from a template using the `dotnet new` command. See [here](/src/DataCore.Adapter.Templates) for more information.
 
 1. Create a new ASP.NET Core project.
 2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
