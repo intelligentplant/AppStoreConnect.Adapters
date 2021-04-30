@@ -22,6 +22,56 @@
       "replaces": "ExampleHostedAdapterOptions",
       "fileRename": "ExampleHostedAdapterOptions"
     },
+    "AdapterTypeName": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The display name for the adapter type.",
+      "defaultValue": "My Adapter",
+      "replaces": "My Adapter"
+    },
+    "AdapterTypeNameUriSuffix": {
+      "type": "generated",
+      "generator": "regex",
+      "parameters": {
+        "source": "AdapterTypeName",
+        "steps": [
+          {
+            "regex": "[^A-Za-z0-9-]",
+            "replacement": "-"
+          }
+        ]
+      }
+    },
+    "AdapterTypeNameUriSuffixLower": {
+      "type": "generated",
+      "generator": "casing",
+      "replaces": "my-adapter",
+      "parameters": {
+        "source": "AdapterTypeNameUriSuffix",
+        "toLower": true
+      }
+    },
+    "AdapterTypeDescription": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The description for the adapter type.",
+      "defaultValue": "A brief description of the adapter type",
+      "replaces": "A brief description of the adapter type"
+    },
+    "VendorName": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The vendor name to use in the adapter metadata.",
+      "defaultValue": "My Company",
+      "replaces": "My Company"
+    },
+    "VendorUrl": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The vendor URL to use in the adapter metadata. Remember to include the scheme (e.g. https://) or you will get a runtime error at startup!",
+      "defaultValue": "https://my-company.com",
+      "replaces": "https://my-company.com"
+    },
     "HttpsPort": {
       "type": "parameter",
       "datatype": "integer",

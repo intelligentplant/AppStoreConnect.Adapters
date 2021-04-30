@@ -90,16 +90,16 @@ namespace ExampleHostedAdapter {
         }
 
 
-        // Override the Dispose(bool) method if you need to dispose of managed or unmanaged 
-        // resources. 
+        // Your adapter implements both IDisposable and IAsyncDisposable.
+        // 
+        // Override the Dispose(bool) and DisposeAsyncCore() methods if you need to dispose of
+        // managed or unmanaged resources. 
         //
-        // If any of your resources implement IAsyncDisposable, you can also override 
-        // DisposeAsyncCore() to implement asynchronous disposal. You should ensure that you also 
-        // dispose of these resources synchronously in your Dispose(bool) implementation if the 
-        // 'disposing' parameter is true.
+        // When IDisposable.Dispose() is called on your adapter, Dispose(true) will be called.
         //
-        // Note that, when calling DisposeAsync(), the behaviour implemented by the adapter is to 
-        // call DisposeAsyncCore(), and then call Dispose(false). See here for more details: 
+        // When IAsyncDisposable.DisposeAsync() is called on your adapter, DisposeAsyncCore()
+        // is called, followed by Dispose(false). This is the standard pattern for implementing
+        // both IDisposable and IAsyncDisposable on the same type. See here for more details: 
         // https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-disposeasync
 
     }
