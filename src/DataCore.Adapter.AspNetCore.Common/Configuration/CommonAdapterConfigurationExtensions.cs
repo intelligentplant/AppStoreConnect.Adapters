@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
@@ -84,7 +85,11 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The version of the hosting application.
         /// </param>
         /// <param name="vendor">
-        ///   The vendor information for the hosting application.
+        ///   The vendor information for the hosting application. If <see langword="null"/>, the 
+        ///   <see cref="VendorInfo"/> will be retrieved from the service provider. If this is also 
+        ///   <see langword="null"/>, the method will look for a <see cref="VendorInfoAttribute"/> 
+        ///   on the assembly returned by <see cref="Assembly.GetEntryAssembly"/> and will use that 
+        ///   if available.
         /// </param>
         /// <param name="includeOperatingSystemDetails">
         ///   When <see langword="true"/>, a property will be added to the host information 
@@ -144,9 +149,14 @@ namespace Microsoft.Extensions.DependencyInjection {
             if (properties != null) {
                 props.AddRange(properties);
             }
-            var hostInfo = HostInfo.Create(name, description, version, vendor, props);
 
-            return builder.AddHostInfo(hostInfo);
+            builder.Services.AddSingleton(sp => HostInfo.Create(
+                name, 
+                description,
+                version,
+                vendor ?? sp.GetService<VendorInfo>() ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo()
+            ));
+            return builder;
         }
 
 
