@@ -19,6 +19,9 @@ public class BuildState {
     // Specifies if the Clean target should be run.
     public bool RunCleanTarget => Clean || string.Equals(Target, "Clean", StringComparison.OrdinalIgnoreCase);
 
+    // Specifies if tests should be skipped.
+    public bool SkipTests { get; set; }
+
     // Specifies if this is a continuous integration build.
     public bool ContinuousIntegrationBuild { get; set; }
 

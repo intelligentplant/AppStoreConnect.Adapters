@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>$(PackagePrefix).Adapter.Templates</PackageId>
+    <PackageType>Template</PackageType>
+    <DefaultNetCoreTargetFramework>netcoreapp3.1</DefaultNetCoreTargetFramework>
+    <Title>App Store Connect Adapter Templates</Title>
+    <Description>Templates to use when creating an adapter for Intelligent Plant App Store Connect.</Description>
+    <PackageTags>$(PackageTags);dotnet-new;templates</PackageTags>
+    <IncludeDevelopmentPackages>false</IncludeDevelopmentPackages>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="**\*" />
+    <Content Include="templates\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\README*.md;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
+  </ItemGroup>
+    
+  <Target Name="CopyAscHostedAdapterTemplateFiles" BeforeTargets="Build">
+    <Copy SkipUnchangedFiles="false" SourceFiles="@(HostedAdapterTemplateFiles)" DestinationFiles="@(HostedAdapterTemplateFiles->'templates\aschostedadapter\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SkipUnchangedFiles="false" SourceFiles="..\..\examples\ExampleHostedAdapter\README_TEMPLATE.md" DestinationFiles="templates\aschostedadapter\README.md" />
+  </Target>
+  
+  <Target Name="CreateTemplateProjectFiles" BeforeTargets="Build">
+    <ReplaceFileText InputFilename="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj" OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj" Placeholder="Version=&quot;%24(Version)&quot;" Replacement="Version=&quot;$(Version)&quot;" />
+  </Target>
+
+  <UsingTask TaskName="ReplaceFileText" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <InputFileName ParameterType="System.String" Required="true" />
+      <OutputFileName ParameterType="System.String" Required="true" />
+      <Placeholder ParameterType="System.String" Required="true" />
+      <Replacement ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[  
+          File.WriteAllText(
+            OutputFileName,
+            File.ReadAllText(InputFileName).Replace(Placeholder, Replacement)
+          );
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>

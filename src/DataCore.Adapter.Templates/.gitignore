@@ -1,0 +1,5 @@
+# Ignore all files copied to template folders at compile time.
+templates/aschostedadapter/*
+
+# Ensure that the template configuration files are tracked.
+!templates/aschostedadapter/.template.config

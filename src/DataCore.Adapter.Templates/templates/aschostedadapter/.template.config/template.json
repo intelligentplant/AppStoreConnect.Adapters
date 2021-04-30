@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Intelligent Plant",
+  "classifications": [ "Industrial App Store", "Web", "MVC" ],
+  "identity": "IntelligentPlant.AppStoreConnect.Adapter.AppStoreConnectAdapterHost",
+  "name": "Industrial App Store Connect Adapter Host (ASP.NET Core)",
+  "shortName": "aschostedadapter",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "ExampleHostedAdapter",
+  "preferNameDirectory": true,
+  "guids": [
+    "fdb421d7-03b2-49e8-880a-224e8e5f04ef"
+  ],
+  "symbols": {
+    "AdapterOptionsName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "AppendOptionsSuffix",
+      "replaces": "ExampleHostedAdapterOptions",
+      "fileRename": "ExampleHostedAdapterOptions"
+    },
+    "AdapterTypeName": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The display name for the adapter type.",
+      "defaultValue": "My Adapter",
+      "replaces": "My Adapter"
+    },
+    "AdapterTypeNameUriSuffix": {
+      "type": "generated",
+      "generator": "regex",
+      "parameters": {
+        "source": "AdapterTypeName",
+        "steps": [
+          {
+            "regex": "[^A-Za-z0-9-]",
+            "replacement": "-"
+          }
+        ]
+      }
+    },
+    "AdapterTypeNameUriSuffixLower": {
+      "type": "generated",
+      "generator": "casing",
+      "replaces": "my-adapter",
+      "parameters": {
+        "source": "AdapterTypeNameUriSuffix",
+        "toLower": true
+      }
+    },
+    "AdapterTypeDescription": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The description for the adapter type.",
+      "defaultValue": "A brief description of the adapter type",
+      "replaces": "A brief description of the adapter type"
+    },
+    "VendorName": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The vendor name to use in the adapter metadata.",
+      "defaultValue": "My Company",
+      "replaces": "My Company"
+    },
+    "VendorUrl": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "The vendor URL to use in the adapter metadata. Remember to include the scheme (e.g. https://) or you will get a runtime error at startup!",
+      "defaultValue": "https://my-company.com",
+      "replaces": "https://my-company.com"
+    },
+    "HttpsPort": {
+      "type": "parameter",
+      "datatype": "integer",
+      "description": "Port number to use for the HTTPS endpoint in launchSettings.json and appsettings.json. If not specified, a port number will be generated automatically."
+    },
+    "SkipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "If specified, skips the automatic restore of the project on create.",
+      "defaultValue": "false"
+    },
+    "HttpPortGenerated": {
+      "type": "generated",
+      "generator": "port"
+    },
+    "HttpPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "HttpPortGenerated",
+        "fallbackVariableName": "HttpPortGenerated"
+      },
+      "replaces": "8080"
+    },
+    "HttpsPortGenerated": {
+      "type": "generated",
+      "generator": "port",
+      "parameters": {
+        "low": 44300,
+        "high": 44399
+      }
+    },
+    "HttpsPortReplacer": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "HttpsPort",
+        "fallbackVariableName": "HttpsPortGenerated"
+      },
+      "replaces": "44300"
+    }
+  },
+  "forms": {
+    "AppendOptionsSuffix": {
+      "identifier": "replace",
+      "pattern": "^(.+)$",
+      "replacement": "$1Options"
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "ExampleHostedAdapter.csproj"
+    }
+  ],
+  "defaultName": "IasHostedAdapter",
+  "postActions": [
+    {
+      "condition": "(!SkipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        { "text": "Run 'dotnet restore'" }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

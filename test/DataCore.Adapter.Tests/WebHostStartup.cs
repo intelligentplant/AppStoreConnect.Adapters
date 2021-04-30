@@ -104,7 +104,7 @@ namespace DataCore.Adapter.Tests {
 
             services
                 .AddHealthChecks()
-                .AddAdapterHeathChecks();
+                .AddAdapterHealthChecks();
         }
 
 

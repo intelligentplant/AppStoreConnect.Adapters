@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "HttpsPort": {
+      "longName": "port",
+      "shortName": ""
+    },
+    "SkipRestore": {
+      "longName": "no-restore",
+      "shortName": ""
+    },
+    "AdapterTypeName": {
+      "longName": "adapter-name",
+      "shortName": ""
+    },
+    "AdapterTypeDescription": {
+      "longName": "adapter-description",
+      "shortName": ""
+    },
+    "VendorName": {
+      "longName": "vendor-name",
+      "shortName": ""
+    },
+    "VendorUrl": {
+      "longName": "vendor-url",
+      "shortName": ""
+    }
+  },
+  "usageExamples": []
+}
