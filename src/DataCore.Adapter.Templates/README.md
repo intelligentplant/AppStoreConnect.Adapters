@@ -83,3 +83,15 @@ Example:
 
 dotnet new aschostedadapter --port 43789
 ```
+
+```
+# Specifies adapter metadata.
+
+dotnet new aschostedadapter --adapter-name "My MQTT Adapter" --adapter-description "Adapter for MQTT"
+```
+
+```
+# Specifies vendor metadata.
+
+dotnet new aschostedadapter --vendor-name "Intelligent Plant" --vendor-url "https://www.intelligentplant.com"
+```
