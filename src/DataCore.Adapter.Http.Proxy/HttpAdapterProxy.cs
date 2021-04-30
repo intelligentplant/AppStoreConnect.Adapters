@@ -189,7 +189,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
-            if (this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
+            if (_snapshotRefreshInterval > TimeSpan.Zero && this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
                 // We are able to simulate tag value push functionality.
                 var simulatedPush = new Adapter.RealTimeData.PollingSnapshotTagValuePush(
                     readSnapshot!, 

@@ -29,8 +29,13 @@ namespace DataCore.Adapter.Http.Proxy {
 
         /// <summary>
         /// The interval to use between re-polling snapshot values for subscribed tags. Ignored if 
-        /// the remote adapter does not support <see cref="Adapter.RealTimeData.ISnapshotTagValuePush"/>.
+        /// the remote adapter does not support <see cref="Adapter.RealTimeData.IReadSnapshotTagValues"/>.
         /// </summary>
+        /// <remarks>
+        ///   Specifying a value less than or equal to <see cref="TimeSpan.Zero"/> will result in 
+        ///   the <see cref="Adapter.RealTimeData.ISnapshotTagValuePush"/> feature being disabled, 
+        ///   even if the remote adapter supports <see cref="Adapter.RealTimeData.IReadSnapshotTagValues"/>.
+        /// </remarks>
         public TimeSpan TagValuePushInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
