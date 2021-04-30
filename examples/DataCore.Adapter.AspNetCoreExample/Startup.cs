@@ -93,7 +93,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services
                 .AddHealthChecks()
-                .AddAdapterHeathChecks();
+                .AddAdapterHealthChecks();
 
             // Add OpenTelemetry tracing
             services.AddOpenTelemetryTracing(builder => {
