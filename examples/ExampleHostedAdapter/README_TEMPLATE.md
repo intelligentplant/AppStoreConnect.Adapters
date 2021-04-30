@@ -12,6 +12,13 @@ For information about how to implement adapter features, as well as example proj
 The `Startup` class configures the dependency injection container and application pipeline for the ASP.NET Core application. The `appsettings.json` file provides configuration settings for the application, including the `ExampleHostedAdapterOptions` instance that is passed to the `ExampleHostedAdapter` instance at runtime.
 
 
+# Unit Tests
+
+Helpers are available for running adapter tests in MSTest unit test projects, via the [IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers) NuGet package.
+
+See [here](https://github.com/intelligentplant/AppStoreConnect.Adapters/src/DataCore.Adapter.Tests.Helpers) for more information.
+
+
 # Connecting App Store Connect to the Adapter
 
 To connect a local App Store Connect instance to your adapter, configure a new `App Store Connect Adapter (HTTP Proxy)` data source in the App Store Connect UI, using the following settings:
