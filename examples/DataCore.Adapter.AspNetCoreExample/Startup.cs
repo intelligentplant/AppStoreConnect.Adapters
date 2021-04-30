@@ -12,6 +12,8 @@ using Microsoft.Extensions.Options;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+[assembly: DataCore.Adapter.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com")]
+
 namespace DataCore.Adapter.AspNetCoreExample {
     public class Startup {
         public Startup(IConfiguration configuration) {
@@ -34,10 +36,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     "Example .NET Core Host",
                     "An example App Store Connect Adapters host running on ASP.NET Core",
                     version,
-                    Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                    true,
-                    true,
-                    new [] {
+                    properties: new [] {
                         Common.AdapterProperty.Create(
                             "Project URL",
                             new Uri("https://github.com/intelligentplant/AppStoreConnect.Adapters"),
