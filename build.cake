@@ -1,3 +1,7 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Use build.ps1 to run the build script. Command line arguments are documented below.
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 const string DefaultSolutionName = "./DataCore.Adapter.sln";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,6 +23,9 @@ const string DefaultSolutionName = "./DataCore.Adapter.sln";
 // --clean
 //   Specifies if this is a rebuild rather than an incremental build. All artifact, bin, and test 
 //   output folders will be cleaned prior to running the specified target.
+//
+// --no-tests
+//   Specifies that tests should be skipped.
 //
 // --ci
 //   Forces continuous integration build mode. Not required if the build is being run by a 
@@ -66,6 +73,7 @@ Setup<BuildState>(context => {
             Configuration = Argument("configuration", "Debug"),
             ContinuousIntegrationBuild = HasArgument("ci") || !BuildSystem.IsLocalBuild,
             Clean = HasArgument("clean"),
+            SkipTests = HasArgument("no-tests"),
             SignOutput = HasArgument("sign-output"),
             Verbose = HasArgument("verbose")
         };
@@ -97,10 +105,6 @@ Setup<BuildState>(context => {
         state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix) 
             ? $"{majorVersion}.{minorVersion}.{patchVersion}"
             : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
-
-        if (!string.IsNullOrEmpty(buildMetadata)) {
-            state.PackageVersion = string.Concat(state.PackageVersion, "+", buildMetadata);
-        }
 
         state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
             ? $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}+{branch}"
@@ -180,6 +184,7 @@ Task("Build")
 // Runs unit tests.
 Task("Test")
     .IsDependentOn("Build")
+    .WithCriteria<BuildState>((c, state) => !state.SkipTests)
     .Does<BuildState>(state => {
         var testSettings = new DotNetCoreTestSettings {
             Configuration = state.Configuration,
