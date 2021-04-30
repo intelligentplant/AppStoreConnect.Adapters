@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Http.Proxy;
+using DataCore.Adapter.RealTimeData;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -31,8 +33,35 @@ namespace DataCore.Adapter.Tests {
 
 
         protected override HttpAdapterProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider) {
-            return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(serviceProvider, nameof(HttpProxyTests), new HttpAdapterProxyOptions() {
+            var options = new HttpAdapterProxyOptions() {
                 RemoteId = remoteAdapterId
+            };
+
+            if (string.Equals(context.TestName, nameof(HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsZero))) {
+                options.TagValuePushInterval = TimeSpan.Zero;
+            }
+            else if (string.Equals(context.TestName, nameof(HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsNegative))) {
+                options.TagValuePushInterval = TimeSpan.FromSeconds(-1);
+            }
+
+            return ActivatorUtilities.CreateInstance<HttpAdapterProxy>(serviceProvider, nameof(HttpProxyTests), options);
+        }
+
+
+        [TestMethod]
+        public Task HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsZero() {
+            return RunAdapterTest((adapter, ctx, ct) => {
+                Assert.IsFalse(adapter.HasFeature<ISnapshotTagValuePush>());
+                return Task.CompletedTask;
+            });
+        }
+
+
+        [TestMethod]
+        public Task HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsNegative() {
+            return RunAdapterTest((adapter, ctx, ct) => {
+                Assert.IsFalse(adapter.HasFeature<ISnapshotTagValuePush>());
+                return Task.CompletedTask;
             });
         }
 
