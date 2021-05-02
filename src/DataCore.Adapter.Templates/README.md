@@ -40,7 +40,7 @@ cd MyNewAdapter
 dotnet new aschostedadapter
 ```
 
-This will create a new adapter hosted in an ASP.NET Core application that App Store Connect can connect to using HTTP or gRPC. The `README.md` file for the new project provides additional instructions for completing the setup.
+This will create a new adapter hosted in an ASP.NET Core application that App Store Connect can connect to using REST API calls, SignalR, or gRPC. The `README.md` file for the new project provides additional instructions for completing the setup.
 
 You can open the project in Visual Studio by double clicking it. In the future, you will be able to [use the template from inside Visual Studio](https://devblogs.microsoft.com/dotnet/net-cli-templates-in-visual-studio/).
 
