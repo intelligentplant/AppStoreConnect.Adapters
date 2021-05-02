@@ -55,7 +55,7 @@ const string DefaultSolutionName = "./DataCore.Adapter.sln";
 #load "build/build-utilities.cake"
 
 // Get the target that was specified.
-var target = Argument("target", "Test");
+var target = Argument("target", HasArgument("no-tests") ? "Build" : "Test");
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
