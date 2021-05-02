@@ -57,6 +57,8 @@ namespace ExampleHostedAdapter {
                 })
                 .AddDataCoreAdapterMvc();
 
+            services.AddSignalR().AddDataCoreAdapterSignalR();
+
             // Add OpenTelemetry tracing
             services.AddOpenTelemetryTracing(builder => {
                 builder
@@ -93,8 +95,9 @@ namespace ExampleHostedAdapter {
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
-                // Map MVC API and gRPC endpoints.
+                // Map MVC API, SignalR, and gRPC endpoints.
                 endpoints.MapControllers();
+                endpoints.MapDataCoreAdapterHubs();
                 endpoints.MapDataCoreGrpcServices();
 
                 // Redirect requests to / to the API endpoint for retrieving details about the
