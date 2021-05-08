@@ -171,6 +171,12 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 endpoints.MapControllers();
                 endpoints.MapDataCoreAdapterHubs();
                 endpoints.MapHealthChecks("/health");
+
+                // Redirect all other requests to the host info API endpoint.
+                endpoints.MapFallback("/{*url}", context => {
+                    context.Response.Redirect($"/api/app-store-connect/v2.0/host-info/");
+                    return System.Threading.Tasks.Task.CompletedTask;
+                });
             });
         }
     }
