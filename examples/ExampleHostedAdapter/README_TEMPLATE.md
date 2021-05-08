@@ -35,8 +35,8 @@ You can connect to the adapter host using REST API calls, SignalR, or gRPC. Use 
 
 To connect a local App Store Connect instance to your adapter using the REST API, configure a new `App Store Connect Adapter (HTTP Proxy)` data source in the App Store Connect UI, using the following settings:
 
-- **Address:** https://localhost:44300/
-- **Adapter ID:** fdb421d7-03b2-49e8-880a-224e8e5f04ef
+- `Address`: https://localhost:44300/
+- `Adapter ID`: fdb421d7-03b2-49e8-880a-224e8e5f04ef
 
 
 ## SignalR

@@ -64,7 +64,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                httpResponse.EnsureSuccessStatusCode();
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<AdapterDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
@@ -102,7 +102,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                httpResponse.EnsureSuccessStatusCode();
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<AdapterDescriptorExtended>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
@@ -139,7 +139,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                httpResponse.EnsureSuccessStatusCode();
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<HealthCheckResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }

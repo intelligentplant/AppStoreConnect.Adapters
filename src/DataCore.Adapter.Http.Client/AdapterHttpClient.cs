@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Http.Client.Clients;
 using DataCore.Adapter.Json;
 
@@ -194,7 +195,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
-        protected internal static HttpRequestMessage CreateHttpRequestMessage(
+        public static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             Uri url, 
             RequestMetadata? metadata
@@ -227,7 +228,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
-        protected internal static HttpRequestMessage CreateHttpRequestMessage(
+        public static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             string url, 
             RequestMetadata? metadata
@@ -270,7 +271,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
-        protected internal static HttpRequestMessage CreateHttpRequestMessage<TContent>(
+        public static HttpRequestMessage CreateHttpRequestMessage<TContent>(
             HttpMethod method, 
             Uri url, 
             TContent content, 
@@ -281,6 +282,43 @@ namespace DataCore.Adapter.Http.Client {
             result.Content = System.Net.Http.Json.JsonContent.Create(content, options: options);
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified content and metadata attached.
+        /// </summary>
+        /// <typeparam name="TContent">
+        ///   The type of the <paramref name="content"/>.
+        /// </typeparam>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="content">
+        ///   The content for the request. The content will be serialized to JSON.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        public HttpRequestMessage CreateHttpRequestMessage<TContent>(
+            HttpMethod method,
+            Uri url,
+            TContent content,
+            RequestMetadata? metadata
+        ) {
+            return CreateHttpRequestMessage(method, url, content, metadata, JsonSerializerOptions);
         }
 
 
@@ -314,7 +352,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
-        protected internal static HttpRequestMessage CreateHttpRequestMessage<TContent>(
+        public static HttpRequestMessage CreateHttpRequestMessage<TContent>(
             HttpMethod method, 
             string url, 
             TContent content, 
@@ -328,6 +366,43 @@ namespace DataCore.Adapter.Http.Client {
                 metadata,
                 options
             );
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified content and metadata attached.
+        /// </summary>
+        /// <typeparam name="TContent">
+        ///   The type of the <paramref name="content"/>.
+        /// </typeparam>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="content">
+        ///   The content for the request. The content will be serialized to JSON.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        public HttpRequestMessage CreateHttpRequestMessage<TContent>(
+            HttpMethod method,
+            string url,
+            TContent content,
+            RequestMetadata? metadata
+        ) {
+            return CreateHttpRequestMessage(method, url, content, metadata, JsonSerializerOptions);
         }
 
     }

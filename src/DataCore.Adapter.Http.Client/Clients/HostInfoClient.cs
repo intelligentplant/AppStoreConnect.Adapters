@@ -56,7 +56,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ) {
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                httpResponse.EnsureSuccessStatusCode();
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<HostInfo>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
