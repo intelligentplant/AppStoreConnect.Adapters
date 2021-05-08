@@ -9,34 +9,6 @@ namespace DataCore.Adapter.Http.Client {
     public static class HttpRequestMessageExtensions {
 
         /// <summary>
-        /// Sets a correlation ID on the request by setting the <c>Request-Id</c> header.
-        /// </summary>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="correlationId">
-        ///   The correlation ID.
-        /// </param>
-        /// <returns>
-        ///   The <paramref name="request"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="request"/> is <see langword="null"/>.
-        /// </exception>
-        private static HttpRequestMessage AddCorrelationId(this HttpRequestMessage request, string? correlationId) {
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            if (!string.IsNullOrWhiteSpace(correlationId)) {
-                request.Headers.Add("Request-Id", correlationId);
-            }
-
-            return request;
-        }
-
-
-        /// <summary>
         /// Associates metadata with the request.
         /// </summary>
         /// <param name="request">
@@ -59,9 +31,7 @@ namespace DataCore.Adapter.Http.Client {
                 }
             }
 
-            return request
-                .AddStateProperty(metadata)
-                .AddCorrelationId(metadata?.CorrelationId);
+            return request.AddStateProperty(metadata);
         }
 
 
