@@ -6,20 +6,19 @@ public static class BuildUtilities {
         // Tell TeamCity the build number if required.
         if (buildSystem.IsRunningOnTeamCity) {
             buildSystem.TeamCity.SetBuildNumber(buildState.BuildNumber);
-            buildSystem.TeamCity.SetParameter("system.AssemblyVersion", buildState.AssemblyVersion);
-            buildSystem.TeamCity.SetParameter("system.AssemblyFileVersion", buildState.AssemblyFileVersion);
-            buildSystem.TeamCity.SetParameter("system.InformationalVersion", buildState.InformationalVersion);
-            buildSystem.TeamCity.SetParameter("system.PackageVersion", buildState.PackageVersion);
         }
     }
 
 
     // Writes a log message.
-    public static void WriteLogMessage(BuildSystem buildSystem, string message) {
+    public static void WriteLogMessage(BuildSystem buildSystem, string message, bool newlineBeforeMessage = true) {
         if (buildSystem.IsRunningOnTeamCity) {
             buildSystem.TeamCity.WriteProgressMessage(message);
         }
         else {
+            if (newlineBeforeMessage) {
+                Console.WriteLine();
+            }
             Console.WriteLine(message);
         }
     }
@@ -43,22 +42,61 @@ public static class BuildUtilities {
 
     // Writes the specified build state to the log.
     public static void WriteBuildStateToLog(BuildSystem buildSystem, BuildState state) {
-        WriteLogMessage(buildSystem, $"Solution Name: {state.SolutionName}");
-        WriteLogMessage(buildSystem, $"Build Number: {state.BuildNumber}");
-        WriteLogMessage(buildSystem, $"Target: {state.Target}");
-        WriteLogMessage(buildSystem, $"Configuration: {state.Configuration}");
-        WriteLogMessage(buildSystem, $"Clean: {state.RunCleanTarget}");
-        WriteLogMessage(buildSystem, $"Continuous Integration Build: {state.ContinuousIntegrationBuild}");
-        WriteLogMessage(buildSystem, $"Sign Output: {state.CanSignOutput}");
-        WriteLogMessage(buildSystem, $"Informational Version: {state.InformationalVersion}");
-        WriteLogMessage(buildSystem, $"Assembly Version: {state.AssemblyVersion}");
-        WriteLogMessage(buildSystem, $"Assembly File Version: {state.AssemblyFileVersion}");
-        WriteLogMessage(buildSystem, $"Package Version: {state.PackageVersion}");
+        WriteLogMessage(buildSystem, $"Solution Name: {state.SolutionName}", true);
+        WriteLogMessage(buildSystem, $"Build Number: {state.BuildNumber}", false);
+        WriteLogMessage(buildSystem, $"Target: {state.Target}", false);
+        WriteLogMessage(buildSystem, $"Configuration: {state.Configuration}", false);
+        WriteLogMessage(buildSystem, $"Clean: {state.RunCleanTarget}", false);
+        WriteLogMessage(buildSystem, $"Skip Tests: {state.SkipTests}", false);
+        WriteLogMessage(buildSystem, $"Continuous Integration Build: {state.ContinuousIntegrationBuild}", false);
+        WriteLogMessage(buildSystem, $"Sign Output: {state.CanSignOutput}", false);
+    }
+
+
+    // Adds MSBuild properties from properties specified via the "property" command line argument.
+    public static void ApplyMSBuildPropertiesFromArguments(DotNetCoreMSBuildSettings settings, ICollection<string> props) {
+        if (props?.Count == 0) {
+            return;
+        }
+
+        // We expect each property to be in "NAME=VALUE" format.
+        var regex = new System.Text.RegularExpressions.Regex(@"^(?<name>.+)=(?<value>.+)$");
+
+        foreach (var prop in props) {
+            if (string.IsNullOrWhiteSpace(prop)) {
+                continue;
+            }
+
+            var m = regex.Match(prop.Trim());
+            if (!m.Success) {
+                continue;
+            }
+
+            settings.Properties[m.Groups["name"].Value] = new List<string> { m.Groups["value"].Value };
+        }
     }
 
 
     // Adds MSBuild properties from the build state.
     public static void ApplyMSBuildProperties(DotNetCoreMSBuildSettings settings, BuildState state) {
+        if (state.MSBuildProperties?.Count > 0) {
+            // We expect each property to be in "NAME=VALUE" format.
+            var regex = new System.Text.RegularExpressions.Regex(@"^(?<name>.+)=(?<value>.+)$");
+
+            foreach (var prop in state.MSBuildProperties) {
+                if (string.IsNullOrWhiteSpace(prop)) {
+                    continue;
+                }
+
+                var m = regex.Match(prop.Trim());
+                if (!m.Success) {
+                    continue;
+                }
+
+                settings.Properties[m.Groups["name"].Value] = new List<string> { m.Groups["value"].Value };
+            }
+        }
+
         // Specify if this is a CI build. 
         if (state.ContinuousIntegrationBuild) {
             settings.Properties["ContinuousIntegrationBuild"] = new List<string> { "True" };
@@ -68,12 +106,6 @@ public static class BuildUtilities {
         if (state.CanSignOutput) {
             settings.Properties["SignOutput"] = new List<string> { "True" };
         }
-
-        // Set version numbers.
-        settings.Properties["AssemblyVersion"] = new List<string> { state.AssemblyVersion };
-        settings.Properties["FileVersion"] = new List<string> { state.AssemblyFileVersion };
-        settings.Properties["Version"] = new List<string> { state.PackageVersion };
-        settings.Properties["InformationalVersion"] = new List<string> { state.InformationalVersion };
     }
 
 

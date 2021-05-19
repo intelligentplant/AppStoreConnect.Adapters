@@ -44,6 +44,11 @@ const string DefaultSolutionName = "./DataCore.Adapter.sln";
 //
 // --verbose
 //   Enables verbose messages.
+//
+// --property=<PROPERTY>
+//   Specifies an additional property to pass to MSBuild during Build and Pack targets. The value
+//   must be specified using a '<NAME>=<VALUE>' format e.g. --property="NoWarn=CS1591". This 
+//   argument can be specified multiple times.
 // 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +80,8 @@ Setup<BuildState>(context => {
             Clean = HasArgument("clean"),
             SkipTests = HasArgument("no-tests"),
             SignOutput = HasArgument("sign-output"),
-            Verbose = HasArgument("verbose")
+            Verbose = HasArgument("verbose"),
+            MSBuildProperties = HasArgument("property") ? Arguments<string>("property") : new List<string>()
         };
 
         // Get raw version numbers from JSON.
@@ -87,32 +93,14 @@ Setup<BuildState>(context => {
         var patchVersion = versionJson.Value<int>("Patch");
         var versionSuffix = versionJson.Value<string>("PreRelease");
 
-        // Compute version numbers.
+        // Compute build number.
 
         var buildCounter = Argument("build-counter", 0);
-        var buildMetadata = Argument("build-metadata", state.ContinuousIntegrationBuild ? "" : "unofficial");
-        if (!string.IsNullOrEmpty(buildMetadata)) {
-            var buildMetadataValidator = new System.Text.RegularExpressions.Regex(@"^[0-9A-Aa-z-]+(\.[0-9A-Aa-z-]+)*$");
-            if (!buildMetadataValidator.Match(buildMetadata).Success) {
-                throw new Exception($"Build metadata '{buildMetadata}' is invalid. Metadata must consist of dot-delimited groups of ASCII alphanumerics and hyphens (i.e. [0-9A-Za-z-]). See https://semver.org/#spec-item-10 for details.");
-            }
-        }
         var branch = GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
-
-        state.AssemblyVersion = $"{majorVersion}.{minorVersion}.0.0";
-        state.AssemblyFileVersion = $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}";
-
-        state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix) 
-            ? $"{majorVersion}.{minorVersion}.{patchVersion}"
-            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
 
         state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
             ? $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}+{branch}"
             : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}+{branch}";
-
-        state.InformationalVersion = string.IsNullOrWhiteSpace(buildMetadata)
-            ? state.BuildNumber
-            : $"{state.BuildNumber}#{buildMetadata}";
 
         if (!string.Equals(state.Target, "Clean", StringComparison.OrdinalIgnoreCase)) {
             BuildUtilities.SetBuildSystemBuildNumber(BuildSystem, state);

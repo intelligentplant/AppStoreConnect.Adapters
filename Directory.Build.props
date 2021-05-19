@@ -9,6 +9,7 @@
   <!-- Import common NuGet package versions -->
   <Import Project=".\build\Dependencies.props"/>
   
+  <!-- Common build properties -->
   <PropertyGroup>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -19,21 +20,14 @@
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts\packages\$(Configuration)</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <NeutralLanguage>en</NeutralLanguage>
-    <Version>2.0.0</Version>
   </PropertyGroup>
 
-  <Choose>
-    <When Condition=" $([System.DateTime]::UtcNow.Year) > 2019 ">
-      <PropertyGroup>
-        <Copyright>Copyright © 2019-$([System.DateTime]::UtcNow.Year) $(Company)</Copyright>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <Copyright>Copyright © 2019 $(Company)</Copyright>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
+  <!-- Jaahas.MSBuild.Extensions uses these properties to set our copyright message and version 
+       properties at build time. -->
+  <PropertyGroup>
+    <CopyrightStartYear>2019</CopyrightStartYear>
+    <VersionPropertiesInputFile Condition="Exists('$(MSBuildThisFileDirectory)build\version.json')">$(MSBuildThisFileDirectory)build\version.json</VersionPropertiesInputFile>
+  </PropertyGroup>
 
   <!-- Extension point to allow Continuous Integration systems to inject their own configuration. -->
   <Import Project="CI.props" Condition="Exists('CI.props')" />

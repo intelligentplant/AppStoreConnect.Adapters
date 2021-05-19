@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\README*.md;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
+    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\Directory.Build.props;..\..\examples\ExampleHostedAdapter\README*.md;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
   </ItemGroup>
     
   <Target Name="CopyAscHostedAdapterTemplateFiles" BeforeTargets="Build">
@@ -30,7 +30,7 @@
   </Target>
   
   <Target Name="CreateTemplateProjectFiles" BeforeTargets="Build">
-    <ReplaceFileText InputFilename="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj" OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj" Placeholder="Version=&quot;%24(Version)&quot;" Replacement="Version=&quot;$(Version)&quot;" />
+    <ReplaceFileText InputFilename="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj" OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj" Placeholder="Version=&quot;%24(_AdapterPackageVersion)&quot;" Replacement="Version=&quot;$(Version)&quot;" />
   </Target>
 
   <UsingTask TaskName="ReplaceFileText" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
