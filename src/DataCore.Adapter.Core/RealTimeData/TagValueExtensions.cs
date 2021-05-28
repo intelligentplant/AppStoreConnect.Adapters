@@ -122,6 +122,54 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Gets the first value in the <see cref="TagValueQueryResult"/> that can be cast to the specified 
+        /// type, or returns a default value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value to return.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <returns>
+        ///   The first tag value that can be cast to an instance of <typeparamref name="T"/>, 
+        ///   or the provided default value if the no such conversion can be performed on any of 
+        ///   the values in the <see cref="TagValue"/>.
+        /// </returns>
+        public static T? GetValueOrDefault<T>(this TagValueQueryResult value) {
+            return value.Value.GetValueOrDefault(default(T));
+        }
+
+
+        /// <summary>
+        /// Gets the first value in the <see cref="TagValue"/> that can be cast to the specified 
+        /// type, or returns a default value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value to return.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <param name="defaultValue">
+        ///   The default value to return if none of the values can be converted to 
+        ///   <typeparamref name="T"/>.
+        /// </param>
+        /// <returns>
+        ///   The first tag value that can be cast to an instance of <typeparamref name="T"/>, 
+        ///   or the provided default value if the no such conversion can be performed on any of 
+        ///   the values in the <see cref="TagValue"/>.
+        /// </returns>
+        public static T? GetValueOrDefault<T>(this TagValueQueryResult value, T? defaultValue) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            return value.Value.GetValueOrDefault(defaultValue);
+        }
+
+
+        /// <summary>
         /// Tries to get the display value for the <see cref="TagValueExtended"/>.
         /// </summary>
         /// <param name="value">

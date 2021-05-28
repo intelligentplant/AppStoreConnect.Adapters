@@ -1318,6 +1318,243 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        [TestMethod]
+        public void TagValueExtractShouldExtractTagValuesFromJsonForAllNonTimestampFields() {
+            var deviceSample = new { 
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                SignalStrength = -75,
+                DataFormat = 5,
+                Temperature = 19.3, 
+                Humidity = 37.905,
+                Pressure = 1013.35,
+                AccelerationX = -0.872,
+                AccelerationY = 0.512,
+                AccelerationZ = -0.04,
+                BatteryVoltage = 3.085,
+                TxPower = 4,
+                MovementCounter = 5,
+                MeasurementSequence = 34425,
+                MacAddress = "AB:CD:EF:01:23:45"
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json).ToArray();
+
+            Assert.AreEqual(13, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldProcessTagNameTemplate() {
+            var deviceSample = new {
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                SignalStrength = -75,
+                DataFormat = 5,
+                Temperature = 19.3,
+                Humidity = 37.905,
+                Pressure = 1013.35,
+                AccelerationX = -0.872,
+                AccelerationY = 0.512,
+                AccelerationZ = -0.04,
+                BatteryVoltage = 3.085,
+                TxPower = 4,
+                MovementCounter = 5,
+                MeasurementSequence = 34425,
+                MacAddress = "AB:CD:EF:01:23:45"
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() { 
+                Template = TestContext.TestName + "/{MacAddress}/{$prop}"
+            }).ToArray();
+
+            Assert.AreEqual(13, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+            Assert.IsTrue(tagValues.All(x => x.TagName.StartsWith(TestContext.TestName + "/" + deviceSample.MacAddress)));
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldProcessTagNameTemplateWithDefaultReplacements() {
+            var deviceSample = new {
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                SignalStrength = -75,
+                DataFormat = 5,
+                Temperature = 19.3,
+                Humidity = 37.905,
+                Pressure = 1013.35,
+                AccelerationX = -0.872,
+                AccelerationY = 0.512,
+                AccelerationZ = -0.04,
+                BatteryVoltage = 3.085,
+                TxPower = 4,
+                MovementCounter = 5,
+                MeasurementSequence = 34425,
+                MacAddress = "AB:CD:EF:01:23:45"
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var guid = Guid.NewGuid();
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() {
+                Template = TestContext.TestName + "/{MacAddress}/{Uuid}/{$prop}",
+                TemplateReplacements = new Dictionary<string, string>() {
+                    ["Uuid"] = guid.ToString()
+                }
+            }).ToArray();
+
+            Assert.AreEqual(13, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+            Assert.IsTrue(tagValues.All(x => x.TagName.StartsWith(TestContext.TestName + "/" + deviceSample.MacAddress + "/" + guid)));
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldExcludeSpecifiedProperties() {
+            var deviceSample = new {
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                SignalStrength = -75,
+                DataFormat = 5,
+                Temperature = 19.3,
+                Humidity = 37.905,
+                Pressure = 1013.35,
+                AccelerationX = -0.872,
+                AccelerationY = 0.512,
+                AccelerationZ = -0.04,
+                BatteryVoltage = 3.085,
+                TxPower = 4,
+                MovementCounter = 5,
+                MeasurementSequence = 34425,
+                MacAddress = "AB:CD:EF:01:23:45"
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() {
+                Template = TestContext.TestName + "/{MacAddress}/{DataFormat}/{$prop}",
+                ExcludeProperties = new [] {
+                    nameof(deviceSample.DataFormat),
+                    nameof(deviceSample.MacAddress)
+                }
+            }).ToArray();
+
+            Assert.AreEqual(11, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+            Assert.IsTrue(tagValues.All(x => x.TagName.StartsWith(TestContext.TestName + "/" + deviceSample.MacAddress + "/" + deviceSample.DataFormat)));
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldIncludeSpecifiedProperties() {
+            var deviceSample = new {
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                SignalStrength = -75,
+                DataFormat = 5,
+                Temperature = 19.3,
+                Humidity = 37.905,
+                Pressure = 1013.35,
+                AccelerationX = -0.872,
+                AccelerationY = 0.512,
+                AccelerationZ = -0.04,
+                BatteryVoltage = 3.085,
+                TxPower = 4,
+                MovementCounter = 5,
+                MeasurementSequence = 34425,
+                MacAddress = "AB:CD:EF:01:23:45"
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() {
+                Template = TestContext.TestName + "/{MacAddress}/{DataFormat}/{$prop}",
+                IncludeProperties = new[] {
+                    nameof(deviceSample.Temperature),
+                    nameof(deviceSample.Humidity),
+                    nameof(deviceSample.Pressure)
+                }
+            }).ToArray();
+
+            Assert.AreEqual(3, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+            Assert.IsTrue(tagValues.All(x => x.TagName.StartsWith(TestContext.TestName + "/" + deviceSample.MacAddress + "/" + deviceSample.DataFormat)));
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldParseTopLevelArray() {
+            var deviceSamples = new[] { 
+                new { Value = 55.5 },
+                new { Value = 417.1 },
+                new { Value = -0.0032 },
+                new { Value = 14.0 },
+            };
+
+            var json = JsonSerializer.Serialize(deviceSamples);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() {
+                Template = TestContext.TestName + "/sample/{$prop}"
+            }).ToArray();
+
+            Assert.AreEqual(deviceSamples.Length, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => string.Equals(x.TagName, TestContext.TestName + "/sample/Value")));
+
+            for (var i = 0; i < deviceSamples.Length; i++) {
+                Assert.AreEqual(deviceSamples[i].Value, tagValues[i].Value.GetValueOrDefault<double>(), $"Samples at index {i} are different.");
+            }
+        }
+
+
+        [TestMethod]
+        public void TagValueExtractShouldRecursivelyParseObject() {
+            var deviceSample = new {
+                Timestamp = DateTimeOffset.Parse("2021-05-28T17:41:09.7031076+03:00"),
+                Metadata = new {
+                    SignalStrength = -75,
+                    DataFormat = 5,
+                    MeasurementSequence = 34425,
+                    MacAddress = "AB:CD:EF:01:23:45"
+                },
+                Environment = new[] {
+                    new {
+                        Temperature = 19.3,
+                        Humidity = 37.905,
+                        Pressure = 1013.35
+                    },
+                    new {
+                        Temperature = 19.3,
+                        Humidity = 37.905,
+                        Pressure = 1013.35
+                    }
+                },
+                Acceleration = new {
+                    X = -0.872,
+                    Y = 0.512,
+                    Z = -0.04
+                },
+                Power = new {
+                    BatteryVoltage = 3.085,
+                    TxPower = 4
+                },
+                Other = new {
+                    MovementCounter = 5
+                }
+            };
+
+            var json = JsonSerializer.Serialize(deviceSample);
+
+            var tagValues = JsonTagValueExtractor.GetTagValues(json, new JsonTagValueExtractorOptions() {
+                Template = TestContext.TestName + "/{$prop}",
+                Recursive = true
+            }).ToArray();
+
+            Assert.AreEqual(16, tagValues.Length);
+            Assert.IsTrue(tagValues.All(x => x.Value.UtcSampleTime.Equals(deviceSample.Timestamp.UtcDateTime)));
+        }
+
+
         private class VariantTestClass {
 
             public string TestName { get; set; }
