@@ -137,17 +137,15 @@ namespace DataCore.Adapter.Diagnostics {
                         break;
                     }
 
-                    using (var publishActivity = Telemetry.ActivitySource.StartActivity("publish_to_subscriber")) {
-                        try {
-                            var success = subscriber.Publish(update);
-                            if (!success) {
-                                _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
-                            }
+                    try {
+                        var success = subscriber.Publish(update);
+                        if (!success) {
+                            _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
                         }
-                        catch (OperationCanceledException) { }
-                        catch (Exception e) {
-                            _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
-                        }
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (Exception e) {
+                        _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
                     }
                 }
             }
