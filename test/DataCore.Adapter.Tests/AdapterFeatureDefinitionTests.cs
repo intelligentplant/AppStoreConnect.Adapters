@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using DataCore.Adapter.Extensions;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -24,6 +26,30 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsNotNull(descriptor, $"Decriptor for {uri} should not be null.");
                 Assert.AreEqual(uri, descriptor.Uri);
             }
+        }
+
+
+        [TestMethod]
+        public void ShouldResolveExtensionFeatureFromOperationUri() {
+            var featureUri = new Uri(new Uri(WellKnownFeatures.Extensions.BaseUri), string.Concat("unit-tests/", GetType().Name, "/"));
+            var operationUri = new Uri(featureUri, "invoke/" + TestContext.TestName);
+
+            var success = AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationUri, out var featureUriActual, out var error);
+            if (!success) {
+                Assert.Fail(error);
+            }
+            Assert.AreEqual(featureUri, featureUriActual);
+        }
+
+
+        [DataTestMethod]
+        [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/")]
+        [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/invoke/")]
+        [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/GetDescriptor")]
+        [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/GetOperations")]
+        public void ShouldNotResolveFeatureFromOperationUri(string uri) {
+            var operationUri = new Uri(uri);
+            Assert.IsFalse(AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationUri, out var _, out var _));
         }
 
     }
