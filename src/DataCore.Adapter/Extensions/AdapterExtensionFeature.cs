@@ -672,7 +672,11 @@ namespace DataCore.Adapter.Extensions {
             // Operation URIs should be in the format <feature_uri>/<operation_type>/<operation_name>.
             // If we split the operation URI using '/', we should end up with at least 3 parts (more
             // if the feature URI contains '/').
-            var parts = operationUri.AbsoluteUri.Split('/');
+#if NETSTANDARD2_1_OR_GREATER
+            var parts = operationUri.AbsoluteUri.Split('/', StringSplitOptions.RemoveEmptyEntries);
+#else
+            var parts = operationUri.AbsoluteUri.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+#endif
             if (parts.Length < 3) {
                 // Operation URI cannot be valid because it does not contain the parts described above.
                 featureUri = null!;
@@ -681,14 +685,14 @@ namespace DataCore.Adapter.Extensions {
             }
 
             // Second-last URI part should be the operation type.
-            if (!Enum.TryParse<ExtensionFeatureOperationType>(parts[parts.Length - 2], out var _)) {
+            if (!Enum.TryParse<ExtensionFeatureOperationType>(parts[parts.Length - 2], true, out var _)) {
                 // Not a valid operation type.
                 featureUri = null!;
                 error = Resources.Error_InvalidExtensionFeatureOperationUri;
                 return false;
             }
 
-            featureUri = new Uri(operationUri, "../../");
+            featureUri = new Uri(operationUri.EnsurePathHasTrailingSlash(), "../../");
             return true;
         }
 
