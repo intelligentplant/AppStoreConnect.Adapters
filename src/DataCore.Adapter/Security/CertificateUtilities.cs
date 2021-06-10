@@ -304,7 +304,7 @@ namespace DataCore.Adapter.Security {
         ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool TryLoadCertificateFromStore(string path, out X509Certificate2 certificate) {
+        public static bool TryLoadCertificateFromStore(string path, out X509Certificate2? certificate) {
             return TryLoadCertificateFromStore(path, true, out certificate);
         }
 
@@ -327,14 +327,14 @@ namespace DataCore.Adapter.Security {
         ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        public static bool TryLoadCertificateFromStore(string path, bool validOnly, out X509Certificate2 certificate) {
+        public static bool TryLoadCertificateFromStore(string path, bool validOnly, out X509Certificate2? certificate) {
             if (path == null) {
-                certificate = null!;
+                certificate = null;
                 return false;
             }
 
             if (!TryParseCertificateStorePath(path, out var location, out var name, out var thumbprintOrSubjectName)) {
-                certificate = null!;
+                certificate = null;
                 return false;
             }
 
@@ -343,7 +343,7 @@ namespace DataCore.Adapter.Security {
                 var certs = LoadCertificates(store, thumbprintOrSubjectName, validOnly);
                 
                 if (certs.Length == 0) {
-                    certificate = null!;
+                    certificate = null;
                     return false;
                 }
 
