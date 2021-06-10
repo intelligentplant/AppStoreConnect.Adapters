@@ -215,25 +215,29 @@ namespace DataCore.Adapter.Security {
         /// <param name="thumbprintOrSubjectName">
         ///   The thumbprint or subject name to match.
         /// </param>
+        /// <param name="validOnly">
+        ///   Specifies if only valid certificates should be returned.
+        /// </param>
         /// <returns>
         ///   The matching certificates.
         /// </returns>
-        private static IEnumerable<X509Certificate2> LoadCertificates(X509Store store, string thumbprintOrSubjectName) {
+        private static X509Certificate2[] LoadCertificates(X509Store store, string thumbprintOrSubjectName, bool validOnly) {
             var certificatesByThumbprint = store.Certificates.Find(
                 X509FindType.FindByThumbprint,
                 thumbprintOrSubjectName,
-                true
+                validOnly
             );
 
             var certificatesBySubjectName = store.Certificates.Find(
                 X509FindType.FindBySubjectName,
                 thumbprintOrSubjectName,
-                true
+                validOnly
             );
 
             return certificatesByThumbprint
                 .Cast<X509Certificate2>()
-                .Concat(certificatesBySubjectName.Cast<X509Certificate2>());
+                .Concat(certificatesBySubjectName.Cast<X509Certificate2>())
+                .ToArray();
         }
 
 
@@ -301,6 +305,29 @@ namespace DataCore.Adapter.Security {
         ///   otherwise.
         /// </returns>
         public static bool TryLoadCertificateFromStore(string path, out X509Certificate2 certificate) {
+            return TryLoadCertificateFromStore(path, true, out certificate);
+        }
+
+
+        /// <summary>
+        /// Loads the certificate from the specified certificate store path.
+        /// </summary>
+        /// <param name="path">
+        ///   The certificate store path, in the format <c>cert:\{location}\{name}\{thumbprint_or_subject}</c>.
+        /// </param>
+        /// <param name="validOnly">
+        ///   When <see langword="true"/>, only valid certificates will be considered. Note that 
+        ///   self-signed certificates will not be returned if <paramref name="validOnly"/> is 
+        ///   <see langword="true"/>.
+        /// </param>
+        /// <param name="certificate">
+        ///   The matching certificate.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        public static bool TryLoadCertificateFromStore(string path, bool validOnly, out X509Certificate2 certificate) {
             if (path == null) {
                 certificate = null!;
                 return false;
@@ -313,8 +340,29 @@ namespace DataCore.Adapter.Security {
 
             using (var store = new X509Store(name, location)) {
                 store.Open(OpenFlags.ReadOnly);
-                certificate = LoadCertificates(store, thumbprintOrSubjectName).FirstOrDefault(x => x.Verify());
-                return certificate != null;
+                var certs = LoadCertificates(store, thumbprintOrSubjectName, validOnly);
+                
+                if (certs.Length == 0) {
+                    certificate = null!;
+                    return false;
+                }
+
+                if (certs.Length == 1) {
+                    certificate = certs[0];
+                    return true;
+                }
+
+                // Multiple candidates. Return the first certificate that is currently within its
+                // valid usage time range.
+
+                var now = DateTime.Now;
+                certificate = certs.Where(x => x.NotBefore <= now).Where(x => x.NotAfter > now).FirstOrDefault();
+                if (certificate != null) {
+                    return true;
+                }
+
+                // No certificates that are currently valid.
+                return false;
             }
         }
 
