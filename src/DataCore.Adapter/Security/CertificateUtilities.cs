@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Security {
         /// <returns>
         ///   The matching certificates.
         /// </returns>
-        private static X509Certificate2[] LoadCertificates(X509Store store, string thumbprintOrSubjectName, bool validOnly) {
+        private static IEnumerable<X509Certificate2> LoadCertificates(X509Store store, string thumbprintOrSubjectName, bool validOnly) {
             var certificatesByThumbprint = store.Certificates.Find(
                 X509FindType.FindByThumbprint,
                 thumbprintOrSubjectName,
@@ -236,8 +236,90 @@ namespace DataCore.Adapter.Security {
 
             return certificatesByThumbprint
                 .Cast<X509Certificate2>()
-                .Concat(certificatesBySubjectName.Cast<X509Certificate2>())
-                .ToArray();
+                .Concat(certificatesBySubjectName.Cast<X509Certificate2>());
+        }
+
+
+        /// <summary>
+        /// Selects an appropriate certificate from the provided collection.
+        /// </summary>
+        /// <param name="certificates">
+        ///   The certificates to select from.
+        /// </param>
+        /// <returns>
+        ///   An appropriate <see cref="X509Certificate2"/>, or <see langword="null"/> if 
+        ///   <paramref name="certificates"/>  is <see langword="null"/> or does not contain any 
+        ///   entries
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   If <paramref name="certificates"/> contains multiple items, the following criteria 
+        ///   will be applied (in order) to select the return value:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>
+        ///       If one or more certificates can be verified using basic validation policy (via 
+        ///       <see cref="X509Certificate2.Verify"/>), the verified certificate with the latest 
+        ///       <see cref="X509Certificate2.NotAfter"/> value will be returned.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       If one or more certificates can be verified using a validation policy that 
+        ///       includes the <see cref="X509VerificationFlags.AllowUnknownCertificateAuthority"/>, 
+        ///       the verified certificate with the latest <see cref="X509Certificate2.NotAfter"/> 
+        ///       value will be returned. This allows valid self-signed certificates to be selected.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       If neither of the above two criteria return a result, the item from <paramref name="certificates"/> 
+        ///       with the latest <see cref="X509Certificate2.NotAfter"/> value will be returned.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static X509Certificate2? SelectCertificate(IEnumerable<X509Certificate2>? certificates) {
+            // Order certificates in descending order of expiry time.
+            var certs = certificates
+                ?.Where(x => x != null)
+                ?.OrderByDescending(x => x.NotAfter)
+                ?.ToArray() ?? Array.Empty<X509Certificate2>();
+
+            if (certs.Length == 0) {
+                // No certificates specified; return null.
+                return null;
+            }
+
+            if (certs.Length == 1) {
+                // Only one certificate provided; return it.
+                return certs[0];
+            }
+
+            // First pass: return the first valid certificate in the array.
+            var certificate = certs.FirstOrDefault(x => x.Verify());
+            if (certificate != null) {
+                return certificate;
+            }
+
+            // Second pass: if we find an untrusted but otherwise valid certificate (e.g. self-signed), return it.
+            using (var chain = new X509Chain()) {
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                foreach (var cert in certs) {
+                    chain.Reset();
+                    if (chain.Build(cert)) {
+                        return cert;
+                    }
+                }
+            }
+
+            // Third pass: just return the first certificate in the array, even though it is
+            // untrusted.
+            return certs[0];
         }
 
 
@@ -305,29 +387,6 @@ namespace DataCore.Adapter.Security {
         ///   otherwise.
         /// </returns>
         public static bool TryLoadCertificateFromStore(string path, out X509Certificate2? certificate) {
-            return TryLoadCertificateFromStore(path, true, out certificate);
-        }
-
-
-        /// <summary>
-        /// Loads the certificate from the specified certificate store path.
-        /// </summary>
-        /// <param name="path">
-        ///   The certificate store path, in the format <c>cert:\{location}\{name}\{thumbprint_or_subject}</c>.
-        /// </param>
-        /// <param name="validOnly">
-        ///   When <see langword="true"/>, only valid certificates will be considered. Note that 
-        ///   self-signed certificates will not be returned if <paramref name="validOnly"/> is 
-        ///   <see langword="true"/>.
-        /// </param>
-        /// <param name="certificate">
-        ///   The matching certificate.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
-        ///   otherwise.
-        /// </returns>
-        public static bool TryLoadCertificateFromStore(string path, bool validOnly, out X509Certificate2? certificate) {
             if (path == null) {
                 certificate = null;
                 return false;
@@ -340,29 +399,9 @@ namespace DataCore.Adapter.Security {
 
             using (var store = new X509Store(name, location)) {
                 store.Open(OpenFlags.ReadOnly);
-                var certs = LoadCertificates(store, thumbprintOrSubjectName, validOnly);
-                
-                if (certs.Length == 0) {
-                    certificate = null;
-                    return false;
-                }
-
-                if (certs.Length == 1) {
-                    certificate = certs[0];
-                    return true;
-                }
-
-                // Multiple candidates. Return the first certificate that is currently within its
-                // valid usage time range.
-
-                var now = DateTime.Now;
-                certificate = certs.Where(x => x.NotBefore <= now).Where(x => x.NotAfter > now).FirstOrDefault();
-                if (certificate != null) {
-                    return true;
-                }
-
-                // No certificates that are currently valid.
-                return false;
+                var certs = LoadCertificates(store, thumbprintOrSubjectName, false);
+                certificate = SelectCertificate(certs);
+                return certificate != null;
             }
         }
 
