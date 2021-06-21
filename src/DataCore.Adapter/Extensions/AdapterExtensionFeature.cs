@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Extensions {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Encoders = encoders?.ToArray() ?? Array.Empty<IObjectEncoder>();
 
-            foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
+            void CreateAutoBindings(Uri featureUri) {
                 // Create auto-binding for GetDescriptor method
                 var opUri = GetOperationUri(
                     featureUri,
@@ -89,7 +89,7 @@ namespace DataCore.Adapter.Extensions {
                 );
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
-                    return new InvocationResponse() { 
+                    return new InvocationResponse() {
                         Results = new Variant[] {
                             this.ConvertToVariant(desc)!
                         }
@@ -98,18 +98,24 @@ namespace DataCore.Adapter.Extensions {
 
                 // Create auto-binding for GetOperations method
                 opUri = GetOperationUri(
-                    featureUri, 
-                    nameof(IAdapterExtensionFeature.GetOperations), 
+                    featureUri,
+                    nameof(IAdapterExtensionFeature.GetOperations),
                     ExtensionFeatureOperationType.Invoke
                 );
-                _boundInvokeMethods[opUri] = async (ctx, arg, ct) => {
+                _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
-                    return new InvocationResponse() { 
+                    return new InvocationResponse() {
                         Results = new[] {
                             this.ConvertToVariant(ops.ToArray())
                         }
                     };
                 };
+            }
+
+            // Create auto-bindings for GetDescriptor and GetOperations methods for each extension
+            // feature implemented by the current class.
+            foreach (var featureUri in GetType().GetAdapterFeatureUris().Where(x => !ExtensionUriBase.Equals(x) && ExtensionUriBase.IsBaseOf(x))) {
+                CreateAutoBindings(featureUri);
             }
         }
 
@@ -663,8 +669,30 @@ namespace DataCore.Adapter.Extensions {
                 return false;
             }
 
-            // Operation URIs are in the format <feature_uri>/<operation_type>/<operation_name>
-            featureUri = new Uri(operationUri, "../../");
+            // Operation URIs should be in the format <feature_uri>/<operation_type>/<operation_name>.
+            // If we split the operation URI using '/', we should end up with at least 3 parts (more
+            // if the feature URI contains '/').
+#if NETSTANDARD2_1_OR_GREATER
+            var parts = operationUri.AbsoluteUri.Split('/', StringSplitOptions.RemoveEmptyEntries);
+#else
+            var parts = operationUri.AbsoluteUri.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+#endif
+            if (parts.Length < 3) {
+                // Operation URI cannot be valid because it does not contain the parts described above.
+                featureUri = null!;
+                error = Resources.Error_InvalidExtensionFeatureOperationUri;
+                return false;
+            }
+
+            // Second-last URI part should be the operation type.
+            if (!Enum.TryParse<ExtensionFeatureOperationType>(parts[parts.Length - 2], true, out var _)) {
+                // Not a valid operation type.
+                featureUri = null!;
+                error = Resources.Error_InvalidExtensionFeatureOperationUri;
+                return false;
+            }
+
+            featureUri = new Uri(operationUri.EnsurePathHasTrailingSlash(), "../../");
             return true;
         }
 
