@@ -46,7 +46,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         private readonly FasterKV<SpanByte, SpanByte> _fasterKVStore;
 
         /// <summary>
-        /// The FASTER device used to persist on-disk and snapshot files.
+        /// The FASTER device used to store the on-disk portion of the log.
         /// </summary>
         private readonly IDevice _logDevice;
 
@@ -75,6 +75,12 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// Flags if periodic snapshots of the entire cache should be persisted to disk.
         /// </summary>
         private readonly bool _canRecordCheckpoints;
+
+        /// <summary>
+        /// Flags if the periodic checkpoint loop should create a new checkpoint the next 
+        /// time it runs.
+        /// </summary>
+        private int _checkpointIsRequired;
 
         /// <summary>
         /// The size (in bytes) that the read-only portion of the FASTER log must reach before 
@@ -262,23 +268,65 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <summary>
-        /// Takes a full snapshot checkpoint of the FASTER log.
+        /// Takes a full snapshot checkpoint.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that returns a tuple containing the operation 
-        ///   status and ID of the checkpoint.
+        ///   A <see cref="ValueTask{TResult}"/> that will return a flag indicating if a 
+        ///   checkpoint was created.
         /// </returns>
         /// <exception cref="InvalidOperationException">
-        ///   Checkpoint management has been disabled for the <see cref="FasterKeyValueStore"/>.
+        ///   Checkpoint management is disabled.
         /// </exception>
-        public async ValueTask<(bool success, Guid token)> TakeFullCheckpointAsync(CancellationToken cancellationToken = default) {
+        /// <remarks>
+        ///   A checkpoint will only be created if items have been added to, updated in, or 
+        ///   removed from the store since the last checkpoint was taken. 
+        /// </remarks>
+        public async ValueTask<bool> TakeFullCheckpointAsync(CancellationToken cancellationToken = default) {
             if (!_canRecordCheckpoints) {
                 throw new InvalidOperationException(Resources.Error_CheckpointsAreDisabled);
             }
-            return await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
+
+            if (Interlocked.CompareExchange(ref _checkpointIsRequired, 0, 1) != 1) {
+                // No checkpoint pending.
+                return false;
+            }
+
+            try {
+                var (success, token) = await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
+                return success;
+            }
+            catch {
+                Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                throw;
+            }
+        }
+
+
+        /// <summary>
+        /// Takes a full snapshot checkpoint.
+        /// </summary>
+        /// <remarks>
+        ///   This method is intended to be called from <see cref="Dispose(bool)"/> and nowhere else!
+        /// </remarks>
+        private void TakeFullCheckpoint() {
+            if (Interlocked.CompareExchange(ref _checkpointIsRequired, 0, 1) != 1) {
+                // No checkpoint pending.
+                return;
+            }
+            try {
+                _fasterKVStore.TakeFullCheckpoint(out _, CheckpointType.Snapshot);
+                // We need to wait for the checkpoint to complete and there is not a
+                // synchronous way of doing this. We avoid doing this if TakeFullCheckpointAsync
+                // is called instead!
+                _fasterKVStore.CompleteCheckpointAsync().GetAwaiter().GetResult();
+            }
+            catch {
+                Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                throw;
+            }
         }
 
 
@@ -321,6 +369,8 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     var session = GetPooledSession();
                     try {
                         session.Compact(compactUntilAddress, true);
+                        // Log has been modified; we need a new checkpoint to be created.
+                        Interlocked.Exchange(ref _checkpointIsRequired, 1);
                     }
                     finally {
                         ReturnPooledSession(session);
@@ -437,6 +487,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     result = await result.CompleteAsync().ConfigureAwait(false);
                 }
 
+                // Mark the cache as dirty.
+                Interlocked.Exchange(ref _checkpointIsRequired, 1);
+
                 return ToKeyValueOperationStatus(result.Status);
             }
             finally {
@@ -496,6 +549,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 while (result.Status == Status.PENDING) {
                     result = await result.CompleteAsync().ConfigureAwait(false);
+                }
+
+                if (result.Status != Status.NOTFOUND) {
+                    // Mark the cache as dirty.
+                    Interlocked.Exchange(ref _checkpointIsRequired, 1);
                 }
 
                 return ToKeyValueOperationStatus(result.Status);
@@ -592,11 +650,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             if (disposing) {
                 if (_canRecordCheckpoints) {
-                    _fasterKVStore.TakeFullCheckpoint(out _, CheckpointType.Snapshot);
-                    // We need to wait for the checkpoint to complete and there is not a
-                    // synchronous way of doing this. We avoid doing this if DisposeAsync is
-                    // called instead!
-                    _fasterKVStore.CompleteCheckpointAsync().GetAwaiter().GetResult();
+                    TakeFullCheckpoint();
                 }
                 DisposeCommon();
             }
@@ -613,7 +667,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// </returns>
         protected virtual async ValueTask DisposeAsyncCore() {
             if (_canRecordCheckpoints) {
-                await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot).ConfigureAwait(false);
+                await TakeFullCheckpointAsync(default).ConfigureAwait(false);
             }
             DisposeCommon();
         }

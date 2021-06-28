@@ -51,6 +51,41 @@ namespace DataCore.Adapter.Tests {
                 tmpPath.Delete(true);
             }
         }
+
+
+        [TestMethod]
+        public async Task ShouldNotCreateCheckpointUnlessDirty() {
+            var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
+
+            try {
+                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                    CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
+                })) {
+
+                    var writeResult = await store.WriteAsync(TestContext.TestName, DateTime.UtcNow);
+                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
+
+                    // Create checkpoint - should succeed
+                    var cp1 = await store.TakeFullCheckpointAsync();
+                    Assert.IsTrue(cp1);
+
+                    // Create another checkpoint - should fail
+                    var cp2 = await store.TakeFullCheckpointAsync();
+                    Assert.IsFalse(cp2);
+
+                    writeResult = await store.WriteAsync(TestContext.TestName, DateTime.UtcNow);
+                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
+
+                    // Create a final checkpoint - should succeed
+                    var cp3 = await store.TakeFullCheckpointAsync();
+                    Assert.IsTrue(cp3);
+                }
+            }
+            finally {
+                tmpPath.Delete(true);
+            }
+        }
+
     }
 
 }
