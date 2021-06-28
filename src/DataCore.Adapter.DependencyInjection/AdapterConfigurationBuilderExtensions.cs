@@ -2,6 +2,7 @@
 
 using DataCore.Adapter;
 using DataCore.Adapter.DependencyInjection;
+using DataCore.Adapter.Services;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -184,6 +185,100 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.AddSingleton(options);
             builder.Services.AddSingleton<IBackgroundTaskService, T>();
 
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Adds a singleton <see cref="IKeyValueStore"/> registration to the service collection.
+        /// </summary>
+        /// <param name="builder">
+        ///   The configuration builder.
+        /// </param>
+        /// <param name="implementationInstance">
+        ///   The <see cref="IKeyValueStore"/> implementation instance to use.
+        /// </param>
+        /// <returns>
+        ///   The configuration builder.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="implementationInstance"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddKeyValueStore(
+            this IAdapterConfigurationBuilder builder,
+            IKeyValueStore implementationInstance
+        ) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (implementationInstance == null) {
+                throw new ArgumentNullException(nameof(implementationInstance));
+            }
+
+            builder.Services.AddSingleton(implementationInstance);
+
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Adds a singleton <see cref="IKeyValueStore"/> registration to the service collection.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The <see cref="IKeyValueStore"/> implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The configuration builder.
+        /// </param>
+        /// <returns>
+        ///   The configuration builder.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddKeyValueStore<T>(this IAdapterConfigurationBuilder builder) where T : class, IKeyValueStore {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IKeyValueStore, T>();
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Adds a singleton <see cref="IKeyValueStore"/> registration to the service collection.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The <see cref="IKeyValueStore"/> implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The configuration builder.
+        /// </param>
+        /// <param name="implementationFactory">
+        ///   The implementation factory to use.
+        /// </param>
+        /// <returns>
+        ///   The configuration builder.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="implementationFactory"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddKeyValueStore<T>(this IAdapterConfigurationBuilder builder, Func<IServiceProvider, T> implementationFactory) where T : class, IKeyValueStore {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (implementationFactory == null) {
+                throw new ArgumentNullException(nameof(implementationFactory));
+            }
+
+            builder.Services.AddSingleton<IKeyValueStore, T>(implementationFactory);
             return builder;
         }
 
