@@ -277,8 +277,113 @@ namespace Microsoft.Extensions.DependencyInjection {
             if (implementationFactory == null) {
                 throw new ArgumentNullException(nameof(implementationFactory));
             }
-
+            
             builder.Services.AddSingleton<IKeyValueStore, T>(implementationFactory);
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Registers an App Store Connect adapter.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The adapter implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Adapters are registered as singleton services.
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddAdapter<T>(
+            this IAdapterConfigurationBuilder builder
+        ) where T : class, IAdapter {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IAdapter, T>();
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Registers an App Store Connect adapter.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The adapter implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="implementationFactory">
+        ///   The factory that creates the service.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="implementationFactory"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Adapters are registered as singleton services.
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddAdapter<T>(
+            this IAdapterConfigurationBuilder builder,
+            Func<IServiceProvider, T> implementationFactory
+        ) where T : class, IAdapter {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (implementationFactory == null) {
+                throw new ArgumentNullException(nameof(implementationFactory));
+            }
+
+            builder.Services.AddSingleton<IAdapter, T>(implementationFactory);
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Registers additional services.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="configure">
+        ///   A delegate that will register additional services.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public static IAdapterConfigurationBuilder AddServices(
+            this IAdapterConfigurationBuilder builder,
+            Action<IServiceCollection> configure
+        ) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (configure == null) {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            configure?.Invoke(builder.Services);
+
             return builder;
         }
 
