@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD2_0 || NET46
+﻿#if !NETSTANDARD2_1_OR_GREATER
 
 namespace DataCore.Adapter {
 
