@@ -451,6 +451,12 @@ For example, the `PingInvoke` method above is annotated with an `[ExtensionFeatu
 ```
 
 
+# Persisting State
+
+The [IKeyValueStore](/src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) service can be injected into an adapter constructor to provide a service for storing arbitrary key-value pairs that can be persisted and restored when an adapter or host application is restarted. 
+> The default [in-memory implementation](/src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use the [Microsoft FASTER-based implementation](/src/DataCore.Adapter.KeyValueStore.FASTER) or write your own implementation.
+
+
 # Telemetry
 
 Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The [Web API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages automatically create activities when invoking operations on your adapter. You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class to provide adapter-specific telemetry inside your feature implementations (for example, while executing a database query):

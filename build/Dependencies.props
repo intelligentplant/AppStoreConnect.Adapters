@@ -2,17 +2,13 @@
 
 <Project>
 
-  <!-- CoreFX Packages -->
+  <!-- Microsoft Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
     <SystemNetHttpJsonVersion>5.0.0</SystemNetHttpJsonVersion>
     <SystemTextJsonVersion>5.0.1</SystemTextJsonVersion>
     <SystemThreadingChannelsVersion>5.0.0</SystemThreadingChannelsVersion>
     <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
-  </PropertyGroup>
-  
-  <!-- ASP.NET Core/Microsoft Extension Packages -->
-  <PropertyGroup>
     <!-- 
       Microsoft.AspNetCore metapackage is referenced by .NET Framework 4.8 unit tests. 
     -->
@@ -28,6 +24,7 @@
     -->
     <MicrosoftExtensionsHostingVersion>2.2.0</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsHttpVersion>2.2.0</MicrosoftExtensionsHttpVersion>
+    <MicrosoftFASTERCoreVersion>1.9.5</MicrosoftFASTERCoreVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->

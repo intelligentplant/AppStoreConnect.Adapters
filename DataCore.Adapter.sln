@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{0DEC6A
 		LICENSE = LICENSE
 		README.md = README.md
 		swagger.json = swagger.json
+		THIRD_PARTY_LICENSES.md = THIRD_PARTY_LICENSES.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{004EC5B0-7D4E-4382-A139-A9BD049D99C4}"
@@ -133,9 +134,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "writing-an-extension-featur
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{7701E410-A9F0-4F50-80E4-51576DABB306}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Templates", "src\DataCore.Adapter.Templates\DataCore.Adapter.Templates.csproj", "{B5692AC0-AA11-4062-8F65-8A120C8846FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Templates", "src\DataCore.Adapter.Templates\DataCore.Adapter.Templates.csproj", "{B5692AC0-AA11-4062-8F65-8A120C8846FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleHostedAdapter", "examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj", "{CA874402-DD93-40C0-893A-BC8D1D961A43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleHostedAdapter", "examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj", "{CA874402-DD93-40C0-893A-BC8D1D961A43}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueStore.FASTER", "src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj", "{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -263,6 +266,10 @@ Global
 		{CA874402-DD93-40C0-893A-BC8D1D961A43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA874402-DD93-40C0-893A-BC8D1D961A43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA874402-DD93-40C0-893A-BC8D1D961A43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -307,6 +314,7 @@ Global
 		{7701E410-A9F0-4F50-80E4-51576DABB306} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{B5692AC0-AA11-4062-8F65-8A120C8846FA} = {7701E410-A9F0-4F50-80E4-51576DABB306}
 		{CA874402-DD93-40C0-893A-BC8D1D961A43} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
+		{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

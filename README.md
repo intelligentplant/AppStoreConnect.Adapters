@@ -22,6 +22,7 @@ Some of the core projects in the repository are:
 * `DataCore.Adapter.DependencyInjection` ([source](/src/DataCore.Adapter.DependencyInjection)) - types and extension methods for `Microsoft.Extensions.DependencyInjection`, to simplify the registration of required services with a dependency injection container.
 * `DataCore.Adapter.Json` ([source](/src/DataCore.Adapter.Json)) - converters for model types for the `System.Text.Json` JSON serializer.
 * `DataCore.Adapter.Json.Newtonsoft` ([source](/src/DataCore.Adapter.Json.Newtonsoft)) - converters for model types for the `Newtonsoft.Json` JSON serializer.
+* `DataCore.Adapter.KeyValueStore.FASTER` ([source](/src/DataCore.Adapter.KeyValueStore.FASTER)) - a key-value store for an adapter that uses [Microsoft FASTER](https://microsoft.github.io/FASTER/) to efficiently store data.
 
 ## Hosting
 
