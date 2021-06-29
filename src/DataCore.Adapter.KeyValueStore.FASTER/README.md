@@ -23,6 +23,7 @@ public void ConfigureAdapters(IServiceCollection services) {
         .AddKeyValueStore(sp => {
             // Configure options for FasterKeyValueStore.
 
+            // Create a file system directory to hold FASTER data.
             var fasterLogDirectory = new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Data", "FASTER"));
             fasterLogDirectory.Create();
 
@@ -32,9 +33,9 @@ public void ConfigureAdapters(IServiceCollection services) {
                 LogDeviceFactory = () => Devices.CreateLogDevice(fasterLogDirectory.FullName),
 
                 // Configures FASTER to create checkpoints in the same folder 
-                // where the on-disk part of the KV store is held. Checkpoints 
-                // must be enabled to allow the store to persist and restore 
-                // its contents between restarts.
+                // where the on-disk part of the KV store is held. The store 
+                // can only persist and restore its contents between restarts 
+                // if a CheckpointManagerFactory delegate is provided.
                 CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(fasterLogDirectory.FullName),
 
                 // Configures how frequently automatic checkpoints of the 
@@ -42,6 +43,11 @@ public void ConfigureAdapters(IServiceCollection services) {
                 // the store has been modified since the last checkpoint was 
                 // taken. A checkpoint is also created when the store is 
                 // disposed if required.
+                //
+                // Even if an automatic checkpoint interval is not configured, 
+                // a checkpoint will be automatically taken when the store is 
+                // disposed (assuming that a CheckpointManagerFactory delegate 
+                // was specified as above).
                 CheckpointInterval = TimeSpan.FromMinutes(1)
             };
 
@@ -49,6 +55,7 @@ public void ConfigureAdapters(IServiceCollection services) {
         })
         .AddAdapter(sp => {
             const string adapterId = "my-adapter-1";
+            // Assume that MyAdapter's constructor expects an IKeyValueStore instance. 
             return ActivatorUtilities.CreateInstance<MyAdapter>(
                 sp, 
                 adapterId, 
@@ -58,9 +65,8 @@ public void ConfigureAdapters(IServiceCollection services) {
 }
 ```
 
-The `IKeyValueStore` can then be injected into an adapter in the same was as any other service. If you are hosting multiple adapters, or the `IKeyValueStore` will be used by other parts of your application, it is recommended to pass a scoped `IKeyValueStore` when creating the adapter, to ensure that all items in the store associated with the adapter use the same prefix:
+The `IKeyValueStore` can then be injected into an adapter in the same way as any other service. If you are hosting multiple adapters in the same application, or the `IKeyValueStore` will be used by other parts of your application, it is recommended to pass a scoped `IKeyValueStore` when creating the adapter, to ensure that all items in the store associated with the adapter use a common prefix:
 
-```csharp
 ```csharp
 public void ConfigureAdapters(IServiceCollection services) {
     services
