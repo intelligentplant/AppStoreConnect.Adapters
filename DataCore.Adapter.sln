@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{0DEC6A
 		LICENSE = LICENSE
 		README.md = README.md
 		swagger.json = swagger.json
-		THIRD_PARTY_LICENSES = THIRD_PARTY_LICENSES
+		THIRD_PARTY_LICENSES.md = THIRD_PARTY_LICENSES.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{004EC5B0-7D4E-4382-A139-A9BD049D99C4}"
@@ -138,7 +138,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Templates"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleHostedAdapter", "examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj", "{CA874402-DD93-40C0-893A-BC8D1D961A43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.KeyValueStore.FASTER", "src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj", "{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueStore.FASTER", "src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj", "{E2C09B9E-FCE1-4C61-A547-16ADFA76B7F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
