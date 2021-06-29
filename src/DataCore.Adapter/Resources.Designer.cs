@@ -241,15 +241,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The tag manager has not been initialised. Call &apos;{0}&apos; before attempting any other operations..
-        /// </summary>
-        internal static string Error_TagManager_NotInitialised {
-            get {
-                return ResourceManager.GetString("Error_TagManager_NotInitialised", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Too many subscriptions..
         /// </summary>
         internal static string Error_TooManySubscriptions {

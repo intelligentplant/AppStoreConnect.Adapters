@@ -190,10 +190,6 @@
     <comment>{0} - IAdapterExtensionFeature name
 {1} - AdapterFeatureAttribute name</comment>
   </data>
-  <data name="Error_TagManager_NotInitialised" xml:space="preserve">
-    <value>The tag manager has not been initialised. Call '{0}' before attempting any other operations.</value>
-    <comment>{0} - init method name</comment>
-  </data>
   <data name="Error_TooManySubscriptions" xml:space="preserve">
     <value>Too many subscriptions.</value>
   </data>
