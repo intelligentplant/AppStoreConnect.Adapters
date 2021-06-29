@@ -27,9 +27,9 @@ namespace DataCore.Adapter.RealTimeData {
         private bool _isDisposed;
 
         /// <summary>
-        /// Holds the current values for subscribed tags indexed by tag ID.
+        /// Holds the current values for subscribed tags.
         /// </summary>
-        private readonly ConcurrentDictionary<string, TagValueQueryResult> _currentValueByTagId = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<TagIdentifier, TagValueQueryResult> _currentValueCache = new ConcurrentDictionary<TagIdentifier, TagValueQueryResult>();
 
         /// <summary>
         /// Channel that is used to publish changes to subscribed topics.
@@ -249,6 +249,45 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Tests if the specified tag has subscribers.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the tag has subscribers, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   The default behaviour of <see cref="HasSubscribers"/> is to check if at least one 
+        ///   subscription is observing the <paramref name="tag"/>. If this check fails, a call 
+        ///   to <see cref="SnapshotTagValuePushOptions.HasSubscribers"/> is performed, if a 
+        ///   callback is provided for this property in the options passed to the 
+        ///   <see cref="SnapshotTagValuePush"/>.
+        /// </remarks>
+        protected virtual bool HasSubscribers(TagIdentifier tag) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            lock (_subscriberCount) {
+                if (_subscriberCount.TryGetValue(tag, out var count) && count > 0) {
+                    return true;
+                }
+            }
+
+            if (Options.HasSubscribers != null) {
+                return Options.HasSubscribers.Invoke(tag);
+            } 
+
+            return false;
+        }
+
+
         /// <inheritdoc/>
         protected override async ValueTask<bool> IsTopicMatch(TagValueQueryResult value, IEnumerable<TagIdentifier> topics, CancellationToken cancellationToken) {
             if (value == null) {
@@ -275,24 +314,21 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        public override ValueTask<bool> ValueReceived(TagValueQueryResult message, CancellationToken cancellationToken = default) {
+        public override async ValueTask<bool> ValueReceived(TagValueQueryResult message, CancellationToken cancellationToken = default) {
             if (message == null) {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            // If we wanted to ensure that we only accepted values for tags with subscribers, we
-            // could uncomment the following...
+            var tagIdentifier = new TagIdentifier(message.TagId, message.TagName);
 
-            //if (!Options.KeepCurrentValuesForUnsubscribedTags) {
-            //    var identifier = new TagIdentifier(message.TagId, message.TagName);
-            //    if (!_subscriberCount.TryGetValue(identifier, out var count) || count == 0) {
-            //        return new ValueTask<bool>(false);
-            //    }
+            //// Reject values with no subscribers
+            //if (!HasSubscribers(tagIdentifier)) {
+            //    return false;
             //}
 
             // Add the value
-            var latestValue = _currentValueByTagId.AddOrUpdate(
-                message.TagId,
+            var latestValue = _currentValueCache.AddOrUpdate(
+                tagIdentifier,
                 message,
                 (key, prev) => prev.Value.UtcSampleTime > message.Value.UtcSampleTime
                     ? prev
@@ -301,10 +337,92 @@ namespace DataCore.Adapter.RealTimeData {
 
             if (latestValue != message) {
                 // There was already a later value sent for this tag.
-                return new ValueTask<bool>(false);
+                return false;
             }
 
-            return base.ValueReceived(message, cancellationToken);
+            return await base.ValueReceived(message, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Tries to retrieve the cached value for the specified tag.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="value">
+        ///   The cached tag value.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if a cached value was found for the <paramref name="tag"/>, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        public bool TryGetCachedValue(TagIdentifier tag, out TagValueQueryResult? value) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            return _currentValueCache.TryGetValue(tag, out value);
+        }
+
+
+        /// <summary>
+        /// Removes all tag values from the cache that no longer have any subscribers.
+        /// </summary>
+        public void RemoveStaleCachedValues() {
+            foreach (var item in _currentValueCache.Keys) {
+                RemoveCachedValueIfNoSubscribers(item);
+            }
+        }
+
+
+        /// <summary>
+        /// Removes the cached value for the specified tag if it has no subscribers.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        private void RemoveCachedValueIfNoSubscribers(TagIdentifier tag) {
+            // Lock around _subscriberCount here so that it is not possible for a tag to gain
+            // subscribers between calling HasSubscribers and removing the cached value.
+            //
+            // HasSubscribers is virtual, but the base implementation uses _subscriberCount to
+            // synchronise access.
+            lock (_subscriberCount) {
+                if (!HasSubscribers(tag)) {
+                    TryRemoveCachedValue(tag);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Removes the cached value for the specified tag.
+        /// </summary>
+        /// <param name="tag">
+        ///   The identifier for the tag to remove from the cache.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if a value for the specified <paramref name="tag"/> was 
+        ///   removed, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public bool TryRemoveCachedValue(TagIdentifier tag) {
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            return _currentValueCache.TryRemove(tag, out _);
+        }
+
+
+        /// <summary>
+        /// Removes all cached tag values.
+        /// </summary>
+        public void RemoveAllCachedValues() {
+            _currentValueCache.Clear();
         }
 
 
@@ -400,7 +518,7 @@ namespace DataCore.Adapter.RealTimeData {
             subscription.AddTopics(topics);
 
             foreach (var topic in topics) {
-                if (_currentValueByTagId.TryGetValue(topic.Id, out var value)) {
+                if (_currentValueCache.TryGetValue(topic, out var value)) {
                     subscription.Publish(value, true);
                 }
             }
@@ -528,12 +646,9 @@ namespace DataCore.Adapter.RealTimeData {
                 await Options.OnTagSubscriptionsRemoved.Invoke(tags, cancellationToken).ConfigureAwait(false);
             }
 
-            if (!Options.KeepCurrentValuesForUnsubscribedTags) {
-                // Remove current value if we are caching it.
-                foreach (var tag in tags) {
-                    _currentValueByTagId.TryRemove(tag.Id, out var _);
-                }
-            }
+            //foreach (var tag in tags) {
+            //    RemoveCachedValueIfNoSubscribers(tag);
+            //}
         }
 
 
@@ -639,66 +754,6 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
-        /// <summary>
-        /// A method compatible with <see cref="IReadSnapshotTagValues.ReadSnapshotTagValues"/> 
-        /// that can be used when the <see cref="SnapshotTagValuePush"/> cache is being used to 
-        /// satisfy snapshot tag value polling requests for an adapter.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the caller.
-        /// </param>
-        /// <param name="request">
-        ///   The data query.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A channel that will complete once the request has completed.
-        /// </returns>
-        /// <remarks>
-        ///   When <see cref="SnapshotTagValuePushOptions.KeepCurrentValuesForUnsubscribedTags"/> 
-        ///   is <see langword="false"/>, <see cref="ReadSnapshotTagValues"/> will only return 
-        ///   values for tags that have subscribers.
-        /// </remarks>
-        public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
-            IAdapterCallContext context, 
-            ReadSnapshotTagValuesRequest request, 
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-            if (request == null) {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var tags = request.Tags?.ToArray() ?? Array.Empty<string>();
-            if (tags == null) {
-                yield break;
-            }
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
-                await foreach (var item in ResolveTags(context, tags, ctSource.Token).ConfigureAwait(false)) {
-                    if (ctSource.IsCancellationRequested) {
-                        break;
-                    }
-
-                    if (item == null) {
-                        continue;
-                    }
-
-                    if (!_currentValueByTagId.TryGetValue(item.Id, out var val)) {
-                        continue;
-                    }
-
-                    yield return val;
-                }
-            }
-        }
-
-
         /// <inheritdoc/>
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
@@ -767,10 +822,18 @@ namespace DataCore.Adapter.RealTimeData {
         public Func<TagIdentifier, TagIdentifier, CancellationToken, ValueTask<bool>>? IsTopicMatch { get; set; }
 
         /// <summary>
-        /// When <see langword="true"/>, the cached current value for a tag will be kept even if 
-        /// there are no subscribers for that tag.
+        /// A delegate that is invoked to determine if a given tag has subscribers.
         /// </summary>
-        public bool KeepCurrentValuesForUnsubscribedTags { get; set; }
+        /// <remarks>
+        /// <para>
+        /// It is generally not required to specify a value for this property. An example of when 
+        /// it would be desirable to provide a delegate would be if you wanted to allow wildcard 
+        /// subscriptions, as the default implementation of <see cref="SnapshotTagValuePush.HasSubscribers"/> 
+        /// only checks to see if there is a subscription that exactly matches a given 
+        /// <see cref="TagIdentifier"/>.
+        /// </para>
+        /// </remarks>
+        public Func<TagIdentifier, bool>? HasSubscribers { get; set; }
 
     }
 

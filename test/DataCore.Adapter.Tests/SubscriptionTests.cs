@@ -136,19 +136,17 @@ namespace DataCore.Adapter.Tests {
             using (var feature = new SnapshotTagValuePush(options, null, null)) {
                 var channel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
-                var val1 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now).WithValue(now.Ticks).Build());
-                var val2 = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build());
+                var val = new TagValueQueryResult(TestContext.TestName, TestContext.TestName, new TagValueBuilder().WithUtcSampleTime(now.AddSeconds(1)).WithValue(now.Ticks + TimeSpan.TicksPerSecond).Build());
 
                 _ = Task.Run(async () => {
                     try {
-                        // val1 should not be received by the subscription.
-                        await feature.ValueReceived(val1, CancellationToken);
+                        _ = Task.Run(async () => {
+                            await Task.Delay(100, CancellationToken);
 
-                        // val2 should be received by the subscription.
-                        await feature.ValueReceived(val2, CancellationToken);
-
-                        await Task.Delay(100, CancellationToken);
-
+                            // val should be received by the subscription.
+                            await feature.ValueReceived(val, CancellationToken);
+                        }, CancellationToken);
+                        
                         // Add the subscription change - we should receive the current value for
                         // the tag at the point of subscription.
                         await channel.Writer.WriteAsync(new TagValueSubscriptionUpdate() {
@@ -171,8 +169,8 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsNotNull(emitted);
                 Assert.AreEqual(TestContext.TestName, emitted.TagId);
                 Assert.AreEqual(TestContext.TestName, emitted.TagName);
-                Assert.AreEqual(val2.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
-                Assert.AreEqual(val2.Value.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
+                Assert.AreEqual(val.Value.UtcSampleTime, emitted.Value.UtcSampleTime);
+                Assert.AreEqual(val.Value.UtcSampleTime.Ticks, emitted.Value.GetValueOrDefault<long>());
             }
         }
 
