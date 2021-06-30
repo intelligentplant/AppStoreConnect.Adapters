@@ -54,6 +54,16 @@ namespace DataCore.Adapter.Tags {
         /// </summary>
         private bool _isInitialised;
 
+        /// <summary>
+        /// Lazy task for initialising the tag manager.
+        /// </summary>
+        private readonly Lazy<Task> _initTask;
+
+        /// <summary>
+        /// Cancellation token source that will fire when the tag manager is disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
         /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
@@ -84,6 +94,7 @@ namespace DataCore.Adapter.Tags {
             _keyValueStore = keyValueStore.CreateScopedStore("tag-manager:");
 
             _tagPropertyDefinitions = tagPropertyDefinitions?.ToArray() ?? Array.Empty<AdapterProperty>();
+            _initTask = new Lazy<Task>(() => InitAsyncCore(_disposedTokenSource.Token), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
@@ -98,12 +109,21 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
-        /// Throws an <see cref="InvalidOperationException"/> if the object has not been initialised.
+        /// Initialises the <see cref="TagManager"/>.
         /// </summary>
-        private void ThrowOnNotInitialised() {
-            if (!_isInitialised) {
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, Resources.Error_TagManager_NotInitialised, nameof(InitAsync)));
-            }
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will initialise the <see cref="TagManager"/>.
+        /// </returns>
+        /// <remarks>
+        ///   Call <see cref="InitAsync"/> to eagerly initialise the <see cref="TagManager"/>. If 
+        ///   <see cref="InitAsync"/> is not called, the <see cref="TagManager"/> will be 
+        ///   initialised on the first call to configure or query tags.
+        /// </remarks>
+        public async ValueTask InitAsync(CancellationToken cancellationToken = default) {
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -114,12 +134,17 @@ namespace DataCore.Adapter.Tags {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask"/> that will initialise the <see cref="TagManager"/>.
+        ///   A <see cref="Task"/> that will initialise the <see cref="TagManager"/>. <see cref="Task"/> 
+        ///   is used because the resulting task is returned by the <see cref="_initTask"/> field 
+        ///   and may be awaited multiple times.
         /// </returns>
-        public async ValueTask InitAsync(CancellationToken cancellationToken = default) {
+        private async Task InitAsyncCore(CancellationToken cancellationToken) {
             ThrowOnDisposed();
 
-            _isInitialised = false;
+            if (_isInitialised) {
+                return;
+            }
+
             _tagsById.Clear();
             _tagsByName.Clear();
 
@@ -162,10 +187,69 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
+        /// Gets the tag definition with the specified name or ID.
+        /// </summary>
+        /// <param name="tagNameOrId">
+        ///   The tag name or ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the matching tag definition.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        ///   The <see cref="TagManager"/> has been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The <see cref="TagManager"/> has not been initialised via a call to <see cref="InitAsync"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagNameOrId"/> is <see langword="null"/>.
+        /// </exception>
+        public async ValueTask<TagDefinition?> GetTagAsync(string tagNameOrId, CancellationToken cancellationToken = default) {
+            ThrowOnDisposed();
+
+            if (tagNameOrId == null) {
+                throw new ArgumentNullException(nameof(tagNameOrId));
+            }
+
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            return GetTag(tagNameOrId);
+        }
+
+
+        /// <summary>
+        /// Gets the tag definition with the specified name or ID.
+        /// </summary>
+        /// <param name="tagNameOrId">
+        ///   The tag name or ID.
+        /// </param>
+        /// <returns>
+        ///   The matching tag definition.
+        /// </returns>
+        private TagDefinition? GetTag(string tagNameOrId) {
+            if (_tagsByName.TryGetValue(tagNameOrId, out var tag)) {
+                return tag;
+            }
+
+            if (_tagsById.TryGetValue(tagNameOrId, out tag)) {
+                return tag;
+            }
+
+            return null;
+        }
+
+
+        /// <summary>
         /// Adds or updates a tag definition.
         /// </summary>
         /// <param name="tag">
         ///   The tag.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A <see cref="ValueTask"/> that will cache the tag definition and save it to the 
@@ -180,13 +264,14 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public async ValueTask AddOrUpdateTagAsync(TagDefinition tag) {
+        public async ValueTask AddOrUpdateTagAsync(TagDefinition tag, CancellationToken cancellationToken = default) {
             ThrowOnDisposed();
-            ThrowOnNotInitialised();
 
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
+
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
             // "tags:{id}" key contains the the definition with ID {id}.
             var result = await _keyValueStore.WriteAsync(string.Concat("tags:", tag.Id), tag).ConfigureAwait(false);
@@ -225,7 +310,12 @@ namespace DataCore.Adapter.Tags {
         /// Deletes a tag from the <see cref="TagManager"/> cache and the underlying 
         /// <see cref="IKeyValueStore"/>.
         /// </summary>
-        /// <param name="tagId"></param>
+        /// <param name="tagNameOrId">
+        ///   The name or ID of the tag to delete.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException">
         ///   The <see cref="TagManager"/> has been disposed.
@@ -234,19 +324,29 @@ namespace DataCore.Adapter.Tags {
         ///   The <see cref="TagManager"/> has not been initialised via a call to <see cref="InitAsync"/>.
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        ///   <paramref name="tagNameOrId"/> is <see langword="null"/>.
         /// </exception>
-        public async ValueTask<bool> DeleteTagAsync(string tagId) {
+        public async ValueTask<bool> DeleteTagAsync(string tagNameOrId, CancellationToken cancellationToken = default) {
             ThrowOnDisposed();
-            ThrowOnNotInitialised();
 
-            if (tagId == null) {
-                throw new ArgumentNullException(nameof(tagId));
+            if (tagNameOrId == null) {
+                throw new ArgumentNullException(nameof(tagNameOrId));
+            }
+
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            var tag = GetTag(tagNameOrId);
+            if (tag == null) {
+                return false;
             }
 
             // "tags:{id}" key contains the the definition with ID {id}.
-            var result = await _keyValueStore.DeleteAsync(string.Concat("tags:", tagId)).ConfigureAwait(false);
-            if (result == KeyValueStoreOperationStatus.OK && _tagsById.TryRemove(tagId, out _)) {
+            var result = await _keyValueStore.DeleteAsync(string.Concat("tags:", tag.Id)).ConfigureAwait(false);
+
+            if (result == KeyValueStoreOperationStatus.OK) {
+                _tagsById.TryRemove(tag.Id, out _);
+                _tagsByName.TryRemove(tag.Name, out _);
+
                 // "tags" key contains an array of the defined tag IDs.
                 await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
             }
@@ -263,7 +363,7 @@ namespace DataCore.Adapter.Tags {
             CancellationToken cancellationToken
         ) {
             ThrowOnDisposed();
-            ThrowOnNotInitialised();
+
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -271,7 +371,7 @@ namespace DataCore.Adapter.Tags {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            await Task.Yield();
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
             foreach (var item in _tagsById.Values.ApplyFilter(request)) {
                 if (cancellationToken.IsCancellationRequested) {
@@ -290,7 +390,6 @@ namespace DataCore.Adapter.Tags {
             CancellationToken cancellationToken
         ) {
             ThrowOnDisposed();
-            ThrowOnNotInitialised();
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -298,19 +397,7 @@ namespace DataCore.Adapter.Tags {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            await Task.Yield();
-
-            TagDefinition? GetTag(string tagNameOrId) {
-                if (_tagsByName.TryGetValue(tagNameOrId, out var tag)) {
-                    return tag;
-                }
-
-                if (_tagsById.TryGetValue(tagNameOrId, out tag)) {
-                    return tag;
-                }
-
-                return null;
-            }
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
             foreach (var item in request.Tags ?? Array.Empty<string>()) {
                 if (cancellationToken.IsCancellationRequested) {
@@ -329,13 +416,13 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<AdapterProperty> GetTagProperties(
+        public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
             IAdapterCallContext context, 
             GetTagPropertiesRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             ThrowOnDisposed();
-            ThrowOnNotInitialised();
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -343,10 +430,14 @@ namespace DataCore.Adapter.Tags {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            return _tagPropertyDefinitions
-                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-                .SelectPage(request)
-                .ToAsyncEnumerable(cancellationToken);
+            await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            foreach (var item in _tagPropertyDefinitions.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request)) {
+                if (cancellationToken.IsCancellationRequested) {
+                    break;
+                }
+                yield return item;
+            }
         }
 
 
@@ -356,6 +447,8 @@ namespace DataCore.Adapter.Tags {
                 return;
             }
 
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
             _tagsById.Clear();
             _tagsByName.Clear();
             _disposed = true;
