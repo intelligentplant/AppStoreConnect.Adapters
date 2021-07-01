@@ -70,13 +70,14 @@
     </Otherwise>
   </Choose>
   
-  <!-- 
+  <!--  
   Since we are using v5.0.x of the SignalR MessagePack library, we need to include a reference to 
-  v5.0.0 of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
+  v5.0.x of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
   will throw a runtime error. 
   -->
+  
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
