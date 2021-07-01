@@ -186,7 +186,7 @@ To export to another destination (e.g. [Jaeger](https://www.jaegertracing.io/)),
 
 # Building
 
-Run [build.ps1](./build.ps1) to bootstrap and build the solution using [Cake](https://cakebuild.net/).
+Run [build.ps1](./build.ps1) or [build.sh](./build.sh) to bootstrap and build the solution using [Cake](https://cakebuild.net/).
 
 Signing of assemblies (by specifying the `--sign-output` flag when running the build script) requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
 
