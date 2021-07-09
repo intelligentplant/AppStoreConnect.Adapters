@@ -63,7 +63,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="existing"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueBuilder(TagValueExtended existing) {
+        public TagValueBuilder(TagValueExtended existing) : this((TagValue) existing) {
             if (existing == null) {
                 throw new ArgumentNullException(nameof(existing));
             }
@@ -71,9 +71,27 @@ namespace DataCore.Adapter.RealTimeData {
             WithUtcSampleTime(existing.UtcSampleTime);
             WithValue(existing.Value);
             WithStatus(existing.Status);
-            WithNotes(existing.Notes);
-            WithError(existing.Error);
-            WithProperties(existing.Properties);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueBuilder"/> object that is initialised using an existing 
+        /// tag value.
+        /// </summary>
+        /// <param name="existing">
+        ///   The existing value.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public TagValueBuilder(TagValue existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
+            }
+
+            WithUtcSampleTime(existing.UtcSampleTime);
+            WithValue(existing.Value);
+            WithStatus(existing.Status);
         }
 
 

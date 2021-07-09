@@ -2,23 +2,19 @@
 
 <Project>
 
-  <!-- CoreFX Packages -->
+  <!-- Microsoft Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
     <SystemNetHttpJsonVersion>5.0.0</SystemNetHttpJsonVersion>
     <SystemTextJsonVersion>5.0.1</SystemTextJsonVersion>
     <SystemThreadingChannelsVersion>5.0.0</SystemThreadingChannelsVersion>
     <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
-  </PropertyGroup>
-  
-  <!-- ASP.NET Core/Microsoft Extension Packages -->
-  <PropertyGroup>
     <!-- 
       Microsoft.AspNetCore metapackage is referenced by .NET Framework 4.8 unit tests. 
     -->
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>5.0.3</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.3</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>5.0.7</MicrosoftAspNetCoreSignalRClientVersion>
+    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.7</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
     <MicrosoftBclAsyncInterfacesVersion>5.0.0</MicrosoftBclAsyncInterfacesVersion>
@@ -28,6 +24,7 @@
     -->
     <MicrosoftExtensionsHostingVersion>2.2.0</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsHttpVersion>2.2.0</MicrosoftExtensionsHttpVersion>
+    <MicrosoftFASTERCoreVersion>1.9.5</MicrosoftFASTERCoreVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
@@ -42,11 +39,12 @@
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
+    <JaahasMSBuildExtensionsVersion>1.0.4</JaahasMSBuildExtensionsVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.8.3</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>16.10.0</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MSTestTestAdapterVersion>2.1.2</MSTestTestAdapterVersion>
-    <MSTestTestFrameworkVersion>2.1.2</MSTestTestFrameworkVersion>
+    <MSTestTestAdapterVersion>2.2.5</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion>2.2.5</MSTestTestFrameworkVersion>
   </PropertyGroup>
   
   <!-- Other Packages -->

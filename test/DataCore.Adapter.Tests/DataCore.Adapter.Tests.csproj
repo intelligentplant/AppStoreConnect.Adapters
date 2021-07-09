@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
@@ -69,13 +70,14 @@
     </Otherwise>
   </Choose>
   
-  <!-- 
+  <!--  
   Since we are using v5.0.x of the SignalR MessagePack library, we need to include a reference to 
-  v5.0.0 of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
+  v5.0.x of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
   will throw a runtime error. 
   -->
+  
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
