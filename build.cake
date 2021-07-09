@@ -93,10 +93,27 @@ Setup<BuildState>(context => {
         var patchVersion = versionJson.Value<int>("Patch");
         var versionSuffix = versionJson.Value<string>("PreRelease");
 
-        // Compute build number.
+        // Compute build and version numbers.
 
         var buildCounter = Argument("build-counter", 0);
+        var buildMetadata = Argument("build-metadata", "");
         var branch = GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
+
+        state.AssemblyVersion = $"{majorVersion}.{minorVersion}.0.0";
+
+        state.AssemblyFileVersion = $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}";
+
+        state.InformationalVersion = string.IsNullOrWhiteSpace(versionSuffix)
+            ? $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}+{branch}"
+            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}+{branch}";
+
+        if (!string.IsNullOrWhiteSpace(buildMetadata)) {
+            state.InformationalVersion = string.Concat(state.InformationalVersion, "#", buildMetadata);
+        }
+
+        state.PackageVersion = string.IsNullOrWhiteSpace(versionSuffix)
+            ? $"{majorVersion}.{minorVersion}.{patchVersion}"
+            : $"{majorVersion}.{minorVersion}.{patchVersion}-{versionSuffix}.{buildCounter}";
 
         state.BuildNumber = string.IsNullOrWhiteSpace(versionSuffix)
             ? $"{majorVersion}.{minorVersion}.{patchVersion}.{buildCounter}+{branch}"

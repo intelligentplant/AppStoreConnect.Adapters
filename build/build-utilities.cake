@@ -6,6 +6,10 @@ public static class BuildUtilities {
         // Tell TeamCity the build number if required.
         if (buildSystem.IsRunningOnTeamCity) {
             buildSystem.TeamCity.SetBuildNumber(buildState.BuildNumber);
+            buildSystem.TeamCity.SetParameter("system.AssemblyVersion", buildState.AssemblyVersion);
+            buildSystem.TeamCity.SetParameter("system.AssemblyFileVersion", buildState.AssemblyFileVersion);
+            buildSystem.TeamCity.SetParameter("system.InformationalVersion", buildState.InformationalVersion);
+            buildSystem.TeamCity.SetParameter("system.PackageVersion", buildState.PackageVersion);
         }
     }
 
@@ -106,6 +110,12 @@ public static class BuildUtilities {
         if (state.CanSignOutput) {
             settings.Properties["SignOutput"] = new List<string> { "True" };
         }
+
+        // Set version numbers.
+        settings.Properties["AssemblyVersion"] = new List<string> { state.AssemblyVersion };
+        settings.Properties["FileVersion"] = new List<string> { state.AssemblyFileVersion };
+        settings.Properties["Version"] = new List<string> { state.PackageVersion };
+        settings.Properties["InformationalVersion"] = new List<string> { state.InformationalVersion };
     }
 
 
