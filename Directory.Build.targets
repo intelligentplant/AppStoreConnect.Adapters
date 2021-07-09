@@ -19,15 +19,6 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <!-- Add MSBuild extensions (for setting copyright notice and version numbers). -->
-  <ItemGroup>
-    <PackageReference Remove="Jaahas.MSBuild.Extensions" />
-    <PackageReference Include="Jaahas.MSBuild.Extensions" Version="$(JaahasMSBuildExtensionsVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
   <ItemGroup Condition=" '$(IncludeDevelopmentPackages)' == 'true' ">
     <!-- .NET Analyzers NuGet Package -->
     <PackageReference Remove="Microsoft.CodeAnalysis.NetAnalyzers" />
