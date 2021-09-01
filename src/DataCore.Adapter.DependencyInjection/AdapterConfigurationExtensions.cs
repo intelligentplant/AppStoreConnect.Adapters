@@ -31,8 +31,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.AddDefaultBackgroundTaskService();
             builder.AddKeyValueStore<DataCore.Adapter.Services.InMemoryKeyValueStore>();
 
-            builder.Services.AddTransient<DataCore.Adapter.Common.IObjectEncoder, DataCore.Adapter.Json.JsonObjectEncoder>();
-
             return builder;
         }
 
