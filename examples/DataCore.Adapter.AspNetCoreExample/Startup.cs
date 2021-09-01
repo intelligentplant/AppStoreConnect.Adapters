@@ -1,5 +1,7 @@
 ﻿using System;
+
 using DataCore.Adapter.Example;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -109,10 +111,13 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 options.Title = "App Store Connect Adapters";
                 options.Description = "HTTP API for querying an App Store Connect adapters host.";
                 options.Version = "2.0.0";
+
+                options.TypeMappers.Add(new NJsonSchema.Generation.TypeMappers.ObjectTypeMapper(typeof(System.Text.Json.JsonElement), NJsonSchema.JsonSchema.CreateAnySchema()));
+
                 options.AddOperationFilter(context => {
-                    // Don't include the legacy routes.
                     return !context.OperationDescription.Path.StartsWith("/api/data-core/");
                 });
+
                 options.OperationProcessors.Add(new NSwag.Generation.Processors.OperationProcessor(context => { 
                     string RemoveWhiteSpace(string s) {
                         return s.Replace("\n", "").Trim();

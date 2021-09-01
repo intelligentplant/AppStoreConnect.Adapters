@@ -3338,19 +3338,23 @@
             "description": "The description.",
             "nullable": true
           },
-          "inputs": {
-            "type": "array",
-            "description": "The input parameter descriptors for the operation.",
-            "items": {
-              "$ref": "#/components/schemas/ExtensionFeatureOperationParameterDescriptor"
-            }
+          "requestSchema": {
+            "description": "The JSON schema for the operation's request object.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
           },
-          "outputs": {
-            "type": "array",
-            "description": "The output parameter descriptors for the operation.",
-            "items": {
-              "$ref": "#/components/schemas/ExtensionFeatureOperationParameterDescriptor"
-            }
+          "responseSchema": {
+            "description": "The JSON schema for the operation's response object.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
           }
         }
       },
@@ -3368,56 +3372,20 @@
           "DuplexStream"
         ]
       },
-      "ExtensionFeatureOperationParameterDescriptor": {
-        "type": "object",
-        "description": "Describes an input or output parameter on an ExtensionFeatureOperationDescriptor.",
-        "additionalProperties": false,
-        "properties": {
-          "ordinal": {
-            "type": "integer",
-            "description": "The ordinal position of the parameter in the operation's InvocationRequest, \nInvocationStreamItem, or InvocationResponse message.",
-            "format": "int32"
-          },
-          "variantType": {
-            "description": "The VariantType for the parameter.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/VariantType"
-              }
-            ]
-          },
-          "arrayRank": {
-            "type": "integer",
-            "description": "The array rank of the parameter. A value of less than one indicates that the parameter \nis a single value rather than an array of values.",
-            "format": "int32"
-          },
-          "typeId": {
-            "type": "string",
-            "description": "The type ID for the parameter type, if VariantType is \nExtensionObject.",
-            "format": "uri",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "A description of the parameter value.",
-            "nullable": true
-          }
-        }
-      },
+      "JsonElement": {},
       "InvocationResponse": {
         "type": "object",
         "description": "Describes a response to an InvocationRequest.",
         "additionalProperties": false,
-        "required": [
-          "results"
-        ],
         "properties": {
           "results": {
-            "type": "array",
             "description": "The invocation results.",
-            "items": {
-              "$ref": "#/components/schemas/Variant"
-            }
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
           }
         }
       },
@@ -3431,8 +3399,7 @@
             "description": "A request to invoke an extension operation on an adapter of type Invoke \nor Stream. ",
             "additionalProperties": false,
             "required": [
-              "operationId",
-              "arguments"
+              "operationId"
             ],
             "properties": {
               "operationId": {
@@ -3442,11 +3409,13 @@
                 "minLength": 1
               },
               "arguments": {
-                "type": "array",
                 "description": "The invocation arguments.",
-                "items": {
-                  "$ref": "#/components/schemas/Variant"
-                }
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/JsonElement"
+                  }
+                ]
               }
             }
           }
