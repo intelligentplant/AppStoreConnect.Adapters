@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 
 namespace DataCore.Adapter.Common {
 
@@ -212,16 +213,16 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
-        public static implicit operator Variant(EncodedObject? val) => new Variant(val);
+        public static implicit operator Variant(JsonElement? val) => new Variant(val);
 
         /// <inheritdoc/>
-        public static explicit operator EncodedObject?(Variant val) => (EncodedObject?) val.Value;
+        public static explicit operator JsonElement?(Variant val) => (JsonElement?) val.Value;
 
         /// <inheritdoc/>
-        public static implicit operator Variant(EncodedObject[]? val) => new Variant(val);
+        public static implicit operator Variant(JsonElement[]? val) => new Variant(val);
 
         /// <inheritdoc/>
-        public static explicit operator EncodedObject[]?(Variant val) => (EncodedObject[]?) val.Value;
+        public static explicit operator JsonElement[]?(Variant val) => (JsonElement[]?) val.Value;
 
     }
 

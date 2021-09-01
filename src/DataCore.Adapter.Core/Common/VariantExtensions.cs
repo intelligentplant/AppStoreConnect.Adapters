@@ -10,7 +10,6 @@ namespace DataCore.Adapter.Common {
     /// </summary>
     public static class VariantExtensions {
 
-
         /// <summary>
         /// Tests if a variant contains a null value.
         /// </summary>
