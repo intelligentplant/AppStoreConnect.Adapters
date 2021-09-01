@@ -135,10 +135,10 @@ namespace DataCore.Adapter.Tests {
         [ExtensionFeature(ExtensionFeatureUri)]
         private class TestExtension : AdapterExtensionFeature {
 
-            public TestExtension() : base(null, Array.Empty<Common.IObjectEncoder>()) {
+            public TestExtension() : base(null) {
                 BindInvoke<TestExtension>((ctx, req, ct) => {
                     return Task.FromResult(new InvocationResponse() { 
-                        Results = new Common.Variant[] { this.ConvertToVariant(GetCurrentTime()) }
+                        Results = SerializeToJsonElement(GetCurrentTime())
                     });
                 }, nameof(GetCurrentTime));
             }

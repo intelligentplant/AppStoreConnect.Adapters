@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUri() {
             using (var adapter = new TestAdapter(TestContext.TestName)) {
-                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                adapter.AddFeatures(new PingPongExtension(null!));
                 var featureCollection = adapter.Features;
 
                 Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.FeatureUri)));
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUri() {
             using (var adapter = new TestAdapter(TestContext.TestName)) {
-                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                adapter.AddFeatures(new PingPongExtension(null!));
                 var featureCollection = adapter.Features;
 
                 Assert.IsNotNull(featureCollection.GetExtension(new Uri(PingPongExtension.RelativeFeatureUri, UriKind.Relative)));
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingAbsoluteUriString() {
             using (var adapter = new TestAdapter(TestContext.TestName)) {
-                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                adapter.AddFeatures(new PingPongExtension(null!));
                 var featureCollection = adapter.Features;
 
                 Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.FeatureUri));
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AdapterFeaturesCollectionShouldResolveExtensionUsingRelativeUriString() {
             using (var adapter = new TestAdapter(TestContext.TestName)) {
-                adapter.AddFeatures(new PingPongExtension(null!, Array.Empty<Common.IObjectEncoder>()));
+                adapter.AddFeatures(new PingPongExtension(null!));
                 var featureCollection = adapter.Features;
 
                 Assert.IsNotNull(featureCollection.GetExtension(PingPongExtension.RelativeFeatureUri));

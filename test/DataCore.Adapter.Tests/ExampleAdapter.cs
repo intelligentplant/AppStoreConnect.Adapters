@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Tests {
             features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
             features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
             features.Add<IEventMessagePushWithTopics, EventTopicSubscriptionManager>(_eventTopicSubscriptionManager);
-            features.AddFromProvider(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
+            features.AddFromProvider(new PingPongExtension(BackgroundTaskService));
             Features = features;
         }
 
