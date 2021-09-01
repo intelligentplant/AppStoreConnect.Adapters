@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JsonSchema.Net.Generation" Version="$(JsonSchemaNetGenerationVersion)" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(MicrosoftAspNetCoreVersion)" />
     <PackageReference Include="System.Threading.Channels" Version="$(SystemThreadingChannelsVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
