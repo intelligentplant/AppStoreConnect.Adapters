@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 using DataCore.Adapter.Common;
 
@@ -20,8 +21,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The invocation arguments.
         /// </summary>
-        [Required]
-        public Variant[] Arguments { get; set; } = Array.Empty<Variant>();
+        public JsonElement? Arguments { get; set; }
 
     }
 

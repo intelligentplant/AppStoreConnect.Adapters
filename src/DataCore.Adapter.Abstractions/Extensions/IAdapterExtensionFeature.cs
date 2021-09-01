@@ -22,13 +22,6 @@ namespace DataCore.Adapter.Extensions {
     public interface IAdapterExtensionFeature : IAdapterFeature {
 
         /// <summary>
-        /// The <see cref="IObjectEncoder"/> instances to use when encoding or decoding <see cref="EncodedObject"/> 
-        /// instances.
-        /// </summary>
-        public IEnumerable<IObjectEncoder> Encoders { get; }
-
-
-        /// <summary>
         /// Gets the descriptor for the extension feature.
         /// </summary>
         /// <param name="context">

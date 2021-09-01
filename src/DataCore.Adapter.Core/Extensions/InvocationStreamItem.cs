@@ -1,7 +1,5 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-using DataCore.Adapter.Common;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -11,10 +9,9 @@ namespace DataCore.Adapter.Extensions {
     public class InvocationStreamItem {
 
         /// <summary>
-        /// The encoded invocation arguments.
+        /// The invocation arguments.
         /// </summary>
-        [Required]
-        public Variant[] Arguments { get; set; } = Array.Empty<Variant>();
+        public JsonElement? Arguments { get; set; }
 
     }
 
