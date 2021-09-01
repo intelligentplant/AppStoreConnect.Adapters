@@ -28,14 +28,14 @@ Note that we have specified a parameter of type `IAdapterCallContext`. This para
 Next, update the `PingPongExtension` constructor as follows:
 
 ```csharp
-public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
     BindInvoke<PingPongExtension, PingMessage, PongMessage>(Ping);
 }
 ```
 
-The constructor now makes a call to the `BindInvoke` method to tell the base class that it should register an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. Here, we are calling the `BindInvoke<TFeature, TIn, TOut>` overload of the method, which allows us to tell the binding method that we expect the operation to receive a single input parameter of type `PingMessage` and return a result of type `PongMessage`, and that the method should be added as an operation on the `PingPongExtension` extension registration.
+The constructor now makes a call to the `BindInvoke` method to tell the base class that it should register an operation that can be called via the `Invoke` method on the `IAdapterExtensionFeature` interface. Here, we are calling the `BindInvoke<TFeature, TIn, TOut>` overload of the method, which allows us to tell the binding method that we expect the operation to receive an input parameter of type `PingMessage` and return a result of type `PongMessage`, and that the method should be added as an operation on the `PingPongExtension` extension registration.
 
-Normally, the delegate signature for an invocable method is `Func<IAdapterCallContext, InvocationRequest, InvocationResponse Task<InvocationResponse>>`. However, the various `BindInvoke` methods inherited from the `AdapterExtensionFeature` base class allow registration of methods that have different signatures, converting to and from the specified input and output types.
+Normally, the delegate signature for an invocable method is `Func<IAdapterCallContext, InvocationRequest, CancellationToken, Task<InvocationResponse>>`. However, the various `BindInvoke` methods inherited from the `AdapterExtensionFeature` base class allow registration of methods that have different signatures, converting to and from the specified input and output types.
 
 Compile and run the program and we will see the following output:
 
@@ -61,28 +61,12 @@ Note that our `Ping` method is now listed as an invocable operation with its own
 public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
     BindInvoke<PingPongExtension, PingMessage, PongMessage>(
         Ping,
-        description: "Responds to a ping message with a pong message",
-        inputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                Description = "The ping message"
-            }
-        },
-        outputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                Description = "The pong message"
-            }
-        }
+        description: "Responds to a ping message with a pong message"
     );
 }
 ```
 
-We have added metadata that describes the operation, as well as the input and output parameters for the operation. When describing the input and output parameters, note that we have specified that the method accepts and returns an extension object, and have specified the `TypeId` for the parameters. When calling operations on extension features, the inputs and outputs in the underlying request and response messages are specified using the `Variant` type. `Variant` can automatically convert to or from a number of simple types (such as `double`, `string`, `bool`, and so on), but can also accept an `EncodedObject` as its value, which contains serialized data that must be deserialized by the recipient. `PingMessage` and `PongMessage` are custom types that are not directly recognised as valid `Variant` values, so our parameter metadata provides a hint to consumers about the structure of the serialized data so that they can encode or decode the required inputs and outputs. 
+We have now added some metadata that describes the operation. We could have also specified parameters describing the JSON schemas of our request and response types (`PingMessage` and `PongMessage` respectively). However, by not specifying these parameters, the `BindInvoke` will automatically generate these schemas for us.
 
 Compile and run the program again and we will see the following output:
 
@@ -109,7 +93,7 @@ The next step is for us to try invoking the operation.
 
 When working with an in-process adapter, it is of course possible to retrieve the extension feature from the adapter's feature collection, and then cast it to the correct type and directly call a method on the extension feature type. However, this is not possible when trying to call an extension operation on an adapter that is running in an external process or on a remote server. This is where the methods defined on the `IAdapterExtensionFeature` interface come to the rescue.
 
-In order to call our `Ping` method via a call to `Invoke`, we need pass in an `InvocationRequest` object that contains our encoded `PingMessage`, and then process the resulting `InvocationResponse` object to extract the `PongMessage` result.
+In order to call our `Ping` method via a call to `Invoke`, we need pass in an `InvocationRequest` object that contains our `PingMessage`, and then process the resulting `InvocationResponse` object to extract the `PongMessage` result.
 
 Fortunately, we can use extension methods for the `IAdapterExtensionFeature` type to perform the encoding and decoding for us.
 

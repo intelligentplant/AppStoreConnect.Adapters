@@ -39,23 +39,7 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
     
     BindStream<PingPongExtension, PingMessage, PongMessage>(
         Ping,
-        description: "Responds to a ping message with a stream of pong messages",
-        inputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                Description = "The ping message"
-            }
-        },
-        outputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                Description = "The pong message"
-            }
-        }
+        description: "Responds to a ping message with a stream of pong messages"
     );
 }
 ```

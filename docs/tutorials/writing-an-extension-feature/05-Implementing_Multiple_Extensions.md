@@ -14,6 +14,9 @@ Our new extension will be a simple temperature converter, with operations for co
 ```csharp
 using DataCore.Adapter;
 using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Json;
+
+using Json.Schema;
 
 namespace MyAdapter {
 
@@ -38,20 +41,16 @@ namespace MyAdapter {
         public static ExtensionFeatureOperationDescriptorPartial GetCtoFMetadata() {
             return new ExtensionFeatureOperationDescriptorPartial() { 
                 Description = "Converts a temperature in Celsius to Fahrenheit",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 
@@ -59,20 +58,16 @@ namespace MyAdapter {
         public static ExtensionFeatureOperationDescriptorPartial GetFtoCMetadata() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Description = "Converts a temperature in Fahrenheit to Celsius",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 
@@ -83,7 +78,7 @@ namespace MyAdapter {
 
 Note that, in addition to the interface itself, we have included a class that returns metadata about the extension feature's operations, and we have annotated our interface methods with `[ExtensionFeatureOperation]` attributes. These attributes allow us to define provider methods for retrieving metadata about the operations so that we do not have to provide this information when we bind the operations.
 
-Note as well that, when defining the metadata about the input and ourput parameters, we do not include a `TypeId`, and instead just specify that the `VariantType` of the parameters is `DataCore.Adapter.Common.VariantType.Double`. This is because `Variant` values can automatically be converted to or from `double` without needing to encode the value inside an `EncodedObject` instance.
+Note as well that, when defining the metadata about the input and output parameters, we are defining our JSON schemas manually using the `SchemaBuilder` class from the [JsonSchema.Net.Generation](https://www.nuget.org/packages/JsonSchema.Net.Generation/) library. It is useful to manually define these schemas when our input and/or output types are primitive types that we cannot annotate with attributes to customise automatically-generated schemas.
 
 Next, we will update our `PingPongExtension` class to implement our new interface:
 
@@ -119,7 +114,7 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
 }
 ```
 
-Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. Note also that, because we have defined our operation metadata via `[ExtensionFeatureOperation]` annotations on our interface methods, our binding call is much mor concise!
+Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. Note also that, because we have defined our operation metadata via `[ExtensionFeatureOperation]` annotations on our interface methods, our binding call is much more concise!
 
 If you run and compile the program, you will see that the new extension and its registered operations are now visible in the adapter summary:
 
