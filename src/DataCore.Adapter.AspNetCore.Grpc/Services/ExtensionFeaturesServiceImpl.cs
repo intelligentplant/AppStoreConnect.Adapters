@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Security;
+using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -147,7 +148,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             var adapterRequest = new Extensions.InvocationRequest() {
                 OperationId = operationId!,
-                Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                Arguments = Json.JsonElementExtensions.DeserializeJsonFromUtf8Bytes(request.Arguments.ToByteArray())
             };
             Util.ValidateObject(adapterRequest);
 
@@ -155,9 +156,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 try {
                     var result = await adapter.Feature.Invoke(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
-                    var response = new InvokeExtensionResponse();
-                    response.Results.AddRange(result.Results.Select(x => x.ToGrpcVariant()));
-
+                    var response = new InvokeExtensionResponse() { 
+                        Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(result.Results))
+                    };
+                    
                     return response;
                 }
                 catch (SecurityException) {
@@ -198,7 +200,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             var adapterRequest = new InvocationRequest() {
                 OperationId = operationId!,
-                Arguments = request.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                Arguments = Json.JsonElementExtensions.DeserializeJsonFromUtf8Bytes(request.Arguments.ToByteArray())
             };
             Util.ValidateObject(adapterRequest);
 
@@ -207,8 +209,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     long outputItems = 0;
 
                     await foreach (var val in adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        var response = new InvokeExtensionResponse();
-                        response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
+                        var response = new InvokeExtensionResponse() { 
+                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results))
+                        };
 
                         await responseStream.WriteAsync(response).ConfigureAwait(false);
                         activity.SetResponseItemCountTag(++outputItems);
@@ -280,7 +283,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                         try {
                             while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
                                 await inputChannel.Writer.WriteAsync(new InvocationStreamItem() {
-                                    Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                                    Arguments = Json.JsonElementExtensions.DeserializeJsonFromUtf8Bytes(requestStream.Current.Arguments.ToByteArray())
                                 }, ct).ConfigureAwait(false);
                                 activity.SetRequestItemCountTag(++inputItems);
                             }
@@ -296,8 +299,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     long outputItems = 0;
                     await foreach (var val in adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                        var response = new InvokeExtensionResponse();
-                        response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
+                        var response = new InvokeExtensionResponse() { 
+                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results))
+                        };
 
                         await responseStream.WriteAsync(response).ConfigureAwait(false);
                         activity.SetResponseItemCountTag(++outputItems);

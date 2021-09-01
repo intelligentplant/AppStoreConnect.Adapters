@@ -31,13 +31,6 @@ enum VariantType {
 }
 
 
-message EncodedObject {
-    string type_id = 1;
-    string encoding = 2;
-    bytes encoded_body = 3;
-}
-
-
 message Variant {
     VariantType type = 1;
     bytes value = 2;
@@ -421,8 +414,8 @@ message ExtensionFeatureOperationDescriptor {
     ExtensionFeatureOperationType operation_type = 2;
     string name = 3;
     string description = 4;
-    repeated ExtensionFeatureOperationParameterDescriptor inputs = 5;
-    repeated ExtensionFeatureOperationParameterDescriptor outputs = 6;
+    bytes request_schema = 7;
+    bytes response_schema = 8;
 }
 
 
@@ -430,13 +423,4 @@ enum ExtensionFeatureOperationType {
     EXTENSION_FEATURE_OPERATION_TYPE_INVOKE = 0;
     EXTENSION_FEATURE_OPERATION_TYPE_STREAM = 1;
     EXTENSION_FEATURE_OPERATION_TYPE_DUPLEX_STREAM = 2;
-}
-
-
-message ExtensionFeatureOperationParameterDescriptor {
-    int32 ordinal = 1;
-    VariantType variant_type = 2;
-    int32 array_rank = 3;
-    string type_id = 4;
-    string description = 5;
 }
