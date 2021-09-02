@@ -1,6 +1,7 @@
-﻿
-using DataCore.Adapter;
-using DataCore.Adapter.Extensions;
+﻿using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Json;
+
+using Json.Schema;
 
 namespace MyAdapter {
 
@@ -20,25 +21,21 @@ namespace MyAdapter {
     }
 
 
-    public static class TemperatureConverterMetadata { 
-    
+    public static class TemperatureConverterMetadata {
+
         public static ExtensionFeatureOperationDescriptorPartial GetCtoFMetadata() {
-            return new ExtensionFeatureOperationDescriptorPartial() { 
+            return new ExtensionFeatureOperationDescriptorPartial() {
                 Description = "Converts a temperature in Celsius to Fahrenheit",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 
@@ -46,20 +43,16 @@ namespace MyAdapter {
         public static ExtensionFeatureOperationDescriptorPartial GetFtoCMetadata() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Description = "Converts a temperature in Fahrenheit to Celsius",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 

@@ -24,26 +24,10 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
             BindInvoke<PingPongExtension, PingMessage, PongMessage>(
                 Ping,
-                description: "Responds to a ping message with a pong message",
-                inputParameters: new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                outputParameters: new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The pong message"
-                    }
-                }
+                description: "Responds to a ping message with a pong message"
             );
         }
 

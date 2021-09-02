@@ -40,25 +40,68 @@ Normally, the delegate signature for an invocable method is `Func<IAdapterCallCo
 Compile and run the program and we will see the following output:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description:
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      "name": "Ping Pong",
+      "description": "Example extension feature.",
+      "operations": {
+        "asc:extensions/tutorial/ping-pong/invoke/Ping/": {
+          "operationType": "Invoke",
+          "name": "Ping",
+          "description": null,
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the ping was sent at."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping associated with this pong.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the pong was sent at."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
-Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. The `/invoke/` section towards the end of the URI indicates that the operation can be invoked via the `Invoke` method on the `IAdapterExtensionFeature` interface. However, we do not have a description. This is because we have not provided any operation metadata. We can do this by specifying additional optional parameters when calling the `BindInvoke` method. Replace the `BindInvoke` call as follows:
+Note that our `Ping` method is now listed as an invocable operation with its own URI that is derived from the extension URI. We can also see that the `requestSchema` and `responseSchema` properties in the output describe automatically-generated [JSON schemas](https://json-schema.org) for our `PingMessage` and `PongMessage` classes that we defined previously. 
+
+However, we do not have an operation description. This is because we have not provided any additional metadata about the operation itself. We can do this by specifying additional optional parameters when calling the `BindInvoke` method. Replace the `BindInvoke` call as follows:
 
 ```csharp
-public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) : base(backgroundTaskService, encoders) {
+public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
     BindInvoke<PingPongExtension, PingMessage, PongMessage>(
         Ping,
         description: "Responds to a ping message with a pong message"
@@ -66,24 +109,63 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IO
 }
 ```
 
-We have now added some metadata that describes the operation. We could have also specified parameters describing the JSON schemas of our request and response types (`PingMessage` and `PongMessage` respectively). However, by not specifying these parameters, the `BindInvoke` will automatically generate these schemas for us.
+We have now added some metadata that describes the operation. We could have also explicitly specified parameters describing the JSON schemas of our request and response types (`PingMessage` and `PongMessage` respectively). However, by not specifying these parameters, the `BindInvoke` will automatically generate these schemas for us.
 
-Compile and run the program again and we will see the following output:
+Compile and run the program again and we can see that the description has been added to the operation:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      "name": "Ping Pong",
+      "description": "Example extension feature.",
+      "operations": {
+        "asc:extensions/tutorial/ping-pong/invoke/Ping/": {
+          "operationType": "Invoke",
+          "name": "Ping",
+          "description": "Responds to a ping message with a pong message",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the ping was sent at."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping associated with this pong.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the pong was sent at."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
 The next step is for us to try invoking the operation.
@@ -119,19 +201,7 @@ Console.WriteLine($"[INVOKE] Pong: {pongMessage.CorrelationId} @ {pongMessage.Ut
 Compile and run the program again and the output will be similar to the following:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
+-- Adapter summary removed for brevity --
 
 [INVOKE] Ping: 55be298d-17f5-49ca-9a42-fb14c53cfb85 @ 11:25:11 UTC
 [INVOKE] Pong: 55be298d-17f5-49ca-9a42-fb14c53cfb85 @ 11:25:11 UTC

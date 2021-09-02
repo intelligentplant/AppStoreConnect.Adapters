@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -25,38 +26,24 @@ namespace MyAdapter {
         }
 
 
+        private static System.Text.Json.JsonSerializerOptions GetJsonOptions() {
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions() {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+            jsonOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            return jsonOptions;
+        }
+
+
         private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {
             using (IAdapter adapter = new Adapter(AdapterId, AdapterDisplayName, AdapterDescription)) {
                 await adapter.StartAsync(cancellationToken);
 
-                var adapterDescriptor = adapter.CreateExtendedAdapterDescriptor();
-
+                var adapterInfo = await AdapterInfo.Create(context, adapter, cancellationToken);
+                Console.WriteLine("Adapter Summary:");
                 Console.WriteLine();
-                Console.WriteLine($"[{adapter.Descriptor.Id}]");
-                Console.WriteLine($"  Name: {adapter.Descriptor.Name}");
-                Console.WriteLine($"  Description: {adapter.Descriptor.Description}");
-                Console.WriteLine("  Properties:");
-                foreach (var prop in adapter.Properties) {
-                    Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-                }
-                Console.WriteLine("  Features:");
-                foreach (var feature in adapterDescriptor.Features) {
-                    Console.WriteLine($"    - {feature}");
-                }
-                Console.WriteLine("  Extensions:");
-                foreach (var feature in adapterDescriptor.Extensions) {
-                    var extension = adapter.GetFeature<IAdapterExtensionFeature>(feature);
-                    var extensionDescriptor = await extension.GetDescriptor(context, feature, cancellationToken);
-                    var extensionOps = await extension.GetOperations(context, feature, cancellationToken);
-                    Console.WriteLine($"    - {feature}");
-                    Console.WriteLine($"      - Name: {extensionDescriptor.DisplayName}");
-                    Console.WriteLine($"      - Description: {extensionDescriptor.Description}");
-                    Console.WriteLine($"      - Operations:");
-                    foreach (var op in extensionOps) {
-                        Console.WriteLine($"        - {op.Name} ({op.OperationId})");
-                        Console.WriteLine($"          - Description: {op.Description}");
-                    }
-                }
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(adapterInfo, GetJsonOptions()));
 
                 var extensionFeature = adapter.GetFeature<IAdapterExtensionFeature>("asc:extensions/tutorial/ping-pong/");
                 var correlationId = Guid.NewGuid().ToString();
@@ -81,4 +68,63 @@ namespace MyAdapter {
         }
 
     }
+
+    public class AdapterInfo {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<string> Features { get; set; }
+        public IDictionary<string, ExtensionFeatureInfo> Extensions { get; set; }
+
+        public static async Task<AdapterInfo> Create(IAdapterCallContext context, IAdapter adapter, CancellationToken cancellationToken) {
+            var adapterDescriptor = adapter.CreateExtendedAdapterDescriptor();
+
+            var result = new AdapterInfo() {
+                Id = adapterDescriptor.Id,
+                Name = adapterDescriptor.Name,
+                Description = adapterDescriptor.Description,
+                Properties = adapterDescriptor.Properties.ToDictionary(x => x.Name, x => x.Value.ToString()),
+                Features = adapterDescriptor.Features.ToArray(),
+                Extensions = new Dictionary<string, ExtensionFeatureInfo>()
+            };
+
+            foreach (var feature in adapterDescriptor.Extensions) {
+                var extension = adapter.GetFeature<IAdapterExtensionFeature>(feature);
+                var extensionDescriptor = await extension.GetDescriptor(context, feature, cancellationToken);
+                var extensionOps = await extension.GetOperations(context, feature, cancellationToken);
+
+                var extInfo = new ExtensionFeatureInfo() {
+                    Name = extensionDescriptor.DisplayName,
+                    Description = extensionDescriptor.Description,
+                    Operations = extensionOps.ToDictionary(x => x.OperationId.ToString(), x => new ExtensionOperationInfo() {
+                        OperationType = x.OperationType,
+                        Name = x.Name,
+                        Description = x.Description,
+                        RequestSchema = x.RequestSchema,
+                        ResponseSchema = x.ResponseSchema
+                    })
+                };
+
+                result.Extensions[extensionDescriptor.Uri.ToString()] = extInfo;
+            }
+
+            return result;
+        }
+    }
+
+    public class ExtensionFeatureInfo {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public IDictionary<string, ExtensionOperationInfo> Operations { get; set; }
+    }
+
+    public class ExtensionOperationInfo {
+        public ExtensionFeatureOperationType OperationType { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public System.Text.Json.JsonElement? RequestSchema { get; set; }
+        public System.Text.Json.JsonElement? ResponseSchema { get; set; }
+    }
+
 }
