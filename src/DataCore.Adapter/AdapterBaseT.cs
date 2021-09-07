@@ -565,9 +565,34 @@ namespace DataCore.Adapter {
         /// 
         /// </remarks>
         /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
+        /// <seealso cref="ValidateInvocation{TFeature}(IAdapterCallContext, object[])"/>
         protected virtual void ValidateContext(IAdapterCallContext context) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
+            }
+        }
+
+
+        /// <summary>
+        /// <strong>[INFRASTRUCTURE METHOD]</strong>
+        /// Ensures that the specified feature type is available on the adapter.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <exception cref="InvalidOperationException">
+        ///   <typeparamref name="TFeature"/> is not available.
+        /// </exception>
+        /// <remarks>
+        ///   In some scenarios, an adapter class might implement a given feature interface, but 
+        ///   the feature itself might not be available at runtime. This method allows validation 
+        ///   of a feature's availability when one if the feature's methods is called.
+        /// </remarks>
+        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
+        /// <seealso cref="ValidateInvocation{TFeature}(IAdapterCallContext, object[])"/>
+        private void ValidateFeature<TFeature>() where TFeature : IAdapterFeature {
+            if (!this.HasFeature<TFeature>()) {
+                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_MissingAdapterFeature, typeof(TFeature).Name));
             }
         }
 
@@ -663,6 +688,45 @@ namespace DataCore.Adapter {
             foreach (var item in invocationParameters) {
                 ValidateInvocationParameter(item);
             }
+        }
+
+
+        /// <summary>
+        /// Validates the invocation of an adapter feature method.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the invocation.
+        /// </param>
+        /// <param name="invocationParameters">
+        ///   The invocation parameters to validate (such as request DTOs).
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   Any item in <paramref name="invocationParameters"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   Any item in <paramref name="invocationParameters"/> fails validation.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   The adapter has been disposed.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        ///   The adapter is not running.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   Call this method at the start of every adapter feature implementation method to 
+        ///   validate the availability of the feature, and the feature method's parameters.
+        /// </para>
+        /// 
+        /// </remarks>
+        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
+        public void ValidateInvocation<TFeature>(IAdapterCallContext context, params object[] invocationParameters) where TFeature : IAdapterFeature {
+            ValidateFeature<TFeature>();
+            ValidateInvocation(context, invocationParameters);
         }
 
 
