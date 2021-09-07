@@ -39,23 +39,7 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
     
     BindStream<PingPongExtension, PingMessage, PongMessage>(
         Ping,
-        description: "Responds to a ping message with a stream of pong messages",
-        inputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                Description = "The ping message"
-            }
-        },
-        outputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                Description = "The pong message"
-            }
-        }
+        description: "Responds to a ping message with a stream of pong messages"
     );
 }
 ```
@@ -63,21 +47,63 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
 If you compile and run the program, you will notice that the streaming method is automatically added to the list of available operations:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      "name": "Ping Pong",
+      "description": "Example extension feature.",
+      "operations": {
+        "asc:extensions/tutorial/ping-pong/stream/Ping/": {
+          "operationType": "Stream",
+          "name": "Ping",
+          "description": "Responds to a ping message with a stream of pong messages",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the ping was sent at."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping associated with this pong.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the pong was sent at."
+              }
+            }
+          }
+        },
+        "asc:extensions/tutorial/ping-pong/invoke/Ping/": {
+          // Removed for brevity
+        }
+      }
+    }
+  }
+}
 ```
 
 Our next step is to subscribe to the stream. Replace the code to call the original operation in `Runner.cs` with the following:
@@ -96,6 +122,7 @@ try {
         context,
         new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
         pingMessage,
+        null,
         cancellationToken
     )) {
         Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
@@ -107,21 +134,7 @@ catch (OperationCanceledException) { }
 When you compile and run the program again, you will see a pong message displayed every second until you cancel the subscription by pressing `CTRL+C` e.g.
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
+-- Adapter summary removed for brevity --
 
 [STREAM] Ping: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:24 UTC
 [STREAM] Pong: ef84a7ec-b8eb-4fc1-9b45-720941b89ca1 @ 11:40:25 UTC

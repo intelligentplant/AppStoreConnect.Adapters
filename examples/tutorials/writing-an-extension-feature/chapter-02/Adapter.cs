@@ -17,7 +17,7 @@ namespace MyAdapter {
             IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
         ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) {
-            AddExtensionFeatures(new PingPongExtension(BackgroundTaskService, DataCore.Adapter.Json.JsonObjectEncoder.Default));
+            AddExtensionFeatures(new PingPongExtension(BackgroundTaskService));
         }
 
         protected override Task StartAsync(CancellationToken cancellationToken) {

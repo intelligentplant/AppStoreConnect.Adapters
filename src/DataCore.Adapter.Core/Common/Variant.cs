@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace DataCore.Adapter.Common {
 
@@ -16,7 +17,7 @@ namespace DataCore.Adapter.Common {
             [typeof(byte)] = VariantType.Byte,
             [typeof(DateTime)] = VariantType.DateTime,
             [typeof(double)] = VariantType.Double,
-            [typeof(EncodedObject)] = VariantType.ExtensionObject,
+            [typeof(JsonElement)] = VariantType.ExtensionObject,
             [typeof(float)] = VariantType.Float,
             [typeof(short)] = VariantType.Int16,
             [typeof(int)] = VariantType.Int32,
@@ -786,7 +787,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value.
         /// </param>
-        public Variant(EncodedObject? value) {
+        public Variant(JsonElement? value) {
             if (value == null) {
                 Value = null;
                 Type = VariantType.Null;
@@ -810,7 +811,7 @@ namespace DataCore.Adapter.Common {
         ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
         ///   will be equal to <see cref="Null"/>.
         /// </remarks>
-        public Variant(EncodedObject[]? value) {
+        public Variant(JsonElement[]? value) {
             if (value == null) {
                 Value = null;
                 Type = VariantType.Null;
@@ -1060,7 +1061,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0 || NET46
+#if NETSTANDARD2_0 || NET461
             return HashGenerator.Combine(Type, Value);
 #else
             return HashCode.Combine(Type, Value);

@@ -86,7 +86,7 @@ namespace DataCore.Adapter.RealTimeData {
                     return tagNameOrId;
                 }
 
-                return nameToIdResult.Value;
+                return nameToIdResult.Value!;
             }
 
             var tagId = await GetTagId().ConfigureAwait(false);

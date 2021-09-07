@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Json;
 using DataCore.Adapter.Proxy;
 
 using IntelligentPlant.BackgroundTasks;
@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="proxy"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterExtensionFeatureImpl(GrpcAdapterProxy proxy) : base(proxy, proxy.Encoders) { }
+        public AdapterExtensionFeatureImpl(GrpcAdapterProxy proxy) : base(proxy) { }
 
 
         /// <inheritdoc/>
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async Task<Adapter.Extensions.InvocationResponse> InvokeInternal(IAdapterCallContext context, Adapter.Extensions.InvocationRequest request, CancellationToken cancellationToken) {
+        protected override async Task<Adapter.Extensions.InvocationResponse> InvokeCore(IAdapterCallContext context, Adapter.Extensions.InvocationRequest request, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context);
 
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
@@ -82,22 +82,22 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 OperationId = request.OperationId?.ToString() ?? string.Empty
             };
 
-            foreach (var item in request.Arguments) {
-                req.Arguments.Add(item.ToGrpcVariant());
+            if (request.Arguments != null) {
+                req.Arguments = Google.Protobuf.ByteString.CopyFrom(request.Arguments.Value.SerializeToUtf8Bytes());
             }
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
             using (var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, ctSource.Token))) {
                 var result = await response.ResponseAsync.ConfigureAwait(false);
                 return new InvocationResponse() {
-                    Results = result.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                    Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(result.Results.ToByteArray()) ?? default
                 };
             }
         }
 
 
         /// <inheritdoc/>
-        protected override async IAsyncEnumerable<InvocationResponse> StreamInternal(
+        protected override async IAsyncEnumerable<InvocationResponse> StreamCore(
             IAdapterCallContext context, 
             InvocationRequest request, 
             [EnumeratorCancellation]
@@ -112,15 +112,15 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 OperationId = request.OperationId?.ToString() ?? string.Empty
             };
 
-            foreach (var item in request.Arguments) {
-                req.Arguments.Add(item.ToGrpcVariant());
+            if (request.Arguments != null) {
+                req.Arguments = Google.Protobuf.ByteString.CopyFrom(request.Arguments.Value.SerializeToUtf8Bytes());
             }
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
             using (var response = client.InvokeStreamingExtension(req, Proxy.GetCallOptions(context, ctSource.Token))) {
                 while (await response.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     yield return new InvocationResponse() {
-                        Results = response.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(response.ResponseStream.Current.Results.ToByteArray()) ?? default
                     };
                 }
             }
@@ -128,7 +128,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
+        protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamCore(
             IAdapterCallContext context,
             DuplexStreamInvocationRequest request, 
             IAsyncEnumerable<InvocationStreamItem> channel, 
@@ -158,8 +158,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                                 OperationId = request.OperationId?.ToString() ?? string.Empty
                             };
 
-                            foreach (var item in val.Arguments) {
-                                req.Arguments.Add(item.ToGrpcVariant());
+                            if (val.Arguments != null) {
+                                req.Arguments = Google.Protobuf.ByteString.CopyFrom(val.Arguments.Value.SerializeToUtf8Bytes());
                             }
 
                             await stream.RequestStream.WriteAsync(req).ConfigureAwait(false);
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
                 while (await stream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     yield return new InvocationResponse() {
-                        Results = stream.ResponseStream.Current.Results.Select(x => x.ToAdapterVariant()).ToArray()
+                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(stream.ResponseStream.Current.Results.ToByteArray()) ?? default
                     };
                 }
             }

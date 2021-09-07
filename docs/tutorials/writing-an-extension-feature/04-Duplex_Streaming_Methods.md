@@ -36,23 +36,7 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
 
     BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(
         Ping,
-        description: "Responds to each ping message in the incoming stream with a pong message",
-        inputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                Description = "The ping message"
-            }
-        },
-        outputParameters: new[] {
-            new ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = 0,
-                VariantType = VariantType.ExtensionObject,
-                TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                Description = "The pong message"
-            }
-        }
+        description: "Responds to each ping message in the incoming stream with a pong message"
     );
 }
 ```
@@ -60,23 +44,66 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
 Compiling and running the program at this point will show the new operation in our adapter summary:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
-          - Description: Responds to each ping message in the incoming stream with a pong message
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      "name": "Ping Pong",
+      "description": "Example extension feature.",
+      "operations": {
+        "asc:extensions/tutorial/ping-pong/duplexstream/Ping/": {
+          "operationType": "DuplexStream",
+          "name": "Ping",
+          "description": "Responds to each ping message in the incoming stream with a pong message",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the ping was sent at."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping associated with this pong.",
+                "required": []
+              },
+              "UtcTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The UTC time that the pong was sent at."
+              }
+            }
+          }
+        },
+        "asc:extensions/tutorial/ping-pong/invoke/Ping/": {
+          // Removed for brevity
+        },
+        "asc:extensions/tutorial/ping-pong/stream/Ping/": {
+          // Removed for brevity
+        }
+      }
+    }
+  }
+}
 ```
 
 To test the new method, we will create a `Channel<PingMessage>` that we will write a ping message to at a random interval in a background task, and then read the corresponding pong messages from our subscription. Replace the code for calling the streaming operation in `Runner.cs` with the following:
@@ -115,6 +142,7 @@ await foreach (var pongMessage in extensionFeature.DuplexStream<PingMessage, Pon
     context,
     new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
     pingMessageStream.Reader.ReadAllAsync(cancellationToken),
+    null,
     cancellationToken
 )) {
     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");
@@ -124,23 +152,7 @@ await foreach (var pongMessage in extensionFeature.DuplexStream<PingMessage, Pon
 Compile and run the program. You will see output similar to the following:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
-          - Description: Responds to each ping message in the incoming stream with a pong message
+-- Adapter summary removed for brevity --
 
 [DUPLEX STREAM] Ping: 76640863-e5a5-474a-9593-671ba698a90f @ 12:27:35 UTC
 [DUPLEX STREAM] Pong: 76640863-e5a5-474a-9593-671ba698a90f @ 12:27:35 UTC

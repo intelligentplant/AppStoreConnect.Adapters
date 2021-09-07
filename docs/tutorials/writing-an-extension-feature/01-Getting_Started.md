@@ -132,6 +132,7 @@ As you can see, this is a very bare-bones adapter, which does nothing other than
 
 ```csharp
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -158,57 +159,105 @@ namespace MyAdapter {
         }
 
 
+        private static System.Text.Json.JsonSerializerOptions GetJsonOptions() {
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions() {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+            jsonOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            return jsonOptions;
+        }
+
+
         private static async Task Run(IAdapterCallContext context, CancellationToken cancellationToken) {
             await using (IAdapter adapter = new Adapter(AdapterId, AdapterDisplayName, AdapterDescription)) {
-
                 await adapter.StartAsync(cancellationToken);
 
-                var adapterDescriptor = adapter.CreateExtendedAdapterDescriptor();
-
+                var adapterInfo = await AdapterInfo.Create(context, adapter, cancellationToken);
+                Console.WriteLine("Adapter Summary:");
                 Console.WriteLine();
-                Console.WriteLine($"[{adapter.Descriptor.Id}]");
-                Console.WriteLine($"  Name: {adapter.Descriptor.Name}");
-                Console.WriteLine($"  Description: {adapter.Descriptor.Description}");
-                Console.WriteLine("  Properties:");
-                foreach (var prop in adapter.Properties) {
-                    Console.WriteLine($"    - {prop.Name} = {prop.Value}");
-                }
-                Console.WriteLine("  Features:");
-                foreach (var feature in adapterDescriptor.Features) {
-                    Console.WriteLine($"    - {feature}");
-                }
-                Console.WriteLine("  Extensions:");
-                foreach (var feature in adapterDescriptor.Extensions) {
-                    var extension = adapter.GetFeature<IAdapterExtensionFeature>(feature);
-                    var extensionDescriptor = await extension.GetDescriptor(context, feature, cancellationToken);
-                    var extensionOps = await extension.GetOperations(context, feature, cancellationToken);
-                    Console.WriteLine($"    - {feature}");
-                    Console.WriteLine($"      - Name: {extensionDescriptor.DisplayName}");
-                    Console.WriteLine($"      - Description: {extensionDescriptor.Description}");
-                    Console.WriteLine($"      - Operations:");
-                    foreach (var op in extensionOps) {
-                        Console.WriteLine($"        - {op.Name} ({op.OperationId})");
-                        Console.WriteLine($"          - Description: {op.Description}");
-                    }
-                }
-
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(adapterInfo, GetJsonOptions()));
             }
         }
 
     }
+
+    public class AdapterInfo {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public IDictionary<string, string> Properties { get; set; }
+        public IEnumerable<string> Features { get; set; }
+        public IDictionary<string, ExtensionFeatureInfo> Extensions { get; set; }
+
+        public static async Task<AdapterInfo> Create(IAdapterCallContext context, IAdapter adapter, CancellationToken cancellationToken) {
+            var adapterDescriptor = adapter.CreateExtendedAdapterDescriptor();
+
+            var result = new AdapterInfo() {
+                Id = adapterDescriptor.Id,
+                Name = adapterDescriptor.Name,
+                Description = adapterDescriptor.Description,
+                Properties = adapterDescriptor.Properties.ToDictionary(x => x.Name, x => x.Value.ToString()),
+                Features = adapterDescriptor.Features.ToArray(),
+                Extensions = new Dictionary<string, ExtensionFeatureInfo>()
+            };
+
+            foreach (var feature in adapterDescriptor.Extensions) {
+                var extension = adapter.GetFeature<IAdapterExtensionFeature>(feature);
+                var extensionDescriptor = await extension.GetDescriptor(context, feature, cancellationToken);
+                var extensionOps = await extension.GetOperations(context, feature, cancellationToken);
+
+                var extInfo = new ExtensionFeatureInfo() {
+                    Name = extensionDescriptor.DisplayName,
+                    Description = extensionDescriptor.Description,
+                    Operations = extensionOps.ToDictionary(x => x.OperationId.ToString(), x => new ExtensionOperationInfo() { 
+                        OperationType = x.OperationType,
+                        Name = x.Name,
+                        Description = x.Description,
+                        RequestSchema = x.RequestSchema,
+                        ResponseSchema = x.ResponseSchema
+                    })
+                };
+
+                result.Extensions[extensionDescriptor.Uri.ToString()] = extInfo;
+            }
+
+            return result;
+        }
+    }
+
+    public class ExtensionFeatureInfo {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public IDictionary<string, ExtensionOperationInfo> Operations { get; set; }
+    }
+
+    public class ExtensionOperationInfo {
+        public ExtensionFeatureOperationType OperationType { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public System.Text.Json.JsonElement? RequestSchema { get; set; }
+        public System.Text.Json.JsonElement? ResponseSchema { get; set; }
+    }
+
 }
 ```
 
 If you compile and run the program, you will see output similar to the following:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {}
+}
 ```
 
 At present, we don't see anything under the `Extensions` section of the program output, because our adapter does not implement any extension features. Our next step is to start defining our extension.
@@ -220,27 +269,38 @@ Our extension feature will be a ping-pong service, allowing callers to send a pi
 
 ```csharp
 using System;
-
-using DataCore.Adapter.Extensions;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace MyAdapter {
 
-    [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
     public class PingMessage {
+
+        [Required]
+        [Description("The correlation ID for the ping.")]
         public string CorrelationId { get; set; }
+
+        [Description("The UTC time that the ping was sent at.")]
         public DateTime UtcTime { get; set; } = DateTime.UtcNow;
+
     }
 
-    [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
     public class PongMessage {
+
+        [Required]
+        [Description("The correlation ID for the ping associated with this pong.")]
         public string CorrelationId { get; set; }
+
+        [Description("The UTC time that the pong was sent at.")]
         public DateTime UtcTime { get; set; } = DateTime.UtcNow;
     }
 
 }
 ```
 
-Our models allow a caller to specify a correlation ID for a ping message, and receive a pong message that contains a matching correlation ID. We also use the `[ExtensionFeatureDataType]` attribute to annotate our messages. This annotation is used when decoding and encoding messages received and returned by our extension. Don't worry about any compiler errors related to `PingPongExtension` being undefined; we will create the missing type below.
+> **IMPORTANT:** All request and response payloads are sent to and received from an extension feature as `System.Text.Json.JsonElement` instances. Therefore, your request and response models **must** be serializable and deserializable using `System.Text.Json.JsonSerializer`.
+
+Our models allow a caller to specify a correlation ID for a ping message, and receive a pong message that contains a matching correlation ID. Note that we have annotated our model properties with attributes from the `System.ComponentModel` and `System.ComponentModel.DataAnnotations` namespaces. These annotations are used when we generate JSON schema documents describing our request and response types.
 
 Next, we will create the extension itself. Create a new class file, `PingPongExtension.cs`, and replace the code with the following:
 
@@ -271,8 +331,8 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) 
-            : base(backgroundTaskService, encoders) { }
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService) 
+            : base(backgroundTaskService) { }
 
     }
 }
@@ -280,38 +340,31 @@ namespace MyAdapter {
 
 Let's look at some points of interest in the above code: 
 
-Our class inherits from [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs), which takes care of the [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs) implementation for us. It is annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which is used to specify some additional metadata about the extension. This metadata is used to build the `FeatureDescriptor` returned by a call to the `IAdapterExtensionFeature` interface's `GetDescriptor` method. The metadata includes a URI that is used to identify the extension. We have specified a relative URI, which will be made absolute using the base path defined by `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` ([see here](/src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs)). It is also possible to specify an absolute URI, as long as it is a child path of the `WellKnownFeatures.Extensions.ExtensionFeatureBasePath`.
+Our class inherits from [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs), which takes care of the [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs) implementation for us. It is annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which is used to specify some additional metadata about the extension. 
 
-In the constructor for our feature, we receive an array of [IObjectEncoder](/src/DataCore.Adapter.Core/Common/IObjectEncoder.cs) objects. `IObjectEncoder` is a service that can encode and decode data contained in custom [EncodedObject](/src/DataCore.Adapter.Core/Common/EncodedObject.cs) objects that are received and returned by extension features.
-
-Update the constructor for our adapter as follows so that it registers our extension feature and uses the default [JsonObjectEncoder](/src/DataCore.Adapter.Json/JsonObjectEncoder.cs) `IObjectEncoder` implementation to encode and decode custom object data to/from JSON:
-
-```csharp
-public Adapter(
-    string id,
-    string name,
-    string description,
-    IBackgroundTaskService backgroundTaskService = null,
-    ILogger<Adapter> logger = null
-) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) {
-    AddExtensionFeatures(new PingPongExtension(backgroundTaskService, DataCore.Adapter.Json.JsonObjectEncoder.Default);
-}
-```
+The extension metadata is used to build the `FeatureDescriptor` returned by a call to the `IAdapterExtensionFeature` interface's `GetDescriptor` method. The metadata includes a URI that is used to identify the extension. We have specified a relative URI, which will be made absolute using the base path defined by `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` ([see here](/src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs)). It is also possible to specify an absolute URI, as long as it is a child path of the `WellKnownFeatures.Extensions.ExtensionFeatureBasePath`.
 
 If you compile and run the program again, you will now see output similar to the following:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      "name": "Ping Pong",
+      "description": "Example extension feature.",
+      "operations": {}
+    }
+  }
+}
 ```
 
 We can see that our extension is listed in the program output, but we don't yet have any extension operations available for us to call. We'll rectify that in the next chapter.

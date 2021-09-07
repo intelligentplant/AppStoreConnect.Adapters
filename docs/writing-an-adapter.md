@@ -322,21 +322,7 @@ public class PingPongExtension : AdapterExtensionFeature {
     internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
         return new ExtensionFeatureOperationDescriptorPartial() {
             Name = "Ping",
-            Description = "Returns a pong message that matches the correlation ID of the specified ping message",
-            Inputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
+            Description = "Returns a pong message that matches the correlation ID of the specified ping message"
         };
     }
 
@@ -344,21 +330,7 @@ public class PingPongExtension : AdapterExtensionFeature {
     internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
         return new ExtensionFeatureOperationDescriptorPartial() {
             Name = "Ping",
-            Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
+            Description = "Returns a pong message every second that matches the correlation ID of the specified ping message"
         };
     }
 
@@ -366,45 +338,21 @@ public class PingPongExtension : AdapterExtensionFeature {
     internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
         return new ExtensionFeatureOperationDescriptorPartial() {
             Name = "Ping",
-            Description = "Returns a pong message every time a ping message is received",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
+            Description = "Returns a pong message every time a ping message is received"
         };
     }
 
 }
 
 
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "ping-message"
-)]
 public class PingMessage {
+    [Description("The correlation ID for the ping.")]
     public Guid CorrelationId { get; set; } = Guid.NewGuid();
 }
 
 
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "pong-message"
-)]
 public class PongMessage {
+    [Description("The correlation ID for the ping associated woth this pong.")]
     public Guid CorrelationId { get; set; } = Guid.NewGuid();
 }
 ```
@@ -429,26 +377,28 @@ For example, the `PingInvoke` method above is annotated with an `[ExtensionFeatu
     "operationType": "Invoke",
     "name": "Ping",
     "description": "Returns a pong message that matches the correlation ID of the specified ping message",
-    "inputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/ping-message/",
-            "description": "The ping message"
+    "requestSchema": {
+        "type": "object",
+        "properties": {
+            "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping."
+            }
         }
-    ],
-    "outputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/pong-message/",
-            "description": "The resulting pong message"
+    },
+    "responseSchema": {
+        "type": "object",
+        "properties": {
+            "CorrelationId": {
+                "type": "string",
+                "description": "The correlation ID for the ping associated with this pong."
+            }
         }
-    ]
+    }
 }
 ```
+
+Note that the `requestSchema` and `responseSchema` properties in the descriptor are defined using [JSON Schema](https://json-schema.org/). `AdapterExtensionFeature` can automatically generate schemas for your request and response models using the [JsonSchema.Net.Generation](https://www.nuget.org/packages/JsonSchema.Net.Generation/) library. You can annotate your models with attributes from the `System.ComponentModel` or `System.ComponentModel.DataAnnotations` namespaces to customise the generated schemas, or you can use the annotations from `JsonSchema.Net.Generation` directly.
 
 
 # Persisting State

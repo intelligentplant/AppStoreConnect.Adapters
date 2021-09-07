@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="proxy"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterExtensionFeatureImpl(HttpAdapterProxy proxy) : base(proxy, proxy.Encoders) { }
+        public AdapterExtensionFeatureImpl(HttpAdapterProxy proxy) : base(proxy) { }
 
 
         /// <inheritdoc/>
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
+        protected override async Task<InvocationResponse> InvokeCore(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context, request);
 
             var client = Proxy.GetClient();

@@ -39,7 +39,6 @@
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <JaahasMSBuildExtensionsVersion>1.0.4</JaahasMSBuildExtensionsVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>16.10.0</MicrosoftNETTestSdkVersion>
     <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
@@ -53,6 +52,7 @@
     <CsvHelperVersion>22.1.2</CsvHelperVersion>
     <IntelligentPlantBackgroundTasksVersion>8.0.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
+    <JsonSchemaNetGenerationVersion>1.8.0</JsonSchemaNetGenerationVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
     <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>

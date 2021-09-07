@@ -412,8 +412,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongExtensionShouldReturnAvailableOperationsViaInvoke() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
                     Assert.Inconclusive("Invoke operation not available.");
@@ -438,7 +436,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -451,8 +449,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task HelloWorldExtensionShouldReturnAvailableOperationsViaInvoke() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 var feature = adapter.Features.Get(HelloWorldConstants.FeatureUri) as IAdapterExtensionFeature;
                 if (feature == null) {
@@ -470,7 +466,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -483,8 +479,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongInvokeMethodShouldReturnCorrectValue() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
                     Assert.Inconclusive("Invoke operation not available.");
@@ -508,7 +502,7 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
+                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(context, operationId, pingMessage, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
@@ -518,8 +512,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongStreamMethodShouldReturnCorrectValue() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
                     Assert.Inconclusive("Stream operation not available.");
@@ -545,7 +537,7 @@ namespace DataCore.Adapter.Tests {
 
                 var pongMessageCount = 0;
 
-                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false)) {
+                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, cancellationToken: ct).ConfigureAwait(false)) {
                     ++pongMessageCount;
                     if (pongMessageCount > 1) {
                         break;
@@ -562,8 +554,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongDuplexStreamMethodShouldReturnCorrectValue() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Stream)) {
                     Assert.Inconclusive("DuplexStream operation not available.");
@@ -592,7 +582,7 @@ namespace DataCore.Adapter.Tests {
 
                 var messagesRead = 0;
 
-                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), cancellationToken: ct).ConfigureAwait(false)) {
                     ++messagesRead;
                     if (messagesRead > pingMessages.Count) {
                         Assert.Fail("Incorrect number of pong messages received.");
@@ -611,8 +601,6 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public Task PingPongArray1DInvokeMethodShouldReturnCorrectValue() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
             return RunAdapterTest(async (adapter, context, ct) => {
                 if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
                     Assert.Inconclusive("Invoke operation not available.");
@@ -646,7 +634,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 };
 
-                var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
+                var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.AreEqual(pingMessages.Length, pongMessages.Length);
 
@@ -655,82 +643,6 @@ namespace DataCore.Adapter.Tests {
                     var pong = pongMessages[i];
                     Assert.IsNotNull(pong);
                     Assert.AreEqual(ping.CorrelationId, pong.CorrelationId);
-                }
-            });
-        }
-
-
-        [TestMethod]
-        public Task PingPongArray2DInvokeMethodShouldReturnCorrectValue() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-
-            return RunAdapterTest(async (adapter, context, ct) => {
-                if (!ExpectedExtensionFeatureOperationTypes().Contains(ExtensionFeatureOperationType.Invoke)) {
-                    Assert.Inconclusive("Invoke operation not available.");
-                }
-
-                var feature = adapter.Features.Get(PingPongExtension.FeatureUri) as IAdapterExtensionFeature;
-                if (feature == null) {
-                    AssertFeatureNotImplemented(PingPongExtension.FeatureUri);
-                    return;
-                }
-
-                var operations = await feature.GetOperations(context, PingPongExtension.FeatureUri, ct).ConfigureAwait(false);
-
-                var operationId = operations.FirstOrDefault(x => x.OperationType == ExtensionFeatureOperationType.Invoke && x.Name.Contains(nameof(PingPongExtension.PingArray2D)))?.OperationId;
-                if (operationId == null) {
-                    Assert.Fail("Invoke operation should be available.");
-                }
-
-                var pingMessages = new[,] {
-                    {
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        },
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        },
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        }
-                    },
-                    {
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        },
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        },
-                        new PingMessage() {
-                            CorrelationId = Guid.NewGuid(),
-                            UtcClientTime = DateTime.UtcNow
-                        }
-                    }
-                };
-
-                var pongMessages = await feature.Invoke<PingMessage[,], PongMessage[,]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
-
-                Assert.AreEqual(pingMessages.Rank, pongMessages.Rank);
-
-                for (var i = 0; i < pingMessages.Rank; i++) {
-                    Assert.AreEqual(pingMessages.GetLength(i), pongMessages.GetLength(i));
-                }
-
-                var len0 = pingMessages.GetLength(0);
-                var len1 = pingMessages.GetLength(1);
-
-                for (var i = 0; i < len0; i++) {
-                    for (var j = 0; j < len1; j++) {
-                        var ping = pingMessages[i, j];
-                        var pong = pongMessages[i, j];
-                        Assert.IsNotNull(pong);
-                        Assert.AreEqual(ping.CorrelationId, pong.CorrelationId);
-                    }
                 }
             });
         }

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
@@ -36,13 +35,12 @@ namespace DataCore.Adapter.Tests {
         public const string RelativeFeatureUri = "unit-tests/ping-pong/";
 
 
-        internal PingPongExtension(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders) : base(backgroundTaskService, encoders) {
+        internal PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(backgroundTaskService) {
             BindInvoke<PingPongExtension, PingMessage, PongMessage>(PingInvoke);
             BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
             BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
 
             BindInvoke<PingPongExtension, PingMessage[], PongMessage[]>(PingArray1D);
-            BindInvoke<PingPongExtension, PingMessage[,], PongMessage[,]>(PingArray2D);
 
             BindInvoke<IHelloWorld, string>(Greet);
         }
@@ -121,26 +119,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public PongMessage[,] PingArray2D(PingMessage[,] messages) {
-            var len0 = messages.GetLength(0);
-            var len1 = messages.GetLength(1);
-            var result = new PongMessage[len0, len1];
-
-            for (var i = 0; i < len0; i++) {
-                for (var j = 0; j < len1; j++) {
-                    var ping = messages[i, j];
-                    var pong = new PongMessage() {
-                        CorrelationId = ping.CorrelationId,
-                        UtcServerTime = DateTime.UtcNow
-                    };
-                    result[i, j] = pong;
-                }
-            }
-
-            return result;
-        }
-
-
         public string Greet() {
             return "Hello, world!";
         }
@@ -149,21 +127,7 @@ namespace DataCore.Adapter.Tests {
         internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Name = "Ping",
-                Description = "Returns a pong message that matches the correlation ID of the specified ping message",
-                Inputs = new [] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                Outputs = new [] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
+                Description = "Returns a pong message that matches the correlation ID of the specified ping message"
             };
         }
 
@@ -171,21 +135,7 @@ namespace DataCore.Adapter.Tests {
         internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Name = "Ping",
-                Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
+                Description = "Returns a pong message every second that matches the correlation ID of the specified ping message"
             };
         }
 
@@ -193,21 +143,7 @@ namespace DataCore.Adapter.Tests {
         internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Name = "Ping",
-                Description = "Returns a pong message every time a ping message is received",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                        Description = "The ping message"
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        VariantType = VariantType.ExtensionObject,
-                        TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                        Description = "The resulting pong message"
-                    }
-                }
+                Description = "Returns a pong message every time a ping message is received"
             };
         }
 
@@ -221,7 +157,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
+    [Description("A ping message received by the ping pong service.")]
     internal class PingMessage {
 
         public Guid CorrelationId { get; set; }
@@ -231,7 +167,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-    [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
+    [Description("A pong message generated from a corresponding ping message.")]
     internal class PongMessage {
 
         public Guid CorrelationId { get; set; }

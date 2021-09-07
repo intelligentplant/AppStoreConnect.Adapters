@@ -25,7 +25,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
         ///   <paramref name="proxy"/> is <see langword="null"/>.
         /// </exception>
         public AdapterExtensionFeatureImpl(SignalRAdapterProxy proxy) 
-            : base(proxy, proxy.Encoders) { }
+            : base(proxy) { }
 
 
         /// <inheritdoc/>
@@ -59,7 +59,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
+        protected override async Task<InvocationResponse> InvokeCore(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
             Proxy.ValidateInvocation(context, request);
             var client = Proxy.GetClient();
 
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async IAsyncEnumerable<InvocationResponse> StreamInternal(
+        protected override async IAsyncEnumerable<InvocationResponse> StreamCore(
             IAdapterCallContext context, 
             InvocationRequest request, 
             [EnumeratorCancellation]
@@ -88,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
 
 
         /// <inheritdoc/>
-        protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
+        protected override async IAsyncEnumerable<InvocationResponse> DuplexStreamCore(
             IAdapterCallContext context, 
             DuplexStreamInvocationRequest request, 
             IAsyncEnumerable<InvocationStreamItem> channel, 

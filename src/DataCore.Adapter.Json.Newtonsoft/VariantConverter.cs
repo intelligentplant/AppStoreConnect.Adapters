@@ -92,8 +92,8 @@ namespace DataCore.Adapter.NewtonsoftJson {
                         : new Variant(valueToken.ToObject<double>());
                 case VariantType.ExtensionObject:
                     return isArray
-                        ? new Variant(ReadArray<EncodedObject>(valueToken, arrayDimensions!, serializer))
-                        : new Variant(valueToken.ToObject<EncodedObject>());
+                        ? new Variant(ReadArray<System.Text.Json.JsonElement>(valueToken, arrayDimensions!, serializer))
+                        : new Variant(valueToken.ToObject<System.Text.Json.JsonElement>(serializer));
                 case VariantType.Float:
                     return isArray
                         ? new Variant(ReadArray<float>(valueToken, arrayDimensions!, serializer))

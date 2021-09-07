@@ -1,6 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Example {
@@ -16,10 +16,26 @@ namespace DataCore.Adapter.Example {
     public interface IExampleExtensionFeature : IAdapterExtensionFeature {
 
         [ExtensionFeatureOperation(typeof(ExampleAdapter.ExampleExtensionImpl), nameof(ExampleAdapter.ExampleExtensionImpl.GetPingDescriptor))]
-        InvocationResponse Ping(
+        PongMessage Ping(
             IAdapterCallContext context,
-            string correlationId
+            PingMessage message
         );
+
+    }
+
+
+    public class PingMessage {
+
+        [Description("The correlation ID for the ping.")]
+        public string CorrelationId { get; set; }
+
+    }
+
+
+    public class PongMessage {
+
+        [Description("The correlation ID for the ping associated with this pong.")]
+        public string CorrelationId { get; set; }
 
     }
 

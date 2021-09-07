@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Text.Json;
+
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -18,14 +21,14 @@ namespace DataCore.Adapter.Extensions {
         public string? Description { get; set; }
 
         /// <summary>
-        /// The input parameter descriptors for the operation.
+        /// The JSON schema for the operation's request payload.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor[] Inputs { get; set; } = Array.Empty<ExtensionFeatureOperationParameterDescriptor>();
+        public JsonElement? RequestSchema { get; set; }
 
         /// <summary>
-        /// The output parameter descriptors for the operation.
+        /// The JSON schema for the operation's response payload.
         /// </summary>
-        public ExtensionFeatureOperationParameterDescriptor[] Outputs { get; set; } = Array.Empty<ExtensionFeatureOperationParameterDescriptor>();
+        public JsonElement? ResponseSchema { get; set; }
 
     }
 

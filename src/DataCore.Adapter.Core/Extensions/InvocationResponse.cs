@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-using DataCore.Adapter.Common;
+﻿using System.Text.Json;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -13,8 +10,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The invocation results.
         /// </summary>
-        [Required]
-        public Variant[] Results { get; set; } = Array.Empty<Variant>();
+        public JsonElement? Results { get; set; }
 
     }
 }

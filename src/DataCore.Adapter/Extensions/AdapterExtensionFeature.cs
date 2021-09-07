@@ -5,13 +5,20 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Json;
 
 using IntelligentPlant.BackgroundTasks;
+
+using Json.Schema;
+using Json.Schema.Generation;
+
+using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -31,15 +38,20 @@ namespace DataCore.Adapter.Extensions {
         internal static Uri ExtensionUriBase { get; } = new Uri(WellKnownFeatures.Extensions.BaseUri);
 
         /// <summary>
+        /// Holds cached JSON schemas.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, JsonSchema> s_jsonSchemaCache = new ConcurrentDictionary<Type, JsonSchema>();
+
+        /// <summary>
         /// The <see cref="IBackgroundTaskService"/> that can be used to run background tasks.
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
-        /// The <see cref="IObjectEncoder"/> instances to use when encoding or decoding <see cref="EncodedObject"/> 
-        /// instances.
+        /// The <see cref="JsonSerializerOptions"/> to use when deserializing or serializing 
+        /// extension operation inputs and outputs.
         /// </summary>
-        public IEnumerable<IObjectEncoder> Encoders { get; }
+        protected internal JsonSerializerOptions? JsonOptions { get; }
 
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
@@ -66,19 +78,30 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
+        /// Class initialiser.
+        /// </summary>
+        static AdapterExtensionFeature() {
+            Json.Schema.JsonSchemaUtility.RegisterExtensions();
+        }
+
+
+        /// <summary>
         /// Creates a new <see cref="AdapterExtensionFeature"/> object.
         /// </summary>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        /// <param name="encoders">
-        ///   The <see cref="IObjectEncoder"/> instances to use when encoding or decoding 
-        ///   <see cref="EncodedObject"/> instances.
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when deserializing or serializing 
+        ///   extension operation inputs and outputs. Can be <see langword="null"/>.
         /// </param>
-        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService, IEnumerable<IObjectEncoder> encoders) {
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService, JsonSerializerOptions? jsonOptions) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            Encoders = encoders?.ToArray() ?? Array.Empty<IObjectEncoder>();
+            JsonOptions = jsonOptions;
+            if (JsonOptions != null) {
+                JsonOptions.AddDataCoreAdapterConverters();
+            }
 
             void CreateAutoBindings(Uri featureUri) {
                 // Create auto-binding for GetDescriptor method
@@ -90,9 +113,7 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() {
-                        Results = new Variant[] {
-                            this.ConvertToVariant(desc)!
-                        }
+                        Results = desc.ToJsonElement(JsonOptions)
                     };
                 };
 
@@ -105,9 +126,7 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() {
-                        Results = new[] {
-                            this.ConvertToVariant(ops.ToArray())
-                        }
+                        Results = ops.ToJsonElement(JsonOptions)
                     };
                 };
             }
@@ -118,6 +137,17 @@ namespace DataCore.Adapter.Extensions {
                 CreateAutoBindings(featureUri);
             }
         }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterExtensionFeature"/> object.
+        /// </summary>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
+        ///   <see langword="null"/>.
+        /// </param>
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService) 
+            : this(backgroundTaskService, null) { }
 
 
         /// <inheritdoc/>
@@ -166,7 +196,7 @@ namespace DataCore.Adapter.Extensions {
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
 
-            return InvokeInternal(context, request, cancellationToken);
+            return InvokeCore(context, request, cancellationToken);
         }
 
 
@@ -184,7 +214,7 @@ namespace DataCore.Adapter.Extensions {
             }
             Validator.ValidateObject(request, new ValidationContext(request), true);
 
-            return StreamInternal(context, request, cancellationToken);
+            return StreamCore(context, request, cancellationToken);
         }
 
 
@@ -200,7 +230,7 @@ namespace DataCore.Adapter.Extensions {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));
             }
-            return DuplexStreamInternal(context, request, channel, cancellationToken);
+            return DuplexStreamCore(context, request, channel, cancellationToken);
         }
 
 
@@ -317,13 +347,12 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
-        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
-        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
+        ///   When overriding this method, you can use extension methods in <see cref="JsonElementExtensions"/> 
+        ///   to easily create <see cref="JsonElement"/> instances for <see cref="InvocationResponse.Results"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual Task<InvocationResponse> InvokeInternal(
+        protected virtual Task<InvocationResponse> InvokeCore(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             InvocationRequest request, 
@@ -361,13 +390,12 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
-        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
-        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
+        ///   When overriding this method, you can use extension methods in <see cref="JsonElementExtensions"/> 
+        ///   to easily create <see cref="JsonElement"/> instances for <see cref="InvocationResponse.Results"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual IAsyncEnumerable<InvocationResponse> StreamInternal(
+        protected virtual IAsyncEnumerable<InvocationResponse> StreamCore(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context, 
             InvocationRequest request, 
@@ -410,13 +438,12 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   When overriding this method, use the <see cref="AdapterExtensionFeatureExtensions.ConvertToVariant"/> 
-        ///   method to simplify creation of values if your extension method returns <see cref="Variant"/> 
-        ///   values with a type of <see cref="VariantType.ExtensionObject"/>.
+        ///   When overriding this method, you can use extension methods in <see cref="JsonElementExtensions"/> 
+        ///   to easily create <see cref="JsonElement"/> instances for <see cref="InvocationResponse.Results"/>.
         /// </para>
         /// 
         /// </remarks>
-        protected virtual IAsyncEnumerable<InvocationResponse> DuplexStreamInternal(
+        protected virtual IAsyncEnumerable<InvocationResponse> DuplexStreamCore(
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
             IAdapterCallContext context,
             DuplexStreamInvocationRequest request, 
@@ -490,6 +517,217 @@ namespace DataCore.Adapter.Extensions {
 
 
         /// <summary>
+        /// Gets the <see cref="JsonSchema"/> for the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type.
+        /// </typeparam>
+        /// <returns>
+        ///   The <see cref="JsonSchema"/> for the type. The schema will be cached for re-use.
+        /// </returns>
+        private static JsonSchema GetJsonSchema<T>() {
+            return s_jsonSchemaCache.GetOrAdd(typeof(T), key => new JsonSchemaBuilder().FromType<T>().Build());
+        }
+
+
+        /// <summary>
+        /// Gets the JSON schema for the specified type, converted to a <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type.
+        /// </typeparam>
+        /// <param name="jsonOptions">
+        ///   The JSON serializer options to use.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="JsonElement"/> defining the JSON schema for the type.
+        /// </returns>
+        private static JsonElement GetSerializedJsonSchema<T>(JsonSerializerOptions? jsonOptions) {
+            return SerializeToJsonElement(GetJsonSchema<T>(), jsonOptions);
+        }
+
+
+        /// <summary>
+        /// Serializes the specified <paramref name="value"/> to a <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <param name="options">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="JsonElement"/> representing the serialized <paramref name="value"/>.
+        /// </returns>
+        protected internal static JsonElement SerializeToJsonElement<T>(T? value, JsonSerializerOptions? options) {
+            return JsonElementExtensions.ToJsonElement(value, options);
+        }
+
+
+        /// <summary>
+        /// Serializes the specified <paramref name="value"/> to a <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="JsonElement"/> representing the serialized <paramref name="value"/>.
+        /// </returns>
+        protected internal JsonElement SerializeToJsonElement<T>(T? value) {
+            return SerializeToJsonElement(value, JsonOptions);
+        }
+
+
+        /// <summary>
+        /// Deserializes a <see cref="JsonElement"/> to an instance of the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type to deserialize the <see cref="JsonElement"/> to.
+        /// </typeparam>
+        /// <param name="json">
+        ///   The <see cref="JsonElement"/> to deserialize.
+        /// </param>
+        /// <param name="options">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
+        /// <returns>
+        ///   An instance of <typeparamref name="T"/>.
+        /// </returns>
+        protected internal static T? DeserializeFromJsonElement<T>(JsonElement json, JsonSerializerOptions? options) {
+            return json.Deserialize<T>(options);
+        }
+
+
+        /// <summary>
+        /// Deserializes a <see cref="JsonElement"/> to an instance of the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type to deserialize the <see cref="JsonElement"/> to.
+        /// </typeparam>
+        /// <param name="json">
+        ///   The <see cref="JsonElement"/> to deserialize.
+        /// </param>
+        /// <returns>
+        ///   An instance of <typeparamref name="T"/>.
+        /// </returns>
+        protected internal T? DeserializeFromJsonElement<T>(JsonElement json) {
+            return DeserializeFromJsonElement<T>(json, JsonOptions);
+        }
+
+
+        /// <summary>
+        /// Creates an <see cref="ExtensionFeatureOperationDescriptor"/> for a feature operation.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The extension feature type. This must be a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   that is annotated with <see cref="AdapterFeatureAttribute"/>.
+        /// </typeparam>
+        /// <typeparam name="TRequest">
+        ///   The request payload type.
+        /// </typeparam>
+        /// <typeparam name="TResponse">
+        ///   The response payload type.
+        /// </typeparam>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
+        /// <param name="name">
+        ///   The operation name.
+        /// </param>
+        /// <param name="description">
+        ///   The operation description.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing the request and 
+        ///   response schemas for the operation.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <typeparamref name="TFeature"/> is not a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
+        /// </exception>
+        protected static ExtensionFeatureOperationDescriptor CreateOperationDescriptor<TFeature, TRequest, TResponse>(
+            ExtensionFeatureOperationType operationType,
+            string name,
+            string? description,
+            JsonSerializerOptions? jsonOptions
+        ) {
+            var featureType = typeof(TFeature);
+            var operationId = GetOperationUri(featureType, name, operationType);
+            return new ExtensionFeatureOperationDescriptor() {
+                OperationId = operationId,
+                OperationType = operationType,
+                Name = name,
+                Description = description,
+                RequestSchema = GetSerializedJsonSchema<TRequest>(jsonOptions),
+                ResponseSchema = GetSerializedJsonSchema<TResponse>(jsonOptions)
+            };
+        }
+
+
+        /// <summary>
+        /// Creates an <see cref="ExtensionFeatureOperationDescriptor"/> for a feature operation.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The extension feature type. This must be a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   that is annotated with <see cref="AdapterFeatureAttribute"/>.
+        /// </typeparam>
+        /// <typeparam name="TResponse">
+        ///   The response payload type.
+        /// </typeparam>
+        /// <param name="operationType">
+        ///   The operation type.
+        /// </param>
+        /// <param name="name">
+        ///   The operation name.
+        /// </param>
+        /// <param name="description">
+        ///   The operation description.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing the request and 
+        ///   response schemas for the operation.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <typeparamref name="TFeature"/> is not a type derived from <see cref="IAdapterExtensionFeature"/> 
+        ///   and annotated with <see cref="AdapterFeatureAttribute"/>.
+        /// </exception>
+        protected static ExtensionFeatureOperationDescriptor CreateOperationDescriptor<TFeature, TResponse>(
+            ExtensionFeatureOperationType operationType,
+            string name,
+            string? description,
+            JsonSerializerOptions? jsonOptions
+        ) {
+            var featureType = typeof(TFeature);
+            var operationId = GetOperationUri(featureType, name, operationType);
+            return new ExtensionFeatureOperationDescriptor() {
+                OperationId = operationId,
+                OperationType = operationType,
+                Name = name,
+                Description = description,
+                ResponseSchema = GetSerializedJsonSchema<TResponse>(jsonOptions)
+            };
+        }
+
+
+        /// <summary>
         /// Creates an <see cref="ExtensionFeatureOperationDescriptor"/> for a feature operation.
         /// </summary>
         /// <typeparam name="TFeature">
@@ -505,11 +743,11 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="description">
         ///   The operation description.
         /// </param>
-        /// <param name="inputParameters">
-        ///   The input parameters for the operation.
+        /// <param name="requestSchema">
+        ///   The JSON schema for the request payload.
         /// </param>
-        /// <param name="outputParameters">
-        ///   The output parameters for the operation.
+        /// <param name="responseSchema">
+        ///   The JSON schema for the response payload.
         /// </param>
         /// <returns>
         ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
@@ -525,18 +763,18 @@ namespace DataCore.Adapter.Extensions {
             ExtensionFeatureOperationType operationType,
             string name,
             string? description,
-            IEnumerable<ExtensionFeatureOperationParameterDescriptor>? inputParameters,
-            IEnumerable<ExtensionFeatureOperationParameterDescriptor>? outputParameters
+            JsonElement? requestSchema,
+            JsonElement? responseSchema
         ) {
             var featureType = typeof(TFeature);
             var operationId = GetOperationUri(featureType, name, operationType);
-            return new ExtensionFeatureOperationDescriptor() { 
+            return new ExtensionFeatureOperationDescriptor() {
                 OperationId = operationId,
                 OperationType = operationType,
                 Name = name,
                 Description = description,
-                Inputs = inputParameters?.ToArray() ?? Array.Empty<ExtensionFeatureOperationParameterDescriptor>(),
-                Outputs = outputParameters?.ToArray() ?? Array.Empty<ExtensionFeatureOperationParameterDescriptor>()
+                RequestSchema = requestSchema,
+                ResponseSchema = responseSchema
             };
         }
 

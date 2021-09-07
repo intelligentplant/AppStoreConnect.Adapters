@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Example {
         /// <param name="logger">
         ///   The adapter logger.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders, ILogger<ExampleAdapter> logger) : base(
+        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, ILogger<ExampleAdapter> logger) : base(
             "wind-power",
             new Csv.CsvAdapterOptions() {
                 Name = "Wind Power Energy Company",
@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
             AddFeature<IAssetModelBrowse>(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
-            AddExtensionFeatures(new ExampleExtensionImpl(this, encoders));
+            AddExtensionFeatures(new ExampleExtensionImpl(this));
         }
 
 
@@ -81,17 +81,14 @@ namespace DataCore.Adapter.Example {
 
         internal class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
-            public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
-                BindInvoke<IExampleExtensionFeature, string, InvocationResponse>(Ping);
+            public ExampleExtensionImpl(ExampleAdapter adapter) : base(adapter.BackgroundTaskService) {
+                BindInvoke<IExampleExtensionFeature, PingMessage, PongMessage>(Ping);
             }
 
 
-            public InvocationResponse Ping(IAdapterCallContext context, string correlationId) {
-                return new InvocationResponse() { 
-                    Results = new Variant[] {
-                        correlationId,
-                        DateTime.UtcNow
-                    }
+            public PongMessage Ping(IAdapterCallContext context, PingMessage message) {
+                return new PongMessage() { 
+                    CorrelationId = message?.CorrelationId
                 };
             }
 
@@ -99,26 +96,7 @@ namespace DataCore.Adapter.Example {
             internal static ExtensionFeatureOperationDescriptorPartial GetPingDescriptor() {
                 return new ExtensionFeatureOperationDescriptorPartial() {
                     Name = "Ping",
-                    Description = "Responds to a ping message with a pong message",
-                    Inputs = new[] {
-                        new ExtensionFeatureOperationParameterDescriptor() {
-                            Ordinal = 0,
-                            VariantType = VariantType.String,
-                            Description = "The correlation ID for the ping message"
-                        }
-                    },
-                    Outputs = new[] {
-                        new ExtensionFeatureOperationParameterDescriptor() {
-                            Ordinal = 0,
-                            VariantType = VariantType.String,
-                            Description = "The correlation ID for the pong message"
-                        },
-                        new ExtensionFeatureOperationParameterDescriptor() {
-                            Ordinal = 1,
-                            VariantType = VariantType.DateTime,
-                            Description = "The UTC time that the ping request was processed at"
-                        }
-                    }
+                    Description = "Responds to a ping message with a pong message"
                 };
             }
 

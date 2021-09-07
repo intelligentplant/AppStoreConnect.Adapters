@@ -23,8 +23,8 @@ namespace MyAdapter {
 
         public const string ExtensionUri = "tutorial/ping-pong/";
 
-        public PingPongExtension(IBackgroundTaskService backgroundTaskService, params IObjectEncoder[] encoders) 
-            : base(backgroundTaskService, encoders) { }
+        public PingPongExtension(IBackgroundTaskService backgroundTaskService) 
+            : base(backgroundTaskService) { }
 
     }
 }

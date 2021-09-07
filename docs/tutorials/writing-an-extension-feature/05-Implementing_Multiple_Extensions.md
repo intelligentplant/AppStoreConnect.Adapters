@@ -12,8 +12,10 @@ In the [previous chapter](04-Duplex_Streaming_Methods.md), we implemented a dupl
 Our new extension will be a simple temperature converter, with operations for converting from degrees Celsius to degrees Fahrenheit, and vice versa. To get started, we will create a new file called `ITemperatureConverter.cs` and add our extension feature definition to the file:
 
 ```csharp
-using DataCore.Adapter;
 using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Json;
+
+using Json.Schema;
 
 namespace MyAdapter {
 
@@ -38,20 +40,16 @@ namespace MyAdapter {
         public static ExtensionFeatureOperationDescriptorPartial GetCtoFMetadata() {
             return new ExtensionFeatureOperationDescriptorPartial() { 
                 Description = "Converts a temperature in Celsius to Fahrenheit",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 
@@ -59,20 +57,16 @@ namespace MyAdapter {
         public static ExtensionFeatureOperationDescriptorPartial GetFtoCMetadata() {
             return new ExtensionFeatureOperationDescriptorPartial() {
                 Description = "Converts a temperature in Fahrenheit to Celsius",
-                Inputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Fahrenheit."
-                    }
-                },
-                Outputs = new[] {
-                    new ExtensionFeatureOperationParameterDescriptor() {
-                        Ordinal = 0,
-                        VariantType = DataCore.Adapter.Common.VariantType.Double,
-                        Description = "The temperature in Celsius."
-                    }
-                }
+                RequestSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Fahrenheit")
+                    .Build()
+                    .ToJsonElement(),
+                ResponseSchema = new JsonSchemaBuilder()
+                    .Type(SchemaValueType.Number)
+                    .Description("The temperature in degrees Celsius")
+                    .Build()
+                    .ToJsonElement()
             };
         }
 
@@ -83,7 +77,7 @@ namespace MyAdapter {
 
 Note that, in addition to the interface itself, we have included a class that returns metadata about the extension feature's operations, and we have annotated our interface methods with `[ExtensionFeatureOperation]` attributes. These attributes allow us to define provider methods for retrieving metadata about the operations so that we do not have to provide this information when we bind the operations.
 
-Note as well that, when defining the metadata about the input and ourput parameters, we do not include a `TypeId`, and instead just specify that the `VariantType` of the parameters is `DataCore.Adapter.Common.VariantType.Double`. This is because `Variant` values can automatically be converted to or from `double` without needing to encode the value inside an `EncodedObject` instance.
+Note as well that, when defining the metadata about the input and output parameters, we are defining our JSON schemas manually using the `SchemaBuilder` class from the [JsonSchema.Net.Generation](https://www.nuget.org/packages/JsonSchema.Net.Generation/) library. The `ToJsonElement()` extension method from the `DataCore.Adapter.Json` namespace automatically serializes the schema to the format that we require. It is useful to manually define schemas when our input and/or output types are primitive types that we cannot annotate with attributes to customise automatically-generated schemas.
 
 Next, we will update our `PingPongExtension` class to implement our new interface:
 
@@ -119,36 +113,59 @@ public PingPongExtension(IBackgroundTaskService backgroundTaskService) : base(ba
 }
 ```
 
-Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. Note also that, because we have defined our operation metadata via `[ExtensionFeatureOperation]` annotations on our interface methods, our binding call is much mor concise!
+Note that our new `BindInvoke` calls specify the type of our new extension feature (`ITemperatureConverter`) rather than the `PingPongExtension` type. This is required so that the operation IDs generated for the bindings use the feature ID of our `ITemperatureConverter` feature. Note also that, because we have defined our operation metadata via `[ExtensionFeatureOperation]` annotations on our interface methods, our binding call is much more concise!
 
 If you run and compile the program, you will see that the new extension and its registered operations are now visible in the adapter summary:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
-          - Description: Responds to each ping message in the incoming stream with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-    - asc:extensions/tutorial/temperature-converter/
-      - Name: Temperature Converter
-      - Description: Converts Celsius to Fahrenheit and vice versa.
-      - Operations:
-        - FtoC (asc:extensions/tutorial/temperature-converter/invoke/FtoC/)
-          - Description: Converts a temperature in Fahrenheit to Celsius
-        - CtoF (asc:extensions/tutorial/temperature-converter/invoke/CtoF/)
-          - Description: Converts a temperature in Celsius to Fahrenheit
+Adapter Summary:
+
+{
+  "id": "example",
+  "name": "Example Adapter",
+  "description": "Example adapter with an extension feature, built using the tutorial on GitHub",
+  "properties": {},
+  "features": [
+    "asc:features/diagnostics/health-check/"
+  ],
+  "extensions": {
+    "asc:extensions/tutorial/ping-pong/": {
+      // Removed for brevity
+    },
+    "asc:extensions/tutorial/temperature-converter/": {
+      "name": "Temperature Converter",
+      "description": "Converts Celsius to Fahrenheit and vice versa.",
+      "operations": {
+        "asc:extensions/tutorial/temperature-converter/invoke/FtoC/": {
+          "operationType": "Invoke",
+          "name": "FtoC",
+          "description": "Converts a temperature in Fahrenheit to Celsius",
+          "requestSchema": {
+            "type": "number",
+            "description": "The temperature in degrees Fahrenheit"
+          },
+          "responseSchema": {
+            "type": "number",
+            "description": "The temperature in degrees Celsius"
+          }
+        },
+        "asc:extensions/tutorial/temperature-converter/invoke/CtoF/": {
+          "operationType": "Invoke",
+          "name": "CtoF",
+          "description": "Converts a temperature in Celsius to Fahrenheit",
+          "requestSchema": {
+            "type": "number",
+            "description": "The temperature in degrees Celsius"
+          },
+          "responseSchema": {
+            "type": "number",
+            "description": "The temperature in degrees Fahrenheit"
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
 Our final step is to test the execution of our new operations. Replace any existing code in `Runner.cs` for calling extension operations with the following:
@@ -162,6 +179,7 @@ var degF = await extensionFeature.Invoke<double, double>(
     context,
     new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
     degC,
+    null,
     cancellationToken
 );
 
@@ -172,6 +190,7 @@ degC = await extensionFeature.Invoke<double, double>(
     context,
     new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
     degF,
+    null,
     cancellationToken
 );
 
@@ -181,31 +200,7 @@ Console.WriteLine($"{degF:0.#} Fahrenheit is {degC:0.#} Celsius");
 When you compile and run the program again, you will see the following output:
 
 ```
-[example]
-  Name: Example Adapter
-  Description: Example adapter with an extension feature, built using the tutorial on GitHub
-  Properties:
-  Features:
-    - asc:features/diagnostics/health-check/
-  Extensions:
-    - asc:extensions/tutorial/ping-pong/
-      - Name: Ping Pong
-      - Description: Example extension feature.
-      - Operations:
-        - Ping (asc:extensions/tutorial/ping-pong/duplexstream/Ping/)
-          - Description: Responds to each ping message in the incoming stream with a pong message
-        - Ping (asc:extensions/tutorial/ping-pong/stream/Ping/)
-          - Description: Responds to a ping message with a stream of pong messages
-        - Ping (asc:extensions/tutorial/ping-pong/invoke/Ping/)
-          - Description: Responds to a ping message with a pong message
-    - asc:extensions/tutorial/temperature-converter/
-      - Name: Temperature Converter
-      - Description: Converts Celsius to Fahrenheit and vice versa.
-      - Operations:
-        - FtoC (asc:extensions/tutorial/temperature-converter/invoke/FtoC/)
-          - Description: Converts a temperature in Fahrenheit to Celsius
-        - CtoF (asc:extensions/tutorial/temperature-converter/invoke/CtoF/)
-          - Description: Converts a temperature in Celsius to Fahrenheit
+-- Adapter summary removed for brevity --
 
 40 Celsius is 104 Fahrenheit
 60 Fahrenheit is 15.6 Celsius

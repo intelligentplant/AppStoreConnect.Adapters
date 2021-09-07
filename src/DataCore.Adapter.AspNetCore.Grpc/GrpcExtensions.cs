@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
@@ -413,8 +414,8 @@ namespace DataCore.Adapter {
                     break;
                 case Grpc.VariantType.Object:
                     value = isArray
-                        ? (object) ReadJsonArray<EncodedObject>(bytes, variant.ArrayDimensions)
-                        : ReadJsonValue<EncodedObject>(bytes)!;
+                        ? (object) ReadJsonArray<System.Text.Json.JsonElement>(bytes, variant.ArrayDimensions)
+                        : ReadJsonValue<System.Text.Json.JsonElement>(bytes)!;
                     break;
                 case Grpc.VariantType.Sbyte:
                     value = isArray
@@ -519,7 +520,7 @@ namespace DataCore.Adapter {
                         bytes = Array.Empty<byte>();
                         break;
                     case Common.VariantType.ExtensionObject:
-                        bytes = WriteJsonValue(variant.GetValueOrDefault<EncodedObject>());
+                        bytes = WriteJsonValue(variant.GetValueOrDefault<System.Text.Json.JsonElement>());
                         break;
                     case Common.VariantType.SByte:
                         bytes = new[] { (byte) variant.GetValueOrDefault<sbyte>() };
@@ -1028,46 +1029,6 @@ namespace DataCore.Adapter {
             return result;
         }
 
-
-        /// <summary>
-        /// Converts the object to its gRPC equivalent.
-        /// </summary>
-        /// <param name="obj">
-        ///   The <see cref="EncodedObject"/>.
-        /// </param>
-        /// <returns>
-        ///   The equivalent <see cref="Grpc.EncodedObject"/>.
-        /// </returns>
-        public static Grpc.EncodedObject ToGrpcEncodedObject(this EncodedObject obj) {
-            if (obj == null) {
-                throw new ArgumentNullException(nameof(obj));
-            }
-
-            return new Grpc.EncodedObject() { 
-                TypeId = obj.TypeId.ToString(),
-                Encoding = obj.Encoding,
-                EncodedBody = Google.Protobuf.ByteString.CopyFrom(obj.ToByteArray())
-            };
-        }
-
-
-        /// <summary>
-        /// Converts the object to its adapter equivalent.
-        /// </summary>
-        /// <param name="obj">
-        ///   The <see cref="Grpc.EncodedObject"/>.
-        /// </param>
-        /// <returns>
-        ///   The equivalent <see cref="EncodedObject"/>.
-        /// </returns>
-        public static EncodedObject ToAdapterEncodedObject(this Grpc.EncodedObject obj) {
-            if (obj == null) {
-                throw new ArgumentNullException(nameof(obj));
-            }
-
-            return EncodedObject.Create(new Uri(obj.TypeId), obj.Encoding, obj.EncodedBody.ToByteArray());
-        }
-
         #endregion
 
         #region [ Diagnostics ]
@@ -1555,8 +1516,8 @@ namespace DataCore.Adapter {
                 OperationType = descriptor.OperationType.ToAdapterExtensionFeatureOperationType(),
                 Name = descriptor.Name,
                 Description = descriptor.Description,
-                Inputs = descriptor.Inputs.Select(x => x.ToAdapterExtensionFeatureParameterDescriptor()).ToArray(),
-                Outputs = descriptor.Outputs.Select(x => x.ToAdapterExtensionFeatureParameterDescriptor()).ToArray()
+                RequestSchema = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(descriptor.RequestSchema.ToByteArray()),
+                ResponseSchema = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(descriptor.ResponseSchema.ToByteArray())
             };
         }
 
@@ -1582,76 +1543,15 @@ namespace DataCore.Adapter {
                 Description = descriptor.Description ?? string.Empty
             };
 
-            if (descriptor.Inputs != null) {
-                foreach (var item in descriptor.Inputs) {
-                    if (item == null) {
-                        continue;
-                    }
-                    result.Inputs.Add(item.ToGrpcExtensionFeatureParameterDescriptor());
-                }
+            if (descriptor.RequestSchema != null) {
+                result.RequestSchema = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(descriptor.RequestSchema.Value));
             }
 
-            if (descriptor.Outputs != null) {
-                foreach (var item in descriptor.Outputs) {
-                    if (item == null) {
-                        continue;
-                    }
-                    result.Outputs.Add(item.ToGrpcExtensionFeatureParameterDescriptor());
-                }
+            if (descriptor.ResponseSchema != null) {
+                result.ResponseSchema = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(descriptor.ResponseSchema.Value));
             }
 
             return result;
-        }
-
-
-        /// <summary>
-        /// Converts a gRPC extension operation parameter descriptor to its adapter equivalent.
-        /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor.
-        /// </param>
-        /// <returns>
-        ///   The converted descriptor.
-        /// </returns>
-        public static Extensions.ExtensionFeatureOperationParameterDescriptor ToAdapterExtensionFeatureParameterDescriptor(this Grpc.ExtensionFeatureOperationParameterDescriptor descriptor) {
-            if (descriptor == null) {
-                return new Extensions.ExtensionFeatureOperationParameterDescriptor();
-            }
-
-            return new Extensions.ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = descriptor.Ordinal,
-                VariantType = descriptor.VariantType.ToAdapterVariantType(),
-                ArrayRank = descriptor.ArrayRank,
-                TypeId = Uri.TryCreate(descriptor.TypeId, UriKind.Absolute, out var uri) ? uri : null,
-                Description = descriptor.Description
-            };
-        }
-
-
-        /// <summary>
-        /// Converts an adapter extension operation descriptor to its gRPC equivalent.
-        /// </summary>
-        /// <param name="descriptor">
-        ///   The descriptor.
-        /// </param>
-        /// <returns>
-        ///   The converted descriptor.
-        /// </returns>
-        public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
-            if (descriptor == null) {
-                return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 
-                    TypeId = string.Empty,
-                    Description = string.Empty
-                };
-            }
-
-            return new Grpc.ExtensionFeatureOperationParameterDescriptor() {
-                Ordinal = descriptor.Ordinal,
-                VariantType = descriptor.VariantType.ToGrpcVariantType(),
-                ArrayRank = descriptor.ArrayRank,
-                TypeId = descriptor.TypeId?.ToString() ?? string.Empty,
-                Description = descriptor.Description ?? string.Empty
-            };
         }
 
 

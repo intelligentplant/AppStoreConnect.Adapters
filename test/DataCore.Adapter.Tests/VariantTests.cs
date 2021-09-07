@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 using DataCore.Adapter.Common;
 
@@ -17,7 +18,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(typeof(byte), typeof(byte[]), typeof(byte[,]), typeof(byte[,,]))]
         [DataRow(typeof(DateTime), typeof(DateTime[]), typeof(DateTime[,]), typeof(DateTime[,,]))]
         [DataRow(typeof(double), typeof(double[]), typeof(double[,]), typeof(double[,,]))]
-        [DataRow(typeof(EncodedObject), typeof(EncodedObject[]), typeof(EncodedObject[,]), typeof(EncodedObject[,,]))]
+        [DataRow(typeof(JsonElement), typeof(JsonElement[]), typeof(JsonElement[,]), typeof(JsonElement[,,]))]
         [DataRow(typeof(float), typeof(float[]), typeof(float[,]), typeof(float[,,]))]
         [DataRow(typeof(short), typeof(short[]), typeof(short[,]), typeof(short[,,]))]
         [DataRow(typeof(int), typeof(int[]), typeof(int[,]), typeof(int[,,]))]
@@ -568,9 +569,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldAllowImplicitConversionFromExtensionObject() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-            var value = encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() { 
-                ["Intelligent"] = "Plant"
+            var value = Json.JsonElementExtensions.ToJsonElement(new { 
+                Intelligent = "Plant"
             });
             Variant variant = value;
             ValidateVariant(variant, VariantType.ExtensionObject, value, null);
@@ -579,15 +579,15 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldAllowImplicitConversionFromExtensionObjectArray() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-            var value = new[] {
-                encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                    ["Intelligent"] = "Plant"
+            var value = new [] {
+                Json.JsonElementExtensions.ToJsonElement(new {
+                    Intelligent = "Plant"
                 }),
-                encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                    ["Industrial"] = "App Store"
+                Json.JsonElementExtensions.ToJsonElement(new {
+                    Industrial = "App Store"
                 })
             };
+
             Variant variant = value;
             ValidateVariant(variant, VariantType.ExtensionObject, value, new[] { value.Length });
         }
@@ -595,29 +595,27 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldAllowExplicitConversionToExtensionObject() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-            var value = encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                ["Intelligent"] = "Plant"
+            var value = Json.JsonElementExtensions.ToJsonElement(new {
+                Intelligent = "Plant"
             });
             Variant variant = value;
-            var actualValue = (EncodedObject) variant;
+            var actualValue = (JsonElement) variant;
             Assert.AreEqual(value, actualValue);
         }
 
 
         [TestMethod]
         public void VariantShouldAllowExplicitConversionToExtensionObjectArray() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-            var value = new[] {
-                encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                    ["Intelligent"] = "Plant"
+            var value = new [] {
+                Json.JsonElementExtensions.ToJsonElement(new {
+                    Intelligent = "Plant"
                 }),
-                encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                    ["Industrial"] = "App Store"
+                Json.JsonElementExtensions.ToJsonElement(new {
+                    Industrial = "App Store"
                 })
             };
             Variant variant = value;
-            var actualValue = (EncodedObject[]) variant;
+            var actualValue = (JsonElement[]) variant;
             Assert.IsTrue(value.SequenceEqual(actualValue));
         }
 
@@ -677,9 +675,8 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldAllowCreationFromExtensionObjectAsObject() {
-            var encoder = AssemblyInitializer.ApplicationServices.GetRequiredService<IObjectEncoder>();
-            object value = encoder.Encode(new Uri("asc:types/test"), new Dictionary<string, string>() {
-                ["Intelligent"] = "Plant"
+            object value = Json.JsonElementExtensions.ToJsonElement(new {
+                Intelligent = "Plant"
             });
             var variant = new Variant(value);
             ValidateVariant(variant, VariantType.ExtensionObject, value, null);
