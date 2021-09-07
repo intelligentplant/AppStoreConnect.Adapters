@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Common {
+﻿using System;
+
+namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes the status of a write operation.
     /// </summary>
+    [Obsolete("WriteStatus has been deprecated in favour of StatusCode.", false)]
     public enum WriteStatus {
 
         /// <summary>

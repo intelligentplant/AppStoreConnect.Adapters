@@ -1226,7 +1226,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new WriteEventMessageResult(
                 "CorrelationId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
@@ -1258,7 +1258,7 @@ namespace DataCore.Adapter.Tests {
             var expected = new WriteTagValueAnnotationResult(
                 "TagId",
                 "AnnotationId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
@@ -1291,7 +1291,7 @@ namespace DataCore.Adapter.Tests {
             var expected = new WriteTagValueResult(
                 "CorrelationId",
                 "TagId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),

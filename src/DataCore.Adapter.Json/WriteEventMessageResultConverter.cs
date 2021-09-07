@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string correlationId = null!;
-            WriteStatus status = WriteStatus.Unknown;
+            StatusCode status = StatusCodes.Uncertain;
             string notes = null!;
             AdapterProperty[] properties = null!;
             
@@ -35,7 +35,7 @@ namespace DataCore.Adapter.Json {
                     correlationId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Status), StringComparison.OrdinalIgnoreCase)) {
-                    status = JsonSerializer.Deserialize<WriteStatus>(ref reader, options);
+                    status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Notes), StringComparison.OrdinalIgnoreCase)) {
                     notes = JsonSerializer.Deserialize<string>(ref reader, options)!;

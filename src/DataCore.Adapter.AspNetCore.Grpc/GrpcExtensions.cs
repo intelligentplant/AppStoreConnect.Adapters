@@ -716,54 +716,6 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC write operation status.
-        /// </param>
-        /// <returns>
-        ///   The adapter write operation status.
-        /// </returns>
-        public static Common.WriteStatus ToAdapterWriteStatus(this Grpc.WriteOperationStatus status) {
-            switch (status) {
-                case Grpc.WriteOperationStatus.Success:
-                    return Common.WriteStatus.Success;
-                case Grpc.WriteOperationStatus.Fail:
-                    return Common.WriteStatus.Fail;
-                case Grpc.WriteOperationStatus.Pending:
-                    return Common.WriteStatus.Pending;
-                case Grpc.WriteOperationStatus.Unknown:
-                default:
-                    return Common.WriteStatus.Unknown;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter write operation status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC write operation status.
-        /// </returns>
-        public static Grpc.WriteOperationStatus ToGrpcWriteStatus(this Common.WriteStatus status) {
-            switch (status) {
-                case Common.WriteStatus.Success:
-                    return Grpc.WriteOperationStatus.Success;
-                case Common.WriteStatus.Fail:
-                    return Grpc.WriteOperationStatus.Fail;
-                case Common.WriteStatus.Pending:
-                    return Grpc.WriteOperationStatus.Pending;
-                case Common.WriteStatus.Unknown:
-                default:
-                    return Grpc.WriteOperationStatus.Unknown;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="hostInfo">
@@ -1406,7 +1358,7 @@ namespace DataCore.Adapter {
 
             return Events.WriteEventMessageResult.Create(
                 result.CorrelationId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -1430,7 +1382,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.WriteEventMessageResult() {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus()
+                StatusCode = adapterResult.Status
             };
 
             if (adapterResult.Properties != null) {
@@ -2263,7 +2215,7 @@ namespace DataCore.Adapter {
             return RealTimeData.WriteTagValueResult.Create(
                 result.CorrelationId,
                 result.TagId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -2288,7 +2240,7 @@ namespace DataCore.Adapter {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus()
+                StatusCode = adapterResult.Status
             };
 
             if (adapterResult.Properties != null) {
@@ -2537,7 +2489,7 @@ namespace DataCore.Adapter {
             return RealTimeData.WriteTagValueAnnotationResult.Create(
                 result.TagId,
                 result.AnnotationId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -2565,7 +2517,7 @@ namespace DataCore.Adapter {
                 AdapterId = adapterId ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
                 AnnotationId = adapterResult.AnnotationId ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus(),
+                StatusCode = adapterResult.Status,
                 Notes = adapterResult.Notes ?? string.Empty
             };
 

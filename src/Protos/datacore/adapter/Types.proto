@@ -53,14 +53,6 @@ enum SubscriptionUpdateAction {
 }
 
 
-enum WriteOperationStatus {
-    WRITE_OPERATION_STATUS_UNKNOWN = 0;
-    WRITE_OPERATION_STATUS_SUCCESS = 1;
-    WRITE_OPERATION_STATUS_FAIL = 2;
-    WRITE_OPERATION_STATUS_PENDING = 3;
-}
-
-
 enum ConfigurationChangeType {
     CONFIGURATION_CHANGE_TYPE_UNKNOWN = 0;
     CONFIGURATION_CHANGE_TYPE_CREATED = 1;
@@ -215,9 +207,10 @@ message WriteEventMessageItem {
 
 message WriteEventMessageResult {
     string correlation_id = 1;
-    WriteOperationStatus write_status = 2;
+    // Ordinal 2 no longer in use.
     string notes = 3;
     repeated AdapterProperty properties = 4;
+    uint32 status_code = 5;
 }
 
 
@@ -297,9 +290,10 @@ message WriteTagValueAnnotationResult {
     string adapter_id = 1;
     string tag_id = 2;
     string annotation_id = 3;
-    WriteOperationStatus write_status = 4;
+    // Ordinal 4 no longer in use.
     string notes = 5;
     repeated AdapterProperty properties = 6;
+    uint32 status_code = 7;
 }
 
 
@@ -309,6 +303,7 @@ message WriteTagValueAnnotationResult {
 message TagValue {
     google.protobuf.Timestamp utc_sample_time = 1;
     Variant value = 2;
+    // Ordinal 3 no longer in use.
     string units = 4;
     string notes = 5;
     string error = 6;
@@ -390,9 +385,10 @@ message WriteTagValueItem {
 message WriteTagValueResult {
     string correlation_id = 1;
     string tag_id = 2;
-    WriteOperationStatus write_status = 3;
+    // Ordinal 3 no longer in use.
     string notes = 4;
     repeated AdapterProperty properties = 5;
+    uint32 status_code = 6;
 }
 
 
