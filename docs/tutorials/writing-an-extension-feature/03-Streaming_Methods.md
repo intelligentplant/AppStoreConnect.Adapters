@@ -122,6 +122,7 @@ try {
         context,
         new Uri("asc:extensions/tutorial/ping-pong/stream/Ping/"),
         pingMessage,
+        null,
         cancellationToken
     )) {
         Console.WriteLine($"[STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");

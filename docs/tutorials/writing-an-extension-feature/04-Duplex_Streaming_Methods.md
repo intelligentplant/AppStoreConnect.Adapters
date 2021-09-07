@@ -142,6 +142,7 @@ await foreach (var pongMessage in extensionFeature.DuplexStream<PingMessage, Pon
     context,
     new Uri("asc:extensions/tutorial/ping-pong/duplexstream/Ping/"),
     pingMessageStream.Reader.ReadAllAsync(cancellationToken),
+    null,
     cancellationToken
 )) {
     Console.WriteLine($"[DUPLEX STREAM] Pong: {pongMessage.CorrelationId} @ {pongMessage.UtcTime:HH:mm:ss} UTC");

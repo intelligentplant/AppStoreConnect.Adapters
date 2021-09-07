@@ -190,6 +190,7 @@ var pongMessage = await extensionFeature.Invoke<PingMessage, PongMessage>(
     context,
     new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
     pingMessage,
+    null,
     cancellationToken
 );
 

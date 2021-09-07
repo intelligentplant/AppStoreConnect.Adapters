@@ -53,6 +53,7 @@ namespace MyAdapter {
                     context,
                     new Uri("asc:extensions/tutorial/temperature-converter/invoke/CtoF/"),
                     degC,
+                    null,
                     cancellationToken
                 );
 
@@ -63,6 +64,7 @@ namespace MyAdapter {
                     context,
                     new Uri("asc:extensions/tutorial/temperature-converter/invoke/FtoC/"),
                     degF,
+                    null,
                     cancellationToken
                 );
 

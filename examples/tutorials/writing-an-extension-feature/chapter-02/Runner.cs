@@ -53,6 +53,7 @@ namespace MyAdapter {
                     context,
                     new Uri("asc:extensions/tutorial/ping-pong/invoke/Ping/"),
                     pingMessage,
+                    null,
                     cancellationToken
                 );
 
