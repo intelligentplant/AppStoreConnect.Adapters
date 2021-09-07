@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -153,6 +154,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="operationId">
         ///   The ID of the operation to call.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when deserializing the operation 
+        ///   result.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -173,7 +178,8 @@ namespace DataCore.Adapter.Extensions {
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
-            CancellationToken cancellationToken
+            JsonSerializerOptions? jsonOptions = null,
+            CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -196,7 +202,7 @@ namespace DataCore.Adapter.Extensions {
                 return default;
             }
 
-            return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(result!.Value));
+            return result!.Value.Deserialize<T>(jsonOptions);
         }
 
 
@@ -221,6 +227,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="argument">
         ///   The operation argument.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing and deserializing 
+        ///   the <paramref name="argument"/> and the operation result.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -242,7 +252,8 @@ namespace DataCore.Adapter.Extensions {
             IAdapterCallContext context,
             Uri operationId,
             T1? argument,
-            CancellationToken cancellationToken
+            JsonSerializerOptions? jsonOptions = null,
+            CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -256,7 +267,7 @@ namespace DataCore.Adapter.Extensions {
 
             var request = new InvocationRequest() {
                 OperationId = operationId,
-                Arguments = AdapterExtensionFeature.SerializeToJsonElement(argument)
+                Arguments = argument.ToJsonElement(jsonOptions)
             };
 
             var response = await feature.Invoke(context, request, cancellationToken).ConfigureAwait(false);
@@ -266,7 +277,7 @@ namespace DataCore.Adapter.Extensions {
                 return default;
             }
 
-            return JsonSerializer.Deserialize<T2>(JsonSerializer.SerializeToUtf8Bytes(result!.Value));
+            return result!.Value.Deserialize<T2>(jsonOptions);
         }
 
         #endregion
@@ -287,6 +298,10 @@ namespace DataCore.Adapter.Extensions {
         /// </param>
         /// <param name="operationId">
         ///   The ID of the operation to call.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when deserializing the operation 
+        ///   results.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -309,8 +324,9 @@ namespace DataCore.Adapter.Extensions {
             this IAdapterExtensionFeature feature,
             IAdapterCallContext context,
             Uri operationId,
+            JsonSerializerOptions? jsonOptions = null,
             [EnumeratorCancellation]
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -333,7 +349,7 @@ namespace DataCore.Adapter.Extensions {
                     yield return default;
                 }
 
-                yield return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(result!.Value));
+                yield return result!.Value.Deserialize<T>(jsonOptions);
             }
         }
 
@@ -359,6 +375,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="argument">
         ///   The operation argument.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing and deserializing 
+        ///   the <paramref name="argument"/> and the operation results.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -381,8 +401,9 @@ namespace DataCore.Adapter.Extensions {
             IAdapterCallContext context,
             Uri operationId,
             T1? argument,
+            JsonSerializerOptions? jsonOptions = null,
             [EnumeratorCancellation]
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -396,7 +417,7 @@ namespace DataCore.Adapter.Extensions {
 
             var request = new InvocationRequest() {
                 OperationId = operationId,
-                Arguments = AdapterExtensionFeature.SerializeToJsonElement(argument)
+                Arguments = argument.ToJsonElement(jsonOptions)
             };
 
             await foreach (var item in feature.Stream(context, request, cancellationToken).ConfigureAwait(false)) {
@@ -406,7 +427,7 @@ namespace DataCore.Adapter.Extensions {
                     yield return default;
                 }
 
-                yield return JsonSerializer.Deserialize<T2>(JsonSerializer.SerializeToUtf8Bytes(result!.Value));
+                yield return result!.Value.Deserialize<T2>(jsonOptions);
             }
         }
 
@@ -435,6 +456,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="channel">
         ///   A channel that will provide arguments to stream to the operation.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing and deserializing 
+        ///   the operations inputs and results.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -460,8 +485,9 @@ namespace DataCore.Adapter.Extensions {
             IAdapterCallContext context,
             Uri operationId,
             IAsyncEnumerable<T1?> channel,
+            JsonSerializerOptions? jsonOptions = null,
             [EnumeratorCancellation]
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken = default
         ) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
@@ -482,7 +508,7 @@ namespace DataCore.Adapter.Extensions {
 
             var response = feature.DuplexStream(context, request, channel.Transform(x => {
                 return new InvocationStreamItem() {
-                    Arguments = AdapterExtensionFeature.SerializeToJsonElement(x)
+                    Arguments = x.ToJsonElement(jsonOptions)
                 };
             }, cancellationToken), cancellationToken);
 
@@ -493,7 +519,7 @@ namespace DataCore.Adapter.Extensions {
                     yield return default;
                 }
 
-                yield return JsonSerializer.Deserialize<T2>(JsonSerializer.SerializeToUtf8Bytes(result!.Value));
+                yield return result!.Value.Deserialize<T2>(jsonOptions);
             }
         }
 

@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Extensions {
                     else if (partialDescriptor.RequestSchema == null) {
                         // No request schema has been defined, but we known the request type, so
                         // we will automatically generate the schema.
-                        partialDescriptor.RequestSchema = GetSerializedJsonSchema<TRequest>();
+                        partialDescriptor.RequestSchema = GetSerializedJsonSchema<TRequest>(JsonOptions);
                     }
 
                     if (responseSchema != null) {
@@ -100,7 +100,7 @@ namespace DataCore.Adapter.Extensions {
                     else if (partialDescriptor.ResponseSchema == null) {
                         // No response schema has been defined, but we known the response type, so
                         // we will automatically generate the schema.
-                        partialDescriptor.ResponseSchema = GetSerializedJsonSchema<TResponse>();
+                        partialDescriptor.ResponseSchema = GetSerializedJsonSchema<TResponse>(JsonOptions);
                     }
                 }
             );
@@ -174,7 +174,7 @@ namespace DataCore.Adapter.Extensions {
                     else if (partialDescriptor.ResponseSchema == null) {
                         // No response schema has been defined, but we known the response type, so
                         // we will automatically generate the schema.
-                        partialDescriptor.ResponseSchema = GetSerializedJsonSchema<TResponse>();
+                        partialDescriptor.ResponseSchema = GetSerializedJsonSchema<TResponse>(JsonOptions);
                     }
                 }
             );
@@ -766,7 +766,7 @@ namespace DataCore.Adapter.Extensions {
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
                 var input = req.Arguments == null 
                     ? default 
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 var output = await handler.Invoke(ctx, input, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -870,7 +870,7 @@ namespace DataCore.Adapter.Extensions {
             return BindInvoke<TFeature>((ctx, req, ct) => {
                 var input = req.Arguments == null
                     ? default
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 var output = handler.Invoke(ctx, input);
 
                 if (output is InvocationResponse ir) {
@@ -1315,7 +1315,7 @@ namespace DataCore.Adapter.Extensions {
             return BindInvoke<TFeature>(async (ctx, req, ct) => {
                 var input = req.Arguments == null
                     ? default
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 var output = await handler.Invoke(input, ct).ConfigureAwait(false);
 
                 if (output is InvocationResponse ir) {
@@ -1419,7 +1419,7 @@ namespace DataCore.Adapter.Extensions {
             return BindInvoke<TFeature>((ctx, req, ct) => {
                 var input = req.Arguments == null
                     ? default
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 var output = handler.Invoke(input);
 
                 if (output is InvocationResponse ir) {
@@ -1751,7 +1751,7 @@ namespace DataCore.Adapter.Extensions {
             ) {
                 var input = req.Arguments == null
                     ? default
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 await foreach (var item in handler.Invoke(ctx, input, ct).ConfigureAwait(false)) {
                     if (item is InvocationResponse ir) {
                         yield return ir;
@@ -2043,7 +2043,7 @@ namespace DataCore.Adapter.Extensions {
             ) {
                 var input = req.Arguments == null
                     ? default
-                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value);
+                    : DeserializeFromJsonElement<TRequest>(req.Arguments.Value, JsonOptions);
                 await foreach (var item in handler.Invoke(input, ct).ConfigureAwait(false)) {
                     if (item is InvocationResponse ir) {
                         yield return ir;
@@ -2280,7 +2280,7 @@ namespace DataCore.Adapter.Extensions {
                 [EnumeratorCancellation]
                 CancellationToken ct
             ) {
-                var transformedInput = input.Transform(update => update.Arguments == null ? default : DeserializeFromJsonElement<TRequest>(update.Arguments.Value), ct);
+                var transformedInput = input.Transform(update => update.Arguments == null ? default : DeserializeFromJsonElement<TRequest>(update.Arguments.Value, JsonOptions), ct);
                 await foreach (var item in handler.Invoke(ctx, transformedInput, ct).ConfigureAwait(false)) {
                     if (item is InvocationResponse ir) {
                         yield return ir;
@@ -2475,7 +2475,7 @@ namespace DataCore.Adapter.Extensions {
                 [EnumeratorCancellation]
                 CancellationToken ct
             ) {
-                var transformedInput = input.Transform(update => update.Arguments == null ? default : DeserializeFromJsonElement<TRequest>(update.Arguments.Value), ct);
+                var transformedInput = input.Transform(update => update.Arguments == null ? default : DeserializeFromJsonElement<TRequest>(update.Arguments.Value, JsonOptions), ct);
                 await foreach (var item in handler.Invoke(transformedInput, ct).ConfigureAwait(false)) {
                     if (item is InvocationResponse ir) {
                         yield return ir;

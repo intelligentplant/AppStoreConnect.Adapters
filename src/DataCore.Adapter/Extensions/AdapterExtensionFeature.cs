@@ -47,6 +47,12 @@ namespace DataCore.Adapter.Extensions {
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
+        /// <summary>
+        /// The <see cref="JsonSerializerOptions"/> to use when deserializing or serializing 
+        /// extension operation inputs and outputs.
+        /// </summary>
+        protected internal JsonSerializerOptions? JsonOptions { get; }
+
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
         /// <summary>
         /// Operation descriptors created from calls to one of the <see cref="BindInvoke"/>, 
@@ -86,8 +92,16 @@ namespace DataCore.Adapter.Extensions {
         ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService) {
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when deserializing or serializing 
+        ///   extension operation inputs and outputs. Can be <see langword="null"/>.
+        /// </param>
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService, JsonSerializerOptions? jsonOptions) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            JsonOptions = jsonOptions;
+            if (JsonOptions != null) {
+                JsonOptions.AddDataCoreAdapterConverters();
+            }
 
             void CreateAutoBindings(Uri featureUri) {
                 // Create auto-binding for GetDescriptor method
@@ -99,7 +113,7 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var desc = await ((IAdapterExtensionFeature) this).GetDescriptor(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() {
-                        Results = desc.ToJsonElement()
+                        Results = desc.ToJsonElement(JsonOptions)
                     };
                 };
 
@@ -112,7 +126,7 @@ namespace DataCore.Adapter.Extensions {
                 _boundInvokeMethods[opUri] = async (ctx, req, ct) => {
                     var ops = await ((IAdapterExtensionFeature) this).GetOperations(ctx, featureUri, ct).ConfigureAwait(false);
                     return new InvocationResponse() {
-                        Results = ops.ToJsonElement()
+                        Results = ops.ToJsonElement(JsonOptions)
                     };
                 };
             }
@@ -123,6 +137,17 @@ namespace DataCore.Adapter.Extensions {
                 CreateAutoBindings(featureUri);
             }
         }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterExtensionFeature"/> object.
+        /// </summary>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use when running background tasks. Can be 
+        ///   <see langword="null"/>.
+        /// </param>
+        protected AdapterExtensionFeature(IBackgroundTaskService? backgroundTaskService) 
+            : this(backgroundTaskService, null) { }
 
 
         /// <inheritdoc/>
@@ -511,11 +536,14 @@ namespace DataCore.Adapter.Extensions {
         /// <typeparam name="T">
         ///   The type.
         /// </typeparam>
+        /// <param name="jsonOptions">
+        ///   The JSON serializer options to use.
+        /// </param>
         /// <returns>
         ///   A <see cref="JsonElement"/> defining the JSON schema for the type.
         /// </returns>
-        private static JsonElement GetSerializedJsonSchema<T>() {
-            return SerializeToJsonElement(GetJsonSchema<T>());
+        private static JsonElement GetSerializedJsonSchema<T>(JsonSerializerOptions? jsonOptions) {
+            return SerializeToJsonElement(GetJsonSchema<T>(), jsonOptions);
         }
 
 
@@ -534,8 +562,25 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   A <see cref="JsonElement"/> representing the serialized <paramref name="value"/>.
         /// </returns>
-        protected internal static JsonElement SerializeToJsonElement<T>(T? value, JsonSerializerOptions? options = null) {
+        protected internal static JsonElement SerializeToJsonElement<T>(T? value, JsonSerializerOptions? options) {
             return JsonElementExtensions.ToJsonElement(value, options);
+        }
+
+
+        /// <summary>
+        /// Serializes the specified <paramref name="value"/> to a <see cref="JsonElement"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="JsonElement"/> representing the serialized <paramref name="value"/>.
+        /// </returns>
+        protected internal JsonElement SerializeToJsonElement<T>(T? value) {
+            return SerializeToJsonElement(value, JsonOptions);
         }
 
 
@@ -554,8 +599,25 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   An instance of <typeparamref name="T"/>.
         /// </returns>
-        protected internal static T? DeserializeFromJsonElement<T>(JsonElement json, JsonSerializerOptions? options = null) {
+        protected internal static T? DeserializeFromJsonElement<T>(JsonElement json, JsonSerializerOptions? options) {
             return json.Deserialize<T>(options);
+        }
+
+
+        /// <summary>
+        /// Deserializes a <see cref="JsonElement"/> to an instance of the specified type.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The type to deserialize the <see cref="JsonElement"/> to.
+        /// </typeparam>
+        /// <param name="json">
+        ///   The <see cref="JsonElement"/> to deserialize.
+        /// </param>
+        /// <returns>
+        ///   An instance of <typeparamref name="T"/>.
+        /// </returns>
+        protected internal T? DeserializeFromJsonElement<T>(JsonElement json) {
+            return DeserializeFromJsonElement<T>(json, JsonOptions);
         }
 
 
@@ -581,6 +643,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="description">
         ///   The operation description.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing the request and 
+        ///   response schemas for the operation.
+        /// </param>
         /// <returns>
         ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
         /// </returns>
@@ -594,7 +660,8 @@ namespace DataCore.Adapter.Extensions {
         protected static ExtensionFeatureOperationDescriptor CreateOperationDescriptor<TFeature, TRequest, TResponse>(
             ExtensionFeatureOperationType operationType,
             string name,
-            string? description
+            string? description,
+            JsonSerializerOptions? jsonOptions
         ) {
             var featureType = typeof(TFeature);
             var operationId = GetOperationUri(featureType, name, operationType);
@@ -603,8 +670,8 @@ namespace DataCore.Adapter.Extensions {
                 OperationType = operationType,
                 Name = name,
                 Description = description,
-                RequestSchema = GetSerializedJsonSchema<TRequest>(),
-                ResponseSchema = GetSerializedJsonSchema<TResponse>()
+                RequestSchema = GetSerializedJsonSchema<TRequest>(jsonOptions),
+                ResponseSchema = GetSerializedJsonSchema<TResponse>(jsonOptions)
             };
         }
 
@@ -628,6 +695,10 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="description">
         ///   The operation description.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use when serializing the request and 
+        ///   response schemas for the operation.
+        /// </param>
         /// <returns>
         ///   A new <see cref="ExtensionFeatureOperationDescriptor"/> object.
         /// </returns>
@@ -641,7 +712,8 @@ namespace DataCore.Adapter.Extensions {
         protected static ExtensionFeatureOperationDescriptor CreateOperationDescriptor<TFeature, TResponse>(
             ExtensionFeatureOperationType operationType,
             string name,
-            string? description
+            string? description,
+            JsonSerializerOptions? jsonOptions
         ) {
             var featureType = typeof(TFeature);
             var operationId = GetOperationUri(featureType, name, operationType);
@@ -650,7 +722,7 @@ namespace DataCore.Adapter.Extensions {
                 OperationType = operationType,
                 Name = name,
                 Description = description,
-                ResponseSchema = GetSerializedJsonSchema<TResponse>()
+                ResponseSchema = GetSerializedJsonSchema<TResponse>(jsonOptions)
             };
         }
 

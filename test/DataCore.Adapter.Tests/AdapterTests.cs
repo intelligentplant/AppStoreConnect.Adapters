@@ -436,7 +436,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -466,7 +466,7 @@ namespace DataCore.Adapter.Tests {
                     "/"
                 ));
 
-                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, ct).ConfigureAwait(false);
+                var operationsFromInvoke = await feature.Invoke<ExtensionFeatureOperationDescriptor[]>(context, operationId, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(operationsFromInvoke);
                 foreach (var op in operations) {
@@ -502,7 +502,7 @@ namespace DataCore.Adapter.Tests {
                     UtcClientTime = DateTime.UtcNow
                 };
 
-                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false);
+                var pongMessage = await feature.Invoke<PingMessage, PongMessage>(context, operationId, pingMessage, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.IsNotNull(pongMessage);
                 Assert.AreEqual(pingMessage.CorrelationId, pongMessage.CorrelationId);
@@ -537,7 +537,7 @@ namespace DataCore.Adapter.Tests {
 
                 var pongMessageCount = 0;
 
-                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, ct).ConfigureAwait(false)) {
+                await foreach (var pongMessage in feature.Stream<PingMessage, PongMessage>(context, operationId, pingMessage, cancellationToken: ct).ConfigureAwait(false)) {
                     ++pongMessageCount;
                     if (pongMessageCount > 1) {
                         break;
@@ -582,7 +582,7 @@ namespace DataCore.Adapter.Tests {
 
                 var messagesRead = 0;
 
-                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), ct).ConfigureAwait(false)) {
+                await foreach (var pongMessage in feature.DuplexStream<PingMessage, PongMessage>(context, operationId, pingMessages.PublishToChannel().ReadAllAsync(ct), cancellationToken: ct).ConfigureAwait(false)) {
                     ++messagesRead;
                     if (messagesRead > pingMessages.Count) {
                         Assert.Fail("Incorrect number of pong messages received.");
@@ -634,7 +634,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 };
 
-                var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
+                var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, cancellationToken: ct).ConfigureAwait(false);
 
                 Assert.AreEqual(pingMessages.Length, pongMessages.Length);
 
