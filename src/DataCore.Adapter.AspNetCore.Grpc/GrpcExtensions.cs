@@ -1781,50 +1781,6 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC tag value status.
-        /// </param>
-        /// <returns>
-        ///   The adapter tag value status.
-        /// </returns>
-        public static RealTimeData.TagValueStatus ToAdapterTagValueStatus(this Grpc.TagValueStatus status) {
-            switch (status) {
-                case Grpc.TagValueStatus.Bad:
-                    return RealTimeData.TagValueStatus.Bad;
-                case Grpc.TagValueStatus.Good:
-                    return RealTimeData.TagValueStatus.Good;
-                case Grpc.TagValueStatus.Uncertain:
-                default:
-                    return RealTimeData.TagValueStatus.Uncertain;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter tag value status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC tag value status.
-        /// </returns>
-        public static Grpc.TagValueStatus ToGrpcTagValueStatus(this RealTimeData.TagValueStatus status) {
-            switch (status) {
-                case RealTimeData.TagValueStatus.Bad:
-                    return Grpc.TagValueStatus.Bad;
-                case RealTimeData.TagValueStatus.Good:
-                    return Grpc.TagValueStatus.Good;
-                case RealTimeData.TagValueStatus.Uncertain:
-                default:
-                    return Grpc.TagValueStatus.Uncertain;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="tagValue">
@@ -1841,7 +1797,7 @@ namespace DataCore.Adapter {
             return new RealTimeData.TagValueExtended(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.Value.ToAdapterVariant(),
-                tagValue.Status.ToAdapterTagValueStatus(),
+                tagValue.StatusCode,
                 tagValue.Units,
                 tagValue.Notes,
                 tagValue.Error,
@@ -1867,7 +1823,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = tagValue.Error ?? string.Empty,
                 Notes = tagValue.Notes ?? string.Empty,
-                Status = tagValue.Status.ToGrpcTagValueStatus(),
+                StatusCode = tagValue.Status.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -1903,7 +1859,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = string.Empty,
                 Notes = string.Empty,
-                Status = tagValue.Status.ToGrpcTagValueStatus(),
+                StatusCode = tagValue.Status.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()

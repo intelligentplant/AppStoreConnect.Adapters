@@ -701,7 +701,7 @@ namespace DataCore.Adapter.Tests {
                new TagValueExtended(
                    DateTime.UtcNow, 
                    Variant.FromValue(100),
-                   TagValueStatus.Good, 
+                   StatusCodes.Good, 
                    "Units", 
                    "Notes", 
                    "Error",
@@ -1110,7 +1110,7 @@ namespace DataCore.Adapter.Tests {
             new TagValue(
                 DateTime.UtcNow,
                 Variant.FromValue(100),
-                TagValueStatus.Good,
+                StatusCodes.Good,
                 "Units"
             );
 
@@ -1132,7 +1132,7 @@ namespace DataCore.Adapter.Tests {
             new TagValueExtended(
                 DateTime.UtcNow,
                 Variant.FromValue(100),
-                TagValueStatus.Good,
+                StatusCodes.Good,
                 "Units",
                 "Notes",
                 "Error",
@@ -1173,7 +1173,7 @@ namespace DataCore.Adapter.Tests {
                new TagValueExtended(
                    DateTime.UtcNow,
                    Variant.FromValue(100),
-                   TagValueStatus.Good,
+                   StatusCodes.Good,
                    "Units",
                    "Notes",
                    "Error",

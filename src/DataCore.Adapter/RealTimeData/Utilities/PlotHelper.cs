@@ -425,7 +425,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
+            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => !StatusCode.IsGood(x.Status));
             if (exceptionValue != null) {
                 significantValues.Add(exceptionValue);
             }

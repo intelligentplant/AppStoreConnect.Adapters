@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Json {
 
             DateTime utcSampleTime = default;
             Variant value = Variant.Null;
-            TagValueStatus status = TagValueStatus.Uncertain;
+            StatusCode status = StatusCodes.Uncertain;
             string units = null!;
             string notes = null!;
             string error = null!;
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Json {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Status), StringComparison.OrdinalIgnoreCase)) {
-                    status = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
+                    status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Units), StringComparison.OrdinalIgnoreCase)) {
                     units = JsonSerializer.Deserialize<string>(ref reader, options)!;

@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Tests {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => StatusCode.IsGood(x.Status))
                 .Average(x => x.GetValueOrDefault<double>());
         }
 
@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Tests {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => StatusCode.IsGood(x.Status))
                 .Min(x => x.GetValueOrDefault<double>());
         }
 
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Tests {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => StatusCode.IsGood(x.Status))
                 .OrderBy(x => x.GetValueOrDefault<double>())
                 .FirstOrDefault()?.UtcSampleTime;
         }
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Tests {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => StatusCode.IsGood(x.Status))
                 .Max(x => x.GetValueOrDefault<double>());
         }
 
@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Tests {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => StatusCode.IsGood(x.Status))
                 .OrderByDescending(x => x.GetValueOrDefault<double>())
                 .FirstOrDefault()?.UtcSampleTime;
         }
@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Tests {
                 values
                     .Where(x => x.UtcSampleTime >= bucketStart)
                     .Where(x => x.UtcSampleTime < bucketEnd)
-                    .Where(x => x.Status == TagValueStatus.Good)
+                    .Where(x => StatusCode.IsGood(x.Status))
                     .First()
                     .GetValueOrDefault<double>() 
                     
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Tests {
                 values
                     .Where(x => x.UtcSampleTime >= bucketStart)
                     .Where(x => x.UtcSampleTime < bucketEnd)
-                    .Where(x => x.Status == TagValueStatus.Good)
+                    .Where(x => StatusCode.IsGood(x.Status))
                     .Last()
                     .GetValueOrDefault<double>();
         }
@@ -100,7 +100,7 @@ namespace DataCore.Adapter.Tests {
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd);
-            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Good)) / bucketValues.Count() * 100;
+            return ((double) bucketValues.Count(x => StatusCode.IsGood(x.Status))) / bucketValues.Count() * 100;
         }
 
 
@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Tests {
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd);
-            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Bad)) / bucketValues.Count() * 100;
+            return ((double) bucketValues.Count(x => StatusCode.IsBad(x.Status))) / bucketValues.Count() * 100;
         }
 
 
@@ -116,7 +116,7 @@ namespace DataCore.Adapter.Tests {
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good);
+                .Where(x => StatusCode.IsGood(x.Status));
 
             if (bucketValues.Count() < 2) {
                 return 0;
@@ -131,7 +131,7 @@ namespace DataCore.Adapter.Tests {
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd)
-                .Where(x => x.Status == TagValueStatus.Good);
+                .Where(x => StatusCode.IsGood(x.Status));
 
             if (bucketValues.Count() < 2) {
                 return 0;
@@ -204,7 +204,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsGood(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -274,7 +274,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsGood(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -310,7 +310,7 @@ namespace DataCore.Adapter.Tests {
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(StatusCodes.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -338,7 +338,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -372,8 +372,8 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(StatusCodes.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(StatusCodes.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -399,7 +399,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(val.Value.Error));
             Assert.AreEqual(double.NaN, val.Value.GetValueOrDefault(double.NaN));
-            Assert.AreEqual(TagValueStatus.Bad, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsBad(val.Value.Status));
             Assert.AreEqual(start, val.Value.UtcSampleTime);
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
@@ -431,7 +431,7 @@ namespace DataCore.Adapter.Tests {
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(StatusCodes.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -459,7 +459,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsGood(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -489,8 +489,8 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(StatusCodes.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(StatusCodes.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -518,7 +518,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsGood(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -627,7 +627,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = start;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsGood(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -676,7 +676,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = end;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -704,7 +704,7 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(StatusCodes.Bad).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
@@ -730,7 +730,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = start;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -753,7 +753,7 @@ namespace DataCore.Adapter.Tests {
             var interval = TimeSpan.FromSeconds(60);
 
             var rawValues = new[] {
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).WithStatus(StatusCodes.Bad).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
@@ -779,7 +779,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = start;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -807,7 +807,7 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(StatusCodes.Bad).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(100).Build(),
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
             };
@@ -833,7 +833,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = start;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -857,8 +857,8 @@ namespace DataCore.Adapter.Tests {
 
             var rawValues = new[] {
                 new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-69)).WithValue(70).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(TagValueStatus.Bad).Build(),
-                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(TagValueStatus.Bad).Build()
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).WithStatus(StatusCodes.Bad).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).WithStatus(StatusCodes.Bad).Build()
             };
 
             var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
@@ -882,7 +882,7 @@ namespace DataCore.Adapter.Tests {
             var expectedSampleTime = start;
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -932,7 +932,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             // Value should have uncertain status because it has been extrapolated.
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }
@@ -981,7 +981,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             // Value should have uncertain status because it has been extrapolated.
-            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+            Assert.IsTrue(StatusCode.IsUncertain(val.Value.Status));
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
         }

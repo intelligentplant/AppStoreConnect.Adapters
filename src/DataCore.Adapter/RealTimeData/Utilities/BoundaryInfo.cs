@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
     /// <summary>
@@ -19,15 +21,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         public TagValueExtended? ClosestValue { get; private set; }
 
         /// <summary>
-        /// The status of the boundary. The value will be <see cref="TagValueStatus.Uncertain"/> 
+        /// The status of the boundary. The value will be <see cref="StatusCodes.Uncertain"/> 
         /// if <see cref="BestQualityValue"/> is <see langword="null"/> or <see cref="BestQualityValue"/> 
-        /// and <see cref="ClosestValue"/> differ, and <see cref="TagValueStatus.Good"/> otherwise.
+        /// and <see cref="ClosestValue"/> differ, and <see cref="StatusCodes.Good"/> otherwise.
         /// </summary>
-        public TagValueStatus BoundaryStatus {
+        public StatusCode BoundaryStatus {
             get {
                 return BestQualityValue == null || BestQualityValue != ClosestValue
-                    ? TagValueStatus.Uncertain
-                    : TagValueStatus.Good;
+                    ? StatusCodes.Uncertain
+                    : StatusCodes.Good;
             }
         }
 

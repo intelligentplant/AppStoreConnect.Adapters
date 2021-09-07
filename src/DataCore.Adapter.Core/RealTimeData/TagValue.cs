@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 using DataCore.Adapter.Common;
 
@@ -22,9 +20,9 @@ namespace DataCore.Adapter.RealTimeData {
         public Variant Value { get; }
 
         /// <summary>
-        /// The quality status for the value.
+        /// The status code for the value.
         /// </summary>
-        public TagValueStatus Status { get; }
+        public StatusCode Status { get; }
 
         /// <summary>
         /// The value units.
@@ -42,37 +40,16 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The value for the sample.
         /// </param>
         /// <param name="status">
-        ///   The quality status for the value.
+        ///   The status code for the value.
         /// </param>
         /// <param name="units">
         ///   The value units.
         /// </param>
-        public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
+        public TagValue(DateTime utcSampleTime, Variant value, StatusCode status, string? units) {
             UtcSampleTime = utcSampleTime;
             Value = value;
             Status = status;
             Units = units;
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagValue"/> object.
-        /// </summary>
-        /// <param name="utcSampleTime">
-        ///   The UTC sample time.
-        /// </param>
-        /// <param name="value">
-        ///   The tag value.
-        /// </param>
-        /// <param name="status">
-        ///   The quality status for the value.
-        /// </param>
-        /// <param name="units">
-        ///   The value units.
-        /// </param>
-        [Obsolete("Use constructor directly.", true)]
-        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            return new TagValue(utcSampleTime, value, status, units);
         }
 
 
@@ -100,17 +77,17 @@ namespace DataCore.Adapter.RealTimeData {
         public string ToString(string? format, IFormatProvider? formatProvider) {
             var formattedValue = Value.ToString(format, formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
-            var formattedStatus = Status == TagValueStatus.Good
+            var formattedStatus = StatusCode.IsGood(Status)
                 ? SharedResources.TagValueStatus_Good
-                : Status == TagValueStatus.Bad
-                    ? SharedResources.TagValueStatus_Bad
-                    : SharedResources.TagValueStatus_Uncertain;
+                : StatusCode.IsUncertain(Status)
+                    ? SharedResources.TagValueStatus_Uncertain
+                    : SharedResources.TagValueStatus_Bad;
 
             if (string.IsNullOrWhiteSpace(Units)) {
-                return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, "]");
+                return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, ": ", Status, "]");
             }
 
-            return string.Concat(formattedValue, " ", Units, " @ ", formattedTimestamp, " [", formattedStatus, "]");
+            return string.Concat(formattedValue, " ", Units, " @ ", formattedTimestamp, " [", formattedStatus, ": ", Status, "]");
         }
 
     }

@@ -22,9 +22,9 @@ namespace DataCore.Adapter.RealTimeData {
         private Variant _value = Variant.Null;
 
         /// <summary>
-        /// The quality status.
+        /// The status code.
         /// </summary>
-        private TagValueStatus _status = TagValueStatus.Good;
+        private StatusCode _status = StatusCodes.Good;
 
         /// <summary>
         /// The units.
@@ -202,7 +202,7 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Updates the quality status.
+        /// Updates the status code.
         /// </summary>
         /// <param name="status">
         ///   The updated status.
@@ -210,8 +210,28 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithStatus(TagValueStatus status) {
+        /// <remarks>
+        ///   The <see cref="StatusCodes"/> class defines constants for the most common status 
+        ///   codes.
+        /// </remarks>
+        public TagValueBuilder WithStatus(StatusCode status) {
             _status = status;
+            return this;
+        }
+
+
+        /// <summary>
+        /// Updates the status code.
+        /// </summary>
+        /// <param name="status">
+        ///   The updated status.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        [Obsolete("TagValueStatus is deprecated. Use WithStatus(StatusCode) instead.", false)]
+        public TagValueBuilder WithStatus(TagValueStatus status) {
+            _status = StatusCode.FromTagValueStatus(status);
             return this;
         }
 
@@ -255,15 +275,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        /// <remarks>
-        ///   If <paramref name="error"/> is not <see langword="null"/> or white space, the status 
-        ///   of the value will also be set to <see cref="TagValueStatus.Bad"/>.
-        /// </remarks>
         public TagValueBuilder WithError(string? error) {
             _error = error;
-            if (!string.IsNullOrWhiteSpace(error)) {
-                _status = TagValueStatus.Bad;
-            }
             return this;
         }
 
