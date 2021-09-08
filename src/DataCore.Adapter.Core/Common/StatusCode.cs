@@ -61,30 +61,39 @@ namespace DataCore.Adapter.Common {
     /// </remarks>
     public struct StatusCode : IEquatable<StatusCode> {
 
-        // 30:31     29        16:28            12:15     10:11      0:9
-        // [00]      [00]      [0000 00000000]  [0000]    [00]       [00 00000000]
+        // 30:31     28:29     16:27            12:15     10:11      0:9
         // quality   not_used  sub_code         not_used  info_type  info_bits
 
         /// <summary>
-        /// Bitmask that can be applied to a status code value to get just the overall quality 
-        /// indicator of the status code.
+        /// Bitmask that can be applied to a status code value to clear everything except for the 
+        /// quality bits.
         /// </summary>
-        private const uint QualityMask = 0xC0000000;
+        internal const uint QualityMask = 0xC0000000;
 
         /// <summary>
-        /// Good quality/success condition.
+        /// Bitmask for clearing the sub code.
         /// </summary>
-        private const uint QualityGood = 0x00000000;
+        internal const uint ClearSubCodeMask = 0xE000FFFF;
 
         /// <summary>
-        /// Uncertain quality/warning condition.
+        /// Bitmask for clearing the info type and info bits.
         /// </summary>
-        private const uint QualityUncertain = 0x40000000;
+        internal const uint ClearInfoMask = 0xCFFFF600;
 
         /// <summary>
-        /// Bad quality/failure condition.
+        /// Bitmask that can be used to get the info type.
         /// </summary>
-        private const uint QualityBad = 0x80000000;
+        internal const uint InfoTypeMask = 0x00000C00;
+
+        /// <summary>
+        /// Info type value when setting tag value info bits.
+        /// </summary>
+        internal const uint InfoTypeTagValue = 0x00000400;
+
+        /// <summary>
+        /// Bitmask for retrieving only the info bits.
+        /// </summary>
+        internal const uint InfoBitsMask = 0x000001FF;
 
 
         /// <summary>
@@ -100,11 +109,128 @@ namespace DataCore.Adapter.Common {
         ///   The status code.
         /// </param>
         /// <remarks>
+        /// 
+        /// <para>
         ///   The <see cref="StatusCodes"/> class defines constants for the most common status 
         ///   codes.
+        /// </para>
+        /// 
+        /// <para>
+        ///   <see cref="ForTagValue"/> provides a convenient way to qualify a base status code 
+        ///   with info bits for a tag value.
+        /// </para>
+        /// 
         /// </remarks>
+        /// <seealso cref="ForTagValue"/>
         public StatusCode(uint value) {
             Value = value;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="StatusCode"/> using the specified quality, sub-code, info 
+        /// type flag and info bits.
+        /// </summary>
+        /// <param name="quality">
+        ///   The 2-bit quality flag (<c>0</c> = good, <c>1</c> = uncertain, <c>2</c> = bad).
+        /// </param>
+        /// <param name="subCode">
+        ///   The sub-code for the status code (<c>0x0000</c> - <c>0x0FFF</c>).
+        /// </param>
+        /// <param name="infoType">
+        ///   The info bits type indicator (<c>0</c> = not set, <c>1</c> = tag value, <c>other</c> = not used).
+        /// </param>
+        /// <param name="infoBits">
+        ///   The info bits for the status code (<c>0x0000</c> - <c>0x03FF</c>).
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="quality"/> is outside the range of allowed values.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="subCode"/> is outside the range of allowed values.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="infoType"/> is outside the range of allowed values.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="infoBits"/> is outside the range of allowed values.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The following table summarises the allowed values for each parameter:
+        /// </para>
+        /// 
+        /// <list type="table">
+        ///   <item>
+        ///     <term>
+        ///       <paramref name="quality"/>
+        ///     </term>
+        ///     <description>
+        ///       <c>0x00</c> - <c>0x03</c> (<c>0</c> = good, <c>1</c> = uncertain, <c>2</c> = bad, <c>3</c> = not currently in use)
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>
+        ///       <paramref name="subCode"/>
+        ///     </term>
+        ///     <description>
+        ///       <c>0x0000</c> - <c>0x0FFF</c>
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>
+        ///       <paramref name="infoType"/>
+        ///     </term>
+        ///     <description>
+        ///        <c>0x00</c> - <c>0x03</c> (<c>0</c> = not set, <c>1</c> = tag value, <c>2</c> = not currently in use, <c>3</c> = not currently in use)
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>
+        ///       <paramref name="infoBits"/>
+        ///     </term>
+        ///     <description>
+        ///       <c>0x0000</c> - <c>0x03FF</c>
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public StatusCode(byte quality, ushort subCode, byte infoType = 0, ushort infoBits = 0) {
+            if (quality > 0x11u) {
+                throw new ArgumentOutOfRangeException(nameof(quality));
+            }
+            if (subCode > 0x0FFFu) {
+                throw new ArgumentOutOfRangeException(nameof(subCode));
+            }
+            if (infoType > 0x03u) {
+                throw new ArgumentOutOfRangeException(nameof(infoType));
+            }
+            if (infoBits > 0x03FFu) {
+                throw new ArgumentOutOfRangeException(nameof(infoBits));
+            }
+
+            Value = 0u | (quality * 0x40000000u) | (subCode * 0x10000u) | (infoType * 0x400u) | infoBits;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="StatusCode"/> using a base status code and additional bits 
+        /// that quality the status code for a tag value.
+        /// </summary>
+        /// <param name="baseValue">
+        ///   The base status code.
+        /// </param>
+        /// <param name="infoBits">
+        ///   Additional tag value-specific bits to set on the status code.
+        /// </param>
+        /// <remarks>
+        ///   The <see cref="StatusCodes"/> class defines constants for base status 
+        ///   codes.
+        /// </remarks>
+        public static StatusCode ForTagValue(uint baseValue, TagValueInfoBits infoBits) {
+            return new StatusCode(baseValue | InfoTypeTagValue | (ushort) infoBits);
         }
 
 
@@ -121,63 +247,18 @@ namespace DataCore.Adapter.Common {
 
             switch (tagValueStatus) {
                 case RealTimeData.TagValueStatus.Good:
-                    value = QualityGood;
+                    value = StatusCodes.Good;
                     break;
                 case RealTimeData.TagValueStatus.Uncertain:
-                    value = QualityUncertain;
+                    value = StatusCodes.Uncertain;
                     break;
                 case RealTimeData.TagValueStatus.Bad:
                 default:
-                    value = QualityBad;
+                    value = StatusCodes.Bad;
                     break;
             }
 
-            return new StatusCode(value);
-        }
-
-
-        /// <summary>
-        /// Tests if the specified <see cref="StatusCode"/> represents a good-quality status.
-        /// </summary>
-        /// <param name="statusCode">
-        ///   The <see cref="StatusCode"/>.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the <see cref="StatusCode"/> represents a good-quality 
-        ///   status, or <see langword="false"/> otherwise.
-        /// </returns>
-        public static bool IsGood(StatusCode statusCode) {
-            return (statusCode.Value & QualityMask) == QualityGood;
-        }
-
-
-        /// <summary>
-        /// Tests if the specified <see cref="StatusCode"/> represents an uncertain-quality status.
-        /// </summary>
-        /// <param name="statusCode">
-        ///   The <see cref="StatusCode"/>.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the <see cref="StatusCode"/> represents an uncertain-quality 
-        ///   status, or <see langword="false"/> otherwise.
-        /// </returns>
-        public static bool IsUncertain(StatusCode statusCode) {
-            return (statusCode.Value & QualityMask) == QualityUncertain;
-        }
-
-
-        /// <summary>
-        /// Tests if the specified <see cref="StatusCode"/> represents a bad-quality status.
-        /// </summary>
-        /// <param name="statusCode">
-        ///   The <see cref="StatusCode"/>.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the <see cref="StatusCode"/> represents a bad-quality 
-        ///   status, or <see langword="false"/> otherwise.
-        /// </returns>
-        public static bool IsBad(StatusCode statusCode) {
-            return (statusCode.Value & QualityMask) == QualityBad;
+            return new StatusCode(value | InfoTypeTagValue);
         }
 
 
@@ -229,4 +310,85 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
+
+    /// <summary>
+    /// Defines flags that can be used to qualify a <see cref="StatusCode"/> for a tag value.
+    /// </summary>
+    [Flags]
+    public enum TagValueInfoBits : ushort {
+        // 0:4 Historian bits
+        // 5:6 Not used
+        // 7   Overflow
+        // 8:9 Limit bits
+
+        #region 0:4 - Historian Bits
+
+        /// <summary>
+        /// No flags set.
+        /// </summary>
+        None = 0x0000,
+        
+        /// <summary>
+        /// Value was calculated (e.g. by an aggregation functions).
+        /// </summary>
+        Calculated = 0x0001,
+        
+        /// <summary>
+        /// Value was interpolated.
+        /// </summary>
+        Interpolated = 0x0002,
+        
+        /// <summary>
+        /// Value was calculated from an incomplete interval (e.g. a sample interval of 30 minutes 
+        /// was specified but the interval for this calculation was smaller due to the time range 
+        /// of the query not being exactly divisible by 30 minutes).
+        /// </summary>
+        Partial = 0x0004,
+        
+        /// <summary>
+        /// Additional raw values are defined at the sample timestamp.
+        /// </summary>
+        ExtraData = 0x0008,
+
+        /// <summary>
+        /// Multiple values match the criteria used to select the value (e.g. a maximum 
+        /// aggregation where multiple maximum values with different timestamps exist in the 
+        /// aggregation interval).
+        /// </summary>
+        MultiValue = 0x0010,
+
+        #endregion
+
+        #region 7 - Overflow
+
+        /// <summary>
+        /// The value was received via a subscription where the source has been forced to drop 
+        /// some values due to a maximum queue size limit being exceeded.
+        /// </summary>
+        Overflow = 0x0080,
+
+        #endregion
+
+        #region 8:9 - Limit Bits
+
+        /// <summary>
+        /// The value is at the lower limit defined by the source.
+        /// </summary>
+        LimitLow = 0x0100,
+
+        /// <summary>
+        /// The value is at the higher limit defined by the source.
+        /// </summary>
+        LimitHigh = 0x0200,
+
+        /// <summary>
+        /// The value is constant.
+        /// </summary>
+        LimitConstant = 0x0300
+
+        #endregion
+
+    }
+
 }

@@ -1045,7 +1045,6 @@ namespace DataCore.Adapter.Tests {
 
                 foreach (var value in values) {
                     Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
                     }
@@ -1129,7 +1128,6 @@ namespace DataCore.Adapter.Tests {
 
                 foreach (var value in values) {
                     Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
                     }
@@ -1224,7 +1222,6 @@ namespace DataCore.Adapter.Tests {
 
                 foreach (var value in values) {
                     Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(ProcessedTagValueQueryResult)));
-
                     Assert.IsTrue(dataFunctions.Contains(value.DataFunction), FormatMessage(Resources.UnexpectedDataFunction, value.DataFunction));
 
                     if (allTags.Contains(value.TagId)) {
@@ -1297,7 +1294,6 @@ namespace DataCore.Adapter.Tests {
 
                 foreach (var value in values) {
                     Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagValueQueryResult)));
-
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
                     }
@@ -1538,7 +1534,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
                     Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
                     Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
-                    Assert.IsFalse(StatusCode.IsBad(writeResult.Status), Resources.WriteStatusIndicatesFailure);
+                    Assert.IsFalse(writeResult.Status.IsBad(), Resources.WriteStatusIndicatesFailure);
                 }
 
                 Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
@@ -1604,7 +1600,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
                     Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
                     Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
-                    Assert.IsFalse(StatusCode.IsBad(writeResult.Status), Resources.WriteStatusIndicatesFailure);
+                    Assert.IsFalse(writeResult.Status.IsBad(), Resources.WriteStatusIndicatesFailure);
                 }
 
                 Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
@@ -1998,7 +1994,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsNotNull(writeResult, FormatMessage(Resources.ValueShouldNotBeNull, nameof(WriteTagValueResult)));
                     Assert.IsNotNull(writeResult.CorrelationId, Resources.WriteResultCorrelationIdExpected);
                     Assert.IsTrue(expectedCorrelationIds.Remove(writeResult.CorrelationId!), FormatMessage(Resources.UnexpectedWriteResultCorrelationIdReturned, writeResult.CorrelationId!));
-                    Assert.IsFalse(StatusCode.IsBad(writeResult.Status), Resources.WriteStatusIndicatesFailure);
+                    Assert.IsFalse(writeResult.Status.IsBad(), Resources.WriteStatusIndicatesFailure);
                 }
 
                 Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));

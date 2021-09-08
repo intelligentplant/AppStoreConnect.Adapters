@@ -416,7 +416,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     var tVal = item.GetValueOrDefault<string>();
                     if (currentState != null && 
                         string.Equals(currentState, tVal, StringComparison.Ordinal) && 
-                        currentQuality == item.Status) {
+                        currentQuality == item.Status
+                    ) {
                         continue;
                     }
                     currentState = tVal;
@@ -425,7 +426,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
             }
 
-            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => !StatusCode.IsGood(x.Status));
+            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => !x.Status.IsGood());
             if (exceptionValue != null) {
                 significantValues.Add(exceptionValue);
             }
@@ -435,6 +436,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     tag.Id, 
                     tag.Name, 
                     new TagValueBuilder(value)
+                        .WithStatus(value.Status, bucket.InfoBits)
                         .WithBucketProperties(bucket)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build()

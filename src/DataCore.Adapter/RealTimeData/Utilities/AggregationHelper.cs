@@ -178,7 +178,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -186,7 +186,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -195,7 +195,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(status)
+                .WithStatus(StatusCode.ForTagValue(status, TagValueInfoBits.Calculated | bucket.InfoBits))
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -229,16 +229,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
             var minValue = goodQualitySamples
-                .OrderBy(x => x.GetValueOrDefault(double.NaN))
+                .Select(x => new { Sample = x, Value = x.GetValueOrDefault(double.NaN) })
+                .OrderBy(x => x.Value)
+                .ToLookup(x => x.Value)
                 .First();
 
-            yield return new TagValueBuilder(minValue)
-                .WithStatus(status)
+            // If the minimum value occurs in more than one sample, set the multi-value status
+            // code flag.
+            var infoBits = minValue.Count() > 1 ? TagValueInfoBits.MultiValue : TagValueInfoBits.None;
+
+            yield return new TagValueBuilder(minValue.First().Sample)
+                .WithStatus(status, infoBits | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -263,7 +269,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateMaximum(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -271,16 +277,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
             var maxValue = goodQualitySamples
-                .OrderByDescending(x => x.GetValueOrDefault(double.NaN))
+                .Select(x => new { Sample = x, Value = x.GetValueOrDefault(double.NaN) })
+                .OrderByDescending(x => x.Value)
+                .ToLookup(x => x.Value)
                 .First();
 
-            yield return new TagValueBuilder(maxValue)
-                .WithStatus(status)
+            // If the maximum value occurs in more than one sample, set the multi-value status
+            // code flag.
+            var infoBits = maxValue.Count() > 1 ? TagValueInfoBits.MultiValue : TagValueInfoBits.None;
+
+            yield return new TagValueBuilder(maxValue.First().Sample)
+                .WithStatus(status, infoBits | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -305,10 +317,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateCount(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -316,7 +328,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status)
+                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
@@ -326,7 +338,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(goodQualitySamples.Length)
-                .WithStatus(status)
+                .WithStatus(status, TagValueInfoBits.Calculated)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -356,7 +368,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateRange(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -364,7 +376,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -376,7 +388,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(status)
+                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -403,7 +415,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateDelta(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -411,7 +423,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -422,7 +434,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(status)
+                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -452,20 +464,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
                     .WithUnits("%")
-                    .WithStatus(StatusCodes.Uncertain)
+                    .WithStatus(StatusCodes.Uncertain, TagValueInfoBits.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
                 yield break;
             }
 
-            var percentGoodCount = bucket.RawSamples.Count(x => StatusCode.IsGood(x.Status));
+            var percentGoodCount = bucket.RawSamples.Count(x => x.Status.IsGood());
 
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue((double) percentGoodCount / bucket.RawSampleCount * 100)
                 .WithUnits("%")
-                .WithStatus((StatusCode) StatusCodes.Good)
+                .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -494,20 +506,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
                     .WithUnits("%")
-                    .WithStatus(StatusCodes.Uncertain)
+                    .WithStatus(StatusCodes.Uncertain, TagValueInfoBits.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
                 yield break;
             }
 
-            var percentBadCount = bucket.RawSamples.Count(x => StatusCode.IsBad(x.Status));
+            var percentBadCount = bucket.RawSamples.Count(x => x.Status.IsBad());
 
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
                 .WithUnits("%")
-                .WithStatus((StatusCode) StatusCodes.Good)
+                .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -556,10 +568,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateVariance(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -572,7 +584,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status)
+                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
@@ -587,7 +599,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(variance)
-                .WithStatus(status)
+                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(
                     CreateXPoweredByProperty(),
@@ -615,10 +627,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateStandardDeviation(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => StatusCode.IsGood(x.Status))
+                .Where(x => x.Status.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !StatusCode.IsGood(x.Status))
+            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -631,7 +643,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status)
+                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
@@ -652,7 +664,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(stdDev)
-                .WithStatus(status)
+                .WithStatus(status, TagValueInfoBits.Calculated)
                 .WithBucketProperties(bucket)
                 .WithProperties(
                     CreateXPoweredByProperty(),
@@ -1107,7 +1119,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                         // Add the end boundary value(s) from the previous bucket as the start 
                         // boundary value(s) on the new one.
-                        if (StatusCode.IsGood(previousBucket.EndBoundary.BoundaryStatus)) {
+                        if (previousBucket.EndBoundary.BoundaryStatus.IsGood()) {
                             if (previousBucket.EndBoundary.BestQualityValue != null) {
                                 bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
                             }
@@ -1152,7 +1164,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     // Add the end boundary value(s) from the previous bucket as the start 
                     // boundary value(s) on the new one.
-                    if (StatusCode.IsGood(previousBucket.EndBoundary.BoundaryStatus)) {
+                    if (previousBucket.EndBoundary.BoundaryStatus.IsGood()) {
                         if (previousBucket.EndBoundary.BestQualityValue != null) {
                             bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
                         }
@@ -1248,7 +1260,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return new TagValueBuilder()
                 .WithUtcSampleTime(sampleTime)
                 .WithValue(Resources.TagValue_ProcessedValue_Error)
-                .WithStatus(StatusCodes.Bad)
+                .WithStatus(StatusCodes.Bad, TagValueInfoBits.Calculated | bucket.InfoBits)
                 .WithError(error)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())

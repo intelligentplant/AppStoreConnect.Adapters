@@ -28,6 +28,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </summary>
         public DateTime UtcQueryEnd { get; }
 
+        /// <summary>
+        /// The raw data samples for the bucket
+        /// </summary>
         private List<TagValueExtended> _rawSamples = new List<TagValueExtended>();
 
         /// <summary>
@@ -49,6 +52,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Holds information about values immediately before the end boundary of the bucket.
         /// </summary>
         public BoundaryInfo EndBoundary { get; } = new BoundaryInfo();
+
+        /// <summary>
+        /// The <see cref="Common.TagValueInfoBits"/> to set on values calculated or selected from 
+        /// the bucket.
+        /// </summary>
+        public Common.TagValueInfoBits InfoBits => UtcBucketEnd > UtcQueryEnd
+            ? Common.TagValueInfoBits.Partial
+            : Common.TagValueInfoBits.None;
 
 
         /// <summary>

@@ -77,9 +77,9 @@ namespace DataCore.Adapter.RealTimeData {
         public string ToString(string? format, IFormatProvider? formatProvider) {
             var formattedValue = Value.ToString(format, formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
-            var formattedStatus = StatusCode.IsGood(Status)
+            var formattedStatus = Status.IsGood()
                 ? SharedResources.TagValueStatus_Good
-                : StatusCode.IsUncertain(Status)
+                : Status.IsUncertain()
                     ? SharedResources.TagValueStatus_Uncertain
                     : SharedResources.TagValueStatus_Bad;
 
