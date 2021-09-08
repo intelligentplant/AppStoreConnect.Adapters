@@ -598,7 +598,7 @@ namespace DataCore.Adapter.WaveGenerator {
                     var val = new TagValueBuilder()
                         .WithUtcSampleTime(sampleTime)
                         .WithValue(CalculateValue(sampleTime, tagOptions!))
-                        .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated)
+                        .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.Calculated)
                         .Build();
 
                     yield return new TagValueQueryResult(tagId, tagId, val);
@@ -651,7 +651,7 @@ namespace DataCore.Adapter.WaveGenerator {
                         var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
-                            .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated)
+                            .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.Calculated)
                             .Build();
 
                         yield return new TagValueQueryResult(tagId, tagId, val);
@@ -689,7 +689,7 @@ namespace DataCore.Adapter.WaveGenerator {
                         var val = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(CalculateValue(sampleTime, tagOptions!))
-                            .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated)
+                            .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.Calculated)
                             .Build();
 
                         yield return new TagValueQueryResult(tagId, tagId, val);

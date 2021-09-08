@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.Common {
+﻿using DataCore.Adapter.RealTimeData;
+
+namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Extensions for <see cref="StatusCode"/>.
@@ -103,7 +105,7 @@
 
 
         /// <summary>
-        /// Tests if the <see cref="StatusCode"/> has the specified <see cref="TagValueInfoBits"/> 
+        /// Tests if the <see cref="StatusCode"/> has the specified <see cref="TagValueStatusCodeFlags"/> 
         /// flag set.
         /// </summary>
         /// <param name="statusCode">
@@ -125,7 +127,7 @@
         /// <seealso cref="IsCalculatedTagValue(StatusCode)"/>
         /// <seealso cref="IsInterpolatedTagValue(StatusCode)"/>
         /// <seealso cref="IsRawTagValue(StatusCode)"/>
-        public static bool HasFlag(this StatusCode statusCode, TagValueInfoBits flag) {
+        public static bool HasFlag(this StatusCode statusCode, TagValueStatusCodeFlags flag) {
             var flagVal = (ushort) flag;
             return statusCode.HasTagValueInfoType() && (statusCode.Value & flagVal) == flagVal;
         }
@@ -143,7 +145,7 @@
         ///   describes a calculated tag value, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsCalculatedTagValue(this StatusCode statusCode) {
-            return HasFlag(statusCode, TagValueInfoBits.Calculated);
+            return HasFlag(statusCode, TagValueStatusCodeFlags.Calculated);
         }
 
 
@@ -159,7 +161,7 @@
         ///   describes an interpolated tag value, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsInterpolatedTagValue(this StatusCode statusCode) {
-            return HasFlag(statusCode, TagValueInfoBits.Interpolated);
+            return HasFlag(statusCode, TagValueStatusCodeFlags.Interpolated);
         }
 
 

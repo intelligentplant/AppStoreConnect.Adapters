@@ -101,7 +101,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                             valueBefore.Status.IsGood() && !forceUncertainStatus 
                                 ? StatusCodes.Good 
                                 : StatusCodes.Uncertain,
-                            TagValueInfoBits.Interpolated
+                            TagValueStatusCodeFlags.Interpolated
                         )
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
@@ -119,7 +119,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return new TagValueBuilder()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithValue(nextNumericValue)
-                .WithStatus(nextStatusValue, TagValueInfoBits.Interpolated)
+                .WithStatus(nextStatusValue, TagValueStatusCodeFlags.Interpolated)
                 .WithUnits(valueBefore.Units)
                 .WithNotes($"Interpolated using samples @ {valueBefore.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z and {valueAfter.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z.")
                 .WithProperties(AggregationHelper.CreateXPoweredByProperty())
@@ -187,7 +187,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     return new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status, TagValueInfoBits.Interpolated)
+                        .WithStatus(status, TagValueStatusCodeFlags.Interpolated)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }
@@ -198,7 +198,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     return new TagValueBuilder(valueAfter)
                         .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status, TagValueInfoBits.Interpolated)
+                        .WithStatus(status, TagValueStatusCodeFlags.Interpolated)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }

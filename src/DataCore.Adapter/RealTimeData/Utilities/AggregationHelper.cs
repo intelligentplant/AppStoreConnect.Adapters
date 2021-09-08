@@ -195,7 +195,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(StatusCode.ForTagValue(status, TagValueInfoBits.Calculated | bucket.InfoBits))
+                .WithStatus(StatusCode.ForTagValue(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits))
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -241,7 +241,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             // If the minimum value occurs in more than one sample, set the multi-value status
             // code flag.
-            var infoBits = minValue.Count() > 1 ? TagValueInfoBits.MultiValue : TagValueInfoBits.None;
+            var infoBits = minValue.Count() > 1 ? TagValueStatusCodeFlags.MultiValue : TagValueStatusCodeFlags.None;
 
             yield return new TagValueBuilder(minValue.First().Sample)
                 .WithStatus(status, infoBits | bucket.InfoBits)
@@ -289,7 +289,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             // If the maximum value occurs in more than one sample, set the multi-value status
             // code flag.
-            var infoBits = maxValue.Count() > 1 ? TagValueInfoBits.MultiValue : TagValueInfoBits.None;
+            var infoBits = maxValue.Count() > 1 ? TagValueStatusCodeFlags.MultiValue : TagValueStatusCodeFlags.None;
 
             yield return new TagValueBuilder(maxValue.First().Sample)
                 .WithStatus(status, infoBits | bucket.InfoBits)
@@ -328,7 +328,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                    .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
@@ -338,7 +338,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(goodQualitySamples.Length)
-                .WithStatus(status, TagValueInfoBits.Calculated)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -388,7 +388,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -434,7 +434,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(numericValue)
-                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithUnits(tag.Units)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
@@ -464,7 +464,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
                     .WithUnits("%")
-                    .WithStatus(StatusCodes.Uncertain, TagValueInfoBits.Calculated | bucket.InfoBits)
+                    .WithStatus(StatusCodes.Uncertain, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
@@ -477,7 +477,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue((double) percentGoodCount / bucket.RawSampleCount * 100)
                 .WithUnits("%")
-                .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -506,7 +506,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
                     .WithUnits("%")
-                    .WithStatus(StatusCodes.Uncertain, TagValueInfoBits.Calculated | bucket.InfoBits)
+                    .WithStatus(StatusCodes.Uncertain, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build();
@@ -519,7 +519,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
                 .WithUnits("%")
-                .WithStatus(StatusCodes.Good, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -584,7 +584,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                    .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
@@ -599,7 +599,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(variance)
-                .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(
                     CreateXPoweredByProperty(),
@@ -643,7 +643,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield return new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
                     .WithValue(0d)
-                    .WithStatus(status, TagValueInfoBits.Calculated | bucket.InfoBits)
+                    .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
@@ -664,7 +664,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(stdDev)
-                .WithStatus(status, TagValueInfoBits.Calculated)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated)
                 .WithBucketProperties(bucket)
                 .WithProperties(
                     CreateXPoweredByProperty(),
@@ -1260,7 +1260,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             return new TagValueBuilder()
                 .WithUtcSampleTime(sampleTime)
                 .WithValue(Resources.TagValue_ProcessedValue_Error)
-                .WithStatus(StatusCodes.Bad, TagValueInfoBits.Calculated | bucket.InfoBits)
+                .WithStatus(StatusCodes.Bad, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithError(error)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())

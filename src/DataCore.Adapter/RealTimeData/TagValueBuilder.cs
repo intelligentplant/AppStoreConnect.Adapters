@@ -24,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The status code.
         /// </summary>
-        private StatusCode _status = StatusCode.ForTagValue(StatusCodes.Good, TagValueInfoBits.None);
+        private StatusCode _status = StatusCode.ForTagValue(StatusCodes.Good, TagValueStatusCodeFlags.None);
 
         /// <summary>
         /// The units.
@@ -217,7 +217,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="StatusCodes"/> class defines constants for the most common status 
         ///   codes.
         /// </remarks>
-        public TagValueBuilder WithStatus(StatusCode status, TagValueInfoBits infoBits = TagValueInfoBits.None) {
+        public TagValueBuilder WithStatus(StatusCode status, TagValueStatusCodeFlags infoBits = TagValueStatusCodeFlags.None) {
             _status = StatusCode.ForTagValue(status, infoBits);
             return this;
         }

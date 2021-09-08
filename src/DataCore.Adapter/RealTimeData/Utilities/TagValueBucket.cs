@@ -54,12 +54,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         public BoundaryInfo EndBoundary { get; } = new BoundaryInfo();
 
         /// <summary>
-        /// The <see cref="Common.TagValueInfoBits"/> to set on values calculated or selected from 
+        /// The <see cref="TagValueStatusCodeFlags"/> to set on values calculated or selected from 
         /// the bucket.
         /// </summary>
-        public Common.TagValueInfoBits InfoBits => UtcBucketEnd > UtcQueryEnd
-            ? Common.TagValueInfoBits.Partial
-            : Common.TagValueInfoBits.None;
+        public TagValueStatusCodeFlags InfoBits => UtcBucketEnd > UtcQueryEnd
+            ? TagValueStatusCodeFlags.Partial
+            : TagValueStatusCodeFlags.None;
 
 
         /// <summary>
