@@ -338,7 +338,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
                 .WithValue(goodQualitySamples.Length)
-                .WithStatus(status, TagValueStatusCodeFlags.Calculated)
+                .WithStatus(status, TagValueStatusCodeFlags.Calculated | bucket.InfoBits)
                 .WithBucketProperties(bucket)
                 .WithProperties(CreateXPoweredByProperty())
                 .Build();
@@ -1136,13 +1136,13 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 // Add the sample to the bucket.
-                if (val.Value.UtcSampleTime <= utcEndTime) {
+                if (val.Value.UtcSampleTime < utcEndTime) {
                     bucket.AddRawSample(val.Value);
                 }
             }
 
-            if (bucket.UtcBucketEnd <= utcEndTime) {
-                // Only emit the final bucket if it is within our time range.
+            if (bucket.UtcBucketStart < utcEndTime) {
+                // Emit the final bucket if it is within our time range.
                 foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
                     yield return calcVal;
                 }
