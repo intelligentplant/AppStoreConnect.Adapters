@@ -524,6 +524,70 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        [DataTestMethod]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, false)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, false)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdCount, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, true)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, true)]
+        public async Task DefaultDataFunctionShouldSetStatusCodeFlags(
+            string functionId,
+            bool checkCalculatedFlag
+        ) {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(45); // I.e. one interval of 45 seconds and a second of 15 seconds.
+
+            var rawValues = new[] {
+                // Bucket 1
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(1)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(44)).WithValue(100).Build(),
+                // Bucket 2
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(47)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { functionId },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(2, values.Count());
+
+            var sample1 = values.First();
+            if (checkCalculatedFlag) {
+                Assert.IsTrue(sample1.Value.Status.IsCalculatedTagValue());
+            }
+            Assert.IsFalse(sample1.Value.Status.HasFlag(TagValueStatusCodeFlags.Partial));
+
+            var sample2 = values.Last();
+            if (checkCalculatedFlag) {
+                Assert.IsTrue(sample2.Value.Status.IsCalculatedTagValue());
+            }
+            Assert.IsTrue(sample2.Value.Status.HasFlag(TagValueStatusCodeFlags.Partial));
+        }
+
+
         [TestMethod]
         public void InterpolatedValueShouldBeCalculatedCorrectly() {
             var now = DateTime.UtcNow;
@@ -984,6 +1048,46 @@ namespace DataCore.Adapter.Tests {
             Assert.IsTrue(val.Value.Status.IsUncertain());
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+        }
+
+
+        [TestMethod]
+        public async Task InterpolateShouldSetStatusCodeFlags() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-57)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.IsTrue(val.Value.Status.IsInterpolatedTagValue());
         }
 
 
