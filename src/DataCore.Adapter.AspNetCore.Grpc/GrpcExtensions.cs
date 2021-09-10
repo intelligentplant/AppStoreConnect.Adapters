@@ -986,50 +986,6 @@ namespace DataCore.Adapter {
         #region [ Diagnostics ]
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC health status.
-        /// </param>
-        /// <returns>
-        ///   The adapter health status.
-        /// </returns>
-        public static Diagnostics.HealthStatus ToAdapterHealthStatus(this Grpc.HealthStatus status) {
-            switch (status) {
-                case Grpc.HealthStatus.Healthy:
-                    return Diagnostics.HealthStatus.Healthy;
-                case Grpc.HealthStatus.Degraded:
-                    return Diagnostics.HealthStatus.Degraded;
-                case Grpc.HealthStatus.Unhealthy:
-                default:
-                    return Diagnostics.HealthStatus.Unhealthy;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter health status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC health status.
-        /// </returns>
-        public static Grpc.HealthStatus ToGrpcHealthStatus(this Diagnostics.HealthStatus status) {
-            switch (status) {
-                case Diagnostics.HealthStatus.Healthy:
-                    return Grpc.HealthStatus.Healthy;
-                case Diagnostics.HealthStatus.Degraded:
-                    return Grpc.HealthStatus.Degraded;
-                case Diagnostics.HealthStatus.Unhealthy:
-                default:
-                    return Grpc.HealthStatus.Unhealthy;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="healthCheckResult">
@@ -1045,7 +1001,7 @@ namespace DataCore.Adapter {
 
             return new Diagnostics.HealthCheckResult(
                 healthCheckResult.DisplayName,
-                healthCheckResult.Status.ToAdapterHealthStatus(),
+                healthCheckResult.StatusCode,
                 healthCheckResult.Description,
                 healthCheckResult.Error,
                 healthCheckResult.Data,
@@ -1066,7 +1022,7 @@ namespace DataCore.Adapter {
         public static Grpc.HealthCheckResult ToGrpcHealthCheckResult(this Diagnostics.HealthCheckResult healthCheckResult) {
             var result = new Grpc.HealthCheckResult() {
                 DisplayName = healthCheckResult.DisplayName ?? string.Empty,
-                Status = healthCheckResult.Status.ToGrpcHealthStatus(),
+                StatusCode = healthCheckResult.Status,
                 Description = healthCheckResult.Description ?? string.Empty,
                 Error = healthCheckResult.Error ?? string.Empty
             };

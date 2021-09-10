@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 
 namespace DataCore.Adapter.Json {
@@ -17,7 +19,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string? displayName = default;
-            HealthStatus status = default;
+            StatusCode status = default;
             string? description = default;
             string? error = default;
             IDictionary<string, string>? data = default;
@@ -37,7 +39,7 @@ namespace DataCore.Adapter.Json {
                     displayName = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Status), StringComparison.OrdinalIgnoreCase)) {
-                    status = JsonSerializer.Deserialize<HealthStatus>(ref reader, options);
+                    status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
                     description = JsonSerializer.Deserialize<string>(ref reader, options);

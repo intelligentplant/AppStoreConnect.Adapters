@@ -603,7 +603,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new HealthCheckResult(
                 "DisplayName",
-                HealthStatus.Healthy,
+                StatusCodes.Good,
                 "Description",
                 "Error",
                 new Dictionary<string, string>() {
@@ -613,7 +613,7 @@ namespace DataCore.Adapter.Tests {
                 new [] {
                     new HealthCheckResult(
                         "InnerDisplayName",
-                        HealthStatus.Healthy,
+                        StatusCodes.Good,
                         "InnerDescription",
                         "InnerError",
                         new Dictionary<string, string>() {

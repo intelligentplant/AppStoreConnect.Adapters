@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Represents the result of an adapter health check.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Use cases do not require equality checks")]
     public struct HealthCheckResult {
 
         /// <summary>
@@ -19,7 +20,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The status of the health check result.
         /// </summary>
-        public HealthStatus Status { get; }
+        public StatusCode Status { get; }
 
         /// <summary>
         /// The description of the health check that was performed.
@@ -65,7 +66,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The inner results that contributed to the status of this result. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        public HealthCheckResult(string? displayName, HealthStatus status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
+        public HealthCheckResult(string? displayName, StatusCode status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
                 : displayName!;
@@ -106,14 +107,17 @@ namespace DataCore.Adapter.Diagnostics {
                 return Healthy(displayName, description, data);
             }
 
-            switch (GetAggregateHealthStatus(innerResults.Select(x => x.Status))) {
-                case HealthStatus.Unhealthy:
-                    return Unhealthy(displayName, description, null, data, innerResults);
-                case HealthStatus.Degraded:
-                    return Degraded(displayName, description, null, data, innerResults);
-                default:
-                    return Healthy(displayName, description, data, innerResults);
+            var aggregateStatusCode = GetAggregateHealthStatus(innerResults.Select(x => x.Status));
+
+            if (aggregateStatusCode.IsGood()) {
+                return Healthy(displayName, description, data, innerResults);
             }
+
+            if (aggregateStatusCode.IsUncertain()) {
+                return Degraded(displayName, description, null, data, innerResults);
+            }
+
+            return Unhealthy(displayName, description, null, data, innerResults);
         }
 
 
@@ -137,7 +141,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
         public static HealthCheckResult Healthy(string? displayName, string? description = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
-            return new HealthCheckResult(displayName, HealthStatus.Healthy, description, null, data, innerResults);
+            return new HealthCheckResult(displayName, StatusCodes.Good, description, null, data, innerResults);
         }
 
 
@@ -165,7 +169,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
         public static HealthCheckResult Degraded(string? displayName, string? description = null, string? error = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
-            return new HealthCheckResult(displayName, HealthStatus.Degraded, description, error, data, innerResults);
+            return new HealthCheckResult(displayName, StatusCodes.Uncertain, description, error, data, innerResults);
         }
 
 
@@ -193,7 +197,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   A new <see cref="HealthCheckResult"/>.
         /// </returns>
         public static HealthCheckResult Unhealthy(string? displayName, string? description = null, string? error = null, IDictionary<string, string>? data = null, IEnumerable<HealthCheckResult>? innerResults = null) {
-            return new HealthCheckResult(displayName, HealthStatus.Unhealthy, description, error, data, innerResults);
+            return new HealthCheckResult(displayName, StatusCodes.Bad, description, error, data, innerResults);
         }
 
 
@@ -206,12 +210,21 @@ namespace DataCore.Adapter.Diagnostics {
         /// <returns>
         ///   The worst-case aggregate status of the collection.
         /// </returns>
-        public static HealthStatus GetAggregateHealthStatus(IEnumerable<HealthStatus> statuses) {
+        /// <remarks>
+        ///   The result will always be a non-specific status code (i.e. a status code with only 
+        ///   the good/uncertain/bad quality bits set).
+        /// </remarks>
+        public static StatusCode GetAggregateHealthStatus(IEnumerable<StatusCode> statuses) {
             if (statuses == null) {
                 throw new ArgumentNullException(nameof(statuses));
             }
 
-            return statuses.Aggregate(HealthStatus.Healthy, (previous, current) => current < previous ? current : previous);
+            return statuses.Aggregate((StatusCode) StatusCodes.Good, (previous, current) => {
+                var nonSpecificCode = current.GetBaseStatusCode();
+                return nonSpecificCode > previous
+                    ? nonSpecificCode
+                    : previous;
+            });
         }
 
     }

@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Common;
+
 using IntelligentPlant.BackgroundTasks;
 
 using Microsoft.Extensions.Logging;
@@ -172,19 +174,12 @@ namespace DataCore.Adapter.Diagnostics {
                 var resultsArray = results.ToArray();
 
                 var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
-                string description;
 
-                switch (compositeStatus) {
-                    case HealthStatus.Unhealthy:
-                        description = Resources.HealthChecks_CompositeResultDescription_Unhealthy;
-                        break;
-                    case HealthStatus.Degraded:
-                        description = Resources.HealthChecks_CompositeResultDescription_Degraded;
-                        break;
-                    default:
-                        description = Resources.HealthChecks_CompositeResultDescription_Healthy;
-                        break;
-                }
+                var description = compositeStatus.IsGood()
+                    ? Resources.HealthChecks_CompositeResultDescription_Healthy
+                    : compositeStatus.IsUncertain()
+                        ? Resources.HealthChecks_CompositeResultDescription_Degraded
+                        : Resources.HealthChecks_CompositeResultDescription_Unhealthy;
 
                 var overallResult = new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
                 _latestHealthCheck = overallResult;

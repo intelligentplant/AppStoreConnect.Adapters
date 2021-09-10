@@ -8,36 +8,17 @@ namespace DataCore.Adapter.Common {
     public static class StatusCodeExtensions {
 
         /// <summary>
-        /// Creates a copy of the <see cref="StatusCode"/> but optionally clears the sub code 
-        /// and/or info bits.
+        /// Gets the non-specific <see cref="StatusCode"/> for the current <see cref="StatusCode"/> 
+        /// (i.e. the version of the status code that only has the quality bits set).
         /// </summary>
         /// <param name="statusCode">
         ///   The <see cref="StatusCode"/>.
         /// </param>
-        /// <param name="resetSubCode">
-        ///   When <see langword="true"/>, the sub code bits in the new <see cref="StatusCode"/> 
-        ///   are cleared.
-        /// </param>
-        /// <param name="resetInfoBits">
-        ///   When <see langword="true"/>, the info bits in the new <see cref="StatusCode"/> are 
-        ///   cleared.
-        /// </param>
         /// <returns>
-        ///   A new <see cref="StatusCode"/> instance that is a copy of the existing <paramref name="statusCode"/> 
-        ///   but with the info type and info bits reset.
+        ///   The non-specific version of the status code.
         /// </returns>
-        public static StatusCode Clone(this StatusCode statusCode, bool resetSubCode = false, bool resetInfoBits = false) {
-            uint newCode = statusCode;
-
-            if (resetSubCode) {
-                newCode = newCode & StatusCode.ClearSubCodeMask;
-            }
-
-            if (resetInfoBits) {
-                newCode = newCode & StatusCode.ClearInfoMask;
-            }
-
-            return newCode;
+        public static StatusCode GetBaseStatusCode(this StatusCode statusCode) {
+            return statusCode.Value & StatusCode.QualityMask;
         }
 
 
@@ -52,7 +33,7 @@ namespace DataCore.Adapter.Common {
         ///   status, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsGood(this StatusCode statusCode) {
-            return (statusCode.Value & StatusCode.QualityMask) == StatusCodes.Good;
+            return statusCode.GetBaseStatusCode() == StatusCodes.Good;
         }
 
 
@@ -67,7 +48,7 @@ namespace DataCore.Adapter.Common {
         ///   status, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool IsUncertain(this StatusCode statusCode) {
-            return (statusCode.Value & StatusCode.QualityMask) == StatusCodes.Uncertain;
+            return statusCode.GetBaseStatusCode() == StatusCodes.Uncertain;
         }
 
 
@@ -84,7 +65,7 @@ namespace DataCore.Adapter.Common {
         public static bool IsBad(this StatusCode statusCode) {
             // >= here because a quality of 0x11 is reserved for future use in OPC UA but should
             // be interpreted as bad for now.
-            return (statusCode.Value & StatusCode.QualityMask) >= StatusCodes.Bad;
+            return statusCode.GetBaseStatusCode() >= StatusCodes.Bad;
         }
 
 
