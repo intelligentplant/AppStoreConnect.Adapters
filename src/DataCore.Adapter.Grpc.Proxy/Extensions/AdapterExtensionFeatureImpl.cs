@@ -90,7 +90,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             using (var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, ctSource.Token))) {
                 var result = await response.ResponseAsync.ConfigureAwait(false);
                 return new InvocationResponse() {
-                    Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(result.Results.ToByteArray()) ?? default
+                    Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(result.Results.ToByteArray()) ?? default,
+                    Status = result.StatusCode
                 };
             }
         }
@@ -120,7 +121,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             using (var response = client.InvokeStreamingExtension(req, Proxy.GetCallOptions(context, ctSource.Token))) {
                 while (await response.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     yield return new InvocationResponse() {
-                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(response.ResponseStream.Current.Results.ToByteArray()) ?? default
+                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(response.ResponseStream.Current.Results.ToByteArray()) ?? default,
+                        Status = response.ResponseStream.Current.StatusCode
                     };
                 }
             }
@@ -172,7 +174,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
                 while (await stream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
                     yield return new InvocationResponse() {
-                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(stream.ResponseStream.Current.Results.ToByteArray()) ?? default
+                        Results = JsonElementExtensions.DeserializeJsonFromUtf8Bytes(stream.ResponseStream.Current.Results.ToByteArray()) ?? default,
+                        Status = stream.ResponseStream.Current.StatusCode
                     };
                 }
             }

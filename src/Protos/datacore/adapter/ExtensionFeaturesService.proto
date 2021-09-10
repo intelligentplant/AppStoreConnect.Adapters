@@ -35,10 +35,15 @@ message GetExtensionOperationsResponse {
 message InvokeExtensionRequest {
     string adapter_id = 1;
     string operation_id = 2;
+    // Ordinal 3 is no longer in use.
+    reserved 3;
     bytes arguments = 4; // UTF-8 JSON
 }
 
 
 message InvokeExtensionResponse {
+    // Ordinal 1 is no longer in use.
+    reserved 1;
     bytes results = 2; // UTF-8 JSON
+    uint32 status_code = 3;
 }

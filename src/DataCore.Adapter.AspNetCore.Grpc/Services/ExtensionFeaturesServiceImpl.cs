@@ -157,7 +157,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     var result = await adapter.Feature.Invoke(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
                     var response = new InvokeExtensionResponse() { 
-                        Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(result.Results))
+                        Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(result.Results)),
+                        StatusCode = (uint) result.Status
                     };
                     
                     return response;
@@ -210,7 +211,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     await foreach (var val in adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
                         var response = new InvokeExtensionResponse() { 
-                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results))
+                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results)),
+                            StatusCode = (uint) val.Status
                         };
 
                         await responseStream.WriteAsync(response).ConfigureAwait(false);
@@ -300,7 +302,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     long outputItems = 0;
                     await foreach (var val in adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
                         var response = new InvokeExtensionResponse() { 
-                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results))
+                            Results = Google.Protobuf.ByteString.CopyFrom(JsonSerializer.SerializeToUtf8Bytes(val.Results)),
+                            StatusCode = (uint) val.Status
                         };
 
                         await responseStream.WriteAsync(response).ConfigureAwait(false);
