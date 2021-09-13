@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -32,7 +33,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The ID of the tag that was written to.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -46,7 +47,7 @@ namespace DataCore.Adapter.RealTimeData {
         public WriteTagValueResult(
             string? correlationId, 
             string tagId, 
-            WriteStatus status, 
+            StatusCode status, 
             string? notes, 
             IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
@@ -65,7 +66,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The ID of the tag that was written to.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -76,7 +77,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public static WriteTagValueResult Create(string? correlationId, string tagId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
+        public static WriteTagValueResult Create(string? correlationId, string tagId, StatusCode status, string? notes, IEnumerable<AdapterProperty>? properties) {
             return new WriteTagValueResult(correlationId, tagId, status, notes, properties);
         }
 

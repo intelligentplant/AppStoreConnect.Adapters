@@ -716,54 +716,6 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC write operation status.
-        /// </param>
-        /// <returns>
-        ///   The adapter write operation status.
-        /// </returns>
-        public static Common.WriteStatus ToAdapterWriteStatus(this Grpc.WriteOperationStatus status) {
-            switch (status) {
-                case Grpc.WriteOperationStatus.Success:
-                    return Common.WriteStatus.Success;
-                case Grpc.WriteOperationStatus.Fail:
-                    return Common.WriteStatus.Fail;
-                case Grpc.WriteOperationStatus.Pending:
-                    return Common.WriteStatus.Pending;
-                case Grpc.WriteOperationStatus.Unknown:
-                default:
-                    return Common.WriteStatus.Unknown;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter write operation status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC write operation status.
-        /// </returns>
-        public static Grpc.WriteOperationStatus ToGrpcWriteStatus(this Common.WriteStatus status) {
-            switch (status) {
-                case Common.WriteStatus.Success:
-                    return Grpc.WriteOperationStatus.Success;
-                case Common.WriteStatus.Fail:
-                    return Grpc.WriteOperationStatus.Fail;
-                case Common.WriteStatus.Pending:
-                    return Grpc.WriteOperationStatus.Pending;
-                case Common.WriteStatus.Unknown:
-                default:
-                    return Grpc.WriteOperationStatus.Unknown;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="hostInfo">
@@ -1034,50 +986,6 @@ namespace DataCore.Adapter {
         #region [ Diagnostics ]
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC health status.
-        /// </param>
-        /// <returns>
-        ///   The adapter health status.
-        /// </returns>
-        public static Diagnostics.HealthStatus ToAdapterHealthStatus(this Grpc.HealthStatus status) {
-            switch (status) {
-                case Grpc.HealthStatus.Healthy:
-                    return Diagnostics.HealthStatus.Healthy;
-                case Grpc.HealthStatus.Degraded:
-                    return Diagnostics.HealthStatus.Degraded;
-                case Grpc.HealthStatus.Unhealthy:
-                default:
-                    return Diagnostics.HealthStatus.Unhealthy;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter health status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC health status.
-        /// </returns>
-        public static Grpc.HealthStatus ToGrpcHealthStatus(this Diagnostics.HealthStatus status) {
-            switch (status) {
-                case Diagnostics.HealthStatus.Healthy:
-                    return Grpc.HealthStatus.Healthy;
-                case Diagnostics.HealthStatus.Degraded:
-                    return Grpc.HealthStatus.Degraded;
-                case Diagnostics.HealthStatus.Unhealthy:
-                default:
-                    return Grpc.HealthStatus.Unhealthy;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="healthCheckResult">
@@ -1093,7 +1001,7 @@ namespace DataCore.Adapter {
 
             return new Diagnostics.HealthCheckResult(
                 healthCheckResult.DisplayName,
-                healthCheckResult.Status.ToAdapterHealthStatus(),
+                healthCheckResult.StatusCode,
                 healthCheckResult.Description,
                 healthCheckResult.Error,
                 healthCheckResult.Data,
@@ -1114,7 +1022,7 @@ namespace DataCore.Adapter {
         public static Grpc.HealthCheckResult ToGrpcHealthCheckResult(this Diagnostics.HealthCheckResult healthCheckResult) {
             var result = new Grpc.HealthCheckResult() {
                 DisplayName = healthCheckResult.DisplayName ?? string.Empty,
-                Status = healthCheckResult.Status.ToGrpcHealthStatus(),
+                StatusCode = healthCheckResult.Status,
                 Description = healthCheckResult.Description ?? string.Empty,
                 Error = healthCheckResult.Error ?? string.Empty
             };
@@ -1406,7 +1314,7 @@ namespace DataCore.Adapter {
 
             return Events.WriteEventMessageResult.Create(
                 result.CorrelationId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -1430,7 +1338,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.WriteEventMessageResult() {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus()
+                StatusCode = adapterResult.Status
             };
 
             if (adapterResult.Properties != null) {
@@ -1781,50 +1689,6 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the value to its adapter equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The gRPC tag value status.
-        /// </param>
-        /// <returns>
-        ///   The adapter tag value status.
-        /// </returns>
-        public static RealTimeData.TagValueStatus ToAdapterTagValueStatus(this Grpc.TagValueStatus status) {
-            switch (status) {
-                case Grpc.TagValueStatus.Bad:
-                    return RealTimeData.TagValueStatus.Bad;
-                case Grpc.TagValueStatus.Good:
-                    return RealTimeData.TagValueStatus.Good;
-                case Grpc.TagValueStatus.Uncertain:
-                default:
-                    return RealTimeData.TagValueStatus.Uncertain;
-            }
-        }
-
-
-        /// <summary>
-        /// Converts the value to its gRPC equivalent.
-        /// </summary>
-        /// <param name="status">
-        ///   The adapter tag value status.
-        /// </param>
-        /// <returns>
-        ///   The gRPC tag value status.
-        /// </returns>
-        public static Grpc.TagValueStatus ToGrpcTagValueStatus(this RealTimeData.TagValueStatus status) {
-            switch (status) {
-                case RealTimeData.TagValueStatus.Bad:
-                    return Grpc.TagValueStatus.Bad;
-                case RealTimeData.TagValueStatus.Good:
-                    return Grpc.TagValueStatus.Good;
-                case RealTimeData.TagValueStatus.Uncertain:
-                default:
-                    return Grpc.TagValueStatus.Uncertain;
-            }
-        }
-
-
-        /// <summary>
         /// Converts the object to its adapter equivalent.
         /// </summary>
         /// <param name="tagValue">
@@ -1841,7 +1705,7 @@ namespace DataCore.Adapter {
             return new RealTimeData.TagValueExtended(
                 tagValue.UtcSampleTime.ToDateTime(),
                 tagValue.Value.ToAdapterVariant(),
-                tagValue.Status.ToAdapterTagValueStatus(),
+                tagValue.StatusCode,
                 tagValue.Units,
                 tagValue.Notes,
                 tagValue.Error,
@@ -1867,7 +1731,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = tagValue.Error ?? string.Empty,
                 Notes = tagValue.Notes ?? string.Empty,
-                Status = tagValue.Status.ToGrpcTagValueStatus(),
+                StatusCode = tagValue.Status.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -1903,7 +1767,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = string.Empty,
                 Notes = string.Empty,
-                Status = tagValue.Status.ToGrpcTagValueStatus(),
+                StatusCode = tagValue.Status.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -2307,7 +2171,7 @@ namespace DataCore.Adapter {
             return RealTimeData.WriteTagValueResult.Create(
                 result.CorrelationId,
                 result.TagId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -2332,7 +2196,7 @@ namespace DataCore.Adapter {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus()
+                StatusCode = adapterResult.Status
             };
 
             if (adapterResult.Properties != null) {
@@ -2581,7 +2445,7 @@ namespace DataCore.Adapter {
             return RealTimeData.WriteTagValueAnnotationResult.Create(
                 result.TagId,
                 result.AnnotationId,
-                result.WriteStatus.ToAdapterWriteStatus(),
+                result.StatusCode,
                 result.Notes,
                 result.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -2609,7 +2473,7 @@ namespace DataCore.Adapter {
                 AdapterId = adapterId ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
                 AnnotationId = adapterResult.AnnotationId ?? string.Empty,
-                WriteStatus = adapterResult.Status.ToGrpcWriteStatus(),
+                StatusCode = adapterResult.Status,
                 Notes = adapterResult.Notes ?? string.Empty
             };
 

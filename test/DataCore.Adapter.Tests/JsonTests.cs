@@ -603,7 +603,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new HealthCheckResult(
                 "DisplayName",
-                HealthStatus.Healthy,
+                StatusCodes.Good,
                 "Description",
                 "Error",
                 new Dictionary<string, string>() {
@@ -613,7 +613,7 @@ namespace DataCore.Adapter.Tests {
                 new [] {
                     new HealthCheckResult(
                         "InnerDisplayName",
-                        HealthStatus.Healthy,
+                        StatusCodes.Good,
                         "InnerDescription",
                         "InnerError",
                         new Dictionary<string, string>() {
@@ -701,7 +701,7 @@ namespace DataCore.Adapter.Tests {
                new TagValueExtended(
                    DateTime.UtcNow, 
                    Variant.FromValue(100),
-                   TagValueStatus.Good, 
+                   StatusCodes.Good, 
                    "Units", 
                    "Notes", 
                    "Error",
@@ -1110,7 +1110,7 @@ namespace DataCore.Adapter.Tests {
             new TagValue(
                 DateTime.UtcNow,
                 Variant.FromValue(100),
-                TagValueStatus.Good,
+                StatusCodes.Good,
                 "Units"
             );
 
@@ -1132,7 +1132,7 @@ namespace DataCore.Adapter.Tests {
             new TagValueExtended(
                 DateTime.UtcNow,
                 Variant.FromValue(100),
-                TagValueStatus.Good,
+                StatusCodes.Good,
                 "Units",
                 "Notes",
                 "Error",
@@ -1173,7 +1173,7 @@ namespace DataCore.Adapter.Tests {
                new TagValueExtended(
                    DateTime.UtcNow,
                    Variant.FromValue(100),
-                   TagValueStatus.Good,
+                   StatusCodes.Good,
                    "Units",
                    "Notes",
                    "Error",
@@ -1226,7 +1226,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             var expected = new WriteEventMessageResult(
                 "CorrelationId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
@@ -1258,7 +1258,7 @@ namespace DataCore.Adapter.Tests {
             var expected = new WriteTagValueAnnotationResult(
                 "TagId",
                 "AnnotationId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
@@ -1291,7 +1291,7 @@ namespace DataCore.Adapter.Tests {
             var expected = new WriteTagValueResult(
                 "CorrelationId",
                 "TagId",
-                WriteStatus.Success,
+                StatusCodes.Good,
                 "Notes",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),

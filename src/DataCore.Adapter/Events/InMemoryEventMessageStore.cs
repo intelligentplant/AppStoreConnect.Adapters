@@ -252,7 +252,7 @@ namespace DataCore.Adapter.Events {
 
                 yield return new WriteEventMessageResult(
                     item.CorrelationId,
-                    Common.WriteStatus.Success,
+                    Common.StatusCodes.Good,
                     null,
                     new[] {
                         new Common.AdapterProperty("Cursor Position", Common.Variant.FromValue(cursorPosition.ToString()))

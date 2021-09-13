@@ -53,14 +53,6 @@ enum SubscriptionUpdateAction {
 }
 
 
-enum WriteOperationStatus {
-    WRITE_OPERATION_STATUS_UNKNOWN = 0;
-    WRITE_OPERATION_STATUS_SUCCESS = 1;
-    WRITE_OPERATION_STATUS_FAIL = 2;
-    WRITE_OPERATION_STATUS_PENDING = 3;
-}
-
-
 enum ConfigurationChangeType {
     CONFIGURATION_CHANGE_TYPE_UNKNOWN = 0;
     CONFIGURATION_CHANGE_TYPE_CREATED = 1;
@@ -110,19 +102,16 @@ message ExtendedAdapterDescriptor {
     AdapterTypeDescriptor type_descriptor = 5;
 }
 
-enum HealthStatus {
-    HEALTH_STATUS_UNHEALTHY = 0;
-    HEALTH_STATUS_DEGRADED = 1;
-    HEALTH_STATUS_HEALTHY = 2;
-}
 
 message HealthCheckResult {
-    HealthStatus status = 1;
+    // Ordinal 1 is no longer in use.
+    reserved 1;
     string description = 2;
     string error = 3;
     map<string,string> data = 4;
     repeated HealthCheckResult innerResults = 5;
     string display_name = 6;
+    uint32 status_code = 7;
 }
 
 message ConfigurationChange {
@@ -142,6 +131,7 @@ message AssetModelNode {
     string description = 3;
     string parent = 4;
     // 6 not in use
+    reserved 6;
     repeated AdapterProperty properties = 7;
     bool has_children = 8;
     AssetModelNodeType node_type = 9;
@@ -215,9 +205,11 @@ message WriteEventMessageItem {
 
 message WriteEventMessageResult {
     string correlation_id = 1;
-    WriteOperationStatus write_status = 2;
+    // Ordinal 2 no longer in use.
+    reserved 2;
     string notes = 3;
     repeated AdapterProperty properties = 4;
+    uint32 status_code = 5;
 }
 
 
@@ -297,29 +289,27 @@ message WriteTagValueAnnotationResult {
     string adapter_id = 1;
     string tag_id = 2;
     string annotation_id = 3;
-    WriteOperationStatus write_status = 4;
+    // Ordinal 4 no longer in use.
+    reserved 4;
     string notes = 5;
     repeated AdapterProperty properties = 6;
+    uint32 status_code = 7;
 }
 
 
 // Tag value models
 
-enum TagValueStatus {
-    TAG_VALUE_STATUS_BAD = 0;
-    TAG_VALUE_STATUS_UNCERTAIN = 64;
-    TAG_VALUE_STATUS_GOOD = 192;
-}
-
 
 message TagValue {
     google.protobuf.Timestamp utc_sample_time = 1;
     Variant value = 2;
-    TagValueStatus status = 3;
+    // Ordinal 3 no longer in use.
+    reserved 3;
     string units = 4;
     string notes = 5;
     string error = 6;
     repeated AdapterProperty properties = 7;
+    uint32 status_code = 8;
 }
 
 
@@ -389,6 +379,7 @@ message WriteTagValueItem {
     string correlation_id = 1;
     string tag_id = 2;
     // Ordinals 3-6 are not longer in use.
+    reserved 3 to 6;
     TagValue value = 7;
 }
 
@@ -396,9 +387,11 @@ message WriteTagValueItem {
 message WriteTagValueResult {
     string correlation_id = 1;
     string tag_id = 2;
-    WriteOperationStatus write_status = 3;
+    // Ordinal 3 no longer in use.
+    reserved 3;
     string notes = 4;
     repeated AdapterProperty properties = 5;
+    uint32 status_code = 6;
 }
 
 

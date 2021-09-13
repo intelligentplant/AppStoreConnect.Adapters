@@ -40,7 +40,7 @@ namespace DataCore.Adapter.NewtonsoftJson {
             converters.Add(new VariantConverter());
             converters.Add(new JsonElementConverter());
             converters.Add(new NullableJsonElementConverter());
-
+            converters.Add(new StatusCodeConverter());
         }
 
     }

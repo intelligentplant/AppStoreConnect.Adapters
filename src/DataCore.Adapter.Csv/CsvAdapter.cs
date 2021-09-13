@@ -479,7 +479,7 @@ namespace DataCore.Adapter.Csv {
                         var builder = new TagValueBuilder()
                             .WithUtcSampleTime(sampleTime)
                             .WithValue(primaryValue, displayValue)
-                            .WithStatus(TagValueStatus.Good)
+                            .WithStatus(StatusCodes.Good, TagValueStatusCodeFlags.None)
                             .WithUnits(tag.Units);
 
                         valuesForTag.Add(sampleTime, builder.Build());

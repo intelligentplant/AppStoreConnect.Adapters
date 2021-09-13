@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Tests {
                 yield return new WriteTagValueResult(
                     item.CorrelationId,
                     item.TagId,
-                    Common.WriteStatus.Success,
+                    Common.StatusCodes.Good,
                     nameof(IWriteSnapshotTagValues),
                     null
                 );
@@ -50,7 +50,7 @@ namespace DataCore.Adapter.Tests {
                 yield return new WriteTagValueResult(
                     item.CorrelationId,
                     item.TagId,
-                    Common.WriteStatus.Success,
+                    Common.StatusCodes.Good,
                     nameof(IWriteHistoricalTagValues),
                     null
                 );
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Tests {
             await foreach (var item in channel.WithCancellation(cancellationToken)) {
                 yield return new WriteEventMessageResult(
                     item.CorrelationId,
-                    Common.WriteStatus.Success,
+                    Common.StatusCodes.Good,
                     nameof(IWriteEventMessages),
                     null
                 );

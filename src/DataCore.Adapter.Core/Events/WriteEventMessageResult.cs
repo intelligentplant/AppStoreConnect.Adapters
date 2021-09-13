@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -23,7 +22,7 @@ namespace DataCore.Adapter.Events {
         ///   The optional correlation ID for the operation.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -34,7 +33,7 @@ namespace DataCore.Adapter.Events {
         /// 
         public WriteEventMessageResult(
             string? correlationId,
-            WriteStatus status, 
+            StatusCode status, 
             string? notes, 
             IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
@@ -49,7 +48,7 @@ namespace DataCore.Adapter.Events {
         ///   The optional correlation ID for the operation.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -57,7 +56,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional properties related to the write.
         /// </param>
-        public static WriteEventMessageResult Create(string? correlationId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties)  {
+        public static WriteEventMessageResult Create(string? correlationId, StatusCode status, string? notes, IEnumerable<AdapterProperty>? properties)  {
             return new WriteEventMessageResult(correlationId, status, notes, properties);
         }
 

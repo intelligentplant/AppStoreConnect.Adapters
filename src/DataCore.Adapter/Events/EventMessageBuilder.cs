@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Creates a new <see cref="EventMessageBuilder"/> object.
         /// </summary>
-        private EventMessageBuilder() { }
+        public EventMessageBuilder() { }
 
 
         /// <summary>
@@ -59,16 +59,21 @@ namespace DataCore.Adapter.Events {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        private EventMessageBuilder(EventMessage existing) {
-            _id = existing.Id;
-            _topic = existing.Topic;
-            _utcEventTime = existing.UtcEventTime;
-            _priority = existing.Priority;
-            _category = existing.Category;
-            _message = existing.Message;
-            if (existing.Properties != null) {
-                _properties.AddRange(existing.Properties.Where(x => x != null));
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public EventMessageBuilder(EventMessage existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
             }
+
+            WithId(existing.Id);
+            WithTopic(existing.Topic);
+            WithUtcEventTime(existing.UtcEventTime);
+            WithPriority(existing.Priority);
+            WithCategory(existing.Category);
+            WithMessage(existing.Message);
+            WithProperties(existing.Properties);
         }
 
 

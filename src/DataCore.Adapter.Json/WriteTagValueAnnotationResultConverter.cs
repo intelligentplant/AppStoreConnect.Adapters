@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Json {
 
             string tagId = null!;
             string annotationId = null!;
-            WriteStatus status = WriteStatus.Unknown;
+            StatusCode status = StatusCodes.Uncertain;
             string notes = null!;
             AdapterProperty[] properties = null!;
 
@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Json {
                     annotationId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.Status), StringComparison.OrdinalIgnoreCase)) {
-                    status = JsonSerializer.Deserialize<WriteStatus>(ref reader, options);
+                    status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueAnnotationResult.Notes), StringComparison.OrdinalIgnoreCase)) {
                     notes = JsonSerializer.Deserialize<string>(ref reader, options)!;

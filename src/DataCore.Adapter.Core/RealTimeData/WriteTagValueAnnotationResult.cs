@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -34,7 +34,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The ID of the annotation that was written.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.RealTimeData {
         public WriteTagValueAnnotationResult(
             string tagId, 
             string annotationId, 
-            WriteStatus status, 
+            StatusCode status, 
             string? notes, 
             IEnumerable<AdapterProperty>? properties
         ) : base(status, notes, properties) {
@@ -67,7 +67,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The ID of the annotation that was written.
         /// </param>
         /// <param name="status">
-        ///   A flag indicating if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
         ///   Notes associated with the write.
@@ -78,7 +78,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
-        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
+        public static WriteTagValueAnnotationResult Create(string tagId, string annotationId, StatusCode status, string? notes, IEnumerable<AdapterProperty>? properties) {
             return new WriteTagValueAnnotationResult(tagId, annotationId, status, notes, properties);
         }
 

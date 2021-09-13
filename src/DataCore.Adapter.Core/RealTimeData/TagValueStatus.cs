@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.RealTimeData {
+﻿using System;
+
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes the quality status of a tag value.
     /// </summary>
+    [Obsolete("TagValueStatus is deprecated in favour of StatusCode", false)]
     public enum TagValueStatus {
 
         /// <summary>

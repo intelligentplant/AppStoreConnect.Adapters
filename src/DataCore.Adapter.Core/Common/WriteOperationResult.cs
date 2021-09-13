@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DataCore.Adapter.Common {
@@ -11,17 +10,17 @@ namespace DataCore.Adapter.Common {
     public abstract class WriteOperationResult {
 
         /// <summary>
-        /// Indicates if the write was successful.
+        /// The status code for the operation.
         /// </summary>
-        public WriteStatus Status { get; }
+        public StatusCode Status { get; }
 
         /// <summary>
-        /// Notes associated with the write.
+        /// Notes associated with the operation.
         /// </summary>
         public string? Notes { get; }
 
         /// <summary>
-        /// Additional properties related to the write.
+        /// Additional properties related to the operation.
         /// </summary>
         public IEnumerable<AdapterProperty> Properties { get; }
 
@@ -30,15 +29,15 @@ namespace DataCore.Adapter.Common {
         /// Creates a new <see cref="WriteOperationResult"/>.
         /// </summary>
         /// <param name="status">
-        ///   Indicates if the write was successful.
+        ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
-        ///   Notes associated with the write.
+        ///   Notes associated with the operation.
         /// </param>
         /// <param name="properties">
-        ///   Additional properties related to the write.
+        ///   Additional properties related to the operation.
         /// </param>
-        protected WriteOperationResult(WriteStatus status, string? notes, IEnumerable<AdapterProperty>? properties) {
+        protected WriteOperationResult(StatusCode status, string? notes, IEnumerable<AdapterProperty>? properties) {
             Status = status;
             Notes = notes;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();

@@ -4,6 +4,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
+
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
@@ -61,14 +64,15 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
 
             var aggregateStatus = Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(healthChecks.Select(x => x.Value.Status));
             
-            switch (aggregateStatus) {
-                case Adapter.Diagnostics.HealthStatus.Healthy:
-                    return HealthCheckResult.Healthy(data: resultData);
-                case Adapter.Diagnostics.HealthStatus.Degraded:
-                    return HealthCheckResult.Degraded(data: resultData);
-                default:
-                    return HealthCheckResult.Unhealthy(data: resultData);
+            if (aggregateStatus.IsGood()) {
+                return HealthCheckResult.Healthy(data: resultData);
             }
+
+            if (aggregateStatus.IsUncertain()) {
+                return HealthCheckResult.Degraded(data: resultData);
+            }
+
+            return HealthCheckResult.Unhealthy(data: resultData);
         }
     }
 }

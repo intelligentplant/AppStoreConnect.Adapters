@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Tags;
-
-using IntelligentPlant.BackgroundTasks;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -70,9 +68,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The closest raw sample after <paramref name="utcSampleTime"/>.
         /// </param>
         /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   When <see langword="true"/>, the resulting value will have <see cref="StatusCodes.Uncertain"/> 
         ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
-        ///   have <see cref="TagValueStatus.Good"/> status.
+        ///   have <see cref="StatusCodes.Good"/> status.
         /// </param>
         /// <returns>
         ///   The interpolated sample.
@@ -100,9 +98,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     : new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(
-                            valueBefore.Status == TagValueStatus.Good && !forceUncertainStatus 
-                                ? TagValueStatus.Good 
-                                : TagValueStatus.Uncertain
+                            valueBefore.Status.IsGood() && !forceUncertainStatus 
+                                ? StatusCodes.Good 
+                                : StatusCodes.Uncertain,
+                            TagValueStatusCodeFlags.Interpolated
                         )
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
@@ -113,14 +112,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var x1 = valueAfter.UtcSampleTime;
 
             var nextNumericValue = InterpolateValue(utcSampleTime.Ticks, x0.Ticks, x1.Ticks, y0, y1);
-            var nextStatusValue = valueBefore.Status == TagValueStatus.Good && valueAfter.Status == TagValueStatus.Good && !forceUncertainStatus
-                ? TagValueStatus.Good
-                : TagValueStatus.Uncertain;
+            var nextStatusValue = valueBefore.Status.IsGood() && valueAfter.Status.IsGood() && !forceUncertainStatus
+                ? StatusCodes.Good
+                : StatusCodes.Uncertain;
 
             return new TagValueBuilder()
                 .WithUtcSampleTime(utcSampleTime)
                 .WithValue(nextNumericValue)
-                .WithStatus(nextStatusValue)
+                .WithStatus(nextStatusValue, TagValueStatusCodeFlags.Interpolated)
                 .WithUnits(valueBefore.Units)
                 .WithNotes($"Interpolated using samples @ {valueBefore.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z and {valueAfter.UtcSampleTime:yyyy-MM-ddTHH:mm:ss.fff}Z.")
                 .WithProperties(AggregationHelper.CreateXPoweredByProperty())
@@ -151,9 +150,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
         /// </param>
         /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   When <see langword="true"/>, the resulting value will have <see cref="StatusCodes.Uncertain"/> 
         ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
-        ///   have <see cref="TagValueStatus.Good"/> status.
+        ///   have <see cref="StatusCodes.Good"/> status.
         /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
@@ -183,23 +182,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
                     var status = forceUncertainStatus 
-                        ? TagValueStatus.Uncertain 
+                        ? (StatusCode) StatusCodes.Uncertain 
                         : valueBefore.Status;
 
                     return new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status)
+                        .WithStatus(status, TagValueStatusCodeFlags.Interpolated)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
                     var status = forceUncertainStatus
-                        ? TagValueStatus.Uncertain
+                        ? (StatusCode) StatusCodes.Uncertain
                         : valueAfter.Status;
 
                     return new TagValueBuilder(valueAfter)
                         .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status)
+                        .WithStatus(status, TagValueStatusCodeFlags.Interpolated)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build();
                 }
@@ -244,8 +243,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
         /// </param>
         /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
-        ///   status, even if <paramref name="valueBefore"/> has <see cref="TagValueStatus.Good"/> 
+        ///   When <see langword="true"/>, the resulting value will have <see cref="StatusCodes.Uncertain"/> 
+        ///   status, even if <paramref name="valueBefore"/> has <see cref="StatusCodes.Good"/> 
         ///   status.
         /// </param>
         /// <returns>
@@ -288,9 +287,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
         /// </param>
         /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
+        ///   When <see langword="true"/>, the resulting value will have <see cref="StatusCodes.Uncertain"/> 
         ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
-        ///   have <see cref="TagValueStatus.Good"/> status.
+        ///   have <see cref="StatusCodes.Good"/> status.
         /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
@@ -360,14 +359,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // Option 2: if we have boundary values around the sample time, use those values.
 
             var boundaryStartClosest = values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime);
-            var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.Status == TagValueStatus.Good
+            var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.Status.IsGood()
                 ? boundaryStartClosest
-                : values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime && x.Status == TagValueStatus.Good) ?? boundaryStartClosest;
+                : values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime && x.Status.IsGood()) ?? boundaryStartClosest;
 
             var boundaryEndClosest = values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime);
-            var boundaryEndBest = boundaryEndClosest == null || boundaryEndClosest.Status == TagValueStatus.Good
+            var boundaryEndBest = boundaryEndClosest == null || boundaryEndClosest.Status.IsGood()
                 ? boundaryEndClosest
-                : values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime && x.Status == TagValueStatus.Good) ?? boundaryEndClosest;
+                : values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime && x.Status.IsGood()) ?? boundaryEndClosest;
 
             if (boundaryStartBest != null && boundaryEndBest != null) {
                 // We have a boundary value before and after the sample time.
@@ -388,7 +387,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var boundaryValues = values
                 .Where(x => x != null)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => x.Status.IsGood())
                 .Where(x => x.UtcSampleTime < utcSampleTime)
                 .Reverse() // Take values closest to the sample time
                 .Take(2)
@@ -412,7 +411,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             boundaryValues = values
                 .Where(x => x != null)
-                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => x.Status.IsGood())
                 .Where(x => x.UtcSampleTime > utcSampleTime)
                 .Take(2)
                 .ToArray();
