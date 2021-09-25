@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Json {
 
             DateTime utcSampleTime = default;
             Variant value = Variant.Null;
-            StatusCode status = StatusCodes.Uncertain;
+            StatusCode? status = null;
             string units = null!;
             string notes = null!;
             string error = null!;
@@ -41,8 +41,25 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Value), StringComparison.OrdinalIgnoreCase)) {
                     value = JsonSerializer.Deserialize<Variant>(ref reader, options)!;
                 }
-                else if (string.Equals(propertyName, nameof(TagValueExtended.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(TagValueExtended.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, "Status", StringComparison.OrdinalIgnoreCase)) {
+                    if (!status.HasValue) {
+                        // Backwards compatibility for older TagValue definition.
+                        var valueStatus = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
+                        switch (valueStatus) {
+                            case TagValueStatus.Good:
+                                status = StatusCodes.Good;
+                                break;
+                            case TagValueStatus.Bad:
+                                status = StatusCodes.Bad;
+                                break;
+                            case TagValueStatus.Uncertain:
+                                status = StatusCodes.Uncertain;
+                                break;
+                        }
+                    }
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Units), StringComparison.OrdinalIgnoreCase)) {
                     units = JsonSerializer.Deserialize<string>(ref reader, options)!;
@@ -61,7 +78,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new TagValueExtended(utcSampleTime, value, status, units, notes, error, properties);
+            return new TagValueExtended(utcSampleTime, value, status ?? StatusCodes.Uncertain, units, notes, error, properties);
         }
 
 
@@ -75,7 +92,7 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
             WritePropertyValue(writer, nameof(TagValueExtended.UtcSampleTime), value.UtcSampleTime, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Value), value.Value, options);
-            WritePropertyValue(writer, nameof(TagValueExtended.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(TagValueExtended.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Units), value.Units, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Notes), value.Notes, options);
             WritePropertyValue(writer, nameof(TagValueExtended.Error), value.Error, options);
