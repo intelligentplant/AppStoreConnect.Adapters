@@ -1731,7 +1731,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = tagValue.Error ?? string.Empty,
                 Notes = tagValue.Notes ?? string.Empty,
-                StatusCode = tagValue.Status.Value,
+                StatusCode = tagValue.StatusCode.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -1767,7 +1767,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = string.Empty,
                 Notes = string.Empty,
-                StatusCode = tagValue.Status.Value,
+                StatusCode = tagValue.StatusCode.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()

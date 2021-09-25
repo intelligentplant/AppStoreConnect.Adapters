@@ -98,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     : new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
                         .WithStatus(
-                            valueBefore.Status.IsGood() && !forceUncertainStatus 
+                            valueBefore.StatusCode.IsGood() && !forceUncertainStatus 
                                 ? StatusCodes.Good 
                                 : StatusCodes.Uncertain,
                             TagValueStatusCodeFlags.Interpolated
@@ -112,7 +112,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             var x1 = valueAfter.UtcSampleTime;
 
             var nextNumericValue = InterpolateValue(utcSampleTime.Ticks, x0.Ticks, x1.Ticks, y0, y1);
-            var nextStatusValue = valueBefore.Status.IsGood() && valueAfter.Status.IsGood() && !forceUncertainStatus
+            var nextStatusValue = valueBefore.StatusCode.IsGood() && valueAfter.StatusCode.IsGood() && !forceUncertainStatus
                 ? StatusCodes.Good
                 : StatusCodes.Uncertain;
 
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
                     var status = forceUncertainStatus 
                         ? (StatusCode) StatusCodes.Uncertain 
-                        : valueBefore.Status;
+                        : valueBefore.StatusCode;
 
                     return new TagValueBuilder(valueBefore)
                         .WithUtcSampleTime(utcSampleTime)
@@ -194,7 +194,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
                     var status = forceUncertainStatus
                         ? (StatusCode) StatusCodes.Uncertain
-                        : valueAfter.Status;
+                        : valueAfter.StatusCode;
 
                     return new TagValueBuilder(valueAfter)
                         .WithUtcSampleTime(utcSampleTime)
@@ -359,14 +359,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             // Option 2: if we have boundary values around the sample time, use those values.
 
             var boundaryStartClosest = values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime);
-            var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.Status.IsGood()
+            var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.StatusCode.IsGood()
                 ? boundaryStartClosest
-                : values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime && x.Status.IsGood()) ?? boundaryStartClosest;
+                : values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime && x.StatusCode.IsGood()) ?? boundaryStartClosest;
 
             var boundaryEndClosest = values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime);
-            var boundaryEndBest = boundaryEndClosest == null || boundaryEndClosest.Status.IsGood()
+            var boundaryEndBest = boundaryEndClosest == null || boundaryEndClosest.StatusCode.IsGood()
                 ? boundaryEndClosest
-                : values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime && x.Status.IsGood()) ?? boundaryEndClosest;
+                : values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime && x.StatusCode.IsGood()) ?? boundaryEndClosest;
 
             if (boundaryStartBest != null && boundaryEndBest != null) {
                 // We have a boundary value before and after the sample time.
@@ -387,7 +387,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var boundaryValues = values
                 .Where(x => x != null)
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .Where(x => x.UtcSampleTime < utcSampleTime)
                 .Reverse() // Take values closest to the sample time
                 .Take(2)
@@ -411,7 +411,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             boundaryValues = values
                 .Where(x => x != null)
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .Where(x => x.UtcSampleTime > utcSampleTime)
                 .Take(2)
                 .ToArray();

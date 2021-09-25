@@ -410,23 +410,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // The tag is not numeric, so we have to add each text value change or quality status 
                 // change in the bucket.
                 var currentState = lastValuePreviousBucket?.GetValueOrDefault<string>();
-                var currentQuality = lastValuePreviousBucket?.Status;
+                var currentQuality = lastValuePreviousBucket?.StatusCode;
 
                 foreach (var item in bucket.RawSamples) {
                     var tVal = item.GetValueOrDefault<string>();
                     if (currentState != null && 
                         string.Equals(currentState, tVal, StringComparison.Ordinal) && 
-                        currentQuality == item.Status
+                        currentQuality == item.StatusCode
                     ) {
                         continue;
                     }
                     currentState = tVal;
-                    currentQuality = item.Status;
+                    currentQuality = item.StatusCode;
                     significantValues.Add(item);
                 }
             }
 
-            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => !x.Status.IsGood());
+            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => !x.StatusCode.IsGood());
             if (exceptionValue != null) {
                 significantValues.Add(exceptionValue);
             }
@@ -436,7 +436,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     tag.Id, 
                     tag.Name, 
                     new TagValueBuilder(value)
-                        .WithStatus(value.Status, bucket.InfoBits)
+                        .WithStatus(value.StatusCode, bucket.InfoBits)
                         .WithBucketProperties(bucket)
                         .WithProperties(AggregationHelper.CreateXPoweredByProperty())
                         .Build()

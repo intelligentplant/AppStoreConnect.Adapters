@@ -721,7 +721,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.TagName, actual.TagName);
             Assert.AreEqual(expected.DataFunction, actual.DataFunction);
             Assert.AreEqual(expected.Value.UtcSampleTime, actual.Value.UtcSampleTime);
-            Assert.AreEqual(expected.Value.Status, actual.Value.Status);
+            Assert.AreEqual(expected.Value.StatusCode, actual.Value.StatusCode);
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
             Assert.AreEqual(expected.Value.Value, actual.Value.Value);
@@ -1118,7 +1118,7 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<TagValue>(json, options);
 
             Assert.AreEqual(expected.UtcSampleTime, actual.UtcSampleTime);
-            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.StatusCode, actual.StatusCode);
             Assert.AreEqual(expected.Units, actual.Units);
 
             Assert.AreEqual(expected.Value, actual.Value);
@@ -1147,7 +1147,7 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<TagValueExtended>(json, options);
 
             Assert.AreEqual(expected.UtcSampleTime, actual.UtcSampleTime);
-            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.StatusCode, actual.StatusCode);
             Assert.AreEqual(expected.Units, actual.Units);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
@@ -1191,7 +1191,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.TagId, actual.TagId);
             Assert.AreEqual(expected.TagName, actual.TagName);
             Assert.AreEqual(expected.Value.UtcSampleTime, actual.Value.UtcSampleTime);
-            Assert.AreEqual(expected.Value.Status, actual.Value.Status);
+            Assert.AreEqual(expected.Value.StatusCode, actual.Value.StatusCode);
             Assert.AreEqual(expected.Value.Units, actual.Value.Units);
             Assert.AreEqual(expected.Value.Notes, actual.Value.Notes);
 
