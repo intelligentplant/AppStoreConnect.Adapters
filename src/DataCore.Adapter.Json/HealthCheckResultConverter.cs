@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string? displayName = default;
-            StatusCode status = default;
+            StatusCode? status = null;
             string? description = default;
             string? error = default;
             IDictionary<string, string>? data = default;
@@ -41,6 +41,25 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, "Status", StringComparison.OrdinalIgnoreCase)) {
+                    // Backwards compatibility for older HealthCheckResult definition.
+                    if (!status.HasValue) {
+#pragma warning disable CS0618 // Type or member is obsolete
+                        var valueStatus = JsonSerializer.Deserialize<HealthStatus>(ref reader, options);
+                        switch (valueStatus) {
+                            case HealthStatus.Healthy:
+                                status = StatusCodes.Good;
+                                break;
+                            case HealthStatus.Unhealthy:
+                                status = StatusCodes.Bad;
+                                break;
+                            case HealthStatus.Degraded:
+                                status = StatusCodes.Uncertain;
+                                break;
+                        }
+#pragma warning restore CS0618 // Type or member is obsolete
+                    }
+                }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
                     description = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
@@ -58,7 +77,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return new HealthCheckResult(displayName, status, description, error, data, innerResults);
+            return new HealthCheckResult(displayName, status ?? StatusCodes.Uncertain, description, error, data, innerResults);
         }
 
         /// <inheritdoc/>
