@@ -45,8 +45,10 @@ namespace DataCore.Adapter.Json {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, "Status", StringComparison.OrdinalIgnoreCase)) {
+                    // Backwards compatibility for older TagValue definition.
                     if (!status.HasValue) {
-                        // Backwards compatibility for older TagValue definition.
+
+#pragma warning disable CS0618 // Type or member is obsolete
                         var valueStatus = JsonSerializer.Deserialize<TagValueStatus>(ref reader, options);
                         switch (valueStatus) {
                             case TagValueStatus.Good:
@@ -59,6 +61,7 @@ namespace DataCore.Adapter.Json {
                                 status = StatusCodes.Uncertain;
                                 break;
                         }
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                 }
                 else if (string.Equals(propertyName, nameof(TagValueExtended.Units), StringComparison.OrdinalIgnoreCase)) {
