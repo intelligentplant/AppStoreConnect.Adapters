@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(HealthCheckResult.DisplayName), StringComparison.OrdinalIgnoreCase)) {
                     displayName = JsonSerializer.Deserialize<string>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(HealthCheckResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
 
             WritePropertyValue(writer, nameof(HealthCheckResult.DisplayName), value.DisplayName, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(HealthCheckResult.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Description), value.Description, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Error), value.Error, options);
             WritePropertyValue(writer, nameof(HealthCheckResult.Data), value.Data, options);

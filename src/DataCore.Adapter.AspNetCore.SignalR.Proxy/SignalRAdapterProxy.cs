@@ -317,7 +317,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
                 return new HealthCheckResult(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
+                    result.StatusCode,
                     result.Description,
                     result.Error,
                     result.Data,

@@ -416,7 +416,7 @@ namespace DataCore.Adapter.Tests {
         #region [ IHealthCheck ]
 
         /// <summary>
-        /// Verifies that a <see cref="HealthCheckResult.Status"/> property matches the aggregate 
+        /// Verifies that a <see cref="HealthCheckResult.StatusCode"/> property matches the aggregate 
         /// status of its inner results.
         /// </summary>
         /// <param name="health">
@@ -432,7 +432,7 @@ namespace DataCore.Adapter.Tests {
 
                 // If there are any inner results, ensure that the overall status matches the 
                 // aggregate status of the inner results.
-                Assert.AreEqual(health.Status, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.Status)), Resources.HealthCheckStatusDoesNotMatchAggregatedChildStatus);
+                Assert.AreEqual(health.StatusCode, HealthCheckResult.GetAggregateHealthStatus(health.InnerResults.Select(x => x.StatusCode)), Resources.HealthCheckStatusDoesNotMatchAggregatedChildStatus);
             }
         }
 

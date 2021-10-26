@@ -1022,7 +1022,7 @@ namespace DataCore.Adapter {
         public static Grpc.HealthCheckResult ToGrpcHealthCheckResult(this Diagnostics.HealthCheckResult healthCheckResult) {
             var result = new Grpc.HealthCheckResult() {
                 DisplayName = healthCheckResult.DisplayName ?? string.Empty,
-                StatusCode = healthCheckResult.Status,
+                StatusCode = healthCheckResult.StatusCode,
                 Description = healthCheckResult.Description ?? string.Empty,
                 Error = healthCheckResult.Error ?? string.Empty
             };

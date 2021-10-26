@@ -173,7 +173,7 @@ namespace DataCore.Adapter.Diagnostics {
 
                 var resultsArray = results.ToArray();
 
-                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.Status));
+                var compositeStatus = HealthCheckResult.GetAggregateHealthStatus(resultsArray.Select(x => x.StatusCode));
 
                 var description = compositeStatus.IsGood()
                     ? Resources.HealthChecks_CompositeResultDescription_Healthy

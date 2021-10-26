@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
 
             var resultData = new ReadOnlyDictionary<string, object>(healthChecks.ToDictionary(x => x.Key, x => (object) x.Value));
 
-            var aggregateStatus = Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(healthChecks.Select(x => x.Value.Status));
+            var aggregateStatus = Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(healthChecks.Select(x => x.Value.StatusCode));
             
             if (aggregateStatus.IsGood()) {
                 return HealthCheckResult.Healthy(data: resultData);
