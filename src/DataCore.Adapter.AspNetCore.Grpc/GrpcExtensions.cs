@@ -1022,7 +1022,7 @@ namespace DataCore.Adapter {
         public static Grpc.HealthCheckResult ToGrpcHealthCheckResult(this Diagnostics.HealthCheckResult healthCheckResult) {
             var result = new Grpc.HealthCheckResult() {
                 DisplayName = healthCheckResult.DisplayName ?? string.Empty,
-                StatusCode = healthCheckResult.Status,
+                StatusCode = healthCheckResult.StatusCode,
                 Description = healthCheckResult.Description ?? string.Empty,
                 Error = healthCheckResult.Error ?? string.Empty
             };
@@ -1338,7 +1338,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.WriteEventMessageResult() {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
-                StatusCode = adapterResult.Status
+                StatusCode = adapterResult.StatusCode
             };
 
             if (adapterResult.Properties != null) {
@@ -1731,7 +1731,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = tagValue.Error ?? string.Empty,
                 Notes = tagValue.Notes ?? string.Empty,
-                StatusCode = tagValue.Status.Value,
+                StatusCode = tagValue.StatusCode.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -1767,7 +1767,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.TagValue() {
                 Error = string.Empty,
                 Notes = string.Empty,
-                StatusCode = tagValue.Status.Value,
+                StatusCode = tagValue.StatusCode.Value,
                 Units = tagValue.Units ?? string.Empty,
                 UtcSampleTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(tagValue.UtcSampleTime),
                 Value = tagValue.Value.ToGrpcVariant()
@@ -2196,7 +2196,7 @@ namespace DataCore.Adapter {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
-                StatusCode = adapterResult.Status
+                StatusCode = adapterResult.StatusCode
             };
 
             if (adapterResult.Properties != null) {
@@ -2473,7 +2473,7 @@ namespace DataCore.Adapter {
                 AdapterId = adapterId ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
                 AnnotationId = adapterResult.AnnotationId ?? string.Empty,
-                StatusCode = adapterResult.Status,
+                StatusCode = adapterResult.StatusCode,
                 Notes = adapterResult.Notes ?? string.Empty
             };
 

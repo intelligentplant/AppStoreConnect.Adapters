@@ -53,7 +53,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return;
             }
 
-            if (value.Status >= BestQualityValue.Status) {
+            if (value.StatusCode >= BestQualityValue.StatusCode) {
                 // Status is at least as good as the current boundary value; update both 
                 // BestQualityValue and ClosestValue.
                 BestQualityValue = value;

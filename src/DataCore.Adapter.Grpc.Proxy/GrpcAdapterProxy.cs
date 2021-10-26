@@ -430,7 +430,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
                 return new Diagnostics.HealthCheckResult(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
+                    result.StatusCode,
                     result.Description,
                     result.Error,
                     result.Data,

@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Json {
             }
 
             string correlationId = null!;
-            StatusCode status = StatusCodes.Uncertain;
+            StatusCode? status = null;
             string notes = null!;
             AdapterProperty[] properties = null!;
             
@@ -34,8 +34,28 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(WriteEventMessageResult.CorrelationId), StringComparison.OrdinalIgnoreCase)) {
                     correlationId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
-                else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(WriteEventMessageResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, "Status", StringComparison.OrdinalIgnoreCase)) {
+                    // Backwards compatibility for older WriteEventMessageResult definition.
+                    if (!status.HasValue) {
+#pragma warning disable CS0618 // Type or member is obsolete
+                        var valueStatus = JsonSerializer.Deserialize<WriteStatus>(ref reader, options);
+                        switch (valueStatus) {
+                            case WriteStatus.Success:
+                                status = StatusCodes.Good;
+                                break;
+                            case WriteStatus.Fail:
+                                status = StatusCodes.Bad;
+                                break;
+                            case WriteStatus.Pending:
+                            case WriteStatus.Unknown:
+                                status = StatusCodes.Uncertain;
+                                break;
+                        }
+#pragma warning restore CS0618 // Type or member is obsolete
+                    }
                 }
                 else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Notes), StringComparison.OrdinalIgnoreCase)) {
                     notes = JsonSerializer.Deserialize<string>(ref reader, options)!;
@@ -48,7 +68,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return WriteEventMessageResult.Create(correlationId, status, notes, properties);
+            return WriteEventMessageResult.Create(correlationId, status ?? StatusCodes.Uncertain, notes, properties);
         }
 
 
@@ -62,7 +82,7 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
 
             WritePropertyValue(writer, nameof(WriteEventMessageResult.CorrelationId), value.CorrelationId, options);
-            WritePropertyValue(writer, nameof(WriteEventMessageResult.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(WriteEventMessageResult.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(WriteEventMessageResult.Notes), value.Notes, options);
             WritePropertyValue(writer, nameof(WriteEventMessageResult.Properties), value.Properties, options);
 

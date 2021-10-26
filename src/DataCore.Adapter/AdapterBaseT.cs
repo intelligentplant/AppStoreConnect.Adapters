@@ -786,7 +786,7 @@ namespace DataCore.Adapter {
                 // Create new result that uses normalised name.
                 result.Add(new HealthCheckResult(
                     healthCheckName,
-                    featureHealth.Status,
+                    featureHealth.StatusCode,
                     featureHealth.Description,
                     featureHealth.Error,
                     featureHealth.Data,

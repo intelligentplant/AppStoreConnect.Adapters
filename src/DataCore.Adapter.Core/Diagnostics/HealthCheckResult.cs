@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <summary>
         /// The status of the health check result.
         /// </summary>
-        public StatusCode Status { get; }
+        public StatusCode StatusCode { get; }
 
         /// <summary>
         /// The description of the health check that was performed.
@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <param name="displayName">
         ///   The display name for the check. Can be <see langword="null"/>.
         /// </param>
-        /// <param name="status">
+        /// <param name="statusCode">
         ///   The health status for the check.
         /// </param>
         /// <param name="description">
@@ -66,11 +66,11 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The inner results that contributed to the status of this result. Can be 
         ///   <see langword="null"/>.
         /// </param>
-        public HealthCheckResult(string? displayName, StatusCode status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
+        public HealthCheckResult(string? displayName, StatusCode statusCode, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
                 : displayName!;
-            Status = status;
+            StatusCode = statusCode;
             Description = description;
             Error = error;
             Data = new ReadOnlyDictionary<string, string>(data ?? new Dictionary<string, string>());
@@ -107,7 +107,7 @@ namespace DataCore.Adapter.Diagnostics {
                 return Healthy(displayName, description, data);
             }
 
-            var aggregateStatusCode = GetAggregateHealthStatus(innerResults.Select(x => x.Status));
+            var aggregateStatusCode = GetAggregateHealthStatus(innerResults.Select(x => x.StatusCode));
 
             if (aggregateStatusCode.IsGood()) {
                 return Healthy(displayName, description, data, innerResults);

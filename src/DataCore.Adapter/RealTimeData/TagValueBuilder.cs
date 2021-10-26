@@ -70,7 +70,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             WithUtcSampleTime(existing.UtcSampleTime);
             WithValue(existing.Value);
-            WithStatus(existing.Status);
+            WithStatus(existing.StatusCode);
         }
 
 
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             WithUtcSampleTime(existing.UtcSampleTime);
             WithValue(existing.Value);
-            WithStatus(existing.Status);
+            WithStatus(existing.StatusCode);
         }
 
 

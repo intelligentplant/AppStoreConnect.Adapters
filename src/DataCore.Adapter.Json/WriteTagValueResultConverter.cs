@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Json {
 
             string correlationId = null!;
             string tagId = null!;
-            StatusCode status = StatusCodes.Uncertain;
+            StatusCode? status = null;
             string notes = null!;
             AdapterProperty[] properties = null!;
 
@@ -37,8 +37,28 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(WriteTagValueResult.TagId), StringComparison.OrdinalIgnoreCase)) {
                     tagId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
-                else if (string.Equals(propertyName, nameof(WriteTagValueResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(WriteTagValueResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, "Status", StringComparison.OrdinalIgnoreCase)) {
+                    // Backwards compatibility for older WriteTagValueResult definition.
+                    if (!status.HasValue) {
+#pragma warning disable CS0618 // Type or member is obsolete
+                        var valueStatus = JsonSerializer.Deserialize<WriteStatus>(ref reader, options);
+                        switch (valueStatus) {
+                            case WriteStatus.Success:
+                                status = StatusCodes.Good;
+                                break;
+                            case WriteStatus.Fail:
+                                status = StatusCodes.Bad;
+                                break;
+                            case WriteStatus.Pending:
+                            case WriteStatus.Unknown:
+                                status = StatusCodes.Uncertain;
+                                break;
+                        }
+#pragma warning restore CS0618 // Type or member is obsolete
+                    }
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueResult.Notes), StringComparison.OrdinalIgnoreCase)) {
                     notes = JsonSerializer.Deserialize<string>(ref reader, options)!;
@@ -51,7 +71,7 @@ namespace DataCore.Adapter.Json {
                 }
             }
 
-            return WriteTagValueResult.Create(correlationId, tagId, status, notes, properties);
+            return WriteTagValueResult.Create(correlationId, tagId, status ?? StatusCodes.Uncertain, notes, properties);
         }
 
 
@@ -66,7 +86,7 @@ namespace DataCore.Adapter.Json {
 
             WritePropertyValue(writer, nameof(WriteTagValueResult.CorrelationId), value.CorrelationId, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.TagId), value.TagId, options);
-            WritePropertyValue(writer, nameof(WriteTagValueResult.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(WriteTagValueResult.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.Notes), value.Notes, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.Properties), value.Properties, options);
 

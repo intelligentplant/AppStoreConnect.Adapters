@@ -22,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The status code for the value.
         /// </summary>
-        public StatusCode Status { get; }
+        public StatusCode StatusCode { get; }
 
         /// <summary>
         /// The value units.
@@ -48,7 +48,7 @@ namespace DataCore.Adapter.RealTimeData {
         public TagValue(DateTime utcSampleTime, Variant value, StatusCode status, string? units) {
             UtcSampleTime = utcSampleTime;
             Value = value;
-            Status = status;
+            StatusCode = status;
             Units = units;
         }
 
@@ -77,17 +77,17 @@ namespace DataCore.Adapter.RealTimeData {
         public string ToString(string? format, IFormatProvider? formatProvider) {
             var formattedValue = Value.ToString(format, formatProvider);
             var formattedTimestamp = UtcSampleTime.ToString(Variant.DefaultDateTimeFormat, formatProvider);
-            var formattedStatus = Status.IsGood()
+            var formattedStatus = StatusCode.IsGood()
                 ? SharedResources.TagValueStatus_Good
-                : Status.IsUncertain()
+                : StatusCode.IsUncertain()
                     ? SharedResources.TagValueStatus_Uncertain
                     : SharedResources.TagValueStatus_Bad;
 
             if (string.IsNullOrWhiteSpace(Units)) {
-                return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, ": ", Status, "]");
+                return string.Concat(formattedValue, " @ ", formattedTimestamp, " [", formattedStatus, ": ", StatusCode, "]");
             }
 
-            return string.Concat(formattedValue, " ", Units, " @ ", formattedTimestamp, " [", formattedStatus, ": ", Status, "]");
+            return string.Concat(formattedValue, " ", Units, " @ ", formattedTimestamp, " [", formattedStatus, ": ", StatusCode, "]");
         }
 
     }

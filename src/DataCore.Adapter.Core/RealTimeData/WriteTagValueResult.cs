@@ -32,7 +32,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="tagId">
         ///   The ID of the tag that was written to.
         /// </param>
-        /// <param name="status">
+        /// <param name="statusCode">
         ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
@@ -47,10 +47,10 @@ namespace DataCore.Adapter.RealTimeData {
         public WriteTagValueResult(
             string? correlationId, 
             string tagId, 
-            StatusCode status, 
+            StatusCode statusCode, 
             string? notes, 
             IEnumerable<AdapterProperty>? properties
-        ) : base(status, notes, properties) {
+        ) : base(statusCode, notes, properties) {
             CorrelationId = correlationId;
             TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
         }

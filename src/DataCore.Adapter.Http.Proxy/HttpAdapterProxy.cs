@@ -270,7 +270,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
                 return new HealthCheckResult(
                     Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
+                    result.StatusCode,
                     result.Description,
                     result.Error,
                     result.Data,

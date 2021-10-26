@@ -178,7 +178,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateAverage(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -186,7 +186,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateMinimum(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -229,7 +229,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -269,7 +269,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateMaximum(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -277,7 +277,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -317,10 +317,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateCount(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -368,7 +368,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateRange(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -376,7 +376,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -415,7 +415,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateDelta(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
             if (goodQualitySamples.Length == 0) {
@@ -423,7 +423,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -471,7 +471,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var percentGoodCount = bucket.RawSamples.Count(x => x.Status.IsGood());
+            var percentGoodCount = bucket.RawSamples.Count(x => x.StatusCode.IsGood());
 
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
@@ -513,7 +513,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 yield break;
             }
 
-            var percentBadCount = bucket.RawSamples.Count(x => x.Status.IsBad());
+            var percentBadCount = bucket.RawSamples.Count(x => x.StatusCode.IsBad());
 
             yield return new TagValueBuilder()
                 .WithUtcSampleTime(bucket.UtcBucketStart)
@@ -568,10 +568,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateVariance(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 
@@ -627,10 +627,10 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static IEnumerable<TagValueExtended> CalculateStandardDeviation(TagSummary tag, TagValueBucket bucket) {
             var goodQualitySamples = bucket
                 .RawSamples
-                .Where(x => x.Status.IsGood())
+                .Where(x => x.StatusCode.IsGood())
                 .ToArray();
 
-            var status = bucket.RawSamples.Any(x => !x.Status.IsGood())
+            var status = bucket.RawSamples.Any(x => !x.StatusCode.IsGood())
                 ? StatusCodes.Uncertain
                 : StatusCodes.Good;
 

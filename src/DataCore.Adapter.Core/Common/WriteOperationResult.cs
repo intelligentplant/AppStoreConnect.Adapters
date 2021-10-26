@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The status code for the operation.
         /// </summary>
-        public StatusCode Status { get; }
+        public StatusCode StatusCode { get; }
 
         /// <summary>
         /// Notes associated with the operation.
@@ -28,7 +28,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// Creates a new <see cref="WriteOperationResult"/>.
         /// </summary>
-        /// <param name="status">
+        /// <param name="statusCode">
         ///   The status code for the operation.
         /// </param>
         /// <param name="notes">
@@ -37,8 +37,8 @@ namespace DataCore.Adapter.Common {
         /// <param name="properties">
         ///   Additional properties related to the operation.
         /// </param>
-        protected WriteOperationResult(StatusCode status, string? notes, IEnumerable<AdapterProperty>? properties) {
-            Status = status;
+        protected WriteOperationResult(StatusCode statusCode, string? notes, IEnumerable<AdapterProperty>? properties) {
+            StatusCode = statusCode;
             Notes = notes;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
