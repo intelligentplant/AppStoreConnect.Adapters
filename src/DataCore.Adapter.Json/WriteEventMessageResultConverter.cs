@@ -34,7 +34,7 @@ namespace DataCore.Adapter.Json {
                 if (string.Equals(propertyName, nameof(WriteEventMessageResult.CorrelationId), StringComparison.OrdinalIgnoreCase)) {
                     correlationId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
-                else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(WriteEventMessageResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(WriteEventMessageResult.Notes), StringComparison.OrdinalIgnoreCase)) {
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.Json {
             writer.WriteStartObject();
 
             WritePropertyValue(writer, nameof(WriteEventMessageResult.CorrelationId), value.CorrelationId, options);
-            WritePropertyValue(writer, nameof(WriteEventMessageResult.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(WriteEventMessageResult.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(WriteEventMessageResult.Notes), value.Notes, options);
             WritePropertyValue(writer, nameof(WriteEventMessageResult.Properties), value.Properties, options);
 

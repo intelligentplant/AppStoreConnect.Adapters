@@ -37,7 +37,7 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(WriteTagValueResult.TagId), StringComparison.OrdinalIgnoreCase)) {
                     tagId = JsonSerializer.Deserialize<string>(ref reader, options)!;
                 }
-                else if (string.Equals(propertyName, nameof(WriteTagValueResult.Status), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, nameof(WriteTagValueResult.StatusCode), StringComparison.OrdinalIgnoreCase)) {
                     status = JsonSerializer.Deserialize<StatusCode>(ref reader, options);
                 }
                 else if (string.Equals(propertyName, nameof(WriteTagValueResult.Notes), StringComparison.OrdinalIgnoreCase)) {
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.Json {
 
             WritePropertyValue(writer, nameof(WriteTagValueResult.CorrelationId), value.CorrelationId, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.TagId), value.TagId, options);
-            WritePropertyValue(writer, nameof(WriteTagValueResult.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(WriteTagValueResult.StatusCode), value.StatusCode, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.Notes), value.Notes, options);
             WritePropertyValue(writer, nameof(WriteTagValueResult.Properties), value.Properties, options);
 

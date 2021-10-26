@@ -1238,7 +1238,7 @@ namespace DataCore.Adapter.Tests {
             var actual = JsonSerializer.Deserialize<WriteEventMessageResult>(json, options);
 
             Assert.AreEqual(expected.CorrelationId, actual.CorrelationId);
-            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.StatusCode, actual.StatusCode);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
@@ -1271,7 +1271,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expected.TagId, actual.TagId);
             Assert.AreEqual(expected.AnnotationId, actual.AnnotationId);
-            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.StatusCode, actual.StatusCode);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
@@ -1304,7 +1304,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expected.CorrelationId, actual.CorrelationId);
             Assert.AreEqual(expected.TagId, actual.TagId);
-            Assert.AreEqual(expected.Status, actual.Status);
+            Assert.AreEqual(expected.StatusCode, actual.StatusCode);
             Assert.AreEqual(expected.Notes, actual.Notes);
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());

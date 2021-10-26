@@ -1338,7 +1338,7 @@ namespace DataCore.Adapter {
             var result = new Grpc.WriteEventMessageResult() {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
-                StatusCode = adapterResult.Status
+                StatusCode = adapterResult.StatusCode
             };
 
             if (adapterResult.Properties != null) {
@@ -2196,7 +2196,7 @@ namespace DataCore.Adapter {
                 CorrelationId = adapterResult.CorrelationId ?? string.Empty,
                 Notes = adapterResult.Notes ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
-                StatusCode = adapterResult.Status
+                StatusCode = adapterResult.StatusCode
             };
 
             if (adapterResult.Properties != null) {
@@ -2473,7 +2473,7 @@ namespace DataCore.Adapter {
                 AdapterId = adapterId ?? string.Empty,
                 TagId = adapterResult.TagId ?? string.Empty,
                 AnnotationId = adapterResult.AnnotationId ?? string.Empty,
-                StatusCode = adapterResult.Status,
+                StatusCode = adapterResult.StatusCode,
                 Notes = adapterResult.Notes ?? string.Empty
             };
 
