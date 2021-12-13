@@ -364,7 +364,7 @@ namespace DataCore.Adapter.AssetModel {
                 return false;
             }
 
-            return await DeleteNodeCoreAsync(node, true, cancellationToken).ConfigureAwait(false);
+            return await DeleteNodeCoreAsync(node, true, true, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -379,14 +379,20 @@ namespace DataCore.Adapter.AssetModel {
         ///   be checked to see if its <see cref="AssetModelNode.HasChildren"/> property needs to 
         ///   be updated following the deleting of the <paramref name="node"/>.
         /// </param>
+        /// <param name="requiresLock">
+        ///   <see langword="true"/> if <see cref="_writeLock"/> must be acquired before updating, 
+        ///   or <see langword="false"/> if it has already been acquired.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A flag indicating if the delete was successful.
         /// </returns>
-        private async ValueTask<bool> DeleteNodeCoreAsync(AssetModelNode node, bool checkParent, CancellationToken cancellationToken) {
-            await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        private async ValueTask<bool> DeleteNodeCoreAsync(AssetModelNode node, bool checkParent, bool requiresLock, CancellationToken cancellationToken) {
+            if (requiresLock) {
+                await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             try {
                 // "nodes:{id}" key contains the definition with ID {id}.
@@ -401,7 +407,7 @@ namespace DataCore.Adapter.AssetModel {
                     // If the deleted node has any children, delete them as well.
                     if (node.HasChildren) {
                         foreach (var child in _nodesById.Values.Where(x => x.Parent != null && x.Parent.Equals(node.Id, StringComparison.Ordinal))) {
-                            await DeleteNodeCoreAsync(child, false, cancellationToken).ConfigureAwait(false);
+                            await DeleteNodeCoreAsync(child, false, false, cancellationToken).ConfigureAwait(false);
                         }
                     }
 
@@ -421,7 +427,9 @@ namespace DataCore.Adapter.AssetModel {
                 return result == KeyValueStoreOperationStatus.OK;
             }
             finally {
-                _writeLock.Release();
+                if (requiresLock) {
+                    _writeLock.Release();
+                }
             }
         }
 
