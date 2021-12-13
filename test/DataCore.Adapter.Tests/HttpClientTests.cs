@@ -32,7 +32,6 @@ namespace DataCore.Adapter.Tests {
                 }
                 catch (AdapterHttpClientException e) {
                     Assert.IsNotNull(e.ProblemDetails);
-                    Assert.IsNotNull(e.StatusCode);
 #if NETCOREAPP
                     // The type for the problem details is only set in ASP.NET Core 3.x onwards.
                     Assert.IsNotNull(e.ProblemDetails.Type);

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+    <TargetFrameworks>net6.0;net48</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,7 +41,7 @@
   
   -->
   <Choose>
-    <!-- .NET Core 3.1/.NET 5.0 references -->
+    <!-- .NET/.NET Core references -->
     <When Condition=" '$(TargetFramework)' != 'net48' ">
       <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -69,16 +69,6 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
-  
-  <!--  
-  Since we are using v5.0.x of the SignalR MessagePack library, we need to include a reference to 
-  v5.0.x of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
-  will throw a runtime error. 
-  -->
-  
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
