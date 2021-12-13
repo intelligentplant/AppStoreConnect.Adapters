@@ -84,6 +84,9 @@ namespace DataCore.Adapter.Tests {
 #endif
 
             services.AddMvc()
+#if !NET6_0_OR_GREATER
+                .SetCompatibilityVersion(CompatibilityVersion.Latest)
+#endif
 #if NETCOREAPP
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.WriteIndented = true;
