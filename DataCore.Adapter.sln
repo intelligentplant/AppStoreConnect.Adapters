@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28729.10
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{0DEC6A31-20B5-46C7-A1FD-D4193755119E}"
 	ProjectSection(SolutionItems) = preProject
@@ -82,8 +82,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
 	ProjectSection(SolutionItems) = preProject
-		build\build-state.cake = build\build-state.cake
-		build\build-utilities.cake = build\build-utilities.cake
 		build\Dependencies.props = build\Dependencies.props
 		build\NetFX.targets = build\NetFX.targets
 		build\version.json = build\version.json
