@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,6 +8,8 @@ using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Extensions;
+using DataCore.Adapter.Services;
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -22,7 +25,7 @@ namespace DataCore.Adapter.Example {
 
         private const string CsvFile = "tag-data.csv";
 
-        private readonly Features.AssetModelBrowser _assetModelBrowser;
+        private readonly AssetModelManager _assetModelBrowser;
 
         /// <summary>
         /// Creates a new <see cref="ExampleAdapter"/> object.
@@ -51,8 +54,9 @@ namespace DataCore.Adapter.Example {
             logger
         ) {
             // Register additional features!
-            _assetModelBrowser = new Features.AssetModelBrowser(BackgroundTaskService);
-            AddFeature<IAssetModelBrowse>(_assetModelBrowser);
+            _assetModelBrowser = new AssetModelManager(new InMemoryKeyValueStore(), BackgroundTaskService);
+
+            AddFeatures(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
             AddExtensionFeatures(new ExampleExtensionImpl(this));
         }
@@ -61,7 +65,7 @@ namespace DataCore.Adapter.Example {
         /// <inheritdoc/>
         protected override async Task OnStartedAsync(CancellationToken cancellationToken) {
             var startup = DateTime.UtcNow;
-            await _assetModelBrowser.Init(Descriptor.Id, Features.Get<Tags.ITagSearch>(), cancellationToken).ConfigureAwait(false);
+            await InitialiseAssetModelAsync(cancellationToken).ConfigureAwait(false);
 
             while (!cancellationToken.IsCancellationRequested) {
                 var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
@@ -75,6 +79,47 @@ namespace DataCore.Adapter.Example {
                 ).ConfigureAwait(false);
 
                 await Task.Delay(TimeSpan.FromSeconds(60), StopToken).ConfigureAwait(false);
+            }
+        }
+
+
+        private async Task InitialiseAssetModelAsync(CancellationToken cancellationToken) {
+            await _assetModelBrowser.InitAsync(cancellationToken).ConfigureAwait(false);
+
+            using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(ExampleAdapter), "asset-model.json"))
+            using (var reader = new System.IO.StreamReader(stream)) {
+                var json = reader.ReadToEnd();
+                var nodeDefinitions = Newtonsoft.Json.JsonConvert.DeserializeObject<AssetModelNodeDefinition[]>(json);
+
+                var dataReferences = nodeDefinitions.Where(x => !string.IsNullOrWhiteSpace(x.DataReference)).Select(x => x.DataReference).ToArray();
+
+                var tagSearch = this.GetFeature<ITagSearch>();
+                var dataReferencesChannel = tagSearch.GetTags(new DefaultAdapterCallContext(), new Tags.GetTagsRequest() {
+                    Tags = dataReferences
+                }, cancellationToken);
+
+                var tags = await dataReferencesChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                foreach (var nodeDefinition in nodeDefinitions) {
+                    await _assetModelBrowser.AddOrUpdateNodeAsync(
+                        new AssetModelNodeBuilder()
+                            .WithId(nodeDefinition.Id)
+                            .WithName(nodeDefinition.Name)
+                            .WithNodeType(nodeDefinition.NodeType)
+                            .WithDescription(nodeDefinition.Description)
+                            .WithParent(nodeDefinition.Parent)
+                            .WithChildren(nodeDefinition.Children?.Any() ?? false)
+                            .WithDataReference(string.IsNullOrWhiteSpace(nodeDefinition.DataReference)
+                                ? null
+                                : new DataReference(
+                                    Descriptor.Id,
+                                    tags.First(t => t.Id.Equals(nodeDefinition.DataReference, StringComparison.Ordinal) || t.Name.Equals(nodeDefinition.DataReference, StringComparison.Ordinal)).Name
+                                )
+                            )
+                            .Build(), 
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                }
             }
         }
 

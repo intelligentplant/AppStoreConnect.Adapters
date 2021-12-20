@@ -81,7 +81,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services.AddGrpc();
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.WriteIndented = true;
                 })
@@ -89,8 +88,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services
                 .AddSignalR()
-                .AddDataCoreAdapterSignalR()
-                .AddMessagePackProtocol();
+                .AddDataCoreAdapterSignalR();
 
             services
                 .AddHealthChecks()

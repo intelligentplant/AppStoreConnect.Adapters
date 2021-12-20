@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Grpc</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapter gRPC services.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

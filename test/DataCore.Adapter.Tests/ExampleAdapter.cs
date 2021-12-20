@@ -8,9 +8,11 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
@@ -42,6 +44,8 @@ namespace DataCore.Adapter.Tests {
 
         private readonly EventTopicSubscriptionManager _eventTopicSubscriptionManager;
 
+        private readonly AssetModelManager _assetModelManager;
+
 
         public ExampleAdapter() {
             BackgroundTaskService = new BackgroundTaskServiceWrapper(
@@ -54,18 +58,37 @@ namespace DataCore.Adapter.Tests {
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
+            _assetModelManager = new AssetModelManager(new InMemoryKeyValueStore());
+
             features.AddFromProvider(this);
-            features.Add<ISnapshotTagValuePush, SnapshotSubscriptionManager>(_snapshotSubscriptionManager);
-            features.Add<IEventMessagePush, EventSubscriptionManager>(_eventSubscriptionManager);
-            features.Add<IEventMessagePushWithTopics, EventTopicSubscriptionManager>(_eventTopicSubscriptionManager);
+            features.AddFromProvider(_snapshotSubscriptionManager);
+            features.AddFromProvider(_eventSubscriptionManager);
+            features.AddFromProvider(_eventTopicSubscriptionManager);
+            features.AddFromProvider(_assetModelManager);
             features.AddFromProvider(new PingPongExtension(BackgroundTaskService));
             Features = features;
         }
 
 
-        public Task StartAsync(CancellationToken cancellationToken = default) {
+        public async Task StartAsync(CancellationToken cancellationToken = default) {
             _stopTokenSource = new CancellationTokenSource();
-            return Task.CompletedTask;
+
+            using var sha = System.Security.Cryptography.SHA256.Create();
+
+            var nodes = new[] { "Alpha", "Beta", "Gamma", "Delta" }.ToDictionary(x => x, x => GetNodeId(x));
+            var names = nodes.Keys.ToArray();
+            for (var i = 0; i < names.Length; i++) { 
+                var name = names[i];
+                var id = nodes[name];
+                var parent = i > 0 ? nodes[names[i - 1]] : null;
+                await _assetModelManager.AddOrUpdateNodeAsync(new AssetModelNodeBuilder().WithId(id).WithName(name).WithParent(parent).Build(), cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        public static string GetNodeId(string name) {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(name)));
         }
 
 
