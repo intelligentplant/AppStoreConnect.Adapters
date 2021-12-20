@@ -65,26 +65,6 @@ namespace DataCore.Adapter.Json {
 
 
         /// <summary>
-        /// Deserializes the <see cref="JsonElement"/> to an instance of the specified type.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The type to deserialize the <see cref="JsonElement"/> to.
-        /// </typeparam>
-        /// <param name="json">
-        ///   The <see cref="JsonElement"/> to deserialize.
-        /// </param>
-        /// <param name="options">
-        ///   The <see cref="JsonSerializerOptions"/> to use.
-        /// </param>
-        /// <returns>
-        ///   An instance of <typeparamref name="T"/>.
-        /// </returns>
-        public static T? Deserialize<T>(this JsonElement json, JsonSerializerOptions? options = null) {
-            return JsonSerializer.Deserialize<T>(JsonSerializer.SerializeToUtf8Bytes(json, options), options);
-        }
-
-
-        /// <summary>
         /// Serializes the <see cref="JsonElement"/> to a JSON string, encoded as UTF-8 bytes.
         /// </summary>
         /// <param name="json">
