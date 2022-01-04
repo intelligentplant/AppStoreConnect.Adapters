@@ -110,6 +110,28 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
+        /// Creates a delegate compatible with the <see cref="TagManager"/> constructor that 
+        /// forwards configuration changes to a <see cref="ConfigurationChanges"/> instance.
+        /// </summary>
+        /// <param name="configurationChanges">
+        ///   The <see cref="ConfigurationChanges"/> instance to use.
+        /// </param>
+        /// <returns>
+        ///   A delegate that can be passed to the <see cref="TagManager"/> constructor.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="configurationChanges"/> is <see langword="null"/>.
+        /// </exception>
+        public static Func<ConfigurationChange, CancellationToken, ValueTask> CreateConfigurationChangeDelegate(ConfigurationChanges configurationChanges) {
+            if (configurationChanges == null) {
+                throw new ArgumentNullException(nameof(configurationChanges));
+            }
+
+            return async (change, ct) => _ = await configurationChanges.ValueReceived(change, ct).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
         /// Throws an <see cref="ObjectDisposedException"/> if the object has been disposed.
         /// </summary>
         private void ThrowOnDisposed() {
