@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Services;
 
 using IntelligentPlant.BackgroundTasks;
@@ -57,6 +58,11 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
+        /// <summary>
+        /// An optional callback that will be invoked when a node is added, updated, or deleted.
+        /// </summary>
+        private readonly Func<ConfigurationChange, CancellationToken, ValueTask>? _onConfigurationChange;
+
         /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
@@ -70,15 +76,20 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the asset model manager.
         /// </param>
+        /// <param name="onConfigurationChange">
+        ///   An optional callback that will be invoked when a node is added, updated, or deleted.
+        /// </param>
         public AssetModelManager(
             IKeyValueStore keyValueStore,
-            IBackgroundTaskService? backgroundTaskService = null
+            IBackgroundTaskService? backgroundTaskService = null,
+            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
         ) {
             if (keyValueStore == null) {
                 throw new ArgumentNullException(nameof(keyValueStore));
             }
 
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            _onConfigurationChange = onConfigurationChange;
             _keyValueStore = keyValueStore.CreateScopedStore("asset-model-manager:");
 
             _initTask = new Lazy<Task>(() => InitAsyncCore(_disposedTokenSource.Token), LazyThreadSafetyMode.ExecutionAndPublication);
@@ -202,11 +213,44 @@ namespace DataCore.Adapter.AssetModel {
         }
 
 
-
+        /// <summary>
+        /// Gets the node with the specified ID.
+        /// </summary>
+        /// <param name="nodeId">
+        ///   The node ID.
+        /// </param>
+        /// <returns>
+        ///   The node, or <see langword="null"/> if the node cannot be found.
+        /// </returns>
         private AssetModelNode? GetNode(string nodeId) {
             return _nodesById.TryGetValue(nodeId, out var node) 
                 ? node 
                 : null;
+        }
+
+
+        /// <summary>
+        /// Invokes the <see cref="_onConfigurationChange"/> callback.
+        /// </summary>
+        /// <param name="node">
+        ///   The node that triggered the change.
+        /// </param>
+        /// <param name="changeType">
+        ///   The change type.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will invoke the <see cref="_onConfigurationChange"/> 
+        ///   callback.
+        /// </returns>
+        private async ValueTask OnConfigurationChangeAsync(AssetModelNode node, ConfigurationChangeType changeType, CancellationToken cancellationToken) {
+            if (_onConfigurationChange == null) {
+                return;
+            }
+
+            await _onConfigurationChange(new ConfigurationChange(ConfigurationChangeItemTypes.AssetModelNode, node.Id, node.Name, changeType, null), cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -276,8 +320,6 @@ namespace DataCore.Adapter.AssetModel {
                 // "nodes:{id}" key contains the definition with ID {id}.
                 var result = await _keyValueStore.WriteAsync(string.Concat("nodes:", node.Id), node).ConfigureAwait(false);
                 if (result == KeyValueStoreOperationStatus.OK) {
-                    _nodesById.TryRemove(node.Id, out _);
-
                     // Flags if the keys in _nodesById have been modified by this operation. We will
                     // assume that they have by default, and then set to false if we are doing an
                     // update on an existing tag, to prevent us from updating the list of node IDs in
@@ -294,6 +336,10 @@ namespace DataCore.Adapter.AssetModel {
                     if (indexHasChanged) {
                         // "nodes" key contains an array of the defined node IDs.
                         await _keyValueStore.WriteAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
+                        await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
+                    }
+                    else {
+                        await OnConfigurationChangeAsync(node, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -403,6 +449,8 @@ namespace DataCore.Adapter.AssetModel {
 
                     // "nodes" key contains an array of the defined node IDs.
                     await _keyValueStore.WriteAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
+
+                    await OnConfigurationChangeAsync(node, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
                     // If the deleted node has any children, delete them as well.
                     if (node.HasChildren) {

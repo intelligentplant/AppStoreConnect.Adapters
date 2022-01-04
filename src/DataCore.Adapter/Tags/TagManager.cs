@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Services;
 
 using IntelligentPlant.BackgroundTasks;
@@ -64,6 +65,11 @@ namespace DataCore.Adapter.Tags {
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
+        /// <summary>
+        /// An optional callback that will be invoked when a tag is added, updated, or deleted.
+        /// </summary>
+        private readonly Func<ConfigurationChange, CancellationToken, ValueTask>? _onConfigurationChange;
+
         /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
@@ -81,16 +87,21 @@ namespace DataCore.Adapter.Tags {
         ///   The definitions for the properties that can be defined on tags managed by the 
         ///   <see cref="TagManager"/>.
         /// </param>
+        /// <param name="onConfigurationChange">
+        ///   An optional callback that will be invoked when a tag is added, updated, or deleted.
+        /// </param>
         public TagManager(
             IKeyValueStore keyValueStore, 
             IBackgroundTaskService? backgroundTaskService = null, 
-            IEnumerable<AdapterProperty>? tagPropertyDefinitions = null
+            IEnumerable<AdapterProperty>? tagPropertyDefinitions = null,
+            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
         ) {
             if (keyValueStore == null) {
                 throw new ArgumentNullException(nameof(keyValueStore));
             }
 
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            _onConfigurationChange = onConfigurationChange;
             _keyValueStore = keyValueStore.CreateScopedStore("tag-manager:");
 
             _tagPropertyDefinitions = tagPropertyDefinitions?.ToArray() ?? Array.Empty<AdapterProperty>();
@@ -243,6 +254,31 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
+        /// Invokes the <see cref="_onConfigurationChange"/> callback.
+        /// </summary>
+        /// <param name="tag">
+        ///   The node that triggered the change.
+        /// </param>
+        /// <param name="changeType">
+        ///   The change type.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will invoke the <see cref="_onConfigurationChange"/> 
+        ///   callback.
+        /// </returns>
+        private async ValueTask OnConfigurationChangeAsync(TagDefinition tag, ConfigurationChangeType changeType, CancellationToken cancellationToken) {
+            if (_onConfigurationChange == null) {
+                return;
+            }
+
+            await _onConfigurationChange(new ConfigurationChange(ConfigurationChangeItemTypes.Tag, tag.Id, tag.Name, changeType, null), cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
         /// Adds or updates a tag definition.
         /// </summary>
         /// <param name="tag">
@@ -301,6 +337,10 @@ namespace DataCore.Adapter.Tags {
                 if (indexHasChanged) {
                     // "tags" key contains an array of the defined tag IDs.
                     await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
+                    await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
+                }
+                else {
+                    await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -346,6 +386,8 @@ namespace DataCore.Adapter.Tags {
             if (result == KeyValueStoreOperationStatus.OK) {
                 _tagsById.TryRemove(tag.Id, out _);
                 _tagsByName.TryRemove(tag.Name, out _);
+
+                await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
                 // "tags" key contains an array of the defined tag IDs.
                 await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Diagnostics;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -224,6 +226,89 @@ namespace DataCore.Adapter.Tests {
                 // Confirm that parent2 now has children.
                 nodeActual = await manager.GetNodeAsync(node2.Id);
                 Assert.IsTrue(nodeActual.HasChildren);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitCreatedConfigurationChange() {
+            var node = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.AssetModelNode, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Created && change.ItemId.Equals(node.Id, StringComparison.Ordinal) && change.ItemName.Equals(node.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                await manager.AddOrUpdateNodeAsync(node);
+
+                Assert.IsTrue(notificationReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitDeletedConfigurationChange() {
+            var node = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.AssetModelNode, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Deleted && change.ItemId.Equals(node.Id, StringComparison.Ordinal) && change.ItemName.Equals(node.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                await manager.AddOrUpdateNodeAsync(node);
+                await manager.DeleteNodeAsync(node.Id);
+
+                Assert.IsTrue(notificationReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitUpdatedConfigurationChange() {
+            var node1 = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var node2 = new AssetModelNodeBuilder(node1)
+                .WithName(TestContext.TestName + "_UPDATED")
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.AssetModelNode, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Updated && change.ItemId.Equals(node2.Id, StringComparison.Ordinal) && change.ItemName.Equals(node2.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                // Create
+                await manager.AddOrUpdateNodeAsync(node1);
+                // Update
+                await manager.AddOrUpdateNodeAsync(node2);
+
+                Assert.IsTrue(notificationReceived);
             }
         }
 
