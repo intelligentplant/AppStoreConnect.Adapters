@@ -16,7 +16,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
     /// <summary>
     /// <see cref="IKeyValueStore"/> implementation that persists files to disk.
     /// </summary>
-    public class KeyValueFileStore : Services.KeyValueStore {
+    public class FileSystemKeyValueStore : Services.KeyValueStore {
 
 
         /// <summary>
@@ -36,10 +36,10 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
 
         /// <summary>
-        /// Creates a new <see cref="KeyValueFileStore"/> object.
+        /// Creates a new <see cref="FileSystemKeyValueStore"/> object.
         /// </summary>
         /// <param name="options">
-        ///   The <see cref="KeyValueFileStoreOptions"/> for the store.
+        ///   The <see cref="FileSystemKeyValueStoreOptions"/> for the store.
         /// </param>
         /// <param name="logger">
         ///   The logger for the store.
@@ -47,7 +47,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public KeyValueFileStore(KeyValueFileStoreOptions options, ILogger<KeyValueFileStore>? logger = null) : base() {
+        public FileSystemKeyValueStore(FileSystemKeyValueStoreOptions options, ILogger<FileSystemKeyValueStore>? logger = null) : base() {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
@@ -55,7 +55,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
             _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
             var path = string.IsNullOrWhiteSpace(options.Path)
-                ? KeyValueFileStoreOptions.DefaultPath
+                ? FileSystemKeyValueStoreOptions.DefaultPath
                 : options.Path;
 
             if (!Path.IsPathRooted(path)) {

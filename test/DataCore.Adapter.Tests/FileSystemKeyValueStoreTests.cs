@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataCore.Adapter.Tests {
 
     [TestClass]
-    public class KeyValueFileStoreTests : KeyValueStoreTests<KeyValueFileStore> {
+    public class FileSystemKeyValueStoreTests : KeyValueStoreTests<FileSystemKeyValueStore> {
 
         private static DirectoryInfo s_baseDirectory;
 
@@ -31,14 +31,14 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static KeyValueFileStore CreateStore(string baseDirectory) {
-            return new KeyValueFileStore(new KeyValueFileStoreOptions() {
+        private static FileSystemKeyValueStore CreateStore(string baseDirectory) {
+            return new FileSystemKeyValueStore(new FileSystemKeyValueStoreOptions() {
                 Path = baseDirectory
             });
         }
 
 
-        protected override KeyValueFileStore CreateStore() {
+        protected override FileSystemKeyValueStore CreateStore() {
             return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()));
         }
 

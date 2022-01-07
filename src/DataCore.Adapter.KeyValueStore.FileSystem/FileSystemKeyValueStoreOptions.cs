@@ -3,9 +3,9 @@
 namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
     /// <summary>
-    /// Options for <see cref="KeyValueFileStore"/>.
+    /// Options for <see cref="FileSystemKeyValueStore"/>.
     /// </summary>
-    public class KeyValueFileStoreOptions {
+    public class FileSystemKeyValueStoreOptions {
 
         /// <summary>
         /// Default path to save files to.
