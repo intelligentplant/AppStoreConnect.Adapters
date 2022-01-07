@@ -55,15 +55,36 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <summary>
+        /// Enables write-ahead logging on a Sqlite connection.
+        /// </summary>
+        /// <param name="command">
+        ///   A command that will execute against the connection to modify.
+        /// </param>
+        /// <remarks>
+        ///   See <a href="https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/async">here</a> for further details.
+        /// </remarks>
+        private void EnableWriteAheadLogging(SqliteCommand command) {
+            command.CommandText = "PRAGMA journal_mode='wal'";
+            command.ExecuteNonQuery();
+        }
+
+
+        /// <summary>
         /// Creates the key-value table in the SQlite database.
         /// </summary>
         private void CreateKVTable() {
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (var transaction = connection.BeginTransaction())
                 using (var command = connection.CreateCommand()) {
-                    command.CommandText = @"CREATE TABLE IF NOT EXISTS kvstore (key TEXT PRIMARY KEY, value BLOB)";
+                    command.Transaction = transaction;
+
+                    EnableWriteAheadLogging(command);
+
+                    command.CommandText = "CREATE TABLE IF NOT EXISTS kvstore (key TEXT PRIMARY KEY, value BLOB)";
                     command.ExecuteNonQuery();
+                    transaction.Commit();
                 }
             }
         }
@@ -81,6 +102,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                     using (var command = connection.CreateCommand()) {
                         command.Transaction = transaction;
 
+                        // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
                         command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
                         command.Parameters.AddWithValue("$key", hexKey);
                         command.Parameters.AddWithValue("$value", value);
