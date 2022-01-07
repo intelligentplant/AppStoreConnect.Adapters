@@ -32,7 +32,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    var writeResult = await store1.WriteAsync(TestContext.TestName, now);
+                    var writeResult = await store1.WriteJsonAsync(TestContext.TestName, now);
                     Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
 
                     // Checkpoint should be created when we dispose because we have specified a
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Tests {
                 using (var store2 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
-                    var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName);
+                    var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
                     Assert.AreEqual(KeyValueStoreOperationStatus.OK, readResult.Status);
                     Assert.AreEqual(now, readResult.Value);
                 }
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    var writeResult = await store.WriteAsync(TestContext.TestName, DateTime.UtcNow);
+                    var writeResult = await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
                     Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
 
                     // Create checkpoint - should succeed
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.Tests {
                     var cp2 = await store.TakeFullCheckpointAsync();
                     Assert.IsFalse(cp2);
 
-                    writeResult = await store.WriteAsync(TestContext.TestName, DateTime.UtcNow);
+                    writeResult = await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
                     Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
 
                     // Create a final checkpoint - should succeed

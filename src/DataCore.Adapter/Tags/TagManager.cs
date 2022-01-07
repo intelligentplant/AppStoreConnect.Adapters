@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,6 +49,11 @@ namespace DataCore.Adapter.Tags {
         /// The <see cref="IKeyValueStore"/> where the tag definitions are persisted.
         /// </summary>
         private readonly IKeyValueStore _keyValueStore;
+
+        /// <summary>
+        /// Options for serializing/deserializing tags.
+        /// </summary>
+        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
 
         /// <summary>
         /// Flags if the class has been initialised.
@@ -182,7 +187,7 @@ namespace DataCore.Adapter.Tags {
             _tagsByName.Clear();
 
             // "tags" key contains an array of the defined tag IDs.
-            var readResult = await _keyValueStore.ReadAsync<string[]>("tags").ConfigureAwait(false);
+            var readResult = await _keyValueStore.ReadJsonAsync<string[]>("tags", _jsonOptions).ConfigureAwait(false);
             if (cancellationToken.IsCancellationRequested) {
                 return;
             }
@@ -200,7 +205,7 @@ namespace DataCore.Adapter.Tags {
                     }
 
                     // "tags:{id}" key contains the the definition with ID {id}.
-                    var tagReadResult = await _keyValueStore.ReadAsync<TagDefinition>(string.Concat("tags:", tagId)).ConfigureAwait(false);
+                    var tagReadResult = await _keyValueStore.ReadJsonAsync<TagDefinition>(string.Concat("tags:", tagId), _jsonOptions).ConfigureAwait(false);
                     if (tagReadResult.Value == null) {
                         continue;
                     }
@@ -332,7 +337,7 @@ namespace DataCore.Adapter.Tags {
             await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
             // "tags:{id}" key contains the the definition with ID {id}.
-            var result = await _keyValueStore.WriteAsync(string.Concat("tags:", tag.Id), tag).ConfigureAwait(false);
+            var result = await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
             if (result == KeyValueStoreOperationStatus.OK) {
                 // Check if we are renaming the tag.
                 if (_tagsById.TryGetValue(tag.Id, out var oldTag) && !string.Equals(oldTag.Name, tag.Name, StringComparison.OrdinalIgnoreCase)) {
@@ -358,7 +363,7 @@ namespace DataCore.Adapter.Tags {
 
                 if (indexHasChanged) {
                     // "tags" key contains an array of the defined tag IDs.
-                    await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
+                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
                     await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
                 }
                 else {
@@ -412,7 +417,7 @@ namespace DataCore.Adapter.Tags {
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
                 // "tags" key contains an array of the defined tag IDs.
-                await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
+                await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
             }
 
             return result == KeyValueStoreOperationStatus.OK;

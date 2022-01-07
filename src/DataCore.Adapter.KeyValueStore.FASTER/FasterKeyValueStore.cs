@@ -17,7 +17,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public class FasterKeyValueStore : IKeyValueStore, IDisposable, IAsyncDisposable {
+    public class FasterKeyValueStore : Services.KeyValueStore, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -60,11 +60,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// the store.
         /// </summary>
         private readonly ConcurrentQueue<ClientSession<SpanByte, SpanByte, SpanByte, SpanByteAndMemory, Empty, SpanByteFunctions<Empty>>> _sessionPool = new();
-
-        /// <summary>
-        /// Serializer for store values.
-        /// </summary>
-        private readonly IFasterKeyValueStoreSerializer _serializer;
 
         /// <summary>
         /// Flags if the store should run in read-only mode.
@@ -142,7 +137,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             );
 
             _clientSessionBuilder = _fasterKVStore.For(new SpanByteFunctions<Empty>());
-            _serializer = options.Serializer ?? new JsonFasterKeyValueStoreSerializer();
             _readOnly = options.ReadOnly;
 
             if (checkpointManager != null) {
@@ -468,18 +462,14 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreOperationStatus> WriteAsync<TValue>(byte[] key, TValue? value) {
+        protected override async ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
-                var valueSpanByte = SpanByte.FromFixedSpan(_serializer.Serialize(value));
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
+                var valueSpanByte = SpanByte.FromFixedSpan(value);
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
@@ -499,18 +489,15 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreReadResult<TValue>> ReadAsync<TValue>(byte[] key) {
+        protected override async ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
             ThrowIfDisposed();
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
 
             Status status;
             SpanByteAndMemory spanByteAndMemory;
 
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
                 SpanByte valueSpanByte = default;
 
                 var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
@@ -522,10 +509,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             }
 
             using (spanByteAndMemory.Memory) {
-                return new KeyValueStoreReadResult<TValue>(
+                return new KeyValueStoreReadResult(
                     ToKeyValueOperationStatus(status),
                     status == Status.OK
-                        ? _serializer.Deserialize<TValue>(spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).Span)
+                        ? spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray()
                         : default
                     );
             }
@@ -533,17 +520,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreOperationStatus> DeleteAsync(byte[] key) {
+        protected override async ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
 
                 var result = await session.DeleteAsync(ref keySpanByte).ConfigureAwait(false);
 
@@ -565,12 +548,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public IEnumerable<byte[]> GetKeys() {
+        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
             var session = GetPooledSession();
             try {
                 using (var iterator = session.Iterate()) {
                     while (iterator.GetNext(out var recordInfo)) {
-                        yield return iterator.GetKey().AsReadOnlySpan().ToArray();
+                        var span = iterator.GetKey().AsReadOnlySpan();
+
+                        if (prefix == null || prefix.Value.Length == 0 || span.StartsWith(prefix.Value.Value)) {
+                            yield return span.ToArray();
+                        }
                     }
                 }
             }
