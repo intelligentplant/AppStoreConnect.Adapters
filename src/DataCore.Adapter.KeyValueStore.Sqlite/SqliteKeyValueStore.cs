@@ -17,6 +17,11 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
     public class SqliteKeyValueStore : Services.KeyValueStore {
 
         /// <summary>
+        /// Sqlite error code when the database file is unavailable.
+        /// </summary>
+        private const int SQLITE_CANTOPEN = 14;
+
+        /// <summary>
         /// The Sqlite connection string.
         /// </summary>
         private readonly string _connectionString;
@@ -70,21 +75,56 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <summary>
+        /// Tests if the Sqlite database already exists.
+        /// </summary>
+        /// <param name="connectionString">
+        ///   The connection string.
+        /// </param>
+        /// <returns>
+        ///   A flag indicating if the database already exists.
+        /// </returns>
+        private bool DatabaseExists(string connectionString) {
+            // See here: https://github.com/dotnet/efcore/blob/c918248457a3629736ff50c970ac022917b894b1/src/EFCore.Sqlite.Core/Storage/Internal/SqliteDatabaseCreator.cs#L66
+
+            var connectionOptions = new SqliteConnectionStringBuilder(connectionString);
+            if (connectionOptions.DataSource.Equals(":memory:", StringComparison.OrdinalIgnoreCase) || connectionOptions.Mode == SqliteOpenMode.Memory) {
+                return true;
+            }
+
+            var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString) {
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false
+            };
+
+            using (var readOnlyConnection = new SqliteConnection(connectionStringBuilder.ToString())) {
+                try {
+                    readOnlyConnection.Open();
+                }
+                catch (SqliteException ex) when (ex.SqliteErrorCode == SQLITE_CANTOPEN) {
+                    return false;
+                }
+            }
+
+            return true;
+    }
+
+
+        /// <summary>
         /// Creates the key-value table in the SQlite database.
         /// </summary>
         private void CreateKVTable() {
+            var createDatabase = !DatabaseExists(_connectionString);
+
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
-                using (var transaction = connection.BeginTransaction())
                 using (var command = connection.CreateCommand()) {
-                    command.Transaction = transaction;
-
-                    EnableWriteAheadLogging(command);
+                    if (createDatabase) {
+                        EnableWriteAheadLogging(command);
+                    }
 
                     command.CommandText = "CREATE TABLE IF NOT EXISTS kvstore (key TEXT PRIMARY KEY, value BLOB)";
                     command.ExecuteNonQuery();
-                    transaction.Commit();
                 }
             }
         }
