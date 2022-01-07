@@ -1,6 +1,7 @@
 # .NET Foundation
 
 Some code in this repository is based on the [.NET Runtime](https://github.com/dotnet/runtime).
+Some code in this repository is based on [Entity Framework Core](https://github.com/dotnet/efcore).
 
 The MIT License (MIT)
 

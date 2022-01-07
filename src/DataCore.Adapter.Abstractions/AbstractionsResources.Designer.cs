@@ -19,7 +19,7 @@ namespace DataCore.Adapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AbstractionsResources {
@@ -705,6 +705,15 @@ namespace DataCore.Adapter {
         public static string DisplayName_WriteTagValueAnnotations {
             get {
                 return ResourceManager.GetString("DisplayName_WriteTagValueAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Zero byte keys are not allowed..
+        /// </summary>
+        public static string Error_KeyValueStore_InvalidKey {
+            get {
+                return ResourceManager.GetString("Error_KeyValueStore_InvalidKey", resourceCulture);
             }
         }
         

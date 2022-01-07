@@ -2,9 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Json;
 using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
 
@@ -30,6 +32,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// The <see cref="IKeyValueStore"/> to use.
         /// </summary>
         private readonly IKeyValueStore _keyValueStore;
+
+        /// <summary>
+        /// Options for serializing/deserializing tag values.
+        /// </summary>
+        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
 
         /// <summary>
         /// Cached tag values, indexed by tag ID.
@@ -68,6 +75,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             _keyValueStore = keyValueStore.CreateScopedStore("snapshot-tag-value-manager:");
+            _jsonOptions.AddDataCoreAdapterConverters();
         }
 
 
@@ -80,7 +88,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             async ValueTask<string> GetTagId() {
-                var nameToIdResult = await _keyValueStore.ReadAsync<string>($"name-to-id:{tagNameOrId}").ConfigureAwait(false);
+                var nameToIdResult = await _keyValueStore.ReadJsonAsync<string>($"name-to-id:{tagNameOrId}", _jsonOptions).ConfigureAwait(false);
                 if (nameToIdResult.Status != KeyValueStoreOperationStatus.OK || string.IsNullOrEmpty(nameToIdResult.Value)) {
                     // Assume that tagNameOrId is the tag ID.
                     return tagNameOrId;
@@ -90,7 +98,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             var tagId = await GetTagId().ConfigureAwait(false);
-            var valueResult = await _keyValueStore.ReadAsync<TagValueQueryResult>($"value:{tagId}").ConfigureAwait(false);
+            var valueResult = await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
 
             if (valueResult.Status == KeyValueStoreOperationStatus.OK && valueResult.Value != null) {
                 // Update lookups.
@@ -138,8 +146,8 @@ namespace DataCore.Adapter.RealTimeData {
                 _valuesByName[sample.TagId] = sample;
                 _valuesByName[sample.TagName] = sample;
 
-                await _keyValueStore.WriteAsync($"value:{sample.TagId}", sample).ConfigureAwait(false);
-                await _keyValueStore.WriteAsync($"name-to-id:{sample.TagName}", sample.TagId).ConfigureAwait(false);
+                await _keyValueStore.WriteJsonAsync($"value:{sample.TagId}", sample, _jsonOptions).ConfigureAwait(false);
+                await _keyValueStore.WriteJsonAsync($"name-to-id:{sample.TagName}", sample.TagId, _jsonOptions).ConfigureAwait(false);
             }
 
             return await base.ValueReceived(sample, cancellationToken).ConfigureAwait(false);
